@@ -1,4 +1,5 @@
 """Support for tracking MQTT enabled devices identified through discovery."""
+import functools
 import logging
 
 import voluptuous as vol
@@ -20,22 +21,21 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 
-from .. import (
+from .. import subscription
+from ... import mqtt
+from ..const import CONF_QOS, CONF_STATE_TOPIC
+from ..debug_info import log_messages
+from ..mixins import (
+    MQTT_AVAILABILITY_SCHEMA,
+    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    MQTT_JSON_ATTRS_SCHEMA,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
-    subscription,
+    async_setup_entry_helper,
 )
-from ... import mqtt
-from ..const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_STATE_TOPIC
-from ..debug_info import log_messages
-from ..discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ CONF_SOURCE_TYPE = "source_type"
 PLATFORM_SCHEMA_DISCOVERY = (
     mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
         {
-            vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
@@ -55,37 +55,24 @@ PLATFORM_SCHEMA_DISCOVERY = (
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
     )
-    .extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
+    .extend(MQTT_AVAILABILITY_SCHEMA.schema)
+    .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
 )
 
 
 async def async_setup_entry_from_discovery(hass, config_entry, async_add_entities):
     """Set up MQTT device tracker dynamically through MQTT discovery."""
 
-    async def async_discover(discovery_payload):
-        """Discover and add an MQTT device tracker."""
-        discovery_data = discovery_payload.discovery_data
-        try:
-            config = PLATFORM_SCHEMA_DISCOVERY(discovery_payload)
-            await _async_setup_entity(
-                hass, config, async_add_entities, config_entry, discovery_data
-            )
-        except Exception:
-            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
-            clear_discovery_hash(hass, discovery_hash)
-            async_dispatcher_send(
-                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-            )
-            raise
-
-    async_dispatcher_connect(
-        hass, MQTT_DISCOVERY_NEW.format(device_tracker.DOMAIN, "mqtt"), async_discover
+    setup = functools.partial(
+        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    )
+    await async_setup_entry_helper(
+        hass, device_tracker.DOMAIN, setup, PLATFORM_SCHEMA_DISCOVERY
     )
 
 
 async def _async_setup_entity(
-    hass, config, async_add_entities, config_entry=None, discovery_data=None
+    hass, async_add_entities, config, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT Device Tracker entity."""
     async_add_entities([MqttDeviceTracker(hass, config, config_entry, discovery_data)])

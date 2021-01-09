@@ -26,7 +26,6 @@ from .event import async_call_later, async_track_time_interval
 if TYPE_CHECKING:
     from .entity import Entity
 
-# mypy: allow-untyped-defs
 
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 60
@@ -81,7 +80,7 @@ class EntityPlatform:
             self.platform_name, []
         ).append(self)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Represent an EntityPlatform."""
         return f"<EntityPlatform domain={self.domain} platform_name={self.platform_name} config_entry={self.config_entry}>"
 
@@ -116,7 +115,7 @@ class EntityPlatform:
 
         return self.parallel_updates
 
-    async def async_setup(self, platform_config, discovery_info=None):
+    async def async_setup(self, platform_config, discovery_info=None):  # type: ignore[no-untyped-def]
         """Set up the platform from a config file."""
         platform = self.platform
         hass = self.hass
@@ -162,7 +161,7 @@ class EntityPlatform:
         platform = self.platform
 
         @callback
-        def async_create_setup_task():
+        def async_create_setup_task():  # type: ignore[no-untyped-def]
             """Get task to set up platform."""
             return platform.async_setup_entry(  # type: ignore
                 self.hass, config_entry, self._async_schedule_add_entities
@@ -218,7 +217,7 @@ class EntityPlatform:
                 wait_time,
             )
 
-            async def setup_again(now):
+            async def setup_again(now):  # type: ignore[no-untyped-def]
                 """Run setup again."""
                 self._async_cancel_retry_setup = None
                 await self._async_setup_platform(async_create_setup_task, tries)
@@ -340,7 +339,7 @@ class EntityPlatform:
             self.scan_interval,
         )
 
-    async def _async_add_entity(
+    async def _async_add_entity(  # type: ignore[no-untyped-def]
         self, entity, update_before_add, entity_registry, device_registry
     ):
         """Add an entity to the platform."""
@@ -560,7 +559,7 @@ class EntityPlatform:
         )
 
     @callback
-    def async_register_entity_service(self, name, schema, func, required_features=None):
+    def async_register_entity_service(self, name, schema, func, required_features=None):  # type: ignore[no-untyped-def]
         """Register an entity service.
 
         Services will automatically be shared by all platforms of the same domain.

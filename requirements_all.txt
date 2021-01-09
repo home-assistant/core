@@ -404,7 +404,7 @@ btsmarthub_devicelist==0.2.0
 buienradar==1.0.4
 
 # homeassistant.components.caldav
-caldav==0.6.1
+caldav==0.7.1
 
 # homeassistant.components.circuit
 circuit-webhook==1.0.1
@@ -490,7 +490,7 @@ directv==0.4.0
 discogs_client==2.3.0
 
 # homeassistant.components.discord
-discord.py==1.5.1
+discord.py==1.6.0
 
 # homeassistant.components.updater
 distro==1.5.0
@@ -681,7 +681,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.2.5
+google-nest-sdm==0.2.6
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -762,7 +762,7 @@ hole==0.5.1
 holidays==0.10.4
 
 # homeassistant.components.frontend
-home-assistant-frontend==20201229.0
+home-assistant-frontend==20201229.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -983,7 +983,7 @@ netdisco==2.8.2
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==0.9.4
+nexia==0.9.5
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -1061,7 +1061,7 @@ openhomedevice==0.7.2
 opensensemap-api==0.1.5
 
 # homeassistant.components.enigma2
-openwebifpy==3.1.6
+openwebifpy==3.2.7
 
 # homeassistant.components.luci
 openwrt-luci-rpc==1.1.6
@@ -1140,7 +1140,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.12
 
 # homeassistant.components.plugwise
-plugwise==0.8.3
+plugwise==0.8.5
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1304,7 +1304,7 @@ pycfdns==1.2.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==7.6.0
+pychromecast==7.7.2
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.0
@@ -1328,7 +1328,7 @@ pycsspeechtts==1.0.4
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==2.4.0
+pydaikin==2.4.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1539,7 +1539,7 @@ pymsteams==0.1.12
 pymusiccast==0.1.6
 
 # homeassistant.components.myq
-pymyq==2.0.12
+pymyq==2.0.13
 
 # homeassistant.components.mysensors
 pymysensors==0.18.0
@@ -1607,7 +1607,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.7.7
+pypck==0.7.8
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
@@ -1741,7 +1741,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.7
+python-ecobee-api==0.2.8
 
 # homeassistant.components.eq3btsmart
 # python-eq3bt==0.1.11
@@ -2330,7 +2330,7 @@ yeelight==0.5.4
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2020.12.29
+youtube_dl==2021.01.03
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0

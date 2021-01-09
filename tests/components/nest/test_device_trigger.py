@@ -102,9 +102,7 @@ async def test_get_triggers(hass):
     await async_setup_camera(hass, {DEVICE_ID: camera})
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
-    device_entry = device_registry.async_get_device(
-        {("nest", DEVICE_ID)}, connections={}
-    )
+    device_entry = device_registry.async_get_device({("nest", DEVICE_ID)})
 
     expected_triggers = [
         {
@@ -179,9 +177,7 @@ async def test_triggers_for_invalid_device_id(hass):
     await async_setup_camera(hass, {DEVICE_ID: camera})
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
-    device_entry = device_registry.async_get_device(
-        {("nest", DEVICE_ID)}, connections={}
-    )
+    device_entry = device_registry.async_get_device({("nest", DEVICE_ID)})
     assert device_entry is not None
 
     # Create an additional device that does not exist.  Fetching supported
@@ -293,9 +289,7 @@ async def test_subscriber_automation(hass, calls):
     subscriber = await async_setup_camera(hass, {DEVICE_ID: camera})
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
-    device_entry = device_registry.async_get_device(
-        {("nest", DEVICE_ID)}, connections={}
-    )
+    device_entry = device_registry.async_get_device({("nest", DEVICE_ID)})
 
     assert await setup_automation(hass, device_entry.id, "camera_motion")
 

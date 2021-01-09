@@ -602,7 +602,7 @@ async def help_test_entity_device_info_with_identifier(hass, mqtt_mock, domain, 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
     assert device.identifiers == {("mqtt", "helloworld")}
     assert device.manufacturer == "Whatever"
@@ -650,14 +650,14 @@ async def help_test_entity_device_info_remove(hass, mqtt_mock, domain, config):
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = dev_registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = dev_registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
     assert ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique")
 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", "")
     await hass.async_block_till_done()
 
-    device = dev_registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = dev_registry.async_get_device({("mqtt", "helloworld")})
     assert device is None
     assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique")
 
@@ -678,7 +678,7 @@ async def help_test_entity_device_info_update(hass, mqtt_mock, domain, config):
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
     assert device.name == "Beer"
 
@@ -687,7 +687,7 @@ async def help_test_entity_device_info_update(hass, mqtt_mock, domain, config):
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
     assert device.name == "Milk"
 
@@ -790,7 +790,7 @@ async def help_test_entity_debug_info(hass, mqtt_mock, domain, config):
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)
@@ -823,7 +823,7 @@ async def help_test_entity_debug_info_max_messages(hass, mqtt_mock, domain, conf
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)
@@ -885,7 +885,7 @@ async def help_test_entity_debug_info_message(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)
@@ -931,7 +931,7 @@ async def help_test_entity_debug_info_remove(hass, mqtt_mock, domain, config):
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)
@@ -975,7 +975,7 @@ async def help_test_entity_debug_info_update_entity_id(hass, mqtt_mock, domain, 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = dev_registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = dev_registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)

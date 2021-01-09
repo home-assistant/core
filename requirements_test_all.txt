@@ -216,7 +216,7 @@ bsblan==0.4.0
 buienradar==1.0.4
 
 # homeassistant.components.caldav
-caldav==0.6.1
+caldav==0.7.1
 
 # homeassistant.components.coinmarketcap
 coinmarketcap==5.0.3
@@ -355,7 +355,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.2.5
+google-nest-sdm==0.2.6
 
 # homeassistant.components.gree
 greeclimate==0.10.3
@@ -394,7 +394,7 @@ hole==0.5.1
 holidays==0.10.4
 
 # homeassistant.components.frontend
-home-assistant-frontend==20201229.0
+home-assistant-frontend==20201229.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -487,7 +487,7 @@ nessclient==0.9.15
 netdisco==2.8.2
 
 # homeassistant.components.nexia
-nexia==0.9.4
+nexia==0.9.5
 
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
@@ -566,7 +566,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.12
 
 # homeassistant.components.plugwise
-plugwise==0.8.3
+plugwise==0.8.5
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -664,13 +664,13 @@ pybotvac==0.0.19
 pycfdns==1.2.1
 
 # homeassistant.components.cast
-pychromecast==7.6.0
+pychromecast==7.7.2
 
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.1.2
 
 # homeassistant.components.daikin
-pydaikin==2.4.0
+pydaikin==2.4.1
 
 # homeassistant.components.deconz
 pydeconz==77
@@ -782,7 +782,7 @@ pymodbus==2.3.0
 pymonoprice==0.3
 
 # homeassistant.components.myq
-pymyq==2.0.12
+pymyq==2.0.13
 
 # homeassistant.components.nut
 pynut2==2.1.2
@@ -873,7 +873,7 @@ pysqueezebox==0.5.5
 pysyncthru==0.7.0
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.7
+python-ecobee-api==0.2.8
 
 # homeassistant.components.darksky
 python-forecastio==1.4.0
