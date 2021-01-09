@@ -6,12 +6,13 @@ from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_REVERSE
+from homeassistant.const import CONF_ENTITY_ID, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 
 from .const import (
     CONF_DEFAULT_REVERSE,
     CONF_ENTITY_CONFIG,
+    CONF_REVERSE,
     CONF_SYSTEM_ID,
     DEFAULT_PORT,
     MYLINK_ENTITY_IDS,
