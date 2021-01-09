@@ -104,7 +104,7 @@ class ZWaveBaseEntity(Entity):
         property: Union[str, int],
         command_class: Optional[int] = None,
         endpoint: Optional[int] = None,
-        property_key_name: Optional[str] = None,
+        value_property_key_name: Optional[str] = None,
         add_to_watched_value_ids: bool = True,
     ) -> Optional[ZwaveValue]:
         """Return specific ZwaveValue on this ZwaveNode."""
