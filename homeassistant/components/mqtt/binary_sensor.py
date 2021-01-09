@@ -35,10 +35,8 @@ from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
-    MqttAttributes,
     MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
+    MqttEntity,
     async_setup_entry_helper,
 )
 
@@ -94,21 +92,12 @@ async def _async_setup_entity(
     async_add_entities([MqttBinarySensor(hass, config, config_entry, discovery_data)])
 
 
-class MqttBinarySensor(
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    BinarySensorEntity,
-):
+class MqttBinarySensor(MqttEntity, BinarySensorEntity):
     """Representation a binary sensor that is updated by MQTT."""
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT binary sensor."""
-        self.hass = hass
-        self._unique_id = config.get(CONF_UNIQUE_ID)
         self._state = None
-        self._sub_state = None
         self._expiration_trigger = None
         self._delay_listener = None
         expire_after = config.get(CONF_EXPIRE_AFTER)
@@ -117,30 +106,12 @@ class MqttBinarySensor(
         else:
             self._expired = None
 
-        # Load config
-        self._setup_from_config(config)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
-        device_config = config.get(CONF_DEVICE)
-
-        MqttAttributes.__init__(self, config)
-        MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
-
-    async def async_added_to_hass(self):
-        """Subscribe mqtt events."""
-        await super().async_added_to_hass()
-        await self._subscribe_topics()
-
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA(discovery_payload)
-        self._setup_from_config(config)
-        await self.attributes_discovery_update(config)
-        await self.availability_discovery_update(config)
-        await self.device_info_discovery_update(config)
-        await self._subscribe_topics()
-        self.async_write_ha_state()
+    @staticmethod
+    def config_schema():
+        """Return the config schema."""
+        return PLATFORM_SCHEMA
 
     def _setup_from_config(self, config):
         self._config = config
@@ -240,15 +211,6 @@ class MqttBinarySensor(
             },
         )
 
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
-            self.hass, self._sub_state
-        )
-        await MqttAttributes.async_will_remove_from_hass(self)
-        await MqttAvailability.async_will_remove_from_hass(self)
-        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
-
     @callback
     def _value_is_expired(self, *_):
         """Triggered when value is expired."""
@@ -257,11 +219,6 @@ class MqttBinarySensor(
         self._expired = True
 
         self.async_write_ha_state()
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
 
     @property
     def name(self):
@@ -282,11 +239,6 @@ class MqttBinarySensor(
     def force_update(self):
         """Force update."""
         return self._config[CONF_FORCE_UPDATE]
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
 
     @property
     def available(self) -> bool:
