@@ -5,7 +5,7 @@ AIR_TEMPERATURE_SENSOR = "sensor.multisensor_6_air_temperature"
 
 
 async def test_numeric_sensor(hass, multisensor_6, integration):
-    """Test the string sensor."""
+    """Test the numeric sensor."""
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
     assert state
