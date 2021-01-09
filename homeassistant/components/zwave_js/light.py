@@ -232,7 +232,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             if transition <= 127:
                 duration = int(transition)
             else:
-                minutes = int(transition / 60)
+                minutes = round(transition / 60)
                 LOGGER.debug(
                     "Transition rounded to %d minutes for %s",
                     minutes,
