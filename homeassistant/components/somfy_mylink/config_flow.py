@@ -43,6 +43,8 @@ async def validate_input(hass: core.HomeAssistant, data):
     except asyncio.TimeoutError:
         raise CannotConnect
 
+    _LOGGER.error("status_info: %s", status_info)
+
     if not status_info:
         raise InvalidAuth
 
