@@ -150,7 +150,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 state = self.hass.states.get(entity_id)
                 if state:
                     name = state.attributes.get(ATTR_FRIENDLY_NAME, entity_id)
-                entity_dict[entity_id] = f"{name} (f{entity_id})"
+                entity_dict[entity_id] = f"{name} ({entity_id})"
             data_schema = data_schema.extend(
                 {vol.Optional(CONF_ENTITY_ID): vol.In(entity_dict)}
             )
