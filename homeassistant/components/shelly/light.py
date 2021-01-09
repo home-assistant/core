@@ -74,20 +74,16 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         """Initialize light."""
         super().__init__(wrapper, block)
         self.control_result = None
+        self.mode_result = None
         self._supported_features = 0
-        self._color_mode = (
-            hasattr(block, "red")
-            and hasattr(block, "green")
-            and hasattr(block, "blue")
-            and wrapper.device.settings["mode"] == "color"
-        )
+
         if hasattr(block, "brightness") or hasattr(block, "gain"):
             self._supported_features |= SUPPORT_BRIGHTNESS
         if hasattr(block, "colorTemp"):
             self._supported_features |= SUPPORT_COLOR_TEMP
-        if hasattr(block, "white") and self._color_mode:
+        if hasattr(block, "white"):
             self._supported_features |= SUPPORT_WHITE_VALUE
-        if self._color_mode:
+        if hasattr(block, "red") and hasattr(block, "green") and hasattr(block, "blue"):
             self._supported_features |= SUPPORT_COLOR
 
     @property
@@ -104,9 +100,27 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return self.block.output
 
     @property
+    def mode(self) -> Optional[str]:
+        """Return the color mode of the light."""
+        if self.mode_result:
+            return self.mode_result["mode"]
+
+        if hasattr(self.block, "mode"):
+            return self.block.mode
+
+        if (
+            hasattr(self.block, "red")
+            and hasattr(self.block, "green")
+            and hasattr(self.block, "blue")
+        ):
+            return "color"
+
+        return "white"
+
+    @property
     def brightness(self) -> Optional[int]:
         """Brightness of light."""
-        if self._color_mode:
+        if self.mode == "color":
             if self.control_result:
                 brightness = self.control_result["gain"]
             else:
@@ -130,6 +144,9 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
     @property
     def hs_color(self) -> Optional[Tuple[float, float]]:
         """Return the hue and saturation color value of light."""
+        if self.mode == "white":
+            return color_RGB_to_hs(255, 255, 255)
+
         if self.control_result:
             red = self.control_result["red"]
             green = self.control_result["green"]
@@ -143,6 +160,9 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
     @property
     def color_temp(self) -> Optional[float]:
         """Return the CT color value in mireds."""
+        if self.mode == "color":
+            return None
+
         if self.control_result:
             color_temp = self.control_result["temp"]
         else:
@@ -170,22 +190,32 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         params = {"turn": "on"}
         if ATTR_BRIGHTNESS in kwargs:
             tmp_brightness = int(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
-            if self._color_mode:
+            if hasattr(self.block, "gain"):
                 params["gain"] = tmp_brightness
-            else:
+            if hasattr(self.block, "brightness"):
                 params["brightness"] = tmp_brightness
         if ATTR_COLOR_TEMP in kwargs:
             color_temp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
             color_temp = min(
                 KELVIN_MAX_VALUE, max(min_kelvin(self.wrapper.model), color_temp)
             )
+            # Color temperature change - used only in white mode, switch device mode to white
+            if self.mode == "color":
+                self.mode_result = await self.wrapper.device.switch_light_mode("white")
+                params["red"] = params["green"] = params["blue"] = 255
             params["temp"] = int(color_temp)
         elif ATTR_HS_COLOR in kwargs:
             red, green, blue = color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
+            # Color channels change - used only in color mode, switch device mode to color
+            if self.mode == "white":
+                self.mode_result = await self.wrapper.device.switch_light_mode("color")
             params["red"] = red
             params["green"] = green
             params["blue"] = blue
         elif ATTR_WHITE_VALUE in kwargs:
+            # White channel change - used only in color mode, switch device mode device to color
+            if self.mode == "white":
+                self.mode_result = await self.wrapper.device.switch_light_mode("color")
             params["white"] = int(kwargs[ATTR_WHITE_VALUE])
         self.control_result = await self.block.set_state(**params)
         self.async_write_ha_state()
@@ -197,6 +227,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
 
     @callback
     def _update_callback(self):
-        """When device updates, clear control result that overrides state."""
+        """When device updates, clear control & mode result that overrides state."""
         self.control_result = None
+        self.mode_result = None
         super()._update_callback()
