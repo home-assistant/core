@@ -1,11 +1,12 @@
 """MQTT component mixins and helpers."""
+from abc import abstractmethod
 import json
 import logging
 from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE, CONF_NAME
+from homeassistant.const import CONF_DEVICE, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -15,7 +16,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
-from . import CONF_TOPIC, DATA_MQTT, debug_info, publish
+from . import CONF_TOPIC, DATA_MQTT, debug_info, publish, subscription
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
@@ -493,3 +494,73 @@ class MqttEntityDeviceInfo(Entity):
     def device_info(self):
         """Return a device description for device registry."""
         return device_info_from_config(self._device_config)
+
+
+class MqttEntity(
+    MqttAttributes,
+    MqttAvailability,
+    MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo,
+):
+    """Representation of an MQTT entity."""
+
+    def __init__(self, hass, config, config_entry, discovery_data):
+        """Init the MQTT Entity."""
+        self.hass = hass
+        self._unique_id = config.get(CONF_UNIQUE_ID)
+        self._sub_state = None
+
+        # Load config
+        self._setup_from_config(config)
+
+        # Initialize mixin classes
+        MqttAttributes.__init__(self, config)
+        MqttAvailability.__init__(self, config)
+        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
+        MqttEntityDeviceInfo.__init__(self, config.get(CONF_DEVICE), config_entry)
+
+    async def async_added_to_hass(self):
+        """Subscribe mqtt events."""
+        await super().async_added_to_hass()
+        await self._subscribe_topics()
+
+    async def discovery_update(self, discovery_payload):
+        """Handle updated discovery message."""
+        config = self.config_schema()(discovery_payload)
+        self._setup_from_config(config)
+        await self.attributes_discovery_update(config)
+        await self.availability_discovery_update(config)
+        await self.device_info_discovery_update(config)
+        await self._subscribe_topics()
+        self.async_write_ha_state()
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe when removed."""
+        self._sub_state = await subscription.async_unsubscribe_topics(
+            self.hass, self._sub_state
+        )
+        await MqttAttributes.async_will_remove_from_hass(self)
+        await MqttAvailability.async_will_remove_from_hass(self)
+        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
+
+    @staticmethod
+    @abstractmethod
+    def config_schema():
+        """Return the config schema."""
+
+    def _setup_from_config(self, config):
+        """(Re)Setup the entity."""
+
+    @abstractmethod
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id

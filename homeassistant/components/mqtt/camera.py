@@ -19,10 +19,7 @@ from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
+    MqttEntity,
     async_setup_entry_helper,
 )
 
@@ -69,41 +66,23 @@ async def _async_setup_entity(
     async_add_entities([MqttCamera(config, config_entry, discovery_data)])
 
 
-class MqttCamera(
-    MqttAttributes, MqttAvailability, MqttDiscoveryUpdate, MqttEntityDeviceInfo, Camera
-):
+class MqttCamera(MqttEntity, Camera):
     """representation of a MQTT camera."""
 
     def __init__(self, config, config_entry, discovery_data):
         """Initialize the MQTT Camera."""
-        self._config = config
-        self._unique_id = config.get(CONF_UNIQUE_ID)
-        self._sub_state = None
-
         self._last_image = None
 
-        device_config = config.get(CONF_DEVICE)
-
         Camera.__init__(self)
-        MqttAttributes.__init__(self, config)
-        MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
+        MqttEntity.__init__(self, None, config, config_entry, discovery_data)
 
-    async def async_added_to_hass(self):
-        """Subscribe MQTT events."""
-        await super().async_added_to_hass()
-        await self._subscribe_topics()
+    @staticmethod
+    def config_schema():
+        """Return the config schema."""
+        return PLATFORM_SCHEMA
 
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA(discovery_payload)
+    def _setup_from_config(self, config):
         self._config = config
-        await self.attributes_discovery_update(config)
-        await self.availability_discovery_update(config)
-        await self.device_info_discovery_update(config)
-        await self._subscribe_topics()
-        self.async_write_ha_state()
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -127,15 +106,6 @@ class MqttCamera(
             },
         )
 
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
-            self.hass, self._sub_state
-        )
-        await MqttAttributes.async_will_remove_from_hass(self)
-        await MqttAvailability.async_will_remove_from_hass(self)
-        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
-
     async def async_camera_image(self):
         """Return image response."""
         return self._last_image
@@ -144,8 +114,3 @@ class MqttCamera(
     def name(self):
         """Return the name of this camera."""
         return self._config[CONF_NAME]
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
