@@ -8,29 +8,28 @@ from homeassistant.components.cover import (
 )
 from homeassistant.util import slugify
 
-from . import CONF_DEFAULT_REVERSE, DATA_SOMFY_MYLINK
+from .const import (
+    CONF_DEFAULT_REVERSE,
+    DATA_SOMFY_MYLINK,
+    DOMAIN,
+    MANUFACTURER,
+    MYLINK_STATUS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Discover and configure Somfy covers."""
-    if discovery_info is None:
-        return
-    somfy_mylink = hass.data[DATA_SOMFY_MYLINK]
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    mylink_status = data[MYLINK_STATUS]
+    somfy_mylink = data[DATA_SOMFY_MYLINK]
     cover_list = []
-    try:
-        mylink_status = await somfy_mylink.status_info()
-    except TimeoutError:
-        _LOGGER.error(
-            "Unable to connect to the Somfy MyLink device, "
-            "please check your settings"
-        )
-        return
+
     for cover in mylink_status["result"]:
         entity_id = ENTITY_ID_FORMAT.format(slugify(cover["name"]))
-        entity_config = discovery_info.get(entity_id, {})
-        default_reverse = discovery_info[CONF_DEFAULT_REVERSE]
+        entity_config = config_entry.options.get(entity_id, {})
+        default_reverse = config_entry.options.get(CONF_DEFAULT_REVERSE)
         cover_config = {}
         cover_config["target_id"] = cover["targetID"]
         cover_config["name"] = cover["name"]
@@ -86,6 +85,15 @@ class SomfyShade(CoverEntity):
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._device_class
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self._target_id)},
+            "name": self._name,
+            "manufacturer": MANUFACTURER,
+        }
 
     async def async_open_cover(self, **kwargs):
         """Wrap Homeassistant calls to open the cover."""

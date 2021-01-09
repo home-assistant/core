@@ -28,15 +28,18 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from .. import (
+from .. import subscription
+from ... import mqtt
+from ..debug_info import log_messages
+from ..mixins import (
+    MQTT_AVAILABILITY_SCHEMA,
+    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    MQTT_JSON_ATTRS_SCHEMA,
     MqttAttributes,
     MqttAvailability,
     MqttDiscoveryUpdate,
     MqttEntityDeviceInfo,
-    subscription,
 )
-from ... import mqtt
-from ..debug_info import log_messages
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,7 +123,7 @@ PLATFORM_SCHEMA_LEGACY = (
             vol.Inclusive(CONF_CHARGING_TOPIC, "charging"): mqtt.valid_publish_topic,
             vol.Inclusive(CONF_CLEANING_TEMPLATE, "cleaning"): cv.template,
             vol.Inclusive(CONF_CLEANING_TOPIC, "cleaning"): mqtt.valid_publish_topic,
-            vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Inclusive(CONF_DOCKED_TEMPLATE, "docked"): cv.template,
             vol.Inclusive(CONF_DOCKED_TOPIC, "docked"): mqtt.valid_publish_topic,
             vol.Inclusive(CONF_ERROR_TEMPLATE, "error"): cv.template,
@@ -160,8 +163,8 @@ PLATFORM_SCHEMA_LEGACY = (
             vol.Optional(mqtt.CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         }
     )
-    .extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
+    .extend(MQTT_AVAILABILITY_SCHEMA.schema)
+    .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
     .extend(MQTT_VACUUM_SCHEMA.schema)
 )
 
