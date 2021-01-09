@@ -46,9 +46,26 @@ class CommandLineNotificationService(BaseNotificationService):
                 stdin=subprocess.PIPE,
                 shell=True,  # nosec # shell by design
             )
-            proc.communicate(input=message, timeout=self._timeout)
+            
+            _LOGGER.debug("Running command: `%s`, with input: %s", self.command, message) 
+            stdout_data, stderr_data = proc.communicate(input=message, timeout=self._timeout)
             if proc.returncode != 0:
                 _LOGGER.error("Command failed: %s", self.command)
+            
+            if stdout_data:
+                _LOGGER.debug(
+                    "Stdout of command: `%s`, return code: %s:\n%s",
+                    self.command,
+                    process.returncode,
+                    stdout_data,
+                )
+            if stderr_data:
+                _LOGGER.debug(
+                    "Stderr of command: `%s`, return code: %s:\n%s",
+                    self.command,
+                    process.returncode,
+                    stderr_data,
+                )
         except subprocess.TimeoutExpired:
             _LOGGER.error("Timeout for command: %s", self.command)
         except subprocess.SubprocessError:
