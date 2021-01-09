@@ -16,6 +16,12 @@ def generic_data_fixture():
     return load_fixture("ozw/generic_network_dump.csv")
 
 
+@pytest.fixture(name="migration_data", scope="session")
+def migration_data_fixture():
+    """Load migration MQTT data and return it."""
+    return load_fixture("ozw/migration_fixture.csv")
+
+
 @pytest.fixture(name="fan_data", scope="session")
 def fan_data_fixture():
     """Load fan MQTT data and return it."""

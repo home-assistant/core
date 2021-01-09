@@ -2,6 +2,8 @@
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.components.ozw.const import DOMAIN as OZW_DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import callback
 
 from .const import (
@@ -56,9 +58,32 @@ def websocket_get_migration_config(hass, connection, msg):
     )
 
 
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command({vol.Required(TYPE): "zwave/start_ozw_config_flow"})
+async def websocket_start_ozw_config_flow(hass, connection, msg):
+    """Start the ozw integration config flow (for migration wizard).
+
+    Return data with the flow id of the started ozw config flow.
+    """
+    config = hass.data[DATA_ZWAVE_CONFIG]
+    data = {
+        "usb_path": config[CONF_USB_STICK_PATH],
+        "network_key": config[CONF_NETWORK_KEY],
+    }
+    result = await hass.config_entries.flow.async_init(
+        OZW_DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+    )
+    connection.send_result(
+        msg[ID],
+        {"flow_id": result["flow_id"]},
+    )
+
+
 @callback
 def async_load_websocket_api(hass):
     """Set up the web socket API."""
     websocket_api.async_register_command(hass, websocket_network_status)
     websocket_api.async_register_command(hass, websocket_get_config)
     websocket_api.async_register_command(hass, websocket_get_migration_config)
+    websocket_api.async_register_command(hass, websocket_start_ozw_config_flow)
