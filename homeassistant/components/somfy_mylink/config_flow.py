@@ -129,7 +129,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             _LOGGER.error("MyLink must be connected to manage device options")
             return self.async_abort(reason="cannot_connect")
 
-        self.options[CONF_ENTITY_CONFIG].setdefault({})
+        self.options.setdefault(CONF_ENTITY_CONFIG, {})
 
         if user_input is not None:
             self.options[CONF_DEFAULT_REVERSE] = user_input[CONF_DEFAULT_REVERSE]
