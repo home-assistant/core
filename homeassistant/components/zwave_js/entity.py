@@ -115,7 +115,7 @@ class ZWaveBaseEntity(Entity):
         if endpoint is None:
             endpoint = self.info.primary_value.endpoint
         # lookup by key first as this is fast
-        key_name = property_key_name or property
+        key_name = value_property_key_name or value_property
         value_id = f"{self.info.node.node_id}-{command_class}-{endpoint}-{key_name}"
         return_value = self.info.node.values.get(value_id)
         if not return_value:
