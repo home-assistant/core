@@ -146,11 +146,17 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         hs_color = kwargs.get(ATTR_HS_COLOR)
         if hs_color is not None and self._supports_color:
             red, green, blue = color_util.color_hs_to_RGB(*hs_color)
-            target_val = self.get_zwave_value("targetColor", value_property_key_name="Red")
+            target_val = self.get_zwave_value(
+                "targetColor", value_property_key_name="Red"
+            )
             await self.info.node.async_set_value(target_val, red)
-            target_val = self.get_zwave_value("targetColor", value_property_key_name="Green")
+            target_val = self.get_zwave_value(
+                "targetColor", value_property_key_name="Green"
+            )
             await self.info.node.async_set_value(target_val, green)
-            target_val = self.get_zwave_value("targetColor", value_property_key_name="Blue")
+            target_val = self.get_zwave_value(
+                "targetColor", value_property_key_name="Blue"
+            )
             await self.info.node.async_set_value(target_val, blue)
 
         # Color temperature
@@ -262,28 +268,25 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if red_val and green_val and blue_val:
             self._supports_color = True
             # convert to HS
-            self._hs = color_util.color_RGB_to_hs(
-                red_val.value, green_val.value, blue_val.value
-            )
-
-        # Update color temp limits.
-        min_kelvin_val = self.get_zwave_value(81, CommandClass.CONFIGURATION)
-        if min_kelvin_val:
-            self._max_mireds = round(
-                color_util.color_temperature_kelvin_to_mired(min_kelvin_val.value)
-            )
-        max_kelvin_val = self.get_zwave_value(82, CommandClass.CONFIGURATION)
-        if max_kelvin_val:
-            self._min_mireds = round(
-                color_util.color_temperature_kelvin_to_mired(max_kelvin_val.value)
-            )
+            if (
+                red_val.value is not None
+                and green_val.value is not None
+                and blue_val.value is not None
+            ):
+                self._hs = color_util.color_RGB_to_hs(
+                    red_val.value, green_val.value, blue_val.value
+                )
 
         # White colors
         ww_val = self.get_zwave_value(
-            "currentColor", CommandClass.SWITCH_COLOR, value_property_key_name="Warm White"
+            "currentColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key_name="Warm White",
         )
         cw_val = self.get_zwave_value(
-            "currentColor", CommandClass.SWITCH_COLOR, value_property_key_name="Cold White"
+            "currentColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key_name="Cold White",
         )
         if ww_val and cw_val:
             # Color temperature (CW + WW) Support
