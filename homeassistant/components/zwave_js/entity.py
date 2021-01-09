@@ -129,8 +129,8 @@ class ZWaveBaseEntity(Entity):
                 if item.property_ != value_property:
                     continue
                 if (
-                    property_key_name is not None
-                    and item.property_key_name != property_key_name
+                    value_property_key_name is not None
+                    and item.property_key_name != value_property_key_name
                 ):
                     continue
                 # all conditions pass
