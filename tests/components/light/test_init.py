@@ -352,6 +352,21 @@ async def test_services(hass, mock_light_profiles):
         light.ATTR_TRANSITION: 4,
     }
 
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TOGGLE,
+        {
+            ATTR_ENTITY_ID: ent3.entity_id,
+            light.ATTR_TRANSITION: 4,
+        },
+        blocking=True,
+    )
+
+    _, data = ent3.last_call("turn_off")
+    assert data == {
+        light.ATTR_TRANSITION: 4,
+    }
+
     # Test bad data
     await hass.services.async_call(
         light.DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_MATCH_ALL}, blocking=True
