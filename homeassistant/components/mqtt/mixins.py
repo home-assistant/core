@@ -30,6 +30,7 @@ from .const import (
 from .debug_info import log_messages
 from .discovery import (
     MQTT_DISCOVERY_DONE,
+    MQTT_DISCOVERY_NEW,
     MQTT_DISCOVERY_UPDATED,
     clear_discovery_hash,
     set_discovery_hash,
@@ -128,6 +129,28 @@ MQTT_JSON_ATTRS_SCHEMA = vol.Schema(
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
     }
 )
+
+
+async def async_setup_entry_helper(hass, domain, async_setup, schema):
+    """Set up entity, automation or tag creation dynamically through MQTT discovery."""
+
+    async def async_discover(discovery_payload):
+        """Discover and add an MQTT entity, automation or tag."""
+        discovery_data = discovery_payload.discovery_data
+        try:
+            config = schema(discovery_payload)
+            await async_setup(config, discovery_data=discovery_data)
+        except Exception:
+            discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
+            clear_discovery_hash(hass, discovery_hash)
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+            )
+            raise
+
+    async_dispatcher_connect(
+        hass, MQTT_DISCOVERY_NEW.format(domain, "mqtt"), async_discover
+    )
 
 
 class MqttAttributes(Entity):
