@@ -6,9 +6,16 @@ from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_REVERSE
+from homeassistant.core import callback
 
-from .const import CONF_SYSTEM_ID
+from .const import (
+    CONF_DEFAULT_REVERSE,
+    CONF_ENTITY_CONFIG,
+    CONF_SYSTEM_ID,
+    DEFAULT_PORT,
+    MYLINK_ENTITY_IDS,
+)
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,13 +25,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_SYSTEM_ID): str,
         vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, default=44100): str,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): str,
     }
 )
 
-# options
-# vol.Optional(CONF_DEFAULT_REVERSE, default=False): cv.boolean,
-# vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
+OPTIONS_SCHEMA = vol.Schema({vol.Required(CONF_DEFAULT_REVERSE, default=False): bool})
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -42,8 +47,6 @@ async def validate_input(hass: core.HomeAssistant, data):
         status_info = await somfy_mylink.status_info()
     except asyncio.TimeoutError:
         raise CannotConnect
-
-    _LOGGER.error("status_info: %s", status_info)
 
     if not status_info:
         raise InvalidAuth
@@ -101,6 +104,75 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_HOST] == host:
                 return True
         return False
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a option flow for somfy_mylink."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+        self.options = config_entry.options.copy()
+        self._entity_id = None
+
+    async def async_step_init(self, user_input=None):
+        """Handle options flow."""
+
+        if self.config_entry.state != config_entries.ENTRY_STATE_LOADED:
+            _LOGGER.error("MyLink must be connected to manage device options")
+            return self.async_abort(reason="cannot_connect")
+
+        self.options[CONF_ENTITY_CONFIG].setdefault({})
+
+        if user_input is not None:
+            self.options[CONF_DEFAULT_REVERSE] = user_input[CONF_DEFAULT_REVERSE]
+
+            entity_id = user_input.get(CONF_ENTITY_ID)
+            if entity_id:
+                return await self.async_step_entity_config(None, entity_id)
+
+            return self.async_create_entry(title="", data=self.options)
+
+        data_schema = OPTIONS_SCHEMA
+        data = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        mylink_entity_ids = data[MYLINK_ENTITY_IDS]
+
+        if mylink_entity_ids:
+            data_schema = data_schema.extend(
+                {vol.Optional(CONF_ENTITY_ID): vol.In([None, *mylink_entity_ids])}
+            )
+
+        return self.async_show_form(step_id="init", data_schema=data_schema, errors={})
+
+    async def async_step_entity_config(self, user_input=None, entity_id=None):
+        """Handle options flow for entity."""
+        if user_input is not None:
+            self.options[CONF_ENTITY_CONFIG][self._entity_id] = user_input[CONF_REVERSE]
+            return await self.async_step_init()
+        else:
+            self._entity_id = entity_id
+
+        return self.async_show_form(
+            step_id="entity_config",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_REVERSE,
+                        default=self.options.get(CONF_DEFAULT_REVERSE, False),
+                    ): bool
+                }
+            ),
+            description_placeholders={
+                "entity_id": entity_id,
+            },
+            errors={},
+        )
 
 
 class CannotConnect(exceptions.HomeAssistantError):
