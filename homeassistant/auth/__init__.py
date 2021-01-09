@@ -461,6 +461,11 @@ class AuthManager:
     def _async_resolve_provider(
         self, refresh_token: models.RefreshToken
     ) -> Optional[AuthProvider]:
+        """Get the auth provider for the given refresh token.
+
+        Raises an exception if the expected provider is no longer available or return
+        None if no provider was expected for this refresh token.
+        """
         if not refresh_token.cred or refresh_token.cred.auth_provider_id is None:
             return None
 
