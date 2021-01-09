@@ -159,7 +159,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             _LOGGER.warning(
                 "Setup options for %s = %s", self._entity_id, user_input[CONF_REVERSE]
             )
-            self.options[CONF_ENTITY_CONFIG][self._entity_id] = user_input[CONF_REVERSE]
+            entity_config = self.options[CONF_ENTITY_CONFIG]
+            entity_config.setdefault(self._entity_id,{})[CONF_REVERSE] = user_input[CONF_REVERSE]
             return await self.async_step_init()
         else:
             self._entity_id = entity_id
