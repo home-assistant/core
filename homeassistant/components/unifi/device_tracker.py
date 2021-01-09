@@ -52,6 +52,8 @@ CLIENT_STATIC_ATTRIBUTES = [
     "oui",
 ]
 
+CLIENT_CONNECTED_ALL_ATTRIBUTES = CLIENT_CONNECTED_ATTRIBUTES + CLIENT_STATIC_ATTRIBUTES
+
 DEVICE_UPGRADED = (ACCESS_POINT_UPGRADED, GATEWAY_UPGRADED, SWITCH_UPGRADED)
 
 WIRED_CONNECTION = (WIRED_CLIENT_CONNECTED,)
@@ -224,16 +226,16 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
     @property
     def device_state_attributes(self):
         """Return the client state attributes."""
-        attributes = {"is_wired": self.is_wired}
+        raw = self.client.raw
 
         if self.is_connected:
-            for variable in CLIENT_CONNECTED_ATTRIBUTES:
-                if variable in self.client.raw:
-                    attributes[variable] = self.client.raw[variable]
+            attributes = {
+                k: raw[k] for k in CLIENT_CONNECTED_ALL_ATTRIBUTES if k in raw
+            }
+        else:
+            attributes = {k: raw[k] for k in CLIENT_STATIC_ATTRIBUTES if k in raw}
 
-        for variable in CLIENT_STATIC_ATTRIBUTES:
-            if variable in self.client.raw:
-                attributes[variable] = self.client.raw[variable]
+        attributes["is_wired"] = self.is_wired
 
         return attributes
 
