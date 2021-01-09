@@ -44,11 +44,6 @@ class ZWaveBaseEntity(Entity):
         )
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, f"{DOMAIN}_update_{self.info.value_id}", self._value_changed
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
                 self.hass, f"{DOMAIN}_connection_state", self.async_write_ha_state
             )
         )
