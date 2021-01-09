@@ -81,9 +81,6 @@ class NeatoSensor(Entity):
     @property
     def state(self):
         """Return the state."""
-        if not self._state:
-            # Not yet updated
-            return None
         return self._state["details"]["charge"]
 
     @property
