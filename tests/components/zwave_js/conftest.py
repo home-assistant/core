@@ -27,7 +27,7 @@ def mock_client_fixture(controller_state):
     with patch(
         "homeassistant.components.zwave_js.ZwaveClient", autospec=True
     ) as client_class:
-        driver = Driver(controller_state)
+        driver = Driver(client_class.return_value, controller_state)
         client_class.return_value.driver = driver
         yield client_class.return_value
 
@@ -35,7 +35,7 @@ def mock_client_fixture(controller_state):
 @pytest.fixture(name="multisensor_6")
 def multisensor_6_fixture(client, multisensor_6_state):
     """Mock a multisensor 6 node."""
-    node = Node(multisensor_6_state)
+    node = Node(client, multisensor_6_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
 
