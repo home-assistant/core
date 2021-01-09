@@ -160,13 +160,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         entities_config = self.options.setdefault(CONF_ENTITY_CONFIG, {})
 
         if user_input is not None:
-            entities_config.setdefault(self._entity_id, {})[CONF_REVERSE] = user_input[
-                CONF_REVERSE
-            ]
-            # If we do not modify a top level key
-            # the entity config will never be written
-            self.options.setdefault(ENTITY_CONFIG_VERSION, 0)
-            self.options[ENTITY_CONFIG_VERSION] += 1
+            entity_config = entities_config.setdefault(self._entity_id, {})
+            if entity_config.get(CONF_REVERSE) != user_input[CONF_REVERSE]:
+                entity_config[CONF_REVERSE] = user_input[CONF_REVERSE]
+                # If we do not modify a top level key
+                # the entity config will never be written
+                self.options.setdefault(ENTITY_CONFIG_VERSION, 0)
+                self.options[ENTITY_CONFIG_VERSION] += 1
             return await self.async_step_init()
         else:
             self._entity_id = entity_id
