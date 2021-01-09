@@ -23,6 +23,7 @@ from aiounifi.events import (
 )
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 import async_timeout
+from hass.helpers.event import async_track_time_interval
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -32,6 +33,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+import homeassistant.util.dt as dt_util
 
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
@@ -64,6 +66,7 @@ from .const import (
 from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
+CHECK_DISCONNECTED_INTERVAL = timedelta(seconds=10)
 SUPPORTED_PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
 CLIENT_CONNECTED = (
@@ -93,6 +96,8 @@ class UniFiController:
         self.listeners = []
         self._site_name = None
         self._site_role = None
+
+        self._cancel_disconnected_check = None
 
         self.entities = {}
 
@@ -375,7 +380,25 @@ class UniFiController:
 
         self.config_entry.add_update_listener(self.async_config_entry_updated)
 
+        self._cancel_disconnected_check = async_track_time_interval(
+            self.hass, self._async_check_for_disconnected, CHECK_DISCONNECTED_INTERVAL
+        )
+
         return True
+
+    @callback
+    def _async_check_for_disconnected(self) -> None:
+        """Check for any scheduled updates that are due to be canceled."""
+        now = dt_util.utcnow()
+
+        for entities in self.entities.values():
+            for entity in entities:
+                if not hasattr(entity, "mark_disconnected"):
+                    continue
+                if entity.disconnected_time is None:
+                    continue
+                if now > entity.disconnected_time:
+                    entity.make_disconnected()
 
     @staticmethod
     async def async_config_entry_updated(hass, config_entry) -> None:
@@ -429,6 +452,10 @@ class UniFiController:
         for unsub_dispatcher in self.listeners:
             unsub_dispatcher()
         self.listeners = []
+
+        if self._cancel_disconnected_check:
+            self._cancel_disconnected_check()
+            self._cancel_disconnected_check = None
 
         return True
 
