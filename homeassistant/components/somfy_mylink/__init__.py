@@ -93,6 +93,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             "Unable to connect to the Somfy MyLink device, please check your settings"
         )
 
+    _LOGGER.warning("Entry loading for mylink")
+
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_SOMFY_MYLINK: somfy_mylink,
         MYLINK_STATUS: mylink_status,
