@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry, load_fixture
 @pytest.fixture(name="basic_data", scope="session")
 def basic_data_fixture():
     """Load the basic fixture data."""
-    return load_fixture("zwave_js/basic_dump.txt").split("\n")
+    return load_fixture("zwave_js/basic_dump.jsonl").split("\n")
 
 
 @pytest.fixture(name="client")
