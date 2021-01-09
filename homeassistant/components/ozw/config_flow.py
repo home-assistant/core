@@ -37,6 +37,15 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.integration_created_addon = False
         self.install_task = None
 
+    async def async_step_import(self, data):
+        """Handle imported data.
+
+        This step will be used when importing data during zwave to ozw migration.
+        """
+        self.network_key = data.get(CONF_NETWORK_KEY)
+        self.usb_path = data.get(CONF_USB_PATH)
+        return await self.async_step_user()
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         if self._async_current_entries():
@@ -163,13 +172,15 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return self._async_create_entry_from_vars()
 
-        self.usb_path = self.addon_config.get(CONF_ADDON_DEVICE, "")
-        self.network_key = self.addon_config.get(CONF_ADDON_NETWORK_KEY, "")
+        usb_path = self.addon_config.get(CONF_ADDON_DEVICE, self.usb_path or "")
+        network_key = self.addon_config.get(
+            CONF_ADDON_NETWORK_KEY, self.network_key or ""
+        )
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_USB_PATH, default=self.usb_path): str,
-                vol.Optional(CONF_NETWORK_KEY, default=self.network_key): str,
+                vol.Required(CONF_USB_PATH, default=usb_path): str,
+                vol.Optional(CONF_NETWORK_KEY, default=network_key): str,
             }
         )
 
