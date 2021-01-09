@@ -64,9 +64,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
+        if self._host_already_configured(user_input[CONF_HOST]):
+            return self.async_abort(reason="already_configured")
+
         try:
             info = await validate_input(self.hass, user_input)
-            await self.async_set_unique_id(user_input[CONF_SYSTEM_ID])
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
@@ -83,10 +85,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
-        await self.async_set_unique_id(user_input[CONF_SYSTEM_ID])
-        self._abort_if_unique_id_configured()
+        if self._host_already_configured(user_input[CONF_HOST]):
+            return self.async_abort(reason="already_configured")
 
         return await self.async_step_user(user_input)
+
+    def _host_already_configured(self, host):
+        """See if we already have an entry matching the host."""
+        for entry in self._async_current_entries():
+            if CONF_HOST not in entry.data:
+                continue
+
+            if entry.data[CONF_HOST] == host:
+                return True
+        return False
 
 
 class CannotConnect(exceptions.HomeAssistantError):
