@@ -193,7 +193,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         super().async_update_callback()
 
     @callback
-    def make_disconnected(self, _):
+    def make_disconnected(self, *_):
         """Mark client as disconnected."""
         self._is_connected = False
         self.async_write_ha_state()
@@ -301,7 +301,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         super().async_update_callback()
 
     @callback
-    def make_disconnected(self, _):
+    def make_disconnected(self, *_):
         """No heart beat by device."""
         self._is_connected = False
         self.async_write_ha_state()

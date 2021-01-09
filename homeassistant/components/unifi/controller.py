@@ -1,6 +1,6 @@
 """UniFi Controller abstraction."""
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import ssl
 
 from aiohttp import CookieJar
@@ -399,13 +399,10 @@ class UniFiController:
         self._watch_disconnected_entites.remove(entity)
 
     @callback
-    def _async_check_for_disconnected(self, now: datetime) -> None:
-        """Check for any scheduled updates that are due to be canceled."""
-
+    def _async_check_for_disconnected(self, *_) -> None:
+        """Check for any devices scheduled to be marked disconnected."""
         now = dt_util.utcnow()
-        LOGGER.warning("ENTITIES: %s", self._watch_disconnected_entites)
 
-        LOGGER.warning("now: %s", now)
         for entity in self._watch_disconnected_entites:
             disconnected_time = entity.disconnected_time
             LOGGER.warning("disconnected_time: %s", disconnected_time)
