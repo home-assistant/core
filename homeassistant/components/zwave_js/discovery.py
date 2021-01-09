@@ -104,7 +104,7 @@ DISCOVERY_SCHEMAS = [
 
 
 @callback
-def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None, None]:
+def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None]:
     """Run discovery on ZWave node and return matching (primary) values."""
     for value in node.values.values():
         disc_val = async_discover_value(value)
