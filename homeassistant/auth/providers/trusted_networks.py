@@ -162,10 +162,6 @@ class TrustedNetworksAuthProvider(AuthProvider):
         Raise InvalidAuthError if not.
         Raise InvalidAuthError if trusted_networks is not configured.
         """
-        if ip_addr is None:
-            raise InvalidAuthError(
-                "Unknown remote ip can't be used for trusted network provider."
-            )
         if not self.trusted_networks:
             raise InvalidAuthError("trusted_networks is not configured")
 
@@ -179,6 +175,10 @@ class TrustedNetworksAuthProvider(AuthProvider):
         self, refresh_token: RefreshToken, remote_ip: Optional[str] = None
     ) -> None:
         """Verify a refresh token is still valid."""
+        if remote_ip is None:
+            raise InvalidAuthError(
+                "Unknown remote ip can't be used for trusted network provider."
+            )
         self.async_validate_access(ip_address(remote_ip))
 
 

@@ -146,6 +146,9 @@ async def test_validate_access(provider):
 async def test_validate_refresh_token(provider):
     """Verify re-validation of refresh token."""
     with patch.object(provider, "async_validate_access") as mock:
+        with pytest.raises(tn_auth.InvalidAuthError):
+            provider.async_validate_refresh_token(Mock(), None)
+
         provider.async_validate_refresh_token(Mock(), "127.0.0.1")
         mock.assert_called_once_with(ip_address("127.0.0.1"))
 
