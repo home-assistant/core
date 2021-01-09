@@ -126,7 +126,7 @@ class ZWaveBaseEntity(Entity):
                     continue
                 if item.endpoint != endpoint:
                     continue
-                if item.property_ != property:
+                if item.property_ != value_property:
                     continue
                 if (
                     property_key_name is not None
