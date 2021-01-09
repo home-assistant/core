@@ -44,10 +44,10 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         status_info = await somfy_mylink.status_info()
-    except asyncio.TimeoutError:
-        raise CannotConnect
+    except asyncio.TimeoutError as ex:
+        raise CannotConnect from ex
 
-    if "error" in status_info:
+    if not status_info or "error" in status_info:
         raise InvalidAuth
 
     return {"title": f"MyLink {data[CONF_HOST]}"}
@@ -173,9 +173,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 self.options.setdefault(ENTITY_CONFIG_VERSION, 0)
                 self.options[ENTITY_CONFIG_VERSION] += 1
             return await self.async_step_init()
-        else:
-            self._entity_id = entity_id
 
+        self._entity_id = entity_id
         default_reverse = self.options.get(CONF_DEFAULT_REVERSE, False)
         entity_config = entities_config.get(entity_id, {})
 

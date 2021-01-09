@@ -87,10 +87,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         mylink_status = await somfy_mylink.status_info()
-    except asyncio.TimeoutError:
+    except asyncio.TimeoutError as ex:
         raise ConfigEntryNotReady(
             "Unable to connect to the Somfy MyLink device, please check your settings"
-        )
+        ) from ex
 
     if "error" in mylink_status:
         _LOGGER.error(
