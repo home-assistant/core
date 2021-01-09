@@ -21,6 +21,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+# pylint: disable=unused-argument
 def get_service(hass, config, discovery_info=None):
     """Get the Command Line notification service."""
     command = config[CONF_COMMAND]
@@ -44,26 +45,22 @@ class CommandLineNotificationService(BaseNotificationService):
                 self.command,
                 universal_newlines=True,
                 stdin=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 shell=True,  # nosec # shell by design
             )
-            
-            _LOGGER.debug("Running command: `%s`, with input: %s", self.command, message) 
-            stdout_data, stderr_data = proc.communicate(input=message, timeout=self._timeout)
+
+            _LOGGER.debug(
+                "Running command: `%s`, with input: %s", self.command, message
+            )
+            _, stderr_data = proc.communicate(input=message, timeout=self._timeout)
             if proc.returncode != 0:
                 _LOGGER.error("Command failed: %s", self.command)
-            
-            if stdout_data:
-                _LOGGER.debug(
-                    "Stdout of command: `%s`, return code: %s:\n%s",
-                    self.command,
-                    process.returncode,
-                    stdout_data,
-                )
+
             if stderr_data:
                 _LOGGER.debug(
                     "Stderr of command: `%s`, return code: %s:\n%s",
                     self.command,
-                    process.returncode,
+                    proc.returncode,
                     stderr_data,
                 )
         except subprocess.TimeoutExpired:
