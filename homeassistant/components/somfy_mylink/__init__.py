@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
@@ -22,6 +22,8 @@ from .const import (
     MYLINK_STATUS,
     SOMFY_MYLINK_COMPONENTS,
 )
+
+CONFIG_OPTIONS = (CONF_DEFAULT_REVERSE, CONF_ENTITY_CONFIG)
 
 
 def validate_entity_config(values):
@@ -72,8 +74,9 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Somfy MyLink from a config entry."""
-    config = entry.data
+    _async_import_options_from_data_if_missing(hass, entry)
 
+    config = entry.data
     host = config[CONF_HOST]
     port = config[CONF_PORT]
     system_id = config[CONF_SYSTEM_ID]
@@ -99,6 +102,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
 
     return True
+
+
+@callback
+def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
+    options = dict(entry.options)
+    data = dict(entry.data)
+    modified = False
+    for importable_option in CONFIG_OPTIONS:
+        if importable_option not in options and importable_option in data:
+            options[importable_option] = data.pop(importable_option)
+            modified = True
+
+    if modified:
+        hass.config_entries.async_update_entry(entry, data=data, options=options)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
