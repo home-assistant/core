@@ -23,7 +23,6 @@ from aiounifi.events import (
 )
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 import async_timeout
-from hass.helpers.event import async_track_time_interval
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -33,6 +32,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
 from .const import (
