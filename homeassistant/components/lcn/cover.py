@@ -161,8 +161,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.motor)
+        await self.device_connection.activate_status_request_handler(self.motor)
 
     @property
     def is_closed(self):
