@@ -25,9 +25,9 @@ ENTITY_CONFIG_VERSION = "entity_config_version"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_SYSTEM_ID): str,
         vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): str,
+        vol.Required(CONF_SYSTEM_ID): int,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
 
