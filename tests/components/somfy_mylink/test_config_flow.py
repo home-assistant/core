@@ -3,7 +3,13 @@ import asyncio
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.somfy_mylink.const import CONF_SYSTEM_ID, DOMAIN
+from homeassistant.components.somfy_mylink.const import (
+    CONF_DEFAULT_REVERSE,
+    CONF_ENTITY_CONFIG,
+    CONF_REVERSE,
+    CONF_SYSTEM_ID,
+    DOMAIN,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
@@ -117,6 +123,45 @@ async def test_form_import(hass):
         CONF_HOST: "1.1.1.1",
         CONF_PORT: 1234,
         CONF_SYSTEM_ID: 456,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_import_with_entity_config(hass):
+    """Test we can import entity config."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "homeassistant.components.somfy_mylink.config_flow.SomfyMyLinkSynergy.status_info",
+        return_value={"any": "data"},
+    ), patch(
+        "homeassistant.components.somfy_mylink.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.somfy_mylink.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 1234,
+                CONF_SYSTEM_ID: 456,
+                CONF_DEFAULT_REVERSE: True,
+                CONF_ENTITY_CONFIG: {"cover.xyz": {CONF_REVERSE: False}},
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "MyLink 1.1.1.1"
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: 1234,
+        CONF_SYSTEM_ID: 456,
+        CONF_DEFAULT_REVERSE: True,
+        CONF_ENTITY_CONFIG: {"cover.xyz": {CONF_REVERSE: False}},
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
