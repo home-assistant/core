@@ -405,8 +405,6 @@ class UniFiController:
 
         for entity in self._watch_disconnected_entites:
             disconnected_time = entity.disconnected_time
-            LOGGER.warning("disconnected_time: %s", disconnected_time)
-
             if disconnected_time is not None and now > disconnected_time:
                 entity.make_disconnected()
 
