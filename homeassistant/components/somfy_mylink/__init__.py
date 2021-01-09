@@ -16,7 +16,9 @@ from .const import (
     CONF_REVERSE,
     CONF_SYSTEM_ID,
     DATA_SOMFY_MYLINK,
+    DEFAULT_PORT,
     DOMAIN,
+    MYLINK_ENTITY_IDS,
     MYLINK_STATUS,
     SOMFY_MYLINK_COMPONENTS,
 )
@@ -41,7 +43,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_SYSTEM_ID): cv.string,
                 vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_PORT, default=44100): cv.port,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_DEFAULT_REVERSE, default=False): cv.boolean,
                 vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
             }
@@ -88,6 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_SOMFY_MYLINK: somfy_mylink,
         MYLINK_STATUS: mylink_status,
+        MYLINK_ENTITY_IDS: [],
     }
 
     for component in SOMFY_MYLINK_COMPONENTS:

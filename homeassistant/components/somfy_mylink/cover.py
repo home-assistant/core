@@ -14,9 +14,11 @@ from homeassistant.util import slugify
 
 from .const import (
     CONF_DEFAULT_REVERSE,
+    CONF_REVERSE,
     DATA_SOMFY_MYLINK,
     DOMAIN,
     MANUFACTURER,
+    MYLINK_ENTITY_IDS,
     MYLINK_STATUS,
 )
 
@@ -30,10 +32,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     data = hass.data[DOMAIN][config_entry.entry_id]
     mylink_status = data[MYLINK_STATUS]
     somfy_mylink = data[DATA_SOMFY_MYLINK]
+    mylink_entity_ids = data[MYLINK_ENTITY_IDS]
     cover_list = []
 
     for cover in mylink_status["result"]:
         entity_id = ENTITY_ID_FORMAT.format(slugify(cover["name"]))
+        mylink_entity_ids.append(entity_id)
+
         entity_config = config_entry.options.get(entity_id, {})
         default_reverse = config_entry.options.get(CONF_DEFAULT_REVERSE)
 
@@ -43,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         cover_config["device_class"] = MYLINK_COVER_TYPE_TO_DEVICE_CLASS.get(
             cover.get("type"), DEVICE_CLASS_WINDOW
         )
-        cover_config["reverse"] = entity_config.get("reverse", default_reverse)
+        cover_config["reverse"] = entity_config.get(CONF_REVERSE, default_reverse)
 
         cover_list.append(SomfyShade(somfy_mylink, **cover_config))
 
