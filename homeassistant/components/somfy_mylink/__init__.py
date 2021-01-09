@@ -119,6 +119,7 @@ def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: Confi
     options = dict(entry.options)
     data = dict(entry.data)
     modified = False
+
     for importable_option in CONFIG_OPTIONS:
         if importable_option not in options and importable_option in data:
             options[importable_option] = data.pop(importable_option)

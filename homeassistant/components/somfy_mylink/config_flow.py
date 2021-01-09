@@ -14,6 +14,7 @@ from .const import (
     CONF_ENTITY_CONFIG,
     CONF_REVERSE,
     CONF_SYSTEM_ID,
+    DEFAULT_CONF_DEFAULT_REVERSE,
     DEFAULT_PORT,
     MYLINK_ENTITY_IDS,
 )
@@ -136,7 +137,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             {
                 vol.Required(
                     CONF_DEFAULT_REVERSE,
-                    default=self.options.get(CONF_DEFAULT_REVERSE, False),
+                    default=self.options.get(
+                        CONF_DEFAULT_REVERSE, DEFAULT_CONF_DEFAULT_REVERSE
+                    ),
                 ): bool
             }
         )
