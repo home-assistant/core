@@ -308,11 +308,7 @@ async def test_stream_response_already_expired(hass, auth):
 
 async def test_camera_removed(hass, auth):
     """Test case where entities are removed and stream tokens expired."""
-    auth.responses = [
-        make_stream_url_response(),
-        aiohttp.web.json_response({"results": {}}),
-    ]
-    await async_setup_camera(
+    subscriber = await async_setup_camera(
         hass,
         DEVICE_TRAITS,
         auth=auth,
@@ -323,8 +319,23 @@ async def test_camera_removed(hass, auth):
     assert cam is not None
     assert cam.state == STATE_IDLE
 
+    # Start a stream, exercising cleanup on remove
+    auth.responses = [
+        make_stream_url_response(),
+        aiohttp.web.json_response({"results": {}}),
+    ]
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
+
+    # Fetch an event image, exercising cleanup on remove
+    await subscriber.async_receive_event(make_motion_event())
+    await hass.async_block_till_done()
+    auth.responses = [
+        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
+    ]
+    image = await async_get_image(hass)
+    assert image.content == IMAGE_BYTES_FROM_EVENT
 
     for config_entry in hass.config_entries.async_entries(DOMAIN):
         await hass.config_entries.async_remove(config_entry.entry_id)
