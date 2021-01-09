@@ -92,11 +92,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             "Unable to connect to the Somfy MyLink device, please check your settings"
         )
 
-    if "result" not in mylink_status:
-        _LOGGER.debug("Missing result in mylink_status: %s", mylink_status)
-        raise ConfigEntryNotReady(
-            "Unable to connect to the Somfy MyLink device, not device returned"
+    if "error" in mylink_status:
+        _LOGGER.error(
+            "mylink failed to setup because of an error: %s",
+            mylink_status.get("error", {}).get("message"),
         )
+        return False
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 

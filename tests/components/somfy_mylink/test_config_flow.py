@@ -210,7 +210,11 @@ async def test_form_invalid_auth(hass):
 
     with patch(
         "homeassistant.components.somfy_mylink.config_flow.SomfyMyLinkSynergy.status_info",
-        return_value={},
+        return_value={
+            "jsonrpc": "2.0",
+            "error": {"code": -32652, "message": "Invalid auth"},
+            "id": 818,
+        },
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

@@ -47,7 +47,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     except asyncio.TimeoutError:
         raise CannotConnect
 
-    if not status_info or "result" not in status_info:
+    if "error" in status_info:
         raise InvalidAuth
 
     return {"title": f"MyLink {data[CONF_HOST]}"}
