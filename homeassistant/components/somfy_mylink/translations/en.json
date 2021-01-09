@@ -3,6 +3,7 @@
   "config": {
     "step": {
       "user": {
+        "description": "The System ID can be obtained in the MyLink app under Integration by selecting any non-Cloud service.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
