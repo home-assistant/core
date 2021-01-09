@@ -156,7 +156,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_entity_config(self, user_input=None, entity_id=None):
         """Handle options flow for entity."""
         if user_input is not None:
-            _LOGGER.warning("Setup options for %s = %s", self._entity_id, user_input[CONF_REVERSE] )
+            _LOGGER.warning(
+                "Setup options for %s = %s", self._entity_id, user_input[CONF_REVERSE]
+            )
             self.options[CONF_ENTITY_CONFIG][self._entity_id] = user_input[CONF_REVERSE]
             return await self.async_step_init()
         else:
