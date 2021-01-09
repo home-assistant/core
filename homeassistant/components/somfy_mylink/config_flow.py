@@ -30,8 +30,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema({vol.Required(CONF_DEFAULT_REVERSE, default=False): bool})
-
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
@@ -140,7 +138,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             return self.async_create_entry(title="", data=self.options)
 
-        data_schema = OPTIONS_SCHEMA
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_DEFAULT_REVERSE,
+                    default=self.options.get(CONF_DEFAULT_REVERSE, False),
+                ): bool
+            }
+        )
         data = self.hass.data[DOMAIN][self.config_entry.entry_id]
         mylink_entity_ids = data[MYLINK_ENTITY_IDS]
 
