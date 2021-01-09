@@ -25,6 +25,7 @@ from .const import (
 )
 
 CONFIG_OPTIONS = (CONF_DEFAULT_REVERSE, CONF_ENTITY_CONFIG)
+UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,11 +95,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
 
     _LOGGER.warning("Entry loading for mylink")
+    undo_listener = entry.add_update_listener(_async_update_listener)
 
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_SOMFY_MYLINK: somfy_mylink,
         MYLINK_STATUS: mylink_status,
         MYLINK_ENTITY_IDS: [],
+        UNDO_UPDATE_LISTENER: undo_listener,
     }
 
     for component in SOMFY_MYLINK_COMPONENTS:
@@ -107,6 +110,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
 
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 @callback
@@ -133,6 +141,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
+    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
