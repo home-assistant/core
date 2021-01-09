@@ -232,7 +232,7 @@ async def async_setup(hass, config):
     async def async_handle_toggle_service(light, call):
         """Handle toggling a light."""
         if light.is_on:
-            off_params = filter_turn_off_params(call.data)
+            off_params = filter_turn_off_params(call.data["params"])
             await light.async_turn_off(**off_params)
         else:
             await async_handle_light_on_service(light, call)
