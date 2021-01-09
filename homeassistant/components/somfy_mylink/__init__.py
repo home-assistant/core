@@ -70,16 +70,11 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Somfy MyLink from a config entry."""
-    # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
     config = entry.data
 
     host = config[CONF_HOST]
     port = config[CONF_PORT]
     system_id = config[CONF_SYSTEM_ID]
-
-    entity_config = config[CONF_ENTITY_CONFIG]
-    entity_config[CONF_DEFAULT_REVERSE] = config[CONF_DEFAULT_REVERSE]
 
     somfy_mylink = SomfyMyLinkSynergy(system_id, host, port)
 
