@@ -8,6 +8,7 @@ from pymyq.device import (
 
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
 
+CONF_USERAGENT = "user_agent"
 DOMAIN = "myq"
 
 PLATFORMS = ["cover", "binary_sensor"]

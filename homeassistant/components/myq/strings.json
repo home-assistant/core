@@ -5,7 +5,8 @@
         "title": "Connect to the MyQ Gateway",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "user_agent": "User Agent"
         }
       }
     },
@@ -16,6 +17,16 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Adjust MyQ Options",
+        "data": {
+          "user_agent": "User Agent"
+        }
+      }
     }
   }
 }

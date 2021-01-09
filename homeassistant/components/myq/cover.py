@@ -34,6 +34,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    CONF_USERAGENT,
     DOMAIN,
     MYQ_COORDINATOR,
     MYQ_GATEWAY,
@@ -46,6 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_USERAGENT): cv.string,
         # This parameter is no longer used; keeping it to avoid a breaking change in
         # a hotfix, but in a future main release, this should be removed:
         vol.Optional(CONF_TYPE): cv.string,
@@ -63,6 +65,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             data={
                 CONF_USERNAME: config[CONF_USERNAME],
                 CONF_PASSWORD: config[CONF_PASSWORD],
+                CONF_USERAGENT: config[CONF_USERAGENT],
             },
         )
     )
