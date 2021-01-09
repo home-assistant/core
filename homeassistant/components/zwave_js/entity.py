@@ -108,7 +108,7 @@ class ZWaveBaseEntity(Entity):
         add_to_watched_value_ids: bool = True,
     ) -> Optional[ZwaveValue]:
         """Return specific ZwaveValue on this ZwaveNode."""
-        # use commandclass and endpoint from primary value if ommitted
+        # use commandclass and endpoint from primary value if omitted
         return_value = None
         if command_class is None:
             command_class = self.info.primary_value.command_class

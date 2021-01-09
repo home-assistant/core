@@ -30,12 +30,6 @@ from .entity import ZWaveBaseEntity
 
 LOGGER = logging.getLogger(__name__)
 
-COLOR_CHANNEL_WARM_WHITE = 0x01
-COLOR_CHANNEL_COLD_WHITE = 0x02
-COLOR_CHANNEL_RED = 0x04
-COLOR_CHANNEL_GREEN = 0x08
-COLOR_CHANNEL_BLUE = 0x10
-
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
