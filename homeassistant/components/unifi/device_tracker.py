@@ -153,6 +153,16 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             if self._is_connected:
                 self.schedule_update = True
 
+    async def async_added_to_hass(self) -> None:
+        """Watch object when added."""
+        self.controller.add_disconnected_check(self)
+        await super().async_added_to_hass()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect object when removed."""
+        self.controller.remove_disconnected_check(self)
+        await super().async_will_remove_from_hass()
+
     @callback
     def async_update_callback(self) -> None:
         """Update the clients state."""
@@ -261,14 +271,24 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         """Wrap item."""
         return self._item
 
+    async def async_added_to_hass(self) -> None:
+        """Watch object when added."""
+        self.controller.add_disconnected_check(self)
+        await super().async_added_to_hass()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect object when removed."""
+        self.controller.remove_disconnected_check(self)
+        await super().async_will_remove_from_hass()
+
     @callback
     def async_update_callback(self):
         """Update the devices' state."""
 
         if self.device.last_updated == SOURCE_DATA:
             self._is_connected = True
-            self.disconnected_time = (
-                dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 60),
+            self.disconnected_time = dt_util.utcnow() + timedelta(
+                seconds=self.device.next_interval + 60
             )
 
         elif (

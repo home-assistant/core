@@ -1,6 +1,6 @@
 """UniFi Controller abstraction."""
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import ssl
 
 from aiohttp import CookieJar
@@ -32,6 +32,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
@@ -66,7 +67,7 @@ from .const import (
 from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
-CHECK_DISCONNECTED_INTERVAL = timedelta(seconds=10)
+CHECK_DISCONNECTED_INTERVAL = timedelta(seconds=1)
 SUPPORTED_PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
 CLIENT_CONNECTED = (
@@ -98,6 +99,7 @@ class UniFiController:
         self._site_role = None
 
         self._cancel_disconnected_check = None
+        self._watch_disconnected_entites = []
 
         self.entities = {}
 
@@ -387,18 +389,29 @@ class UniFiController:
         return True
 
     @callback
-    def _async_check_for_disconnected(self) -> None:
-        """Check for any scheduled updates that are due to be canceled."""
-        now = dt_util.utcnow()
+    def add_disconnected_check(self, entity: Entity) -> None:
+        """Add an entity to watch for disconnection."""
+        self._watch_disconnected_entites.append(entity)
 
-        for entities in self.entities.values():
-            for entity in entities:
-                if not hasattr(entity, "mark_disconnected"):
-                    continue
-                if entity.disconnected_time is None:
-                    continue
-                if now > entity.disconnected_time:
-                    entity.make_disconnected()
+    @callback
+    def remove_disconnected_check(self, entity: Entity) -> None:
+        """Remove an entity to watch for disconnection."""
+        self._watch_disconnected_entites.remove(entity)
+
+    @callback
+    def _async_check_for_disconnected(self, now: datetime) -> None:
+        """Check for any scheduled updates that are due to be canceled."""
+
+        now = dt_util.utcnow()
+        LOGGER.warning("ENTITIES: %s", self._watch_disconnected_entites)
+
+        LOGGER.warning("now: %s", now)
+        for entity in self._watch_disconnected_entites:
+            disconnected_time = entity.disconnected_time
+            LOGGER.warning("disconnected_time: %s", disconnected_time)
+
+            if disconnected_time is not None and now > disconnected_time:
+                entity.make_disconnected()
 
     @staticmethod
     async def async_config_entry_updated(hass, config_entry) -> None:
