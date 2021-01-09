@@ -146,11 +146,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         hs_color = kwargs.get(ATTR_HS_COLOR)
         if hs_color is not None and self._supports_color:
             red, green, blue = color_util.color_hs_to_RGB(*hs_color)
-            target_val = self.get_zwave_value("targetColor", property_key_name="Red")
+            target_val = self.get_zwave_value("targetColor", value_property_key_name="Red")
             await self.info.node.async_set_value(target_val, red)
-            target_val = self.get_zwave_value("targetColor", property_key_name="Green")
+            target_val = self.get_zwave_value("targetColor", value_property_key_name="Green")
             await self.info.node.async_set_value(target_val, green)
-            target_val = self.get_zwave_value("targetColor", property_key_name="Blue")
+            target_val = self.get_zwave_value("targetColor", value_property_key_name="Blue")
             await self.info.node.async_set_value(target_val, blue)
 
         # Color temperature
@@ -171,11 +171,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             )
             warm = 255 - cold
             target_val = self.get_zwave_value(
-                "targetColor", property_key_name="Warm White"
+                "targetColor", value_property_key_name="Warm White"
             )
             await self.info.node.async_set_value(target_val, warm)
             target_val = self.get_zwave_value(
-                "targetColor", property_key_name="Cold White"
+                "targetColor", value_property_key_name="Cold White"
             )
             await self.info.node.async_set_value(target_val, cold)
 
@@ -183,7 +183,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         white = kwargs.get(ATTR_WHITE_VALUE)
         if white and self._supports_white_value and warm is not None:
             target_val = self.get_zwave_value(
-                "targetColor", property_key_name="Warm White"
+                "targetColor", value_property_key_name="Warm White"
             )
             await self.info.node.async_set_value(target_val, warm)
 
@@ -230,7 +230,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             # transition specified by user
             transition = duration
             if transition <= 127:
-                duration = int(transition)
+                duration = transition
             else:
                 minutes = int(transition / 60)
                 LOGGER.debug(
@@ -251,13 +251,13 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # RGB support
         red_val = self.get_zwave_value(
-            "currentColor", CommandClass.SWITCH_COLOR, property_key_name="Red"
+            "currentColor", CommandClass.SWITCH_COLOR, value_property_key_name="Red"
         )
         green_val = self.get_zwave_value(
-            "currentColor", CommandClass.SWITCH_COLOR, property_key_name="Green"
+            "currentColor", CommandClass.SWITCH_COLOR, value_property_key_name="Green"
         )
         blue_val = self.get_zwave_value(
-            "currentColor", CommandClass.SWITCH_COLOR, property_key_name="Blue"
+            "currentColor", CommandClass.SWITCH_COLOR, value_property_key_name="Blue"
         )
         if red_val and green_val and blue_val:
             self._supports_color = True
@@ -280,10 +280,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # White colors
         ww_val = self.get_zwave_value(
-            "currentColor", CommandClass.SWITCH_COLOR, property_key_name="Warm White"
+            "currentColor", CommandClass.SWITCH_COLOR, value_property_key_name="Warm White"
         )
         cw_val = self.get_zwave_value(
-            "currentColor", CommandClass.SWITCH_COLOR, property_key_name="Cold White"
+            "currentColor", CommandClass.SWITCH_COLOR, value_property_key_name="Cold White"
         )
         if ww_val and cw_val:
             # Color temperature (CW + WW) Support
