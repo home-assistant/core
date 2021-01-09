@@ -163,7 +163,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             entities_config.setdefault(self._entity_id, {})[CONF_REVERSE] = user_input[
                 CONF_REVERSE
             ]
-            self.options.setdefault(ENTITY_CONFIG_VERSION, 1)
+            self.options.setdefault(ENTITY_CONFIG_VERSION, 0)
             self.options[ENTITY_CONFIG_VERSION] += 1
             return await self.async_step_init()
         else:
