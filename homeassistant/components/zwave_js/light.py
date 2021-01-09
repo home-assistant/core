@@ -1,6 +1,6 @@
 """Support for Z-Wave lights."""
 import logging
-from typing import Callable, List, Optional
+from typing import Any, Callable, List, Optional
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
@@ -140,7 +140,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         """Flag supported features."""
         return self._supported_features
 
-    async def async_turn_on(self, **kwargs: dict) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         # RGB/HS color
         hs_color = kwargs.get(ATTR_HS_COLOR)
@@ -155,6 +155,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # Color temperature
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
+        warm: Optional[int] = None
         if color_temp is not None and self._supports_color_temp:
             # Limit color temp to min/max values
             cold = max(
@@ -180,7 +181,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # White value
         white = kwargs.get(ATTR_WHITE_VALUE)
-        if white and self._supports_white_value:
+        if white and self._supports_white_value and warm is not None:
             target_val = self.get_zwave_value(
                 "targetColor", property_key_name="Warm White"
             )
@@ -191,7 +192,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             kwargs.get(ATTR_BRIGHTNESS), kwargs.get(ATTR_TRANSITION)
         )
 
-    async def async_turn_off(self, **kwargs: dict) -> Optional[int]:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._async_set_brightness(0, kwargs.get(ATTR_TRANSITION))
 
@@ -222,7 +223,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # https://github.com/zwave-js/node-zwave-js/issues/1321
         return
 
-        if duration is None:
+        if duration is None:  # type: ignore
             # no transition specified by user, use defaults
             duration = 7621  # anything over 7620 uses the factory default
         else:
@@ -268,13 +269,13 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # Update color temp limits.
         min_kelvin_val = self.get_zwave_value(81, CommandClass.CONFIGURATION)
         if min_kelvin_val:
-            self._max_mireds = color_util.color_temperature_kelvin_to_mired(
-                min_kelvin_val.value
+            self._max_mireds = round(
+                color_util.color_temperature_kelvin_to_mired(min_kelvin_val.value)
             )
         max_kelvin_val = self.get_zwave_value(82, CommandClass.CONFIGURATION)
         if max_kelvin_val:
-            self._min_mireds = color_util.color_temperature_kelvin_to_mired(
-                max_kelvin_val.value
+            self._min_mireds = round(
+                color_util.color_temperature_kelvin_to_mired(max_kelvin_val.value)
             )
 
         # White colors
@@ -288,8 +289,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             # Color temperature (CW + WW) Support
             self._supports_color_temp = True
             # Calculate color temps based on whites
+
+            # FIXME: We need to solve the type error here.
             if cw_val.value or ww_val.value:
-                self._color_temp = round(
+                self._color_temp = round(  # type: ignore
                     self._max_mireds
                     - ((cw_val.value / 255) * (self._max_mireds - self._min_mireds))
                 )

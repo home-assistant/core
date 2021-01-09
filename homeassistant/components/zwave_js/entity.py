@@ -1,7 +1,7 @@
 """Generic Z-Wave Entity Class."""
 
 import logging
-from typing import Union, Optional
+from typing import Optional, Union
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.value import Value as ZwaveValue
@@ -101,7 +101,7 @@ class ZWaveBaseEntity(Entity):
     @callback
     def get_zwave_value(
         self,
-        property: str,
+        property: Union[str, int],
         command_class: Optional[int] = None,
         endpoint: Optional[int] = None,
         property_key_name: Optional[str] = None,
