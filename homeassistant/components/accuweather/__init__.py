@@ -104,7 +104,7 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
         # current condition and forecast as update interval to not exceed allowed number
         # of requests. We have 50 requests allowed per day, so we use 36 and leave 14 as
         # a reserve for restarting HA.
-        update_interval = timedelta(minutes=32)
+        update_interval = timedelta(minutes=40)
         if self.forecast:
             update_interval *= 2
         _LOGGER.debug("Data will be update every %s", update_interval)
