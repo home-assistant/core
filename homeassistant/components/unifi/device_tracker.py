@@ -228,7 +228,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         """Return the client state attributes."""
         raw = self.client.raw
 
-        if self._is_connected:
+        if self.is_connected:
             attributes = {
                 k: raw[k] for k in CLIENT_CONNECTED_ALL_ATTRIBUTES if k in raw
             }
