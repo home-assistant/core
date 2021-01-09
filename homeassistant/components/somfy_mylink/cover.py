@@ -2,6 +2,8 @@
 import logging
 
 from homeassistant.components.cover import (
+    DEVICE_CLASS_BLIND,
+    DEVICE_CLASS_SHUTTER,
     DEVICE_CLASS_WINDOW,
     ENTITY_ID_FORMAT,
     CoverEntity,
@@ -18,6 +20,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+MYLINK_COVER_TYPE_TO_DEVICE_CLASS = {0: DEVICE_CLASS_BLIND, 1: DEVICE_CLASS_SHUTTER}
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Discover and configure Somfy covers."""
@@ -30,16 +34,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entity_id = ENTITY_ID_FORMAT.format(slugify(cover["name"]))
         entity_config = config_entry.options.get(entity_id, {})
         default_reverse = config_entry.options.get(CONF_DEFAULT_REVERSE)
+
         cover_config = {}
         cover_config["target_id"] = cover["targetID"]
         cover_config["name"] = cover["name"]
+        cover_config["device_class"] = MYLINK_COVER_TYPE_TO_DEVICE_CLASS.get(
+            cover.get("type"), DEVICE_CLASS_WINDOW
+        )
         cover_config["reverse"] = entity_config.get("reverse", default_reverse)
+
         cover_list.append(SomfyShade(somfy_mylink, **cover_config))
+
         _LOGGER.info(
             "Adding Somfy Cover: %s with targetID %s",
             cover_config["name"],
             cover_config["target_id"],
         )
+
     async_add_entities(cover_list)
 
 
