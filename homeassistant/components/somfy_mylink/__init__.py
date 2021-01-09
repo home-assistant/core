@@ -1,5 +1,6 @@
 """Component for the Somfy MyLink device supporting the Synergy API."""
 import asyncio
+import logging
 
 from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
@@ -24,6 +25,8 @@ from .const import (
 )
 
 CONFIG_OPTIONS = (CONF_DEFAULT_REVERSE, CONF_ENTITY_CONFIG)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def validate_entity_config(values):
@@ -75,6 +78,10 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Somfy MyLink from a config entry."""
     _async_import_options_from_data_if_missing(hass, entry)
+
+    _LOGGER.warning("data: %s", entry.data)
+
+    _LOGGER.warning("options: %s", entry.options)
 
     config = entry.data
     host = config[CONF_HOST]
