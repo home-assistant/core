@@ -79,10 +79,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Somfy MyLink from a config entry."""
     _async_import_options_from_data_if_missing(hass, entry)
 
-    _LOGGER.warning("data: %s", entry.data)
-
-    _LOGGER.warning("options: %s", entry.options)
-
     config = entry.data
     host = config[CONF_HOST]
     port = config[CONF_PORT]

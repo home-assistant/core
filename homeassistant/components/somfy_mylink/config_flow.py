@@ -21,6 +21,7 @@ from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
+ENTITY_CONFIG_VERSION = "entity_config_version"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -162,6 +163,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             entities_config.setdefault(self._entity_id, {})[CONF_REVERSE] = user_input[
                 CONF_REVERSE
             ]
+            self.options.setdefault(ENTITY_CONFIG_VERSION, 1)
+            self.options[ENTITY_CONFIG_VERSION] += 1
             return await self.async_step_init()
         else:
             self._entity_id = entity_id
