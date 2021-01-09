@@ -101,7 +101,7 @@ class ZWaveBaseEntity(Entity):
     @callback
     def get_zwave_value(
         self,
-        property: Union[str, int],
+        value_property: Union[str, int],
         command_class: Optional[int] = None,
         endpoint: Optional[int] = None,
         value_property_key_name: Optional[str] = None,
