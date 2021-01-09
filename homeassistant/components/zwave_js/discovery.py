@@ -32,12 +32,14 @@ class ZWaveDiscoverySchema:
     """Z-Wave discovery schema.
 
     The (primary) value for an entity must match these conditions.
+    Use the Z-Wave specifications to find out the values for these parameters:
+    https://github.com/zwave-js/node-zwave-js/tree/master/specs
     """
 
     # specify the hass platform for which this scheme applies (e.g. light, sensor)
     platform: str
     # [optional] hint for platform
-    hint: Optional[str]
+    hint: Optional[str] = None
     # [optional] the node's basic device class must match ANY of these values
     device_class_basic: Optional[Set[str]] = None
     # [optional] the node's generic device class must match ANY of these values
@@ -55,6 +57,21 @@ class ZWaveDiscoverySchema:
 
 
 DISCOVERY_SCHEMAS = [
+    # light
+    # primary value is the currentValue (brightness)
+    ZWaveDiscoverySchema(
+        platform="light",
+        device_class_generic={"Multilevel Switch", "Remote Switch"},
+        device_class_specific={
+            "Multilevel Tunable Color Light",
+            "Binary Tunable Color Light",
+            "Multilevel Remote Switch",
+            "Multilevel Power Switch",
+        },
+        command_class={CommandClass.SWITCH_MULTILEVEL},
+        property={"currentValue"},
+        type={"number"},
+    ),
     # generic text sensors
     ZWaveDiscoverySchema(
         platform="sensor",
