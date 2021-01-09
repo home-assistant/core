@@ -289,11 +289,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             # Color temperature (CW + WW) Support
             self._supports_color_temp = True
             # Calculate color temps based on whites
-
-            if cw_val.value or ww_val.value:
+            cold_level = cw_val.value or 0
+            if cold_level or ww_val.value:
                 self._color_temp = int(
                     self._max_mireds
-                    - ((cw_val.value / 255) * (self._max_mireds - self._min_mireds))
+                    - ((cold_level / 255) * (self._max_mireds - self._min_mireds))
                 )
             else:
                 self._color_temp = None
