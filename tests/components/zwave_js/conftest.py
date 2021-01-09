@@ -9,36 +9,35 @@ from zwave_js_server.model.node import Node
 from tests.common import MockConfigEntry, load_fixture
 
 
-@pytest.fixture(name="basic_data", scope="session")
-def basic_data_fixture():
-    """Load the basic fixture data."""
-    return load_fixture("zwave_js/basic_dump.jsonl").split("\n")
+@pytest.fixture(name="controller_state", scope="session")
+def controller_state_fixture():
+    """Load the controller state fixture data."""
+    return json.loads(load_fixture("zwave_js/controller_state.json"))
+
+
+@pytest.fixture(name="multisensor_6_state", scope="session")
+def multisensor_6_state_fixture():
+    """Load the multisensor 6 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/multisensor_6_state.json"))
 
 
 @pytest.fixture(name="client")
-def mock_client_fixture(basic_data):
+def mock_client_fixture(controller_state):
     """Mock a client."""
-    state = json.loads(basic_data[0])["state"]
-    state["nodes"].clear()
     with patch(
         "homeassistant.components.zwave_js.ZwaveClient", autospec=True
     ) as client_class:
-        driver = Driver(state)
+        driver = Driver(controller_state)
         client_class.return_value.driver = driver
         yield client_class.return_value
 
 
 @pytest.fixture(name="multisensor_6")
-def multisensor_6_fixture(basic_data, client):
+def multisensor_6_fixture(client, multisensor_6_state):
     """Mock a multisensor 6 node."""
-    state = json.loads(basic_data[0])["state"]
-    for node_data in state["nodes"]:
-        if node_data["nodeId"] == 52:
-            node = Node(node_data)
-            client.driver.controller.nodes = {node.node_id: node}
-            return node
-
-    raise RuntimeError("Bad fixture data")
+    node = Node(multisensor_6_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
 
 
 @pytest.fixture(name="integration")
