@@ -127,8 +127,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             _LOGGER.error("MyLink must be connected to manage device options")
             return self.async_abort(reason="cannot_connect")
 
-        self.options.setdefault(CONF_ENTITY_CONFIG, {})
-
         if user_input is not None:
             self.options[CONF_DEFAULT_REVERSE] = user_input[CONF_DEFAULT_REVERSE]
 
@@ -158,14 +156,18 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_entity_config(self, user_input=None, entity_id=None):
         """Handle options flow for entity."""
+        entities_config = self.options.setdefault(CONF_ENTITY_CONFIG, {})
+
         if user_input is not None:
-            entity_config = self.options[CONF_ENTITY_CONFIG]
-            entity_config.setdefault(self._entity_id, {})[CONF_REVERSE] = user_input[
+            entities_config.setdefault(self._entity_id, {})[CONF_REVERSE] = user_input[
                 CONF_REVERSE
             ]
             return await self.async_step_init()
         else:
             self._entity_id = entity_id
+
+        default_reverse = self.options.get(CONF_DEFAULT_REVERSE, False)
+        entity_config = entities_config.get(entity_id, {})
 
         return self.async_show_form(
             step_id="entity_config",
@@ -173,7 +175,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_REVERSE,
-                        default=self.options.get(CONF_DEFAULT_REVERSE, False),
+                        default=entity_config.get(CONF_REVERSE, default_reverse),
                     ): bool
                 }
             ),
