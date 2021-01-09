@@ -40,7 +40,11 @@ from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
+AVAILABILITY_ALL = "all"
+AVAILABILITY_LATEST = "latest"
+
 CONF_AVAILABILITY = "availability"
+CONF_AVAILABILITY_MODE = "availability_mode"
 CONF_AVAILABILITY_TOPIC = "availability_topic"
 CONF_PAYLOAD_AVAILABLE = "payload_available"
 CONF_PAYLOAD_NOT_AVAILABLE = "payload_not_available"
@@ -54,6 +58,8 @@ CONF_MODEL = "model"
 CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
+
+DEFAULT_AVAILABILITY_MODE = AVAILABILITY_LATEST
 
 MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
@@ -69,6 +75,9 @@ MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
 
 MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
     {
+        vol.Optional(
+            CONF_AVAILABILITY_MODE, default=DEFAULT_AVAILABILITY_MODE
+        ): vol.All(cv.string, vol.In([AVAILABILITY_ALL, AVAILABILITY_LATEST])),
         vol.Exclusive(CONF_AVAILABILITY, "availability"): vol.All(
             cv.ensure_list,
             [
@@ -203,7 +212,8 @@ class MqttAvailability(Entity):
     def __init__(self, config: dict) -> None:
         """Initialize the availability mixin."""
         self._availability_sub_state = None
-        self._available = False
+        self._available = {}
+        self._available_latest = False
         self._availability_setup_from_config(config)
 
     async def async_added_to_hass(self) -> None:
@@ -251,12 +261,15 @@ class MqttAvailability(Entity):
             """Handle a new received MQTT availability message."""
             topic = msg.topic
             if msg.payload == self._avail_topics[topic][CONF_PAYLOAD_AVAILABLE]:
-                self._available = True
+                self._available[topic] = True
+                self._available_latest = True
             elif msg.payload == self._avail_topics[topic][CONF_PAYLOAD_NOT_AVAILABLE]:
-                self._available = False
+                self._available[topic] = False
+                self._available_latest = False
 
             self.async_write_ha_state()
 
+        self._available = {topic: False for topic in self._avail_topics}
         topics = {
             f"availability_{topic}": {
                 "topic": topic,
@@ -289,7 +302,11 @@ class MqttAvailability(Entity):
         """Return if the device is available."""
         if not self.hass.data[DATA_MQTT].connected and not self.hass.is_stopping:
             return False
-        return not self._avail_topics or self._available
+        if not self._avail_topics:
+            return True
+        if self._avail_config[CONF_AVAILABILITY_MODE] == AVAILABILITY_LATEST:
+            return self._available_latest
+        return all(self._available.values())
 
 
 async def cleanup_device_registry(hass, device_id):
