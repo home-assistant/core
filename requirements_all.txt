@@ -1539,7 +1539,7 @@ pymsteams==0.1.12
 pymusiccast==0.1.6
 
 # homeassistant.components.myq
-pymyq==2.0.12
+pymyq==2.0.13
 
 # homeassistant.components.mysensors
 pymysensors==0.18.0
@@ -1607,7 +1607,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.7.8
+pypck==0.7.7
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
@@ -1741,7 +1741,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.7
+python-ecobee-api==0.2.8
 
 # homeassistant.components.eq3btsmart
 # python-eq3bt==0.1.11
@@ -1855,7 +1855,7 @@ pytraccar==0.9.0
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri[async]==7.0.5
+pytradfri[async]==7.0.6
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
