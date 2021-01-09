@@ -169,7 +169,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
             description_placeholders={
-                "entity_id": entity_id,
+                CONF_ENTITY_ID: entity_id,
             },
             errors={},
         )
