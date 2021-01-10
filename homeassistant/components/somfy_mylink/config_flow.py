@@ -147,15 +147,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             return self.async_create_entry(title="", data=self.options)
 
-        data_schema = vol.Schema({})
+        cover_dict = {None: None}
         mylink_targets = self._async_callback_targets()
         if mylink_targets:
-            cover_dict = {None: None}
             for cover in mylink_targets:
                 cover_dict[cover["targetID"]] = cover["name"]
-            data_schema = data_schema.extend(
-                {vol.Optional(CONF_ENTITY_ID): vol.In(cover_dict)}
-            )
+
+        data_schema = vol.Schema({vol.Optional(CONF_ENTITY_ID): vol.In(cover_dict)})
 
         return self.async_show_form(step_id="init", data_schema=data_schema, errors={})
 
