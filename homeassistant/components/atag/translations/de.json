@@ -3,6 +3,9 @@
         "abort": {
             "already_configured": "Dieses Ger\u00e4t wurde bereits zu HomeAssistant hinzugef\u00fcgt"
         },
+        "error": {
+            "cannot_connect": "Verbindungsfehler"
+        },
         "step": {
             "user": {
                 "data": {

@@ -96,7 +96,7 @@ class AccuWeatherSensor(CoordinatorEntity):
                 return self.coordinator.data[ATTR_FORECAST][self.forecast_day][
                     self.kind
                 ]["Value"]
-            if self.kind in ["WindGustDay", "WindGustNight"]:
+            if self.kind in ["WindDay", "WindNight", "WindGustDay", "WindGustNight"]:
                 return self.coordinator.data[ATTR_FORECAST][self.forecast_day][
                     self.kind
                 ]["Speed"]["Value"]
@@ -115,7 +115,7 @@ class AccuWeatherSensor(CoordinatorEntity):
             return self.coordinator.data["PrecipitationSummary"][self.kind][
                 self._unit_system
             ]["Value"]
-        if self.kind == "WindGust":
+        if self.kind in ["Wind", "WindGust"]:
             return self.coordinator.data[self.kind]["Speed"][self._unit_system]["Value"]
         return self.coordinator.data[self.kind]
 
@@ -144,7 +144,7 @@ class AccuWeatherSensor(CoordinatorEntity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self.forecast_day is not None:
-            if self.kind in ["WindGustDay", "WindGustNight"]:
+            if self.kind in ["WindDay", "WindNight", "WindGustDay", "WindGustNight"]:
                 self._attrs["direction"] = self.coordinator.data[ATTR_FORECAST][
                     self.forecast_day
                 ][self.kind]["Direction"]["English"]

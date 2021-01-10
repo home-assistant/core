@@ -1,12 +1,13 @@
 """Fixtures for pywemo."""
+import asyncio
+from unittest.mock import create_autospec, patch
+
 import pytest
 import pywemo
 
 from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC
 from homeassistant.components.wemo.const import DOMAIN
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import create_autospec, patch
 
 MOCK_HOST = "127.0.0.1"
 MOCK_PORT = 50000
@@ -26,9 +27,11 @@ def pywemo_registry_fixture():
     registry = create_autospec(pywemo.SubscriptionRegistry, instance=True)
 
     registry.callbacks = {}
+    registry.semaphore = asyncio.Semaphore(value=0)
 
     def on_func(device, type_filter, callback):
         registry.callbacks[device.name] = callback
+        registry.semaphore.release()
 
     registry.on.side_effect = on_func
 

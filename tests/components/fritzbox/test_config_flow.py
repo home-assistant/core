@@ -1,5 +1,6 @@
 """Tests for AVM Fritz!Box config flow."""
 from unittest import mock
+from unittest.mock import Mock, patch
 
 from pyfritzhome import LoginError
 import pytest
@@ -15,8 +16,6 @@ from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USE
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import MOCK_CONFIG
-
-from tests.async_mock import Mock, patch
 
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
 MOCK_SSDP_DATA = {

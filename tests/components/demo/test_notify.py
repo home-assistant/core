@@ -1,6 +1,7 @@
 """The tests for the notify demo platform."""
 
 import logging
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -11,7 +12,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component
 
 CONFIG = {notify.DOMAIN: {"platform": "demo"}}

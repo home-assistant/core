@@ -73,7 +73,6 @@ from homeassistant.exceptions import (
 from homeassistant.util import location, network
 from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
 import homeassistant.util.dt as dt_util
-from homeassistant.util.thread import fix_threading_exception_logging
 from homeassistant.util.timeout import TimeoutManager
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 import homeassistant.util.uuid as uuid_util
@@ -86,10 +85,9 @@ if TYPE_CHECKING:
 
 
 block_async_io.enable()
-fix_threading_exception_logging()
 
 T = TypeVar("T")
-_UNDEF: dict = {}
+_UNDEF: dict = {}  # Internal; not helpers.typing.UNDEFINED due to circular dependency
 # pylint: disable=invalid-name
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
 CALLBACK_TYPE = Callable[[], None]
@@ -863,7 +861,7 @@ class State:
 
         if not valid_state(state):
             raise InvalidStateError(
-                f"Invalid state encountered for entity id: {entity_id}. "
+                f"Invalid state encountered for entity ID: {entity_id}. "
                 "State max length is 255 characters."
             )
 

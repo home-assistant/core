@@ -4,6 +4,7 @@ This is not a test module. These test methods are used by the platform test modu
 """
 import asyncio
 import threading
+from unittest.mock import patch
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
@@ -12,8 +13,6 @@ from homeassistant.components.homeassistant import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 def _perform_registry_callback(hass, pywemo_registry, pywemo_device):

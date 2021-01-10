@@ -11,8 +11,6 @@ NEATO_ROBOTS = "neato_robots"
 
 SCAN_INTERVAL_MINUTES = 1
 
-VALID_VENDORS = ["neato", "vorwerk"]
-
 MODE = {1: "Eco", 2: "Turbo"}
 
 ACTION = {

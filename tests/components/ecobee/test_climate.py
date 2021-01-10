@@ -208,26 +208,32 @@ async def test_set_temperature(ecobee_fixture, thermostat, data):
     # Auto -> Auto
     data.reset_mock()
     thermostat.set_temperature(target_temp_low=20, target_temp_high=30)
-    data.ecobee.set_hold_temp.assert_has_calls([mock.call(1, 30, 20, "nextTransition")])
+    data.ecobee.set_hold_temp.assert_has_calls(
+        [mock.call(1, 30, 20, "nextTransition", 0)]
+    )
 
     # Auto -> Hold
     data.reset_mock()
     thermostat.set_temperature(temperature=20)
-    data.ecobee.set_hold_temp.assert_has_calls([mock.call(1, 25, 15, "nextTransition")])
+    data.ecobee.set_hold_temp.assert_has_calls(
+        [mock.call(1, 25, 15, "nextTransition", 0)]
+    )
 
     # Cool -> Hold
     data.reset_mock()
     ecobee_fixture["settings"]["hvacMode"] = "cool"
     thermostat.set_temperature(temperature=20.5)
     data.ecobee.set_hold_temp.assert_has_calls(
-        [mock.call(1, 20.5, 20.5, "nextTransition")]
+        [mock.call(1, 20.5, 20.5, "nextTransition", 0)]
     )
 
     # Heat -> Hold
     data.reset_mock()
     ecobee_fixture["settings"]["hvacMode"] = "heat"
     thermostat.set_temperature(temperature=20)
-    data.ecobee.set_hold_temp.assert_has_calls([mock.call(1, 20, 20, "nextTransition")])
+    data.ecobee.set_hold_temp.assert_has_calls(
+        [mock.call(1, 20, 20, "nextTransition", 0)]
+    )
 
     # Heat -> Auto
     data.reset_mock()
@@ -280,16 +286,32 @@ async def test_resume_program(thermostat, data):
 
 async def test_hold_preference(ecobee_fixture, thermostat):
     """Test hold preference."""
-    assert thermostat.hold_preference() == "nextTransition"
+    ecobee_fixture["settings"]["holdAction"] = "indefinite"
+    assert thermostat.hold_preference() == "indefinite"
+    for action in ["useEndTime2hour", "useEndTime4hour"]:
+        ecobee_fixture["settings"]["holdAction"] = action
+        assert thermostat.hold_preference() == "holdHours"
     for action in [
-        "useEndTime4hour",
-        "useEndTime2hour",
+        "nextPeriod",
+        "askMe",
+    ]:
+        ecobee_fixture["settings"]["holdAction"] = action
+        assert thermostat.hold_preference() == "nextTransition"
+
+
+def test_hold_hours(ecobee_fixture, thermostat):
+    """Test hold hours preference."""
+    ecobee_fixture["settings"]["holdAction"] = "useEndTime2hour"
+    assert thermostat.hold_hours() == 2
+    ecobee_fixture["settings"]["holdAction"] = "useEndTime4hour"
+    assert thermostat.hold_hours() == 4
+    for action in [
         "nextPeriod",
         "indefinite",
         "askMe",
     ]:
         ecobee_fixture["settings"]["holdAction"] = action
-        assert thermostat.hold_preference() == "nextTransition"
+        assert thermostat.hold_hours() == 0
 
 
 async def test_set_fan_mode_on(thermostat, data):

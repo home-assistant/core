@@ -1,5 +1,7 @@
 """Define tests for the Awair config flow."""
 
+from unittest.mock import patch
+
 from python_awair.exceptions import AuthError, AwairError
 
 from homeassistant import data_entry_flow
@@ -9,7 +11,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 
 from .const import CONFIG, DEVICES_FIXTURE, NO_DEVICES_FIXTURE, UNIQUE_ID, USER_FIXTURE
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
