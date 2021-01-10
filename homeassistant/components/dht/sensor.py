@@ -181,8 +181,8 @@ class DHTClient:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data the DHT sensor."""
+        dht = self.sensor(self.pin)
         try:
-            dht = self.sensor(self.pin)
             humidity = dht.humidity
             temperature = dht.temperature
             if temperature:
