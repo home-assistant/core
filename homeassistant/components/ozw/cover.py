@@ -52,12 +52,6 @@ def percent_to_zwave_position(value):
 class ZWaveCoverEntity(ZWaveDeviceEntity, CoverEntity):
     """Representation of a Z-Wave Cover device."""
 
-    def __init__(self, values):
-        """Initialize Z-Wave cover device entity."""
-        self._open_button_pressed = False
-        self._close_button_pressed = False
-        super().__init__(values)
-
     @property
     def is_closed(self):
         """Return true if cover is closed."""
@@ -75,21 +69,18 @@ class ZWaveCoverEntity(ZWaveDeviceEntity, CoverEntity):
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
         self.values.open.send_value(PRESS_BUTTON)
-        self._open_button_pressed = True
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
         self.values.close.send_value(PRESS_BUTTON)
-        self._close_button_pressed = True
 
     async def async_stop_cover(self, **kwargs):
         """Stop cover."""
-        if self._open_button_pressed:
-            self.values.open.send_value(RELEASE_BUTTON)
-            self._open_button_pressed = False
-        if self._close_button_pressed:
-            self.values.close.send_value(RELEASE_BUTTON)
-            self._close_button_pressed = False
+        # Need to issue both buttons release since qt-openzwave implements idempotency
+        # keeping internal state of model to trigger actual updates. We could also keep
+        # another state in Hass.io to know which button to release, but this implementation is simpler.
+        self.values.open.send_value(RELEASE_BUTTON)
+        self.values.close.send_value(RELEASE_BUTTON)
 
 
 class ZwaveGarageDoorBarrier(ZWaveDeviceEntity, CoverEntity):

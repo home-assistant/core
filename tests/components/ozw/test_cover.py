@@ -54,10 +54,14 @@ async def test_cover(hass, cover_data, sent_messages, cover_msg):
         {"entity_id": "cover.roller_shutter_3_instance_1_level"},
         blocking=True,
     )
-    assert len(sent_messages) == 3
+    assert len(sent_messages) == 4
     msg = sent_messages[2]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": False, "ValueIDKey": 281475602284568}
+
+    msg = sent_messages[3]
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert msg["payload"] == {"Value": False, "ValueIDKey": 562950578995224}
 
     # Test closing
     await hass.services.async_call(
@@ -66,8 +70,8 @@ async def test_cover(hass, cover_data, sent_messages, cover_msg):
         {"entity_id": "cover.roller_shutter_3_instance_1_level"},
         blocking=True,
     )
-    assert len(sent_messages) == 4
-    msg = sent_messages[3]
+    assert len(sent_messages) == 5
+    msg = sent_messages[4]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": True, "ValueIDKey": 562950578995224}
 
@@ -78,8 +82,12 @@ async def test_cover(hass, cover_data, sent_messages, cover_msg):
         {"entity_id": "cover.roller_shutter_3_instance_1_level"},
         blocking=True,
     )
-    assert len(sent_messages) == 5
-    msg = sent_messages[4]
+    assert len(sent_messages) == 7
+    msg = sent_messages[5]
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert msg["payload"] == {"Value": False, "ValueIDKey": 281475602284568}
+
+    msg = sent_messages[6]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": False, "ValueIDKey": 562950578995224}
 
@@ -90,8 +98,16 @@ async def test_cover(hass, cover_data, sent_messages, cover_msg):
         {"entity_id": "cover.roller_shutter_3_instance_1_level"},
         blocking=True,
     )
-    # no message sent
-    assert len(sent_messages) == 5
+    # both stop open/close messages sent
+    assert len(sent_messages) == 9
+    msg = sent_messages[7]
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert msg["payload"] == {"Value": False, "ValueIDKey": 281475602284568}
+
+    msg = sent_messages[8]
+    assert msg["topic"] == "OpenZWave/1/command/setvalue/"
+    assert msg["payload"] == {"Value": False, "ValueIDKey": 562950578995224}
+
 
     # Test converting position to zwave range for position > 0
     await hass.services.async_call(
@@ -100,8 +116,8 @@ async def test_cover(hass, cover_data, sent_messages, cover_msg):
         {"entity_id": "cover.roller_shutter_3_instance_1_level", "position": 100},
         blocking=True,
     )
-    assert len(sent_messages) == 6
-    msg = sent_messages[5]
+    assert len(sent_messages) == 10
+    msg = sent_messages[9]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": 99, "ValueIDKey": 625573905}
 
@@ -112,8 +128,8 @@ async def test_cover(hass, cover_data, sent_messages, cover_msg):
         {"entity_id": "cover.roller_shutter_3_instance_1_level", "position": 0},
         blocking=True,
     )
-    assert len(sent_messages) == 7
-    msg = sent_messages[6]
+    assert len(sent_messages) == 11
+    msg = sent_messages[10]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": 0, "ValueIDKey": 625573905}
 
