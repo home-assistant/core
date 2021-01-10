@@ -1,7 +1,7 @@
 """Map Z-Wave nodes and values to Home Assistant entities."""
 
 from dataclasses import dataclass
-from typing import Any, Generator, Optional, Set, Union
+from typing import Generator, Optional, Set, Union
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -117,29 +117,37 @@ def async_discover_value(value: ZwaveValue) -> Optional[ZwaveDiscoveryInfo]:
     """Run discovery on Z-Wave value and return ZwaveDiscoveryInfo if match found."""
     for schema in DISCOVERY_SCHEMAS:
         # check device_class_basic
-        if not compare_value(schema.device_class_basic, value.node.device_class.basic):
+        if (
+            schema.device_class_basic is not None
+            and value.node.device_class.basic not in schema.device_class_basic
+        ):
             continue
         # check device_class_generic
-        if not compare_value(
-            schema.device_class_generic, value.node.device_class.generic
+        if (
+            schema.device_class_generic is not None
+            and value.node.device_class.generic not in schema.device_class_generic
         ):
             continue
         # check device_class_specific
-        if not compare_value(
-            schema.device_class_specific, value.node.device_class.specific
+        if (
+            schema.device_class_specific is not None
+            and value.node.device_class.specific not in schema.device_class_specific
         ):
             continue
         # check command_class
-        if not compare_value(schema.command_class, value.command_class):
+        if (
+            schema.command_class is not None
+            and value.command_class not in schema.command_class
+        ):
             continue
         # check endpoint
-        if not compare_value(schema.endpoint, value.endpoint):
+        if schema.endpoint is not None and value.endpoint not in schema.endpoint:
             continue
         # check property
-        if not compare_value(schema.property, value.property_):
+        if schema.property is not None and value.property_ not in schema.property:
             continue
         # check metadata_type
-        if not compare_value(schema.type, value.metadata.type):
+        if schema.type is not None and value.metadata.type not in schema.type:
             continue
         # all checks passed, this value belongs to an entity
         return ZwaveDiscoveryInfo(
@@ -148,11 +156,5 @@ def async_discover_value(value: ZwaveValue) -> Optional[ZwaveDiscoveryInfo]:
             platform=schema.platform,
             platform_hint=schema.hint,
         )
+
     return None
-
-
-def compare_value(schema_value: Optional[Set[Any]], zwave_value: Any) -> bool:
-    """Return if value matches schema."""
-    if schema_value is None:
-        return True
-    return zwave_value in schema_value

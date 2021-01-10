@@ -50,8 +50,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     initialized = asyncio.Event()
     dev_reg = await device_registry.async_get_registry(hass)
 
-    # pylint: disable=fixme
-
     async def async_on_connect() -> None:
         """Handle websocket is (re)connected."""
         LOGGER.info("Connected to Zwave JS Server")
