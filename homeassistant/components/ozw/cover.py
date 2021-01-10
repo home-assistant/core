@@ -78,7 +78,8 @@ class ZWaveCoverEntity(ZWaveDeviceEntity, CoverEntity):
         """Stop cover."""
         # Need to issue both buttons release since qt-openzwave implements idempotency
         # keeping internal state of model to trigger actual updates. We could also keep
-        # another state in Hass.io to know which button to release, but this implementation is simpler.
+        # another state in Home Assistant to know which button to release,
+        # but this implementation is simpler.
         self.values.open.send_value(RELEASE_BUTTON)
         self.values.close.send_value(RELEASE_BUTTON)
 

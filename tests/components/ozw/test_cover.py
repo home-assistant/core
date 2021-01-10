@@ -108,7 +108,6 @@ async def test_cover(hass, cover_data, sent_messages, cover_msg):
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {"Value": False, "ValueIDKey": 562950578995224}
 
-
     # Test converting position to zwave range for position > 0
     await hass.services.async_call(
         "cover",
