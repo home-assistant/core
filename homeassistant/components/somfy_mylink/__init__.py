@@ -152,16 +152,22 @@ def _async_migrate_entity_config(
         return
 
     options = dict(entry.options)
+
     reversed_target_ids = options[CONF_REVERSED_TARGET_IDS] = {}
+    legacy_entry_config = options[CONF_ENTITY_CONFIG]
 
     for cover in mylink_status["result"]:
         legacy_entity_id = ENTITY_ID_FORMAT.format(slugify(cover["name"]))
         target_id = cover["targetID"]
 
-        entity_config = options.get(legacy_entity_id, {})
+        entity_config = legacy_entry_config.get(legacy_entity_id, {})
         default_reverse = options.get(CONF_DEFAULT_REVERSE)
         if entity_config.get(CONF_REVERSE, default_reverse):
             reversed_target_ids[target_id] = True
+
+    for legacy_key in (CONF_DEFAULT_REVERSE, CONF_ENTITY_CONFIG):
+        if legacy_key in options:
+            del options[legacy_key]
 
     hass.config_entries.async_update_entry(entry, data=entry.data, options=options)
 

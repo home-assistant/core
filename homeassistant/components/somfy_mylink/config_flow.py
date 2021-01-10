@@ -6,7 +6,7 @@ from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_ENTITY_ID, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 
 from .const import (
@@ -22,7 +22,7 @@ from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-TARGET_CONFIG_VERSION = "entity_config_version"
+TARGET_CONFIG_VERSION = "target_config_version"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -125,7 +125,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         ]
 
     @callback
-    def _async_get_target_name(self, target_id: int) -> None:
+    def _async_get_target_name(self, target_id) -> None:
         """Find the name of a target in the api data."""
         mylink_targets = self._async_callback_targets()
         for cover in mylink_targets:
@@ -153,7 +153,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             for cover in mylink_targets:
                 cover_dict[cover["targetID"]] = cover["name"]
 
-        data_schema = vol.Schema({vol.Optional(CONF_ENTITY_ID): vol.In(cover_dict)})
+        data_schema = vol.Schema({vol.Optional(CONF_TARGET_ID): vol.In(cover_dict)})
 
         return self.async_show_form(step_id="init", data_schema=data_schema, errors={})
 
@@ -162,9 +162,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         reversed_target_ids = self.options.setdefault(CONF_REVERSED_TARGET_IDS, {})
 
         if user_input is not None:
-            target_reversed = reversed_target_ids.get(self._target_id, False)
+            target_reversed = reversed_target_ids.get(self._target_id)
             if user_input[CONF_REVERSE] != target_reversed:
-                reversed_target_ids[self._target_id] = target_reversed
+                reversed_target_ids[self._target_id] = user_input[CONF_REVERSE]
                 # If we do not modify a top level key
                 # the target config will never be written
                 self.options.setdefault(TARGET_CONFIG_VERSION, 0)

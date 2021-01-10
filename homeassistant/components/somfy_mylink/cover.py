@@ -28,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     data = hass.data[DOMAIN][config_entry.entry_id]
     mylink_status = data[MYLINK_STATUS]
     somfy_mylink = data[DATA_SOMFY_MYLINK]
-    reversed_target_ids = config_entry.options[CONF_REVERSED_TARGET_IDS]
+    reversed_target_ids = config_entry.options.get(CONF_REVERSED_TARGET_IDS, {})
     cover_list = []
 
     for cover in mylink_status["result"]:
