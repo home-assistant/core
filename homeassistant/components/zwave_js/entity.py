@@ -123,7 +123,7 @@ class ZWaveBaseEntity(Entity):
             command_class = self.info.primary_value.command_class
         if endpoint is None:
             endpoint = self.info.primary_value.endpoint
-        # lookup by key first as this is fast
+        # lookup value by value_id
         value_id = get_value_id(
             self.info.node,
             {
@@ -134,24 +134,6 @@ class ZWaveBaseEntity(Entity):
             },
         )
         return_value = self.info.node.values.get(value_id)
-        if not return_value:
-            # if this may fail for whatever reason, fall back to lookup
-            # this may happen if the value_id generation may change in the library ?
-            for item in self.info.node.values.values():
-                if item.command_class != command_class:
-                    continue
-                if item.endpoint != endpoint:
-                    continue
-                if item.property_ != value_property:
-                    continue
-                if (
-                    value_property_key_name is not None
-                    and item.property_key_name != value_property_key_name
-                ):
-                    continue
-                # all conditions pass
-                return_value = item
-                break
         # add to watched_ids list so we will be triggered when the value updates
         if (
             return_value
