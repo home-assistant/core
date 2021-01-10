@@ -1,8 +1,9 @@
 {
+  "title": "TP-Link Kasa Smart",
   "config": {
     "step": {
       "confirm": {
-        "description": "Do you want to setup TP-Link smart devices?"
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
     "abort": {

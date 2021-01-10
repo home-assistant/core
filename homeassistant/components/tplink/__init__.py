@@ -1,22 +1,10 @@
 """Component to embed TP-Link smart home devices."""
 import logging
 
-import voluptuous as vol
-
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .common import (
-    ATTR_CONFIG,
-    CONF_DIMMER,
-    CONF_DISCOVERY,
-    CONF_LIGHT,
-    CONF_RETRY_DELAY,
-    CONF_RETRY_MAX_ATTEMPTS,
-    CONF_STRIP,
-    CONF_SWITCH,
     SmartDevices,
     async_discover_devices,
     get_static_devices,
@@ -24,38 +12,14 @@ from .common import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "tplink"
-MAX_ATTEMPTS = 300
-SLEEP_TIME = 2
-
-TPLINK_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
-
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_LIGHT, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_SWITCH, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_STRIP, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_DIMMER, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
-                vol.Optional(CONF_RETRY_DELAY, default=SLEEP_TIME): cv.positive_int,
-                vol.Optional(
-                    CONF_RETRY_MAX_ATTEMPTS, default=MAX_ATTEMPTS
-                ): cv.positive_int,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
+from .const import (
+    ATTR_CONFIG,
+    CONF_DISCOVERY,
+    CONF_LIGHT,
+    CONF_RETRY_DELAY,
+    CONF_RETRY_MAX_ATTEMPTS,
+    CONF_SWITCH,
+    DOMAIN,
 )
 
 
@@ -78,7 +42,8 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigType):
     """Set up TPLink from a config entry."""
-    config_data = hass.data[DOMAIN].get(ATTR_CONFIG)
+    # config_data = hass.data[DOMAIN].get(ATTR_CONFIG)
+    config_data = config_entry.data
 
     # These will contain the initialized devices
     lights = hass.data[DOMAIN][CONF_LIGHT] = []
@@ -96,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigType):
         hass.data[DOMAIN][CONF_RETRY_MAX_ATTEMPTS] = config_data[
             CONF_RETRY_MAX_ATTEMPTS
         ]
-        hass.data[DOMAIN]["add_attempt"] = 0
+    hass.data[DOMAIN]["add_attempt"] = 0
 
     # Add discovered devices
     if config_data is None or config_data[CONF_DISCOVERY]:
