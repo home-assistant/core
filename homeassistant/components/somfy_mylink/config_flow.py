@@ -162,8 +162,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         reversed_target_ids = self.options.setdefault(CONF_REVERSED_TARGET_IDS, {})
 
         if user_input is not None:
-            target_reversed = reversed_target_ids.get(self._target_id)
-            if user_input[CONF_REVERSE] != target_reversed:
+            if user_input[CONF_REVERSE] != reversed_target_ids.get(self._target_id):
                 reversed_target_ids[self._target_id] = user_input[CONF_REVERSE]
                 # If we do not modify a top level key
                 # the target config will never be written
