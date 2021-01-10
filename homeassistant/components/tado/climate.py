@@ -63,6 +63,12 @@ CLIMATE_TIMER_SCHEMA = {
     vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
 }
 
+SERVICE_TEMP_OFFSET = "set_climate_temperature_offset"
+ATTR_OFFSET = "offset"
+
+CLIMATE_TEMP_OFFSET_SCHEMA = {
+    vol.Required(ATTR_OFFSET, default=0): vol.Coerce(float),
+}
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
@@ -80,6 +86,12 @@ async def async_setup_entry(
         "set_timer",
     )
 
+    platform.async_register_entity_service(
+        SERVICE_TEMP_OFFSET,
+        CLIMATE_TEMP_OFFSET_SCHEMA,
+        "set_temp_offset",
+    )
+    
     if entities:
         async_add_entities(entities, True)
 
@@ -89,13 +101,13 @@ def _generate_entities(tado):
     entities = []
     for zone in tado.zones:
         if zone["type"] in [TYPE_HEATING, TYPE_AIR_CONDITIONING]:
-            entity = create_climate_entity(tado, zone["name"], zone["id"])
+            entity = create_climate_entity(tado, zone["name"], zone["id"], zone["devices"][0])
             if entity:
                 entities.append(entity)
     return entities
 
 
-def create_climate_entity(tado, name: str, zone_id: int):
+def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
     """Create a Tado climate entity."""
     capabilities = tado.get_capabilities(zone_id)
     _LOGGER.debug("Capabilities for zone %s: %s", zone_id, capabilities)
@@ -178,6 +190,7 @@ def create_climate_entity(tado, name: str, zone_id: int):
         supported_hvac_modes,
         supported_fan_modes,
         support_flags,
+        device_info,
     )
     return entity
 
@@ -200,6 +213,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         supported_hvac_modes,
         supported_fan_modes,
         support_flags,
+        device_info,
     ):
         """Initialize of Tado climate entity."""
         self._tado = tado
@@ -208,6 +222,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self.zone_id = zone_id
         self.zone_type = zone_type
         self._unique_id = f"{zone_type} {zone_id} {tado.home_id}"
+        self._device_info = device_info
+        self._device_id = self._device_info["shortSerialNo"]
 
         self._ac_device = zone_type == TYPE_AIR_CONDITIONING
         self._supported_hvac_modes = supported_hvac_modes
@@ -362,6 +378,17 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             hvac_mode=CONST_MODE_HEAT, target_temp=temperature, duration=time_period
         )
 
+    def set_temp_offset(self, offset):
+        """Set offset on the entity"""
+        
+        _LOGGER.info(
+                "Setting temperature offset for device %s setting to (%d)",
+                self._device_id,    
+                offset,
+            )
+            
+        self._tado.set_temperature_offset(self._device_id, offset)
+        
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
