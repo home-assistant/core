@@ -4,7 +4,7 @@ import logging
 from typing import Optional, Union
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.model.value import Value as ZwaveValue
+from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -95,6 +95,8 @@ class ZWaveBaseEntity(Entity):
         else:
             value_id = event_data["value"].value_id
         if value_id in self.watched_value_ids:
+            value = self.info.node.values[value_id]
+            LOGGER.debug("[%s] Value %s/%s changed to: %s", self.entity_id, value.property_, value.property_key_name, value.value)
             self.on_value_update()
             self.async_write_ha_state()
 
@@ -115,8 +117,12 @@ class ZWaveBaseEntity(Entity):
         if endpoint is None:
             endpoint = self.info.primary_value.endpoint
         # lookup by key first as this is fast
-        key_name = value_property_key_name or value_property
-        value_id = f"{self.info.node.node_id}-{command_class}-{endpoint}-{key_name}"
+        value_id = get_value_id(self.info.node, {
+            "commandClass": command_class,
+            "endpoint": endpoint,
+            "property": value_property,
+            "propertyKeyName": value_property_key_name
+        })
         return_value = self.info.node.values.get(value_id)
         if not return_value:
             # if this may fail for whatever reason, fall back to lookup

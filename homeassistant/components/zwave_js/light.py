@@ -70,7 +70,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self._supports_color_temp = False
         self._hs_color = None
         self._white_value = None
-        self._color_temp = None
+        self._color_temp: None
         self._min_mireds = 153  # 6500K as a safe default
         self._max_mireds = 370  # 2700K as a safe default
         self._supported_features = SUPPORT_BRIGHTNESS
@@ -145,19 +145,18 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # RGB/HS color
         hs_color = kwargs.get(ATTR_HS_COLOR)
         if hs_color is not None and self._supports_color:
+            # set white levels to 0 when setting rgb
+            await self._async_set_color("Warm White", 0)
+            await self._async_set_color("Cold White", 0)
             red, green, blue = color_util.color_hs_to_RGB(*hs_color)
-            target_val = self.get_zwave_value(
-                "targetColor", value_property_key_name="Red"
-            )
-            await self.info.node.async_set_value(target_val, red)
-            target_val = self.get_zwave_value(
-                "targetColor", value_property_key_name="Green"
-            )
-            await self.info.node.async_set_value(target_val, green)
-            target_val = self.get_zwave_value(
-                "targetColor", value_property_key_name="Blue"
-            )
-            await self.info.node.async_set_value(target_val, blue)
+            await self._async_set_color("Red", red)
+            await self._async_set_color("Green", green)
+            await self._async_set_color("Blue", blue)
+        else:
+            # turn off rgb when setting white values
+            await self._async_set_color("Red", 0)
+            await self._async_set_color("Green", 0)
+            await self._async_set_color("Blue", 0)
 
         # Color temperature
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
@@ -176,20 +175,17 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                 ),
             )
             warm = 255 - cold
-            target_val = self.get_zwave_value(
-                "targetColor", value_property_key_name="Warm White"
-            )
-            await self.info.node.async_set_value(target_val, warm)
-            target_val = self.get_zwave_value(
-                "targetColor", value_property_key_name="Cold White"
-            )
-            await self.info.node.async_set_value(target_val, cold)
+            await self._async_set_color("Warm White", warm)
+            await self._async_set_color("Cold White", cold)
+            return
 
         # White value
         white = kwargs.get(ATTR_WHITE_VALUE)
         if white and self._supports_white_value and warm is not None:
             target_val = self.get_zwave_value(
-                "targetColor", value_property_key_name="Warm White"
+                "targetColor",
+                CommandClass.SWITCH_COLOR,
+                value_property_key_name="Warm White",
             )
             await self.info.node.async_set_value(target_val, warm)
 
@@ -202,21 +198,49 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         """Turn the light off."""
         await self._async_set_brightness(0, kwargs.get(ATTR_TRANSITION))
 
+    async def _async_set_color(self, color_name: str, new_value: int) -> None:
+        """Set defined color to given value."""
+        cur_zwave_value = self.get_zwave_value(
+            "currentColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key_name=color_name,
+        )
+        # guard for unsupported command
+        if cur_zwave_value is None:
+            return
+        # no need to send same value
+        if cur_zwave_value.value == new_value:
+            return
+        # actually set the new color value
+        target_zwave_value = self.get_zwave_value(
+            "targetColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key_name=color_name,
+        )
+        if target_zwave_value is None:
+            return
+        await self.info.node.async_set_value(target_zwave_value, new_value)
+
     async def _async_set_brightness(
         self, brightness: Optional[int], transition: Optional[int] = None
     ) -> None:
         """Set new brightness to light."""
-        await self._async_set_transition_duration(transition)
-        # Zwave multilevel switches use a range of [0, 99] to control
-        # brightness. Level 255 means to set it to previous value.
+        if self.info.primary_value.value == brightness:
+            # no point in setting same brightness
+            return
+        if brightness is None and self.info.primary_value.value:
+            # there is no point in setting default brightness when light is already on
+            return
         if brightness is None:
+            # Level 255 means to set it to previous value.
             brightness = 255
         else:
+            # Zwave multilevel switches use a range of [0, 99] to control brightness.
             brightness = byte_to_zwave_brightness(brightness)
-        if self._target_value is not None:
-            await self.info.node.async_set_value(self._target_value, brightness)
-        else:
-            await self.info.node.async_set_value(self.info.primary_value, brightness)
+        # set transition value before seinding new brightness
+        await self._async_set_transition_duration(transition)
+        # setting a value requires setting targetValue
+        await self.info.node.async_set_value(self._target_value, brightness)
 
     async def _async_set_transition_duration(
         self, duration: Optional[int] = None
@@ -224,7 +248,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         """Set the transition time for the brightness value."""
         if self._dimming_duration is None:
             return
-
+        # pylint: disable=fixme,unreachable
         # TODO: setting duration needs to be fixed upstream
         # https://github.com/zwave-js/node-zwave-js/issues/1321
         return
@@ -293,7 +317,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             self._supports_color_temp = True
             # Calculate color temps based on whites
             cold_level = cw_val.value or 0
-            if cold_level or ww_val.value:
+            if cold_level or ww_val.value is not None:
                 self._color_temp = round(
                     self._max_mireds
                     - ((cold_level / 255) * (self._max_mireds - self._min_mireds))
