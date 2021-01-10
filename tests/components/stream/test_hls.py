@@ -4,7 +4,6 @@ from unittest.mock import patch
 from urllib.parse import urlparse
 
 import av
-import pytest
 
 from homeassistant.components.stream import request_stream
 from homeassistant.const import HTTP_NOT_FOUND
@@ -15,7 +14,6 @@ from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video, preload_stream
 
 
-@pytest.mark.skip("Flaky in CI")
 async def test_hls_stream(hass, hass_client):
     """
     Test hls stream.
@@ -62,7 +60,6 @@ async def test_hls_stream(hass, hass_client):
     assert fail_response.status == HTTP_NOT_FOUND
 
 
-@pytest.mark.skip("Flaky in CI")
 async def test_stream_timeout(hass, hass_client):
     """Test hls stream timeout."""
     await async_setup_component(hass, "stream", {"stream": {}})
@@ -99,7 +96,6 @@ async def test_stream_timeout(hass, hass_client):
     assert fail_response.status == HTTP_NOT_FOUND
 
 
-@pytest.mark.skip("Flaky in CI")
 async def test_stream_ended(hass):
     """Test hls stream packets ended."""
     await async_setup_component(hass, "stream", {"stream": {}})
