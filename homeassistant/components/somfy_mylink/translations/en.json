@@ -1,0 +1,44 @@
+{
+  "title": "Somfy MyLink",
+  "config": {
+    "step": {
+      "user": {
+        "description": "The System ID can be obtained in the MyLink app under Integration by selecting any non-Cloud service.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "system_id": "System ID"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "init": {
+        "title": "Configure MyLink Entities",
+        "data": {
+          "default_reverse": "Default reversal status for unconfigured covers",
+          "entity_id": "Configure a specific entity."
+        }
+      },
+      "entity_config": {
+        "title": "Configure Entity",
+        "description": "Configure options for `{entity_id}`",
+        "data": {
+          "reverse": "Cover is reversed"
+        }
+      }
+    }
+  }  
+}

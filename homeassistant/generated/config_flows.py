@@ -191,6 +191,7 @@ FLOWS = [
     "solarlog",
     "soma",
     "somfy",
+    "somfy_mylink",
     "sonarr",
     "songpal",
     "sonos",

@@ -841,7 +841,8 @@ omit =
     homeassistant/components/soma/cover.py
     homeassistant/components/soma/sensor.py
     homeassistant/components/somfy/*
-    homeassistant/components/somfy_mylink/*
+    homeassistant/components/somfy_mylink/__init__.py
+    homeassistant/components/somfy_mylink/cover.py
     homeassistant/components/sonos/*
     homeassistant/components/sony_projector/switch.py
     homeassistant/components/spc/*

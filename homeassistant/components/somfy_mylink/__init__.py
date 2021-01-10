@@ -1,18 +1,33 @@
 """Component for the Somfy MyLink device supporting the Synergy API."""
+import asyncio
+import logging
+
 from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 
-CONF_ENTITY_CONFIG = "entity_config"
-CONF_SYSTEM_ID = "system_id"
-CONF_REVERSE = "reverse"
-CONF_DEFAULT_REVERSE = "default_reverse"
-DATA_SOMFY_MYLINK = "somfy_mylink_data"
-DOMAIN = "somfy_mylink"
-SOMFY_MYLINK_COMPONENTS = ["cover"]
+from .const import (
+    CONF_DEFAULT_REVERSE,
+    CONF_ENTITY_CONFIG,
+    CONF_REVERSE,
+    CONF_SYSTEM_ID,
+    DATA_SOMFY_MYLINK,
+    DEFAULT_PORT,
+    DOMAIN,
+    MYLINK_ENTITY_IDS,
+    MYLINK_STATUS,
+    SOMFY_MYLINK_COMPONENTS,
+)
+
+CONFIG_OPTIONS = (CONF_DEFAULT_REVERSE, CONF_ENTITY_CONFIG)
+UNDO_UPDATE_LISTENER = "undo_update_listener"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def validate_entity_config(values):
@@ -34,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_SYSTEM_ID): cv.string,
                 vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_PORT, default=44100): cv.port,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_DEFAULT_REVERSE, default=False): cv.boolean,
                 vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
             }
@@ -47,15 +62,94 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the MyLink platform."""
 
-    host = config[DOMAIN][CONF_HOST]
-    port = config[DOMAIN][CONF_PORT]
-    system_id = config[DOMAIN][CONF_SYSTEM_ID]
-    entity_config = config[DOMAIN][CONF_ENTITY_CONFIG]
-    entity_config[CONF_DEFAULT_REVERSE] = config[DOMAIN][CONF_DEFAULT_REVERSE]
-    somfy_mylink = SomfyMyLinkSynergy(system_id, host, port)
-    hass.data[DATA_SOMFY_MYLINK] = somfy_mylink
+    conf = config.get(DOMAIN)
+    hass.data.setdefault(DOMAIN, {})
+
+    if not conf:
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+        )
+    )
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up Somfy MyLink from a config entry."""
+    _async_import_options_from_data_if_missing(hass, entry)
+
+    config = entry.data
+    somfy_mylink = SomfyMyLinkSynergy(
+        config[CONF_SYSTEM_ID], config[CONF_HOST], config[CONF_PORT]
+    )
+
+    try:
+        mylink_status = await somfy_mylink.status_info()
+    except asyncio.TimeoutError as ex:
+        raise ConfigEntryNotReady(
+            "Unable to connect to the Somfy MyLink device, please check your settings"
+        ) from ex
+
+    if "error" in mylink_status:
+        _LOGGER.error(
+            "mylink failed to setup because of an error: %s",
+            mylink_status.get("error", {}).get("message"),
+        )
+        return False
+
+    undo_listener = entry.add_update_listener(_async_update_listener)
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_SOMFY_MYLINK: somfy_mylink,
+        MYLINK_STATUS: mylink_status,
+        MYLINK_ENTITY_IDS: [],
+        UNDO_UPDATE_LISTENER: undo_listener,
+    }
+
     for component in SOMFY_MYLINK_COMPONENTS:
         hass.async_create_task(
-            async_load_platform(hass, component, DOMAIN, entity_config, config)
+            hass.config_entries.async_forward_entry_setup(entry, component)
         )
+
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+@callback
+def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
+    options = dict(entry.options)
+    data = dict(entry.data)
+    modified = False
+
+    for importable_option in CONFIG_OPTIONS:
+        if importable_option not in options and importable_option in data:
+            options[importable_option] = data.pop(importable_option)
+            modified = True
+
+    if modified:
+        hass.config_entries.async_update_entry(entry, data=data, options=options)
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in SOMFY_MYLINK_COMPONENTS
+            ]
+        )
+    )
+
+    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
