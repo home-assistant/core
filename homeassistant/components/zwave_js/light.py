@@ -68,9 +68,9 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self._supports_color = False
         self._supports_white_value = False
         self._supports_color_temp = False
-        self._hs_color = None
-        self._white_value = None
-        self._color_temp: None
+        self._hs_color: Optional[List[float]] = None
+        self._white_value: Optional[int] = None
+        self._color_temp: Optional[int] = None
         self._min_mireds = 153  # 6500K as a safe default
         self._max_mireds = 370  # 2700K as a safe default
         self._supported_features = SUPPORT_BRIGHTNESS
@@ -111,7 +111,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         return self.brightness > 0
 
     @property
-    def hs_color(self) -> Optional[List]:
+    def hs_color(self) -> Optional[List[float]]:
         """Return the hs color."""
         return self._hs_color
 
