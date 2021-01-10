@@ -104,6 +104,12 @@ def _is_connected(host: _HostType | None) -> bool:
     return False if host is None else cast(str, host.get("Active", "1")) != "0"
 
 
+def _is_us(host: _HostType) -> bool:
+    """Try to determine if the host entry is us, the HA instance."""
+    # LAN host info entries have an "isLocalDevice" property, "1" / "0"; WLAN host list ones don't.
+    return cast(str, host.get("isLocalDevice", "0")) == "1"
+
+
 @callback
 def async_add_new_entities(
     hass: HomeAssistantType,
@@ -119,7 +125,12 @@ def async_add_new_entities(
 
     new_entities: list[Entity] = []
     for host in (
-        x for x in hosts if _is_connected(x) and _is_wireless(x) and x.get("MacAddress")
+        x
+        for x in hosts
+        if not _is_us(x)
+        and _is_connected(x)
+        and _is_wireless(x)
+        and x.get("MacAddress")
     ):
         entity = HuaweiLteScannerEntity(router, host["MacAddress"])
         if entity.unique_id in tracked:
