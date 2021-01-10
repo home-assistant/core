@@ -96,13 +96,14 @@ class ZWaveBaseEntity(Entity):
             value_id = event_data["value"].value_id
         if value_id in self.watched_value_ids:
             value = self.info.node.values[value_id]
-            LOGGER.debug(
-                "[%s] Value %s/%s changed to: %s",
-                self.entity_id,
-                value.property_,
-                value.property_key_name,
-                value.value,
-            )
+            if LOGGER.isEnabledFor(logging.DEBUG):
+                LOGGER.debug(
+                    "[%s] Value %s/%s changed to: %s",
+                    self.entity_id,
+                    value.property_,
+                    value.property_key_name,
+                    value.value,
+                )
             self.on_value_update()
             self.async_write_ha_state()
 
