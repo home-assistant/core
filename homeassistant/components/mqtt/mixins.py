@@ -41,7 +41,10 @@ from .util import valid_subscribe_topic
 _LOGGER = logging.getLogger(__name__)
 
 AVAILABILITY_ALL = "all"
+AVAILABILITY_ANY = "any"
 AVAILABILITY_LATEST = "latest"
+
+AVAILABILITY_MODES = [AVAILABILITY_ALL, AVAILABILITY_ANY, AVAILABILITY_LATEST]
 
 CONF_AVAILABILITY = "availability"
 CONF_AVAILABILITY_MODE = "availability_mode"
@@ -59,8 +62,6 @@ CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 
-DEFAULT_AVAILABILITY_MODE = AVAILABILITY_LATEST
-
 MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
         vol.Exclusive(CONF_AVAILABILITY_TOPIC, "availability"): valid_subscribe_topic,
@@ -75,9 +76,9 @@ MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
 
 MQTT_AVAILABILITY_LIST_SCHEMA = vol.Schema(
     {
-        vol.Optional(
-            CONF_AVAILABILITY_MODE, default=DEFAULT_AVAILABILITY_MODE
-        ): vol.All(cv.string, vol.In([AVAILABILITY_ALL, AVAILABILITY_LATEST])),
+        vol.Optional(CONF_AVAILABILITY_MODE, default=AVAILABILITY_LATEST): vol.All(
+            cv.string, vol.In(AVAILABILITY_MODES)
+        ),
         vol.Exclusive(CONF_AVAILABILITY, "availability"): vol.All(
             cv.ensure_list,
             [
@@ -304,9 +305,11 @@ class MqttAvailability(Entity):
             return False
         if not self._avail_topics:
             return True
-        if self._avail_config[CONF_AVAILABILITY_MODE] == AVAILABILITY_LATEST:
-            return self._available_latest
-        return all(self._available.values())
+        if self._avail_config[CONF_AVAILABILITY_MODE] == AVAILABILITY_ALL:
+            return all(self._available.values())
+        if self._avail_config[CONF_AVAILABILITY_MODE] == AVAILABILITY_ANY:
+            return any(self._available.values())
+        return self._available_latest
 
 
 async def cleanup_device_registry(hass, device_id):
