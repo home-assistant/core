@@ -21,6 +21,7 @@ repos:
           - --skip="./.*,*.csv,*.json"
           - --quiet-level=2
         exclude_types: [csv, json]
+        exclude: ^tests/fixtures/
   - repo: https://gitlab.com/pycqa/flake8
     rev: 3.8.4
     hooks:
