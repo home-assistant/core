@@ -145,7 +145,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
                     node_status = call_api_node(proxmox, node_name)
 
                     if node_status is None:
-                        _LOGGER.error(f"Node {node_name} unable to be found")
+                        _LOGGER.error("Node %s unable to be found", node_name)
                         hass.data[DOMAIN][IGNORED].append(node_name)
                         continue
 
@@ -157,7 +157,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
                         call = call_api_container_vm(proxmox, node_name, vm_id, TYPE_VM)
 
                         if call is None:
-                            _LOGGER.error(f"Vm/Container {vm_id} unable to be found")
+                            _LOGGER.error("Vm/Container %s unable to be found", vm_id)
                             hass.data[DOMAIN][IGNORED].append(vm_id)
                             continue
 
@@ -177,7 +177,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
                         if call is None:
                             _LOGGER.error(
-                                f"Vm/Container {container_id} unable to be found"
+                                "Vm/Container %s unable to be found", container_id
                             )
                             hass.data[DOMAIN][IGNORED].append(container_id)
                             continue
@@ -269,14 +269,14 @@ def call_api_node(proxmox, node_name):
     return node_status
 
 
-def call_api_container_vm(proxmox, node_name, vm_id, type):
+def call_api_container_vm(proxmox, node_name, vm_id, machine_type):
     """Make proper api calls and return the output ordered into a list."""
     status = None
 
     try:
-        if type == TYPE_VM:
+        if machine_type == TYPE_VM:
             status = proxmox.nodes(node_name).qemu(vm_id).status.current.get()
-        elif type == TYPE_CONTAINER:
+        elif machine_type == TYPE_CONTAINER:
             status = proxmox.nodes(node_name).lxc(vm_id).status.current.get()
         rrd = proxmox.nodes(node_name).qemu(vm_id).rrddata.get(timeframe="hour")
     except ResourceException:
@@ -287,7 +287,8 @@ def call_api_container_vm(proxmox, node_name, vm_id, type):
     try:
         rrd = rrd[-1]
         # try to access something that might not be there
-        rrd["cpu"]
+        if rrd["cpu"] is None:
+            rrd = None
     except KeyError:
         # there is no rrd data to be parsed now
         rrd = None

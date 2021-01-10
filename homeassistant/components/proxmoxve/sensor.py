@@ -186,28 +186,28 @@ class ProxmoxSensor(ProxmoxEntity):
 class ProxmoxNodeMemorySensor(ProxmoxSensor):
     """Represents the memory used of a proxmox node."""
 
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        unique_id,
-        name,
-        icon,
-        unit_of_measurement,
-        host_name,
-        node_name,
-        vm_id=None,
-    ):
-        """Create a node memory sensor."""
-        super().__init__(
-            coordinator,
-            unique_id,
-            name,
-            icon,
-            unit_of_measurement,
-            host_name,
-            node_name,
-            vm_id,
-        )
+    # def __init__(
+    #     self,
+    #     coordinator: DataUpdateCoordinator,
+    #     unique_id,
+    #     name,
+    #     icon,
+    #     unit_of_measurement,
+    #     host_name,
+    #     node_name,
+    #     vm_id=None,
+    # ):
+    #     """Create a node memory sensor."""
+    #     super().__init__(
+    #         coordinator,
+    #         unique_id,
+    #         name,
+    #         icon,
+    #         unit_of_measurement,
+    #         host_name,
+    #         node_name,
+    #         vm_id,
+    #     )
 
     @property
     def state(self):
@@ -232,29 +232,6 @@ class ProxmoxNodeMemorySensor(ProxmoxSensor):
 class ProxmoxNodeRootfsSensor(ProxmoxSensor):
     """Represents the root filesystem of a proxmox node."""
 
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        unique_id,
-        name,
-        icon,
-        unit_of_measurement,
-        host_name,
-        node_name,
-        vm_id=None,
-    ):
-        """Create a root filesystem sensor for a node."""
-        super().__init__(
-            coordinator,
-            unique_id,
-            name,
-            icon,
-            unit_of_measurement,
-            host_name,
-            node_name,
-            vm_id,
-        )
-
     @property
     def state(self):
         """Return the state of the sensor."""
@@ -276,29 +253,6 @@ class ProxmoxNodeRootfsSensor(ProxmoxSensor):
 
 class ProxmoxVmMemorySensor(ProxmoxSensor):
     """Represents the memory used of a proxmox virtual machine."""
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        unique_id,
-        name,
-        icon,
-        unit_of_measurement,
-        host_name,
-        node_name,
-        vm_id=None,
-    ):
-        """Create a vm memory sensor."""
-        super().__init__(
-            coordinator,
-            unique_id,
-            name,
-            icon,
-            unit_of_measurement,
-            host_name,
-            node_name,
-            vm_id,
-        )
 
     @property
     def state(self):
@@ -323,29 +277,6 @@ class ProxmoxVmMemorySensor(ProxmoxSensor):
 class ProxmoxVmNetworkInSensor(ProxmoxSensor):
     """Represents the network in of a proxmox virtual machine."""
 
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        unique_id,
-        name,
-        icon,
-        unit_of_measurement,
-        host_name,
-        node_name,
-        vm_id,
-    ):
-        """Create a vm network input sensor."""
-        super().__init__(
-            coordinator,
-            unique_id,
-            name,
-            icon,
-            unit_of_measurement,
-            host_name,
-            node_name,
-            vm_id,
-        )
-
     @property
     def state(self):
         """Return the state of the sensor."""
@@ -356,29 +287,6 @@ class ProxmoxVmNetworkInSensor(ProxmoxSensor):
 class ProxmoxVmNetworkOutSensor(ProxmoxSensor):
     """Represents the network out of a proxmox virtual machine."""
 
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        unique_id,
-        name,
-        icon,
-        unit_of_measurement,
-        host_name,
-        node_name,
-        vm_id,
-    ):
-        """Create a vm network output sensor."""
-        super().__init__(
-            coordinator,
-            unique_id,
-            name,
-            icon,
-            unit_of_measurement,
-            host_name,
-            node_name,
-            vm_id,
-        )
-
     @property
     def state(self):
         """Return the state of the sensor."""
@@ -388,29 +296,6 @@ class ProxmoxVmNetworkOutSensor(ProxmoxSensor):
 
 class ProxmoxVmCpuSensor(ProxmoxSensor):
     """Represents the cpu of a proxmox virtual machine."""
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        unique_id,
-        name,
-        icon,
-        unit_of_measurement,
-        host_name,
-        node_name,
-        vm_id,
-    ):
-        """Create a vm cpu usage sensor."""
-        super().__init__(
-            coordinator,
-            unique_id,
-            name,
-            icon,
-            unit_of_measurement,
-            host_name,
-            node_name,
-            vm_id,
-        )
 
     @property
     def state(self):
@@ -428,29 +313,6 @@ class ProxmoxVmCpuSensor(ProxmoxSensor):
 
 class ProxmoxVmUptimeSensor(ProxmoxSensor):
     """Represents the uptime of a proxmox virtual machine."""
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        unique_id,
-        name,
-        icon,
-        unit_of_measurement,
-        host_name,
-        node_name,
-        vm_id,
-    ):
-        """Create a vm uptime sensor."""
-        super().__init__(
-            coordinator,
-            unique_id,
-            name,
-            icon,
-            unit_of_measurement,
-            host_name,
-            node_name,
-            vm_id,
-        )
 
     @property
     def state(self):
