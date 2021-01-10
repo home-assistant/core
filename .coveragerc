@@ -1095,6 +1095,11 @@ omit =
     homeassistant/components/zoneminder/*
     homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
+    homeassistant/components/zwave_js/__init__.py
+    homeassistant/components/zwave_js/discovery.py
+    homeassistant/components/zwave_js/entity.py
+    homeassistant/components/zwave_js/light.py
+    homeassistant/components/zwave_js/sensor.py
 
 [report]
 # Regexes for lines to exclude from consideration

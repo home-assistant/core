@@ -241,5 +241,6 @@ FLOWS = [
     "yeelight",
     "zerproc",
     "zha",
-    "zwave"
+    "zwave",
+    "zwave_js"
 ]
