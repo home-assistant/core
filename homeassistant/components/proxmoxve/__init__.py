@@ -23,7 +23,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 PLATFORMS = ["sensor", "binary_sensor"]
-DOMAIN = "proxmox_custom"
+DOMAIN = "proxmoxve"
 PROXMOX_CLIENTS = "proxmox_clients"
 CONF_REALM = "realm"
 CONF_NODE = "node"
@@ -220,6 +220,23 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 def parse_api_container_vm(status, rrd):
     """Get the container or vm api data and return it formatted in a dictionary."""
+
+    # Handles the case where the rrd data hasn't updated. This means the VM is off.
+    data = {
+        "status": status["status"],
+        "uptime": status["uptime"],
+        "name": status["name"],
+        "memory_used": 0,
+        "memory_total": 0,
+        "net_out": 0,
+        "net_in": 0,
+        "cpu_use": 0,
+        "num_cpu": 0,
+    }
+
+    if rrd is None:
+        return data
+
     return {
         "status": status["status"],
         "uptime": status["uptime"],
@@ -272,10 +289,8 @@ def call_api_container_vm(proxmox, node_name, vm_id, type):
         # try to access something that might not be there
         rrd["cpu"]
     except KeyError:
-        _LOGGER.warning("rrd api returned bad info")
-        rrd = rrd[-2]
-        _LOGGER.warning(f"vm_rrd is now {rrd}")
-
+        # there is no rrd data to be parsed now
+        rrd = None
     return [status, rrd]
 
 

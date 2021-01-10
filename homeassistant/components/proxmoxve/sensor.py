@@ -119,7 +119,7 @@ def create_sensors_container_vm(
 
     net_out = ProxmoxVmNetworkOutSensor(
         coordinator=coordinator,
-        unique_id=f"proxmox_{node_name}_{vm_id}_network_out",  # TODO
+        unique_id=f"proxmox_{node_name}_{vm_id}_network_out",
         name=f"{node_name}_{vm_name}_network_out",
         icon="mdi:upload-network",
         unit_of_measurement="k",
@@ -131,7 +131,7 @@ def create_sensors_container_vm(
 
     cpu_use = ProxmoxVmCpuSensor(
         coordinator=coordinator,
-        unique_id=f"proxmox_{node_name}_{vm_id}_cpu_use",  # TODO
+        unique_id=f"proxmox_{node_name}_{vm_id}_cpu_use",
         name=f"{node_name}_{vm_name}_cpu_use",
         icon="mdi:cpu-64-bit",
         unit_of_measurement="%",
@@ -143,7 +143,7 @@ def create_sensors_container_vm(
 
     uptime = ProxmoxVmUptimeSensor(
         coordinator=coordinator,
-        unique_id=f"proxmox_{node_name}_{vm_id}_uptime",  # TODO
+        unique_id=f"proxmox_{node_name}_{vm_id}_uptime",
         name=f"{node_name}_{vm_name}_uptime",
         icon="mdi:timer-outline",
         unit_of_measurement="Hours",
@@ -304,6 +304,8 @@ class ProxmoxVmMemorySensor(ProxmoxSensor):
     def state(self):
         """Return the state of the sensor."""
         data = self.coordinator.data[self._host_name][self._node_name][self._vm_id]
+        if data["memory_total"] == 0:
+            return 0
         return "%.2f" % (100 * (data["memory_used"] / data["memory_total"]))
 
     @property
