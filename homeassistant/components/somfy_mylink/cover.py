@@ -25,10 +25,11 @@ MYLINK_COVER_TYPE_TO_DEVICE_CLASS = {0: DEVICE_CLASS_BLIND, 1: DEVICE_CLASS_SHUT
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Discover and configure Somfy covers."""
+    reversed_target_ids = config_entry.options.get(CONF_REVERSED_TARGET_IDS, {})
+
     data = hass.data[DOMAIN][config_entry.entry_id]
     mylink_status = data[MYLINK_STATUS]
     somfy_mylink = data[DATA_SOMFY_MYLINK]
-    reversed_target_ids = config_entry.options.get(CONF_REVERSED_TARGET_IDS, {})
     cover_list = []
 
     for cover in mylink_status["result"]:
