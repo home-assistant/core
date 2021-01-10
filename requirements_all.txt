@@ -1286,7 +1286,7 @@ pyatome==0.1.1
 pyatv==0.7.3
 
 # homeassistant.components.avreceiver
-pyavreceiver==0.0.9
+pyavreceiver==0.0.10
 
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
