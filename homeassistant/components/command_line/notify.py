@@ -45,6 +45,7 @@ class CommandLineNotificationService(BaseNotificationService):
                 self.command,
                 universal_newlines=True,
                 stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 shell=True,  # nosec # shell by design
             )
@@ -52,10 +53,19 @@ class CommandLineNotificationService(BaseNotificationService):
             _LOGGER.debug(
                 "Running command: `%s`, with input: %s", self.command, message
             )
-            _, stderr_data = proc.communicate(input=message, timeout=self._timeout)
+            stdout_data, stderr_data = proc.communicate(
+                input=message, timeout=self._timeout
+            )
             if proc.returncode != 0:
                 _LOGGER.error("Command failed: %s", self.command)
 
+            if stdout_data:
+                _LOGGER.debug(
+                    "Stdout of command: `%s`, return code: %s:\n%s",
+                    self.command,
+                    proc.returncode,
+                    stdout_data,
+                )
             if stderr_data:
                 _LOGGER.debug(
                     "Stderr of command: `%s`, return code: %s:\n%s",

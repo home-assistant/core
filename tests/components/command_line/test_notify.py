@@ -1,4 +1,5 @@
 """The tests for the command line notification platform."""
+import logging
 import os
 import tempfile
 import unittest
@@ -115,3 +116,45 @@ async def test_timeout(hass, caplog):
     )
     await hass.async_block_till_done()
     assert "Timeout" in caplog.text
+
+
+async def test_debug_logging_error(hass, caplog):
+    """Test that debug logging occurs for errors."""
+    assert await async_setup_component(
+        hass,
+        notify.DOMAIN,
+        {
+            "notify": {
+                "name": "test",
+                "platform": "command_line",
+                "command": "i_dont_exist",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    with caplog.at_level(logging.DEBUG):
+        assert await hass.services.async_call(
+            "notify", "test", {"message": "error"}, blocking=True
+        )
+        await hass.async_block_till_done()
+        assert "Running command" in caplog.text
+        assert "Stderr" in caplog.text
+        assert "Stdout" not in caplog.text
+
+
+async def test_debug_logging_success(hass, caplog):
+    """Test that debug logging occurs for success."""
+    assert await async_setup_component(
+        hass,
+        notify.DOMAIN,
+        {"notify": {"name": "test", "platform": "command_line", "command": "cat"}},
+    )
+    await hass.async_block_till_done()
+    with caplog.at_level(logging.DEBUG):
+        assert await hass.services.async_call(
+            "notify", "test", {"message": "success"}, blocking=True
+        )
+        await hass.async_block_till_done()
+        assert "Running command" in caplog.text
+        assert "Stdout" in caplog.text
+        assert "Stderr" not in caplog.text
