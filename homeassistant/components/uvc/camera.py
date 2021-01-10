@@ -120,6 +120,11 @@ class UnifiVideoCamera(Camera):
         return self._caminfo["recordingSettings"]["motionRecordEnabled"]
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this client."""
+        return self._uuid
+
+    @property
     def brand(self):
         """Return the brand of this camera."""
         return "Ubiquiti"
