@@ -1,7 +1,7 @@
 """Map Z-Wave nodes and values to Home Assistant entities."""
 
 from dataclasses import dataclass
-from typing import Any, Generator, Optional, Set
+from typing import Any, Generator, Optional, Set, Union
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -32,12 +32,14 @@ class ZWaveDiscoverySchema:
     """Z-Wave discovery schema.
 
     The (primary) value for an entity must match these conditions.
+    Use the Z-Wave specifications to find out the values for these parameters:
+    https://github.com/zwave-js/node-zwave-js/tree/master/specs
     """
 
     # specify the hass platform for which this scheme applies (e.g. light, sensor)
     platform: str
     # [optional] hint for platform
-    hint: Optional[str]
+    hint: Optional[str] = None
     # [optional] the node's basic device class must match ANY of these values
     device_class_basic: Optional[Set[str]] = None
     # [optional] the node's generic device class must match ANY of these values
@@ -49,12 +51,27 @@ class ZWaveDiscoverySchema:
     # [optional] the value's endpoint must match ANY of these values
     endpoint: Optional[Set[int]] = None
     # [optional] the value's property must match ANY of these values
-    property: Optional[Set[int]] = None
+    property: Optional[Set[Union[str, int]]] = None
     # [optional] the value's metadata_type must match ANY of these values
     type: Optional[Set[str]] = None
 
 
 DISCOVERY_SCHEMAS = [
+    # light
+    # primary value is the currentValue (brightness)
+    ZWaveDiscoverySchema(
+        platform="light",
+        device_class_generic={"Multilevel Switch", "Remote Switch"},
+        device_class_specific={
+            "Multilevel Tunable Color Light",
+            "Binary Tunable Color Light",
+            "Multilevel Remote Switch",
+            "Multilevel Power Switch",
+        },
+        command_class={CommandClass.SWITCH_MULTILEVEL},
+        property={"currentValue"},
+        type={"number"},
+    ),
     # generic text sensors
     ZWaveDiscoverySchema(
         platform="sensor",

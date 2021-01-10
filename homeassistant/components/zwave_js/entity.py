@@ -1,10 +1,10 @@
 """Generic Z-Wave Entity Class."""
 
 import logging
-from typing import Union
+from typing import Optional, Union
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.model.value import Value as ZwaveValue, value_id as get_value_id
+from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -26,7 +26,7 @@ class ZWaveBaseEntity(Entity):
         self.client = client
         self.info = info
         # entities requiring additional values, can add extra ids to this list
-        self.watched_value_ids = [self.info.primary_value.property_]
+        self.watched_value_ids = {self.info.primary_value.value_id}
 
     @callback
     def on_value_update(self) -> None:
@@ -88,10 +88,55 @@ class ZWaveBaseEntity(Entity):
         if isinstance(event_data, ZwaveValue):
             value_id = event_data.value_id
         else:
-            value_id = get_value_id(self.info.node, event_data["args"])
+            value_id = event_data["value"].value_id
         if value_id in self.watched_value_ids:
+            value = self.info.node.values[value_id]
+            if LOGGER.isEnabledFor(logging.DEBUG):
+                LOGGER.debug(
+                    "[%s] Value %s/%s changed to: %s",
+                    self.entity_id,
+                    value.property_,
+                    value.property_key_name,
+                    value.value,
+                )
             self.on_value_update()
             self.async_write_ha_state()
+
+    @callback
+    def get_zwave_value(
+        self,
+        value_property: Union[str, int],
+        command_class: Optional[int] = None,
+        endpoint: Optional[int] = None,
+        value_property_key_name: Optional[str] = None,
+        add_to_watched_value_ids: bool = True,
+    ) -> Optional[ZwaveValue]:
+        """Return specific ZwaveValue on this ZwaveNode."""
+        # use commandclass and endpoint from primary value if omitted
+        return_value = None
+        if command_class is None:
+            command_class = self.info.primary_value.command_class
+        if endpoint is None:
+            endpoint = self.info.primary_value.endpoint
+        # lookup value by value_id
+        value_id = get_value_id(
+            self.info.node,
+            {
+                "commandClass": command_class,
+                "endpoint": endpoint,
+                "property": value_property,
+                "propertyKeyName": value_property_key_name,
+            },
+        )
+        return_value = self.info.node.values.get(value_id)
+        # add to watched_ids list so we will be triggered when the value updates
+        if (
+            return_value
+            and return_value.value_id not in self.watched_value_ids
+            and add_to_watched_value_ids
+        ):
+            self.watched_value_ids.add(return_value.value_id)
+        return return_value
 
     @property
     def should_poll(self) -> bool:

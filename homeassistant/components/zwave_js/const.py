@@ -3,7 +3,7 @@
 
 DOMAIN = "zwave_js"
 NAME = "Z-Wave JS"
-PLATFORMS = ["sensor"]
+PLATFORMS = ["light", "sensor"]
 
 DATA_CLIENT = "client"
 DATA_UNSUBSCRIBE = "unsubs"
