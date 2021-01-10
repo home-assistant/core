@@ -160,7 +160,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # Color temperature
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
-        warm: Optional[int] = None
         if color_temp is not None and self._supports_color_temp:
             # Limit color temp to min/max values
             cold = max(
