@@ -4,6 +4,7 @@ from typing import Dict
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
 from pyhap.accessory import Accessory
+from pyhap.const import CATEGORY_CAMERA, CATEGORY_TELEVISION
 import pytest
 
 from homeassistant import config as hass_config
@@ -340,7 +341,7 @@ async def test_homekit_setup_safe_mode(hass, hk_driver):
     assert homekit.driver.safe_mode is True
 
 
-async def test_homekit_add_accessory(hass):
+async def test_homekit_add_accessory(hass, mock_zeroconf):
     """Add accessory if config exists and get_acc returns an accessory."""
     entry = await async_init_integration(hass)
 
@@ -360,10 +361,12 @@ async def test_homekit_add_accessory(hass):
     homekit.bridge = mock_bridge = Mock()
     homekit.bridge.accessories = range(10)
 
+    mock_acc = Mock(category="any")
+
     await async_init_integration(hass)
 
     with patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc:
-        mock_get_acc.side_effect = [None, "acc", None]
+        mock_get_acc.side_effect = [None, mock_acc, None]
         homekit.add_bridge_accessory(State("light.demo", "on"))
         mock_get_acc.assert_called_with(hass, "driver", ANY, 1403373688, {})
         assert not mock_bridge.add_accessory.called
@@ -374,10 +377,50 @@ async def test_homekit_add_accessory(hass):
 
         homekit.add_bridge_accessory(State("demo.test_2", "on"))
         mock_get_acc.assert_called_with(hass, "driver", ANY, 1467253281, {})
-        mock_bridge.add_accessory.assert_called_with("acc")
+        mock_bridge.add_accessory.assert_called_with(mock_acc)
 
 
-async def test_homekit_remove_accessory(hass):
+@pytest.mark.parametrize("acc_category", [CATEGORY_TELEVISION, CATEGORY_CAMERA])
+async def test_homekit_warn_add_accessory_bridge(
+    hass, acc_category, mock_zeroconf, caplog
+):
+    """Test we warn when adding cameras or tvs to a bridge."""
+    entry = await async_init_integration(hass)
+
+    homekit = HomeKit(
+        hass,
+        None,
+        None,
+        None,
+        lambda entity_id: True,
+        {},
+        DEFAULT_SAFE_MODE,
+        HOMEKIT_MODE_BRIDGE,
+        advertise_ip=None,
+        entry_id=entry.entry_id,
+    )
+    homekit.driver = "driver"
+    homekit.bridge = mock_bridge = Mock()
+    homekit.bridge.accessories = range(10)
+
+    mock_camera_acc = Mock(category=acc_category)
+
+    await async_init_integration(hass)
+
+    with patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc:
+        mock_get_acc.side_effect = [None, mock_camera_acc, None]
+        homekit.add_bridge_accessory(State("light.demo", "on"))
+        mock_get_acc.assert_called_with(hass, "driver", ANY, 1403373688, {})
+        assert not mock_bridge.add_accessory.called
+
+        homekit.add_bridge_accessory(State("camera.test", "on"))
+        mock_get_acc.assert_called_with(hass, "driver", ANY, 1508819236, {})
+        assert mock_bridge.add_accessory.called
+
+    assert "accessory mode" in caplog.text
+
+
+async def test_homekit_remove_accessory(hass, mock_zeroconf):
     """Remove accessory from bridge."""
     entry = await async_init_integration(hass)
 
