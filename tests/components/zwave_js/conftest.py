@@ -1,6 +1,6 @@
 """Provide common Z-Wave JS fixtures."""
 import json
-from unittest.mock import patch
+from unittest.mock import DEFAULT, patch
 
 import pytest
 from zwave_js_server.model.driver import Driver
@@ -49,6 +49,7 @@ async def integration_fixture(hass, client):
     def initialize_client(async_on_initialized):
         """Init the client."""
         hass.async_create_task(async_on_initialized())
+        return DEFAULT
 
     client.register_on_initialized.side_effect = initialize_client
 
