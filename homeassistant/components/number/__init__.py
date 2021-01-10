@@ -24,6 +24,8 @@ from .const import (
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
     DOMAIN,
+    SERVICE_DECREMENT,
+    SERVICE_INCREMENT,
     SERVICE_SET_VALUE,
 )
 
@@ -47,6 +49,18 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         SERVICE_SET_VALUE,
         {vol.Required(ATTR_VALUE): vol.Coerce(float)},
         "async_set_value",
+    )
+
+    component.async_register_entity_service(
+        SERVICE_INCREMENT,
+        {},
+        "async_increment",
+    )
+
+    component.async_register_entity_service(
+        SERVICE_DECREMENT,
+        {},
+        "async_decrement",
     )
 
     return True
@@ -112,3 +126,11 @@ class NumberEntity(Entity):
         """Set new value."""
         assert self.hass is not None
         await self.hass.async_add_executor_job(self.set_value, value)
+
+    async def async_increment(self) -> None:
+        """Increment value."""
+        await self.async_set_value(min(self.value + self.step, self.max_value))
+
+    async def async_decrement(self) -> None:
+        """Decrement value."""
+        await self.async_set_value(max(self.value - self.step, self.min_value))

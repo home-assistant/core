@@ -12,3 +12,5 @@ DEFAULT_STEP = 1.0
 DOMAIN = "number"
 
 SERVICE_SET_VALUE = "set_value"
+SERVICE_INCREMENT = "increment"
+SERVICE_DECREMENT = "decrement"

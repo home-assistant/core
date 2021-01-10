@@ -9,3 +9,15 @@ set_value:
     value:
       description: The target value the entity should be set to.
       example: 42
+decrement:
+  description: Decrement the value of a Number entity by its stepping.
+  fields:
+    entity_id:
+      description: Entity id of the Number that should be decremented.
+      example: number.volume
+increment:
+  description: Increment the value of a Number entity by its stepping.
+  fields:
+    entity_id:
+      description: Entity id of the Number that should be incremented.
+      example: number.volume
