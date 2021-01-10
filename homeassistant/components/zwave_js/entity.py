@@ -54,7 +54,10 @@ class ZWaveBaseEntity(Entity):
         # device is precreated in main handler
         return {
             "identifiers": {
-                (DOMAIN, self.client.driver.controller.home_id, self.info.node.node_id)
+                (
+                    DOMAIN,
+                    f"{self.client.driver.controller.home_id}-{self.info.node.node_id}",
+                )
             },
         }
 

@@ -36,7 +36,7 @@ def register_node_in_dev_reg(
     """Register node in dev reg."""
     dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, client.driver.controller.home_id, node.node_id)},
+        identifiers={(DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")},
         sw_version=node.firmware_version,
         name=node.name or node.device_config.description,
         model=node.device_config.label or str(node.product_type),
