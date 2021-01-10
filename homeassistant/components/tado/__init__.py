@@ -303,7 +303,7 @@ class TadoConnector:
             _LOGGER.error("Could not set zone overlay: %s", exc)
 
         self.update_sensor("zone", zone_id)
-    
+
     def set_temperature_offset(self, device_id, offset):
         """Set temperature offset of device"""
         try:

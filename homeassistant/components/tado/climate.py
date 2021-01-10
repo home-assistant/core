@@ -70,6 +70,7 @@ CLIMATE_TEMP_OFFSET_SCHEMA = {
     vol.Required(ATTR_OFFSET, default=0): vol.Coerce(float),
 }
 
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
@@ -91,7 +92,7 @@ async def async_setup_entry(
         CLIMATE_TEMP_OFFSET_SCHEMA,
         "set_temp_offset",
     )
-    
+
     if entities:
         async_add_entities(entities, True)
 
@@ -101,7 +102,9 @@ def _generate_entities(tado):
     entities = []
     for zone in tado.zones:
         if zone["type"] in [TYPE_HEATING, TYPE_AIR_CONDITIONING]:
-            entity = create_climate_entity(tado, zone["name"], zone["id"], zone["devices"][0])
+            entity = create_climate_entity(
+                tado, zone["name"], zone["id"], zone["devices"][0]
+            )
             if entity:
                 entities.append(entity)
     return entities
@@ -380,15 +383,15 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     def set_temp_offset(self, offset):
         """Set offset on the entity"""
-        
+
         _LOGGER.info(
-                "Setting temperature offset for device %s setting to (%d)",
-                self._device_id,    
-                offset,
-            )
-            
+            "Setting temperature offset for device %s setting to (%d)",
+            self._device_id,
+            offset,
+        )
+
         self._tado.set_temperature_offset(self._device_id, offset)
-        
+
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
