@@ -1,8 +1,25 @@
 """Test the Z-Wave JS init module."""
-from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
+from unittest.mock import patch
+
+import pytest
+
+from homeassistant.config_entries import (
+    ENTRY_STATE_LOADED,
+    ENTRY_STATE_NOT_LOADED,
+    ENTRY_STATE_SETUP_RETRY,
+)
 from homeassistant.const import STATE_UNAVAILABLE
 
+from tests.common import MockConfigEntry
+
 AIR_TEMPERATURE_SENSOR = "sensor.multisensor_6_air_temperature"
+
+
+@pytest.fixture(name="connect_timeout")
+def connect_timeout_fixture():
+    """Mock the connect timeout."""
+    with patch("homeassistant.components.zwave_js.CONNECT_TIMEOUT", new=0) as timeout:
+        yield timeout
 
 
 async def test_entry_setup_unload(hass, client, integration):
@@ -59,3 +76,14 @@ async def test_on_connect_disconnect(hass, client, multisensor_6, integration):
 
     assert state
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_initialized_timeout(hass, client, connect_timeout):
+    """Test we handle a timeout during client initialization."""
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == ENTRY_STATE_SETUP_RETRY

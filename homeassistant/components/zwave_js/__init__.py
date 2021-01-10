@@ -18,6 +18,7 @@ from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN, PLATFORMS
 from .discovery import async_discover_values
 
 LOGGER = logging.getLogger(__name__)
+CONNECT_TIMEOUT = 10
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -113,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # connect and throw error if connection failed
     asyncio.create_task(client.connect())
     try:
-        async with timeout(10):
+        async with timeout(CONNECT_TIMEOUT):
             await initialized.wait()
     except asyncio.TimeoutError as err:
         for unsub in unsubs:
