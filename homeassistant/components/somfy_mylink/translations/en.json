@@ -28,7 +28,7 @@
       "init": {
         "title": "Configure MyLink Entities",
         "data": {
-          "default_reverse": "Default reversal status for unconfigered covers",
+          "default_reverse": "Default reversal status for unconfigured covers",
           "entity_id": "Configure a specific entity."
         }
       },
