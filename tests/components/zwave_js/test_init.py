@@ -19,3 +19,10 @@ async def test_entry_setup_unload(hass, client, integration):
     assert client.register_on_disconnect.return_value.call_count == 1
     assert client.register_on_connect.return_value.call_count == 1
     assert entry.state == ENTRY_STATE_NOT_LOADED
+
+
+async def test_home_assistant_stop(hass, client, integration):
+    """Test we clean up on home assistant stop."""
+    await hass.async_stop()
+
+    assert client.disconnect.call_count == 1
