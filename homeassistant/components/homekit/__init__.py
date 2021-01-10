@@ -5,7 +5,7 @@ import logging
 import os
 
 from aiohttp import web
-from pyhap.const import STANDALONE_AID
+from pyhap.const import CATEGORY_CAMERA, CATEGORY_TELEVISION, STANDALONE_AID
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
@@ -530,6 +530,24 @@ class HomeKit:
         try:
             acc = get_accessory(self.hass, self.driver, state, aid, conf)
             if acc is not None:
+                if acc.category == CATEGORY_CAMERA:
+                    _LOGGER.warning(
+                        "The bridge %s has camera %s. For best performance, "
+                        "and to prevent unexpected unavailability, create and "
+                        "pair a separate HomeKit instance in accessory mode for "
+                        "each camera.",
+                        self._name,
+                        acc.entity_id,
+                    )
+                elif acc.category == CATEGORY_TELEVISION:
+                    _LOGGER.warning(
+                        "The bridge %s has tv %s. For best performance, "
+                        "and to prevent unexpected unavailability, create and "
+                        "pair a separate HomeKit instance in accessory mode for "
+                        "each tv media player.",
+                        self._name,
+                        acc.entity_id,
+                    )
                 self.bridge.add_accessory(acc)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
