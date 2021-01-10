@@ -33,4 +33,3 @@ set_climate_temperature_offset:
     offset:
       description: Offset you would like, can be to 2 decimal places (depending on your device) positive or negative
       example: -1.2
-      
