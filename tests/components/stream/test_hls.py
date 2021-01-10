@@ -48,7 +48,7 @@ async def test_hls_stream(hass, hass_client):
     # Fetch segment
     playlist = await playlist_response.text()
     playlist_url = "/".join(parsed_url.path.split("/")[:-1])
-    segment_url = playlist_url + playlist.splitlines()[-1][1:]
+    segment_url = playlist_url + "/" + playlist.splitlines()[-1]
     segment_response = await http_client.get(segment_url)
     assert segment_response.status == 200
 
