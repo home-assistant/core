@@ -46,10 +46,10 @@ def validate_entity_config(values):
 
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.deprecated,
-            vol.Schema(
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
                 {
                     vol.Required(CONF_SYSTEM_ID): cv.string,
                     vol.Required(CONF_HOST): cv.string,
@@ -59,9 +59,9 @@ CONFIG_SCHEMA = vol.Schema(
                         CONF_ENTITY_CONFIG, default={}
                     ): validate_entity_config,
                 }
-            ),
-        )
-    },
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
