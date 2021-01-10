@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any, Callable, cast
+from typing import Any, Callable, Dict, List, cast
 
 import attr
 from stringcase import snakecase
@@ -21,12 +21,27 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import HuaweiLteBaseEntity
-from .const import DOMAIN, KEY_WLAN_HOST_LIST, UPDATE_SIGNAL
+from . import HuaweiLteBaseEntity, Router
+from .const import DOMAIN, KEY_LAN_HOST_INFO, KEY_WLAN_HOST_LIST, UPDATE_SIGNAL
 
 _LOGGER = logging.getLogger(__name__)
 
 _DEVICE_SCAN = f"{DEVICE_TRACKER_DOMAIN}/device_scan"
+
+_HostType = Dict[str, Any]
+
+
+def _get_hosts(
+    router: Router, ignore_subscriptions: bool = False
+) -> list[_HostType] | None:
+    for key in KEY_LAN_HOST_INFO, KEY_WLAN_HOST_LIST:
+        if not ignore_subscriptions and key not in router.subscriptions:
+            continue
+        try:
+            return cast(List[_HostType], router.data[key]["Hosts"]["Host"])
+        except KeyError:
+            _LOGGER.debug("%s[%s][%s] not in data", key, "Hosts", "Host")
+    return None
 
 
 async def async_setup_entry(
@@ -40,10 +55,7 @@ async def async_setup_entry(
     # us, i.e. if wlan host list is supported. Only set up a subscription and proceed
     # with adding and tracking entities if it is.
     router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
-    try:
-        _ = router.data[KEY_WLAN_HOST_LIST]["Hosts"]["Host"]
-    except KeyError:
-        _LOGGER.debug("%s[%s][%s] not in data", KEY_WLAN_HOST_LIST, "Hosts", "Host")
+    if _get_hosts(router, True) is None:
         return
 
     # Initialize already tracked entities
@@ -62,6 +74,7 @@ async def async_setup_entry(
     async_add_entities(known_entities, True)
 
     # Tell parent router to poll hosts list to gather new devices
+    router.subscriptions[KEY_LAN_HOST_INFO].add(_DEVICE_SCAN)
     router.subscriptions[KEY_WLAN_HOST_LIST].add(_DEVICE_SCAN)
 
     async def _async_maybe_add_new_entities(url: str) -> None:
@@ -79,6 +92,18 @@ async def async_setup_entry(
     async_add_new_entities(hass, router.url, async_add_entities, tracked)
 
 
+def _is_wireless(host: _HostType) -> bool:
+    # LAN host info entries have an "InterfaceType" property, "Ethernet" / "Wireless".
+    # WLAN host list ones don't, but they're expected to be all wireless.
+    return cast(str, host.get("InterfaceType", "Wireless")) != "Ethernet"
+
+
+def _is_connected(host: _HostType | None) -> bool:
+    # LAN host info entries have an "Active" property, "1" or "0".
+    # WLAN host list ones don't, but that call appears to return active hosts only.
+    return False if host is None else cast(str, host.get("Active", "1")) != "0"
+
+
 @callback
 def async_add_new_entities(
     hass: HomeAssistantType,
@@ -88,14 +113,14 @@ def async_add_new_entities(
 ) -> None:
     """Add new entities that are not already being tracked."""
     router = hass.data[DOMAIN].routers[router_url]
-    try:
-        hosts = router.data[KEY_WLAN_HOST_LIST]["Hosts"]["Host"]
-    except KeyError:
-        _LOGGER.debug("%s[%s][%s] not in data", KEY_WLAN_HOST_LIST, "Hosts", "Host")
+    hosts = _get_hosts(router)
+    if not hosts:
         return
 
     new_entities: list[Entity] = []
-    for host in (x for x in hosts if x.get("MacAddress")):
+    for host in (
+        x for x in hosts if _is_connected(x) and _is_wireless(x) and x.get("MacAddress")
+    ):
         entity = HuaweiLteScannerEntity(router, host["MacAddress"])
         if entity.unique_id in tracked:
             continue
@@ -159,11 +184,17 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
 
     async def async_update(self) -> None:
         """Update state."""
-        hosts = self.router.data[KEY_WLAN_HOST_LIST]["Hosts"]["Host"]
+        hosts = _get_hosts(self.router)
+        if hosts is None:
+            self._available = False
+            return
+        self._available = True
         host = next((x for x in hosts if x.get("MacAddress") == self.mac), None)
-        self._is_connected = host is not None
+        self._is_connected = _is_connected(host)
         if host is not None:
             self._hostname = host.get("HostName")
             self._extra_state_attributes = {
-                _better_snakecase(k): v for k, v in host.items() if k != "HostName"
+                _better_snakecase(k): v
+                for k, v in host.items()
+                if k not in ("Active", "HostName")
             }

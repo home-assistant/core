@@ -26,6 +26,7 @@ KEY_DEVICE_BASIC_INFORMATION = "device_basic_information"
 KEY_DEVICE_INFORMATION = "device_information"
 KEY_DEVICE_SIGNAL = "device_signal"
 KEY_DIALUP_MOBILE_DATASWITCH = "dialup_mobile_dataswitch"
+KEY_LAN_HOST_INFO = "lan_host_info"
 KEY_MONITORING_CHECK_NOTIFICATIONS = "monitoring_check_notifications"
 KEY_MONITORING_MONTH_STATISTICS = "monitoring_month_statistics"
 KEY_MONITORING_STATUS = "monitoring_status"
@@ -42,7 +43,10 @@ BINARY_SENSOR_KEYS = {
     KEY_WLAN_WIFI_FEATURE_SWITCH,
 }
 
-DEVICE_TRACKER_KEYS = {KEY_WLAN_HOST_LIST}
+DEVICE_TRACKER_KEYS = {
+    KEY_LAN_HOST_INFO,
+    KEY_WLAN_HOST_LIST,
+}
 
 SENSOR_KEYS = {
     KEY_DEVICE_INFORMATION,

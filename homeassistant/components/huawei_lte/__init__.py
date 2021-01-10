@@ -64,6 +64,7 @@ from .const import (
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
     KEY_DIALUP_MOBILE_DATASWITCH,
+    KEY_LAN_HOST_INFO,
     KEY_MONITORING_CHECK_NOTIFICATIONS,
     KEY_MONITORING_MONTH_STATISTICS,
     KEY_MONITORING_STATUS,
@@ -261,6 +262,10 @@ class Router:
         self._get_data(KEY_NET_CURRENT_PLMN, self.client.net.current_plmn)
         self._get_data(KEY_NET_NET_MODE, self.client.net.net_mode)
         self._get_data(KEY_SMS_SMS_COUNT, self.client.sms.sms_count)
+        self._get_data(KEY_LAN_HOST_INFO, self.client.lan.host_info)
+        if self.data.get(KEY_LAN_HOST_INFO):
+            # LAN host info includes everything in WLAN host list
+            self.subscriptions.pop(KEY_WLAN_HOST_LIST, None)
         self._get_data(KEY_WLAN_HOST_LIST, self.client.wlan.host_list)
         self._get_data(
             KEY_WLAN_WIFI_FEATURE_SWITCH, self.client.wlan.wifi_feature_switch
