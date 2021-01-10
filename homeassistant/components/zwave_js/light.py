@@ -177,17 +177,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             warm = 255 - cold
             await self._async_set_color("Warm White", warm)
             await self._async_set_color("Cold White", cold)
-            return
 
         # White value
-        white = kwargs.get(ATTR_WHITE_VALUE)
-        if white and self._supports_white_value and warm is not None:
-            target_val = self.get_zwave_value(
-                "targetColor",
-                CommandClass.SWITCH_COLOR,
-                value_property_key_name="Warm White",
-            )
-            await self.info.node.async_set_value(target_val, warm)
+        white_value = kwargs.get(ATTR_WHITE_VALUE)
+        if white_value is not None and self._supports_white_value:
+            await self._async_set_color("Warm White", white_value)
 
         # set brightness
         await self._async_set_brightness(
