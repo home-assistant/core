@@ -74,6 +74,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _async_get_roomba_discovery(self):
         """Create a discovery object."""
         discovery = RoombaDiscovery()
+        discovery.amount_of_broadcasted_messages = 10
         discovery.server_socket.settimeout(SOCKET_TIMEOUT)
         return discovery
 
