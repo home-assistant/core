@@ -14,6 +14,7 @@ failure modes or corner cases like how out of order packets are handled.
 
 import fractions
 import threading
+from unittest.mock import patch
 
 import av
 
@@ -23,8 +24,6 @@ from homeassistant.components.stream.const import (
     PACKETS_TO_WAIT_FOR_AUDIO,
 )
 from homeassistant.components.stream.worker import stream_worker
-
-from tests.async_mock import patch
 
 STREAM_SOURCE = "some-stream-source"
 # Formats here are arbitrary, not exercised by tests
