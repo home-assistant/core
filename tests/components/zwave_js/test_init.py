@@ -1,6 +1,6 @@
 """Test the Z-Wave JS init module."""
 from copy import deepcopy
-from unittest.mock import patch
+from unittest.mock import DEFAULT, patch
 
 import pytest
 from zwave_js_server.model.node import Node
@@ -126,6 +126,39 @@ async def test_on_node_added_not_ready(hass, multisensor_6_state, client, integr
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
     assert not state  # device added in registry but entity not yet added
+
+    node.data["ready"] = True
+    node.emit("ready", event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+    assert state
+    assert state.state != STATE_UNAVAILABLE  # entity added
+
+
+async def test_existing_node_not_ready(hass, client, multisensor_6):
+    """Test we handle a non ready node that exist during integration setup."""
+    node = multisensor_6
+    node.data = deepcopy(node.data)  # Copy to allow modification in tests.
+    node.data["ready"] = False
+    event = {"node": node}
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+
+    def initialize_client(async_on_initialized):
+        """Init the client."""
+        hass.async_create_task(async_on_initialized())
+        return DEFAULT
+
+    client.register_on_initialized.side_effect = initialize_client
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+    assert not state  # node and entity not yet added
 
     node.data["ready"] = True
     node.emit("ready", event)
