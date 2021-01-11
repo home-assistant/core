@@ -170,9 +170,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         Given a configured host, will ask the user to press the home and target buttons
         to connect to the device.
         """
-        if user_input is None:
-            return self.async_show_form(step_id="link")
-
         if not self.blid:
             discovery = self._async_get_roomba_discovery()
             robot = None
@@ -186,9 +183,13 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not robot:
                 return self.async_abort(reason="cannot_connect")
+
             self.blid = robot.blid
             await self.async_set_unique_id(self.blid, raise_on_progress=False)
             self._abort_if_unique_id_configured()
+
+        if user_input is None:
+            return self.async_show_form(step_id="link")
 
         getpassword = RoombaPassword(self.host)
         password = None
