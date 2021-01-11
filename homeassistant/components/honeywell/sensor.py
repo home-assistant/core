@@ -38,21 +38,23 @@ PLATFORM_SCHEMA = vol.All(
 class ThermostatSensor(HoneywellDevice, Entity):
     """Base class for honeywell thermostat sensor."""
 
-    def __init__(self, coordinator, device, get_data_function_name, display_name):
+    def __init__(
+        self, coordinator, location_id, device_id, get_data_function_name, display_name
+    ):
         """Init the sensor, pass in reference to coordinator, somecomfort device, somecomfort function name, and entity display name."""
-        HoneywellDevice.__init__(self, coordinator, device)
+        HoneywellDevice.__init__(self, coordinator, location_id, device_id)
         self._get_data_function_name = get_data_function_name
         self._display_name = display_name
 
     @property
     def name(self):
         """Return the display name of the sensor entity."""
-        return self._display_name + " " + self._device.name
+        return self._display_name + " " + self.get_device().name
 
     @property
     def state(self):
         """Return the current state of the entity."""
-        return getattr(self._device, self._get_data_function_name)
+        return getattr(self.get_device(), self._get_data_function_name)
 
 
 class TemperatureSensor(ThermostatSensor):
@@ -61,7 +63,11 @@ class TemperatureSensor(ThermostatSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement, either C or F."""
-        return TEMP_CELSIUS if self._device.temperature_unit == "C" else TEMP_FAHRENHEIT
+        return (
+            TEMP_CELSIUS
+            if self.get_device().temperature_unit == "C"
+            else TEMP_FAHRENHEIT
+        )
 
     @property
     def icon(self):
@@ -110,29 +116,35 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     loc_id = config.get(CONF_LOC_ID)
 
     sensors_list = []
-    for location in client.locations_by_id.values():
-        for device in location.devices_by_id.values():
+    for location_id, location in client.locations_by_id.items():
+        for device_id, device in location.devices_by_id.items():
             if (not loc_id or location.locationid == loc_id) and (
                 not dev_id or device.deviceid == dev_id
             ):
                 sensors_list.append(
                     TemperatureSensor(
                         coordinator,
-                        device,
+                        location_id,
+                        device_id,
                         "current_temperature",
                         "Indoor Temperature",
                     )
                 )
                 sensors_list.append(
                     HumiditySensor(
-                        coordinator, device, "current_humidity", "Indoor Humidity"
+                        coordinator,
+                        location_id,
+                        device_id,
+                        "current_humidity",
+                        "Indoor Humidity",
                     )
                 )
                 if device.outdoor_temperature:
                     sensors_list.append(
                         TemperatureSensor(
                             coordinator,
-                            device,
+                            location_id,
+                            device_id,
                             "outdoor_temperature",
                             "Outdoor Temperature",
                         )
@@ -141,7 +153,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     sensors_list.append(
                         HumiditySensor(
                             coordinator,
-                            device,
+                            location_id,
+                            device_id,
                             "outdoor_humidity",
                             "Outdoor Humidity",
                         )

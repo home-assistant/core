@@ -22,11 +22,17 @@ CLIENT_KEY_COORDINATOR = "client_key_coordinator"
 class HoneywellDevice(CoordinatorEntity):
     """Base class to be used by honeywell thermostat sensors and thermostats."""
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator, location_id, device_id):
         """Initialize the HoneywellDevice."""
         # the coordinator updates the device object
         CoordinatorEntity.__init__(self, coordinator)
-        self._device = device
+        self._device_id = device_id
+        self._location_id = location_id
+
+    def get_device(self):
+        """Get the device object from the coordinator."""
+        client = self.coordinator.data
+        return client.locations_by_id[self._location_id].devices_by_id[self._device_id]
 
 
 # decorator that allows IO functions to run in a background thread
@@ -113,11 +119,12 @@ async def async_setup(hass, config):
         if client is None:
             try:
                 client = await __login_to_honeywell(username, password)
-            except somecomfort.client.APIRateLimited:
+            except somecomfort.client.APIRateLimited as exp:
                 _LOGGER.error(
                     "Failed to login to honeywell account during async_update_data due to rate limit."
                 )
                 _LOGGER.error(" Will retry later")
+                raise UpdateFailed(str(exp)) from exp
 
         # assuming we got a working login, try getting the data
         try:
@@ -135,6 +142,8 @@ async def async_setup(hass, config):
             requests.exceptions.ReadTimeout,
         ) as exp:
             _LOGGER.error("SomeComfort update failed - Error: %s", exp)
+            # try logging in again if the retries didn't work
+            client = await __login_to_honeywell(username, password)
             raise UpdateFailed(str(exp)) from exp
 
         return client
