@@ -56,7 +56,6 @@ homeassistant/components/auth/* @home-assistant/core
 homeassistant/components/automation/* @home-assistant/core
 homeassistant/components/avea/* @pattyland
 homeassistant/components/awair/* @ahayworth @danielsjf
-homeassistant/components/aws/* @awarecan
 homeassistant/components/axis/* @Kane610
 homeassistant/components/azure_devops/* @timmo001
 homeassistant/components/azure_event_hub/* @eavanvalkenburg
@@ -290,7 +289,7 @@ homeassistant/components/neato/* @dshokouhi @Santobert
 homeassistant/components/nederlandse_spoorwegen/* @YarmoM
 homeassistant/components/nello/* @pschmitt
 homeassistant/components/ness_alarm/* @nickw444
-homeassistant/components/nest/* @awarecan @allenporter
+homeassistant/components/nest/* @allenporter
 homeassistant/components/netatmo/* @cgtobi
 homeassistant/components/netdata/* @fabaff
 homeassistant/components/nexia/* @bdraco
