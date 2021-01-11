@@ -29,8 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELAY}
 
 SOCKET_TIMEOUT = 10
-DISCOVERY_TIMEOUT = 30
-
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
@@ -109,14 +107,8 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return await self.async_step_link()
 
-        devices = None
         discovery = self._async_get_roomba_discovery()
-        # Find / discover robots
-        try:
-            with async_timeout.timeout(DISCOVERY_TIMEOUT):
-                devices = await self.hass.async_add_executor_job(discovery.get_all)
-        except asyncio.TimeoutError:
-            return await self.async_step_manual()
+        devices = await self.hass.async_add_executor_job(discovery.get_all)
 
         if devices:
             # Find already configured hosts
