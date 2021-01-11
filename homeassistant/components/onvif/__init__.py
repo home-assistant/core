@@ -2,7 +2,6 @@
 import asyncio
 
 from onvif.exceptions import ONVIFAuthError, ONVIFError, ONVIFTimeoutError
-import voluptuous as vol
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -32,8 +31,6 @@ from .const import (
     RTSP_TRANS_PROTOCOLS,
 )
 from .device import ONVIFDevice
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
