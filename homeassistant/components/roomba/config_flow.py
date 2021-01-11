@@ -80,7 +80,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         # Check if user chooses manual entry
-        if user_input is not None and user_input[CONF_HOST] is None:
+        if user_input is not None and not user_input[CONF_HOST]:
             return await self.async_step_manual()
 
         if (
