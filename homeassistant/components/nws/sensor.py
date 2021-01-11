@@ -89,9 +89,9 @@ class NWSSensor(Entity):
             return None
         if self._unit == SPEED_MILES_PER_HOUR:
             return round(convert_distance(value, LENGTH_KILOMETERS, LENGTH_MILES))
-        elif self._unit == LENGTH_MILES:
+        if self._unit == LENGTH_MILES:
             return round(convert_distance(value, LENGTH_METERS, LENGTH_MILES))
-        elif self._unit == PRESSURE_INHG:
+        if self._unit == PRESSURE_INHG:
             return round(convert_pressure(value, PRESSURE_PA, PRESSURE_INHG), 2)
         return value
 
