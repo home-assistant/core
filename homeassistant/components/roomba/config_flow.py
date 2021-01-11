@@ -24,6 +24,7 @@ from .const import (
 from .const import DOMAIN  # pylint:disable=unused-import
 
 DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELAY}
+DISCOVERY_TIMEOUT = 15
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -98,7 +99,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         discovery = RoombaDiscovery()
         # Find / discover bridges
         try:
-            with async_timeout.timeout(5):
+            with async_timeout.timeout(DISCOVERY_TIMEOUT):
                 devices = await self.hass.async_add_executor_job(discovery.get_all)
         except asyncio.TimeoutError:
             return await self.async_step_manual()
@@ -132,7 +133,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_manual(self, user_input):
+    async def async_step_manual(self, user_input=None):
         """Handle manual device setup."""
         if user_input is None:
             return self.async_show_form(
