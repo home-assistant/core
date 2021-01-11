@@ -241,7 +241,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
 
 @callback
-def _async_get_roomba_discovery(self):
+def _async_get_roomba_discovery():
     """Create a discovery object."""
     discovery = RoombaDiscovery()
     discovery.amount_of_broadcasted_messages = MAX_NUM_DEVICES_TO_DISCOVER
