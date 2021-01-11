@@ -257,7 +257,7 @@ def test_type_switches(type_name, entity_id, state, attrs, config):
     "type_name, entity_id, state, attrs",
     [
         (
-            "DockVacuum",
+            "Vacuum",
             "vacuum.dock_vacuum",
             "docked",
             {
