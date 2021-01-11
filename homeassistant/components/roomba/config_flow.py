@@ -205,7 +205,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 await async_disconnect_or_timeout(self.hass, info[ROOMBA_SESSION])
-                return self.async_create_entry(title=self.host, data=config)
+                return self.async_create_entry(title=info[CONF_NAME], data=config)
 
         return self.async_show_form(
             step_id="link_manual",
