@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.somfy_mylink.config_flow import TARGET_CONFIG_VERSION
 from homeassistant.components.somfy_mylink.const import (
     CONF_DEFAULT_REVERSE,
     CONF_ENTITY_CONFIG,
@@ -349,7 +348,6 @@ async def test_options_with_targets(hass, reversed):
 
         assert config_entry.options == {
             CONF_REVERSED_TARGET_IDS: {"a": reversed},
-            TARGET_CONFIG_VERSION: 1,
         }
 
         await hass.async_block_till_done()
@@ -419,11 +417,7 @@ async def test_form_import_with_entity_config_modify_options(hass, reversed):
         assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
         # Will not be altered if nothing changes
-        options_copy = mock_imported_config_entry.options.copy()
-        if TARGET_CONFIG_VERSION in options_copy:
-            del options_copy[TARGET_CONFIG_VERSION]
-
-        assert options_copy == {
+        assert mock_imported_config_entry.options == {
             CONF_REVERSED_TARGET_IDS: {"1.2": reversed},
         }
 
