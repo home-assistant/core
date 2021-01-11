@@ -172,7 +172,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             with async_timeout.timeout(120):
                 password = await self.hass.async_add_executor_job(
-                    getpassword.get_password
+                    getpassword.get_password, self.host
                 )
         except Exception:  # pylint: disable=broad-except
             return await self.async_step_link_manual()
