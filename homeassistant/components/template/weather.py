@@ -51,15 +51,17 @@ CONF_HUMIDITY_TEMPLATE = "humidity_template"
 CONF_CONDITION_TEMPLATE = "condition_template"
 CONF_PRESSURE_TEMPLATE = "pressure_template"
 CONF_WIND_SPEED_TEMPLATE = "wind_speed_template"
+CONF_FORECAST_TEMPLATE = "forecast_template"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_CONDITION_TEMPLATE): cv.template,
         vol.Required(CONF_TEMPERATURE_TEMPLATE): cv.template,
-        vol.Required(CONF_HUMIDITY_TEMPLATE): cv.template,
+        vol.Optional(CONF_HUMIDITY_TEMPLATE): cv.template,
         vol.Optional(CONF_PRESSURE_TEMPLATE): cv.template,
         vol.Optional(CONF_WIND_SPEED_TEMPLATE): cv.template,
+        vol.Optional(CONF_FORECAST_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
@@ -72,9 +74,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = config[CONF_NAME]
     condition_template = config[CONF_CONDITION_TEMPLATE]
     temperature_template = config[CONF_TEMPERATURE_TEMPLATE]
-    humidity_template = config[CONF_HUMIDITY_TEMPLATE]
+    humidity_template = config.get(CONF_HUMIDITY_TEMPLATE)
     pressure_template = config.get(CONF_PRESSURE_TEMPLATE)
     wind_speed_template = config.get(CONF_WIND_SPEED_TEMPLATE)
+    forecast_template = config.get(CONF_FORECAST_TEMPLATE)
     unique_id = config.get(CONF_UNIQUE_ID)
 
     async_add_entities(
@@ -87,6 +90,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 humidity_template,
                 pressure_template,
                 wind_speed_template,
+                forecast_template,
                 unique_id,
             )
         ]
@@ -105,6 +109,7 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         humidity_template,
         pressure_template,
         wind_speed_template,
+        forecast_template,
         unique_id,
     ):
         """Initialize the Demo weather."""
@@ -116,6 +121,7 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._humidity_template = humidity_template
         self._pressure_template = pressure_template
         self._wind_speed_template = wind_speed_template
+        self._forecast_template = forecast_template
         self._unique_id = unique_id
 
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
@@ -125,6 +131,7 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._humidity = None
         self._pressure = None
         self._wind_speed = None
+        self._forecast = []
 
     @property
     def name(self):
@@ -160,6 +167,11 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
     def pressure(self):
         """Return the pressure."""
         return self._pressure
+
+    @property
+    def forecast(self):
+        """Return the forecast."""
+        return self._forecast
 
     @property
     def attribution(self):
@@ -199,5 +211,10 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
             self.add_template_attribute(
                 "_wind_speed",
                 self._wind_speed_template,
+            )
+        if self._forecast_template:
+            self.add_template_attribute(
+                "_forecast",
+                self._forecast_template,
             )
         await super().async_added_to_hass()
