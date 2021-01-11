@@ -23,6 +23,8 @@ from .const import (
 )
 from .const import DOMAIN  # pylint:disable=unused-import
 
+DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELAY}
+
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
@@ -179,7 +181,12 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=self.name or self.host,
-            data={CONF_HOST: self.host, CONF_BLID: self.blid, CONF_PASSWORD: password},
+            data={
+                CONF_HOST: self.host,
+                CONF_BLID: self.blid,
+                CONF_PASSWORD: password,
+                **DEFAULT_OPTIONS,
+            },
         )
 
     async def async_step_link_manual(self, user_input=None):
@@ -191,6 +198,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: self.host,
                 CONF_BLID: self.blid,
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
+                **DEFAULT_OPTIONS,
             }
             try:
                 info = await validate_input(self.hass, config)
