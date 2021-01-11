@@ -1,5 +1,6 @@
 """Config flow for Somfy MyLink integration."""
 import asyncio
+from copy import deepcopy
 import logging
 
 from somfy_mylink_synergy import SomfyMyLinkSynergy
@@ -21,8 +22,6 @@ from .const import (
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
-
-TARGET_CONFIG_VERSION = "target_config_version"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -114,7 +113,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry):
         """Initialize options flow."""
         self.config_entry = config_entry
-        self.options = config_entry.options.copy()
+        self.options = deepcopy(dict(config_entry.options))
         self._target_id = None
 
     @callback
