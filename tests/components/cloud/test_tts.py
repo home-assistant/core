@@ -39,8 +39,9 @@ async def test_prefs_default_voice(hass, cloud_prefs):
     assert provider_conf.default_options == {"gender": "female"}
 
     await cloud_prefs.async_update(tts_default_voice=("nl-NL", "male"))
+    await hass.async_block_till_done()
 
-    assert provider_pref.default_language == "en-US"
-    assert provider_pref.default_options == {"gender": "female"}
+    assert provider_pref.default_language == "nl-NL"
+    assert provider_pref.default_options == {"gender": "male"}
     assert provider_conf.default_language == "fr-FR"
     assert provider_conf.default_options == {"gender": "female"}
