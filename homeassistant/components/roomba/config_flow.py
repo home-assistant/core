@@ -1,5 +1,4 @@
 """Config flow to configure roomba component."""
-import logging
 
 from roombapy import Roomba
 from roombapy.discovery import RoombaDiscovery
@@ -21,8 +20,6 @@ from .const import (
     ROOMBA_SESSION,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELAY}
 
@@ -89,7 +86,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         # Check if user chooses manual entry
-        _LOGGER.warning("async_step_init user_input: %s", user_input)
         if user_input is not None and not user_input.get(CONF_HOST):
             return await self.async_step_manual()
 
