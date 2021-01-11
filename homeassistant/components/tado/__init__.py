@@ -205,6 +205,13 @@ class TadoConnector:
         try:
             if sensor_type == "device":
                 data = self.tado.getDeviceInfo(sensor)
+                if (
+                    "INSIDE_TEMPERATURE_MEASUREMENT"
+                    in data["characteristics"]["capabilities"]
+                ):
+                    data["TEMP_OFFSET"] = self.tado.getDeviceInfo(
+                        sensor, "temperatureOffset"
+                    )
             elif sensor_type == "zone":
                 data = self.tado.getZoneState(sensor)
             else:

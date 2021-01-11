@@ -255,6 +255,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
         self._tado_zone_data = None
 
+        self._tado_zone_temp_offset = dict()
+
         self._async_update_zone_data()
 
     async def async_added_to_hass(self):
@@ -457,6 +459,11 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             return [TADO_SWING_ON, TADO_SWING_OFF]
         return None
 
+    @property
+    def device_state_attributes(self):
+        """Return temperature offset."""
+        return self._tado_zone_temp_offset
+
     def set_swing_mode(self, swing_mode):
         """Set swing modes for the device."""
         self._control_hvac(swing_mode=swing_mode)
@@ -465,10 +472,18 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def _async_update_zone_data(self):
         """Load tado data into zone."""
         self._tado_zone_data = self._tado.data["zone"][self.zone_id]
+        self._update_offset()
         self._current_tado_fan_speed = self._tado_zone_data.current_fan_speed
         self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
         self._current_tado_hvac_action = self._tado_zone_data.current_hvac_action
         self._current_tado_swing_mode = self._tado_zone_data.current_swing_mode
+
+    def _update_offset(self):
+        # Add 'offset' to the key so its named correctly as an attribute in HA
+        for key in self._tado.data["device"][self._device_id]["TEMP_OFFSET"]:
+            self._tado_zone_temp_offset["offset_" + key] = self._tado.data["device"][
+                self._device_id
+            ]["TEMP_OFFSET"][key]
 
     @callback
     def _async_update_callback(self):
