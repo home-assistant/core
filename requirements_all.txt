@@ -218,7 +218,7 @@ aiopylgtv==0.3.3
 aiorecollect==1.0.1
 
 # homeassistant.components.shelly
-aioshelly==0.5.1
+aioshelly==0.5.3
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -2372,4 +2372,4 @@ zigpy==0.29.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.6.0
+zwave-js-server-python==0.7.0

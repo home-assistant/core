@@ -10,20 +10,25 @@ from homeassistant.components.homekit.const import (
     TYPE_SPRINKLER,
     TYPE_VALVE,
 )
-from homeassistant.components.homekit.type_switches import (
-    DockVacuum,
-    Outlet,
-    Switch,
-    Valve,
-)
+from homeassistant.components.homekit.type_switches import Outlet, Switch, Vacuum, Valve
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_RETURN_TO_BASE,
     SERVICE_START,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_CLEANING,
     STATE_DOCKED,
+    SUPPORT_RETURN_HOME,
+    SUPPORT_START,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_TYPE, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    CONF_TYPE,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import split_entity_id
 import homeassistant.util.dt as dt_util
 
@@ -193,14 +198,18 @@ async def test_valve_set_state(hass, hk_driver, events):
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_vacuum_set_state(hass, hk_driver, events):
+async def test_vacuum_set_state_with_returnhome_and_start_support(
+    hass, hk_driver, events
+):
     """Test if Vacuum accessory and HA are updated accordingly."""
     entity_id = "vacuum.roomba"
 
-    hass.states.async_set(entity_id, None)
+    hass.states.async_set(
+        entity_id, None, {ATTR_SUPPORTED_FEATURES: SUPPORT_RETURN_HOME | SUPPORT_START}
+    )
     await hass.async_block_till_done()
 
-    acc = DockVacuum(hass, hk_driver, "DockVacuum", entity_id, 2, None)
+    acc = Vacuum(hass, hk_driver, "Vacuum", entity_id, 2, None)
     await acc.run_handler()
     await hass.async_block_till_done()
     assert acc.aid == 2
@@ -208,11 +217,19 @@ async def test_vacuum_set_state(hass, hk_driver, events):
 
     assert acc.char_on.value == 0
 
-    hass.states.async_set(entity_id, STATE_CLEANING)
+    hass.states.async_set(
+        entity_id,
+        STATE_CLEANING,
+        {ATTR_SUPPORTED_FEATURES: SUPPORT_RETURN_HOME | SUPPORT_START},
+    )
     await hass.async_block_till_done()
     assert acc.char_on.value == 1
 
-    hass.states.async_set(entity_id, STATE_DOCKED)
+    hass.states.async_set(
+        entity_id,
+        STATE_DOCKED,
+        {ATTR_SUPPORTED_FEATURES: SUPPORT_RETURN_HOME | SUPPORT_START},
+    )
     await hass.async_block_till_done()
     assert acc.char_on.value == 0
 
@@ -235,6 +252,52 @@ async def test_vacuum_set_state(hass, hk_driver, events):
     assert acc.char_on.value == 0
     assert call_return_to_base
     assert call_return_to_base[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] is None
+
+
+async def test_vacuum_set_state_without_returnhome_and_start_support(
+    hass, hk_driver, events
+):
+    """Test if Vacuum accessory and HA are updated accordingly."""
+    entity_id = "vacuum.roomba"
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+
+    acc = Vacuum(hass, hk_driver, "Vacuum", entity_id, 2, None)
+    await acc.run_handler()
+    await hass.async_block_till_done()
+    assert acc.aid == 2
+    assert acc.category == 8  # Switch
+
+    assert acc.char_on.value == 0
+
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert acc.char_on.value == 1
+
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert acc.char_on.value == 0
+
+    # Set from HomeKit
+    call_turn_on = async_mock_service(hass, VACUUM_DOMAIN, SERVICE_TURN_ON)
+    call_turn_off = async_mock_service(hass, VACUUM_DOMAIN, SERVICE_TURN_OFF)
+
+    await hass.async_add_executor_job(acc.char_on.client_update_value, 1)
+    await hass.async_block_till_done()
+    assert acc.char_on.value == 1
+    assert call_turn_on
+    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
+
+    await hass.async_add_executor_job(acc.char_on.client_update_value, 0)
+    await hass.async_block_till_done()
+    assert acc.char_on.value == 0
+    assert call_turn_off
+    assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
 

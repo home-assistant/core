@@ -1,7 +1,7 @@
 """Test the Z-Wave JS sensor platform."""
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 
-AIR_TEMPERATURE_SENSOR = "sensor.multisensor_6_air_temperature"
+from .common import AIR_TEMPERATURE_SENSOR
 
 
 async def test_numeric_sensor(hass, multisensor_6, integration):
