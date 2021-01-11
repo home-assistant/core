@@ -1,8 +1,6 @@
 """Config flow to configure roomba component."""
-import asyncio
 import logging
 
-import async_timeout
 from roombapy import Roomba
 from roombapy.discovery import RoombaDiscovery
 from roombapy.getpassword import RoombaPassword
@@ -171,15 +169,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="link")
 
-        getpassword = RoombaPassword(self.host)
-        password = None
-        try:
-            with async_timeout.timeout(120):
-                password = await self.hass.async_add_executor_job(
-                    getpassword.get_password, self.host
-                )
-        except Exception:  # pylint: disable=broad-except
-            return await self.async_step_link_manual()
+        password = await self.hass.async_add_executor_job(RoombaPassword(self.host))
 
         if not password:
             return await self.async_step_link_manual()
