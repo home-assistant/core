@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import pytest
+from zwave_js_server.model.node import Node
 
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
@@ -87,3 +88,21 @@ async def test_initialized_timeout(hass, client, connect_timeout):
     await hass.async_block_till_done()
 
     assert entry.state == ENTRY_STATE_SETUP_RETRY
+
+
+async def test_on_node_added_ready(hass, multisensor_6_state, client, integration):
+    """Test we handle node added event."""
+    node = Node(client, multisensor_6_state)
+    event = {"node": node}
+
+    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+    assert not state  # node and entity not yet added
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+    assert state
+    assert state.state != STATE_UNAVAILABLE  # node and entity added
