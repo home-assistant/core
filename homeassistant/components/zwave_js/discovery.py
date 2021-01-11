@@ -100,6 +100,12 @@ DISCOVERY_SCHEMAS = [
         },
         type={"number"},
     ),
+    # binary switches
+    ZWaveDiscoverySchema(
+        platform="switch",
+        command_class={CommandClass.SWITCH_BINARY},
+        property={"currentValue"},
+    ),
 ]
 
 
