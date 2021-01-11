@@ -152,7 +152,9 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="manual",
-                data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+                data_schema=vol.Schema(
+                    {vol.Required(CONF_HOST): str, vol.Required(CONF_BLID): str}
+                ),
             )
 
         if any(
@@ -162,6 +164,9 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         self.host = user_input[CONF_HOST]
+        self.blid = user_input[CONF_BLID]
+        await self.async_set_unique_id(self.blid, raise_on_progress=False)
+        self._abort_if_unique_id_configured()
         return await self.async_step_link()
 
     async def async_step_link(self, user_input=None):
@@ -170,24 +175,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         Given a configured host, will ask the user to press the home and target buttons
         to connect to the device.
         """
-        if not self.blid:
-            discovery = self._async_get_roomba_discovery()
-            robot = None
-            try:
-                with async_timeout.timeout(SOCKET_TIMEOUT):
-                    robot = await self.hass.async_add_executor_job(
-                        discovery.get, self.host
-                    )
-            except asyncio.TimeoutError:
-                return self.async_abort(reason="cannot_connect")
-
-            if not robot:
-                return self.async_abort(reason="cannot_connect")
-
-            self.blid = robot.blid
-            await self.async_set_unique_id(self.blid, raise_on_progress=False)
-            self._abort_if_unique_id_configured()
-
         if user_input is None:
             return self.async_show_form(step_id="link")
 
