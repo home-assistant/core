@@ -114,6 +114,7 @@ def _has_all_unique_names_and_ports(bridges):
 
 BRIDGE_SCHEMA = vol.All(
     cv.deprecated(CONF_ZEROCONF_DEFAULT_INTERFACE),
+    cv.deprecated(CONF_SAFE_MODE),
     vol.Schema(
         {
             vol.Optional(CONF_HOMEKIT_MODE, default=DEFAULT_HOMEKIT_MODE): vol.In(
@@ -246,7 +247,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     homekit_mode = options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
     entity_config = options.get(CONF_ENTITY_CONFIG, {}).copy()
     auto_start = options.get(CONF_AUTO_START, DEFAULT_AUTO_START)
-    safe_mode = options.get(CONF_SAFE_MODE, DEFAULT_SAFE_MODE)
     entity_filter = FILTER_SCHEMA(options.get(CONF_FILTER, {}))
 
     homekit = HomeKit(
@@ -256,7 +256,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         ip_address,
         entity_filter,
         entity_config,
-        safe_mode,
         homekit_mode,
         advertise_ip,
         entry.entry_id,
@@ -421,7 +420,6 @@ class HomeKit:
         ip_address,
         entity_filter,
         entity_config,
-        safe_mode,
         homekit_mode,
         advertise_ip=None,
         entry_id=None,
@@ -433,7 +431,6 @@ class HomeKit:
         self._ip_address = ip_address
         self._filter = entity_filter
         self._config = entity_config
-        self._safe_mode = safe_mode
         self._advertise_ip = advertise_ip
         self._entry_id = entry_id
         self._homekit_mode = homekit_mode
@@ -469,10 +466,6 @@ class HomeKit:
             self.driver.load()
         else:
             self.driver.persist()
-
-        if self._safe_mode:
-            _LOGGER.debug("Safe_mode selected for %s", self._name)
-            self.driver.safe_mode = True
 
     def reset_accessories(self, entity_ids):
         """Reset the accessory to load the latest configuration."""
