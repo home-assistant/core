@@ -1,0 +1,632 @@
+{
+    "nodeId": 39,
+    "index": 0,
+    "installerIcon": 1536,
+    "userIcon": 1536,
+    "status": 4,
+    "ready": true,
+    "deviceClass": {
+        "basic": "Static Controller",
+        "generic": "Multilevel Switch",
+        "specific": "Multilevel Power Switch",
+        "mandatorySupportedCCs": [
+            "Basic",
+            "Multilevel Switch",
+            "All Switch"
+        ],
+        "mandatoryControlCCs": []
+    },
+    "isListening": true,
+    "isFrequentListening": false,
+    "isRouting": true,
+    "maxBaudRate": 40000,
+    "isSecure": "unknown",
+    "version": 4,
+    "isBeaming": true,
+    "manufacturerId": 881,
+    "productId": 2,
+    "productType": 259,
+    "firmwareVersion": "2.0",
+    "zwavePlusVersion": 1,
+    "nodeType": 0,
+    "roleType": 5,
+    "deviceConfig": {
+        "manufacturerId": 881,
+        "manufacturer": "Aeotec Ltd.",
+        "label": "ZWA002",
+        "description": "Bulb 6 Multi-Color",
+        "devices": [
+            {
+                "productType": "0x0003",
+                "productId": "0x0002"
+            },
+            {
+                "productType": "0x0103",
+                "productId": "0x0002"
+            }
+        ],
+        "firmwareVersion": {
+            "min": "0.0",
+            "max": "255.255"
+        },
+        "paramInformation": {
+            "_map": {}
+        }
+    },
+    "label": "ZWA002",
+    "neighbors": [
+        1,
+        32
+    ],
+    "interviewAttempts": 1,
+    "endpoints": [
+        {
+            "nodeId": 39,
+            "index": 0,
+            "installerIcon": 1536,
+            "userIcon": 1536
+        }
+    ],
+    "values": [
+        {
+            "commandClassName": "Multilevel Switch",
+            "commandClass": 38,
+            "endpoint": 0,
+            "property": "targetValue",
+            "propertyName": "targetValue",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "min": 0,
+                "max": 99,
+                "label": "Target value"
+            }
+        },
+        {
+            "commandClassName": "Multilevel Switch",
+            "commandClass": 38,
+            "endpoint": 0,
+            "property": "duration",
+            "propertyName": "duration",
+            "metadata": {
+                "type": "any",
+                "readable": true,
+                "writeable": true,
+                "label": "Transition duration"
+            }
+        },
+        {
+            "commandClassName": "Multilevel Switch",
+            "commandClass": 38,
+            "endpoint": 0,
+            "property": "currentValue",
+            "propertyName": "currentValue",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 99,
+                "label": "Current value"
+            },
+            "value": 0
+        },
+        {
+            "commandClassName": "Multilevel Switch",
+            "commandClass": 38,
+            "endpoint": 0,
+            "property": "Up",
+            "propertyName": "Up",
+            "metadata": {
+                "type": "boolean",
+                "readable": true,
+                "writeable": true,
+                "label": "Perform a level change (Up)",
+                "ccSpecific": {
+                    "switchType": 2
+                }
+            }
+        },
+        {
+            "commandClassName": "Multilevel Switch",
+            "commandClass": 38,
+            "endpoint": 0,
+            "property": "Down",
+            "propertyName": "Down",
+            "metadata": {
+                "type": "boolean",
+                "readable": true,
+                "writeable": true,
+                "label": "Perform a level change (Down)",
+                "ccSpecific": {
+                    "switchType": 2
+                }
+            }
+        },
+        {
+            "commandClassName": "Color Switch",
+            "commandClass": 51,
+            "endpoint": 0,
+            "property": "duration",
+            "propertyName": "duration",
+            "metadata": {
+                "type": "any",
+                "readable": true,
+                "writeable": true,
+                "label": "Transition duration"
+            }
+        },
+        {
+            "commandClassName": "Color Switch",
+            "commandClass": 51,
+            "endpoint": 0,
+            "property": "currentColor",
+            "propertyKey": 0,
+            "propertyName": "currentColor",
+            "propertyKeyName": "Warm White",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 255,
+                "label": "Current value (Warm White)",
+                "description": "The current value of the Warm White color."
+            },
+            "value": 255
+        },
+        {
+            "commandClassName": "Color Switch",
+            "commandClass": 51,
+            "endpoint": 0,
+            "property": "currentColor",
+            "propertyKey": 1,
+            "propertyName": "currentColor",
+            "propertyKeyName": "Cold White",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 255,
+                "label": "Current value (Cold White)",
+                "description": "The current value of the Cold White color."
+            },
+            "value": 0
+        },
+        {
+            "commandClassName": "Color Switch",
+            "commandClass": 51,
+            "endpoint": 0,
+            "property": "currentColor",
+            "propertyKey": 2,
+            "propertyName": "currentColor",
+            "propertyKeyName": "Red",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 255,
+                "label": "Current value (Red)",
+                "description": "The current value of the Red color."
+            },
+            "value": 0
+        },
+        {
+            "commandClassName": "Color Switch",
+            "commandClass": 51,
+            "endpoint": 0,
+            "property": "currentColor",
+            "propertyKey": 3,
+            "propertyName": "currentColor",
+            "propertyKeyName": "Green",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 255,
+                "label": "Current value (Green)",
+                "description": "The current value of the Green color."
+            },
+            "value": 0
+        },
+        {
+            "commandClassName": "Color Switch",
+            "commandClass": 51,
+            "endpoint": 0,
+            "property": "currentColor",
+            "propertyKey": 4,
+            "propertyName": "currentColor",
+            "propertyKeyName": "Blue",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 255,
+                "label": "Current value (Blue)",
+                "description": "The current value of the Blue color."
+            },
+            "value": 0
+        },
+        {
+            "commandClassName": "Color Switch",
+            "commandClass": 51,
+            "endpoint": 0,
+            "property": "targetColor",
+            "propertyKey": 0,
+            "propertyName": "targetColor",
+            "propertyKeyName": "Warm White",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "min": 0,
+                "max": 255,
+                "label": "Target value (Warm White)",
+                "description": "The target value of the Warm White color."
+            }
+        },
+        {
+            "commandClassName": "Color Switch",
+            "commandClass": 51,
+            "endpoint": 0,
+            "property": "targetColor",
+            "propertyKey": 1,
+            "propertyName": "targetColor",
+            "propertyKeyName": "Cold White",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "min": 0,
+                "max": 255,
+                "label": "Target value (Cold White)",
+                "description": "The target value of the Cold White color."
+            }
+        },
+        {
+            "commandClassName": "Color Switch",
+            "commandClass": 51,
+            "endpoint": 0,
+            "property": "targetColor",
+            "propertyKey": 2,
+            "propertyName": "targetColor",
+            "propertyKeyName": "Red",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "min": 0,
+                "max": 255,
+                "label": "Target value (Red)",
+                "description": "The target value of the Red color."
+            }
+        },
+        {
+            "commandClassName": "Color Switch",
+            "commandClass": 51,
+            "endpoint": 0,
+            "property": "targetColor",
+            "propertyKey": 3,
+            "propertyName": "targetColor",
+            "propertyKeyName": "Green",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "min": 0,
+                "max": 255,
+                "label": "Target value (Green)",
+                "description": "The target value of the Green color."
+            }
+        },
+        {
+            "commandClassName": "Color Switch",
+            "commandClass": 51,
+            "endpoint": 0,
+            "property": "targetColor",
+            "propertyKey": 4,
+            "propertyName": "targetColor",
+            "propertyKeyName": "Blue",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "min": 0,
+                "max": 255,
+                "label": "Target value (Blue)",
+                "description": "The target value of the Blue color."
+            }
+        },
+        {
+            "commandClassName": "Configuration",
+            "commandClass": 112,
+            "endpoint": 0,
+            "property": 1,
+            "propertyName": "Use custom mode for LED animations",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "valueSize": 1,
+                "min": 0,
+                "max": 2,
+                "default": 0,
+                "format": 0,
+                "allowManualEntry": false,
+                "states": {
+                    "0": "Disable",
+                    "1": "Blink Colors in order mode",
+                    "2": "Randomized blink color mode"
+                },
+                "label": "Use custom mode for LED animations",
+                "isFromConfig": true
+            },
+            "value": 0
+        },
+        {
+            "commandClassName": "Configuration",
+            "commandClass": 112,
+            "endpoint": 0,
+            "property": 2,
+            "propertyName": "Enable/Disable Strobe over Custom Color",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "valueSize": 1,
+                "min": 0,
+                "max": 1,
+                "default": 0,
+                "format": 0,
+                "allowManualEntry": false,
+                "states": {
+                    "0": "Disable",
+                    "1": "Enable"
+                },
+                "label": "Enable/Disable Strobe over Custom Color",
+                "isFromConfig": true
+            },
+            "value": 0
+        },
+        {
+            "commandClassName": "Configuration",
+            "commandClass": 112,
+            "endpoint": 0,
+            "property": 3,
+            "propertyName": "Rate of change to next color in Custom Mode",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "valueSize": 4,
+                "min": 5,
+                "max": 8640000,
+                "default": 50,
+                "format": 0,
+                "allowManualEntry": true,
+                "label": "Rate of change to next color in Custom Mode",
+                "isFromConfig": true
+            },
+            "value": 50
+        },
+        {
+            "commandClassName": "Configuration",
+            "commandClass": 112,
+            "endpoint": 0,
+            "property": 16,
+            "propertyName": "Ramp rate when dimming using Multilevel Switch",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "valueSize": 1,
+                "min": 0,
+                "max": 100,
+                "default": 20,
+                "format": 0,
+                "allowManualEntry": true,
+                "label": "Ramp rate when dimming using Multilevel Switch",
+                "isFromConfig": true
+            },
+            "value": 20
+        },
+        {
+            "commandClassName": "Configuration",
+            "commandClass": 112,
+            "endpoint": 0,
+            "property": 80,
+            "propertyName": "Enable notifications",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "valueSize": 1,
+                "min": 0,
+                "max": 1,
+                "default": 1,
+                "format": 0,
+                "allowManualEntry": false,
+                "states": {
+                    "0": "Nothing",
+                    "1": "Basic CC report"
+                },
+                "label": "Enable notifications",
+                "description": "Enable notifications to associated devices (Group 1) when the state is changed",
+                "isFromConfig": true
+            },
+            "value": 1
+        },
+        {
+            "commandClassName": "Configuration",
+            "commandClass": 112,
+            "endpoint": 0,
+            "property": 81,
+            "propertyName": "Adjust color component of Warm White",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "valueSize": 2,
+                "min": 2700,
+                "max": 4999,
+                "default": 2700,
+                "format": 0,
+                "allowManualEntry": true,
+                "label": "Adjust color component of Warm White",
+                "isFromConfig": true
+            },
+            "value": 2700
+        },
+        {
+            "commandClassName": "Configuration",
+            "commandClass": 112,
+            "endpoint": 0,
+            "property": 82,
+            "propertyName": "Adjust color component of Cold White",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "valueSize": 2,
+                "min": 5000,
+                "max": 6500,
+                "default": 6500,
+                "format": 0,
+                "allowManualEntry": true,
+                "label": "Adjust color component of Cold White",
+                "isFromConfig": true
+            },
+            "value": 6500
+        },
+        {
+            "commandClassName": "Configuration",
+            "commandClass": 112,
+            "endpoint": 0,
+            "property": 4,
+            "propertyName": "Set color that LED Bulb blinks in (Blink Mode)",
+            "metadata": {
+                "type": "number",
+                "readable": false,
+                "writeable": true,
+                "valueSize": 1,
+                "min": 1,
+                "max": 255,
+                "default": 1,
+                "format": 1,
+                "allowManualEntry": true,
+                "label": "Set color that LED Bulb blinks in (Blink Mode)",
+                "isFromConfig": true
+            }
+        },
+        {
+            "commandClassName": "Manufacturer Specific",
+            "commandClass": 114,
+            "endpoint": 0,
+            "property": "manufacturerId",
+            "propertyName": "manufacturerId",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 65535,
+                "label": "Manufacturer ID"
+            },
+            "value": 881
+        },
+        {
+            "commandClassName": "Manufacturer Specific",
+            "commandClass": 114,
+            "endpoint": 0,
+            "property": "productType",
+            "propertyName": "productType",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 65535,
+                "label": "Product type"
+            },
+            "value": 259
+        },
+        {
+            "commandClassName": "Manufacturer Specific",
+            "commandClass": 114,
+            "endpoint": 0,
+            "property": "productId",
+            "propertyName": "productId",
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 65535,
+                "label": "Product ID"
+            },
+            "value": 2
+        },
+        {
+            "commandClassName": "Version",
+            "commandClass": 134,
+            "endpoint": 0,
+            "property": "libraryType",
+            "propertyName": "libraryType",
+            "metadata": {
+                "type": "any",
+                "readable": true,
+                "writeable": false,
+                "label": "Libary type"
+            },
+            "value": 3
+        },
+        {
+            "commandClassName": "Version",
+            "commandClass": 134,
+            "endpoint": 0,
+            "property": "protocolVersion",
+            "propertyName": "protocolVersion",
+            "metadata": {
+                "type": "any",
+                "readable": true,
+                "writeable": false,
+                "label": "Z-Wave protocol version"
+            },
+            "value": "4.38"
+        },
+        {
+            "commandClassName": "Version",
+            "commandClass": 134,
+            "endpoint": 0,
+            "property": "firmwareVersions",
+            "propertyName": "firmwareVersions",
+            "metadata": {
+                "type": "any",
+                "readable": true,
+                "writeable": false,
+                "label": "Z-Wave chip firmware versions"
+            },
+            "value": [
+                "2.0"
+            ]
+        },
+        {
+            "commandClassName": "Version",
+            "commandClass": 134,
+            "endpoint": 0,
+            "property": "hardwareVersion",
+            "propertyName": "hardwareVersion",
+            "metadata": {
+                "type": "any",
+                "readable": true,
+                "writeable": false,
+                "label": "Z-Wave chip hardware version"
+            }
+        }
+    ]
+}
