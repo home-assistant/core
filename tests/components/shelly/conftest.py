@@ -1,5 +1,5 @@
 """Test configuration for Shelly."""
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -17,6 +17,7 @@ from tests.common import MockConfigEntry, async_mock_service, mock_device_regist
 
 MOCK_SETTINGS = {
     "name": "Test name",
+    "mode": "relay",
     "device": {
         "mac": "test-mac",
         "hostname": "test-host",
@@ -26,11 +27,36 @@ MOCK_SETTINGS = {
     "coiot": {"update_period": 15},
     "fw": "20201124-092159/v1.9.0@57ac4ad8",
     "relays": [{"btn_type": "momentary"}, {"btn_type": "toggle"}],
+    "rollers": [{"positioning": True}],
 }
 
 MOCK_BLOCKS = [
-    Mock(sensor_ids={"inputEvent": "S", "inputEventCnt": 2}, channel="0", type="relay")
+    Mock(
+        sensor_ids={"inputEvent": "S", "inputEventCnt": 2},
+        channel="0",
+        type="relay",
+        set_state=AsyncMock(side_effect=lambda turn: {"ison": turn == "on"}),
+    ),
+    Mock(
+        sensor_ids={"roller": "stop", "rollerPos": 0},
+        channel="1",
+        type="roller",
+        set_state=AsyncMock(
+            side_effect=lambda go, roller_pos=0: {
+                "current_pos": roller_pos,
+                "state": go,
+            }
+        ),
+    ),
 ]
+
+
+MOCK_SHELLY = {
+    "mac": "test-mac",
+    "auth": False,
+    "fw": "20201124-092854/v1.9.0@57ac4ad8",
+    "num_outputs": 2,
+}
 
 
 @pytest.fixture(autouse=True)
@@ -68,7 +94,12 @@ async def coap_wrapper(hass):
     config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
 
-    device = Mock(blocks=MOCK_BLOCKS, settings=MOCK_SETTINGS)
+    device = Mock(
+        blocks=MOCK_BLOCKS,
+        settings=MOCK_SETTINGS,
+        shelly=MOCK_SHELLY,
+        update=AsyncMock(),
+    )
 
     hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
     hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id] = {}
