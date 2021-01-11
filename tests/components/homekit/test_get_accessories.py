@@ -265,7 +265,7 @@ def test_type_switches(type_name, entity_id, state, attrs, config):
                 | vacuum.SUPPORT_RETURN_HOME
             },
         ),
-        ("Switch", "vacuum.basic_vacuum", "off", {}),
+        ("Vacuum", "vacuum.basic_vacuum", "off", {}),
     ],
 )
 def test_type_vacuum(type_name, entity_id, state, attrs):
