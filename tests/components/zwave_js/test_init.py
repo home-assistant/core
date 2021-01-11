@@ -13,9 +13,9 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import STATE_UNAVAILABLE
 
-from tests.common import MockConfigEntry
+from .common import AIR_TEMPERATURE_SENSOR
 
-AIR_TEMPERATURE_SENSOR = "sensor.multisensor_6_air_temperature"
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="connect_timeout")
