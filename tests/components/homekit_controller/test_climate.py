@@ -309,7 +309,7 @@ def create_thermostat_single_set_point_auto(accessory):
 
 
 async def test_climate_check_min_max_values_per_mode_sspa_device(hass, utcnow):
-    """Test that we we get the appropriate min/max values for each mode"""
+    """Test appropriate min/max values for each mode on sspa devices."""
     helper = await setup_test_component(hass, create_thermostat_single_set_point_auto)
 
     await hass.services.async_call(
