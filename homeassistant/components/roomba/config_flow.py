@@ -27,7 +27,9 @@ from .const import DOMAIN  # pylint:disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELAY}
-DISCOVERY_TIMEOUT = 15
+
+SOCKET_TIMEOUT = 10
+DISCOVERY_TIMEOUT = 30
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -71,6 +73,13 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
+    @callback
+    def _async_get_roomba_discovery(self):
+        """Create a discovery object."""
+        discovery = RoombaDiscovery()
+        discovery.server_socket.settimeout(SOCKET_TIMEOUT)
+        return discovery
+
     async def async_step_import(self, import_info):
         """Set the config entry up from yaml."""
         return await self.async_step_user(import_info)
@@ -101,7 +110,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_link()
 
         devices = None
-        discovery = RoombaDiscovery()
+        discovery = self._async_get_roomba_discovery()
         # Find / discover robots
         try:
             with async_timeout.timeout(DISCOVERY_TIMEOUT):
@@ -165,10 +174,10 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="link")
 
         if not self.blid:
-            discovery = RoombaDiscovery()
+            discovery = self._async_get_roomba_discovery()
             robot = None
             try:
-                with async_timeout.timeout(DISCOVERY_TIMEOUT):
+                with async_timeout.timeout(SOCKET_TIMEOUT):
                     robot = await self.hass.async_add_executor_job(
                         discovery.get, self.host
                     )
