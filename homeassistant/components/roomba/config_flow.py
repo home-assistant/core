@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELAY}
 
-SOCKET_TIMEOUT = 10
+SOCKET_TIMEOUT = 15
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -74,7 +74,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _async_get_roomba_discovery(self):
         """Create a discovery object."""
         discovery = RoombaDiscovery()
-        discovery.amount_of_broadcasted_messages = 10
+        discovery.amount_of_broadcasted_messages = 15
         discovery.server_socket.settimeout(SOCKET_TIMEOUT)
         return discovery
 
