@@ -1,10 +1,9 @@
 """The tests for hls streams."""
 from datetime import timedelta
-from io import BytesIO
+import os
 from unittest.mock import patch
 
 import av
-import pytest
 
 from homeassistant.components.stream.core import Segment
 from homeassistant.components.stream.recorder import recorder_save_worker
@@ -15,8 +14,7 @@ from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video, preload_stream
 
 
-@pytest.mark.skip("Flaky in CI")
-async def test_record_stream(hass, hass_client):
+async def test_record_stream(hass, hass_client, worker_sync):
     """
     Test record stream.
 
@@ -24,6 +22,8 @@ async def test_record_stream(hass, hass_client):
     integration with the stream component.
     """
     await async_setup_component(hass, "stream", {"stream": {}})
+
+    worker_sync.pause()
 
     with patch("homeassistant.components.stream.recorder.recorder_save_worker"):
         # Setup demo track
@@ -37,16 +37,20 @@ async def test_record_stream(hass, hass_client):
             if not segment:
                 break
             segments = segment.sequence
+            if segments > 1:
+                worker_sync.resume()
 
         stream.stop()
+        await hass.async_block_till_done()
 
         assert segments > 1
 
 
-@pytest.mark.skip("Flaky in CI")
-async def test_recorder_timeout(hass, hass_client):
+async def test_recorder_timeout(hass, hass_client, worker_sync):
     """Test recorder timeout."""
     await async_setup_component(hass, "stream", {"stream": {}})
+
+    worker_sync.pause()
 
     with patch(
         "homeassistant.components.stream.recorder.RecorderOutput.cleanup"
@@ -66,24 +70,25 @@ async def test_recorder_timeout(hass, hass_client):
 
         assert mock_cleanup.called
 
+        worker_sync.resume()
+        stream.stop()
+        await hass.async_block_till_done()
 
-@pytest.mark.skip("Flaky in CI")
-async def test_recorder_save():
+
+async def test_recorder_save(tmpdir):
     """Test recorder save."""
     # Setup
     source = generate_h264_video()
-    output = BytesIO()
-    output.name = "test.mp4"
+    filename = f"{tmpdir}/test.mp4"
 
     # Run
-    recorder_save_worker(output, [Segment(1, source, 4)], "mp4")
+    recorder_save_worker(filename, [Segment(1, source, 4)], "mp4")
 
     # Assert
-    assert output.getvalue()
+    assert os.path.exists(filename)
 
 
-@pytest.mark.skip("Flaky in CI")
-async def test_record_stream_audio(hass, hass_client):
+async def test_record_stream_audio(hass, hass_client, worker_sync):
     """
     Test treatment of different audio inputs.
 
@@ -98,6 +103,8 @@ async def test_record_stream_audio(hass, hass_client):
         ("empty", 0),  # audio stream with no packets
         (None, 0),  # no audio stream
     ):
+        worker_sync.pause()
+
         with patch("homeassistant.components.stream.recorder.recorder_save_worker"):
             # Setup demo track
             source = generate_h264_video(
@@ -112,9 +119,11 @@ async def test_record_stream_audio(hass, hass_client):
                 if not segment:
                     break
                 last_segment = segment
+                worker_sync.resume()
 
             result = av.open(last_segment.segment, "r", format="mp4")
 
             assert len(result.streams.audio) == expected_audio_streams
             result.close()
             stream.stop()
+            await hass.async_block_till_done()
