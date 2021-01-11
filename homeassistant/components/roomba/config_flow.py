@@ -97,7 +97,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         devices = None
         discovery = RoombaDiscovery()
-        # Find / discover bridges
+        # Find / discover robots
         try:
             with async_timeout.timeout(DISCOVERY_TIMEOUT):
                 devices = await self.hass.async_add_executor_job(discovery.get_all)
@@ -113,7 +113,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if device.blid not in already_configured
             }
 
-        if not self.discovered_bridges:
+        if not self.discovered_robots:
             return await self.async_step_manual()
 
         return self.async_show_form(
