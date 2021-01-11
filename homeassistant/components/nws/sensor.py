@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -122,9 +123,9 @@ class NWSSensor(Entity):
         return False
 
     @property
-    def attribution(self):
+    def device_state_attributes(self):
         """Return the attribution."""
-        return ATTRIBUTION
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
     def name(self):

@@ -1,9 +1,14 @@
 """Sensors for National Weather Service (NWS)."""
 import pytest
 
-from homeassistant.components import nws
-from homeassistant.components.nws.const import ATTR_LABEL, SENSOR_TYPES
+from homeassistant.components.nws.const import (
+    ATTR_LABEL,
+    ATTRIBUTION,
+    DOMAIN,
+    SENSOR_TYPES,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.util import slugify
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
@@ -37,7 +42,7 @@ async def test_imperial_metric(
     for sensor_name, sensor_data in SENSOR_TYPES.items():
         registry.async_get_or_create(
             SENSOR_DOMAIN,
-            nws.DOMAIN,
+            DOMAIN,
             f"35_-75_{sensor_name}",
             suggested_object_id=f"abc_{sensor_data[ATTR_LABEL]}",
             disabled_by=None,
@@ -45,7 +50,7 @@ async def test_imperial_metric(
 
     hass.config.units = units
     entry = MockConfigEntry(
-        domain=nws.DOMAIN,
+        domain=DOMAIN,
         data=NWS_CONFIG,
     )
     entry.add_to_hass(hass)
@@ -56,3 +61,4 @@ async def test_imperial_metric(
         state = hass.states.get(f"sensor.abc_{slugify(sensor_data[ATTR_LABEL])}")
         assert state
         assert state.state == result_observation[sensor_name]
+        assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
