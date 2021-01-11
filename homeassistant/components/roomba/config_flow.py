@@ -67,13 +67,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
-    @callback
-    def _async_get_roomba_discovery(self):
-        """Create a discovery object."""
-        discovery = RoombaDiscovery()
-        discovery.amount_of_broadcasted_messages = MAX_NUM_DEVICES_TO_DISCOVER
-        return discovery
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         # This is for backwards compatibility.
@@ -99,7 +92,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_link()
 
         already_configured = self._async_current_ids(False)
-        discovery = self._async_get_roomba_discovery()
+        discovery = _async_get_roomba_discovery()
         devices = await self.hass.async_add_executor_job(discovery.get_all)
 
         if devices:
@@ -245,3 +238,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
         )
+
+
+@callback
+def _async_get_roomba_discovery(self):
+    """Create a discovery object."""
+    discovery = RoombaDiscovery()
+    discovery.amount_of_broadcasted_messages = MAX_NUM_DEVICES_TO_DISCOVER
+    return discovery
