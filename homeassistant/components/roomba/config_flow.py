@@ -120,7 +120,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required("host"): vol.In(
+                    vol.Optional("host"): vol.In(
                         {
                             **{
                                 device.ip: f"{device.robot_name} ({device.ip})"
