@@ -40,7 +40,6 @@ async def test_switch(hass, binary_switch, integration, client):
     )
 
     args = client.async_send_json_message.call_args[0][0]
-    print(args)
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 32
     assert args["valueId"] == {
