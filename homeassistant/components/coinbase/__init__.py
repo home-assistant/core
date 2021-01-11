@@ -38,7 +38,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_EXCHANGE_CURRENCIES, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(CONF_BASE_CURRENCY, default=DEFAULT_BASE_CURRENCY): cv.string,
+                vol.Optional(
+                    CONF_BASE_CURRENCY, default=DEFAULT_BASE_CURRENCY
+                ): cv.string,
             }
         )
     },
@@ -58,7 +60,9 @@ def setup(hass, config):
     exchange_currencies = config[DOMAIN][CONF_EXCHANGE_CURRENCIES]
     base_currency = config[DOMAIN][CONF_BASE_CURRENCY]
 
-    hass.data[DATA_COINBASE] = coinbase_data = CoinbaseData(api_key, api_secret, base_currency)
+    hass.data[DATA_COINBASE] = coinbase_data = CoinbaseData(
+        api_key, api_secret, base_currency
+    )
 
     if not hasattr(coinbase_data, "accounts"):
         return False
@@ -97,7 +101,9 @@ class CoinbaseData:
 
         try:
             self.accounts = self.client.get_accounts()
-            self.exchange_rates = self.client.get_exchange_rates(currency=self.base_currency)
+            self.exchange_rates = self.client.get_exchange_rates(
+                currency=self.base_currency
+            )
         except AuthenticationError as coinbase_error:
             _LOGGER.error(
                 "Authentication error connecting to coinbase: %s", coinbase_error
