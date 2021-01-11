@@ -21,12 +21,10 @@ from .const import (
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
-    CONF_SAFE_MODE,
     CONF_VIDEO_CODEC,
     DEFAULT_AUTO_START,
     DEFAULT_CONFIG_FLOW_PORT,
     DEFAULT_HOMEKIT_MODE,
-    DEFAULT_SAFE_MODE,
     HOMEKIT_MODE_ACCESSORY,
     HOMEKIT_MODES,
     SHORT_BRIDGE_NAME,
@@ -217,40 +215,32 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_advanced(self, user_input=None):
         """Choose advanced options."""
-        if user_input is not None:
-            self.homekit_options.update(user_input)
-            for key in (CONF_DOMAINS, CONF_ENTITIES):
-                if key in self.homekit_options:
-                    del self.homekit_options[key]
-            return self.async_create_entry(title="", data=self.homekit_options)
+        if not self.show_advanced_options or user_input is not None:
+            if user_input:
+                self.homekit_options.update(user_input)
 
-        schema_base = {}
-
-        if self.show_advanced_options:
-            schema_base[
-                vol.Optional(
-                    CONF_AUTO_START,
-                    default=self.homekit_options.get(
-                        CONF_AUTO_START, DEFAULT_AUTO_START
-                    ),
-                )
-            ] = bool
-        else:
             self.homekit_options[CONF_AUTO_START] = self.homekit_options.get(
                 CONF_AUTO_START, DEFAULT_AUTO_START
             )
 
-        schema_base.update(
-            {
-                vol.Optional(
-                    CONF_SAFE_MODE,
-                    default=self.homekit_options.get(CONF_SAFE_MODE, DEFAULT_SAFE_MODE),
-                ): bool
-            }
-        )
+            for key in (CONF_DOMAINS, CONF_ENTITIES):
+                if key in self.homekit_options:
+                    del self.homekit_options[key]
+
+            return self.async_create_entry(title="", data=self.homekit_options)
 
         return self.async_show_form(
-            step_id="advanced", data_schema=vol.Schema(schema_base)
+            step_id="advanced",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_AUTO_START,
+                        default=self.homekit_options.get(
+                            CONF_AUTO_START, DEFAULT_AUTO_START
+                        ),
+                    ): bool
+                }
+            ),
         )
 
     async def async_step_cameras(self, user_input=None):
