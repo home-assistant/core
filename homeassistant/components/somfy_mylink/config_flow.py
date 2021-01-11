@@ -1,28 +1,27 @@
 """Config flow for Somfy MyLink integration."""
 import asyncio
+from copy import deepcopy
 import logging
 
 from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_ENTITY_ID, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 
 from .const import (
-    CONF_DEFAULT_REVERSE,
-    CONF_ENTITY_CONFIG,
     CONF_REVERSE,
+    CONF_REVERSED_TARGET_IDS,
     CONF_SYSTEM_ID,
-    DEFAULT_CONF_DEFAULT_REVERSE,
+    CONF_TARGET_ID,
+    CONF_TARGET_NAME,
     DEFAULT_PORT,
-    MYLINK_ENTITY_IDS,
+    MYLINK_STATUS,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
-
-ENTITY_CONFIG_VERSION = "entity_config_version"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -114,8 +113,24 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry):
         """Initialize options flow."""
         self.config_entry = config_entry
-        self.options = config_entry.options.copy()
-        self._entity_id = None
+        self.options = deepcopy(dict(config_entry.options))
+        self._target_id = None
+
+    @callback
+    def _async_callback_targets(self):
+        """Return the list of targets."""
+        return self.hass.data[DOMAIN][self.config_entry.entry_id][MYLINK_STATUS][
+            "result"
+        ]
+
+    @callback
+    def _async_get_target_name(self, target_id) -> str:
+        """Find the name of a target in the api data."""
+        mylink_targets = self._async_callback_targets()
+        for cover in mylink_targets:
+            if cover["targetID"] == target_id:
+                return cover["name"]
+        raise KeyError
 
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
@@ -125,71 +140,45 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_abort(reason="cannot_connect")
 
         if user_input is not None:
-            self.options[CONF_DEFAULT_REVERSE] = user_input[CONF_DEFAULT_REVERSE]
-
-            entity_id = user_input.get(CONF_ENTITY_ID)
-            if entity_id:
-                return await self.async_step_entity_config(None, entity_id)
+            target_id = user_input.get(CONF_TARGET_ID)
+            if target_id:
+                return await self.async_step_target_config(None, target_id)
 
             return self.async_create_entry(title="", data=self.options)
 
-        data_schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_DEFAULT_REVERSE,
-                    default=self.options.get(
-                        CONF_DEFAULT_REVERSE, DEFAULT_CONF_DEFAULT_REVERSE
-                    ),
-                ): bool
-            }
-        )
-        data = self.hass.data[DOMAIN][self.config_entry.entry_id]
-        mylink_entity_ids = data[MYLINK_ENTITY_IDS]
+        cover_dict = {None: None}
+        mylink_targets = self._async_callback_targets()
+        if mylink_targets:
+            for cover in mylink_targets:
+                cover_dict[cover["targetID"]] = cover["name"]
 
-        if mylink_entity_ids:
-            entity_dict = {None: None}
-            for entity_id in mylink_entity_ids:
-                name = entity_id
-                state = self.hass.states.get(entity_id)
-                if state:
-                    name = state.attributes.get(ATTR_FRIENDLY_NAME, entity_id)
-                entity_dict[entity_id] = f"{name} ({entity_id})"
-            data_schema = data_schema.extend(
-                {vol.Optional(CONF_ENTITY_ID): vol.In(entity_dict)}
-            )
+        data_schema = vol.Schema({vol.Optional(CONF_TARGET_ID): vol.In(cover_dict)})
 
         return self.async_show_form(step_id="init", data_schema=data_schema, errors={})
 
-    async def async_step_entity_config(self, user_input=None, entity_id=None):
-        """Handle options flow for entity."""
-        entities_config = self.options.setdefault(CONF_ENTITY_CONFIG, {})
+    async def async_step_target_config(self, user_input=None, target_id=None):
+        """Handle options flow for target."""
+        reversed_target_ids = self.options.setdefault(CONF_REVERSED_TARGET_IDS, {})
 
         if user_input is not None:
-            entity_config = entities_config.setdefault(self._entity_id, {})
-            if entity_config.get(CONF_REVERSE) != user_input[CONF_REVERSE]:
-                entity_config[CONF_REVERSE] = user_input[CONF_REVERSE]
-                # If we do not modify a top level key
-                # the entity config will never be written
-                self.options.setdefault(ENTITY_CONFIG_VERSION, 0)
-                self.options[ENTITY_CONFIG_VERSION] += 1
+            if user_input[CONF_REVERSE] != reversed_target_ids.get(self._target_id):
+                reversed_target_ids[self._target_id] = user_input[CONF_REVERSE]
             return await self.async_step_init()
 
-        self._entity_id = entity_id
-        default_reverse = self.options.get(CONF_DEFAULT_REVERSE, False)
-        entity_config = entities_config.get(entity_id, {})
+        self._target_id = target_id
 
         return self.async_show_form(
-            step_id="entity_config",
+            step_id="target_config",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
                         CONF_REVERSE,
-                        default=entity_config.get(CONF_REVERSE, default_reverse),
+                        default=reversed_target_ids.get(target_id, False),
                     ): bool
                 }
             ),
             description_placeholders={
-                CONF_ENTITY_ID: entity_id,
+                CONF_TARGET_NAME: self._async_get_target_name(target_id),
             },
             errors={},
         )

@@ -5,21 +5,23 @@ import logging
 from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
 
+from homeassistant.components.cover import ENTITY_ID_FORMAT
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.util import slugify
 
 from .const import (
     CONF_DEFAULT_REVERSE,
     CONF_ENTITY_CONFIG,
     CONF_REVERSE,
+    CONF_REVERSED_TARGET_IDS,
     CONF_SYSTEM_ID,
     DATA_SOMFY_MYLINK,
     DEFAULT_PORT,
     DOMAIN,
-    MYLINK_ENTITY_IDS,
     MYLINK_STATUS,
     SOMFY_MYLINK_COMPONENTS,
 )
@@ -44,17 +46,22 @@ def validate_entity_config(values):
 
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_SYSTEM_ID): cv.string,
-                vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_DEFAULT_REVERSE, default=False): cv.boolean,
-                vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_SYSTEM_ID): cv.string,
+                    vol.Required(CONF_HOST): cv.string,
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                    vol.Optional(CONF_DEFAULT_REVERSE, default=False): cv.boolean,
+                    vol.Optional(
+                        CONF_ENTITY_CONFIG, default={}
+                    ): validate_entity_config,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -92,19 +99,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             "Unable to connect to the Somfy MyLink device, please check your settings"
         ) from ex
 
-    if "error" in mylink_status:
+    if not mylink_status or "error" in mylink_status:
         _LOGGER.error(
             "mylink failed to setup because of an error: %s",
-            mylink_status.get("error", {}).get("message"),
+            mylink_status.get("error", {}).get(
+                "message", "Empty response from mylink device"
+            ),
         )
         return False
+
+    _async_migrate_entity_config(hass, entry, mylink_status)
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_SOMFY_MYLINK: somfy_mylink,
         MYLINK_STATUS: mylink_status,
-        MYLINK_ENTITY_IDS: [],
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
@@ -134,6 +144,34 @@ def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: Confi
 
     if modified:
         hass.config_entries.async_update_entry(entry, data=data, options=options)
+
+
+@callback
+def _async_migrate_entity_config(
+    hass: HomeAssistant, entry: ConfigEntry, mylink_status: dict
+):
+    if CONF_ENTITY_CONFIG not in entry.options:
+        return
+
+    options = dict(entry.options)
+
+    reversed_target_ids = options[CONF_REVERSED_TARGET_IDS] = {}
+    legacy_entry_config = options[CONF_ENTITY_CONFIG]
+    default_reverse = options.get(CONF_DEFAULT_REVERSE)
+
+    for cover in mylink_status["result"]:
+        legacy_entity_id = ENTITY_ID_FORMAT.format(slugify(cover["name"]))
+        target_id = cover["targetID"]
+
+        entity_config = legacy_entry_config.get(legacy_entity_id, {})
+        if entity_config.get(CONF_REVERSE, default_reverse):
+            reversed_target_ids[target_id] = True
+
+    for legacy_key in (CONF_DEFAULT_REVERSE, CONF_ENTITY_CONFIG):
+        if legacy_key in options:
+            del options[legacy_key]
+
+    hass.config_entries.async_update_entry(entry, data=entry.data, options=options)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):

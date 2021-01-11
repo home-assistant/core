@@ -5,20 +5,16 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_BLIND,
     DEVICE_CLASS_SHUTTER,
     DEVICE_CLASS_WINDOW,
-    ENTITY_ID_FORMAT,
     CoverEntity,
 )
 from homeassistant.const import STATE_CLOSED, STATE_OPEN
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.util import slugify
 
 from .const import (
-    CONF_DEFAULT_REVERSE,
-    CONF_REVERSE,
+    CONF_REVERSED_TARGET_IDS,
     DATA_SOMFY_MYLINK,
     DOMAIN,
     MANUFACTURER,
-    MYLINK_ENTITY_IDS,
     MYLINK_STATUS,
 )
 
@@ -29,26 +25,22 @@ MYLINK_COVER_TYPE_TO_DEVICE_CLASS = {0: DEVICE_CLASS_BLIND, 1: DEVICE_CLASS_SHUT
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Discover and configure Somfy covers."""
+    reversed_target_ids = config_entry.options.get(CONF_REVERSED_TARGET_IDS, {})
+
     data = hass.data[DOMAIN][config_entry.entry_id]
     mylink_status = data[MYLINK_STATUS]
     somfy_mylink = data[DATA_SOMFY_MYLINK]
-    mylink_entity_ids = data[MYLINK_ENTITY_IDS]
     cover_list = []
 
     for cover in mylink_status["result"]:
-        entity_id = ENTITY_ID_FORMAT.format(slugify(cover["name"]))
-        mylink_entity_ids.append(entity_id)
-
-        entity_config = config_entry.options.get(entity_id, {})
-        default_reverse = config_entry.options.get(CONF_DEFAULT_REVERSE)
-
-        cover_config = {}
-        cover_config["target_id"] = cover["targetID"]
-        cover_config["name"] = cover["name"]
-        cover_config["device_class"] = MYLINK_COVER_TYPE_TO_DEVICE_CLASS.get(
-            cover.get("type"), DEVICE_CLASS_WINDOW
-        )
-        cover_config["reverse"] = entity_config.get(CONF_REVERSE, default_reverse)
+        cover_config = {
+            "target_id": cover["targetID"],
+            "name": cover["name"],
+            "device_class": MYLINK_COVER_TYPE_TO_DEVICE_CLASS.get(
+                cover.get("type"), DEVICE_CLASS_WINDOW
+            ),
+            "reverse": reversed_target_ids.get(cover["targetID"], False),
+        }
 
         cover_list.append(SomfyShade(somfy_mylink, **cover_config))
 

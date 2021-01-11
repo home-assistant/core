@@ -2,11 +2,14 @@
 import asyncio
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.somfy_mylink.const import (
     CONF_DEFAULT_REVERSE,
     CONF_ENTITY_CONFIG,
     CONF_REVERSE,
+    CONF_REVERSED_TARGET_IDS,
     CONF_SYSTEM_ID,
     DOMAIN,
 )
@@ -294,42 +297,9 @@ async def test_options_not_loaded(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
-async def test_options_no_entities(hass):
-    """Test we can configure default reverse."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "1.1.1.1", CONF_PORT: 12, CONF_SYSTEM_ID: 46},
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.somfy_mylink.SomfyMyLinkSynergy.status_info",
-        return_value={"result": []},
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "init"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={"default_reverse": True},
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert config_entry.options == {
-            "default_reverse": True,
-        }
-
-        await hass.async_block_till_done()
-
-
-async def test_options_with_entities(hass):
-    """Test we can configure reverse for an entity."""
+@pytest.mark.parametrize("reversed", [True, False])
+async def test_options_with_targets(hass, reversed):
+    """Test we can configure reverse for a target."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     config_entry = MockConfigEntry(
@@ -359,27 +329,96 @@ async def test_options_with_entities(hass):
 
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={"default_reverse": True, "entity_id": "cover.master_window"},
+            user_input={"target_id": "a"},
         )
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
         result3 = await hass.config_entries.options.async_configure(
             result2["flow_id"],
-            user_input={"reverse": False},
+            user_input={"reverse": reversed},
         )
 
         assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
 
         result4 = await hass.config_entries.options.async_configure(
             result3["flow_id"],
-            user_input={"default_reverse": True, "entity_id": None},
+            user_input={"target_id": None},
         )
         assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
         assert config_entry.options == {
-            "default_reverse": True,
-            "entity_config": {"cover.master_window": {"reverse": False}},
-            "entity_config_version": 1,
+            CONF_REVERSED_TARGET_IDS: {"a": reversed},
+        }
+
+        await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize("reversed", [True, False])
+async def test_form_import_with_entity_config_modify_options(hass, reversed):
+    """Test we can import entity config and modify options."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    mock_imported_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_PORT: 1234,
+            CONF_SYSTEM_ID: 456,
+            CONF_DEFAULT_REVERSE: True,
+            CONF_ENTITY_CONFIG: {"cover.xyz": {CONF_REVERSE: False}},
+        },
+    )
+    mock_imported_config_entry.add_to_hass(hass)
+
+    mock_status_info = {
+        "result": [
+            {"targetID": "1.1", "name": "xyz"},
+            {"targetID": "1.2", "name": "zulu"},
+        ]
+    }
+
+    with patch(
+        "homeassistant.components.somfy_mylink.SomfyMyLinkSynergy.status_info",
+        return_value=mock_status_info,
+    ):
+        assert await hass.config_entries.async_setup(
+            mock_imported_config_entry.entry_id
+        )
+        await hass.async_block_till_done()
+
+        assert mock_imported_config_entry.options == {
+            "reversed_target_ids": {"1.2": True}
+        }
+
+        result = await hass.config_entries.options.async_init(
+            mock_imported_config_entry.entry_id
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={"target_id": "1.2"},
+        )
+
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        result3 = await hass.config_entries.options.async_configure(
+            result2["flow_id"],
+            user_input={"reverse": reversed},
+        )
+
+        assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        result4 = await hass.config_entries.options.async_configure(
+            result3["flow_id"],
+            user_input={"target_id": None},
+        )
+        assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+        # Will not be altered if nothing changes
+        assert mock_imported_config_entry.options == {
+            CONF_REVERSED_TARGET_IDS: {"1.2": reversed},
         }
 
         await hass.async_block_till_done()
