@@ -48,12 +48,12 @@ class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        targetValue = self.get_zwave_value("targetValue")
-        if targetValue is not None:
-            await self.info.node.async_set_value(targetValue, True)
+        target_value = self.get_zwave_value("targetValue")
+        if target_value is not None:
+            await self.info.node.async_set_value(target_value, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        targetValue = self.get_zwave_value("targetValue")
-        if targetValue is not None:
-            await self.info.node.async_set_value(targetValue, False)
+        target_value = self.get_zwave_value("targetValue")
+        if target_value is not None:
+            await self.info.node.async_set_value(target_value, False)
