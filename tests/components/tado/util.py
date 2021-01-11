@@ -22,7 +22,6 @@ async def async_init_integration(
 
     # WR1 Device
     device_wr1_fixture = "tado/device_wr1.json"
-    device_wr1_offset = "tado/device_wr1_offset.json"
 
     # Smart AC with Swing
     zone_5_state_fixture = "tado/smartac3.with_swing.json"
@@ -43,6 +42,9 @@ async def async_init_integration(
     # Tado V2 with manual heating
     zone_1_state_fixture = "tado/tadov2.heating.manual_mode.json"
     zone_1_capabilities_fixture = "tado/tadov2.zone_capabilities.json"
+    
+    # Device Temp Offset
+    device_temp_offset = "tado/device_temp_offset.json"
 
     with requests_mock.mock() as m:
         m.post("https://auth.tado.com/oauth/token", text=load_fixture(token_fixture))
@@ -60,7 +62,11 @@ async def async_init_integration(
         )
         m.get(
             "https://my.tado.com/api/v2/devices/WR1/temperatureOffset",
-            text=load_fixture(device_wr1_offset),
+            text=load_fixture(device_temp_offset),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/devices/WR4/temperatureOffset",
+            text=load_fixture(device_temp_offset),
         )
         m.get(
             "https://my.tado.com/api/v2/homes/1/zones",
