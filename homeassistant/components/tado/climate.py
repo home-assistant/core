@@ -482,11 +482,15 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     def _update_offset(self):
         # Assign offset values to mapped attributes
-        for key in TADO_TO_HA_OFFSET_MAP:
-            if key in self._tado.data["device"][self._device_id][TEMP_OFFSET]:
-                self._tado_zone_temp_offset[
-                    TADO_TO_HA_OFFSET_MAP[key]
-                ] = self._tado.data["device"][self._device_id][TEMP_OFFSET][key]
+        for offset_key, attr in TADO_TO_HA_OFFSET_MAP.items():
+            if (
+                self._device_id in self._tado.data["device"]
+                and offset_key
+                in self._tado.data["device"][self._device_id][TEMP_OFFSET]
+            ):
+                self._tado_zone_temp_offset[attr] = self._tado.data["device"][
+                    self._device_id
+                ][TEMP_OFFSET][offset_key]
 
     @callback
     def _async_update_callback(self):
