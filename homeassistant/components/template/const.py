@@ -18,4 +18,5 @@ PLATFORMS = [
     "sensor",
     "switch",
     "vacuum",
+    "weather",
 ]
