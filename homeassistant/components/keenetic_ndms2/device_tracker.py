@@ -125,7 +125,10 @@ class KeeneticTracker(ScannerEntity):
     def device_state_attributes(self):
         """Return the device state attributes."""
         if self.is_connected:
-            return {"ip": self.device.ip}
+            return {
+                "ip": self.device.ip,
+                "interface": self.device.interface,
+            }
         return None
 
     @property

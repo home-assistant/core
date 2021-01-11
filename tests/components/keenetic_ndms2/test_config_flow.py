@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import keenetic_ndms2 as keenetic
+from homeassistant.components.keenetic_ndms2 import const
 
 from . import MOCK_DATA, MOCK_NAME, MOCK_OPTIONS
 
@@ -82,7 +83,10 @@ async def test_options(hass):
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input=MOCK_OPTIONS,
+        user_input={
+            **MOCK_OPTIONS,
+            const.CONF_INTERFACES: ", ".join(MOCK_OPTIONS[const.CONF_INTERFACES]),
+        },
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

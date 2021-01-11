@@ -23,5 +23,5 @@ MOCK_OPTIONS = {
     const.CONF_TRY_HOTSPOT: False,
     const.CONF_INCLUDE_ARP: True,
     const.CONF_INCLUDE_ASSOCIATED: True,
-    const.CONF_INTERFACE: "VPS0",
+    const.CONF_INTERFACES: ["Home", "VPS0"],
 }

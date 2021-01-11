@@ -16,7 +16,7 @@ from .const import (
     CONF_CONSIDER_HOME,
     CONF_INCLUDE_ARP,
     CONF_INCLUDE_ASSOCIATED,
-    CONF_INTERFACE,
+    CONF_INTERFACES,
     CONF_TRY_HOTSPOT,
     DEFAULT_CONSIDER_HOME,
     DEFAULT_INTERFACE,
@@ -92,7 +92,16 @@ class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_device_tracker(self, user_input=None):
         """Manage the device tracker options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(
+                title="",
+                data={
+                    **user_input,
+                    CONF_INTERFACES: [
+                        interface.strip()
+                        for interface in user_input[CONF_INTERFACES].split(",")
+                    ],
+                },
+            )
 
         options = vol.Schema(
             {
@@ -109,9 +118,11 @@ class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
                     ),
                 ): int,
                 vol.Optional(
-                    CONF_INTERFACE,
-                    default=self.config_entry.options.get(
-                        DEFAULT_INTERFACE, DEFAULT_INTERFACE
+                    CONF_INTERFACES,
+                    default=", ".join(
+                        self.config_entry.options.get(
+                            CONF_INTERFACES, [DEFAULT_INTERFACE]
+                        )
                     ),
                 ): str,
                 vol.Optional(

@@ -24,7 +24,7 @@ from .const import (
     CONF_CONSIDER_HOME,
     CONF_INCLUDE_ARP,
     CONF_INCLUDE_ASSOCIATED,
-    CONF_INTERFACE,
+    CONF_INTERFACES,
     CONF_TRY_HOTSPOT,
     DEFAULT_CONSIDER_HOME,
     DEFAULT_INTERFACE,
@@ -94,7 +94,7 @@ class KeeneticRouter:
         options = {
             CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
             CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME,
-            CONF_INTERFACE: DEFAULT_INTERFACE,
+            CONF_INTERFACES: [DEFAULT_INTERFACE],
             CONF_TRY_HOTSPOT: True,
             CONF_INCLUDE_ARP: True,
             CONF_INCLUDE_ASSOCIATED: True,
@@ -183,7 +183,7 @@ class KeeneticRouter:
             self.last_devices = {
                 dev.mac: dev
                 for dev in _response
-                if dev.interface == self.config_entry.options[CONF_INTERFACE]
+                if dev.interface in self.config_entry.options[CONF_INTERFACES]
             }
             _LOGGER.debug("Successfully fetched data from router: %s", str(_response))
             self._router_info = self._client.get_router_info()
