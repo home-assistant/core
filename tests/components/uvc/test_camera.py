@@ -197,6 +197,7 @@ class TestUVC(unittest.TestCase):
         self.uvc = uvc.UnifiVideoCamera(self.nvr, self.uuid, self.name, self.password)
         self.nvr.get_camera.return_value = {
             "model": "UVC Fake",
+            "uuid": "06e3ff29-8048-31c2-8574-0852d1bd0e03",
             "recordingSettings": {"fullTimeRecordEnabled": True},
             "host": "host-a",
             "internalHost": "host-b",
@@ -238,6 +239,7 @@ class TestUVC(unittest.TestCase):
         assert "Ubiquiti" == self.uvc.brand
         assert "UVC Fake" == self.uvc.model
         assert SUPPORT_STREAM == self.uvc.supported_features
+        assert "uuid" == self.uvc.unique_id
 
     def test_stream(self):
         """Test the RTSP stream URI."""
