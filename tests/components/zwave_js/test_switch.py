@@ -8,7 +8,7 @@ from .common import SWITCH_ENTITY
 async def test_switch(hass, hank_binary_switch, integration, client):
     """Test the switch."""
     state = hass.states.get(SWITCH_ENTITY)
-    node = client.driver.controller.nodes[32]
+    node = hank_binary_switch
 
     assert state
     assert state.state == "off"
