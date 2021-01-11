@@ -26,17 +26,19 @@ def get_service(hass, config, discovery_info=None):
     """Get the Command Line notification service."""
     command = config[CONF_COMMAND]
     timeout = config[CONF_COMMAND_TIMEOUT]
+    name = config[CONF_NAME]
 
-    return CommandLineNotificationService(command, timeout)
+    return CommandLineNotificationService(command, timeout, name)
 
 
 class CommandLineNotificationService(BaseNotificationService):
     """Implement the notification service for the Command Line service."""
 
-    def __init__(self, command, timeout):
+    def __init__(self, command, timeout, name):
         """Initialize the service."""
         self.command = command
         self._timeout = timeout
+        self.name = name
 
     def send_message(self, message="", **kwargs):
         """Send a message to a command line."""
@@ -50,9 +52,6 @@ class CommandLineNotificationService(BaseNotificationService):
                 shell=True,  # nosec # shell by design
             )
 
-            _LOGGER.debug(
-                "Running command: `%s`, with input: %s", self.command, message
-            )
             stdout_data, stderr_data = proc.communicate(
                 input=message, timeout=self._timeout
             )
@@ -61,15 +60,15 @@ class CommandLineNotificationService(BaseNotificationService):
 
             if stdout_data:
                 _LOGGER.debug(
-                    "Stdout of command: `%s`, return code: %s:\n%s",
-                    self.command,
+                    "Stdout of command_line notify '%s': return code: %s\n%s",
+                    self.name,
                     proc.returncode,
                     stdout_data,
                 )
             if stderr_data:
                 _LOGGER.debug(
-                    "Stderr of command: `%s`, return code: %s:\n%s",
-                    self.command,
+                    "Stderr of command_line notify '%s': return code: %s\n%s",
+                    self.name,
                     proc.returncode,
                     stderr_data,
                 )

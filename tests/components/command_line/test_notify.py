@@ -137,7 +137,6 @@ async def test_debug_logging_error(hass, caplog):
             "notify", "test", {"message": "error"}, blocking=True
         )
         await hass.async_block_till_done()
-        assert "Running command" in caplog.text
         assert "Stderr" in caplog.text
         assert "Stdout" not in caplog.text
 
@@ -155,6 +154,5 @@ async def test_debug_logging_success(hass, caplog):
             "notify", "test", {"message": "success"}, blocking=True
         )
         await hass.async_block_till_done()
-        assert "Running command" in caplog.text
         assert "Stdout" in caplog.text
         assert "Stderr" not in caplog.text
