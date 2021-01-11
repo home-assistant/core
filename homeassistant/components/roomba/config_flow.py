@@ -74,10 +74,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         discovery.amount_of_broadcasted_messages = MAX_NUM_DEVICES_TO_DISCOVER
         return discovery
 
-    async def async_step_import(self, import_info):
-        """Set the config entry up from yaml."""
-        return await self.async_step_user(import_info)
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         # This is for backwards compatibility.
