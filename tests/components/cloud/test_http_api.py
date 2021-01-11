@@ -4,7 +4,7 @@ from ipaddress import ip_network
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import aiohttp
-from hass_nabucasa import thingtalk
+from hass_nabucasa import thingtalk, voice
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
 from jose import jwt
@@ -361,6 +361,7 @@ async def test_websocket_status(
             "alexa_report_state": False,
             "google_report_state": False,
             "remote_enabled": False,
+            "tts_default_voice": ["en-US", "female"],
         },
         "alexa_entities": {
             "include_domains": [],
@@ -491,6 +492,7 @@ async def test_websocket_update_preferences(
             "google_secure_devices_pin": "1234",
             "google_default_expose": ["light", "switch"],
             "alexa_default_expose": ["sensor", "media_player"],
+            "tts_default_voice": ["en-GB", "male"],
         }
     )
     response = await client.receive_json()
@@ -501,6 +503,7 @@ async def test_websocket_update_preferences(
     assert setup_api.google_secure_devices_pin == "1234"
     assert setup_api.google_default_expose == ["light", "switch"]
     assert setup_api.alexa_default_expose == ["sensor", "media_player"]
+    assert setup_api.tts_default_voice == ("en-GB", "male")
 
 
 async def test_websocket_update_preferences_require_relink(
@@ -975,3 +978,25 @@ async def test_thingtalk_convert_internal(hass, hass_ws_client, setup_api):
     assert not response["success"]
     assert response["error"]["code"] == "unknown_error"
     assert response["error"]["message"] == "Did not understand"
+
+
+async def test_tts_info(hass, hass_ws_client, setup_api):
+    """Test that we can get TTS info."""
+    # Verify the format is as expected
+    assert voice.MAP_VOICE[("en-US", voice.Gender.FEMALE)] == "JennyNeural"
+
+    client = await hass_ws_client(hass)
+
+    with patch.dict(
+        "homeassistant.components.cloud.http_api.MAP_VOICE",
+        {
+            ("en-US", voice.Gender.MALE): "GuyNeural",
+            ("en-US", voice.Gender.FEMALE): "JennyNeural",
+        },
+        clear=True,
+    ):
+        await client.send_json({"id": 5, "type": "cloud/tts/info"})
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"languages": [["en-US", "male"], ["en-US", "female"]]}

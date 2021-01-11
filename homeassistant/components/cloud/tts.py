@@ -5,6 +5,7 @@ from hass_nabucasa.voice import MAP_VOICE, VoiceError
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.core import callback
 
 from .const import DOMAIN
 
@@ -12,13 +13,14 @@ CONF_GENDER = "gender"
 
 SUPPORT_LANGUAGES = list({key[0] for key in MAP_VOICE})
 
-DEFAULT_LANG = "en-US"
-DEFAULT_GENDER = "female"
-
 
 def validate_lang(value):
     """Validate chosen gender or language."""
-    lang = value[CONF_LANG]
+    lang = value.get(CONF_LANG)
+
+    if lang is None:
+        return value
+
     gender = value.get(CONF_GENDER)
 
     if gender is None:
@@ -35,7 +37,7 @@ def validate_lang(value):
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
         {
-            vol.Optional(CONF_LANG, default=DEFAULT_LANG): str,
+            vol.Optional(CONF_LANG): str,
             vol.Optional(CONF_GENDER): str,
         }
     ),
@@ -48,8 +50,8 @@ async def async_get_engine(hass, config, discovery_info=None):
     cloud: Cloud = hass.data[DOMAIN]
 
     if discovery_info is not None:
-        language = DEFAULT_LANG
-        gender = DEFAULT_GENDER
+        language = None
+        gender = None
     else:
         language = config[CONF_LANG]
         gender = config[CONF_GENDER]
@@ -66,6 +68,17 @@ class CloudProvider(Provider):
         self.name = "Cloud"
         self._language = language
         self._gender = gender
+
+        if self._language is not None:
+            return
+
+        self._language, self._gender = cloud.client.prefs.tts_default_voice
+        cloud.client.prefs.async_listen_updates(self._sync_prefs)
+
+    @callback
+    async def _sync_prefs(self, prefs):
+        """Sync preferences."""
+        self._language, self._gender = prefs.tts_default_voice
 
     @property
     def default_language(self):
