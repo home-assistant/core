@@ -171,6 +171,135 @@ async def help_test_default_availability_list_payload(
         assert state.state != STATE_UNAVAILABLE
 
 
+async def help_test_default_availability_list_payload_all(
+    hass,
+    mqtt_mock,
+    domain,
+    config,
+    no_assumed_state=False,
+    state_topic=None,
+    state_message=None,
+):
+    """Test availability by default payload with defined topic.
+
+    This is a test helper for the MqttAvailability mixin.
+    """
+    # Add availability settings to config
+    config = copy.deepcopy(config)
+    config[domain]["availability_mode"] = "all"
+    config[domain]["availability"] = [
+        {"topic": "availability-topic1"},
+        {"topic": "availability-topic2"},
+    ]
+    assert await async_setup_component(
+        hass,
+        domain,
+        config,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "availability-topic1", "online")
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+    if no_assumed_state:
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "availability-topic2", "online")
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state != STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "availability-topic2", "offline")
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+    if no_assumed_state:
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "availability-topic2", "online")
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state != STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "availability-topic1", "offline")
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+    if no_assumed_state:
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "availability-topic1", "online")
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def help_test_default_availability_list_payload_any(
+    hass,
+    mqtt_mock,
+    domain,
+    config,
+    no_assumed_state=False,
+    state_topic=None,
+    state_message=None,
+):
+    """Test availability by default payload with defined topic.
+
+    This is a test helper for the MqttAvailability mixin.
+    """
+    # Add availability settings to config
+    config = copy.deepcopy(config)
+    config[domain]["availability_mode"] = "any"
+    config[domain]["availability"] = [
+        {"topic": "availability-topic1"},
+        {"topic": "availability-topic2"},
+    ]
+    assert await async_setup_component(
+        hass,
+        domain,
+        config,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "availability-topic1", "online")
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state != STATE_UNAVAILABLE
+    if no_assumed_state:
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "availability-topic2", "online")
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state != STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "availability-topic2", "offline")
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state != STATE_UNAVAILABLE
+    if no_assumed_state:
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "availability-topic1", "offline")
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "availability-topic1", "online")
+
+    state = hass.states.get(f"{domain}.test")
+    assert state.state != STATE_UNAVAILABLE
+    if no_assumed_state:
+        assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+
 async def help_test_default_availability_list_single(
     hass,
     mqtt_mock,
