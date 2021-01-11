@@ -125,7 +125,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         ]
 
     @callback
-    def _async_get_target_name(self, target_id) -> None:
+    def _async_get_target_name(self, target_id) -> str:
         """Find the name of a target in the api data."""
         mylink_targets = self._async_callback_targets()
         for cover in mylink_targets:
