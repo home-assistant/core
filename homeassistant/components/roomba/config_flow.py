@@ -107,12 +107,12 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return await self.async_step_link()
 
+        already_configured = self._async_current_ids(False)
         discovery = self._async_get_roomba_discovery()
         devices = await self.hass.async_add_executor_job(discovery.get_all)
 
         if devices:
             # Find already configured hosts
-            already_configured = self._async_current_ids(False)
             self.discovered_robots = {
                 device.ip: device
                 for device in devices
@@ -131,6 +131,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             **{
                                 device.ip: f"{device.robot_name} ({device.ip})"
                                 for device in devices
+                                if device.blid not in already_configured
                             },
                             None: "Manually add a Roomba or Braava",
                         }
