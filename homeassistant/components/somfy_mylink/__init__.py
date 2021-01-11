@@ -157,13 +157,13 @@ def _async_migrate_entity_config(
 
     reversed_target_ids = options[CONF_REVERSED_TARGET_IDS] = {}
     legacy_entry_config = options[CONF_ENTITY_CONFIG]
+    default_reverse = options.get(CONF_DEFAULT_REVERSE)
 
     for cover in mylink_status["result"]:
         legacy_entity_id = ENTITY_ID_FORMAT.format(slugify(cover["name"]))
         target_id = cover["targetID"]
 
         entity_config = legacy_entry_config.get(legacy_entity_id, {})
-        default_reverse = options.get(CONF_DEFAULT_REVERSE)
         if entity_config.get(CONF_REVERSE, default_reverse):
             reversed_target_ids[target_id] = True
 
