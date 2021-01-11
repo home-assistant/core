@@ -30,8 +30,7 @@
             },
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (disable if you are calling the homekit.start service manually)",
-                    "safe_mode": "Safe Mode (enable only if pairing fails)"
+                    "auto_start": "Autostart (disable if you are calling the homekit.start service manually)"
                 },
                 "description": "These settings only need to be adjusted if HomeKit is not functional.",
                 "title": "Advanced Configuration"
