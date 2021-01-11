@@ -30,6 +30,7 @@ DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELA
 
 SOCKET_TIMEOUT = 10
 
+
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
