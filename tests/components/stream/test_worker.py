@@ -1,14 +1,15 @@
-"""Test the stream worker.
+"""Test the stream worker corner cases.
 
 Exercise the stream worker functionality by mocking av.open calls to return a
 fake media container as well a fake decoded stream in the form of a series of
-packets.
+packets. This is needed as some of these cases can't be encoded using pyav.  It
+is preferred to use test_hls.py for example, when possible.
 
 The worker opens the stream source (typically a URL) and gets back a
-container that has audio/video streams.  The worker iterates over the sequence
-of packets and sends them to the appropriate output buffers.  Each test
+container that has audio/video streams. The worker iterates over the sequence
+of packets and sends them to the appropriate output buffers. Each test
 creates a packet sequence, with a mocked output buffer to capture the segments
-pushed to the output streams.  The packet sequence can be used to exercise
+pushed to the output streams. The packet sequence can be used to exercise
 failure modes or corner cases like how out of order packets are handled.
 """
 
