@@ -169,7 +169,9 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="link")
 
-        password = await self.hass.async_add_executor_job(RoombaPassword(self.host))
+        password = await self.hass.async_add_executor_job(
+            RoombaPassword(self.host).get_password
+        )
 
         if not password:
             return await self.async_step_link_manual()
