@@ -98,7 +98,7 @@ def get_plex_server(hass, plex_server_name=None):
 
 
 def lookup_plex_media(hass, content_type, content_id):
-    """Look up Plex media using media_player.play_media service payloads."""
+    """Look up Plex media for other integrations using media_player.play_media service payloads."""
     content = json.loads(content_id)
 
     if isinstance(content, int):
