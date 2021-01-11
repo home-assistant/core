@@ -26,9 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELAY}
 
-MAX_NUM_DEVICES_TO_DISCOVER = 10
-NUMBER_OF_MSGS_TO_BROADCAST = MAX_NUM_DEVICES_TO_DISCOVER * 2
-SOCKET_TIMEOUT = NUMBER_OF_MSGS_TO_BROADCAST + 1
+MAX_NUM_DEVICES_TO_DISCOVER = 25
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -76,8 +74,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _async_get_roomba_discovery(self):
         """Create a discovery object."""
         discovery = RoombaDiscovery()
-        discovery.amount_of_broadcasted_messages = NUMBER_OF_MSGS_TO_BROADCAST
-        discovery.server_socket.settimeout(SOCKET_TIMEOUT)
+        discovery.amount_of_broadcasted_messages = MAX_NUM_DEVICES_TO_DISCOVER
         return discovery
 
     async def async_step_import(self, import_info):
