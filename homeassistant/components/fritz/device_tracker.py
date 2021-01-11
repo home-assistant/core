@@ -15,13 +15,14 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEFAULT_IP = "169.254.1.1"  # This IP is valid for all FRITZ!Box routers.
+DEFAULT_HOST = "169.254.1.1"  # This IP is valid for all FRITZ!Box routers.
+DEFAULT_USERNAME = "admin"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
-        vol.Optional(CONF_PASSWORD, default="admin"): cv.string,
-        vol.Optional(CONF_USERNAME, default=""): cv.string,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
     }
 )
 
@@ -40,7 +41,7 @@ class FritzBoxScanner(DeviceScanner):
         self.last_results = []
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]
+        self.password = config.get(CONF_PASSWORD)
         self.success_init = True
 
         # Establish a connection to the FRITZ!Box.

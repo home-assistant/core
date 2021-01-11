@@ -196,7 +196,7 @@ class ControllerManager:
         # mapped_ids contains the mapped IDs (new:old)
         for new_id, old_id in mapped_ids.items():
             # update device registry
-            entry = self._device_registry.async_get_device({(DOMAIN, old_id)}, set())
+            entry = self._device_registry.async_get_device({(DOMAIN, old_id)})
             new_identifiers = {(DOMAIN, new_id)}
             if entry:
                 self._device_registry.async_update_device(

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Service is al geconfigureerd"
+        },
         "error": {
             "invalid_key": "Ongeldige API-sleutel en/of applicatiesleutel",
             "no_devices": "Geen apparaten gevonden in account"

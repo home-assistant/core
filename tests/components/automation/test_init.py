@@ -1,5 +1,6 @@
 """The tests for the automation component."""
 import asyncio
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -28,7 +29,6 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import Mock, patch
 from tests.common import assert_setup_component, async_mock_service, mock_restore_cache
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
@@ -1232,3 +1232,28 @@ async def test_automation_variables(hass, caplog):
     hass.bus.async_fire("test_event_3", {"break": 0})
     await hass.async_block_till_done()
     assert len(calls) == 3
+
+
+async def test_blueprint_automation(hass, calls):
+    """Test blueprint automation."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "use_blueprint": {
+                    "path": "test_event_service.yaml",
+                    "input": {
+                        "trigger_event": "blueprint_event",
+                        "service_to_call": "test.automation",
+                    },
+                }
+            }
+        },
+    )
+    hass.bus.async_fire("blueprint_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert automation.entities_in_automation(hass, "automation.automation_0") == [
+        "light.kitchen"
+    ]

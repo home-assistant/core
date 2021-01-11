@@ -280,12 +280,15 @@ async def get_device(hass, host, port, username, password):
 
     except axis.Unauthorized as err:
         LOGGER.warning("Connected to device at %s but not registered.", host)
+        await device.vapix.close()
         raise AuthenticationRequired from err
 
     except (asyncio.TimeoutError, axis.RequestError) as err:
         LOGGER.error("Error connecting to the Axis device at %s", host)
+        await device.vapix.close()
         raise CannotConnect from err
 
     except axis.AxisException as err:
         LOGGER.exception("Unknown Axis communication error occurred")
+        await device.vapix.close()
         raise AuthenticationRequired from err

@@ -271,7 +271,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @property
     def source_list(self):
         """List of available input sources."""
-        return sorted(self._source_list.keys())
+        return sorted(list(self._source_list))
 
     @property
     def media_content_type(self):

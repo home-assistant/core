@@ -6,7 +6,6 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "connection_error": "Erreur de connexion.",
             "snmp_error": "Serveur SNMP d\u00e9sactiv\u00e9 ou imprimante non prise en charge.",
             "wrong_host": "Nom d'h\u00f4te ou adresse IP invalide."
         },

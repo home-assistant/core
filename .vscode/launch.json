@@ -1,0 +1,49 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Home Assistant",
+      "type": "python",
+      "request": "launch",
+      "module": "homeassistant",
+      "args": [
+        "--debug",
+        "-c",
+        "config"
+      ]
+    },
+    {
+      // Debug by attaching to local Home Asistant server using Remote Python Debugger.
+      // See https://www.home-assistant.io/integrations/debugpy/
+      "name": "Home Assistant: Attach Local",
+      "type": "python",
+      "request": "attach",
+      "port": 5678,
+      "host": "localhost",
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "."
+        }
+      ],
+    },
+    {
+      // Debug by attaching to remote Home Asistant server using Remote Python Debugger.
+      // See https://www.home-assistant.io/integrations/debugpy/
+      "name": "Home Assistant: Attach Remote",
+      "type": "python",
+      "request": "attach",
+      "port": 5678,
+      "host": "homeassistant.local",
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "/usr/src/homeassistant"
+        }
+      ],
+    }
+  ]
+}

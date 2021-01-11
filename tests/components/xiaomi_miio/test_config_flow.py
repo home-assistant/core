@@ -1,12 +1,12 @@
 """Test the Xiaomi Miio config flow."""
+from unittest.mock import Mock, patch
+
 from miio import DeviceException
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_miio import config_flow, const
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
-
-from tests.async_mock import Mock, patch
 
 ZEROCONF_NAME = "name"
 ZEROCONF_PROP = "properties"

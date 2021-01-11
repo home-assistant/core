@@ -1,6 +1,5 @@
 """Support for Ambient Weather Station Service."""
 import asyncio
-import logging
 
 from aioambient import Client
 from aioambient.errors import WebsocketError
@@ -9,7 +8,6 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import DEVICE_CLASS_CONNECTIVITY
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    AREA_SQUARE_METERS,
     ATTR_LOCATION,
     ATTR_NAME,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -17,9 +15,9 @@ from homeassistant.const import (
     CONF_API_KEY,
     DEGREE,
     EVENT_HOMEASSISTANT_STOP,
+    IRRADIATION_WATTS_PER_SQUARE_METER,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
     PRESSURE_INHG,
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
@@ -40,11 +38,10 @@ from .const import (
     CONF_APP_KEY,
     DATA_CLIENT,
     DOMAIN,
+    LOGGER,
     TYPE_BINARY_SENSOR,
     TYPE_SENSOR,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_CONFIG = "config"
 
@@ -211,7 +208,7 @@ SENSOR_TYPES = {
     TYPE_SOILTEMP9F: ("Soil Temp 9", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_SOLARRADIATION: (
         "Solar Rad",
-        f"{POWER_WATT}/{AREA_SQUARE_METERS}",
+        IRRADIATION_WATTS_PER_SQUARE_METER,
         TYPE_SENSOR,
         None,
     ),
@@ -308,7 +305,7 @@ async def async_setup_entry(hass, config_entry):
         hass.loop.create_task(ambient.ws_connect())
         hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = ambient
     except WebsocketError as err:
-        _LOGGER.error("Config entry failed: %s", err)
+        LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
     async def _async_disconnect_websocket(*_):
@@ -338,7 +335,7 @@ async def async_migrate_entry(hass, config_entry):
     """Migrate old entry."""
     version = config_entry.version
 
-    _LOGGER.debug("Migrating from version %s", version)
+    LOGGER.debug("Migrating from version %s", version)
 
     # 1 -> 2: Unique ID format changed, so delete and re-import:
     if version == 1:
@@ -351,7 +348,7 @@ async def async_migrate_entry(hass, config_entry):
         version = config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry)
 
-    _LOGGER.info("Migration to version %s successful", version)
+    LOGGER.info("Migration to version %s successful", version)
 
     return True
 
@@ -378,7 +375,7 @@ class AmbientStation:
         try:
             await connect()
         except WebsocketError as err:
-            _LOGGER.error("Error with the websocket connection: %s", err)
+            LOGGER.error("Error with the websocket connection: %s", err)
             self._ws_reconnect_delay = min(2 * self._ws_reconnect_delay, 480)
             async_call_later(self._hass, self._ws_reconnect_delay, connect)
 
@@ -387,13 +384,13 @@ class AmbientStation:
 
         def on_connect():
             """Define a handler to fire when the websocket is connected."""
-            _LOGGER.info("Connected to websocket")
+            LOGGER.info("Connected to websocket")
 
         def on_data(data):
             """Define a handler to fire when the data is received."""
             mac_address = data["macAddress"]
             if data != self.stations[mac_address][ATTR_LAST_DATA]:
-                _LOGGER.debug("New data received: %s", data)
+                LOGGER.debug("New data received: %s", data)
                 self.stations[mac_address][ATTR_LAST_DATA] = data
                 async_dispatcher_send(
                     self._hass, f"ambient_station_data_update_{mac_address}"
@@ -401,7 +398,7 @@ class AmbientStation:
 
         def on_disconnect():
             """Define a handler to fire when the websocket is disconnected."""
-            _LOGGER.info("Disconnected from websocket")
+            LOGGER.info("Disconnected from websocket")
 
         def on_subscribed(data):
             """Define a handler to fire when the subscription is set."""
@@ -409,7 +406,7 @@ class AmbientStation:
                 if station["macAddress"] in self.stations:
                     continue
 
-                _LOGGER.debug("New station subscription: %s", data)
+                LOGGER.debug("New station subscription: %s", data)
 
                 # Only create entities based on the data coming through the socket.
                 # If the user is monitoring brightness (in W/m^2), make sure we also

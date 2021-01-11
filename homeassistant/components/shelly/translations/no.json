@@ -5,7 +5,6 @@
             "unsupported_firmware": "Enheten bruker en ikke-st\u00f8ttet firmwareversjon."
         },
         "error": {
-            "auth_not_supported": "Shelly-enheter som krever godkjenning st\u00f8ttes for \u00f8yeblikket ikke.",
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
@@ -13,7 +12,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm_discovery": {
-                "description": "Vil du konfigurere {model} p\u00e5 {host} ?\n\n F\u00f8r du setter opp, m\u00e5 den batteridrevne enheten vekkes ved \u00e5 trykke p\u00e5 knappen p\u00e5 enheten."
+                "description": "Vil du konfigurere {model} p\u00e5 {host} ?\n\n F\u00f8r du setter opp, m\u00e5 batteridrevne enheter vekkes ved \u00e5 trykke p\u00e5 knappen p\u00e5 enheten."
             },
             "credentials": {
                 "data": {
@@ -25,9 +24,8 @@
                 "data": {
                     "host": "Vert"
                 },
-                "description": "F\u00f8r du setter opp, m\u00e5 den batteridrevne enheten vekkes ved \u00e5 trykke p\u00e5 knappen p\u00e5 enheten."
+                "description": "F\u00f8r du setter opp, m\u00e5 batteridrevne enheter vekkes ved \u00e5 trykke p\u00e5 knappen p\u00e5 enheten."
             }
         }
-    },
-    "title": ""
+    }
 }

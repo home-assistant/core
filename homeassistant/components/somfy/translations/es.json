@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Solo puedes configurar una cuenta de Somfy.",
             "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n",
             "missing_configuration": "El componente Somfy no est\u00e1 configurado. Por favor, sigue la documentaci\u00f3n.",
             "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})",

@@ -1,17 +1,15 @@
 {
     "config": {
         "abort": {
-            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen",
-            "user_already_configured": "Account ist bereits konfiguriert"
+            "unknown": "Unerwarteter Fehler"
         },
         "create_entry": {
             "default": "M\u00f6gliche erweiterte Einstellungen finden sich unter [Life360-Dokumentation]({docs_url})."
         },
         "error": {
-            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen",
+            "already_configured": "Konto ist bereits konfiguriert",
             "invalid_username": "Ung\u00fcltiger Benutzername",
-            "unexpected": "Unerwarteter Fehler bei der Kommunikation mit dem Life360-Server",
-            "user_already_configured": "Konto wurde bereits konfiguriert"
+            "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "user": {

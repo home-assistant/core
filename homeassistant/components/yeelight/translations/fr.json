@@ -15,8 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "H\u00f4te",
-                    "ip_address": "Adresse IP"
+                    "host": "H\u00f4te"
                 },
                 "description": "Si vous laissez l'adresse IP vide, la d\u00e9couverte sera utilis\u00e9e pour trouver des appareils."
             }
@@ -35,6 +34,5 @@
                 "description": "Si vous ne pr\u00e9cisez pas le mod\u00e8le, il sera automatiquement d\u00e9tect\u00e9."
             }
         }
-    },
-    "title": "Yeelight"
+    }
 }

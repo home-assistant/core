@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
-        "error": {
-            "connection_error": "BSB-Lan \uae30\uae30\uc5d0 \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4."
-        },
         "flow_title": "BSB-Lan: {name}",
         "step": {
             "user": {
@@ -18,6 +15,5 @@
                 "title": "BSB-Lan \uae30\uae30\uc5d0 \uc5f0\uacb0\ud558\uae30"
             }
         }
-    },
-    "title": "BSB-Lan"
+    }
 }

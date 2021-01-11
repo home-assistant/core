@@ -1,5 +1,6 @@
 """Test the condition helper."""
 from logging import ERROR
+from unittest.mock import patch
 
 import pytest
 
@@ -8,8 +9,6 @@ from homeassistant.helpers import condition
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
-
-from tests.async_mock import patch
 
 
 async def test_invalid_condition(hass):
@@ -915,3 +914,26 @@ async def test_condition_template_error(hass, caplog):
     assert caplog.records[0].message.startswith(
         "Error during template condition: UndefinedError:"
     )
+
+
+async def test_condition_template_invalid_results(hass):
+    """Test template condition render false with invalid results."""
+    test = await condition.async_from_config(
+        hass, {"condition": "template", "value_template": "{{ 'string' }}"}
+    )
+    assert not test(hass)
+
+    test = await condition.async_from_config(
+        hass, {"condition": "template", "value_template": "{{ 10.1 }}"}
+    )
+    assert not test(hass)
+
+    test = await condition.async_from_config(
+        hass, {"condition": "template", "value_template": "{{ 42 }}"}
+    )
+    assert not test(hass)
+
+    test = await condition.async_from_config(
+        hass, {"condition": "template", "value_template": "{{ [1, 2, 3] }}"}
+    )
+    assert not test(hass)

@@ -4,8 +4,7 @@
             "already_configured": "Kontoen er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes",
-            "connection_error": "Tilkobling mislyktes"
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
             "user": {

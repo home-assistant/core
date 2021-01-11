@@ -4,9 +4,7 @@
             "already_configured": "Plasseringen er allerede konfigurert"
         },
         "error": {
-            "auth": "API-n\u00f8kkelen er ikke korrekt.",
             "cannot_connect": "Tilkobling mislyktes",
-            "connection": "Kan ikke koble til OWM API",
             "invalid_api_key": "Ugyldig API-n\u00f8kkel"
         },
         "step": {

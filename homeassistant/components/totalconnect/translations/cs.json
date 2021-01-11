@@ -4,8 +4,7 @@
             "already_configured": "\u00da\u010det je ji\u017e nastaven"
         },
         "error": {
-            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
-            "login": "Chyba p\u0159ihl\u00e1\u0161en\u00ed: zkontrolujte sv\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no a heslo"
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
         },
         "step": {
             "user": {

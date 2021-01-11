@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "authorize_url_timeout": "Tidsavbrudd som genererer autorer URL-adresse.",
-            "missing_configuration": "Komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen.",
+            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse",
+            "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "create_entry": {
@@ -13,6 +13,5 @@
                 "title": "Velg godkjenningsmetode"
             }
         }
-    },
-    "title": "Xbox"
+    }
 }

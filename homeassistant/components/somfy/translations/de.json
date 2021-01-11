@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Es kann nur ein Somfy-Account konfiguriert werden.",
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
             "missing_configuration": "Die Somfy-Komponente ist nicht konfiguriert. Folge bitte der Dokumentation."
         },

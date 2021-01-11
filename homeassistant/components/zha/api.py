@@ -807,18 +807,12 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
 
     clusters_to_bind = await get_matched_clusters(source_device, target_device)
 
+    zdo = source_device.device.zdo
     bind_tasks = []
-    for cluster_pair in clusters_to_bind:
-        destination_address = zdo_types.MultiAddress()
-        destination_address.addrmode = 3
-        destination_address.ieee = target_device.ieee
-        destination_address.endpoint = cluster_pair.target_cluster.endpoint.endpoint_id
-
-        zdo = cluster_pair.source_cluster.endpoint.device.zdo
-
+    for binding_pair in clusters_to_bind:
         op_msg = "cluster: %s %s --> [%s]"
         op_params = (
-            cluster_pair.source_cluster.cluster_id,
+            binding_pair.source_cluster.cluster_id,
             operation.name,
             target_ieee,
         )
@@ -829,9 +823,9 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
                 zdo.request(
                     operation,
                     source_device.ieee,
-                    cluster_pair.source_cluster.endpoint.endpoint_id,
-                    cluster_pair.source_cluster.cluster_id,
-                    destination_address,
+                    binding_pair.source_cluster.endpoint.endpoint_id,
+                    binding_pair.source_cluster.cluster_id,
+                    binding_pair.destination_address,
                 ),
                 op_msg,
                 op_params,

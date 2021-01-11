@@ -268,7 +268,7 @@ class InfluxFluxSensorData:
         """Get the latest data by querying influx."""
         _LOGGER.debug(RENDERING_QUERY_MESSAGE, self.query)
         try:
-            rendered_query = self.query.render()
+            rendered_query = self.query.render(parse_result=False)
         except TemplateError as ex:
             _LOGGER.error(RENDERING_QUERY_ERROR_MESSAGE, ex)
             return
@@ -312,7 +312,7 @@ class InfluxQLSensorData:
         """Get the latest data with a shell command."""
         _LOGGER.debug(RENDERING_WHERE_MESSAGE, self.where)
         try:
-            where_clause = self.where.render()
+            where_clause = self.where.render(parse_result=False)
         except TemplateError as ex:
             _LOGGER.error(RENDERING_WHERE_ERROR_MESSAGE, ex)
             return

@@ -1,6 +1,40 @@
 {
+    "config": {
+        "abort": {
+            "port_name_in_use": "Sama nime v\u00f5i pordiga tarvik v\u00f5i sild on juba konfigureeritud."
+        },
+        "step": {
+            "pairing": {
+                "description": "Niipea kui {name} on valmis, on sidumine saadaval jaotises \"Notifications\" kui \"HomeKit Bridge Setup\".",
+                "title": "HomeKiti sidumine"
+            },
+            "user": {
+                "data": {
+                    "auto_start": "Autostart (keela, kui kasutad Z-Wave'i v\u00f5i muud viivitatud k\u00e4ivituss\u00fcsteemi)",
+                    "include_domains": "Kaasatavad domeenid"
+                },
+                "description": "HomeKiti integreerimine v\u00f5imaldab teil p\u00e4\u00e4seda juurde HomeKiti \u00fcksustele Home Assistant. Sildire\u017eiimis on HomeKit Bridges piiratud 150 lisaseadmega, sealhulgas sild ise. Kui soovid \u00fchendada rohkem lisatarvikuid, on soovitatav kasutada erinevate domeenide jaoks mitut HomeKiti silda. \u00dcksuse \u00fcksikasjalik konfiguratsioon on esmase silla jaoks saadaval ainult YAML-i kaudu.",
+                "title": "Aktiveeri HomeKit"
+            }
+        }
+    },
     "options": {
         "step": {
+            "advanced": {
+                "data": {
+                    "auto_start": "Autostart (keela, kui kasutad Z-Wave'i v\u00f5i muud viivitatud k\u00e4ivituss\u00fcsteemi)",
+                    "safe_mode": "Turvare\u017eiim (luba ainult siis, kui sidumine nurjub)"
+                },
+                "description": "Neid s\u00e4tteid tuleb muuta ainult siis kui HomeKit ei t\u00f6\u00f6ta.",
+                "title": "T\u00e4psem seadistamine"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Kaamerad, mis toetavad riistvaralist H.264 voogu"
+                },
+                "description": "Vali k\u00f5iki kaameraid, mis toetavad kohalikku H.264 voogu. Kui kaamera ei edasta H.264 voogu, kodeerib s\u00fcsteem video HomeKiti jaoks versioonile H.264. \u00dcmberkodeerimine n\u00f5uab j\u00f5udsat protsessorit ja t\u00f5en\u00e4oliselt ei t\u00f6\u00f6ta see \u00fcheplaadilistes arvutites.",
+                "title": "Vali kaamera videokoodek."
+            },
             "include_exclude": {
                 "data": {
                     "entities": "Olemid",
@@ -11,10 +45,16 @@
             },
             "init": {
                 "data": {
+                    "include_domains": "Kaasatavad domeenid",
                     "mode": "Re\u017eiim"
-                }
+                },
+                "description": "HomeKiti saab seadistada silla v\u00f5i \u00fche lisaseadme avaldamiseks. Lisare\u017eiimis saab kasutada ainult \u00fchte \u00fcksust. Teleriseadmete klassiga meediumipleierite n\u00f5uetekohaseks toimimiseks on vaja lisare\u017eiimi. \u201eKaasatavate domeenide\u201d \u00fcksused puutuvad kokku HomeKitiga. J\u00e4rgmisel ekraanil saad valida, millised \u00fcksused sellesse loendisse lisada v\u00f5i sellest v\u00e4lja j\u00e4tta.",
+                "title": "Valige avaldatavad domeenid."
+            },
+            "yaml": {
+                "description": "Seda sisestust juhitakse YAML-i kaudu",
+                "title": "Kohanda HomeKiti suvandeid"
             }
         }
-    },
-    "title": ""
+    }
 }

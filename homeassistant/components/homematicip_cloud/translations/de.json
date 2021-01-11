@@ -6,7 +6,6 @@
             "unknown": "Ein unbekannter Fehler ist aufgetreten."
         },
         "error": {
-            "invalid_pin": "Ung\u00fcltige PIN, bitte versuche es erneut.",
             "invalid_sgtin_or_pin": "Ung\u00fcltige PIN, bitte versuche es erneut.",
             "press_the_button": "Bitte dr\u00fccke die blaue Taste.",
             "register_failed": "Registrierung fehlgeschlagen, bitte versuche es erneut.",

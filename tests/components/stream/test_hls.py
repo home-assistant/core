@@ -1,5 +1,6 @@
 """The tests for hls streams."""
 from datetime import timedelta
+from unittest.mock import patch
 from urllib.parse import urlparse
 
 import av
@@ -10,7 +11,6 @@ from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video, preload_stream
 
@@ -147,7 +147,9 @@ async def test_stream_keepalive(hass):
 
     with patch("av.open") as av_open, patch(
         "homeassistant.components.stream.worker.time"
-    ) as mock_time:
+    ) as mock_time, patch(
+        "homeassistant.components.stream.worker.STREAM_RESTART_INCREMENT", 0
+    ):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
         mock_time.time.side_effect = time_side_effect
         # Request stream

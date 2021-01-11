@@ -27,6 +27,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Client controllati per l'accesso alla rete",
+                    "dpi_restrictions": "Consenti il controllo dei gruppi di restrizione DPI",
                     "poe_clients": "Consentire il controllo POE dei client"
                 },
                 "description": "Configurare i controlli client \n\nCreare interruttori per i numeri di serie dei quali si desidera controllare l'accesso alla rete.",
@@ -43,12 +44,6 @@
                 },
                 "description": "Configurare il tracciamento del dispositivo",
                 "title": "Opzioni UniFi 1/3"
-            },
-            "init": {
-                "data": {
-                    "one": "uno",
-                    "other": "altri"
-                }
             },
             "simple_options": {
                 "data": {

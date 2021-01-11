@@ -245,7 +245,9 @@ class Remote:
         """Return device info."""
         if self._control is None:
             return None
-        return await self._handle_errors(self._control.get_device_info)
+        device_info = await self._handle_errors(self._control.get_device_info)
+        _LOGGER.debug("Fetched device info: %s", str(device_info))
+        return device_info
 
     async def _handle_errors(self, func, *args):
         """Handle errors from func, set available and reconnect if needed."""

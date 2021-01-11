@@ -255,7 +255,15 @@ class ModbusThermostat(ClimateEntity):
         byte_string = b"".join(
             [x.to_bytes(2, byteorder="big") for x in result.registers]
         )
-        val = struct.unpack(self._structure, byte_string)[0]
+        val = struct.unpack(self._structure, byte_string)
+        if len(val) != 1 or not isinstance(val[0], (float, int)):
+            _LOGGER.error(
+                "Unable to parse result as a single int or float value; adjust your configuration. Result: %s",
+                str(val),
+            )
+            return -1
+
+        val = val[0]
         register_value = format(
             (self._scale * val) + self._offset, f".{self._precision}f"
         )

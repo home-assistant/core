@@ -1,4 +1,6 @@
 """Tests for the Samsung TV Integration."""
+from unittest.mock import Mock, call, patch
+
 import pytest
 
 from homeassistant.components.media_player.const import DOMAIN, SUPPORT_TURN_ON
@@ -15,8 +17,6 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import Mock, call, patch
 
 ENTITY_ID = f"{DOMAIN}.fake_name"
 MOCK_CONFIG = {

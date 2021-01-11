@@ -2,6 +2,7 @@
 import copy
 from datetime import datetime, timedelta
 import json
+from unittest.mock import patch
 
 import pytest
 
@@ -42,7 +43,6 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message, async_fire_time_changed
 
 DEFAULT_CONFIG = {
@@ -579,7 +579,7 @@ async def test_entity_device_info_with_hub(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
     assert device.via_device_id == hub.id
 

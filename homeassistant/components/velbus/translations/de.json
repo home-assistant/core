@@ -1,11 +1,7 @@
 {
     "config": {
-        "abort": {
-            "port_exists": "Dieser Port ist bereits konfiguriert"
-        },
         "error": {
-            "connection_failed": "Die Velbus-Verbindung ist fehlgeschlagen",
-            "port_exists": "Dieser Port ist bereits konfiguriert"
+            "cannot_connect": "Verbindungsfehler"
         },
         "step": {
             "user": {

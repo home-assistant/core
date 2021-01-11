@@ -11,7 +11,7 @@ on:
 
 env:
   CACHE_VERSION: 1
-  DEFAULT_PYTHON: 3.7
+  DEFAULT_PYTHON: 3.8
   PRE_COMMIT_HOME: ~/.cache/pre-commit
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
@@ -48,7 +48,7 @@ jobs:
         run: |
           python -m venv venv
           . venv/bin/activate
-          pip install -U pip setuptools
+          pip install -U "pip<20.3" setuptools
           pip install -r requirements.txt -r requirements_test.txt
       - name: Restore pre-commit environment from cache
         id: cache-precommit
@@ -73,7 +73,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -118,7 +118,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -163,7 +163,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -214,11 +214,11 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
       - name: Check Dockerfile
-        uses: docker://hadolint/hadolint:v1.18.0
+        uses: docker://hadolint/hadolint:v1.18.2
         with:
           args: hadolint Dockerfile
       - name: Check Dockerfile.dev
-        uses: docker://hadolint/hadolint:v1.18.0
+        uses: docker://hadolint/hadolint:v1.18.2
         with:
           args: hadolint Dockerfile.dev
 
@@ -230,7 +230,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -278,7 +278,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -326,7 +326,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -371,7 +371,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -419,7 +419,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -475,7 +475,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -521,13 +521,12 @@ jobs:
     needs: prepare-tests
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [3.8]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
-      - name:
-          Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2
         with:
@@ -555,7 +554,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.1.4
+        uses: actions/setup-python@v2.2.1
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -585,7 +584,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: [3.8, 3.9]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
@@ -607,9 +606,13 @@ jobs:
       - name: Create full Python ${{ matrix.python-version }} virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
+          # Temporary addition of cmake, needed to build some Python 3.9 packages
+          apt-get update
+          apt-get -y install cmake
+
           python -m venv venv
           . venv/bin/activate
-          pip install -U pip setuptools wheel
+          pip install -U "pip<20.3" setuptools wheel
           pip install -r requirements_all.txt
           pip install -r requirements_test.txt
           pip install -e .
@@ -620,7 +623,7 @@ jobs:
     needs: prepare-tests
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [3.8]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
@@ -654,7 +657,7 @@ jobs:
     needs: prepare-tests
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [3.8]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
@@ -688,7 +691,7 @@ jobs:
     strategy:
       matrix:
         group: [1, 2, 3, 4]
-        python-version: [3.7, 3.8]
+        python-version: [3.8, 3.9]
     name: >-
       Run tests Python ${{ matrix.python-version }} (group ${{ matrix.group }})
     container: homeassistant/ci-azure:${{ matrix.python-version }}
@@ -736,7 +739,7 @@ jobs:
             -p no:sugar \
             tests
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v2.2.0
+        uses: actions/upload-artifact@v2.2.2
         with:
           name: coverage-${{ matrix.python-version }}-group${{ matrix.group }}
           path: .coverage
@@ -750,7 +753,7 @@ jobs:
     needs: pytest
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [3.8]
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
@@ -779,4 +782,4 @@ jobs:
           coverage report --fail-under=94
           coverage xml
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1.0.14
+        uses: codecov/codecov-action@v1.2.1

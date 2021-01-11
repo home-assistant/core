@@ -1,17 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindungsfehler"
         },
         "error": {
-            "device_timeout": "Verbindung fehlgeschlagen",
+            "cannot_connect": "Verbindungsfehler",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
-                    "key": "Authentifizierungsschl\u00fcssel (wird nur von BRP072C / Zena-Ger\u00e4ten verwendet)",
                     "password": "Passwort"
                 },
                 "description": "Gib die IP-Adresse deiner Daikin AC ein.",

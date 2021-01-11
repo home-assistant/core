@@ -39,7 +39,8 @@
       "client_control": {
         "data": {
           "block_client": "Network access controlled clients",
-          "poe_clients": "Allow POE control of clients"
+          "poe_clients": "Allow POE control of clients",
+          "dpi_restrictions": "Allow control of DPI restriction groups"
         },
         "description": "Configure client controls\n\nCreate switches for serial numbers you want to control network access for.",
         "title": "UniFi options 2/3"

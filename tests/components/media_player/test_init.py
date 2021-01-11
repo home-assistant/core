@@ -1,11 +1,10 @@
 """Test the base functions of the media player."""
 import base64
+from unittest.mock import patch
 
 from homeassistant.components import media_player
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 async def test_get_image(hass, hass_ws_client, caplog):
@@ -90,6 +89,33 @@ async def test_get_image_http_remote(hass, aiohttp_client):
             content = await resp.read()
 
         assert content == b"image"
+
+
+async def test_get_async_get_browse_image(hass, aiohttp_client, hass_ws_client):
+    """Test get browse image."""
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    entity_comp = hass.data.get("entity_components", {}).get("media_player")
+    assert entity_comp
+
+    player = entity_comp.get_entity("media_player.bedroom")
+    assert player
+
+    client = await aiohttp_client(hass.http.app)
+
+    with patch(
+        "homeassistant.components.media_player.MediaPlayerEntity."
+        "async_get_browse_image",
+        return_value=(b"image", "image/jpeg"),
+    ):
+        url = player.get_browse_image_url("album", "abcd")
+        resp = await client.get(url)
+        content = await resp.read()
+
+    assert content == b"image"
 
 
 def test_deprecated_base_class(caplog):

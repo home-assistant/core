@@ -1,4 +1,6 @@
 """Tests for the Ambiclimate config flow."""
+from unittest.mock import AsyncMock, patch
+
 import ambiclimate
 
 from homeassistant import data_entry_flow
@@ -6,8 +8,6 @@ from homeassistant.components.ambiclimate import config_flow
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.setup import async_setup_component
 from homeassistant.util import aiohttp
-
-from tests.async_mock import AsyncMock, patch
 
 
 async def init_config_flow(hass):

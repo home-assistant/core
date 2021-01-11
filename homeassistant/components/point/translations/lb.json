@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Dir k\u00ebnnt n\u00ebmmen een eenzegen Point Kont konfigur\u00e9ieren.",
+            "already_setup": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun m\u00e9iglech.",
             "authorize_url_fail": "Onbekannte Feeler beim gener\u00e9ieren vun der Autorisatiouns URL.",
             "authorize_url_timeout": "Z\u00e4it Iwwerschreidung beim gener\u00e9ieren vun der Autorisatiouns URL.",
             "external_setup": "Point gouf vun engem anere Floss erfollegr\u00e4ich konfigur\u00e9iert.",
-            "no_flows": "Dir musst Point konfigur\u00e9ieren, ier Dir d\u00ebs Authentifiz\u00e9ierung k\u00ebnnt benotzen.[Liest w.e.g. d'Instruktioune](https://www.home-assistant.io/components/point/)."
+            "no_flows": "Komponent net konfigur\u00e9iert. Folleg w.e.g der Dokumentatioun."
         },
         "create_entry": {
             "default": "Erfollegr\u00e4ich authentifiz\u00e9iert"

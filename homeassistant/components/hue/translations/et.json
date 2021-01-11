@@ -7,6 +7,7 @@
             "cannot_connect": "\u00dchendus nurjus",
             "discover_timeout": "Ei leia Philips Hue sildu",
             "no_bridges": "Philips Hue sildu ei avastatud",
+            "not_hue_bridge": "See pole Hue sild",
             "unknown": "Ilmnes tundmatu viga"
         },
         "error": {
@@ -27,7 +28,8 @@
             "manual": {
                 "data": {
                     "host": ""
-                }
+                },
+                "title": "Hue silla k\u00e4sitsi seadistamine"
             }
         }
     },
@@ -50,6 +52,16 @@
             "remote_button_short_release": "\"{subtype}\" nupp  vabastati",
             "remote_double_button_long_press": "M\u00f5lemad \"{subtype}\" nupud vabastatati p\u00e4rast pikka vajutust",
             "remote_double_button_short_press": "M\u00f5lemad \"{subtype}\" nupud vabastatati"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Luba Hue r\u00fchmad",
+                    "allow_unreachable": "Luba k\u00e4ttesaamatutel pirnidel oma olekust \u00f5igesti teatada"
+                }
+            }
         }
     }
 }

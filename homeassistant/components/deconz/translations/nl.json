@@ -6,7 +6,6 @@
             "no_bridges": "Geen deCONZ apparaten ontdekt",
             "no_hardware_available": "Geen radiohardware aangesloten op deCONZ",
             "not_deconz_bridge": "Dit is geen deCONZ bridge",
-            "one_instance_only": "Component ondersteunt slechts \u00e9\u00e9n deCONZ instantie",
             "updated_instance": "DeCONZ-instantie bijgewerkt met nieuw host-adres"
         },
         "error": {
@@ -67,6 +66,7 @@
             "remote_button_quadruple_press": "\" {subtype} \" knop viervoudig aangeklikt",
             "remote_button_quintuple_press": "\" {subtype} \" knop vijf keer aangeklikt",
             "remote_button_rotated": "Knop gedraaid \" {subtype} \"",
+            "remote_button_rotated_fast": "Knop is snel gedraaid \" {subtype} \"",
             "remote_button_rotation_stopped": "Knoprotatie \" {subtype} \" gestopt",
             "remote_button_short_press": "\"{subtype}\" knop ingedrukt",
             "remote_button_short_release": "\"{subtype}\" knop losgelaten",

@@ -1,6 +1,7 @@
 """Test Axis device."""
 from copy import deepcopy
 from unittest import mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import axis as axislib
 from axis.api_discovery import URL as API_DISCOVERY_URL
@@ -40,7 +41,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 
 MAC = "00408C12345"

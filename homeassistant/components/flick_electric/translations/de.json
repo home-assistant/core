@@ -11,11 +11,11 @@
         "step": {
             "user": {
                 "data": {
+                    "client_id": "Client-ID (optional)",
                     "password": "Passwort",
                     "username": "Benutzername"
                 }
             }
         }
-    },
-    "title": "Flick Electric"
+    }
 }

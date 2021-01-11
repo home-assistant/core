@@ -1,6 +1,8 @@
 """MediaPlayer platform for Roon integration."""
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_BROWSE_MEDIA,
@@ -26,6 +28,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -55,11 +58,37 @@ SUPPORT_ROON = (
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_JOIN = "join"
+SERVICE_UNJOIN = "unjoin"
+SERVICE_TRANSFER = "transfer"
+
+ATTR_JOIN = "join_ids"
+ATTR_UNJOIN = "unjoin_ids"
+ATTR_TRANSFER = "transfer_id"
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Roon MediaPlayer from Config Entry."""
     roon_server = hass.data[DOMAIN][config_entry.entry_id]
     media_players = set()
+
+    # Register entity services
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_JOIN,
+        {vol.Required(ATTR_JOIN): vol.All(cv.ensure_list, [cv.entity_id])},
+        "join",
+    )
+    platform.async_register_entity_service(
+        SERVICE_UNJOIN,
+        {vol.Optional(ATTR_UNJOIN): vol.All(cv.ensure_list, [cv.entity_id])},
+        "unjoin",
+    )
+    platform.async_register_entity_service(
+        SERVICE_TRANSFER,
+        {vol.Required(ATTR_TRANSFER): cv.entity_id},
+        "async_transfer",
+    )
 
     @callback
     def async_update_media_player(player_data):
@@ -118,6 +147,7 @@ class RoonDevice(MediaPlayerEntity):
                 self.async_update_callback,
             )
         )
+        self._server.add_player_id(self.entity_id, self.name)
 
     @callback
     def async_update_callback(self, player_data):
@@ -477,6 +507,112 @@ class RoonDevice(MediaPlayerEntity):
                 media_type,
                 media_id,
             )
+
+    def join(self, join_ids):
+        """Add another Roon player to this player's join group."""
+
+        zone_data = self._server.roonapi.zone_by_output_id(self._output_id)
+        if zone_data is None:
+            _LOGGER.error("No zone data for %s", self.name)
+            return
+
+        sync_available = {}
+        for zone in self._server.zones.values():
+            for output in zone["outputs"]:
+                if (
+                    zone["display_name"] != self.name
+                    and output["output_id"]
+                    in self.player_data["can_group_with_output_ids"]
+                    and zone["display_name"] not in sync_available
+                ):
+                    sync_available[zone["display_name"]] = output["output_id"]
+
+        names = []
+        for entity_id in join_ids:
+            name = self._server.roon_name(entity_id)
+            if name is None:
+                _LOGGER.error("No roon player found for %s", entity_id)
+                return
+            if name not in sync_available:
+                _LOGGER.error(
+                    "Can't join player %s with %s because it's not in the join available list %s",
+                    name,
+                    self.name,
+                    list(sync_available),
+                )
+                return
+            names.append(name)
+
+        _LOGGER.debug("Joining %s to %s", names, self.name)
+        self._server.roonapi.group_outputs(
+            [self._output_id] + [sync_available[name] for name in names]
+        )
+
+    def unjoin(self, unjoin_ids=None):
+        """Remove a Roon player to this player's join group."""
+
+        zone_data = self._server.roonapi.zone_by_output_id(self._output_id)
+        if zone_data is None:
+            _LOGGER.error("No zone data for %s", self.name)
+            return
+
+        join_group = {
+            output["display_name"]: output["output_id"]
+            for output in zone_data["outputs"]
+            if output["display_name"] != self.name
+        }
+
+        if unjoin_ids is None:
+            # unjoin everything
+            names = list(join_group)
+        else:
+            names = []
+            for entity_id in unjoin_ids:
+                name = self._server.roon_name(entity_id)
+                if name is None:
+                    _LOGGER.error("No roon player found for %s", entity_id)
+                    return
+
+                if name not in join_group:
+                    _LOGGER.error(
+                        "Can't unjoin player %s from %s because it's not in the joined group %s",
+                        name,
+                        self.name,
+                        list(join_group),
+                    )
+                    return
+                names.append(name)
+
+        _LOGGER.debug("Unjoining %s from %s", names, self.name)
+        self._server.roonapi.ungroup_outputs([join_group[name] for name in names])
+
+    async def async_transfer(self, transfer_id):
+        """Transfer playback from this roon player to another."""
+
+        name = self._server.roon_name(transfer_id)
+        if name is None:
+            _LOGGER.error("No roon player found for %s", transfer_id)
+            return
+
+        zone_ids = {
+            output["display_name"]: output["zone_id"]
+            for output in self._server.zones.values()
+            if output["display_name"] != self.name
+        }
+
+        transfer_id = zone_ids.get(name)
+        if transfer_id is None:
+            _LOGGER.error(
+                "Can't transfer from %s to %s because destination is not known %s",
+                self.name,
+                transfer_id,
+                list(zone_ids),
+            )
+
+        _LOGGER.debug("Transferring from %s to %s", self.name, name)
+        await self.hass.async_add_executor_job(
+            self._server.roonapi.transfer_zone, self._zone_id, transfer_id
+        )
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""

@@ -1,6 +1,7 @@
 """Test the Broadlink config flow."""
 import errno
 import socket
+from unittest.mock import call, patch
 
 import broadlink.exceptions as blke
 import pytest
@@ -9,8 +10,6 @@ from homeassistant import config_entries
 from homeassistant.components.broadlink.const import DOMAIN
 
 from . import get_device
-
-from tests.async_mock import call, patch
 
 DEVICE_DISCOVERY = "homeassistant.components.broadlink.config_flow.blk.discover"
 DEVICE_FACTORY = "homeassistant.components.broadlink.config_flow.blk.gendevice"
@@ -334,7 +333,7 @@ async def test_flow_auth_os_error(hass):
 
 
 async def test_flow_reset_works(hass):
-    """Test we finish a config flow after a factory reset."""
+    """Test we finish a config flow after a manual unlock."""
     device = get_device("Living Room")
     mock_api = device.get_mock_api()
     mock_api.auth.side_effect = blke.AuthenticationError()

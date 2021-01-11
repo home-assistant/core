@@ -5,7 +5,7 @@
         },
         "error": {
             "identifier_exists": "Konto bereits registriert",
-            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen"
+            "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "reauth_confirm": {

@@ -160,7 +160,7 @@ async def async_get_triggers(hass, device_id):
         return
 
     triggers = []
-    for trigger, subtype in REMOTES[device.model].keys():
+    for trigger, subtype in REMOTES[device.model]:
         triggers.append(
             {
                 CONF_DEVICE_ID: device_id,
