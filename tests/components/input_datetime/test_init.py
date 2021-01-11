@@ -131,7 +131,7 @@ async def test_set_datetime(hass):
 
     entity_id = "input_datetime.test_datetime"
 
-    dt_obj = datetime.datetime(2017, 9, 7, 19, 46, 30)
+    dt_obj = datetime.datetime(2017, 9, 7, 19, 46, 30, tzinfo=datetime.timezone.utc)
 
     await async_set_date_and_time(hass, entity_id, dt_obj)
 
@@ -157,7 +157,7 @@ async def test_set_datetime_2(hass):
 
     entity_id = "input_datetime.test_datetime"
 
-    dt_obj = datetime.datetime(2017, 9, 7, 19, 46, 30)
+    dt_obj = datetime.datetime(2017, 9, 7, 19, 46, 30, tzinfo=datetime.timezone.utc)
 
     await async_set_datetime(hass, entity_id, dt_obj)
 
@@ -183,7 +183,7 @@ async def test_set_datetime_3(hass):
 
     entity_id = "input_datetime.test_datetime"
 
-    dt_obj = datetime.datetime(2017, 9, 7, 19, 46, 30)
+    dt_obj = datetime.datetime(2017, 9, 7, 19, 46, 30, tzinfo=datetime.timezone.utc)
 
     await async_set_timestamp(hass, entity_id, dt_util.as_utc(dt_obj).timestamp())
 
@@ -677,6 +677,7 @@ async def test_timestamp(hass):
         # initial has been converted to the set timezone
         state_with_tz = hass.states.get("input_datetime.test_datetime_initial_with_tz")
         assert state_with_tz is not None
+        # Timezone LA is UTC-8 => timestamp carries +01:00 => delta is -9 => 10:00 - 09:00 => 01:00
         assert state_with_tz.state == "2020-12-13 01:00:00"
         assert (
             dt_util.as_local(
@@ -691,6 +692,13 @@ async def test_timestamp(hass):
         )
         assert state_without_tz is not None
         assert state_without_tz.state == "2020-12-13 10:00:00"
+        # Timezone LA is UTC-8 => timestamp has no zone (= assumed local) => delta to UTC is +8 => 10:00 + 08:00 => 18:00
+        assert (
+            dt_util.utc_from_timestamp(
+                state_without_tz.attributes[ATTR_TIMESTAMP]
+            ).strftime(FMT_DATETIME)
+            == "2020-12-13 18:00:00"
+        )
         assert (
             dt_util.as_local(
                 dt_util.utc_from_timestamp(state_without_tz.attributes[ATTR_TIMESTAMP])
@@ -701,7 +709,7 @@ async def test_timestamp(hass):
         assert (
             dt_util.as_local(
                 datetime.datetime.fromtimestamp(
-                    state_without_tz.attributes[ATTR_TIMESTAMP]
+                    state_without_tz.attributes[ATTR_TIMESTAMP], datetime.timezone.utc
                 )
             ).strftime(FMT_DATETIME)
             == "2020-12-13 10:00:00"
