@@ -1,4 +1,5 @@
 """Test the Z-Wave JS init module."""
+from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
@@ -91,7 +92,7 @@ async def test_initialized_timeout(hass, client, connect_timeout):
 
 
 async def test_on_node_added_ready(hass, multisensor_6_state, client, integration):
-    """Test we handle node added event."""
+    """Test we handle a ready node added event."""
     node = Node(client, multisensor_6_state)
     event = {"node": node}
 
@@ -106,3 +107,31 @@ async def test_on_node_added_ready(hass, multisensor_6_state, client, integratio
 
     assert state
     assert state.state != STATE_UNAVAILABLE  # node and entity added
+
+
+async def test_on_node_added_not_ready(hass, multisensor_6_state, client, integration):
+    """Test we handle a non ready node added event."""
+    node_data = deepcopy(multisensor_6_state)  # Copy to allow modification in tests.
+    node = Node(client, node_data)
+    node.data["ready"] = False
+    event = {"node": node}
+
+    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+    assert not state  # node and entity not yet added
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+    assert not state  # device added in registry but entity not yet added
+
+    node.data["ready"] = True
+    node.emit("ready", event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+    assert state
+    assert state.state != STATE_UNAVAILABLE  # entity added
