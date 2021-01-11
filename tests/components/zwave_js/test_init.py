@@ -159,7 +159,7 @@ async def test_on_node_added_not_ready(
 async def test_existing_node_ready(
     hass, client, multisensor_6, integration, device_registry
 ):
-    """Test we handle a ready node that exist during integration setup."""
+    """Test we handle a ready node that exists during integration setup."""
     node = multisensor_6
     air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
 
@@ -173,7 +173,7 @@ async def test_existing_node_ready(
 
 
 async def test_existing_node_not_ready(hass, client, multisensor_6, device_registry):
-    """Test we handle a non ready node that exist during integration setup."""
+    """Test we handle a non ready node that exists during integration setup."""
     node = multisensor_6
     node.data = deepcopy(node.data)  # Copy to allow modification in tests.
     node.data["ready"] = False
