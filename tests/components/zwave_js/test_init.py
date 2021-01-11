@@ -5,6 +5,7 @@ from unittest.mock import DEFAULT, patch
 import pytest
 from zwave_js_server.model.node import Node
 
+from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
@@ -91,41 +92,59 @@ async def test_initialized_timeout(hass, client, connect_timeout):
     assert entry.state == ENTRY_STATE_SETUP_RETRY
 
 
-async def test_on_node_added_ready(hass, multisensor_6_state, client, integration):
+async def test_on_node_added_ready(
+    hass, multisensor_6_state, client, integration, device_registry
+):
     """Test we handle a ready node added event."""
     node = Node(client, multisensor_6_state)
     event = {"node": node}
+    air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
 
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
-    assert not state  # node and entity not yet added
+    assert not state  # entity and device not yet added
+    assert not device_registry.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id)}
+    )
 
     client.driver.controller.emit("node added", event)
     await hass.async_block_till_done()
 
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
-    assert state
-    assert state.state != STATE_UNAVAILABLE  # node and entity added
+    assert state  # entity and device added
+    assert state.state != STATE_UNAVAILABLE
+    assert device_registry.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id)}
+    )
 
 
-async def test_on_node_added_not_ready(hass, multisensor_6_state, client, integration):
+async def test_on_node_added_not_ready(
+    hass, multisensor_6_state, client, integration, device_registry
+):
     """Test we handle a non ready node added event."""
     node_data = deepcopy(multisensor_6_state)  # Copy to allow modification in tests.
     node = Node(client, node_data)
     node.data["ready"] = False
     event = {"node": node}
+    air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
 
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
-    assert not state  # node and entity not yet added
+    assert not state  # entity and device not yet added
+    assert not device_registry.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id)}
+    )
 
     client.driver.controller.emit("node added", event)
     await hass.async_block_till_done()
 
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
-    assert not state  # device added in registry but entity not yet added
+    assert not state  # entity not yet added but device added in registry
+    assert device_registry.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id)}
+    )
 
     node.data["ready"] = True
     node.emit("ready", event)
@@ -133,16 +152,17 @@ async def test_on_node_added_not_ready(hass, multisensor_6_state, client, integr
 
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
-    assert state
-    assert state.state != STATE_UNAVAILABLE  # entity added
+    assert state  # entity added
+    assert state.state != STATE_UNAVAILABLE
 
 
-async def test_existing_node_not_ready(hass, client, multisensor_6):
+async def test_existing_node_not_ready(hass, client, multisensor_6, device_registry):
     """Test we handle a non ready node that exist during integration setup."""
     node = multisensor_6
     node.data = deepcopy(node.data)  # Copy to allow modification in tests.
     node.data["ready"] = False
     event = {"node": node}
+    air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
@@ -158,7 +178,10 @@ async def test_existing_node_not_ready(hass, client, multisensor_6):
 
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
-    assert not state  # node and entity not yet added
+    assert not state  # entity and device not yet added
+    assert not device_registry.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id)}
+    )
 
     node.data["ready"] = True
     node.emit("ready", event)
@@ -166,5 +189,8 @@ async def test_existing_node_not_ready(hass, client, multisensor_6):
 
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
-    assert state
-    assert state.state != STATE_UNAVAILABLE  # entity added
+    assert state  # entity and device added
+    assert state.state != STATE_UNAVAILABLE
+    assert device_registry.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id)}
+    )
