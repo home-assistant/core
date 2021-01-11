@@ -42,7 +42,7 @@ async def async_init_integration(
     # Tado V2 with manual heating
     zone_1_state_fixture = "tado/tadov2.heating.manual_mode.json"
     zone_1_capabilities_fixture = "tado/tadov2.zone_capabilities.json"
-    
+
     # Device Temp Offset
     device_temp_offset = "tado/device_temp_offset.json"
 
