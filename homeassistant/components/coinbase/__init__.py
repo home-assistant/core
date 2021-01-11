@@ -18,6 +18,9 @@ DOMAIN = "coinbase"
 CONF_API_SECRET = "api_secret"
 CONF_ACCOUNT_CURRENCIES = "account_balance_currencies"
 CONF_EXCHANGE_CURRENCIES = "exchange_rate_currencies"
+CONF_BASE_CURRENCY = "base_currency"
+
+DEFAULT_BASE_CURRENCY = "USD"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
@@ -35,6 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_EXCHANGE_CURRENCIES, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
+                vol.Optional(CONF_BASE_CURRENCY, default=DEFAULT_BASE_CURRENCY): cv.string,
             }
         )
     },
@@ -52,8 +56,9 @@ def setup(hass, config):
     api_secret = config[DOMAIN][CONF_API_SECRET]
     account_currencies = config[DOMAIN].get(CONF_ACCOUNT_CURRENCIES)
     exchange_currencies = config[DOMAIN][CONF_EXCHANGE_CURRENCIES]
+    base_currency = config[DOMAIN][CONF_BASE_CURRENCY]
 
-    hass.data[DATA_COINBASE] = coinbase_data = CoinbaseData(api_key, api_secret)
+    hass.data[DATA_COINBASE] = coinbase_data = CoinbaseData(api_key, api_secret, base_currency)
 
     if not hasattr(coinbase_data, "accounts"):
         return False
@@ -79,10 +84,11 @@ def setup(hass, config):
 class CoinbaseData:
     """Get the latest data and update the states."""
 
-    def __init__(self, api_key, api_secret):
+    def __init__(self, api_key, api_secret, base_currency):
         """Init the coinbase data object."""
 
         self.client = Client(api_key, api_secret)
+        self.base_currency = base_currency
         self.update()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -91,7 +97,7 @@ class CoinbaseData:
 
         try:
             self.accounts = self.client.get_accounts()
-            self.exchange_rates = self.client.get_exchange_rates()
+            self.exchange_rates = self.client.get_exchange_rates(currency=self.base_currency)
         except AuthenticationError as coinbase_error:
             _LOGGER.error(
                 "Authentication error connecting to coinbase: %s", coinbase_error
