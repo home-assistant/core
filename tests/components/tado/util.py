@@ -22,6 +22,7 @@ async def async_init_integration(
 
     # WR1 Device
     device_wr1_fixture = "tado/device_wr1.json"
+    device_wr1_offset = "tado/device_wr1_offset.json"
 
     # Smart AC with Swing
     zone_5_state_fixture = "tado/smartac3.with_swing.json"
@@ -56,6 +57,10 @@ async def async_init_integration(
         m.get(
             "https://my.tado.com/api/v2/devices/WR1/",
             text=load_fixture(device_wr1_fixture),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/devices/WR1/temperatureOffset",
+            text=load_fixture(device_wr1_offset),
         )
         m.get(
             "https://my.tado.com/api/v2/homes/1/zones",

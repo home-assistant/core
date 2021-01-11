@@ -25,6 +25,8 @@ from .const import (
     SIGNAL_TADO_UPDATE_RECEIVED,
     UPDATE_LISTENER,
     UPDATE_TRACK,
+    INSIDE_TEMPERATURE_MEASUREMENT,
+    TEMP_OFFSET,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -206,12 +208,10 @@ class TadoConnector:
             if sensor_type == "device":
                 data = self.tado.getDeviceInfo(sensor)
                 if (
-                    "INSIDE_TEMPERATURE_MEASUREMENT"
+                    INSIDE_TEMPERATURE_MEASUREMENT
                     in data["characteristics"]["capabilities"]
                 ):
-                    data["TEMP_OFFSET"] = self.tado.getDeviceInfo(
-                        sensor, "temperatureOffset"
-                    )
+                    data[TEMP_OFFSET] = self.tado.getDeviceInfo(sensor, TEMP_OFFSET)
             elif sensor_type == "zone":
                 data = self.tado.getZoneState(sensor)
             else:

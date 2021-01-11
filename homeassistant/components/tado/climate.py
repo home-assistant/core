@@ -48,6 +48,8 @@ from .const import (
     TADO_TO_HA_HVAC_MODE_MAP,
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
+    TEMP_OFFSET,
+    TADO_TO_HA_OFFSET_MAP,
 )
 from .entity import TadoZoneEntity
 
@@ -479,11 +481,11 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_swing_mode = self._tado_zone_data.current_swing_mode
 
     def _update_offset(self):
-        # Add 'offset' to the key so its named correctly as an attribute in HA
-        for key in self._tado.data["device"][self._device_id]["TEMP_OFFSET"]:
-            self._tado_zone_temp_offset["offset_" + key] = self._tado.data["device"][
-                self._device_id
-            ]["TEMP_OFFSET"][key]
+        # Assign offset values to mapped attributes
+        for key in TADO_TO_HA_OFFSET_MAP:
+            self._tado_zone_temp_offset[TADO_TO_HA_OFFSET_MAP[key]] = self._tado.data[
+                "device"
+            ][self._device_id][TEMP_OFFSET][key]
 
     @callback
     def _async_update_callback(self):
