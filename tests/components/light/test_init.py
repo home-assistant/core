@@ -1,4 +1,6 @@
 """The tests for the Light component."""
+from unittest.mock import MagicMock, mock_open, patch
+
 import pytest
 import voluptuous as vol
 
@@ -17,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock, mock_open, patch
 from tests.common import async_mock_service
 
 orig_Profiles = light.Profiles
