@@ -18,7 +18,7 @@
       },      
       "link": {
         "title": "Retrieve Password",
-        "description": "Press and hold the Home and Target buttons until the device generates a sound (about two seconds). Some devices may not have a target button."
+        "description": "Press and hold the Home button until the device generates a sound (about two seconds)."
       },
       "link_manual": {
         "title": "Retrieve Password",
