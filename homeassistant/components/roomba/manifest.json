@@ -1,6 +1,6 @@
 {
   "domain": "roomba",
-  "name": "iRobot Roomba",
+  "name": "iRobot Roomba and Braava",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/roomba",
   "requirements": ["roombapy==1.6.2"],
