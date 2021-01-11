@@ -173,15 +173,23 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not password:
             return await self.async_step_link_manual()
 
-        return self.async_create_entry(
-            title=self.name or self.host,
-            data={
-                CONF_HOST: self.host,
-                CONF_BLID: self.blid,
-                CONF_PASSWORD: password,
-                **DEFAULT_OPTIONS,
-            },
-        )
+        config = {
+            CONF_HOST: self.host,
+            CONF_BLID: self.blid,
+            CONF_PASSWORD: password,
+            **DEFAULT_OPTIONS,
+        }
+
+        if not self.name:
+            try:
+                info = await validate_input(self.hass, config)
+            except CannotConnect:
+                return self.async_abort(reason="cannot_connect")
+
+            await async_disconnect_or_timeout(self.hass, info[ROOMBA_SESSION])
+            self.name = info[CONF_NAME]
+
+        return self.async_create_entry(title=self.name, data=config)
 
     async def async_step_link_manual(self, user_input=None):
         """Handle manual linking."""
