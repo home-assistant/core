@@ -26,15 +26,14 @@
     },
     "step": {
       "init": {
-        "title": "Configure MyLink Entities",
+        "title": "Configure MyLink Options",
         "data": {
-          "default_reverse": "Default reversal status for unconfigured covers",
-          "entity_id": "Configure a specific entity."
+          "target_id": "Configure options for a cover."
         }
       },
-      "entity_config": {
-        "title": "Configure Entity",
-        "description": "Configure options for `{entity_id}`",
+      "target_config": {
+        "title": "Configure MyLink Cover",
+        "description": "Configure options for `{target_name}`",
         "data": {
           "reverse": "Cover is reversed"
         }
