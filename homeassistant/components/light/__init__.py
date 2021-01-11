@@ -294,22 +294,24 @@ class Profile:
     transition: Optional[int] = None
     hs_color: Optional[Tuple[float, float]] = dataclasses.field(init=False)
 
-    _OPT_BRIGHTNESS = vol.Any(cv.byte, _coerce_none)  # pylint: disable=invalid-name
-    _OPT_TRANSITION = vol.Any(  # pylint: disable=invalid-name
-        VALID_TRANSITION, _coerce_none
-    )
     SCHEMA = vol.Schema(  # pylint: disable=invalid-name
         vol.Any(
-            vol.ExactSequence((str, _coerce_none, _coerce_none, cv.byte)),
-            vol.ExactSequence((str, cv.small_float, cv.small_float, _OPT_BRIGHTNESS)),
             vol.ExactSequence(
-                (str, cv.small_float, cv.small_float, _OPT_BRIGHTNESS, _OPT_TRANSITION)
+                (
+                    str,
+                    vol.Any(cv.small_float, _coerce_none),
+                    vol.Any(cv.small_float, _coerce_none),
+                    vol.Any(cv.byte, _coerce_none),
+                )
             ),
             vol.ExactSequence(
-                (str, _coerce_none, _coerce_none, _OPT_BRIGHTNESS, VALID_TRANSITION)
-            ),
-            vol.ExactSequence(
-                (str, _coerce_none, _coerce_none, cv.byte, _OPT_TRANSITION)
+                (
+                    str,
+                    vol.Any(cv.small_float, _coerce_none),
+                    vol.Any(cv.small_float, _coerce_none),
+                    vol.Any(cv.byte, _coerce_none),
+                    vol.Any(VALID_TRANSITION, _coerce_none),
+                )
             ),
         )
     )
