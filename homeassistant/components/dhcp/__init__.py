@@ -97,6 +97,7 @@ class DHCPWatcher:
         )
 
         for entry in self._integration_matchers:
+            _LOGGER.debug("Checking %s against %s", data, entry)
             if MACADDRESS in entry and not fnmatch.fnmatch(
                 uppercase_mac, entry[MACADDRESS]
             ):
@@ -106,6 +107,8 @@ class DHCPWatcher:
                 lowercase_hostname, entry[HOSTNAME]
             ):
                 continue
+
+            _LOGGER.debug("Matched %s against %s", data, entry)
 
             self.hass.add_job(
                 self.hass.config_entries.flow.async_init(
