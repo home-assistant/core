@@ -495,7 +495,7 @@ def test_state_object_id():
 def test_state_name_if_no_friendly_name_attr():
     """Test if there is no friendly name."""
     state = ha.State("domain.hello_world", "world")
-    assert state.name == "Hello world"
+    assert state.name == "hello world"
 
 
 def test_state_name_if_friendly_name_attr():
