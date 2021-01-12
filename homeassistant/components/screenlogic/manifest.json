@@ -4,11 +4,8 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/screenlogic",
   "requirements": [
-    "screenlogicpy==1.0.0"
+    "git+https://github.com/dieselrabbit/screenlogicpy.git@dev#screenlogicpy==0.0.3"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
   "dependencies": [],
   "codeowners": [
     "@dieselrabbit"
