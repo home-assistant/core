@@ -72,14 +72,11 @@ MANIFEST_SCHEMA = vol.Schema(
         ),
         vol.Optional("homekit"): vol.Schema({vol.Optional("models"): [str]}),
         vol.Optional("dhcp"): [
-            vol.Any(
-                str,
-                vol.Schema(
-                    {
-                        vol.Optional("macaddress"): vol.All(str, verify_uppercase),
-                        vol.Optional("hostname"): vol.All(str, verify_lowercase),
-                    }
-                ),
+            vol.Schema(
+                {
+                    vol.Optional("macaddress"): vol.All(str, verify_uppercase),
+                    vol.Optional("hostname"): vol.All(str, verify_lowercase),
+                }
             )
         ],
         vol.Required("documentation"): vol.All(
