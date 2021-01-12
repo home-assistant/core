@@ -3,6 +3,6 @@
   "name": "Smart Meter Texas",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smart_meter_texas",
-  "requirements": ["smart-meter-texas==0.4.0"],
+  "requirements": ["smart-meter-texas==0.4.3"],
   "codeowners": ["@grahamwetzler"]
 }
