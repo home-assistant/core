@@ -16,7 +16,7 @@ FILTER = "udp and (port 67 or 68)"
 REQUESTED_ADDR = "requested_addr"
 HOSTNAME = "hostname"
 MACADDRESS = "macaddress"
-IP_ADDRESS = "ip_address"
+IP = "ip"
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,36 +62,36 @@ class DHCPWatcher:
             return
 
         try:
-            ip_address = _decode_dhcp_option(options, REQUESTED_ADDR)
+            ip = _decode_dhcp_option(options, REQUESTED_ADDR)
             hostname = _decode_dhcp_option(options, HOSTNAME)
             mac = format_mac(packet[Ether].src)
-            _LOGGER.warning(f"Host {hostname} ({mac}) requested {ip_address}")
+            _LOGGER.warning(f"Host {hostname} ({mac}) requested {ip}")
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.debug("Error decoding DHCP packet: %s", ex)
             return
 
-        if ip_address is None or hostname is None or mac is None:
+        if ip is None or hostname is None or mac is None:
             return
 
-        data = self._address_data.get(ip_address)
+        data = self._address_data.get(ip)
 
         if data and data[MACADDRESS] == mac and data[HOSTNAME] == hostname:
             # If the address data is the same no need
             # to process it
             return
 
-        self._address_data[ip_address] = {MACADDRESS: mac, HOSTNAME: hostname}
+        self._address_data[ip] = {MACADDRESS: mac, HOSTNAME: hostname}
 
-        self._process_updated_address_data(ip_address, self._address_data[ip_address])
+        self._process_updated_address_data(ip, self._address_data[ip])
 
-    def _process_updated_address_data(self, ip_address, data):
+    def _process_updated_address_data(self, ip, data):
         """Process the address data update."""
         lowercase_hostname = data[HOSTNAME].lower()
         uppercase_mac = data[MACADDRESS].upper()
 
         _LOGGER.debug(
             "Processing updated address data for %s: mac=%s hostname=%s",
-            ip_address,
+            ip,
             uppercase_mac,
             lowercase_hostname,
         )
@@ -111,7 +111,7 @@ class DHCPWatcher:
                 self.hass.config_entries.flow.async_init(
                     entry["domain"],
                     context={"source": DOMAIN},
-                    data={IP_ADDRESS: ip_address, **data[ip_address]},
+                    data={IP: ip, **data},
                 )
             )
 
