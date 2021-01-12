@@ -1,7 +1,6 @@
 """Generate dhcp file."""
-from collections import OrderedDict, defaultdict
 import json
-from typing import Dict
+from typing import Dict, List
 
 from .model import Config, Integration
 
@@ -17,9 +16,9 @@ DHCP = {}
 """.strip()
 
 
-def generate_and_validate(integrations: Dict[str, Integration]):
+def generate_and_validate(integrations: List[Dict[str, str]]):
     """Validate and generate dhcp data."""
-    match_type_dict = defaultdict(list)
+    match_list = []
 
     for domain in sorted(integrations):
         integration = integrations[domain]
@@ -33,20 +32,9 @@ def generate_and_validate(integrations: Dict[str, Integration]):
             continue
 
         for entry in match_types:
-            data = {"domain": domain}
-            if isinstance(entry, dict):
-                typ = entry["type"]
-                entry_without_type = entry.copy()
-                del entry_without_type["type"]
-                data.update(entry_without_type)
-            else:
-                typ = entry
+            match_list.append({"domain": domain, **entry})
 
-            match_type_dict[typ].append(data)
-
-    dhcp = OrderedDict((key, match_type_dict[key]) for key in sorted(match_type_dict))
-
-    return BASE.format(json.dumps(dhcp, indent=4))
+    return BASE.format(json.dumps(match_list, indent=4))
 
 
 def validate(integrations: Dict[str, Integration], config: Config):

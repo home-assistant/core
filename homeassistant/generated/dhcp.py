@@ -5,4 +5,15 @@ To update, run python3 -m script.hassfest
 
 # fmt: off
 
-DHCP = {}
+DHCP = [
+    {
+        "domain": "august",
+        "hostname": "connect",
+        "macaddress": "D86162*"
+    },
+    {
+        "domain": "august",
+        "hostname": "connect",
+        "macaddress": "B8B7F1*"
+    }
+]
