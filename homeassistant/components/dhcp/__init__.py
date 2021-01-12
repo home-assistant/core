@@ -18,7 +18,7 @@ REQUESTED_ADDR = "requested_addr"
 HOSTNAME = "hostname"
 MAC_ADDRESS = "macaddress"
 IP_ADDRESS = "ip"
-
+DHCP_REQUEST = 3
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class DHCPWatcher(Thread):
             return
 
         options = packet[DHCP].options
-        if options[0][1] != 3:
+        if options[0][1] != DHCP_REQUEST:
             # DHCP request
             return
 
