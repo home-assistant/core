@@ -369,6 +369,6 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
                     continue
                 # match found
                 mapping_info = mapping.copy()
-                mapping_info["name"] = state_value
+                mapping_info["name"] = mapping_info.get("name", state_value)
                 return mapping_info
         return {}
