@@ -48,8 +48,8 @@ TRIGGER_SCHEMA = vol.All(
         {
             vol.Required(CONF_PLATFORM): "numeric_state",
             vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_BELOW): cv.NUMERIC_STATE_LIMIT_SCHEMA,
-            vol.Optional(CONF_ABOVE): cv.NUMERIC_STATE_LIMIT_SCHEMA,
+            vol.Optional(CONF_BELOW): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
+            vol.Optional(CONF_ABOVE): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_FOR): cv.positive_time_period_template,
             vol.Optional(CONF_ATTRIBUTE): cv.match_all,

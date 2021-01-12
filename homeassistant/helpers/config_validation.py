@@ -916,7 +916,7 @@ SERVICE_SCHEMA = vol.All(
     has_at_least_one_key(CONF_SERVICE, CONF_SERVICE_TEMPLATE),
 )
 
-NUMERIC_STATE_LIMIT_SCHEMA = vol.Any(
+NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
     vol.Coerce(float), vol.All(str, entity_domain("input_number"))
 )
 
@@ -926,8 +926,8 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
             vol.Required(CONF_CONDITION): "numeric_state",
             vol.Required(CONF_ENTITY_ID): entity_ids,
             vol.Optional(CONF_ATTRIBUTE): str,
-            CONF_BELOW: NUMERIC_STATE_LIMIT_SCHEMA,
-            CONF_ABOVE: NUMERIC_STATE_LIMIT_SCHEMA,
+            CONF_BELOW: NUMERIC_STATE_THRESHOLD_SCHEMA,
+            CONF_ABOVE: NUMERIC_STATE_THRESHOLD_SCHEMA,
             vol.Optional(CONF_VALUE_TEMPLATE): template,
         }
     ),
