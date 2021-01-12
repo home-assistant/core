@@ -75,7 +75,6 @@ class CloudProvider(Provider):
         self._language, self._gender = cloud.client.prefs.tts_default_voice
         cloud.client.prefs.async_listen_updates(self._sync_prefs)
 
-    @callback
     async def _sync_prefs(self, prefs):
         """Sync preferences."""
         self._language, self._gender = prefs.tts_default_voice
