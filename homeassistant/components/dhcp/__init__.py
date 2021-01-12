@@ -25,13 +25,13 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-def _extact_option(dhcp_options, key):
+def _decode_option(dhcp_options, key):
     """Extract and decode data from a packet option."""
     try:
         for i in dhcp_options:
             if i[0] != key:
                 continue
-            # decode to unicode string before returning
+            # hostname is unicode
             return i[1].decode() if key == "hostname" else i[i]
     except Exception:  # pylint: disable=broad-except
         pass
@@ -45,8 +45,8 @@ def _handle_dhcp_packet(packet):
     # DHCP request
     if packet[DHCP].options[0][1] == 3:
         options = packet[DHCP].options
-        requested_addr = _extact_option(options, "requested_addr")
-        hostname = _extact_option(options, "hostname")
+        requested_addr = _decode_option(options, "requested_addr")
+        hostname = _decode_option(options, "hostname")
         _LOGGER.warning(
             f"Host {hostname} ({packet[Ether].src}) requested {requested_addr}"
         )
