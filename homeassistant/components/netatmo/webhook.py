@@ -64,17 +64,16 @@ async def async_evaluate_event(hass, event_data):
             person_event_data[ATTR_IS_KNOWN] = person.get(ATTR_IS_KNOWN)
             person_event_data[ATTR_FACE_URL] = person.get(ATTR_FACE_URL)
 
-            _LOGGER.debug("%s: %s", event_type, person_event_data)
             await async_send_event(hass, event_type, person_event_data)
 
     else:
-        _LOGGER.debug("%s: %s", event_type, event_data)
         await async_send_event(hass, event_type, event_data)
 
 
 @callback
 async def async_send_event(hass, event_type, data):
     """Send events."""
+    _LOGGER.debug("%s: %s", event_type, data)
     async_dispatcher_send(
         hass,
         f"signal-{DOMAIN}-webhook-{event_type}",

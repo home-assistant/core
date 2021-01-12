@@ -24,20 +24,10 @@ from .const import (
     CLIMATE_TRIGGERS,
     EVENT_TYPE_THERM_MODE,
     INDOOR_CAMERA_TRIGGERS,
-    MODEL_NACAMDOORTAG,
     MODEL_NACAMERA,
-    MODEL_NAMAIN,
-    MODEL_NAMODULE1,
-    MODEL_NAMODULE2,
-    MODEL_NAMODULE3,
-    MODEL_NAMODULE4,
-    MODEL_NAPLUG,
     MODEL_NATHERM1,
-    MODEL_NHC,
     MODEL_NOC,
     MODEL_NRV,
-    MODEL_NSD,
-    MODEL_PUBLIC,
     NETATMO_EVENT,
     OUTDOOR_CAMERA_TRIGGERS,
 )
@@ -47,21 +37,10 @@ CONF_SUBTYPE = "subtype"
 DEVICES = {
     MODEL_NACAMERA: INDOOR_CAMERA_TRIGGERS,
     MODEL_NOC: OUTDOOR_CAMERA_TRIGGERS,
-    MODEL_NAPLUG: [],
     MODEL_NATHERM1: CLIMATE_TRIGGERS,
     MODEL_NRV: CLIMATE_TRIGGERS,
-    MODEL_NSD: [],
-    MODEL_NACAMDOORTAG: [],
-    MODEL_NHC: [],
-    MODEL_NAMAIN: [],
-    MODEL_NAMODULE1: [],
-    MODEL_NAMODULE4: [],
-    MODEL_NAMODULE3: [],
-    MODEL_NAMODULE2: [],
-    MODEL_PUBLIC: [],
 }
 
-SUPPORTED_DEVICES = {MODEL_NACAMERA, MODEL_NOC, MODEL_NATHERM1, MODEL_NRV}
 SUBTYPES = {
     EVENT_TYPE_THERM_MODE: [
         STATE_NETATMO_SCHEDULE,
@@ -129,21 +108,26 @@ async def async_attach_trigger(
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
-    if device.model in SUPPORTED_DEVICES:
-        event_config = {
-            event_trigger.CONF_PLATFORM: "event",
-            event_trigger.CONF_EVENT_TYPE: NETATMO_EVENT,
-            event_trigger.CONF_EVENT_DATA: {
-                "type": config[CONF_TYPE],
-                ATTR_DEVICE_ID: config[ATTR_DEVICE_ID],
-            },
-        }
-        if config[CONF_TYPE] in SUBTYPES:
-            event_config[event_trigger.CONF_EVENT_DATA]["data"] = {
-                "mode": config[CONF_SUBTYPE]
-            }
+    if not device:
+        return
 
-        event_config = event_trigger.TRIGGER_SCHEMA(event_config)
-        return await event_trigger.async_attach_trigger(
-            hass, event_config, action, automation_info, platform_type="device"
-        )
+    if device.model not in DEVICES:
+        return
+
+    event_config = {
+        event_trigger.CONF_PLATFORM: "event",
+        event_trigger.CONF_EVENT_TYPE: NETATMO_EVENT,
+        event_trigger.CONF_EVENT_DATA: {
+            "type": config[CONF_TYPE],
+            ATTR_DEVICE_ID: config[ATTR_DEVICE_ID],
+        },
+    }
+    if config[CONF_TYPE] in SUBTYPES:
+        event_config[event_trigger.CONF_EVENT_DATA]["data"] = {
+            "mode": config[CONF_SUBTYPE]
+        }
+
+    event_config = event_trigger.TRIGGER_SCHEMA(event_config)
+    return await event_trigger.async_attach_trigger(
+        hass, event_config, action, automation_info, platform_type="device"
+    )
