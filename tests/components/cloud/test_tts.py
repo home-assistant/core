@@ -2,8 +2,16 @@
 from unittest.mock import Mock
 
 from hass_nabucasa import voice
+import pytest
+import voluptuous as vol
 
 from homeassistant.components.cloud import const, tts
+
+
+@pytest.fixture()
+def cloud_with_prefs(cloud_prefs):
+    """Return a cloud mock with prefs."""
+    return Mock(client=Mock(prefs=cloud_prefs))
 
 
 def test_default_exists():
@@ -18,19 +26,32 @@ def test_schema():
     processed = tts.PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL"})
     assert processed["gender"] == "female"
 
+    with pytest.raises(vol.Invalid):
+        tts.PLATFORM_SCHEMA(
+            {"platform": "cloud", "language": "non-existing", "gender": "female"}
+        )
+
+    with pytest.raises(vol.Invalid):
+        tts.PLATFORM_SCHEMA(
+            {"platform": "cloud", "language": "nl-NL", "gender": "not-supported"}
+        )
+
     # Should not raise
-    processed = tts.PLATFORM_SCHEMA(
-        {"platform": "cloud", "language": "nl-NL", "gender": "female"}
-    )
+    tts.PLATFORM_SCHEMA({"platform": "cloud", "language": "nl-NL", "gender": "female"})
+    tts.PLATFORM_SCHEMA({"platform": "cloud"})
 
 
-async def test_prefs_default_voice(hass, cloud_prefs):
+async def test_prefs_default_voice(hass, cloud_with_prefs, cloud_prefs):
     """Test cloud provider uses the preferences."""
     assert cloud_prefs.tts_default_voice == ("en-US", "female")
 
-    provider_pref = tts.CloudProvider(Mock(client=Mock(prefs=cloud_prefs)), None, None)
-    provider_conf = tts.CloudProvider(
-        Mock(client=Mock(prefs=cloud_prefs)), "fr-FR", "female"
+    provider_pref = await tts.async_get_engine(
+        Mock(data={const.DOMAIN: cloud_with_prefs}), None, {}
+    )
+    provider_conf = await tts.async_get_engine(
+        Mock(data={const.DOMAIN: cloud_with_prefs}),
+        {"language": "fr-FR", "gender": "female"},
+        None,
     )
 
     assert provider_pref.default_language == "en-US"
@@ -45,3 +66,21 @@ async def test_prefs_default_voice(hass, cloud_prefs):
     assert provider_pref.default_options == {"gender": "male"}
     assert provider_conf.default_language == "fr-FR"
     assert provider_conf.default_options == {"gender": "female"}
+
+
+async def test_provider_properties(hass, cloud_with_prefs):
+    """Test cloud provider."""
+    provider = await tts.async_get_engine(
+        Mock(data={const.DOMAIN: cloud_with_prefs}), None, {}
+    )
+    assert provider.supported_options == ["gender"]
+    assert "nl-NL" in provider.supported_languages
+
+
+async def test_get_tts_audio(hass, cloud_with_prefs):
+    """Test cloud provider."""
+    provider = await tts.async_get_engine(
+        Mock(data={const.DOMAIN: cloud_with_prefs}), None, {}
+    )
+    assert provider.supported_options == ["gender"]
+    assert "nl-NL" in provider.supported_languages
