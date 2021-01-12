@@ -249,7 +249,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if duration is None:  # type: ignore
             # no transition specified by user, use defaults
             duration = 7621  # anything over 7620 uses the factory default
-        else:
+        else:  # pragma: no cover
             # transition specified by user
             transition = duration
             if transition <= 127:
@@ -265,7 +265,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # only send value if it differs from current
         # this prevents sending a command for nothing
-        if self._dimming_duration.value != duration:
+        if self._dimming_duration.value != duration:  # pragma: no cover
             await self.info.node.async_set_value(self._dimming_duration, duration)
 
     @callback
