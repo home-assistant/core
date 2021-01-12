@@ -4,7 +4,9 @@ import fnmatch
 import logging
 from threading import Thread
 
-from scapy.all import DHCP, Ether, sniff
+from scapy.layers.dhcp import DHCP
+from scapy.layers.l2 import Ether
+from scapy.sendrecv import sniff
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -23,7 +25,7 @@ DHCP_REQUEST = 3
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the dhcp component."""
 
     async def _initialize(_):
@@ -52,7 +54,7 @@ class DHCPWatcher(Thread):
         """Start watching for dhcp packets."""
         try:
             sniff(filter=FILTER, prn=self.handle_dhcp_packet)
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.info("Cannot watch for dhcp packets: %s", ex)
             return
 
@@ -121,8 +123,6 @@ class DHCPWatcher(Thread):
                     data={IP_ADDRESS: ip_address, **data},
                 )
             )
-
-        return
 
 
 def _decode_dhcp_option(dhcp_options, key):
