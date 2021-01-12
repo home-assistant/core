@@ -104,7 +104,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     if ATTR_BRIGHTNESS in kwargs:
                         brightness = 10 + ceil(kwargs[ATTR_BRIGHTNESS] / 255 * 90)
 
-                    hs_color = kwargs[ATTR_HS_COLOR]
+                    hs_color = kwargs.get(ATTR_HS_COLOR, self._hs_color)
 
                     if hs_color is not None:
                         rgb = color_util.color_hsv_to_RGB(*hs_color, brightness)
