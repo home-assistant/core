@@ -66,6 +66,11 @@ DHCP = [
         "macaddress": "74C63B*"
     },
     {
+        "domain": "ring",
+        "hostname": "ring*",
+        "macaddress": "0CAE7D*"
+    },
+    {
         "domain": "roomba",
         "hostname": "irobot-*",
         "macaddress": "501479*"
