@@ -887,8 +887,8 @@ class State:
     @property
     def name(self) -> str:
         """Name of this state."""
-        return self.attributes.get(ATTR_FRIENDLY_NAME) or humanize_entity_name(
-            self.object_id
+        return self.attributes.get(ATTR_FRIENDLY_NAME) or self.object_id.replace(
+            "_", " "
         )
 
     def as_dict(self) -> Dict:
