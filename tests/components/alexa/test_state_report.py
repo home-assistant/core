@@ -1,4 +1,8 @@
 """Test report state."""
+import asyncio
+from unittest.mock import patch
+
+from homeassistant import core
 from homeassistant.components.alexa import state_report
 
 from . import DEFAULT_CONFIG, TEST_URL
@@ -171,3 +175,100 @@ async def test_doorbell_event(hass, aioclient_mock):
     assert call_json["event"]["header"]["name"] == "DoorbellPress"
     assert call_json["event"]["payload"]["cause"]["type"] == "PHYSICAL_INTERACTION"
     assert call_json["event"]["endpoint"]["endpointId"] == "binary_sensor#test_doorbell"
+
+
+async def test_proactive_mode_filter_states(hass, aioclient_mock):
+    """Test all the cases that filter states."""
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "on",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    await state_report.async_enable_proactive_mode(hass, DEFAULT_CONFIG)
+
+    # Force update should not report
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "on",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+        force_update=True,
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert len(aioclient_mock.mock_calls) == 0
+
+    # hass not running should not report
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "off",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+    with patch.object(hass, "state", core.CoreState.stopping):
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+    assert len(aioclient_mock.mock_calls) == 0
+
+    # unsupported entity should not report
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "on",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+    with patch.dict(
+        "homeassistant.components.alexa.state_report.ENTITY_ADAPTERS", {}, clear=True
+    ):
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+    assert len(aioclient_mock.mock_calls) == 0
+
+    # Not exposed by config should not report
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "off",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+    with patch.object(DEFAULT_CONFIG, "should_expose", return_value=False):
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+    assert len(aioclient_mock.mock_calls) == 0
+
+    # Removing an entity
+    hass.states.async_remove("binary_sensor.test_contact")
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert len(aioclient_mock.mock_calls) == 0
+
+    # Progress should filter out the 2nd event.
+    long_sendchange = asyncio.Event()
+
+    with patch(
+        "homeassistant.components.alexa.state_report.async_send_changereport_message",
+        lambda *args: long_sendchange.wait(),
+    ):
+        hass.states.async_set(
+            "binary_sensor.test_contact",
+            "on",
+            {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+        )
+
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+
+    with patch(
+        "homeassistant.components.alexa.state_report.async_send_changereport_message",
+    ) as mock_report_2:
+        hass.states.async_set(
+            "binary_sensor.test_contact",
+            "off",
+            {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+        )
+
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        long_sendchange.set()
+        await hass.async_block_till_done()
+
+    assert len(mock_report_2.mock_calls) == 0
