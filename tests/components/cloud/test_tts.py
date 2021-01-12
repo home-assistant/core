@@ -68,7 +68,7 @@ async def test_prefs_default_voice(hass, cloud_with_prefs, cloud_prefs):
     assert provider_conf.default_options == {"gender": "female"}
 
 
-async def test_provider_properties(hass, cloud_with_prefs):
+async def test_provider_properties(cloud_with_prefs):
     """Test cloud provider."""
     provider = await tts.async_get_engine(
         Mock(data={const.DOMAIN: cloud_with_prefs}), None, {}
@@ -77,7 +77,7 @@ async def test_provider_properties(hass, cloud_with_prefs):
     assert "nl-NL" in provider.supported_languages
 
 
-async def test_get_tts_audio(hass, cloud_with_prefs):
+async def test_get_tts_audio(cloud_with_prefs):
     """Test cloud provider."""
     provider = await tts.async_get_engine(
         Mock(data={const.DOMAIN: cloud_with_prefs}), None, {}
