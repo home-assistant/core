@@ -32,7 +32,11 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         dhcp_watcher = DHCPWatcher(hass, await async_get_dhcp(hass))
         dhcp_watcher.start()
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, dhcp_watcher.join)
+        async def _stop(*_):
+            nonlocal dhcp_watcher
+            dhcp_watcher.join()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _initialize)
     return True
