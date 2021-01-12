@@ -97,15 +97,11 @@ class DHCPWatcher:
         )
 
         for entry in self._integration_matchers:
-            _LOGGER.debug("Checking entry %s against mac=%s", entry, uppercase_mac)
             if MACADDRESS in entry and not fnmatch.fnmatch(
                 uppercase_mac, entry[MACADDRESS]
             ):
                 continue
 
-            _LOGGER.debug(
-                "Checking entry %s against hostname=%s", entry, lowercase_hostname
-            )
             if HOSTNAME in entry and not fnmatch.fnmatch(
                 lowercase_hostname, entry[HOSTNAME]
             ):
