@@ -1,4 +1,4 @@
-"""Test the Z-Wave JS sensor platform."""
+"""Test the Z-Wave JS switch platform."""
 
 from zwave_js_server.event import Event
 
