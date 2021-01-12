@@ -75,7 +75,7 @@ class DHCPWatcher:
         if data and data[MACADDRESS] == mac and data[HOSTNAME] == hostname:
             return
 
-        data[ip_address] = {MACADDRESS: mac, HOSTNAME: hostname}
+        self._address_data[ip_address] = {MACADDRESS: mac, HOSTNAME: hostname}
 
         if data[MACADDRESS] is None or data[HOSTNAME] is None:
             return
