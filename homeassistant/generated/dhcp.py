@@ -103,6 +103,16 @@ DHCP = [
     {
         "domain": "tesla",
         "hostname": "tesla_*",
-        "macaddress": "4C4CAA*"
+        "macaddress": "4CFCAA*"
+    },
+    {
+        "domain": "tesla",
+        "hostname": "tesla_*",
+        "macaddress": "044EAF*"
+    },
+    {
+        "domain": "tesla",
+        "hostname": "tesla_*",
+        "macaddress": "98ED5C*"
     }
 ]

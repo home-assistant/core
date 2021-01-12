@@ -180,8 +180,6 @@ async def async_get_dhcp(hass: "HomeAssistant") -> List[Dict[str, str]]:
     for integration in integrations.values():
         if not integration.dhcp:
             continue
-        # TODO: should we remove integrtions that already exist in the list
-        # that are overridden as custom?
         for entry in integration.dhcp:
             dhcp.append({"domain": integration.domain, **entry})
 

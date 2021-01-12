@@ -1,7 +1,6 @@
 {
   "domain": "dhcp",
-  "name": "dhcp discovery",
-  "config_flow": false,
+  "name": "DHCP Discovery",
   "documentation": "https://www.home-assistant.io/integrations/dhcp",
   "requirements": [
     "scapy==2.4.4"
