@@ -262,17 +262,6 @@ class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
 
         return int(result.registers[0])
 
-    # def _write_register(self, value):
-        # """Write holding register using the Modbus hub slave."""
-        # try:
-            # self._hub.write_registers(self._slave, self._register, value)
-        # except ConnectionException:
-            # self._available = False
-            # return
-
-        # self._available = True
-
-
     def _write_register(self, value):
         """Write holding register using the Modbus hub slave."""
         try:
@@ -281,7 +270,7 @@ class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
                     self._slave, self._register, [int(float(i)) for i in value]
                 )
             else:          
-                self._hub.write_register(self._slave, self._register, value)                   
+                self._hub.write_register(self._slave, self._register, value)
         except ConnectionException:
             self._available = False
             return
