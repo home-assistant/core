@@ -31,7 +31,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import State, callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import location as loc_helper
+from homeassistant.helpers import (
+    area_registry,
+    device_registry,
+    entity_registry,
+    location as loc_helper,
+)
 from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
@@ -753,6 +758,98 @@ class TemplateState(State):
         return f"<template TemplateState({self._state.__repr__()})>"
 
 
+class Areas:
+    """Class to expose areas."""
+
+    def __init__(self, hass):
+        """Initialize the area list."""
+        self._hass = hass
+        self._area_registry = hass.data.get(area_registry.DATA_REGISTRY)
+
+    def __getattr__(self, id):
+        """Return one areas states by id."""
+        if self._area_registry.async_get_area(id):
+            return AreaStates(self._hass, id)
+
+    __getitem__ = __getattr__
+
+    def __iter__(self):
+        """Return the iteration over all the areas."""
+        for area in self._area_registry.async_list_areas():
+            yield AreaStates(self._hass, area.id)
+
+    def __call__(self, id):
+        """Return one areas states by id."""
+        return self[id]
+
+    def __repr__(self) -> str:
+        """Representation of areas."""
+        return "<template Areas>"
+
+
+class AreaStates:
+    """Class to expose states of entities belonging to certain area."""
+
+    def __init__(self, hass, id):
+        """Initialize the area state."""
+        self._hass = hass
+        self._id = id
+        self._entity_registry = hass.data.get(entity_registry.DATA_REGISTRY)
+        self._device_registry = hass.data.get(device_registry.DATA_REGISTRY)
+        self._area_registry = hass.data.get(area_registry.DATA_REGISTRY)
+
+    @property
+    def id(self):
+        """Id of area."""
+        return self._id
+
+    @property
+    def name(self):
+        """Friendly name of area."""
+        if not self._area_registry:
+            return None
+        return self._area_registry.async_get_area(self._id).name
+
+    def _get_states(self):
+        states = []
+        if not self._entity_registry:
+            return states
+
+        states += [
+            _get_state_if_valid(self._hass, entity.entity_id)
+            for entity in entity_registry.async_entries_for_area(
+                self._entity_registry, self._id
+            )
+        ]
+
+        if not self._device_registry:
+            return states
+
+        for device in device_registry.async_entries_for_area(
+            self._device_registry, self._id
+        ):
+            states += [
+                _get_state_if_valid(self._hass, entity.entity_id)
+                for entity in entity_registry.async_entries_for_device(
+                    self._entity_registry, device.id
+                )
+            ]
+
+        return states
+
+    def __iter__(self):
+        """Iterate over the entities in the area."""
+        yield from sorted(self._get_states(), key=attrgetter("entity_id"))
+
+    def __len__(self) -> int:
+        """Return number of entities in the area."""
+        return len(self._get_states())
+
+    def __repr__(self) -> str:
+        """Representation of area states."""
+        return f"<template AreaStates('{self._id}')>"
+
+
 def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
     entity_collect = hass.data.get(_RENDER_INFO)
     if entity_collect is not None:
@@ -1378,6 +1475,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["states"] = AllStates(hass)
         self.globals["utcnow"] = hassfunction(utcnow)
         self.globals["now"] = hassfunction(now)
+        self.globals["areas"] = Areas(hass)
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
