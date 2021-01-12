@@ -5,7 +5,6 @@ from hass_nabucasa.voice import MAP_VOICE, VoiceError
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
-from homeassistant.core import callback
 
 from .const import DOMAIN
 
