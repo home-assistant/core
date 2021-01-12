@@ -264,4 +264,36 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert red_args["valueId"]["propertyName"] == "targetColor"
     assert red_args["value"] == 235
 
+    client.async_send_json_message.reset_mock()
+
+    # Test turning off
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY},
+        blocking=True,
+    )
+
+    assert len(client.async_send_json_message.call_args_list) == 1
+    args = client.async_send_json_message.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 39
+    assert args["valueId"] == {
+        "commandClassName": "Multilevel Switch",
+        "commandClass": 38,
+        "endpoint": 0,
+        "property": "targetValue",
+        "propertyName": "targetValue",
+        "metadata": {
+            "label": "Target value",
+            "max": 99,
+            "min": 0,
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "label": "Target value",
+        },
+    }
+    assert args["value"] == 0
+
     print(state.attributes)
