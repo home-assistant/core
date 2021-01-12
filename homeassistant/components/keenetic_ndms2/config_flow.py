@@ -1,10 +1,13 @@
 """Config flow for Keenetic NDMS2."""
 from __future__ import annotations
 
+from urllib.parse import urlparse
+
 from ndms2_client import Client, ConnectionException, InterfaceInfo, TelnetConnection
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -72,7 +75,9 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
+                    vol.Required(
+                        CONF_HOST, default=self.context.get(CONF_HOST, vol.UNDEFINED)
+                    ): str,
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Optional(CONF_PORT, default=DEFAULT_TELNET_PORT): int,
@@ -84,6 +89,25 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input=None):
         """Import a config entry."""
         return await self.async_step_user(user_input)
+
+    async def async_step_ssdp(self, discovery_info):
+        """Handle a discovered device."""
+        # Filter out items not having "keenetic' in their name
+        if (
+            "keenetic"
+            not in discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "").lower()
+        ):
+            return self.async_abort(reason="not_keenetic_ndms2")
+
+        host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
+
+        self._async_abort_entries_match({CONF_HOST: host})
+
+        await self.async_set_unique_id(host)
+
+        self.context[CONF_HOST] = host
+
+        return await self.async_step_user()
 
 
 class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
