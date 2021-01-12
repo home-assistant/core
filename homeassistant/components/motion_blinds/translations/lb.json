@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "already_in_progress": "Konfiguratioun's Oflaf ass schon am gaang",
+            "connection_error": "Feeler beim verbannen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Schl\u00ebssel",
+                    "host": "IP Adresse"
+                },
+                "title": "Steierbar Jalousien"
+            }
+        }
+    }
+}

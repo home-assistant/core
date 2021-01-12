@@ -1,11 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Dir k\u00ebnnt n\u00ebmmen eng eenzeg iAqualink Verbindung konfigur\u00e9ieren."
+            "single_instance_allowed": "Scho konfigur\u00e9iert. N\u00ebmmen eng eenzeg Konfiguratioun m\u00e9iglech."
         },
         "error": {
-            "cannot_connect": "Feeler beim verbannen",
-            "connection_failure": "Kann sech net mat iAqualink verbannen. Iwwerpr\u00e9ift \u00e4ren Benotzernumm an Passwuert"
+            "cannot_connect": "Feeler beim verbannen"
         },
         "step": {
             "user": {

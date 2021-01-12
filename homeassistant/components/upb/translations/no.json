@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "En UPB PIM med denne adressen er allerede konfigurert.",
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
@@ -13,7 +12,7 @@
             "user": {
                 "data": {
                     "address": "Adresse (se beskrivelse over)",
-                    "file_path": "Sti og navn p\u00e5 UPStart UPB-eksportfilen.",
+                    "file_path": "Bane og navn p\u00e5 UPStart UPB-eksportfilen.",
                     "protocol": "Protokoll"
                 },
                 "description": "Koble til en universal Powerline Bus Powerline Interface Module (UPB PIM). Adressestrengen m\u00e5 v\u00e6re i skjemaet 'adresse[:port]' for 'tcp'. Porten er valgfri og bruker som standard til 2101. Eksempel: '192.168.1.42'. For serieprotokollen m\u00e5 adressen v\u00e6re i skjemaet 'tty[:baud]'. Baud er valgfritt og standard til 4800. Eksempel: '/dev/ttyS1'.",

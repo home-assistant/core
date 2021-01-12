@@ -77,6 +77,7 @@ async def test_deconz_events(hass):
         "id": "switch_1",
         "unique_id": "00:00:00:00:00:00:00:01",
         "event": 2000,
+        "device_id": gateway.events[0].device_id,
     }
 
     gateway.api.sensors["3"].update({"state": {"buttonevent": 2000}})
@@ -88,6 +89,7 @@ async def test_deconz_events(hass):
         "unique_id": "00:00:00:00:00:00:00:03",
         "event": 2000,
         "gesture": 1,
+        "device_id": gateway.events[2].device_id,
     }
 
     gateway.api.sensors["4"].update({"state": {"gesture": 0}})
@@ -99,6 +101,7 @@ async def test_deconz_events(hass):
         "unique_id": "00:00:00:00:00:00:00:04",
         "event": 1000,
         "gesture": 0,
+        "device_id": gateway.events[3].device_id,
     }
 
     gateway.api.sensors["5"].update(
@@ -113,6 +116,7 @@ async def test_deconz_events(hass):
         "event": 6002,
         "angle": 110,
         "xy": [0.5982, 0.3897],
+        "device_id": gateway.events[4].device_id,
     }
 
     await hass.config_entries.async_unload(config_entry.entry_id)

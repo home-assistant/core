@@ -1,13 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "O ESP j\u00e1 est\u00e1 configurado"
+            "already_configured": "O ESP j\u00e1 est\u00e1 configurado",
+            "already_in_progress": "O processo de configura\u00e7\u00e3o j\u00e1 est\u00e1 a decorrer"
         },
         "error": {
             "connection_error": "N\u00e3o \u00e9 poss\u00edvel conectar-se ao ESP. Por favor, verifique se o seu arquivo YAML cont\u00e9m uma linha 'api:'.",
-            "invalid_password": "Palavra-passe inv\u00e1lida",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
             "resolve_error": "N\u00e3o \u00e9 poss\u00edvel resolver o endere\u00e7o do ESP. Se este erro persistir, defina um endere\u00e7o IP est\u00e1tico: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
+        "flow_title": "",
         "step": {
             "authenticate": {
                 "data": {

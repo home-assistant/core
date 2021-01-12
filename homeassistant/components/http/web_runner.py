@@ -28,7 +28,7 @@ class HomeAssistantTCPSite(web.BaseSite):
         host: Union[None, str, List[str]],
         port: int,
         *,
-        shutdown_timeout: float = 60.0,
+        shutdown_timeout: float = 10.0,
         ssl_context: Optional[SSLContext] = None,
         backlog: int = 128,
         reuse_address: Optional[bool] = None,

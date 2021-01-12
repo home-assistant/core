@@ -509,7 +509,7 @@ class ZoneDevice(ClimateEntity):
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return list(self._state_to_pizone.keys())
+        return list(self._state_to_pizone)
 
     @property
     def current_temperature(self):

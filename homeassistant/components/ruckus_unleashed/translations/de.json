@@ -1,6 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
         "error": {
+            "cannot_connect": "Verbindungsfehler",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {

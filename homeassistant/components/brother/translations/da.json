@@ -5,7 +5,6 @@
             "unsupported_model": "Denne printermodel underst\u00f8ttes ikke."
         },
         "error": {
-            "connection_error": "Forbindelsesfejl.",
             "snmp_error": "SNMP-server er sl\u00e5et fra, eller printeren underst\u00f8ttes ikke.",
             "wrong_host": "Ugyldigt v\u00e6rtsnavn eller IP-adresse."
         },

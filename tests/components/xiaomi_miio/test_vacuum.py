@@ -1,6 +1,7 @@
 """The tests for the Xiaomi vacuum platform."""
 from datetime import datetime, time, timedelta
 from unittest import mock
+from unittest.mock import MagicMock, patch
 
 from miio import DeviceException
 import pytest
@@ -56,8 +57,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import MagicMock, patch
 
 PLATFORM = "xiaomi_miio"
 

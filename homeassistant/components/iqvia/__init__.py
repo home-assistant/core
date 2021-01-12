@@ -1,6 +1,7 @@
 """Support for IQVIA."""
 import asyncio
 from datetime import timedelta
+from functools import partial
 
 from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
@@ -51,7 +52,7 @@ async def async_setup_entry(hass, entry):
         )
 
     websession = aiohttp_client.async_get_clientsession(hass)
-    client = Client(entry.data[CONF_ZIP_CODE], websession)
+    client = Client(entry.data[CONF_ZIP_CODE], session=websession)
 
     async def async_get_data_from_api(api_coro):
         """Get data from a particular API coroutine."""
@@ -77,7 +78,7 @@ async def async_setup_entry(hass, entry):
             LOGGER,
             name=f"{entry.data[CONF_ZIP_CODE]} {sensor_type}",
             update_interval=DEFAULT_SCAN_INTERVAL,
-            update_method=lambda coro=api_coro: async_get_data_from_api(coro),
+            update_method=partial(async_get_data_from_api, api_coro),
         )
         init_data_update_tasks.append(coordinator.async_refresh())
 
@@ -151,22 +152,25 @@ class IQVIAEntity(CoordinatorEntity):
         """Return the unit the value is expressed in."""
         return "index"
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if not self.coordinator.last_update_success:
+            return
+
+        self.update_from_latest_data()
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self):
         """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.update_from_latest_data()
-            self.async_write_ha_state()
-
-        self.async_on_remove(self.coordinator.async_add_listener(update))
+        await super().async_added_to_hass()
 
         if self._type == TYPE_ALLERGY_FORECAST:
-            outlook_coordinator = self.hass.data[DOMAIN][DATA_COORDINATOR][
-                self._entry.entry_id
-            ][TYPE_ALLERGY_OUTLOOK]
-            self.async_on_remove(outlook_coordinator.async_add_listener(update))
+            self.async_on_remove(
+                self.hass.data[DOMAIN][DATA_COORDINATOR][self._entry.entry_id][
+                    TYPE_ALLERGY_OUTLOOK
+                ].async_add_listener(self._handle_coordinator_update)
+            )
 
         self.update_from_latest_data()
 

@@ -22,7 +22,7 @@
                 "title": "Vybrat Hue p\u0159emost\u011bn\u00ed"
             },
             "link": {
-                "description": "Stiskn\u011bte tla\u010d\u00edtko na p\u0159emost\u011bn\u00ed k registraci Philips Hue v Home Assistant.\n\n! [Um\u00edst\u011bn\u00ed tla\u010d\u00edtka na p\u0159emost\u011bn\u00ed](/ static/images/config_philips_hue.jpg)",
+                "description": "Stiskn\u011bte tla\u010d\u00edtko na p\u0159emost\u011bn\u00ed k registraci Philips Hue v Home Assistant.\n\n![Um\u00edst\u011bn\u00ed tla\u010d\u00edtka na p\u0159emost\u011bn\u00ed](/static/images/config_philips_hue.jpg)",
                 "title": "P\u0159ipojit Hub"
             },
             "manual": {
@@ -58,7 +58,8 @@
         "step": {
             "init": {
                 "data": {
-                    "allow_hue_groups": "Povolit skupiny Hue"
+                    "allow_hue_groups": "Povolit skupiny Hue",
+                    "allow_unreachable": "Povolit nedostupn\u00fdm \u017e\u00e1rovk\u00e1m spr\u00e1vn\u011b hl\u00e1sit jejich stav"
                 }
             }
         }

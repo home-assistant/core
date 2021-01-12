@@ -3,6 +3,7 @@ import asyncio
 from uuid import UUID
 
 from simplipy import API
+from simplipy.entity import EntityTypes
 from simplipy.errors import EndpointUnavailable, InvalidCredentialsError, SimplipyError
 from simplipy.websocket import (
     EVENT_CAMERA_MOTION_DETECTED,
@@ -137,7 +138,7 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     }
 )
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.119")
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 @callback
@@ -177,6 +178,8 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up SimpliSafe as config entry."""
+    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = []
+
     entry_updates = {}
     if not config_entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
@@ -312,7 +315,9 @@ async def async_setup_entry(hass, config_entry):
     ]:
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
-    config_entry.add_update_listener(async_reload_entry)
+    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id].append(
+        config_entry.add_update_listener(async_reload_entry)
+    )
 
     return True
 
@@ -329,8 +334,8 @@ async def async_unload_entry(hass, entry):
     )
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
-        remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
-        remove_listener()
+        for remove_listener in hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id):
+            remove_listener()
 
     return unload_ok
 
@@ -460,10 +465,10 @@ class SimpliSafe:
             """Define an event handler to disconnect from the websocket."""
             await self.websocket.async_disconnect()
 
-        self._hass.data[DOMAIN][DATA_LISTENER][
-            self.config_entry.entry_id
-        ] = self._hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, async_websocket_disconnect
+        self._hass.data[DOMAIN][DATA_LISTENER][self.config_entry.entry_id].append(
+            self._hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, async_websocket_disconnect
+            )
         )
 
         self.systems = await self._api.get_systems()
@@ -529,8 +534,7 @@ class SimpliSafe:
                             )
                         )
 
-                    LOGGER.error("Update failed with stored refresh token")
-                    raise UpdateFailed from result
+                    raise UpdateFailed("Update failed with stored refresh token")
 
                 LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
                 self._emergency_refresh_token_used = True
@@ -541,23 +545,18 @@ class SimpliSafe:
                     )
                     return
                 except SimplipyError as err:
-                    LOGGER.error("Error while using stored refresh token: %s", err)
-                    raise UpdateFailed from err
+                    raise UpdateFailed(  # pylint: disable=raise-missing-from
+                        f"Error while using stored refresh token: {err}"
+                    )
 
             if isinstance(result, EndpointUnavailable):
-                # In case the user attempt an action not allowed in their current plan,
+                # In case the user attempts an action not allowed in their current plan,
                 # we merely log that message at INFO level (so the user is aware,
                 # but not spammed with ERROR messages that they cannot change):
                 LOGGER.info(result)
-                raise UpdateFailed from result
 
             if isinstance(result, SimplipyError):
-                LOGGER.error("SimpliSafe error while updating: %s", result)
-                raise UpdateFailed from result
-
-            if isinstance(result, Exception):
-                LOGGER.error("Unknown error while updating: %s", result)
-                raise UpdateFailed from result
+                raise UpdateFailed(f"SimpliSafe error while updating: {result}")
 
         if self._api.refresh_token != self.config_entry.data[CONF_TOKEN]:
             _async_save_refresh_token(
@@ -590,6 +589,13 @@ class SimpliSafeEntity(CoordinatorEntity):
         else:
             self._serial = system.serial
 
+        try:
+            sensor_type = EntityTypes(
+                simplisafe.initial_event_to_use[system.system_id].get("sensorType")
+            )
+        except ValueError:
+            sensor_type = EntityTypes.unknown
+
         self._attrs = {
             ATTR_LAST_EVENT_INFO: simplisafe.initial_event_to_use[system.system_id].get(
                 "info"
@@ -597,9 +603,7 @@ class SimpliSafeEntity(CoordinatorEntity):
             ATTR_LAST_EVENT_SENSOR_NAME: simplisafe.initial_event_to_use[
                 system.system_id
             ].get("sensorName"),
-            ATTR_LAST_EVENT_SENSOR_TYPE: simplisafe.initial_event_to_use[
-                system.system_id
-            ].get("sensorType"),
+            ATTR_LAST_EVENT_SENSOR_TYPE: sensor_type.name,
             ATTR_LAST_EVENT_TIMESTAMP: simplisafe.initial_event_to_use[
                 system.system_id
             ].get("eventTimestamp"),
@@ -724,3 +728,23 @@ class SimpliSafeEntity(CoordinatorEntity):
     @callback
     def async_update_from_websocket_event(self, event):
         """Update the entity with the provided websocket event."""
+
+
+class SimpliSafeBaseSensor(SimpliSafeEntity):
+    """Define a SimpliSafe base (binary) sensor."""
+
+    def __init__(self, simplisafe, system, sensor):
+        """Initialize."""
+        super().__init__(simplisafe, system, sensor.name, serial=sensor.serial)
+        self._device_info["identifiers"] = {(DOMAIN, sensor.serial)}
+        self._device_info["model"] = sensor.type.name
+        self._device_info["name"] = sensor.name
+        self._sensor = sensor
+        self._sensor_type_human_name = " ".join(
+            [w.title() for w in self._sensor.type.name.split("_")]
+        )
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self._system.address} {self._name} {self._sensor_type_human_name}"

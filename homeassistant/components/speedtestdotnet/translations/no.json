@@ -1,21 +1,16 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
-            "wrong_server_id": "Server-ID er ikke gyldig"
+            "wrong_server_id": "Server ID er ikke gyldig"
         },
         "step": {
             "user": {
-                "description": "Vil du starte oppsettet?",
-                "title": "Konfigurere SpeedTest"
+                "description": "Vil du starte oppsettet?"
             }
         }
     },
     "options": {
-        "error": {
-            "retrive_error": "Feil ved henting av serverlisten"
-        },
         "step": {
             "init": {
                 "data": {

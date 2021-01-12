@@ -3,12 +3,13 @@
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
-            "no_devices_found": "V\u00f5rgust ei leitud seadmeid"
+            "no_devices_found": "V\u00f5rgust ei leitud seadmeid",
+            "not_supported": "\u00dchendatud AVM FRITZ!Boxiga! kuid see ei saa juhtida Smart Home seadmeid."
         },
         "error": {
-            "auth_failed": "Kasutajanimi v\u00f5i salas\u00f5na on vale.",
             "invalid_auth": "Tuvastamise viga"
         },
+        "flow_title": "",
         "step": {
             "confirm": {
                 "data": {
@@ -22,7 +23,8 @@
                     "host": "",
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
-                }
+                },
+                "description": "Sisesta oma AVM FRITZ! Boxi teave."
             }
         }
     }

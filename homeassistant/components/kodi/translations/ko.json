@@ -18,12 +18,6 @@
                 "description": "Kodi (` {name} `)\ub97c Home Assistant\uc5d0 \ucd94\uac00 \ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
                 "title": "Kodi \ubc1c\uacac"
             },
-            "host": {
-                "data": {
-                    "ssl": "SSL\uc744 \ud1b5\ud574 \uc5f0\uacb0"
-                },
-                "description": "Kodi \uc5f0\uacb0 \uc815\ubcf4. \uc2dc\uc2a4\ud15c / \uc124\uc815 / \ub124\ud2b8\uc6cc\ud06c / \uc11c\ube44\uc2a4\uc5d0\uc11c \"HTTP\ub97c \ud1b5\ud55c Kodi \uc81c\uc5b4 \ud5c8\uc6a9\"\uc744 \ud65c\uc131\ud654\ud588\ub294\uc9c0 \ud655\uc778\ud558\uc2ed\uc2dc\uc624."
-            },
             "user": {
                 "description": "Kodi \uc5f0\uacb0 \uc815\ubcf4. \uc2dc\uc2a4\ud15c / \uc124\uc815 / \ub124\ud2b8\uc6cc\ud06c / \uc11c\ube44\uc2a4\uc5d0\uc11c \"HTTP\ub97c \ud1b5\ud55c Kodi \uc81c\uc5b4 \ud5c8\uc6a9\"\uc744 \ud65c\uc131\ud654\ud588\ub294\uc9c0 \ud655\uc778\ud558\uc2ed\uc2dc\uc624."
             },

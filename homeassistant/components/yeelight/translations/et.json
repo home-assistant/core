@@ -15,8 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "",
-                    "ip_address": "IP aadress"
+                    "host": ""
                 },
                 "description": "Kui j\u00e4tad hosti t\u00fchjaks kasutatakse seadmete leidmiseks avastamist."
             }
@@ -35,6 +34,5 @@
                 "description": "Kui j\u00e4tad mudeli m\u00e4\u00e4ramata tuvastatakse see automaatselt."
             }
         }
-    },
-    "title": ""
+    }
 }

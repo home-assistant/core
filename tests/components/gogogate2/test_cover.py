@@ -1,5 +1,6 @@
 """Tests for the GogoGate2 component."""
 from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
 from gogogate2_api import GogoGate2Api, ISmartGateApi
 from gogogate2_api.common import (
@@ -49,7 +50,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry, async_fire_time_changed, mock_device_registry
 
 
@@ -445,7 +445,7 @@ async def test_device_info_ismartgate(ismartgateapi_mock, hass: HomeAssistant) -
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({(DOMAIN, "xyz")}, set())
+    device = device_registry.async_get_device({(DOMAIN, "xyz")})
     assert device
     assert device.manufacturer == MANUFACTURER
     assert device.name == "mycontroller"
@@ -480,7 +480,7 @@ async def test_device_info_gogogate2(gogogate2api_mock, hass: HomeAssistant) -> 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({(DOMAIN, "xyz")}, set())
+    device = device_registry.async_get_device({(DOMAIN, "xyz")})
     assert device
     assert device.manufacturer == MANUFACTURER
     assert device.name == "mycontroller"

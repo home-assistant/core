@@ -4,7 +4,7 @@
             "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
-            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "cannot_connect": "Feeler beim verbannen",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "no_results": "Keng Resultater. Prob\u00e9ier mat enger aanerer Statioun/Adress"
         },
@@ -43,6 +43,5 @@
                 "title": "Optiounen"
             }
         }
-    },
-    "title": "HVV Departe"
+    }
 }

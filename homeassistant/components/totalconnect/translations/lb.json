@@ -4,8 +4,7 @@
             "already_configured": "Kont ass scho konfigur\u00e9iert"
         },
         "error": {
-            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
-            "login": "Feeler beim Login: iwwerpr\u00e9if de Benotzernumm & Passwuert"
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
         },
         "step": {
             "user": {

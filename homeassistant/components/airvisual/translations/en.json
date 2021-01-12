@@ -7,8 +7,7 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "general_error": "Unexpected error",
-            "invalid_api_key": "Invalid API key",
-            "unable_to_connect": "Unable to connect to Node/Pro unit."
+            "invalid_api_key": "Invalid API key"
         },
         "step": {
             "geography": {

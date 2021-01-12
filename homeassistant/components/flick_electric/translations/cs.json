@@ -11,12 +11,12 @@
         "step": {
             "user": {
                 "data": {
+                    "client_id": "ID klienta (voliteln\u00e9)",
                     "password": "Heslo",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
                 },
                 "title": "P\u0159ihla\u0161ovac\u00ed \u00fadaje k Flick"
             }
         }
-    },
-    "title": "Flick Electric"
+    }
 }

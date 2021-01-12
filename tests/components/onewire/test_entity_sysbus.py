@@ -1,4 +1,6 @@
 """Tests for 1-Wire devices connected on SysBus."""
+from unittest.mock import patch
+
 from pi1wire import InvalidCRCException, UnsupportResponseException
 import pytest
 
@@ -7,7 +9,6 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import mock_device_registry, mock_registry
 
 MOCK_CONFIG = {
@@ -79,6 +80,7 @@ MOCK_DEVICE_SENSORS = {
             },
         ],
     },
+    "29-111111111111": {"sensors": []},
     "3B-111111111111": {
         "device_info": {
             "identifiers": {(DOMAIN, "3B-111111111111")},
@@ -142,7 +144,7 @@ async def test_onewiredirect_setup_valid_device(hass, device_id):
     read_side_effect.extend([FileNotFoundError("Missing injected value")] * 20)
 
     with patch(
-        "homeassistant.components.onewire.sensor.os.path.isdir", return_value=True
+        "homeassistant.components.onewire.onewirehub.os.path.isdir", return_value=True
     ), patch("pi1wire._finder.glob.glob", return_value=glob_result,), patch(
         "pi1wire.OneWire.get_temperature",
         side_effect=read_side_effect,
@@ -155,7 +157,7 @@ async def test_onewiredirect_setup_valid_device(hass, device_id):
     if len(expected_sensors) > 0:
         device_info = mock_device_sensor["device_info"]
         assert len(device_registry.devices) == 1
-        registry_entry = device_registry.async_get_device({(DOMAIN, device_id)}, set())
+        registry_entry = device_registry.async_get_device({(DOMAIN, device_id)})
         assert registry_entry is not None
         assert registry_entry.identifiers == {(DOMAIN, device_id)}
         assert registry_entry.manufacturer == device_info["manufacturer"]

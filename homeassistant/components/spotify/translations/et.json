@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Saate konfigureerida ainult \u00fche Spotify konto.",
             "authorize_url_timeout": "Kinnituse URLi ajal\u00f5pp",
             "missing_configuration": "Spotify sidumine pole h\u00e4\u00e4lestatud. Palun j\u00e4rgige dokumentatsiooni.",
             "no_url_available": "URL pole saadaval. Rohkem teavet [check the help section]({docs_url})",
@@ -18,6 +17,11 @@
                 "description": "Spotify konto: {account} sidumine tuleb uuesti autentida",
                 "title": "Autendi Spotify uuesti"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Spotify API l\u00f5pp-punkt on k\u00e4ttesaadav"
         }
     }
 }

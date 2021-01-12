@@ -313,10 +313,10 @@ async def async_wait_for_elk_to_sync(elk, timeout, conf_host):
 
         success = succeeded
         if succeeded:
-            _LOGGER.info("ElkM1 login succeeded.")
+            _LOGGER.debug("ElkM1 login succeeded")
         else:
             elk.disconnect()
-            _LOGGER.error("ElkM1 login failed; invalid username or password.")
+            _LOGGER.error("ElkM1 login failed; invalid username or password")
             event.set()
 
     def sync_complete():
@@ -332,7 +332,7 @@ async def async_wait_for_elk_to_sync(elk, timeout, conf_host):
     except asyncio.TimeoutError:
         _LOGGER.error(
             "Timed out after %d seconds while trying to sync with ElkM1 at %s",
-            SYNC_TIMEOUT,
+            timeout,
             conf_host,
         )
         elk.disconnect()

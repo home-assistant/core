@@ -6,7 +6,6 @@
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
-            "connection_error": "Verbindingsfout.",
             "snmp_error": "SNMP-server uitgeschakeld of printer wordt niet ondersteund.",
             "wrong_host": "Ongeldige hostnaam of IP-adres."
         },

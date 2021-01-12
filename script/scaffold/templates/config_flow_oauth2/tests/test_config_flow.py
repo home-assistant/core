@@ -1,4 +1,6 @@
 """Test the NEW_NAME config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries, setup
 from homeassistant.components.NEW_DOMAIN.const import (
     DOMAIN,
@@ -7,13 +9,13 @@ from homeassistant.components.NEW_DOMAIN.const import (
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.async_mock import patch
-
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
 
-async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
+async def test_full_flow(
+    hass, aiohttp_client, aioclient_mock, current_request_with_host
+):
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
@@ -27,7 +29,13 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
     result = await hass.config_entries.flow.async_init(
         "NEW_DOMAIN", context={"source": config_entries.SOURCE_USER}
     )
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
 
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"

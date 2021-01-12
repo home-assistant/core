@@ -5,8 +5,7 @@
         },
         "error": {
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "device_unavailable": "Urz\u0105dzenie nie jest dost\u0119pne"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "user": {
@@ -17,6 +16,5 @@
                 "title": "Konfiguracja Agent DVR"
             }
         }
-    },
-    "title": "Agent DVR"
+    }
 }

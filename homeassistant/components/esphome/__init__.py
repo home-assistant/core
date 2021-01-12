@@ -257,7 +257,12 @@ async def _setup_auto_reconnect_logic(
         try:
             await cli.connect(on_stop=try_connect, login=True)
         except APIConnectionError as error:
-            _LOGGER.info("Can't connect to ESPHome API for %s: %s", host, error)
+            _LOGGER.info(
+                "Can't connect to ESPHome API for %s (%s): %s",
+                entry.unique_id,
+                host,
+                error,
+            )
             # Schedule re-connect in event loop in order not to delay HA
             # startup. First connect is scheduled in tracked tasks.
             data.reconnect_task = hass.loop.create_task(
@@ -489,58 +494,38 @@ def esphome_map_enum(func: Callable[[], Dict[int, str]]):
     return EsphomeEnumMapper(func)
 
 
-class EsphomeEntity(Entity):
-    """Define a generic esphome entity."""
+class EsphomeBaseEntity(Entity):
+    """Define a base esphome entity."""
 
     def __init__(self, entry_id: str, component_key: str, key: int):
         """Initialize."""
         self._entry_id = entry_id
         self._component_key = component_key
         self._key = key
-        self._remove_callbacks: List[Callable[[], None]] = []
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        kwargs = {
-            "entry_id": self._entry_id,
-            "component_key": self._component_key,
-            "key": self._key,
-        }
-        self._remove_callbacks.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 (
-                    f"esphome_{kwargs.get('entry_id')}"
-                    f"_update_{kwargs.get('component_key')}_{kwargs.get('key')}"
-                ),
-                self._on_state_update,
-            )
-        )
-
-        self._remove_callbacks.append(
-            async_dispatcher_connect(
-                self.hass,
-                (
-                    f"esphome_{kwargs.get('entry_id')}_remove_"
-                    f"{kwargs.get('component_key')}_{kwargs.get('key')}"
+                    f"esphome_{self._entry_id}_remove_"
+                    f"{self._component_key}_{self._key}"
                 ),
                 self.async_remove,
             )
         )
 
-        self._remove_callbacks.append(
+        self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"esphome_{kwargs.get('entry_id')}_on_device_update",
+                f"esphome_{self._entry_id}_on_device_update",
                 self._on_device_update,
             )
         )
 
-    async def _on_state_update(self) -> None:
-        """Update the entity state when state or static info changed."""
-        self.async_write_ha_state()
-
-    async def _on_device_update(self) -> None:
+    @callback
+    def _on_device_update(self) -> None:
         """Update the entity state when device info has changed."""
         if self._entry_data.available:
             # Don't update the HA state yet when the device comes online.
@@ -548,12 +533,6 @@ class EsphomeEntity(Entity):
             # through the next entity state packet.
             return
         self.async_write_ha_state()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unregister callbacks."""
-        for remove_callback in self._remove_callbacks:
-            remove_callback()
-        self._remove_callbacks = []
 
     @property
     def _entry_data(self) -> RuntimeEntryData:
@@ -619,3 +598,23 @@ class EsphomeEntity(Entity):
     def should_poll(self) -> bool:
         """Disable polling."""
         return False
+
+
+class EsphomeEntity(EsphomeBaseEntity):
+    """Define a generic esphome entity."""
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+
+        await super().async_added_to_hass()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                (
+                    f"esphome_{self._entry_id}"
+                    f"_update_{self._component_key}_{self._key}"
+                ),
+                self.async_write_ha_state,
+            )
+        )

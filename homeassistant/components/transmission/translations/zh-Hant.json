@@ -1,13 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
-            "name_exists": "\u8a72\u540d\u7a31\u5df2\u5b58\u5728",
-            "wrong_credentials": "\u4f7f\u7528\u8005\u540d\u7a31\u6216\u5bc6\u78bc\u932f\u8aa4"
+            "name_exists": "\u8a72\u540d\u7a31\u5df2\u5b58\u5728"
         },
         "step": {
             "user": {

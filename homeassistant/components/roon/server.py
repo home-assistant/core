@@ -26,6 +26,7 @@ class RoonServer:
         self.all_playlists = []
         self.offline_devices = set()
         self._exit = False
+        self._roon_name_by_id = {}
 
     @property
     def host(self):
@@ -68,6 +69,14 @@ class RoonServer:
     def zones(self):
         """Return list of zones."""
         return self.roonapi.zones
+
+    def add_player_id(self, entity_id, roon_name):
+        """Register a roon player."""
+        self._roon_name_by_id[entity_id] = roon_name
+
+    def roon_name(self, entity_id):
+        """Get the name of the roon player from entity_id."""
+        return self._roon_name_by_id.get(entity_id)
 
     def stop_roon(self):
         """Stop background worker."""

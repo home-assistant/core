@@ -15,7 +15,7 @@
                     "port": "Port",
                     "username": "Kasutajanimi"
                 },
-                "description": "Sisestage oma MQTT vahendaja andmed."
+                "description": "Sisesta oma MQTT vahendaja andmed."
             },
             "hassio_confirm": {
                 "data": {
@@ -62,7 +62,7 @@
                     "port": "Port",
                     "username": "Kasutajanimi"
                 },
-                "description": "Sisestage oma MQTT vahendaja \u00fchenduse teave."
+                "description": "Sisesta oma MQTT vahendaja \u00fchenduse teave."
             },
             "options": {
                 "data": {

@@ -1,11 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured_account": "Account is al geconfigureerd",
-            "cannot_connect": "Kan geen verbinding maken"
+            "already_configured": "Account is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
         },
         "step": {
             "reauth": {

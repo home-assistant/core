@@ -2,6 +2,15 @@
     "config": {
         "abort": {
             "already_configured": "Teenus on juba seadistatud"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mmi": "",
+                    "radius": "Raadius"
+                },
+                "title": "Sisesta oma filtri \u00fcksikasjad."
+            }
         }
     }
 }

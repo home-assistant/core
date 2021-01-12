@@ -1,4 +1,6 @@
 """Package to test the get_accessory method."""
+from unittest.mock import Mock, patch
+
 import pytest
 
 import homeassistant.components.climate as climate
@@ -30,8 +32,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import State
-
-from tests.async_mock import Mock, patch
 
 
 def test_not_supported(caplog):
@@ -257,7 +257,7 @@ def test_type_switches(type_name, entity_id, state, attrs, config):
     "type_name, entity_id, state, attrs",
     [
         (
-            "DockVacuum",
+            "Vacuum",
             "vacuum.dock_vacuum",
             "docked",
             {
@@ -265,7 +265,7 @@ def test_type_switches(type_name, entity_id, state, attrs, config):
                 | vacuum.SUPPORT_RETURN_HOME
             },
         ),
-        ("Switch", "vacuum.basic_vacuum", "off", {}),
+        ("Vacuum", "vacuum.basic_vacuum", "off", {}),
     ],
 )
 def test_type_vacuum(type_name, entity_id, state, attrs):

@@ -28,8 +28,10 @@ CONF_PHONEBOOK = "phonebook"
 CONF_PREFIXES = "prefixes"
 
 DEFAULT_HOST = "169.254.1.1"  # IP valid for all Fritz!Box routers
+DEFAULT_USERNAME = "admin"
 DEFAULT_NAME = "Phone"
 DEFAULT_PORT = 1012
+DEFAULT_PHONEBOOK = 0
 
 INTERVAL_RECONNECT = 60
 
@@ -48,9 +50,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PASSWORD, default="admin"): cv.string,
-        vol.Optional(CONF_USERNAME, default=""): cv.string,
-        vol.Optional(CONF_PHONEBOOK, default=0): cv.positive_int,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_PHONEBOOK, default=DEFAULT_PHONEBOOK): cv.positive_int,
         vol.Optional(CONF_PREFIXES, default=[]): vol.All(cv.ensure_list, [cv.string]),
     }
 )
@@ -58,19 +60,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Fritz!Box call monitor sensor platform."""
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
+    name = config[CONF_NAME]
+    host = config[CONF_HOST]
     # Try to resolve a hostname; if it is already an IP, it will be returned as-is
     try:
         host = socket.gethostbyname(host)
     except OSError:
         _LOGGER.error("Could not resolve hostname %s", host)
         return
-    port = config.get(CONF_PORT)
-    username = config.get(CONF_USERNAME)
+    port = config[CONF_PORT]
+    username = config[CONF_USERNAME]
     password = config.get(CONF_PASSWORD)
-    phonebook_id = config.get(CONF_PHONEBOOK)
-    prefixes = config.get(CONF_PREFIXES)
+    phonebook_id = config[CONF_PHONEBOOK]
+    prefixes = config[CONF_PREFIXES]
 
     try:
         phonebook = FritzBoxPhonebook(

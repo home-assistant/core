@@ -2,13 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Plasseringen er allerede konfigurert eller Node / Pro ID er allerede registrert.",
-            "reauth_successful": "Reautentisering var vellykket"
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
             "general_error": "Uventet feil",
-            "invalid_api_key": "Ugyldig API-n\u00f8kkel",
-            "unable_to_connect": "Kan ikke koble til Node / Pro-enheten."
+            "invalid_api_key": "Ugyldig API-n\u00f8kkel"
         },
         "step": {
             "geography": {
@@ -32,7 +31,7 @@
                 "data": {
                     "api_key": "API-n\u00f8kkel"
                 },
-                "title": "Autentiser AirVisual p\u00e5 nytt"
+                "title": "Godkjenne integrering p\u00e5 nytt"
             },
             "user": {
                 "data": {

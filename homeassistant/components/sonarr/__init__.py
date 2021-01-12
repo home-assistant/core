@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -125,9 +124,7 @@ def _async_start_reauth(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:
     """Handle options update."""
-    async_dispatcher_send(
-        hass, f"sonarr.{entry.entry_id}.entry_options_update", entry.options
-    )
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class SonarrEntity(Entity):

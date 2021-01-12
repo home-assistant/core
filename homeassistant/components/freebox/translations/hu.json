@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "register_failed": "Regisztr\u00e1ci\u00f3 nem siker\u00fclt, k\u00e9rem pr\u00f3b\u00e1lja \u00fajra"
+        },
         "step": {
             "user": {
                 "data": {

@@ -52,14 +52,69 @@ ITEM_TYPE_MEDIA_CLASS = {
 _LOGGER = logging.getLogger(__name__)
 
 
-def browse_media(
-    entity_id, plex_server, media_content_type=None, media_content_id=None
-):
+def browse_media(entity, is_internal, media_content_type=None, media_content_id=None):
     """Implement the websocket media browsing helper."""
+
+    def item_payload(item):
+        """Create response payload for a single media item."""
+        try:
+            media_class = ITEM_TYPE_MEDIA_CLASS[item.type]
+        except KeyError as err:
+            _LOGGER.debug("Unknown type received: %s", item.type)
+            raise UnknownMediaType from err
+        payload = {
+            "title": item.title,
+            "media_class": media_class,
+            "media_content_id": str(item.ratingKey),
+            "media_content_type": item.type,
+            "can_play": True,
+            "can_expand": item.type in EXPANDABLES,
+        }
+        if hasattr(item, "thumbUrl"):
+            entity.plex_server.thumbnail_cache.setdefault(
+                str(item.ratingKey), item.thumbUrl
+            )
+
+            if is_internal:
+                thumbnail = item.thumbUrl
+            else:
+                thumbnail = entity.get_browse_image_url(item.type, item.ratingKey)
+
+            payload["thumbnail"] = thumbnail
+
+        return BrowseMedia(**payload)
+
+    def library_payload(library_id):
+        """Create response payload to describe contents of a specific library."""
+        library = entity.plex_server.library.sectionByID(library_id)
+        library_info = library_section_payload(library)
+        library_info.children = []
+        library_info.children.append(special_library_payload(library_info, "On Deck"))
+        library_info.children.append(
+            special_library_payload(library_info, "Recently Added")
+        )
+        for item in library.all():
+            try:
+                library_info.children.append(item_payload(item))
+            except UnknownMediaType:
+                continue
+        return library_info
+
+    def playlists_payload():
+        """Create response payload for all available playlists."""
+        playlists_info = {**PLAYLISTS_BROWSE_PAYLOAD, "children": []}
+        for playlist in entity.plex_server.playlists():
+            try:
+                playlists_info["children"].append(item_payload(playlist))
+            except UnknownMediaType:
+                continue
+        response = BrowseMedia(**playlists_info)
+        response.children_media_class = MEDIA_CLASS_PLAYLIST
+        return response
 
     def build_item_response(payload):
         """Create response payload for the provided media query."""
-        media = plex_server.lookup_media(**payload)
+        media = entity.plex_server.lookup_media(**payload)
 
         if media is None:
             return None
@@ -85,19 +140,21 @@ def browse_media(
     if (
         media_content_type
         and media_content_type == "server"
-        and media_content_id != plex_server.machine_identifier
+        and media_content_id != entity.plex_server.machine_identifier
     ):
         raise BrowseError(
-            f"Plex server with ID '{media_content_id}' is not associated with {entity_id}"
+            f"Plex server with ID '{media_content_id}' is not associated with {entity.entity_id}"
         )
 
     if special_folder:
         if media_content_type == "server":
-            library_or_section = plex_server.library
+            library_or_section = entity.plex_server.library
             children_media_class = MEDIA_CLASS_DIRECTORY
-            title = plex_server.friendly_name
+            title = entity.plex_server.friendly_name
         elif media_content_type == "library":
-            library_or_section = plex_server.library.sectionByID(media_content_id)
+            library_or_section = entity.plex_server.library.sectionByID(
+                media_content_id
+            )
             title = library_or_section.title
             try:
                 children_media_class = ITEM_TYPE_MEDIA_CLASS[library_or_section.TYPE]
@@ -133,10 +190,10 @@ def browse_media(
 
     try:
         if media_content_type in ["server", None]:
-            return server_payload(plex_server)
+            return server_payload(entity.plex_server)
 
         if media_content_type == "library":
-            return library_payload(plex_server, media_content_id)
+            return library_payload(media_content_id)
 
     except UnknownMediaType as err:
         raise BrowseError(
@@ -144,7 +201,7 @@ def browse_media(
         ) from err
 
     if media_content_type == "playlists":
-        return playlists_payload(plex_server)
+        return playlists_payload()
 
     payload = {
         "media_type": DOMAIN,
@@ -154,27 +211,6 @@ def browse_media(
     if response is None:
         raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
     return response
-
-
-def item_payload(item):
-    """Create response payload for a single media item."""
-    try:
-        media_class = ITEM_TYPE_MEDIA_CLASS[item.type]
-    except KeyError as err:
-        _LOGGER.debug("Unknown type received: %s", item.type)
-        raise UnknownMediaType from err
-    payload = {
-        "title": item.title,
-        "media_class": media_class,
-        "media_content_id": str(item.ratingKey),
-        "media_content_type": item.type,
-        "can_play": True,
-        "can_expand": item.type in EXPANDABLES,
-    }
-    if hasattr(item, "thumbUrl"):
-        payload["thumbnail"] = item.thumbUrl
-
-    return BrowseMedia(**payload)
 
 
 def library_section_payload(section):
@@ -229,33 +265,3 @@ def server_payload(plex_server):
         server_info.children.append(library_section_payload(library))
     server_info.children.append(BrowseMedia(**PLAYLISTS_BROWSE_PAYLOAD))
     return server_info
-
-
-def library_payload(plex_server, library_id):
-    """Create response payload to describe contents of a specific library."""
-    library = plex_server.library.sectionByID(library_id)
-    library_info = library_section_payload(library)
-    library_info.children = []
-    library_info.children.append(special_library_payload(library_info, "On Deck"))
-    library_info.children.append(
-        special_library_payload(library_info, "Recently Added")
-    )
-    for item in library.all():
-        try:
-            library_info.children.append(item_payload(item))
-        except UnknownMediaType:
-            continue
-    return library_info
-
-
-def playlists_payload(plex_server):
-    """Create response payload for all available playlists."""
-    playlists_info = {**PLAYLISTS_BROWSE_PAYLOAD, "children": []}
-    for playlist in plex_server.playlists():
-        try:
-            playlists_info["children"].append(item_payload(playlist))
-        except UnknownMediaType:
-            continue
-    response = BrowseMedia(**playlists_info)
-    response.children_media_class = MEDIA_CLASS_PLAYLIST
-    return response

@@ -15,8 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "\ud638\uc2a4\ud2b8",
-                    "ip_address": "IP \uc8fc\uc18c"
+                    "host": "\ud638\uc2a4\ud2b8"
                 },
                 "description": "\ud638\uc2a4\ud2b8\ub97c \ube44\uc6cc\ub450\uba74 \uc7a5\uce58\ub97c \ucc3e\ub294 \ub370 \uac80\uc0c9\uc774 \uc0ac\uc6a9\ub429\ub2c8\ub2e4."
             }
@@ -35,6 +34,5 @@
                 "description": "\ubaa8\ub378\uc744 \ube44\uc6cc \ub450\uba74 \uc790\ub3d9\uc73c\ub85c \uac80\uc0c9\ub429\ub2c8\ub2e4."
             }
         }
-    },
-    "title": "\uc774\ub77c\uc774\ud2b8"
+    }
 }

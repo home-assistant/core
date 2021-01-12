@@ -36,6 +36,7 @@ from .const import (
     DATA_UTILITY,
     HOURLY,
     MONTHLY,
+    QUARTER_HOURLY,
     QUARTERLY,
     SERVICE_CALIBRATE_METER,
     SIGNAL_RESET_METER,
@@ -144,13 +145,7 @@ class UtilityMeterSensor(RestoreEntity):
         ):
             return
 
-        if (
-            self._unit_of_measurement is None
-            and new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is not None
-        ):
-            self._unit_of_measurement = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
-            )
+        self._unit_of_measurement = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         try:
             diff = Decimal(new_state.state) - Decimal(old_state.state)
@@ -241,7 +236,16 @@ class UtilityMeterSensor(RestoreEntity):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
 
-        if self._period == HOURLY:
+        if self._period == QUARTER_HOURLY:
+            for quarter in range(4):
+                async_track_time_change(
+                    self.hass,
+                    self._async_reset_meter,
+                    minute=(quarter * 15)
+                    + self._period_offset.seconds % (15 * 60) // 60,
+                    second=self._period_offset.seconds % 60,
+                )
+        elif self._period == HOURLY:
             async_track_time_change(
                 self.hass,
                 self._async_reset_meter,
@@ -264,7 +268,9 @@ class UtilityMeterSensor(RestoreEntity):
             self._state = Decimal(state.state)
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             self._last_period = state.attributes.get(ATTR_LAST_PERIOD)
-            self._last_reset = state.attributes.get(ATTR_LAST_RESET)
+            self._last_reset = dt_util.parse_datetime(
+                state.attributes.get(ATTR_LAST_RESET)
+            )
             self.async_write_ha_state()
             if state.attributes.get(ATTR_STATUS) == PAUSED:
                 # Fake cancellation function to init the meter paused

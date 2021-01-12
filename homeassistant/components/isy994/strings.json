@@ -1,5 +1,4 @@
 {
-  "title": "Universal Devices ISY994",
   "config": {
     "flow_title": "Universal Devices ISY994 {name} ({host})",
     "step": {

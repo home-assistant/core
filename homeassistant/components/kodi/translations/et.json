@@ -4,6 +4,7 @@
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamine nurjus",
+            "no_uuid": "Kodi eksemplaril puudub ID. See on k\u00f5ige t\u00f5en\u00e4olisemalt tingitud vananenud Kodi versiooni t\u00f5ttu  (17.x v\u00f5i vanem). Sidumist saad seadistada k\u00e4sitsi v\u00f5i t\u00e4ienda Kodi uuemale versioonile.",
             "unknown": "Tundmatu viga"
         },
         "error": {
@@ -11,33 +12,32 @@
             "invalid_auth": "Tuvastamine nurjus",
             "unknown": "Tundmatu viga"
         },
+        "flow_title": "",
         "step": {
             "credentials": {
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
-                }
+                },
+                "description": "Sisesta oma Kodi kasutajanimi ja salas\u00f5na. Need leiad System/Settings/Network/Services."
             },
             "discovery_confirm": {
-                "description": "Kas soovid lisada Kodi {name} Home Assistanti?"
-            },
-            "host": {
-                "data": {
-                    "host": "",
-                    "port": ""
-                }
+                "description": "Kas soovid lisada Kodi {name} Home Assistanti?",
+                "title": "Avastatud Kodi seadmed"
             },
             "user": {
                 "data": {
                     "host": "",
                     "port": "",
                     "ssl": "Kasutab SSL serti"
-                }
+                },
+                "description": "Kodi \u00fchenduse teave. Veendu, et lubaksid jaotises S\u00fcsteem / Seaded / V\u00f5rk / Teenused valiku \"Luba Kodi juhtimine HTTP kaudu\"."
             },
             "ws_port": {
                 "data": {
                     "ws_port": ""
-                }
+                },
+                "description": "WebSocket'i port (mida Kodis nimetatakse m\u00f5nikord ka TCP-pordiks). WebSocket'i kaudu \u00fchenduse loomiseks peadmen\u00fc\u00fcs S\u00fcsteem / Seaded / V\u00f5rk / Teenused lubama \"Luba programmidel ... Kodit juhtida\". Kui WebSocket pole lubatud, eemalda port ja j\u00e4tat\u00fchjaks."
             }
         }
     },

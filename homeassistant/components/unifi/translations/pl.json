@@ -27,6 +27,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Klienci z kontrol\u0105 dost\u0119pu do sieci",
+                    "dpi_restrictions": "Zezwalaj na kontrolowanie grupowych ogranicze\u0144 g\u0142\u0119bokiej inspekcji pakiet\u00f3w (DPI)",
                     "poe_clients": "Zezwalaj na kontrol\u0119 POE klient\u00f3w"
                 },
                 "description": "Konfigurowanie kontroli klienta.\n\nUtw\u00f3rz prze\u0142\u0105czniki dla numer\u00f3w seryjnych, dla kt\u00f3rych chcesz kontrolowa\u0107 dost\u0119p do sieci.",

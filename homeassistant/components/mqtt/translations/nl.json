@@ -49,13 +49,17 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Kon niet verbinden"
+        },
         "step": {
             "broker": {
                 "data": {
                     "password": "Wachtwoord",
                     "port": "Poort",
                     "username": "Gebruikersnaam"
-                }
+                },
+                "description": "Voer de verbindingsgegevens van uw MQTT-broker in."
             },
             "options": {
                 "data": {

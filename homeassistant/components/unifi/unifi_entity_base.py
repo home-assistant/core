@@ -1,5 +1,6 @@
 """Base class for UniFi entities."""
 import logging
+from typing import Any
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -22,12 +23,20 @@ class UniFiBase(Entity):
         """
         self._item = item
         self.controller = controller
-        self.controller.entities[self.DOMAIN][self.TYPE].add(item.mac)
+        self.controller.entities[self.DOMAIN][self.TYPE].add(self.key)
+
+    @property
+    def key(self) -> Any:
+        """Return item key."""
+        return self._item.mac
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         _LOGGER.debug(
-            "New %s entity %s (%s)", self.TYPE, self.entity_id, self._item.mac
+            "New %s entity %s (%s)",
+            self.TYPE,
+            self.entity_id,
+            self.key,
         )
         for signal, method in (
             (self.controller.signal_reachable, self.async_update_callback),
@@ -40,16 +49,22 @@ class UniFiBase(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
         _LOGGER.debug(
-            "Removing %s entity %s (%s)", self.TYPE, self.entity_id, self._item.mac
+            "Removing %s entity %s (%s)",
+            self.TYPE,
+            self.entity_id,
+            self.key,
         )
         self._item.remove_callback(self.async_update_callback)
-        self.controller.entities[self.DOMAIN][self.TYPE].remove(self._item.mac)
+        self.controller.entities[self.DOMAIN][self.TYPE].remove(self.key)
 
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         _LOGGER.debug(
-            "Updating %s entity %s (%s)", self.TYPE, self.entity_id, self._item.mac
+            "Updating %s entity %s (%s)",
+            self.TYPE,
+            self.entity_id,
+            self.key,
         )
         self.async_write_ha_state()
 
@@ -57,15 +72,15 @@ class UniFiBase(Entity):
         """Config entry options are updated, remove entity if option is disabled."""
         raise NotImplementedError
 
-    async def remove_item(self, mac_addresses: set) -> None:
-        """Remove entity if MAC is part of set.
+    async def remove_item(self, keys: set) -> None:
+        """Remove entity if key is part of set.
 
         Remove entity if no entry in entity registry exist.
         Remove entity registry entry if no entry in device registry exist.
         Remove device registry entry if there is only one linked entity (this entity).
         Remove entity registry entry if there are more than one entity linked to the device registry entry.
         """
-        if self._item.mac not in mac_addresses:
+        if self.key not in keys:
             return
 
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
@@ -80,7 +95,16 @@ class UniFiBase(Entity):
             entity_registry.async_remove(self.entity_id)
             return
 
-        if len(async_entries_for_device(entity_registry, entity_entry.device_id)) == 1:
+        if (
+            len(
+                async_entries_for_device(
+                    entity_registry,
+                    entity_entry.device_id,
+                    include_disabled_entities=True,
+                )
+            )
+            == 1
+        ):
             device_registry.async_remove_device(device_entry.id)
             return
 
