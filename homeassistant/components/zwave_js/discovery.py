@@ -87,7 +87,8 @@ DISCOVERY_SCHEMAS = [
         hint="notification",
         command_class={
             CommandClass.NOTIFICATION,
-        }
+        },
+        type={"number"},
     ),
     # generic text sensors
     ZWaveDiscoverySchema(
