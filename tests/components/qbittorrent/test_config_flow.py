@@ -114,6 +114,7 @@ async def test_valid_credentials(hass):
     assert result["data"][CONF_USERNAME] == test_username
     assert result["data"][CONF_PASSWORD] == test_password
 
+
 def _create_mocked_client(raise_request_exception=False, raise_login_exception=False):
     mocked_client = MagicMock()
     if raise_request_exception:
