@@ -43,8 +43,8 @@ _LOGGER = logging.getLogger(__name__)
 
 REGISTERS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_COMMAND_OFF): cv.positive_int,
-        vol.Required(CONF_COMMAND_ON): cv.positive_int,
+        vol.Required(CONF_COMMAND_OFF): vol.Any(cv.positive_int, vol.All(cv.ensure_list, [cv.positive_int])),
+        vol.Required(CONF_COMMAND_ON): vol.Any(cv.positive_int, vol.All(cv.ensure_list, [cv.positive_int])),
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_REGISTER): cv.positive_int,
         vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
@@ -262,10 +262,26 @@ class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
 
         return int(result.registers[0])
 
+    # def _write_register(self, value):
+        # """Write holding register using the Modbus hub slave."""
+        # try:
+            # self._hub.write_registers(self._slave, self._register, value)
+        # except ConnectionException:
+            # self._available = False
+            # return
+
+        # self._available = True
+
+
     def _write_register(self, value):
         """Write holding register using the Modbus hub slave."""
         try:
-            self._hub.write_register(self._slave, self._register, value)
+            if isinstance(value, list):
+                self._hub.write_registers(
+                    self._slave, self._register, [int(float(i)) for i in value]
+                )
+            else:          
+                self._hub.write_register(self._slave, self._register, value)                   
         except ConnectionException:
             self._available = False
             return
