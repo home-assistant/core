@@ -1,7 +1,5 @@
 """The AV Receiver integration."""
-import asyncio
-
-import pyavreceiver
+from pyavreceiver import const as avr_const, factory
 import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
@@ -9,11 +7,24 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
+import homeassistant.helpers.config_validation as cv
 
-from .config_flow import format_title
-from .const import DOMAIN, SIGNAL_AVR_UPDATED
+from .const import (
+    CONF_ZONE1,
+    CONF_ZONE2,
+    CONF_ZONE3,
+    CONF_ZONE4,
+    CONTROLLER,
+    DOMAIN,
+    SIGNAL_AVR_UPDATED,
+    UNSUB_UPDATE_LISTENER,
+    ZONES,
+)
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Required(CONF_HOST): cv.string})}, extra=vol.ALLOW_EXTRA
+)
 
 PLATFORMS = [MEDIA_PLAYER_DOMAIN]
 
@@ -31,13 +42,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
                 DOMAIN, context={"source": "import"}, data={CONF_HOST: host}
             )
         )
-    else:
-        # Check if host needs to be updated
-        entry = entries[0]
-        if entry.data[CONF_HOST] != host:
-            hass.config_entries.async_update_entry(
-                entry, title=format_title(host), data={**entry.data, CONF_HOST: host}
-            )
 
     return True
 
@@ -45,14 +49,18 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up AV Receiver from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    if entry.unique_id is None:
-        hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
 
     host = entry.data[CONF_HOST]
+    controller = None
     try:
-        controller = await pyavreceiver.factory(host)
+        controller = await factory(host)
         await controller.init()
+        entry.unique_id = (
+            f"{DOMAIN}-{controller.serial_number or controller.mac or controller.host}"
+        )
     except Exception as error:
+        if controller:
+            await controller.disconnect()
         raise ConfigEntryNotReady from error
 
     # Disconnect when shutting down
@@ -64,14 +72,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     controller_manager = AVRManager(hass, controller)
     await controller_manager.connect_listeners()
 
-    zones = ["main", "zone2", "zone3", "zone4"]
+    unsub = entry.add_update_listener(update_listener)
+
+    zones = [
+        CONF_ZONE1,
+        CONF_ZONE2 if entry.options.get(CONF_ZONE2) else "",
+        CONF_ZONE2 if entry.options.get(CONF_ZONE3) else "",
+        CONF_ZONE2 if entry.options.get(CONF_ZONE4) else "",
+    ]
     zones = {
-        name: getattr(controller, name) for name in zones if getattr(controller, name)
+        name: getattr(controller, name)
+        for name in zones
+        if getattr(controller, name, None)
     }
 
     hass.data[DOMAIN][entry.entry_id] = {
-        "controller": controller_manager,
+        CONTROLLER: controller_manager,
         MEDIA_PLAYER_DOMAIN: zones,
+        UNSUB_UPDATE_LISTENER: unsub,
     }
 
     for component in PLATFORMS:
@@ -84,13 +102,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    controller_manager = hass.data[DOMAIN][entry.entry_id]["controller"]
-    await controller_manager.disconnect()
-    hass.data.pop(DOMAIN)
+    await hass.data[DOMAIN][entry.entry_id][CONTROLLER].disconnect()
+
+    hass.data[DOMAIN][entry.entry_id][UNSUB_UPDATE_LISTENER]()
+
+    entity_registry = await er.async_get_registry(hass)
+    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    zone_names = [CONF_ZONE1, CONF_ZONE2, CONF_ZONE3, CONF_ZONE4]
+    for zone in entries:
+        for name in zone_names:
+            if zone.unique_id == f"{entry.unique_id}-{name}":
+                entity_registry.async_remove(zone.entity_id)
+
+    hass.data[DOMAIN].pop(entry.entry_id)
 
     return await hass.config_entries.async_forward_entry_unload(
         entry, MEDIA_PLAYER_DOMAIN
     )
+
+
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 class AVRManager:
@@ -99,27 +132,21 @@ class AVRManager:
     def __init__(self, hass, avreceiver):
         """Init the manager."""
         self._hass = hass
-        self._device_registry = None
-        self._entity_registry = None
         self.avreceiver = avreceiver
         self._signals = []
 
     async def connect_listeners(self):
         """Subscribe to events."""
-        self._device_registry, self._entity_registry = await asyncio.gather(
-            self._hass.helpers.device_registry.async_get_registry(),
-            self._hass.helpers.entity_registry.async_get_registry(),
-        )
         # Handle AVR state update events
         self._signals.append(
             self.avreceiver.dispatcher.connect(
-                pyavreceiver.const.SIGNAL_STATE_UPDATE, self._state_update
+                avr_const.SIGNAL_STATE_UPDATE, self._state_update
             )
         )
         # Handle connection-related events
         self._signals.append(
             self.avreceiver.dispatcher.connect(
-                pyavreceiver.const.SIGNAL_TELNET_EVENT, self._telnet_event
+                avr_const.SIGNAL_TELNET_EVENT, self._connection_update
             )
         )
 
@@ -135,6 +162,11 @@ class AVRManager:
         """Handle controller event."""
         self._hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_AVR_UPDATED)
 
-    async def _telnet_event(self, event):
-        """Handle connection event."""
+    async def _connection_update(self, event):
+        """Handle controller connection event."""
+        # Update state when receiver recovers from connection failure
+        if event == avr_const.EVENT_CONNECTED:
+            for zone_name in ZONES:
+                if zone := getattr(self.avreceiver, zone_name, None):
+                    await zone.update_all()
         self._hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_AVR_UPDATED)

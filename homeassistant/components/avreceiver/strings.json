@@ -13,5 +13,18 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Audio Video Receiver",
+        "description": "Add extra zones",
+        "data": {
+          "zone2": "Add Zone 2 (if available)",
+          "zone3": "Add Zone 3 (if available)",
+          "zone4": "Add Zone 4 (if available)"
+        }
+      }
+    }
   }
 }

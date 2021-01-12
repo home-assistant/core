@@ -1,5 +1,4 @@
 """Support for Denon AVR receivers using their HTTP interface."""
-import logging
 from typing import Sequence
 
 from pyavreceiver.receiver import AVReceiver
@@ -19,7 +18,12 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 
-from .const import DOMAIN as AVRECEIVER_DOMAIN, SIGNAL_AVR_UPDATED
+from .const import (
+    CONF_ZONE1,
+    DOMAIN as AVRECEIVER_DOMAIN,
+    SIGNAL_AVR_UPDATED,
+    THREE_DECIBELS,
+)
 
 BASE_SUPPORTED_FEATURES = (
     SUPPORT_VOLUME_MUTE
@@ -30,20 +34,18 @@ BASE_SUPPORTED_FEATURES = (
     | SUPPORT_TURN_OFF
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass, entry: ConfigEntry, async_add_entities):
     """Add media players for a config entry."""
     zones = hass.data[AVRECEIVER_DOMAIN][entry.entry_id][DOMAIN]
-    devices = []
+    entities = []
     for name, zone in zones.items():
         await zone.update_all()
-        if name == "main":
-            devices.append(AVRMainZone(zone, name))
+        if name == CONF_ZONE1:
+            entities.append(AVRMainZone(zone, name))
         else:
-            devices.append(AVRZone(zone, name))
-    async_add_entities(devices, True)
+            entities.append(AVRZone(zone, name))
+    async_add_entities(entities)
 
 
 class AVRZone(MediaPlayerEntity):
@@ -56,7 +58,9 @@ class AVRZone(MediaPlayerEntity):
         self._avr = zone._avr  # type: AVReceiver
         self._signals = []
         self._supported_features_base = BASE_SUPPORTED_FEATURES
-        self._volume_multiplier = self._zone.max_volume + 80  # - self._zone.min_volume
+        self._volume_multiplier = (
+            self._zone.max_volume or 0 - self._zone.min_volume or -80
+        )
 
     async def _avr_updated(self):
         """Handle avr attribute updated."""
@@ -71,9 +75,6 @@ class AVRZone(MediaPlayerEntity):
             )
         )
 
-    async def async_update(self):
-        """Update supported features of the player."""
-
     @property
     def available(self) -> bool:
         """Return True if the device is available."""
@@ -83,7 +84,7 @@ class AVRZone(MediaPlayerEntity):
     def device_info(self) -> dict:
         """Get attributes about the device."""
         return {
-            "identifiers": {(AVRECEIVER_DOMAIN, self._zone_name)},
+            "identifiers": {(AVRECEIVER_DOMAIN, self._avr.host)},
             "name": self._avr.friendly_name,
             "model": self._avr.model,
             "manufacturer": self._avr.manufacturer,
@@ -107,7 +108,11 @@ class AVRZone(MediaPlayerEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self._avr.mac + self._zone_name
+        return (
+            f"{AVRECEIVER_DOMAIN}-"
+            f"{self._avr.serial_number or self._avr.mac or self._avr.host}-"
+            f"{self._zone_name}"
+        )
 
     @property
     def volume_level(self) -> float:
@@ -134,7 +139,7 @@ class AVRZone(MediaPlayerEntity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        return {}
+        return self._zone.state
 
     @property
     def should_poll(self) -> bool:
@@ -155,11 +160,11 @@ class AVRZone(MediaPlayerEntity):
 
     async def async_volume_up(self):
         """Volume up the media player."""
-        await self._zone.set_volume(self._zone.volume + 3)
+        await self._zone.set_volume(self._zone.volume + THREE_DECIBELS)
 
     async def async_volume_down(self):
         """Volume down media player."""
-        await self._zone.set_volume(self._zone.volume - 3)
+        await self._zone.set_volume(self._zone.volume - THREE_DECIBELS)
 
     async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
