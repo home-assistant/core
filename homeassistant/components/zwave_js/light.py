@@ -218,22 +218,23 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self, brightness: Optional[int], transition: Optional[int] = None
     ) -> None:
         """Set new brightness to light."""
-        if self.info.primary_value.value == brightness:
-            # no point in setting same brightness
-            return
         if brightness is None and self.info.primary_value.value:
             # there is no point in setting default brightness when light is already on
             return
         if brightness is None:
             # Level 255 means to set it to previous value.
-            brightness = 255
+            zwave_brightness = 255
         else:
             # Zwave multilevel switches use a range of [0, 99] to control brightness.
-            brightness = byte_to_zwave_brightness(brightness)
+            zwave_brightness = byte_to_zwave_brightness(brightness)
+
+        if self.info.primary_value.value == zwave_brightness:
+            # no point in setting same brightness
+            return
         # set transition value before seinding new brightness
         await self._async_set_transition_duration(transition)
         # setting a value requires setting targetValue
-        await self.info.node.async_set_value(self._target_value, brightness)
+        await self.info.node.async_set_value(self._target_value, zwave_brightness)
 
     async def _async_set_transition_duration(
         self, duration: Optional[int] = None
