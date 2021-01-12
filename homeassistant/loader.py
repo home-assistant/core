@@ -25,6 +25,7 @@ from typing import (
     cast,
 )
 
+from homeassistant.generated.dhcp import DHCP
 from homeassistant.generated.mqtt import MQTT
 from homeassistant.generated.ssdp import SSDP
 from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
@@ -169,6 +170,29 @@ async def async_get_zeroconf(hass: "HomeAssistant") -> Dict[str, List[Dict[str, 
             zeroconf.setdefault(typ, []).append(data)
 
     return zeroconf
+
+
+async def async_get_dhcp(hass: "HomeAssistant") -> Dict[str, List[Dict[str, str]]]:
+    """Return cached list of dhcp types."""
+    dhcp: Dict[str, List[Dict[str, str]]] = DHCP.copy()
+
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        if not integration.dhcp:
+            continue
+        for entry in integration.dhcp:
+            data = {"domain": integration.domain}
+            if isinstance(entry, dict):
+                typ = entry["type"]
+                entry_without_type = entry.copy()
+                del entry_without_type["type"]
+                data.update(entry_without_type)
+            else:
+                typ = entry
+
+            dhcp.setdefault(typ, []).append(data)
+
+    return dhcp
 
 
 async def async_get_homekit(hass: "HomeAssistant") -> Dict[str, str]:
@@ -355,6 +379,11 @@ class Integration:
     def zeroconf(self) -> Optional[list]:
         """Return Integration zeroconf entries."""
         return cast(List[str], self.manifest.get("zeroconf"))
+
+    @property
+    def dhcp(self) -> Optional[list]:
+        """Return Integration dhcp entries."""
+        return cast(List[str], self.manifest.get("dhcp"))
 
     @property
     def homekit(self) -> Optional[dict]:
