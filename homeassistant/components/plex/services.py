@@ -53,8 +53,6 @@ def refresh_library(hass, service_call):
     library_name = service_call.data["library_name"]
 
     plex_server = get_plex_server(hass, plex_server_name)
-    if not plex_server:
-        return
 
     try:
         library = plex_server.library.section(title=library_name)
@@ -74,27 +72,27 @@ def get_plex_server(hass, plex_server_name=None):
     """Retrieve a configured Plex server by name."""
     plex_servers = hass.data[DOMAIN][SERVERS].values()
 
+    if not plex_servers:
+        raise HomeAssistantError("No Plex servers available")
+
     if plex_server_name:
         plex_server = next(
             (x for x in plex_servers if x.friendly_name == plex_server_name), None
         )
         if plex_server is not None:
             return plex_server
-        _LOGGER.error(
-            "Requested Plex server '%s' not found in %s",
-            plex_server_name,
-            [x.friendly_name for x in plex_servers],
+        friendly_names = [x.friendly_name for x in plex_servers]
+        raise HomeAssistantError(
+            f"Requested Plex server '{plex_server_name}' not found in {friendly_names}"
         )
-        return None
 
     if len(plex_servers) == 1:
         return next(iter(plex_servers))
 
-    _LOGGER.error(
-        "Multiple Plex servers configured, choose with 'plex_server' key: %s",
-        [x.friendly_name for x in plex_servers],
+    friendly_names = [x.friendly_name for x in plex_servers]
+    raise HomeAssistantError(
+        f"Multiple Plex servers configured, choose with 'plex_server' key: {friendly_names}"
     )
-    return None
 
 
 def lookup_plex_media(hass, content_type, content_id):
@@ -109,13 +107,10 @@ def lookup_plex_media(hass, content_type, content_id):
     shuffle = content.pop("shuffle", 0)
 
     plex_server = get_plex_server(hass, plex_server_name=plex_server_name)
-    if not plex_server:
-        return (None, None)
 
     media = plex_server.lookup_media(content_type, **content)
     if media is None:
-        _LOGGER.error("Media could not be found: %s", content)
-        return (None, None)
+        raise HomeAssistantError(f"Plex media not found using payload: '{content_id}'")
 
     playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
     return (playqueue, plex_server)
@@ -127,8 +122,6 @@ def play_on_sonos(hass, content_type, content_id, speaker_name):
     Called by Sonos 'media_player.play_media' service.
     """
     media, plex_server = lookup_plex_media(hass, content_type, content_id)
-    if media is None:
-        raise HomeAssistantError(f"Plex media not found using payload: '{content_id}'")
     sonos_speaker = plex_server.account.sonos_speaker(speaker_name)
     if sonos_speaker is None:
         message = f"Sonos speaker '{speaker_name}' is not associated with '{plex_server.friendly_name}'"
