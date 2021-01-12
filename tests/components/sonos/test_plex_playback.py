@@ -27,7 +27,7 @@ async def test_plex_play_media(
     plex_empty_payload,
     plex_sonos_resources,
 ):
-    """Test join/unjoin requires control access."""
+    """Test playing media via the Plex integration."""
     requests_mock.get("https://plex.tv/users/account", text=plextv_account)
     requests_mock.get("https://sonos.plex.tv/resources", text=plex_empty_payload)
 
