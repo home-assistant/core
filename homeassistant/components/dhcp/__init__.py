@@ -70,18 +70,31 @@ class DHCPWatcher:
             _LOGGER.debug("Error decoding DHCP packet: %s", ex)
             return
 
+        if ip_address is None or hostname is None or mac is None:
+            return
+
         data = self._address_data.get(ip_address)
 
         if data and data[MACADDRESS] == mac and data[HOSTNAME] == hostname:
+            # If the address data is the same no need
+            # to process it
             return
 
         self._address_data[ip_address] = {MACADDRESS: mac, HOSTNAME: hostname}
 
-        if data[MACADDRESS] is None or data[HOSTNAME] is None:
-            return
+        self._process_updated_address_data(ip_address, self._address_data[ip_address])
 
-        lowercase_name = hostname.lower()
-        uppercase_mac = mac.upper()
+    def _process_updated_address_data(self, ip_address, data):
+        """Process the address data update."""
+        lowercase_hostname = data[HOSTNAME].lower()
+        uppercase_mac = data[MACADDRESS].upper()
+
+        _LOGGER.debug(
+            "Processing updated address data for %s: mac=%s hostname=%s",
+            ip_address,
+            uppercase_mac,
+            lowercase_hostname,
+        )
 
         for entry in self._integration_matchers:
             if MACADDRESS in entry and not fnmatch.fnmatch(
@@ -90,7 +103,7 @@ class DHCPWatcher:
                 continue
 
             if HOSTNAME in entry and not fnmatch.fnmatch(
-                lowercase_name, entry[HOSTNAME]
+                lowercase_hostname, entry[HOSTNAME]
             ):
                 continue
 
