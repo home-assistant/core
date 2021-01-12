@@ -16,8 +16,8 @@ from .const import DOMAIN
 FILTER = "udp and (port 67 or 68)"
 REQUESTED_ADDR = "requested_addr"
 HOSTNAME = "hostname"
-MACADDRESS = "macaddress"
-IP = "ip"
+MAC_ADDRESS = "macaddress"
+IP_ADDRESS = "ip"
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,43 +67,43 @@ class DHCPWatcher(Thread):
             return
 
         try:
-            ip = _decode_dhcp_option(options, REQUESTED_ADDR)
+            ip_address = _decode_dhcp_option(options, REQUESTED_ADDR)
             hostname = _decode_dhcp_option(options, HOSTNAME)
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.debug("Error decoding DHCP packet: %s", ex)
             return
 
-        mac = _format_mac(packet[Ether].src)
+        mac_address = _format_mac(packet[Ether].src)
 
-        if ip is None or hostname is None or mac is None:
+        if ip_address is None or hostname is None or mac_address is None:
             return
 
-        data = self._address_data.get(ip)
+        data = self._address_data.get(ip_address)
 
-        if data and data[MACADDRESS] == mac and data[HOSTNAME] == hostname:
+        if data and data[MAC_ADDRESS] == mac_address and data[HOSTNAME] == hostname:
             # If the address data is the same no need
             # to process it
             return
 
-        self._address_data[ip] = {MACADDRESS: mac, HOSTNAME: hostname}
+        self._address_data[ip_address] = {MAC_ADDRESS: mac_address, HOSTNAME: hostname}
 
-        self.process_updated_address_data(ip, self._address_data[ip])
+        self.process_updated_address_data(ip_address, self._address_data[ip_address])
 
-    def process_updated_address_data(self, ip, data):
+    def process_updated_address_data(self, ip_address, data):
         """Process the address data update."""
         lowercase_hostname = data[HOSTNAME].lower()
-        uppercase_mac = data[MACADDRESS].upper()
+        uppercase_mac = data[MAC_ADDRESS].upper()
 
         _LOGGER.debug(
             "Processing updated address data for %s: mac=%s hostname=%s",
-            ip,
+            ip_address,
             uppercase_mac,
             lowercase_hostname,
         )
 
         for entry in self._integration_matchers:
-            if MACADDRESS in entry and not fnmatch.fnmatch(
-                uppercase_mac, entry[MACADDRESS]
+            if MAC_ADDRESS in entry and not fnmatch.fnmatch(
+                uppercase_mac, entry[MAC_ADDRESS]
             ):
                 continue
 
@@ -118,7 +118,7 @@ class DHCPWatcher(Thread):
                 self.hass.config_entries.flow.async_init(
                     entry["domain"],
                     context={"source": DOMAIN},
-                    data={IP: ip, **data},
+                    data={IP_ADDRESS: ip_address, **data},
                 )
             )
 
@@ -134,6 +134,6 @@ def _decode_dhcp_option(dhcp_options, key):
         return i[1].decode() if key == HOSTNAME else i[1]
 
 
-def _format_mac(mac):
+def _format_mac(mac_address):
     """Format a mac address for matching."""
-    return format_mac(mac).replace(":", "")
+    return format_mac(mac_address).replace(":", "")
