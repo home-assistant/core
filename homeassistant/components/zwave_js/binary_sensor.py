@@ -1,7 +1,7 @@
 """Representation of Z-Wave binary sensors."""
 
 import logging
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, TypedDict
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
@@ -53,8 +53,19 @@ NOTIFICATION_WEATHER = 16
 NOTIFICATION_IRRIGATION = 17
 NOTIFICATION_GAS = 18
 
+
+class NotificationSensorMapping(TypedDict, total=False):
+    """Represent a metadata data dict type."""
+
+    type: int  # required
+    states: List[int]  # required
+    device_class: str
+    enabled: bool
+    name: str
+
+
 # Mappings for Notification sensors
-NOTIFICATION_SENSOR_MAPPINGS = [
+NOTIFICATION_SENSOR_MAPPINGS: List[NotificationSensorMapping] = [
     {
         # NotificationType 1: Smoke Alarm - State Id's 1 and 2
         # Assuming here that Value 1 and 2 are not present at the same time
@@ -172,7 +183,7 @@ NOTIFICATION_SENSOR_MAPPINGS = [
         # Battery values (mutually exclusive)
         "type": NOTIFICATION_POWER_MANAGEMENT,
         "states": [10, 11, 12, 13, 14, 15],
-        "device_class": DEVICE_CLASS_POWER,
+        "device_class": DEVICE_CLASS_BATTERY,
         "enabled": False,
     },
     {
@@ -192,20 +203,17 @@ NOTIFICATION_SENSOR_MAPPINGS = [
         # NotificationType 11: Clock - State Id's 1, 2
         "type": NOTIFICATION_CLOCK,
         "states": [1, 2],
-        "device_class": None,
         "enabled": False,
     },
     {
         # NotificationType 12: Appliance - All State Id's
         "type": NOTIFICATION_APPLIANCE,
         "states": list(range(1, 22)),
-        "device_class": None,
     },
     {
         # NotificationType 13: Home Health - State Id's 1,2,3,4,5
         "type": NOTIFICATION_APPLIANCE,
         "states": [1, 2, 3, 4, 5],
-        "device_class": None,
     },
     {
         # NotificationType 14: Siren
@@ -231,7 +239,6 @@ NOTIFICATION_SENSOR_MAPPINGS = [
         # ignore non-boolean values
         "type": NOTIFICATION_IRRIGATION,
         "states": [1, 2, 3, 4, 5],
-        "device_class": None,
     },
     {
         # NotificationType 18: Gas
@@ -323,7 +330,7 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         """Return if the sensor is on or off."""
         if self._mapping_info:
             return self.info.primary_value.value in self._mapping_info["states"]
-        return self.info.primary_value.value != 0
+        return bool(self.info.primary_value.value != 0)
 
     @property
     def device_class(self) -> Optional[str]:
@@ -345,7 +352,7 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         return self._mapping_info.get("enabled", False)
 
     @callback
-    def _get_sensor_mapping(self) -> dict:
+    def _get_sensor_mapping(self) -> NotificationSensorMapping:
         """Try to get a device specific mapping for this sensor."""
         for mapping in NOTIFICATION_SENSOR_MAPPINGS:
             if mapping["type"] != int(
