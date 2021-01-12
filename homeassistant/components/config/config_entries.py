@@ -318,7 +318,9 @@ async def config_entry_update(hass, connection, msg):
 
 @websocket_api.require_admin
 @websocket_api.async_response
-@websocket_api.websocket_command({"type": "config_entries/ignore_flow", "flow_id": str})
+@websocket_api.websocket_command(
+    {"type": "config_entries/ignore_flow", "flow_id": str, "title": str}
+)
 async def ignore_config_flow(hass, connection, msg):
     """Ignore a config flow."""
     flow = next(
@@ -345,7 +347,7 @@ async def ignore_config_flow(hass, connection, msg):
     await hass.config_entries.flow.async_init(
         flow["handler"],
         context={"source": config_entries.SOURCE_IGNORE},
-        data={"unique_id": flow["context"]["unique_id"]},
+        data={"unique_id": flow["context"]["unique_id"], "title": msg["title"]},
     )
     connection.send_result(msg["id"])
 
