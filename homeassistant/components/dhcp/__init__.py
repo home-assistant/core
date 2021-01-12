@@ -2,7 +2,7 @@
 
 import fnmatch
 import logging
-from threading import Thread
+from threading import Event, Thread
 
 from scapy.layers.dhcp import DHCP
 from scapy.layers.l2 import Ether
@@ -33,6 +33,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         dhcp_watcher.start()
 
         def _stop(*_):
+            dhcp_watcher.stop()
             dhcp_watcher.join()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop)
@@ -52,11 +53,20 @@ class DHCPWatcher(Thread):
         self.name = "dhcp-discovery"
         self._integration_matchers = integration_matchers
         self._address_data = {}
+        self._stop_event = Event()
+
+    def stop(self):
+        """Stop the thread."""
+        self._stop_event.set()
 
     def run(self):
         """Start watching for dhcp packets."""
         try:
-            sniff(filter=FILTER, prn=self.handle_dhcp_packet)
+            sniff(
+                filter=FILTER,
+                prn=self.handle_dhcp_packet,
+                stop_filter=lambda _: self._stop_event.is_set(),
+            )
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.info("Cannot watch for dhcp packets: %s", ex)
             return
