@@ -2,8 +2,9 @@
 
 import fnmatch
 import logging
+from threading import Thread
 
-from scapy.all import DHCP, AsyncSniffer, Ether
+from scapy.all import DHCP, Ether, sniff
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -27,29 +28,33 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     async def _initialize(_):
         dhcp_watcher = DHCPWatcher(hass, await async_get_dhcp(hass))
-        try:
-            scapy_sniffer = AsyncSniffer(
-                filter=FILTER, prn=dhcp_watcher.handle_dhcp_packet
-            )
-            scapy_sniffer.start()
-        except Exception as ex:
-            _LOGGER.info("Cannot watch for dhcp packets: %s", ex)
-            return
+        dhcp_watcher.start()
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, scapy_sniffer.stop)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, dhcp_watcher.join)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _initialize)
     return True
 
 
-class DHCPWatcher:
+class DHCPWatcher(Thread):
     """Class to watch dhcp requests."""
 
     def __init__(self, hass, integration_matchers):
         """Initialize class."""
+        super().__init__()
+
         self.hass = hass
+        self.name = "dhcp-discovery"
         self._integration_matchers = integration_matchers
         self._address_data = {}
+
+    def run(self):
+        """Start watching for dhcp packets."""
+        try:
+            sniff(filter=FILTER, prn=self.handle_dhcp_packet)
+        except Exception as ex:
+            _LOGGER.info("Cannot watch for dhcp packets: %s", ex)
+            return
 
     def handle_dhcp_packet(self, packet):
         """Process a dhcp packet."""
@@ -82,9 +87,9 @@ class DHCPWatcher:
 
         self._address_data[ip] = {MACADDRESS: mac, HOSTNAME: hostname}
 
-        self._process_updated_address_data(ip, self._address_data[ip])
+        self.process_updated_address_data(ip, self._address_data[ip])
 
-    def _process_updated_address_data(self, ip, data):
+    def process_updated_address_data(self, ip, data):
         """Process the address data update."""
         lowercase_hostname = data[HOSTNAME].lower()
         uppercase_mac = data[MACADDRESS].upper()
