@@ -55,7 +55,7 @@ NOTIFICATION_GAS = 18
 
 
 class NotificationSensorMapping(TypedDict, total=False):
-    """Represent a metadata data dict type."""
+    """Represent a notification sensor mapping dict type."""
 
     type: int  # required
     states: List[int]  # required
