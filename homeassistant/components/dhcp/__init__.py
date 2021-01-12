@@ -64,11 +64,11 @@ class DHCPWatcher:
         try:
             ip = _decode_dhcp_option(options, REQUESTED_ADDR)
             hostname = _decode_dhcp_option(options, HOSTNAME)
-            mac = _format_mac(packet[Ether].src)
-            _LOGGER.warning(f"Host {hostname} ({mac}) requested {ip}")
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.debug("Error decoding DHCP packet: %s", ex)
             return
+
+        mac = _format_mac(packet[Ether].src)
 
         if ip is None or hostname is None or mac is None:
             return
