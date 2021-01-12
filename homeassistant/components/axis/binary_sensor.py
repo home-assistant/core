@@ -103,7 +103,7 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
         """Return the name of the event."""
         if (
             self.event.CLASS == CLASS_INPUT
-            and self.event.id
+            and self.event.id in self.device.api.vapix.ports
             and self.device.api.vapix.ports[self.event.id].name
         ):
             return (
