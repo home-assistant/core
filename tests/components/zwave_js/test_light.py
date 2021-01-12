@@ -83,11 +83,23 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_COLOR_TEMP] == 370
 
+    # Test turning on with same brightness
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY, ATTR_BRIGHTNESS: 255},
+        blocking=True,
+    )
+
+    assert len(client.async_send_json_message.call_args_list) == 0
+
+    client.async_send_json_message.reset_mock()
+
     # Test turning on with brightness
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY, "brightness": 129},
+        {"entity_id": BULB_6_MULTI_COLOR_LIGHT_ENTITY, ATTR_BRIGHTNESS: 129},
         blocking=True,
     )
 
