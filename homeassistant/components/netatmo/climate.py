@@ -497,11 +497,11 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 "module_id": None,
                 "heating_status": None,
                 "heating_power_request": None,
-                "selected_schedule": self._data._get_selected_schedule(
+                "selected_schedule": self._data._get_selected_schedule(  # pylint: disable=protected-access
                     home_id=self._home_id
                 ).get(
                     "name"
-                ),  # pylint: disable=W0212
+                ),
             }
 
             batterylevel = None
