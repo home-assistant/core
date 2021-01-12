@@ -83,7 +83,7 @@ async def test_invalid_credentials(hass):
 
 
 async def test_valid_credentials(hass):
-    """Test handle invalid credentials."""
+    """Test handle valid credentials."""
     mocked_client = _create_mocked_client(False, False)
     with patch(
         "homeassistant.components.qbittorrent.client.Client",
@@ -110,9 +110,9 @@ async def test_valid_credentials(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == test_url
-assert result["data"][CONF_URL] == test_url
-assert result["data"][CONF_USERNAME] == test_username
-assert result["data"][CONF_PASSWORD] == test_password
+    assert result["data"][CONF_URL] == test_url
+    assert result["data"][CONF_USERNAME] == test_username
+    assert result["data"][CONF_PASSWORD] == test_password
 
 def _create_mocked_client(raise_request_exception=False, raise_login_exception=False):
     mocked_client = MagicMock()
