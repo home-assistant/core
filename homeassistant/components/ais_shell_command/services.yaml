@@ -47,3 +47,10 @@ set_io_scheduler:
     scheduler:
       description: Tryb zarządzania I/O. Domyślnie noop, inne możliwe wartości to deadline cfq.
       example: 'noop'
+
+restart_pm2_service:
+  description: Restart serwisu PM2 (ais, ftp, mqtt, tunnel, webssh...)
+  fields:
+    service:
+      description: Serwis do restartu
+      example: 'tunnel'

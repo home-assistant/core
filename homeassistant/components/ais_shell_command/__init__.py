@@ -37,6 +37,9 @@ async def async_setup(hass, config):
     async def execute_restart(service):
         await _execute_restart(hass, service)
 
+    async def restart_pm2_service(service):
+        await _restart_pm2_service(hass, service)
+
     async def execute_stop(service):
         await _execute_stop(hass, service)
 
@@ -96,6 +99,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "execute_command", execute_command)
     hass.services.async_register(DOMAIN, "execute_script", execute_script)
     hass.services.async_register(DOMAIN, "execute_restart", execute_restart)
+    hass.services.async_register(DOMAIN, "restart_pm2_service", restart_pm2_service)
     hass.services.async_register(DOMAIN, "execute_stop", execute_stop)
     hass.services.async_register(DOMAIN, "key_event", key_event)
     hass.services.async_register(
@@ -464,6 +468,19 @@ async def _execute_restart(hass, call):
         return
 
     subprocess.Popen("su -c reboot", shell=True, stdout=None, stderr=None)  # nosec
+
+
+async def _restart_pm2_service(hass, call):
+    import subprocess
+
+    service = call.data["service"]
+    await hass.services.async_call(
+        "ais_ai_service", "say_it", {"text": "Restartuje serwis " + service}
+    )
+
+    subprocess.Popen(
+        "pm2 restart " + service, shell=True, stdout=None, stderr=None  # nosec
+    )
 
 
 async def _execute_stop(hass, call):
