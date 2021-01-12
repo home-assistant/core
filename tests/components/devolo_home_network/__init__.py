@@ -8,6 +8,18 @@ from tests.common import MockConfigEntry
 
 IP = "1.1.1.1"
 
+CONNECTED_STATIONS = {
+    "connected_stations": [
+        {
+            "mac_address": "AA:BB:CC:DD:EE:FF",
+            "vap_type": "WIFI_VAP_MAIN_AP",
+            "band": "WIFI_BAND_5G",
+            "rx_rate": 87800,
+            "tx_rate": 87800,
+        }
+    ],
+}
+
 DISCOVERY_INFO = {
     "host": IP,
     "port": 14791,
