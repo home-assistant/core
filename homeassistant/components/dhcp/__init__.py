@@ -1,45 +1,57 @@
 """The dhcp integration."""
-import asyncio
 
-from homeassistant.config_entries import ConfigEntry
+import logging
+
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+_LOGGER = logging.getLogger(__name__)
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
-PLATFORMS = ["light"]
+from scapy import DHCP, AsyncSniffer, Ether
+
+from .const import DOMAIN
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the dhcp component."""
-    return True
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up dhcp from a config entry."""
-    # TODO Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
-
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
-
-    return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
+    dhcp_watcher = AsyncSniffer(
+        filter="udp and (port 67 or 68)", prn=_handle_dhcp_packet
     )
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+    dhcp_watcher.start()
 
-    return unload_ok
+    return True
+
+
+def _extact_option(dhcp_options, key):
+
+    must_decode = ["hostname", "domain", "vendor_class_id"]
+    try:
+        for i in dhcp_options:
+            if i[0] == key:
+                # If DHCP Server Returned multiple name servers
+                # return all as comma separated string.
+                if key == "name_server" and len(i) > 2:
+                    return ",".join(i[1:])
+                # domain and hostname are binary strings,
+                # decode to unicode string before returning
+                elif key in must_decode:
+                    return i[1].decode()
+                else:
+                    return i[1]
+    except:
+        pass
+
+
+def _handle_dhcp_packet(packet):
+    if DHCP not in packet:
+        return
+
+    # DHCP request
+    if packet[DHCP].options[0][1] == 3:
+        requested_addr = _extact_option(packet[DHCP].options, "requested_addr")
+        hostname = _extact_option(packet[DHCP].options, "hostname")
+        _LOGGER.warning(
+            f"Host {hostname} ({packet[Ether].src}) requested {requested_addr}"
+        )
+
+    return
