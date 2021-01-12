@@ -135,4 +135,4 @@ def _decode_dhcp_option(dhcp_options, key):
 
 def _format_mac(mac):
     """Format a mac address for matching."""
-    return format_mac(mac).strip(":")
+    return format_mac(mac).replace(":", "")
