@@ -290,8 +290,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                 and green_val.value is not None
                 and blue_val.value is not None
             ):
-                self._hs = color_util.color_RGB_to_hs(
-                    red_val.value, green_val.value, blue_val.value
+                self._hs_color = list(
+                    color_util.color_RGB_to_hs(
+                        red_val.value, green_val.value, blue_val.value
+                    )
                 )
 
         # White colors
@@ -320,3 +322,4 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         elif ww_val or cw_val:
             # only one white channel
             self._supports_white_value = True
+            # FIXME: Update self._white_value
