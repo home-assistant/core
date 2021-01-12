@@ -8,6 +8,7 @@ import async_timeout
 import attr
 from hass_nabucasa import Cloud, auth, thingtalk
 from hass_nabucasa.const import STATE_DISCONNECTED
+from hass_nabucasa.voice import MAP_VOICE
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -37,6 +38,7 @@ from .const import (
     PREF_GOOGLE_DEFAULT_EXPOSE,
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
+    PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
     InvalidTrustedNetworks,
     InvalidTrustedProxies,
@@ -115,6 +117,7 @@ async def async_setup(hass):
     async_register_command(alexa_sync)
 
     async_register_command(thingtalk_convert)
+    async_register_command(tts_info)
 
     hass.http.register_view(GoogleActionsSyncView)
     hass.http.register_view(CloudLoginView)
@@ -385,6 +388,9 @@ async def websocket_subscription(hass, connection, msg):
         vol.Optional(PREF_ALEXA_DEFAULT_EXPOSE): [str],
         vol.Optional(PREF_GOOGLE_DEFAULT_EXPOSE): [str],
         vol.Optional(PREF_GOOGLE_SECURE_DEVICES_PIN): vol.Any(None, str),
+        vol.Optional(PREF_TTS_DEFAULT_VOICE): vol.All(
+            vol.Coerce(tuple), vol.In(MAP_VOICE)
+        ),
     }
 )
 async def websocket_update_prefs(hass, connection, msg):
@@ -637,3 +643,11 @@ async def thingtalk_convert(hass, connection, msg):
             )
         except thingtalk.ThingTalkConversionError as err:
             connection.send_error(msg["id"], ws_const.ERR_UNKNOWN_ERROR, str(err))
+
+
+@websocket_api.websocket_command({"type": "cloud/tts/info"})
+def tts_info(hass, connection, msg):
+    """Fetch available tts info."""
+    connection.send_result(
+        msg["id"], {"languages": [(lang, gender.value) for lang, gender in MAP_VOICE]}
+    )
