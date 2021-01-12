@@ -122,6 +122,16 @@ def split_entity_id(entity_id: str) -> List[str]:
     return entity_id.split(".", 1)
 
 
+def humanize_entity_id(entity_id: str) -> str:
+    """Convert an entity ID into a human friendly version."""
+    return humanize_entity_name(split_entity_id(entity_id)[1])
+
+
+def humanize_entity_name(entity_name: str) -> str:
+    """Convert an entity name into a human friendly version."""
+    return entity_name.replace("_", " ").capitalize()
+
+
 VALID_ENTITY_ID = re.compile(r"^(?!.+__)(?!_)[\da-z_]+(?<!_)\.(?!_)[\da-z_]+(?<!_)$")
 
 
@@ -885,8 +895,8 @@ class State:
     @property
     def name(self) -> str:
         """Name of this state."""
-        return self.attributes.get(ATTR_FRIENDLY_NAME) or self.object_id.replace(
-            "_", " "
+        return self.attributes.get(ATTR_FRIENDLY_NAME) or humanize_entity_name(
+            self.object_id
         )
 
     def as_dict(self) -> Dict:

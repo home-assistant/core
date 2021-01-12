@@ -508,7 +508,7 @@ def test_state_object_id():
 def test_state_name_if_no_friendly_name_attr():
     """Test if there is no friendly name."""
     state = ha.State("domain.hello_world", "world")
-    assert state.name == "hello world"
+    assert state.name == "Hello world"
 
 
 def test_state_name_if_friendly_name_attr():
@@ -516,6 +516,16 @@ def test_state_name_if_friendly_name_attr():
     name = "Some Unique Name"
     state = ha.State("domain.hello_world", "world", {ATTR_FRIENDLY_NAME: name})
     assert state.name == name
+
+
+def test_humanize_entity_id():
+    """Test the humanize function for entity IDs."""
+    assert ha.humanize_entity_id("domain.hello_world") == "Hello world"
+
+
+def test_humanize_name():
+    """Test the humanize function for entity names."""
+    assert ha.humanize_entity_name("hello_world") == "Hello world"
 
 
 def test_state_dict_conversion():
