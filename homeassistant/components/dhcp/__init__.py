@@ -64,7 +64,7 @@ class DHCPWatcher:
         try:
             ip = _decode_dhcp_option(options, REQUESTED_ADDR)
             hostname = _decode_dhcp_option(options, HOSTNAME)
-            mac = format_mac(packet[Ether].src)
+            mac = _format_mac(packet[Ether].src)
             _LOGGER.warning(f"Host {hostname} ({mac}) requested {ip}")
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.debug("Error decoding DHCP packet: %s", ex)
@@ -131,3 +131,8 @@ def _decode_dhcp_option(dhcp_options, key):
             continue
         # hostname is unicode
         return i[1].decode() if key == HOSTNAME else i[1]
+
+
+def _format_mac(mac):
+    """Format a mac address for matching."""
+    return format_mac(mac).strip(":")
