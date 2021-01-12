@@ -126,6 +126,12 @@ class TadoZoneSensor(TadoZoneEntity, Entity):
             return None
 
     @property
+    def device_class(self):
+        """Return the device class."""
+        if self.zone_variable == "humidity":
+            return self.zone_variable
+
+    @property
     def icon(self):
         """Icon for the sensor."""
         if self.zone_variable == "temperature":
