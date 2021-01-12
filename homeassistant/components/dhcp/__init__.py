@@ -124,4 +124,4 @@ def _decode_dhcp_option(dhcp_options, key):
         if i[0] != key:
             continue
         # hostname is unicode
-        return i[1].decode() if key == HOSTNAME else i[i]
+        return i[1].decode() if key == HOSTNAME else i[1]
