@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
-from scapy import DHCP, AsyncSniffer, Ether
+from scapy.all import DHCP, AsyncSniffer, Ether
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 
