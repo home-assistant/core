@@ -269,7 +269,7 @@ class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
                 self._hub.write_registers(
                     self._slave, self._register, [int(float(i)) for i in value]
                 )
-            else:          
+            else:
                 self._hub.write_register(self._slave, self._register, value)
         except ConnectionException:
             self._available = False
