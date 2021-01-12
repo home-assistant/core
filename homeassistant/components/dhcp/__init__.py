@@ -11,6 +11,8 @@ from scapy import DHCP, AsyncSniffer, Ether
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 
 FILTER = "udp and (port 67 or 68)"
+REQUESTED_ADDR = "requested_addr"
+HOSTNAME = "hostname"
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -32,7 +34,7 @@ def _decode_option(dhcp_options, key):
             if i[0] != key:
                 continue
             # hostname is unicode
-            return i[1].decode() if key == "hostname" else i[i]
+            return i[1].decode() if key == HOSTNAME else i[i]
     except Exception:  # pylint: disable=broad-except
         pass
 
@@ -45,8 +47,8 @@ def _handle_dhcp_packet(packet):
     # DHCP request
     if packet[DHCP].options[0][1] == 3:
         options = packet[DHCP].options
-        requested_addr = _decode_option(options, "requested_addr")
-        hostname = _decode_option(options, "hostname")
+        requested_addr = _decode_option(options, REQUESTED_ADDR)
+        hostname = _decode_option(options, HOSTNAME)
         _LOGGER.warning(
             f"Host {hostname} ({packet[Ether].src}) requested {requested_addr}"
         )
