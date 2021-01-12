@@ -172,25 +172,18 @@ async def async_get_zeroconf(hass: "HomeAssistant") -> Dict[str, List[Dict[str, 
     return zeroconf
 
 
-async def async_get_dhcp(hass: "HomeAssistant") -> Dict[str, List[Dict[str, str]]]:
+async def async_get_dhcp(hass: "HomeAssistant") -> List[Dict[str, str]]:
     """Return cached list of dhcp types."""
-    dhcp: Dict[str, List[Dict[str, str]]] = DHCP.copy()
+    dhcp: List[Dict[str, str]] = DHCP.copy()
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if not integration.dhcp:
             continue
+        # TODO: should we remove integrtions that already exist in the list
+        # that are overridden as custom?
         for entry in integration.dhcp:
-            data = {"domain": integration.domain}
-            if isinstance(entry, dict):
-                typ = entry["type"]
-                entry_without_type = entry.copy()
-                del entry_without_type["type"]
-                data.update(entry_without_type)
-            else:
-                typ = entry
-
-            dhcp.setdefault(typ, []).append(data)
+            dhcp.append({"domain": integration.domain, **entry})
 
     return dhcp
 
