@@ -177,7 +177,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert blue_args["valueId"]["propertyName"] == "targetColor"
     assert blue_args["value"] == 255
 
-    # Test color update from value updated event
+    # Test rgb color update from value updated event
     red_event = Event(
         type="value updated",
         data={
@@ -290,6 +290,50 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
 
     client.async_send_json_message.reset_mock()
 
+    # Test color temp update from value updated event
+    red_event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 39,
+            "args": {
+                "commandClassName": "Color Switch",
+                "commandClass": 51,
+                "endpoint": 0,
+                "property": "currentColor",
+                "newValue": 0,
+                "prevValue": 255,
+                "propertyKeyName": "Red",
+            },
+        },
+    )
+    green_event = deepcopy(red_event)
+    green_event.data["args"].update(
+        {"newValue": 0, "prevValue": 76, "propertyKeyName": "Green"}
+    )
+    blue_event = deepcopy(red_event)
+    blue_event.data["args"]["propertyKeyName"] = "Blue"
+    warm_white_event = deepcopy(red_event)
+    warm_white_event.data["args"].update(
+        {"newValue": 20, "propertyKeyName": "Warm White"}
+    )
+    cold_white_event = deepcopy(red_event)
+    cold_white_event.data["args"].update(
+        {"newValue": 235, "propertyKeyName": "Cold White"}
+    )
+    node.receive_event(red_event)
+    node.receive_event(green_event)
+    node.receive_event(blue_event)
+    node.receive_event(warm_white_event)
+    node.receive_event(cold_white_event)
+
+    state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 255
+    assert state.attributes[ATTR_COLOR_TEMP] == 170
+    assert state.attributes[ATTR_RGB_COLOR] == (255, 255, 255)
+
     # Test turning off
     await hass.services.async_call(
         "light",
@@ -319,5 +363,3 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         },
     }
     assert args["value"] == 0
-
-    print(state.attributes)
