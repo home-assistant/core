@@ -97,7 +97,7 @@ class DiscordNotificationService(BaseNotificationService):
                         files = []
                         for image in images:
                             files.append(discord.File(image))
-                    if ATTR_EMBED in data:
+                    if embedding:
                         embed = discord.Embed(**embedding)
                         if fields:
                             for field_num, field_name in enumerate(fields):
