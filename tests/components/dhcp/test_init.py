@@ -2,6 +2,7 @@
 import threading
 from unittest.mock import patch
 
+from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
 from scapy.layers.l2 import Ether
 
@@ -247,6 +248,27 @@ async def test_setup_and_stop(hass):
         wait_event.wait()
 
     with patch("homeassistant.components.dhcp.sniff", _sniff_wait):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    wait_event.set()
+
+
+async def test_setup_fails(hass):
+    """Test we handle sniff setup failing."""
+
+    assert await async_setup_component(
+        hass,
+        dhcp.DOMAIN,
+        {},
+    )
+    await hass.async_block_till_done()
+
+    wait_event = threading.Event()
+
+    with patch("homeassistant.components.dhcp.sniff", side_effect=Scapy_Exception):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 

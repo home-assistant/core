@@ -4,6 +4,7 @@ import fnmatch
 import logging
 from threading import Event, Thread
 
+from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
 from scapy.layers.l2 import Ether
 from scapy.sendrecv import sniff
@@ -67,7 +68,7 @@ class DHCPWatcher(Thread):
                 prn=self.handle_dhcp_packet,
                 stop_filter=lambda _: self._stop_event.is_set(),
             )
-        except Exception as ex:  # pylint: disable=broad-except
+        except (Scapy_Exception, OSError) as ex:  # pylint: disable=broad-except
             _LOGGER.info("Cannot watch for dhcp packets: %s", ex)
             return
 
@@ -84,12 +85,8 @@ class DHCPWatcher(Thread):
             # DHCP request
             return
 
-        try:
-            ip_address = _decode_dhcp_option(options, REQUESTED_ADDR)
-            hostname = _decode_dhcp_option(options, HOSTNAME)
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.debug("Error decoding DHCP packet: %s", ex)
-            return
+        ip_address = _decode_dhcp_option(options, REQUESTED_ADDR)
+        hostname = _decode_dhcp_option(options, HOSTNAME)
 
         mac_address = _format_mac(packet[Ether].src)
 
@@ -150,8 +147,14 @@ def _decode_dhcp_option(dhcp_options, key):
         if value is None:
             return None
 
+        if key != HOSTNAME:
+            return value
+
         # hostname is unicode
-        return value.decode() if key == HOSTNAME else value
+        try:
+            return value.decode()
+        except (AttributeError, UnicodeDecodeError):
+            return None
 
 
 def _format_mac(mac_address):
