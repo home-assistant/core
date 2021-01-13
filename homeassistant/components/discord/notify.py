@@ -51,6 +51,7 @@ class DiscordNotificationService(BaseNotificationService):
         discord.VoiceClient.warn_nacl = False
         discord_bot = discord.Client()
         images = None
+        embedding = None
 
         if ATTR_TARGET not in kwargs:
             _LOGGER.error("No target specified")
