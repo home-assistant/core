@@ -283,6 +283,106 @@ async def test_climate_cannot_set_thermostat_temp_range_in_wrong_mode(hass, utcn
     assert helper.characteristics[THERMOSTAT_TEMPERATURE_COOLING_THRESHOLD].value == 0
 
 
+def create_thermostat_single_set_point_auto(accessory):
+    """Define thermostat characteristics with a single set point in auto."""
+    service = accessory.add_service(ServicesTypes.THERMOSTAT)
+
+    char = service.add_char(CharacteristicsTypes.HEATING_COOLING_TARGET)
+    char.value = 0
+
+    char = service.add_char(CharacteristicsTypes.HEATING_COOLING_CURRENT)
+    char.value = 0
+
+    char = service.add_char(CharacteristicsTypes.TEMPERATURE_TARGET)
+    char.minValue = 7
+    char.maxValue = 35
+    char.value = 0
+
+    char = service.add_char(CharacteristicsTypes.TEMPERATURE_CURRENT)
+    char.value = 0
+
+    char = service.add_char(CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET)
+    char.value = 0
+
+    char = service.add_char(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
+    char.value = 0
+
+
+async def test_climate_check_min_max_values_per_mode_sspa_device(hass, utcnow):
+    """Test appropriate min/max values for each mode on sspa devices."""
+    helper = await setup_test_component(hass, create_thermostat_single_set_point_auto)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVAC_MODE_HEAT},
+        blocking=True,
+    )
+    climate_state = await helper.poll_and_get_state()
+    assert climate_state.attributes["min_temp"] == 7
+    assert climate_state.attributes["max_temp"] == 35
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVAC_MODE_COOL},
+        blocking=True,
+    )
+    climate_state = await helper.poll_and_get_state()
+    assert climate_state.attributes["min_temp"] == 7
+    assert climate_state.attributes["max_temp"] == 35
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVAC_MODE_HEAT_COOL},
+        blocking=True,
+    )
+    climate_state = await helper.poll_and_get_state()
+    assert climate_state.attributes["min_temp"] == 7
+    assert climate_state.attributes["max_temp"] == 35
+
+
+async def test_climate_set_thermostat_temp_on_sspa_device(hass, utcnow):
+    """Test setting temperature in different modes on device with single set point in auto."""
+    helper = await setup_test_component(hass, create_thermostat_single_set_point_auto)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVAC_MODE_HEAT},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {"entity_id": "climate.testdevice", "temperature": 21},
+        blocking=True,
+    )
+    assert helper.characteristics[TEMPERATURE_TARGET].value == 21
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": "climate.testdevice", "hvac_mode": HVAC_MODE_HEAT_COOL},
+        blocking=True,
+    )
+    assert helper.characteristics[TEMPERATURE_TARGET].value == 21
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.testdevice",
+            "hvac_mode": HVAC_MODE_HEAT_COOL,
+            "temperature": 22,
+        },
+        blocking=True,
+    )
+    assert helper.characteristics[TEMPERATURE_TARGET].value == 22
+
+
 async def test_climate_change_thermostat_humidity(hass, utcnow):
     """Test that we can turn a HomeKit thermostat on and off again."""
     helper = await setup_test_component(hass, create_thermostat_service)
