@@ -90,6 +90,12 @@ ZEROCONF = {
             "domain": "ipp"
         }
     ],
+    "_kizbox_tcp.local.": [
+        {
+            "domain": "somfy",
+            "name": "gateway*"
+        }
+    ],
     "_mediaremotetv._tcp.local.": [
         {
             "domain": "apple_tv"
