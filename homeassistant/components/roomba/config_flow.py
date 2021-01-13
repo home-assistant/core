@@ -107,7 +107,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual()
 
         return self.async_show_form(
-            step_id="init",
+            step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Optional("host"): vol.In(
