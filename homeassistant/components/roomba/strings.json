@@ -10,7 +10,7 @@
       },
       "manual": {
         "title": "Manually connect to the device",
-        "description": "No Roomba or Braava have been discovered on your network. The BLID is the portion of the device hostname after `iRobot-`. Please follow the steps outlined in the documentation at: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+        "description": "No Roomba or Braava have been discovered on your network. The BLID is the portion of the device hostname after `iRobot-`. Please follow the steps outlined in the documentation at: {auth_help_url}",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "blid": "BLID"
@@ -22,7 +22,7 @@
       },
       "link_manual": {
         "title": "Enter Password",
-        "description": "The password could not be retrivied from the device automaticlly. Please follow the steps outlined in the documentation at: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+        "description": "The password could not be retrivied from the device automatically. Please follow the steps outlined in the documentation at: {auth_help_url}",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }
