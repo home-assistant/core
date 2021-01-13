@@ -7,8 +7,7 @@
         "step": {
             "user": {
                 "data": {},
-                "description": "[%key:common::config_flow::description::confirm_setup%]",
-                "title": "Kraken.com"
+                "description": "[%key:common::config_flow::description::confirm_setup%]"
             }
         }
     },
