@@ -2,7 +2,7 @@
 import asyncio
 import json
 import logging
-from typing import Optional
+from typing import Dict, Optional
 
 import aiohttp
 import async_timeout
@@ -12,7 +12,7 @@ from homeassistant.core import State
 import homeassistant.util.dt as dt_util
 
 from .const import API_CHANGE, Cause
-from .entities import ENTITY_ADAPTERS, generate_alexa_id
+from .entities import ENTITY_ADAPTERS, AlexaEntity, generate_alexa_id
 from .messages import AlexaResponse
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ async def async_enable_proactive_mode(hass, smart_home_config):
     # Validate we can get access token.
     await smart_home_config.async_get_access_token()
 
-    progress = set()
+    progress: Dict[str, AlexaEntity] = {}
 
     async def async_entity_state_listener(
         changed_entity: str,
@@ -40,9 +40,6 @@ async def async_enable_proactive_mode(hass, smart_home_config):
         if not new_state:
             return
 
-        if changed_entity in progress:
-            return
-
         if new_state.domain not in ENTITY_ADAPTERS:
             return
 
@@ -50,14 +47,17 @@ async def async_enable_proactive_mode(hass, smart_home_config):
             _LOGGER.debug("Not exposing %s because filtered by config", changed_entity)
             return
 
-        alexa_changed_entity = ENTITY_ADAPTERS[new_state.domain](
+        alexa_changed_entity: AlexaEntity = ENTITY_ADAPTERS[new_state.domain](
             hass, smart_home_config, new_state
         )
-        # this sends all the properties of the Alexa Entity, whether they have
-        # changed or not. this should be improved, and properties that have not
-        # changed should be moved to the 'context' object
-        alexa_properties = list(alexa_changed_entity.serialize_properties())
 
+        # Queue up entity to be sent later.
+        # If two states come in while we are reporting the state, only the last one will be reported.
+        if changed_entity in progress:
+            progress[changed_entity] = alexa_changed_entity
+            return
+
+        # Determine how entity should be reported on
         should_report = False
         should_doorbell = False
 
@@ -78,30 +78,48 @@ async def async_enable_proactive_mode(hass, smart_home_config):
         if should_doorbell:
             should_report = False
 
-        if should_report:
-            if old_state and old_state.state == new_state.state:
-                old_alexa_entity = ENTITY_ADAPTERS[old_state.domain](
-                    hass, smart_home_config, old_state
-                )
-                old_alexa_properties = list(old_alexa_entity.serialize_properties())
-                if old_alexa_properties == alexa_properties:
-                    return
+        # Store current state change information
+        last_state: Optional[AlexaEntity] = None
+        if old_state:
+            last_state = ENTITY_ADAPTERS[old_state.domain](
+                hass, smart_home_config, old_state
+            )
+        progress[changed_entity] = alexa_changed_entity
 
-        try:
-            progress.add(changed_entity)
+        # Start reporting on entity. Keep reporting as long as new states come in
+        # while we were reporting a state.
+        while last_state != progress[changed_entity]:
+            to_report = progress[changed_entity]
+            alexa_properties = None
 
             if should_report:
-                await async_send_changereport_message(
-                    hass, smart_home_config, alexa_changed_entity, alexa_properties
-                )
+                # this sends all the properties of the Alexa Entity, whether they have
+                # changed or not. this should be improved, and properties that have not
+                # changed should be moved to the 'context' object
+                alexa_properties = list(alexa_changed_entity.serialize_properties())
 
-            elif should_doorbell:
-                await async_send_doorbell_event_message(
-                    hass, smart_home_config, alexa_changed_entity
-                )
+                if last_state and last_state.entity.state == to_report.entity.state:
+                    old_alexa_properties = list(last_state.serialize_properties())
+                    if old_alexa_properties == alexa_properties:
+                        return
 
-        finally:
-            progress.discard(changed_entity)
+            try:
+                if should_report:
+                    await async_send_changereport_message(
+                        hass, smart_home_config, alexa_changed_entity, alexa_properties
+                    )
+
+                elif should_doorbell:
+                    await async_send_doorbell_event_message(
+                        hass, smart_home_config, alexa_changed_entity
+                    )
+            except Exception:
+                progress.pop(changed_entity)
+                raise
+
+            last_state = to_report
+
+        progress.pop(changed_entity)
 
     return hass.helpers.event.async_track_state_change(
         MATCH_ALL, async_entity_state_listener

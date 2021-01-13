@@ -1,6 +1,6 @@
 """Test report state."""
 import asyncio
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from homeassistant import core
 from homeassistant.components.alexa import state_report
@@ -239,22 +239,39 @@ async def test_proactive_mode_filter_states(hass, aioclient_mock):
     await hass.async_block_till_done()
     assert len(aioclient_mock.mock_calls) == 0
 
+
+async def test_proactive_mode_filter_in_progress(hass, aioclient_mock):
+    """When in progress, queue up state."""
+    hass.states.async_set(
+        "binary_sensor.test_contact",
+        "off",
+        {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+    )
+
+    await state_report.async_enable_proactive_mode(hass, DEFAULT_CONFIG)
+
     # Progress should filter out the 2nd event.
     long_sendchange = asyncio.Event()
 
     with patch(
         "homeassistant.components.alexa.state_report.async_send_changereport_message",
-        lambda *args: long_sendchange.wait(),
-    ):
+        Mock(side_effect=lambda *args: long_sendchange.wait()),
+    ) as mock_report:
         hass.states.async_set(
             "binary_sensor.test_contact",
             "on",
-            {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+            {
+                "friendly_name": "Test Contact Sensor",
+                "device_class": "door",
+                "update": 1,
+            },
         )
 
         await asyncio.sleep(0)
         await asyncio.sleep(0)
         await asyncio.sleep(0)
+
+    assert len(mock_report.mock_calls) == 1
 
     with patch(
         "homeassistant.components.alexa.state_report.async_send_changereport_message",
@@ -262,7 +279,29 @@ async def test_proactive_mode_filter_states(hass, aioclient_mock):
         hass.states.async_set(
             "binary_sensor.test_contact",
             "off",
-            {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+            {
+                "friendly_name": "Test Contact Sensor",
+                "device_class": "door",
+                "update": 2,
+            },
+        )
+        hass.states.async_set(
+            "binary_sensor.test_contact",
+            "on",
+            {
+                "friendly_name": "Test Contact Sensor",
+                "device_class": "door",
+                "update": 3,
+            },
+        )
+        hass.states.async_set(
+            "binary_sensor.test_contact",
+            "off",
+            {
+                "friendly_name": "Test Contact Sensor",
+                "device_class": "door",
+                "update": 4,
+            },
         )
 
         await asyncio.sleep(0)
@@ -271,4 +310,6 @@ async def test_proactive_mode_filter_states(hass, aioclient_mock):
         long_sendchange.set()
         await hass.async_block_till_done()
 
-    assert len(mock_report_2.mock_calls) == 0
+    # Should be 1 because the 4rd state change
+    assert len(mock_report_2.mock_calls) == 1
+    mock_report_2.mock_calls[0][1][2].entity.attributes["update"] == 4
