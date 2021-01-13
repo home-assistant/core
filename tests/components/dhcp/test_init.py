@@ -233,7 +233,7 @@ async def test_dhcp_missing_hostname(hass):
 
 
 async def test_dhcp_invalid_option(hass):
-    """Test we ignore invalid requested_addr."""
+    """Test we ignore invalid hostname option."""
     dhcp_watcher = dhcp.DHCPWatcher(
         hass, [{"domain": "mock-domain", "hostname": "nomatch*"}]
     )
