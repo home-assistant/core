@@ -90,7 +90,7 @@ ZEROCONF = {
             "domain": "ipp"
         }
     ],
-    "_kizbox_tcp.local.": [
+    "_kizbox._tcp.local.": [
         {
             "domain": "somfy",
             "name": "gateway*"
