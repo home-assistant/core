@@ -25,6 +25,11 @@ DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELA
 
 MAX_NUM_DEVICES_TO_DISCOVER = 25
 
+AUTH_HELP_URL_KEY = "auth_help_url"
+AUTH_HELP_URL_VALUE = (
+    "https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials"
+)
+
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
@@ -68,11 +73,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input=None):
-        """Handle a flow initialized by the user."""
-        # This is for backwards compatibility.
-        return await self.async_step_init(user_input)
-
-    async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         # Check if user chooses manual entry
         if user_input is not None and not user_input.get(CONF_HOST):
@@ -107,7 +107,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual()
 
         return self.async_show_form(
-            step_id="init",
+            step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Optional("host"): vol.In(
@@ -129,6 +129,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="manual",
+                description_placeholders={AUTH_HELP_URL_KEY: AUTH_HELP_URL_VALUE},
                 data_schema=vol.Schema(
                     {vol.Required(CONF_HOST): str, vol.Required(CONF_BLID): str}
                 ),
@@ -155,9 +156,12 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="link")
 
-        password = await self.hass.async_add_executor_job(
-            RoombaPassword(self.host).get_password
-        )
+        try:
+            password = await self.hass.async_add_executor_job(
+                RoombaPassword(self.host).get_password
+            )
+        except ConnectionRefusedError:
+            return await self.async_step_link_manual()
 
         if not password:
             return await self.async_step_link_manual()
@@ -202,6 +206,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="link_manual",
+            description_placeholders={AUTH_HELP_URL_KEY: AUTH_HELP_URL_VALUE},
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             errors=errors,
         )
