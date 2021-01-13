@@ -1,0 +1,6 @@
+reboot_camera:
+  description: Reboots the camera
+  fields:
+    entity_id:
+      description: Name of the camera to reboot
+      example: camera.back_door

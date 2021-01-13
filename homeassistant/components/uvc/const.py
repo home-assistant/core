@@ -7,3 +7,5 @@ DOMAIN = "uvc"
 DEFAULT_PASSWORD = "ubnt"
 DEFAULT_PORT = 7080
 DEFAULT_SSL = False
+
+SERVICE_REBOOT = "reboot_camera"

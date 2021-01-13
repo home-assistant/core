@@ -16,10 +16,11 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
 )
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_PASSWORD, DEFAULT_PORT, DEFAULT_SSL, DOMAIN
+from .const import DEFAULT_PASSWORD, DEFAULT_PORT, DEFAULT_SSL, DOMAIN, SERVICE_REBOOT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,6 +77,15 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         ],
         True,
     )
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_REBOOT,
+        {},
+        "async_reboot",
+    )
+
     return True
 
 
@@ -262,6 +272,30 @@ class UnifiVideoCamera(CoordinatorEntity, Camera):
                 return uri
 
         return None
+
+    async def async_reboot(self):
+        """Reboots the camera."""
+        await self.hass.async_add_executor_job(self.reboot)
+
+    def reboot(self):
+        """Reboots the camera."""
+        if not self._camera:
+            if not self._login():
+                return
+
+        def _reboot(retry=True):
+            try:
+                return self._camera.reboot()
+            except uvc_camera.CameraConnectError:
+                _LOGGER.error("Unable to contact camera")
+            except uvc_camera.CameraAuthError:
+                if retry:
+                    self._login()
+                    return _reboot(retry=False)
+                _LOGGER.error("Unable to log into camera, unable to reboot")
+                raise
+
+        return _reboot()
 
 
 def timestamp_ms_to_date(epoch_ms) -> Optional[datetime]:
