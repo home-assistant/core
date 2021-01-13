@@ -84,7 +84,7 @@ async def test_form_user_discovery_and_password_fetch(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] is None
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -195,7 +195,7 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] is None
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -268,7 +268,7 @@ async def test_form_user_discovery_manual_and_auto_password_fetch_but_cannot_con
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] is None
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
