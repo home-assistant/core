@@ -68,7 +68,7 @@ class DHCPWatcher(Thread):
                 prn=self.handle_dhcp_packet,
                 stop_filter=lambda _: self._stop_event.is_set(),
             )
-        except (Scapy_Exception, OSError) as ex:  # pylint: disable=broad-except
+        except (Scapy_Exception, OSError) as ex:
             _LOGGER.info("Cannot watch for dhcp packets: %s", ex)
             return
 
