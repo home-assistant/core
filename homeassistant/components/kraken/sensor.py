@@ -93,6 +93,7 @@ class KrakenSensor(CoordinatorEntity):
         )
         self._received_data_at_least_once = False
         self._available = True
+        self._state = None
 
     @property
     def name(self):
@@ -107,10 +108,12 @@ class KrakenSensor(CoordinatorEntity):
     @property
     def state(self):
         """Return the state."""
+        return self._state
+
+    def _handle_coordinator_update(self):
         try:
-            state = self._try_get_state()
+            self._state = self._try_get_state()
             self._received_data_at_least_once = True  # Received data at least one time.
-            return state
         except TypeError:
             if self._received_data_at_least_once:
                 if self._available:
@@ -119,6 +122,7 @@ class KrakenSensor(CoordinatorEntity):
                         self._device_name,
                     )
                     self._available = False
+        return super()._handle_coordinator_update()
 
     def _try_get_state(self) -> str:
         """Try to get the state or return a TypeError."""
