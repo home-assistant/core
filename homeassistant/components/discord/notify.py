@@ -99,7 +99,7 @@ class DiscordNotificationService(BaseNotificationService):
                             files.append(discord.File(image))
                     if ATTR_EMBED in data:
                         embed = discord.Embed(**embedding)
-                        if ATTR_EMBED_FIELDS in embedding:
+                        if fields:
                             for field_num, field_name in enumerate(fields):
                                 embed.add_field(**fields[field_num])
                         if ATTR_EMBED_FOOTER in embedding:
