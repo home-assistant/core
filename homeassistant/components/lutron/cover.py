@@ -66,4 +66,4 @@ class LutronCover(LutronDevice, CoverEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {"Lutron Integration ID": self._lutron_device.id}
+        return {"lutron_integration_id": self._lutron_device.id}

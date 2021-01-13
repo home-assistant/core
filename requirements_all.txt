@@ -306,7 +306,7 @@ av==8.0.2
 # avion==0.10
 
 # homeassistant.components.axis
-axis==41
+axis==42
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.1.0
@@ -339,7 +339,7 @@ beautifulsoup4==4.9.1
 bellows==0.21.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.13
+bimmer_connected==0.7.14
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
