@@ -20,7 +20,6 @@ def mock_light_profiles():
 
     with patch(
         "homeassistant.components.light.Profiles",
-        SCHEMA=Profiles.SCHEMA,
         side_effect=mock_profiles_class,
     ):
         yield data

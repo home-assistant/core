@@ -1,8 +1,10 @@
 """Provides functionality to interact with lights."""
 import csv
+import dataclasses
 from datetime import timedelta
 import logging
 import os
+from typing import Dict, List, Optional, Tuple, cast
 
 import voluptuous as vol
 
@@ -21,6 +23,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
 
@@ -270,24 +273,74 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
-class Profiles:
-    """Representation of available color profiles."""
+def _coerce_none(value: str) -> None:
+    """Coerce an empty string as None."""
 
-    SCHEMA = vol.Schema(
+    if not isinstance(value, str):
+        raise vol.Invalid("Expected a string")
+
+    if value:
+        raise vol.Invalid("Not an empty string")
+
+
+@dataclasses.dataclass
+class Profile:
+    """Representation of a profile."""
+
+    name: str
+    color_x: Optional[float] = dataclasses.field(repr=False)
+    color_y: Optional[float] = dataclasses.field(repr=False)
+    brightness: Optional[int]
+    transition: Optional[int] = None
+    hs_color: Optional[Tuple[float, float]] = dataclasses.field(init=False)
+
+    SCHEMA = vol.Schema(  # pylint: disable=invalid-name
         vol.Any(
-            vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte)),
             vol.ExactSequence(
-                (str, cv.small_float, cv.small_float, cv.byte, cv.positive_int)
+                (
+                    str,
+                    vol.Any(cv.small_float, _coerce_none),
+                    vol.Any(cv.small_float, _coerce_none),
+                    vol.Any(cv.byte, _coerce_none),
+                )
+            ),
+            vol.ExactSequence(
+                (
+                    str,
+                    vol.Any(cv.small_float, _coerce_none),
+                    vol.Any(cv.small_float, _coerce_none),
+                    vol.Any(cv.byte, _coerce_none),
+                    vol.Any(VALID_TRANSITION, _coerce_none),
+                )
             ),
         )
     )
 
-    def __init__(self, hass):
+    def __post_init__(self) -> None:
+        """Convert xy to hs color."""
+        if None in (self.color_x, self.color_y):
+            self.hs_color = None
+            return
+
+        self.hs_color = color_util.color_xy_to_hs(
+            cast(float, self.color_x), cast(float, self.color_y)
+        )
+
+    @classmethod
+    def from_csv_row(cls, csv_row: List[str]) -> "Profile":
+        """Create profile from a CSV row tuple."""
+        return cls(*cls.SCHEMA(csv_row))
+
+
+class Profiles:
+    """Representation of available color profiles."""
+
+    def __init__(self, hass: HomeAssistantType):
         """Initialize profiles."""
         self.hass = hass
-        self.data = None
+        self.data: Dict[str, Profile] = {}
 
-    def _load_profile_data(self):
+    def _load_profile_data(self) -> Dict[str, Profile]:
         """Load built-in profiles and custom profiles."""
         profile_paths = [
             os.path.join(os.path.dirname(__file__), LIGHT_PROFILES_FILE),
@@ -306,56 +359,46 @@ class Profiles:
 
                 try:
                     for rec in reader:
-                        (
-                            profile,
-                            color_x,
-                            color_y,
-                            brightness,
-                            *transition,
-                        ) = Profiles.SCHEMA(rec)
+                        profile = Profile.from_csv_row(rec)
+                        profiles[profile.name] = profile
 
-                        transition = transition[0] if transition else 0
-
-                        profiles[profile] = color_util.color_xy_to_hs(
-                            color_x, color_y
-                        ) + (
-                            brightness,
-                            transition,
-                        )
                 except vol.MultipleInvalid as ex:
                     _LOGGER.error(
-                        "Error parsing light profile from %s: %s", profile_path, ex
+                        "Error parsing light profile row '%s' from %s: %s",
+                        rec,
+                        profile_path,
+                        ex,
                     )
                     continue
         return profiles
 
-    async def async_initialize(self):
+    async def async_initialize(self) -> None:
         """Load and cache profiles."""
         self.data = await self.hass.async_add_executor_job(self._load_profile_data)
 
     @callback
-    def apply_default(self, entity_id, params):
+    def apply_default(self, entity_id: str, params: Dict) -> None:
         """Return the default turn-on profile for the given light."""
-        name = f"{entity_id}.default"
-        if name in self.data:
-            self.apply_profile(name, params)
-            return
-
-        name = "group.all_lights.default"
-        if name in self.data:
-            self.apply_profile(name, params)
+        for _entity_id in (entity_id, "group.all_lights"):
+            name = f"{_entity_id}.default"
+            if name in self.data:
+                self.apply_profile(name, params)
+                return
 
     @callback
-    def apply_profile(self, name, params):
+    def apply_profile(self, name: str, params: Dict) -> None:
         """Apply a profile."""
         profile = self.data.get(name)
 
         if profile is None:
             return
 
-        params.setdefault(ATTR_HS_COLOR, profile[:2])
-        params.setdefault(ATTR_BRIGHTNESS, profile[2])
-        params.setdefault(ATTR_TRANSITION, profile[3])
+        if profile.hs_color is not None:
+            params.setdefault(ATTR_HS_COLOR, profile.hs_color)
+        if profile.brightness is not None:
+            params.setdefault(ATTR_BRIGHTNESS, profile.brightness)
+        if profile.transition is not None:
+            params.setdefault(ATTR_TRANSITION, profile.transition)
 
 
 class LightEntity(ToggleEntity):
