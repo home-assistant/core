@@ -306,7 +306,7 @@ av==8.0.2
 # avion==0.10
 
 # homeassistant.components.axis
-axis==41
+axis==42
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.1.0
