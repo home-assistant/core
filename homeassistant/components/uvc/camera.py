@@ -4,24 +4,26 @@ import logging
 import re
 from typing import Optional
 
-import requests
 from uvcclient import camera as uvc_camera, nvr
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
-from homeassistant.const import CONF_PORT, CONF_SSL
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+)
 import homeassistant.helpers.config_validation as cv
+
+from .const import DEFAULT_PASSWORD, DEFAULT_PORT, DEFAULT_SSL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_NVR = "nvr"
 CONF_KEY = "key"
-CONF_PASSWORD = "password"
-
-DEFAULT_PASSWORD = "ubnt"
-DEFAULT_PORT = 7080
-DEFAULT_SSL = False
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -34,40 +36,40 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up UVC integration."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_HOST: config["nvr"],
+                CONF_API_KEY: config["key"],
+                CONF_PASSWORD: config["password"],
+                CONF_PORT: config["port"],
+                CONF_SSL: config["ssl"],
+            },
+        )
+    )
+
+    return True
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
     """Discover cameras on a Unifi NVR."""
-    addr = config[CONF_NVR]
-    key = config[CONF_KEY]
-    password = config[CONF_PASSWORD]
-    port = config[CONF_PORT]
-    ssl = config[CONF_SSL]
 
-    try:
-        # Exceptions may be raised in all method calls to the nvr library.
-        nvrconn = nvr.UVCRemote(addr, port, key, ssl=ssl)
-        cameras = nvrconn.index()
+    nvrconn = hass.data[DOMAIN]["nvrconn"]
+    cameras = hass.data[DOMAIN]["cameras"]
+    identifier = hass.data[DOMAIN]["camera_id_field"]
 
-        identifier = "id" if nvrconn.server_version >= (3, 2, 0) else "uuid"
-        # Filter out airCam models, which are not supported in the latest
-        # version of UnifiVideo and which are EOL by Ubiquiti
-        cameras = [
-            camera
-            for camera in cameras
-            if "airCam" not in nvrconn.get_camera(camera[identifier])["model"]
-        ]
-    except nvr.NotAuthorized:
-        _LOGGER.error("Authorization failure while connecting to NVR")
-        return False
-    except nvr.NvrError as ex:
-        _LOGGER.error("NVR refuses to talk to me: %s", str(ex))
-        raise PlatformNotReady from ex
-    except requests.exceptions.ConnectionError as ex:
-        _LOGGER.error("Unable to connect to NVR: %s", str(ex))
-        raise PlatformNotReady from ex
-
-    add_entities(
+    async_add_devices(
         [
-            UnifiVideoCamera(nvrconn, camera[identifier], camera["name"], password)
+            UnifiVideoCamera(
+                nvrconn,
+                camera[identifier],
+                camera["name"],
+                hass.data[DOMAIN]["camera_password"],
+            )
             for camera in cameras
         ],
         True,
