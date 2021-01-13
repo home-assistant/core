@@ -68,8 +68,7 @@ async def test_switches_with_port_cgi(hass):
     device.api.vapix.ports["0"].close = AsyncMock()
     device.api.vapix.ports["1"].name = ""
 
-    for event in EVENTS:
-        device.api.event.process_event(event)
+    device.api.event.update(EVENTS)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
@@ -116,8 +115,7 @@ async def test_switches_with_port_management(hass):
     device.api.vapix.ports["0"].close = AsyncMock()
     device.api.vapix.ports["1"].name = ""
 
-    for event in EVENTS:
-        device.api.event.process_event(event)
+    device.api.event.update(EVENTS)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
