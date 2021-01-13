@@ -3,6 +3,6 @@
   "name": "StarLine",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/starline",
-  "requirements": ["starline==0.1.3"],
+  "requirements": ["starline==0.1.5"],
   "codeowners": ["@anonym-tsk"]
 }
