@@ -61,8 +61,7 @@ class DiscordNotificationService(BaseNotificationService):
 
         if ATTR_EMBED in data:
             embedding = data[ATTR_EMBED]
-            if ATTR_EMBED_FIELDS in embedding:
-                fields = embedding[ATTR_EMBED_FIELDS]
+            fields = embedding.get(ATTR_EMBED_FIELDS)
 
         if ATTR_IMAGES in data:
             images = []
