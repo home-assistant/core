@@ -9,7 +9,7 @@ from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["sensor", "media_player"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
