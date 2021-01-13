@@ -97,7 +97,7 @@ class WeatherEntity(Entity):
     @property
     def humidity(self):
         """Return the humidity."""
-        raise None
+        return None
 
     @property
     def wind_speed(self):
