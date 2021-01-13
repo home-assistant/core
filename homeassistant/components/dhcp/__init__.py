@@ -77,7 +77,10 @@ class DHCPWatcher(Thread):
             return
 
         options = packet[DHCP].options
-        if options[0][1] != DHCP_REQUEST:
+
+        _, request_type = options[0]
+
+        if request_type != DHCP_REQUEST:
             # DHCP request
             return
 
