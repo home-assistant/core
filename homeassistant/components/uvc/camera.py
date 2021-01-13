@@ -96,6 +96,15 @@ class UnifiVideoCamera(CoordinatorEntity, Camera):
         self._motion_status = False
 
     @property
+    def device_info(self):
+        """Device info."""
+        return {
+            "identifiers": {(DOMAIN, self._uuid)},
+            "manufacturer": "Ubiquiti",
+            "model": self._caminfo["model"],
+        }
+
+    @property
     def _caminfo(self):
         return self.coordinator.data[self._uuid]
 

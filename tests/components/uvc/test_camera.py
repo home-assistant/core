@@ -114,6 +114,14 @@ class TestUnifiVideoCamera(unittest.TestCase):
         ] = "MOTION_FINISHED"
         assert self.uvc.is_recording
 
+    def test_device_info(self):
+        """Test device information."""
+        assert {
+            ("uvc", "06e3ff29-8048-31c2-8574-0852d1bd0e03")
+        } == self.uvc.device_info["identifiers"]
+        assert "Ubiquiti" == self.uvc.device_info["manufacturer"]
+        assert "UVC Fake" == self.uvc.device_info["model"]
+
     def test_stream(self):
         """Test the RTSP stream URI."""
         stream_source = yield from self.uvc.stream_source()

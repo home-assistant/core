@@ -39,6 +39,15 @@ class UnifiVideoCameraConnectionSensor(CoordinatorEntity, BinarySensorEntity):
         self._name = name
 
     @property
+    def device_info(self):
+        """Device info."""
+        return {
+            "identifiers": {(DOMAIN, self._uuid)},
+            "manufacturer": "Ubiquiti",
+            "model": self.coordinator.data[self._uuid]["model"],
+        }
+
+    @property
     def name(self):
         """Return the name."""
         return "%s Connection Status" % self._name
