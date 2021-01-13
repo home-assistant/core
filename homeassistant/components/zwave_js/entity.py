@@ -83,15 +83,12 @@ class ZWaveBaseEntity(Entity):
         return self.client.connected and bool(self.info.node.ready)
 
     @callback
-    def _value_changed(self, event_data: Union[dict, ZwaveValue]) -> None:
+    def _value_changed(self, event_data: dict) -> None:
         """Call when (one of) our watched values changes.
 
         Should not be overridden by subclasses.
         """
-        if isinstance(event_data, ZwaveValue):
-            value_id = event_data.value_id
-        else:
-            value_id = event_data["value"].value_id
+        value_id = event_data["value"].value_id
 
         if value_id not in self.watched_value_ids:
             return
