@@ -101,7 +101,6 @@ def convert_include_exclude_filter(
             "automation.ais_change_player_speed",
             "automation.ais_change_remote_web_access",
             "automation.ais_check_wifi_connection",
-            "automation.ais_discovery_info_to_dom_devices",
             "automation.ais_execute_process_command_web_hook",
             "automation.ais_flush_logs",
             "automation.ais_get_books",

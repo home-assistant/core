@@ -49,9 +49,6 @@ async def async_setup(hass, config):
     async def scan_network_for_devices(service):
         await _scan_network_for_devices(hass, service)
 
-    async def scan_network_for_ais_players(service):
-        await _scan_network_for_ais_players(hass, service)
-
     async def scan_device(service):
         await _scan_device(hass, service)
 
@@ -104,9 +101,6 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "key_event", key_event)
     hass.services.async_register(
         DOMAIN, "scan_network_for_devices", scan_network_for_devices
-    )
-    hass.services.async_register(
-        DOMAIN, "scan_network_for_ais_players", scan_network_for_ais_players
     )
 
     hass.services.async_register(DOMAIN, "scan_device", scan_device)
@@ -623,41 +617,6 @@ async def _scan_ais_player(hass, call):
         session.get(url, hooks={"response": bg_cb}, timeout=2, verify=False)
     except Exception:
         pass
-    await hass.services.async_call("ais_shell_command", "scan_network_for_ais_players")
-
-
-async def _scan_network_for_ais_players(hass, call):
-    import homeassistant.components.ais_device_search_mqtt.sensor as dsm
-
-    global GLOBAL_X
-    my_ip = ais_global.get_my_global_ip()
-    if GLOBAL_X == 0:
-        GLOBAL_X += 1
-        # clear the value
-        dsm.MQTT_DEVICES = []
-        dsm.NET_DEVICES = []
-        dsm.DOM_DEVICES = []
-        # info
-        if ais_global.G_AIS_START_IS_DONE:
-            await hass.services.async_call(
-                "ais_ai_service", "say_it", {"text": "Wykrywam, to potrwa chwilę..."}
-            )
-        await hass.services.async_call(
-            "ais_shell_command", "scan_network_for_ais_players"
-        )
-    # 256
-    elif 0 < GLOBAL_X < 256:
-        GLOBAL_X += 1
-        # search android devices
-        rest_url = "http://{}.{}:8122"
-        url = rest_url.format(my_ip.rsplit(".", 1)[0], str(GLOBAL_X))
-
-        await hass.services.async_call(
-            "ais_shell_command", "scan_ais_player", {"url": url}
-        )
-    else:
-        GLOBAL_X = 0
-        # the search is done
 
 
 async def _scan_network_for_devices(hass, call):

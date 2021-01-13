@@ -60,7 +60,6 @@
      data:
        payload: 1
        topic: cmnd/dom/SetOption19
-   - service: ais_shell_command.scan_network_for_ais_players
    - service: mqtt.publish
      data:
        payload: 0
