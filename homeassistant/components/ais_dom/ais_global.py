@@ -65,8 +65,6 @@ G_NAME_FOR_AUDIO_NATURE = {
     G_AN_BOOKMARK: "Zakładki",
 }
 
-G_SPEAKERS_GROUP_LIST = ["media_player.wbudowany_glosnik"]
-
 # tokens
 G_OFFLINE_MODE = False
 

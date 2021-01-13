@@ -1,8 +1,4 @@
 # Describes the format for available AIS cloud services
-
-get_players:
-  description: Serwis wyszukujący dostępne odtwarzacze w Twojej sieci, ten serwis uruchamiany jest automatycznie przy starcie systemu AIS dom.
-
 get_podcast_names:
   description: Pobranie nazw podcastów dla wybranego typu
   fields:

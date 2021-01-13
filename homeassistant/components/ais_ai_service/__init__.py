@@ -2215,21 +2215,7 @@ async def async_process_json_from_frame(hass, json_req):
         hot_word_on = False
     if topic == "ais/player_auto_discovery":
         # parse the json storing the result on the response object
-        model = payload["Model"]
-        manufacturer = payload["Manufacturer"]
-        ip = payload["IPAddressIPv4"]
-        # add the device to the speakers lists
-        hass.async_add_job(
-            hass.services.async_call(
-                "ais_cloud",
-                "get_players",
-                {
-                    "device_name": model + " " + manufacturer,
-                    CONF_IP_ADDRESS: ip,
-                    "ais_gate_client_id": ais_gate_client_id,
-                },
-            )
-        )
+        pass
     elif topic == "ais/player_status":
         # try to get current volume
         try:
@@ -2258,10 +2244,6 @@ async def async_process_json_from_frame(hass, json_req):
                                 },
                             )
                         )
-    elif topic == "ais/player_status_ask":
-        hass.async_add_job(
-            hass.services.async_call("ais_exo_player", "player_status_ask")
-        )
     elif topic == "ais/speech_command":
         try:
             # TODO add info if the intent is media player type - to publish
@@ -2302,9 +2284,7 @@ async def async_process_json_from_frame(hass, json_req):
             )
         )
 
-        res = {
-            CONF_WEBHOOK_ID: payload[CONF_WEBHOOK_ID],
-        }
+        res = {CONF_WEBHOOK_ID: payload[CONF_WEBHOOK_ID]}
 
     elif topic == "ais/event":
         # tag_scanned event
@@ -3578,25 +3558,6 @@ def _post_message(
         )
     except Exception as e:
         pass
-    # do the same for speakers in the group
-    for s in ais_global.G_SPEAKERS_GROUP_LIST:
-        if s != "media_player.wbudowany_glosnik":
-            attr = hass.states.get(s).attributes
-            if "unique_id" in attr and attr["unique_id"] not in (
-                str(exclude_say_it),
-                "1111111111111111111",
-            ):
-                try:
-                    requests.post(
-                        ais_global.G_HTTP_REST_SERVICE_BASE_URL.format(
-                            attr["device_ip"]
-                        )
-                        + "/text_to_speech",
-                        json=j_data,
-                        timeout=1,
-                    )
-                except Exception:
-                    pass
 
 
 def _beep_it(hass, tone):
@@ -3718,11 +3679,7 @@ def _process_code(hass, data):
     CURR_BUTTON_CODE = code
     # show the code in web app
     hass.states.set("binary_sensor.ais_remote_button", code)
-    event_data = {
-        "action": action,
-        "code": code,
-        "long": CURR_BUTTON_LONG_PRESS,
-    }
+    event_data = {"action": action, "code": code, "long": CURR_BUTTON_LONG_PRESS}
     hass.bus.fire("ais_key_event", event_data)
 
     # remove selected action
@@ -4162,9 +4119,7 @@ class ToggleIntent(intent.IntentHandler):
                 success = True
             else:
                 await hass.services.async_call(
-                    entity.domain,
-                    SERVICE_TOGGLE,
-                    {ATTR_ENTITY_ID: entity.entity_id},
+                    entity.domain, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity.entity_id}
                 )
                 msg = f"OK, przełączono {entity.name}"
                 success = True

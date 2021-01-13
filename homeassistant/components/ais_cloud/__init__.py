@@ -24,7 +24,6 @@ from homeassistant.util import slugify
 DOMAIN = "ais_cloud"
 _LOGGER = logging.getLogger(__name__)
 CLOUD_APP_URL = "https://powiedz.co/ords/f?p=100:1&x01=TOKEN:"
-G_PLAYERS = []
 
 
 def check_url(url_address):
@@ -34,13 +33,6 @@ def check_url(url_address):
         return r.url
     except:
         return url_address
-
-
-# Get player id by his name
-def get_player_data(player_name):
-    for player in G_PLAYERS:
-        if player["friendly_name"] == player_name:
-            return player
 
 
 async def async_setup(hass, config):
@@ -70,9 +62,6 @@ async def async_setup(hass, config):
 
     def get_radio_names(call):
         data.get_radio_names(call)
-
-    def get_players(call):
-        data.get_players(call, hass)
 
     def play_audio(call):
         data.process_play_audio(call)
@@ -125,16 +114,12 @@ async def async_setup(hass, config):
     def change_audio_service(call):
         data.change_audio_service(call)
 
-    def send_audio_to_speaker(call):
-        data.send_audio_to_speaker(call)
-
     def enable_gate_pairing_by_pin(call):
         data.enable_gate_pairing_by_pin(call)
 
     # register services
     hass.services.async_register(DOMAIN, "get_radio_types", get_radio_types)
     hass.services.async_register(DOMAIN, "get_radio_names", get_radio_names)
-    hass.services.async_register(DOMAIN, "get_players", get_players)
     hass.services.async_register(DOMAIN, "play_audio", play_audio)
     hass.services.async_register(DOMAIN, "delete_audio", delete_audio)
     hass.services.async_register(DOMAIN, "get_podcast_types", get_podcast_types)
@@ -148,7 +133,6 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "play_prev", play_prev)
     hass.services.async_register(DOMAIN, "play_next", play_next)
     hass.services.async_register(DOMAIN, "change_audio_service", change_audio_service)
-    hass.services.async_register(DOMAIN, "send_audio_to_speaker", send_audio_to_speaker)
     hass.services.async_register(DOMAIN, "get_backup_info", get_backup_info)
     hass.services.async_register(DOMAIN, "set_backup_step", set_backup_step)
     hass.services.async_register(DOMAIN, "do_backup", do_backup)
@@ -190,11 +174,6 @@ async def async_setup(hass, config):
                                     },
                                 )
                             )
-                elif s == "load_platform.media_player":
-                    hass.async_add_job(
-                        hass.services.async_call("ais_cloud", "get_players")
-                    )
-
                 _LOGGER.info("Discovered device prepare remote menu!")
                 # prepare menu
                 hass.async_add_job(
@@ -304,10 +283,7 @@ async def websocket_report_ais_problem(hass, connection, msg):
     )
     connection.send_result(msg["id"], ais_answer)
     if "error" in ais_answer:
-        payload = {
-            "error": True,
-            "info": "AIS Error: " + ais_answer["message"],
-        }
+        payload = {"error": True, "info": "AIS Error: " + ais_answer["message"]}
         connection.send_result(msg["id"], payload)
         await hass.services.async_call(
             "ais_ai_service", "say_it", {"text": ais_answer["message"]}
@@ -327,9 +303,7 @@ async def websocket_report_ais_problem(hass, connection, msg):
 
 
 @websocket_api.websocket_command(
-    {
-        vol.Required("type"): "ais_cloud/confirm_ais_media_source",
-    }
+    {vol.Required("type"): "ais_cloud/confirm_ais_media_source"}
 )
 @websocket_api.async_response
 async def websocket_confirm_ais_media_source(hass, connection, msg):
@@ -345,10 +319,7 @@ async def websocket_confirm_ais_media_source(hass, connection, msg):
         source=media_source, name=media_name, current_url=curr_stream_url
     )
     if "error" in ais_answer:
-        payload = {
-            "error": True,
-            "info": "AIS Error: " + ais_answer["message"],
-        }
+        payload = {"error": True, "info": "AIS Error: " + ais_answer["message"]}
         connection.send_result(msg["id"], payload)
         await hass.services.async_call(
             "ais_ai_service", "say_it", {"text": ais_answer["message"]}
@@ -364,9 +335,7 @@ async def websocket_confirm_ais_media_source(hass, connection, msg):
 
 
 @websocket_api.websocket_command(
-    {
-        vol.Required("type"): "ais_cloud/check_ais_media_source",
-    }
+    {vol.Required("type"): "ais_cloud/check_ais_media_source"}
 )
 @websocket_api.async_response
 async def websocket_check_ais_media_source(hass, connection, msg):
@@ -383,10 +352,7 @@ async def websocket_check_ais_media_source(hass, connection, msg):
     else:
         # no stream url - info to the user
         info = "Obecnie na wbudowanym odtwarzaczu nie odtwarzasz żadnych mediów, dlatego sprawdzanie nie jest dostępne."
-        payload = {
-            "error": True,
-            "info": info,
-        }
+        payload = {"error": True, "info": info}
         connection.send_result(msg["id"], payload)
         await hass.services.async_call("ais_ai_service", "say_it", {"text": info})
         return
@@ -398,10 +364,7 @@ async def websocket_check_ais_media_source(hass, connection, msg):
     )
     if "error" in ais_answer:
         info = ais_answer["message"]
-        payload = {
-            "error": True,
-            "info": "AIS Error: " + info,
-        }
+        payload = {"error": True, "info": "AIS Error: " + info}
         connection.send_result(msg["id"], payload)
         await hass.services.async_call("ais_ai_service", "say_it", {"text": info})
         return
@@ -454,10 +417,7 @@ async def websocket_check_ais_media_source(hass, connection, msg):
         return
 
     info = "Nie udało się automatycznie ustalić lepszego źródła dla mediów. Czy chcesz zgłosić problem do AIS?"
-    payload = {
-        "found": False,
-        "info": info,
-    }
+    payload = {"found": False, "info": info}
     connection.send_result(msg["id"], payload)
     await hass.services.async_call("ais_ai_service", "say_it", {"text": info})
 
@@ -1432,100 +1392,6 @@ class AisColudData:
             "select_next",
             {"entity_id": "input_select.ais_music_service"},
         )
-
-    # send audio from AIS to play on selected speaker
-    def send_audio_to_speaker(self, call):
-        if "media_player" not in call.data:
-            return
-        media_player = call.data["media_player"]
-        state = self.hass.states.get(ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID)
-        attr = state.attributes
-        media_content_id = attr.get("media_content_id")
-        if media_content_id is not None:
-            self.hass.services.call(
-                "media_player",
-                "play_media",
-                {
-                    "entity_id": media_player,
-                    "media_content_type": "music",
-                    "media_content_id": media_content_id,
-                },
-            )
-
-    def get_players(self, call, hass):
-        global G_PLAYERS
-        G_PLAYERS = []
-        players_lv = []
-        if "device_name" in call.data:
-            unique_id = None
-            if "ais_gate_client_id" in call.data:
-                unique_id = call.data.get("ais_gate_client_id")
-            elif "MacWlan0" in call.data:
-                unique_id = call.data.get("MacWlan0")
-            elif "MacEth0" in call.data:
-                unique_id = call.data.get("MacEth0")
-            if unique_id is None:
-                return
-            # check if this device already exists
-            entity_id = slugify(call.data.get("device_name") + "_" + unique_id)
-            m_player = hass.states.get("media_player." + entity_id)
-            do_disco = False
-            if m_player is None:
-                do_disco = True
-            else:
-                if m_player.state == STATE_UNAVAILABLE:
-                    do_disco = True
-            if do_disco:
-                hass.async_run_job(
-                    async_load_platform(
-                        hass,
-                        "media_player",
-                        "ais_exo_player",
-                        {
-                            CONF_NAME: call.data.get("device_name") + "_" + unique_id,
-                            CONF_IP_ADDRESS: call.data.get(CONF_IP_ADDRESS),
-                            "unique_id": unique_id,
-                        },
-                        hass.config,
-                    )
-                )
-            else:
-                # update player info
-                self.hass.services.call(
-                    "ais_exo_player",
-                    "update_attributes",
-                    {
-                        "entity_id": entity_id,
-                        CONF_IP_ADDRESS: call.data.get(CONF_IP_ADDRESS),
-                    },
-                )
-        # take the info about normal players
-        entities = hass.states.async_all()
-        for entity in entities:
-            if entity.entity_id.startswith("media_player."):
-                player = {}
-                friendly_name = entity.attributes.get("friendly_name")
-                device_ip = entity.attributes.get("device_ip")
-                player["friendly_name"] = friendly_name
-                player["entity_id"] = entity.entity_id
-                player["device_ip"] = device_ip
-                G_PLAYERS.append(player)
-                players_lv.append(friendly_name)
-                # add player to group if it's not added
-                hass.async_add_job(
-                    hass.services.async_call(
-                        "group",
-                        "set",
-                        {
-                            "object_id": "audio_player",
-                            "add_entities": [entity.entity_id],
-                        },
-                    )
-                )
-        # rebuild the groups
-        import homeassistant.components.ais_ai_service as ais_ai
-
-        ais_ai.get_groups(hass)
 
     def get_rss_news_category(self, call):
         ws_resp = self.cloud.audio_type(ais_global.G_AN_NEWS)
