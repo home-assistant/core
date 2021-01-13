@@ -59,7 +59,7 @@ class DiscordNotificationService(BaseNotificationService):
         data = kwargs.get(ATTR_DATA) or {}
 
         if ATTR_EMBED in data:
-            embedding = data.get(ATTR_EMBED)
+            embedding = data[ATTR_EMBED]
             if ATTR_EMBED_FIELDS in embedding:
                 fields = embedding[ATTR_EMBED_FIELDS]
 
