@@ -220,7 +220,7 @@ async def test_ignored_discoveries(hass, discovery_flow_conf):
     await hass.config_entries.flow.async_init(
         flow["handler"],
         context={"source": config_entries.SOURCE_IGNORE},
-        data={"unique_id": flow["context"]["unique_id"]},
+        data={"unique_id": flow["context"]["unique_id"], "title": "Ignored Entry"},
     )
 
     # Second discovery should be aborted
