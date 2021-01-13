@@ -66,6 +66,7 @@ class NestCamera(Camera):
         # Cache of most recent event image
         self._event_id = None
         self._event_image_bytes = None
+        self._event_image_cleanup_unsub = None
 
     @property
     def should_poll(self) -> bool:
@@ -154,6 +155,10 @@ class NestCamera(Camera):
             await self._stream.stop_rtsp_stream()
         if self._stream_refresh_unsub:
             self._stream_refresh_unsub()
+        self._event_id = None
+        self._event_image_bytes = None
+        if self._event_image_cleanup_unsub is not None:
+            self._event_image_cleanup_unsub()
 
     async def async_added_to_hass(self):
         """Run when entity is added to register update signal handler."""
@@ -181,10 +186,20 @@ class NestCamera(Camera):
         if not trait:
             return None
         # Reuse image bytes if they have already been fetched
-        event_id = trait.last_event.event_id
-        if self._event_id is not None and self._event_id == event_id:
+        event = trait.last_event
+        if self._event_id is not None and self._event_id == event.event_id:
             return self._event_image_bytes
-        _LOGGER.info("Fetching URL for event_id %s", event_id)
+        _LOGGER.debug("Generating event image URL for event_id %s", event.event_id)
+        image_bytes = await self._async_fetch_active_event_image(trait)
+        if image_bytes is None:
+            return None
+        self._event_id = event.event_id
+        self._event_image_bytes = image_bytes
+        self._schedule_event_image_cleanup(event.expires_at)
+        return image_bytes
+
+    async def _async_fetch_active_event_image(self, trait):
+        """Return image bytes for an active event."""
         try:
             event_image = await trait.generate_active_event_image()
         except GoogleNestException as err:
@@ -193,10 +208,23 @@ class NestCamera(Camera):
         if not event_image:
             return None
         try:
-            image_bytes = await event_image.contents()
+            return await event_image.contents()
         except GoogleNestException as err:
             _LOGGER.debug("Unable to fetch event image: %s", err)
             return None
-        self._event_id = event_id
-        self._event_image_bytes = image_bytes
-        return image_bytes
+
+    def _schedule_event_image_cleanup(self, point_in_time):
+        """Schedules an alarm to remove the image bytes from memory, honoring expiration."""
+        if self._event_image_cleanup_unsub is not None:
+            self._event_image_cleanup_unsub()
+        self._event_image_cleanup_unsub = async_track_point_in_utc_time(
+            self.hass,
+            self._handle_event_image_cleanup,
+            point_in_time,
+        )
+
+    def _handle_event_image_cleanup(self, now):
+        """Clear images cached from events and scheduled callback."""
+        self._event_id = None
+        self._event_image_bytes = None
+        self._event_image_cleanup_unsub = None
