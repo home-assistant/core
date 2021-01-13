@@ -18,6 +18,7 @@ from .const import DOMAIN
 
 FILTER = "udp and (port 67 or 68)"
 REQUESTED_ADDR = "requested_addr"
+MESSAGE_TYPE = "message-type"
 HOSTNAME = "hostname"
 MAC_ADDRESS = "macaddress"
 IP_ADDRESS = "ip"
@@ -79,15 +80,13 @@ class DHCPWatcher(Thread):
 
         options = packet[DHCP].options
 
-        _, request_type = options[0]
-
+        request_type = _decode_dhcp_option(options, MESSAGE_TYPE)
         if request_type != DHCP_REQUEST:
             # DHCP request
             return
 
         ip_address = _decode_dhcp_option(options, REQUESTED_ADDR)
         hostname = _decode_dhcp_option(options, HOSTNAME)
-
         mac_address = _format_mac(packet[Ether].src)
 
         if ip_address is None or hostname is None or mac_address is None:
@@ -140,14 +139,12 @@ class DHCPWatcher(Thread):
 
 def _decode_dhcp_option(dhcp_options, key):
     """Extract and decode data from a packet option."""
-    for name, value in dhcp_options:
-        if name != key:
+    for option in dhcp_options:
+        if len(option) < 2 or option[0] != key:
             continue
 
-        if value is None:
-            return None
-
-        if key != HOSTNAME:
+        value = option[1]
+        if value is None or key != HOSTNAME:
             return value
 
         # hostname is unicode

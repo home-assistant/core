@@ -207,7 +207,7 @@ async def test_dhcp_invalid_hostname(hass):
     assert len(mock_init.mock_calls) == 0
 
 
-async def test_dhcp_mssing_hostname(hass):
+async def test_dhcp_missing_hostname(hass):
     """Test we ignore missing hostnames."""
     dhcp_watcher = dhcp.DHCPWatcher(
         hass, [{"domain": "mock-domain", "hostname": "nomatch*"}]
@@ -222,6 +222,31 @@ async def test_dhcp_mssing_hostname(hass):
         ("server_id", "192.168.208.1"),
         ("param_req_list", [1, 3, 28, 6]),
         ("hostname", None),
+    ]
+
+    with patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init:
+        dhcp_watcher.handle_dhcp_packet(packet)
+
+    assert len(mock_init.mock_calls) == 0
+
+
+async def test_dhcp_invalid_option(hass):
+    """Test we ignore invalid requested_addr."""
+    dhcp_watcher = dhcp.DHCPWatcher(
+        hass, [{"domain": "mock-domain", "hostname": "nomatch*"}]
+    )
+
+    packet = Ether(RAW_DHCP_REQUEST)
+
+    packet[DHCP].options = [
+        ("message-type", 3),
+        ("max_dhcp_size", 1500),
+        ("requested_addr", "192.168.208.55"),
+        ("server_id", "192.168.208.1"),
+        ("param_req_list", [1, 3, 28, 6]),
+        ("hostname"),
     ]
 
     with patch.object(
