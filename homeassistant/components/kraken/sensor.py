@@ -191,9 +191,7 @@ class KrakenSensor(CoordinatorEntity):
     @property
     def available(self):
         """Could the api be accessed during the last update call."""
-        if self._available:
-            return self.coordinator.last_update_success
-        return self._available
+        return self._available and self.coordinator.last_update_success
 
     @property
     def device_info(self) -> dict:
