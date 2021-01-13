@@ -2,8 +2,6 @@
 import logging
 from typing import Optional
 
-import requests
-
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -137,9 +135,6 @@ class AisPlayerDevice(MediaPlayerEntity):
             self._album_name = audio_status.get("media_album_name", "AI-Speaker")
         else:
             _LOGGER.error("Fetch status from AIS")
-
-    def select_source(self, source):
-        """Choose a different available playlist and play it."""
 
     @property
     def volume_level(self):
