@@ -11,7 +11,6 @@ import os
 import platform
 
 import homeassistant.components.ais_dom.ais_global as ais_global
-from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
 
 DOMAIN = "ais_shell_command"
 GLOBAL_X = 0
@@ -45,18 +44,6 @@ async def async_setup(hass, config):
 
     async def key_event(service):
         await _key_event(hass, service)
-
-    async def scan_network_for_devices(service):
-        await _scan_network_for_devices(hass, service)
-
-    async def scan_device(service):
-        await _scan_device(hass, service)
-
-    async def scan_ais_player(service):
-        await _scan_ais_player(hass, service)
-
-    async def show_network_devices_info(service):
-        await _show_network_devices_info(hass, service)
 
     async def led(service):
         await _led(hass, service)
@@ -99,15 +86,6 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "restart_pm2_service", restart_pm2_service)
     hass.services.async_register(DOMAIN, "execute_stop", execute_stop)
     hass.services.async_register(DOMAIN, "key_event", key_event)
-    hass.services.async_register(
-        DOMAIN, "scan_network_for_devices", scan_network_for_devices
-    )
-
-    hass.services.async_register(DOMAIN, "scan_device", scan_device)
-    hass.services.async_register(DOMAIN, "scan_ais_player", scan_ais_player)
-    hass.services.async_register(
-        DOMAIN, "show_network_devices_info", show_network_devices_info
-    )
     hass.services.async_register(DOMAIN, "led", led)
     hass.services.async_register(
         DOMAIN, "set_ais_secure_android_id_dom", set_ais_secure_android_id_dom
@@ -211,7 +189,6 @@ async def _change_wm_overscan(hass, call):
     try:
         import subprocess
 
-        overscan = ""
         overscan = subprocess.check_output(
             "su -c \"dumpsys display  | grep -o 'overscan.*' | cut -d')' -f1 | rev | cut -d'(' -f1 | rev\"",
             shell=True,  # nosec
@@ -223,8 +200,8 @@ async def _change_wm_overscan(hass, call):
             ct = int(overscan.split(",")[1])
             cr = int(overscan.split(",")[2])
             cb = int(overscan.split(",")[3])
-    except Exception:
-        _LOGGER.warning(f"Can't get current overscan {overscan}")
+    except Exception as e:
+        _LOGGER.warning("Can't get current overscan %s", e)
 
     # [reset|LEFT,TOP,RIGHT,BOTTOM]
     if new_value == "reset":
@@ -484,199 +461,6 @@ async def _execute_stop(hass, call):
         return
 
     subprocess.Popen("su -c 'reboot -p'", shell=True, stdout=None, stderr=None)  # nosec
-
-
-async def _show_network_devices_info(hass, call):
-    import homeassistant.components.ais_device_search_mqtt.sensor as dsm
-
-    info = dsm.get_text()
-    hass.states.async_set("sensor.network_devices_info_value", "ok", {"text": info})
-
-
-async def _scan_device(hass, call):
-    url = None
-    if "url" in call.data:
-        url = call.data["url"]
-    url_a = None
-    if "url_a" in call.data:
-        url_a = call.data["url_a"]
-    from urllib.parse import urlparse
-
-    from requests_futures.sessions import FuturesSession
-
-    import homeassistant.components.ais_device_search_mqtt.sensor as dsm
-
-    session = FuturesSession()
-
-    if url is not None:
-
-        def bg_cb(resp, *args, **kwargs):
-            try:
-                # parse the json storing the result on the response object
-                json_ws_resp = resp.json()
-                hostname = urlparse(resp.url).hostname
-                name = json_ws_resp["Status"]["FriendlyName"][0]
-                # ip = json_ws_resp["StatusNET"]["IPAddress"]
-                dsm.NET_DEVICES.append("- " + name + ", http://" + hostname)
-                info = dsm.get_text()
-                hass.states.async_set(
-                    "sensor.network_devices_info_value", "", {"text": info}
-                )
-            except Exception:
-                pass
-
-    if url_a is not None:
-
-        def bg_cb_a(resp, *args, **kwargs):
-            try:
-                # parse the json storing the result on the response object
-                json_ws_resp = resp.json()
-                model = json_ws_resp["Model"]
-                manufacturer = json_ws_resp["Manufacturer"]
-                ip = json_ws_resp["IPAddressIPv4"]
-                mac = json_ws_resp["MacWlan0"]
-                dsm.DOM_DEVICES.append(
-                    "- " + model + " " + manufacturer + ", http://" + ip + ":8180"
-                )
-                info = dsm.get_text()
-                hass.states.async_set(
-                    "sensor.network_devices_info_value", "", {"text": info}
-                )
-                # add the device to the speakers lists
-                hass.async_add_job(
-                    hass.services.async_call(
-                        "ais_cloud",
-                        "get_players",
-                        {
-                            "device_name": model + " " + manufacturer + "(" + ip + ")",
-                            CONF_IP_ADDRESS: ip,
-                            CONF_MAC: mac,
-                        },
-                    )
-                )
-            except Exception:
-                pass
-
-    if url is not None:
-        session.get(url, hooks={"response": bg_cb})
-    if url_a is not None:
-        session.get(url_a, hooks={"response": bg_cb_a})
-
-    if url is not None:
-        await hass.services.async_call("ais_shell_command", "scan_network_for_devices")
-
-
-async def _scan_ais_player(hass, call):
-    url = call.data["url"]
-    from requests_futures.sessions import FuturesSession
-
-    import homeassistant.components.ais_device_search_mqtt.sensor as dsm
-
-    session = FuturesSession()
-
-    def bg_cb(resp, *args, **kwargs):
-        try:
-            # parse the json storing the result on the response object
-            json_ws_resp = resp.json()
-            model = json_ws_resp["Model"]
-            manufacturer = json_ws_resp["Manufacturer"]
-            ip = json_ws_resp["IPAddressIPv4"]
-            ais_gate_client_id = None
-            if "ais_gate_client_id" in json_ws_resp:
-                ais_gate_client_id = json_ws_resp.get("ais_gate_client_id")
-            if ais_gate_client_id is None and "gate_id" in json_ws_resp:
-                ais_gate_client_id = json_ws_resp.get("gate_id")
-            elif ais_gate_client_id is None and "MacWlan0" in json_ws_resp:
-                ais_gate_client_id = json_ws_resp.get("MacWlan0")
-            elif ais_gate_client_id is None and "MacEth0" in json_ws_resp:
-                ais_gate_client_id = json_ws_resp.get("MacEth0")
-            if ais_gate_client_id is None:
-                return
-            if ais_gate_client_id == ais_global.G_AIS_SECURE_ANDROID_ID_DOM:
-                return
-            dsm.DOM_DEVICES.append(
-                "- " + model + " " + manufacturer + ", http://" + ip + ":8122"
-            )
-            # add the device to the speakers lists
-            hass.async_add_job(
-                hass.services.async_call(
-                    "ais_cloud",
-                    "get_players",
-                    {
-                        "device_name": model + " " + manufacturer,
-                        CONF_IP_ADDRESS: ip,
-                        "ais_gate_client_id": ais_gate_client_id,
-                    },
-                )
-            )
-
-        except Exception as e2:
-            _LOGGER.error("Exception " + str(e2))
-
-    try:
-        session.get(url, hooks={"response": bg_cb}, timeout=2, verify=False)
-    except Exception:
-        pass
-
-
-async def _scan_network_for_devices(hass, call):
-    import homeassistant.components.ais_device_search_mqtt.sensor as dsm
-
-    global GLOBAL_X
-    my_ip = ais_global.get_my_global_ip()
-    info = ""
-    if GLOBAL_X == 0:
-        GLOBAL_X += 1
-        # clear the value
-        dsm.MQTT_DEVICES = []
-        dsm.NET_DEVICES = []
-        dsm.DOM_DEVICES = []
-        hass.states.async_set(
-            "sensor.network_devices_info_value",
-            "",
-            {"text": "wykrywam, to może potrwać minutę..."},
-        )
-
-        # send the message to all robots in network
-        await hass.services.async_call(
-            "mqtt", "publish", {"topic": "cmnd/dom/status", "payload": 0}
-        )
-        # fix for new robots, Tasmota 6.4.0
-        await hass.services.async_call(
-            "mqtt", "publish", {"topic": "dom/cmnd/status", "payload": 0}
-        )
-        # disco
-        await hass.services.async_call(
-            "mqtt", "publish", {"topic": "dom/cmnd/SetOption19", "payload": 1}
-        )
-
-        await hass.services.async_call("ais_shell_command", "scan_network_for_devices")
-    # 256
-    elif 0 < GLOBAL_X < 256:
-        GLOBAL_X += 1
-        rest_url = "http://{}.{}/cm?cmnd=status"
-        url = rest_url.format(my_ip.rsplit(".", 1)[0], str(GLOBAL_X))
-        info = "Sprawdzam " + my_ip.rsplit(".", 1)[0]
-        info += "." + str(GLOBAL_X) + "\n"
-        info += dsm.get_text()
-        hass.states.async_set("sensor.network_devices_info_value", "", {"text": info})
-
-        # search android devices
-        rest_url_a = "http://{}.{}:8122"
-        url_a = rest_url_a.format(my_ip.rsplit(".", 1)[0], str(GLOBAL_X))
-
-        await hass.services.async_call(
-            "ais_shell_command", "scan_device", {"url": url, "url_a": url_a}
-        )
-
-    else:
-        GLOBAL_X = 0
-        hass.states.async_set(
-            "sensor.network_devices_info_value", "", {"text": dsm.get_text()}
-        )
-        await hass.services.async_call(
-            "ais_ai_service", "say_it", {"text": dsm.get_text_to_say()}
-        )
 
 
 async def _flush_logs(hass, call):
