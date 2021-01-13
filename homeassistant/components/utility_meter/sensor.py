@@ -298,7 +298,6 @@ class UtilityMeterSensor(RestoreEntity):
             self._collecting = async_track_state_change_event(
                 self.hass, [self._sensor_source_id], self.async_reading
             )
-            self.async_write_ha_state()
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, async_source_tracking
