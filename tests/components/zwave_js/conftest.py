@@ -37,6 +37,12 @@ def binary_switch_state_fixture():
     return json.loads(load_fixture("zwave_js/hank_binary_switch_state.json"))
 
 
+@pytest.fixture(name="bulb_6_multi_color_state", scope="session")
+def bulb_6_multi_color_state_fixture():
+    """Load the bulb 6 multi-color node state fixture data."""
+    return json.loads(load_fixture("zwave_js/bulb_6_multi_color_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state):
     """Mock a client."""
@@ -60,6 +66,14 @@ def multisensor_6_fixture(client, multisensor_6_state):
 def hank_binary_switch_fixture(client, hank_binary_switch_state):
     """Mock a binary switch node."""
     node = Node(client, hank_binary_switch_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="bulb_6_multi_color")
+def bulb_6_multi_color_fixture(client, bulb_6_multi_color_state):
+    """Mock a bulb 6 multi-color node."""
+    node = Node(client, bulb_6_multi_color_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
 
