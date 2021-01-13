@@ -65,8 +65,6 @@ class ZwaveSensorBase(ZWaveBaseEntity):
         if self.info.primary_value.command_class == CommandClass.BATTERY:
             return DEVICE_CLASS_BATTERY
         if self.info.primary_value.command_class == CommandClass.METER:
-            if self.info.primary_value.property_key_name == "W_Consumed":
-                return DEVICE_CLASS_POWER
             if self.info.primary_value.property_key_name == "kWh_Consumed":
                 return DEVICE_CLASS_ENERGY
             return DEVICE_CLASS_POWER
