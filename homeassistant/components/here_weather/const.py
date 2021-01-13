@@ -209,16 +209,10 @@ OBSERVATION_ATTRIBUTES = {
     "icon": {"name": "Icon", "unit_of_measurement": None},
     "iconName": {"name": "Icon Name", "unit_of_measurement": None},
     "iconLink": {"name": "Icon Link", "unit_of_measurement": None},
-    "ageMinutes": {"name": "Age In Minutes", "unit_of_measurement": "min"},
     "activeAlerts": {"name": "Active Alerts", "unit_of_measurement": None},
     "country": {"name": "Country", "unit_of_measurement": None},
     "state": {"name": "State", "unit_of_measurement": None},
     "city": {"name": "City", "unit_of_measurement": None},
-    "latitude": {"name": "Latitude", "unit_of_measurement": None},
-    "longitude": {"name": "Longitude", "unit_of_measurement": None},
-    "distance": {"name": "Distance", "unit_of_measurement": "km"},
-    "elevation": {"name": "Elevation", "unit_of_measurement": "km"},
-    "utcTime": {"name": "UTC Time", "unit_of_measurement": None},
 }
 
 SENSOR_TYPES = {

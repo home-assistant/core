@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_METRIC,
 )
 from homeassistant.core import HomeAssistant
@@ -79,14 +78,12 @@ class HEREWeatherData:
         self.weather_product_type = herepy.WeatherProductType[
             config_entry.data[CONF_MODE]
         ]
-        self.units = None
         self.coordinator = None
         self.unsub_handler = None
 
     async def async_setup(self) -> list:
         """Set up the here_weather integration."""
         self.add_options()
-        self.units = self.config_entry.options[CONF_UNIT_SYSTEM]
         self.unsub_handler = self.config_entry.add_update_listener(
             self.async_options_updated
         )
@@ -106,7 +103,6 @@ class HEREWeatherData:
         if not self.config_entry.options:
             options = {
                 CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-                CONF_UNIT_SYSTEM: self.hass.config.units.name,
             }
             self.hass.config_entries.async_update_entry(
                 self.config_entry, options=options
@@ -124,7 +120,7 @@ class HEREWeatherData:
 
     def _get_data(self):
         """Get the latest data from HERE."""
-        is_metric = self.units == CONF_UNIT_SYSTEM_METRIC
+        is_metric = self.hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
         data = self.here_client.weather_for_coordinates(
             self.latitude,
             self.longitude,

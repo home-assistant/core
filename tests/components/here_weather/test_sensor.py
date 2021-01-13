@@ -17,11 +17,10 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     EVENT_HOMEASSISTANT_START,
 )
 import homeassistant.util.dt as dt_util
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .const import astronomy_response, daily_simple_forecasts_response
 
@@ -106,19 +105,18 @@ async def test_imperial(hass):
         "herepy.DestinationWeatherApi.weather_for_coordinates",
         return_value=daily_simple_forecasts_response,
     ):
+        hass.config.units = IMPERIAL_SYSTEM
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
                 CONF_API_KEY: "test",
                 CONF_NAME: DOMAIN,
                 CONF_MODE: DEFAULT_MODE,
-                CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
                 CONF_LATITUDE: "40.79962",
                 CONF_LONGITUDE: "-73.970314",
             },
             options={
                 CONF_SCAN_INTERVAL: 60,
-                CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
             },
         )
         entry.add_to_hass(hass)

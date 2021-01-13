@@ -14,12 +14,8 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -35,7 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_validate_user_input(hass: HomeAssistant, user_input: dict) -> None:
     """Validate the user_input containing coordinates."""
-    await async_validate_name(hass, user_input)
     here_client = herepy.DestinationWeatherApi(user_input[CONF_API_KEY])
     await hass.async_add_executor_job(
         here_client.weather_for_coordinates,
@@ -43,13 +38,6 @@ async def async_validate_user_input(hass: HomeAssistant, user_input: dict) -> No
         user_input[CONF_LONGITUDE],
         herepy.WeatherProductType[user_input[CONF_MODE]],
     )
-
-
-async def async_validate_name(hass: HomeAssistant, user_input: dict) -> None:
-    """Validate the user input."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data[CONF_NAME] == user_input[CONF_NAME]:
-            raise AlreadyConfigured
 
 
 class HereWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -73,8 +61,6 @@ class HereWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
-            except AlreadyConfigured:
-                return self.async_abort(reason="already_configured")
             except herepy.InvalidRequestError:
                 errors["base"] = "invalid_request"
             except herepy.UnauthorizedError:
@@ -139,13 +125,6 @@ class HereWeatherOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                 ),
             ): int,
-            vol.Optional(CONF_UNIT_SYSTEM, default=self.hass.config.units.name): vol.In(
-                [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
-            ),
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
-
-
-class AlreadyConfigured(HomeAssistantError):
-    """Error to indicate the asset pair is already configured."""

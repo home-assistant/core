@@ -54,7 +54,7 @@ class HEREDestinationWeatherSensor(CoordinatorEntity):
         self._sensor_number = sensor_number
         self._weather_attribute = weather_attribute
         self._unit_of_measurement = convert_unit_of_measurement_if_needed(
-            self._here_data.units,
+            self._here_data.coordinator.hass.config.units.name,
             SENSOR_TYPES[sensor_type][weather_attribute]["unit_of_measurement"],
         )
 

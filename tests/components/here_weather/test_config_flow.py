@@ -13,8 +13,6 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_METRIC,
     EVENT_HOMEASSISTANT_START,
 )
 
@@ -99,49 +97,6 @@ async def test_invalid_request(hass):
         assert result["errors"]["base"] == "invalid_request"
 
 
-async def test_form_already_configured(hass):
-    """Test is already configured."""
-    with patch(
-        "herepy.DestinationWeatherApi.weather_for_coordinates",
-        return_value=daily_simple_forecasts_response,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
-        )
-        assert result["type"] == "form"
-        config = {
-            CONF_API_KEY: "test",
-            CONF_NAME: DOMAIN,
-            CONF_MODE: DEFAULT_MODE,
-            CONF_LATITUDE: "40.79962",
-            CONF_LONGITUDE: "-73.970314",
-        }
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], config
-        )
-        assert result["type"] == "create_entry"
-
-        await hass.async_block_till_done()
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
-        )
-        assert result["type"] == "form"
-        config = {
-            CONF_API_KEY: "test",
-            CONF_NAME: DOMAIN,
-            CONF_MODE: DEFAULT_MODE,
-            CONF_LATITUDE: "40.79962",
-            CONF_LONGITUDE: "-73.970314",
-        }
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], config
-        )
-
-        assert result["type"] == "abort"
-        assert result["reason"] == "already_configured"
-
-
 async def test_options(hass):
     """Test the options flow."""
     with patch(
@@ -165,7 +120,7 @@ async def test_options(hass):
         result = await hass.config_entries.options.async_init(entry.entry_id)
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            {CONF_SCAN_INTERVAL: 10, CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC},
+            {CONF_SCAN_INTERVAL: 10},
         )
         await hass.async_block_till_done()
         assert result["type"] == "create_entry"
