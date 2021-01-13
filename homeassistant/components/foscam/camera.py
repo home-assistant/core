@@ -18,23 +18,15 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import CONF_STREAM, DOMAIN, LOGGER, SERVICE_PTZ
 
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated("ip"),
-    cv.deprecated(CONF_PASSWORD),
-    cv.deprecated(CONF_USERNAME),
-    cv.deprecated(CONF_NAME),
-    cv.deprecated(CONF_PORT),
-    cv.deprecated("rtsp_port"),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required("ip"): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
-            vol.Required(CONF_USERNAME): cv.string,
-            vol.Optional(CONF_NAME, default="Foscam Camera"): cv.string,
-            vol.Optional(CONF_PORT, default=88): cv.port,
-            vol.Optional("rtsp_port"): cv.port,
-        }
-    ),
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required("ip"): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_NAME, default="Foscam Camera"): cv.string,
+        vol.Optional(CONF_PORT, default=88): cv.port,
+        vol.Optional("rtsp_port"): cv.port,
+    }
 )
 
 DIR_UP = "up"
