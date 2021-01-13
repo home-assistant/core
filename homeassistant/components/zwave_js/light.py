@@ -1,6 +1,6 @@
 """Support for Z-Wave lights."""
 import logging
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, Optional, Tuple
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
@@ -68,7 +68,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self._supports_color = False
         self._supports_white_value = False
         self._supports_color_temp = False
-        self._hs_color: Optional[List[float]] = None
+        self._hs_color: Optional[Tuple[float, float]] = None
         self._white_value: Optional[int] = None
         self._color_temp: Optional[int] = None
         self._min_mireds = 153  # 6500K as a safe default
@@ -111,7 +111,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         return self.brightness > 0
 
     @property
-    def hs_color(self) -> Optional[List[float]]:
+    def hs_color(self) -> Optional[Tuple[float, float]]:
         """Return the hs color."""
         return self._hs_color
 
@@ -291,10 +291,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                 and green_val.value is not None
                 and blue_val.value is not None
             ):
-                self._hs_color = list(
-                    color_util.color_RGB_to_hs(
-                        red_val.value, green_val.value, blue_val.value
-                    )
+                self._hs_color = color_util.color_RGB_to_hs(
+                    red_val.value, green_val.value, blue_val.value
                 )
 
         # White colors
