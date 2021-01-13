@@ -7,7 +7,7 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="config_entry")
@@ -77,3 +77,21 @@ def speaker_info_fixture():
         "software_version": "49.2-64250",
         "mac_address": "00-11-22-33-44-55",
     }
+
+
+@pytest.fixture(name="plex_empty_payload", scope="session")
+def plex_empty_payload_fixture():
+    """Load an empty payload and return it."""
+    return load_fixture("plex/empty_payload.xml")
+
+
+@pytest.fixture(name="plextv_account", scope="session")
+def plextv_account_fixture():
+    """Load account info from plex.tv and return it."""
+    return load_fixture("plex/plextv_account.xml")
+
+
+@pytest.fixture(name="plex_sonos_resources", scope="session")
+def plex_sonos_resources_fixture():
+    """Load Sonos resources payload and return it."""
+    return load_fixture("plex/sonos_resources.xml")
