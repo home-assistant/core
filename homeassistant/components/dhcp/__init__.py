@@ -140,11 +140,15 @@ class DHCPWatcher(Thread):
 
 def _decode_dhcp_option(dhcp_options, key):
     """Extract and decode data from a packet option."""
-    for i in dhcp_options:
-        if i[0] != key:
+    for name, value in dhcp_options:
+        if name != key:
             continue
+
+        if value is None:
+            return None
+
         # hostname is unicode
-        return i[1].decode() if key == HOSTNAME else i[1]
+        return value.decode() if key == HOSTNAME else value
 
 
 def _format_mac(mac_address):

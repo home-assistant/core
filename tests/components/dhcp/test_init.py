@@ -1,9 +1,13 @@
 """Test the DHCP discovery integration."""
+import threading
 from unittest.mock import patch
 
+from scapy.layers.dhcp import DHCP
 from scapy.layers.l2 import Ether
 
 from homeassistant.components import dhcp
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
 
@@ -44,6 +48,8 @@ async def test_dhcp_match_hostname_and_macaddress(hass):
     with patch.object(
         hass.config_entries.flow, "async_init", return_value=mock_coro()
     ) as mock_init:
+        dhcp_watcher.handle_dhcp_packet(packet)
+        # Ensure no change is ignored
         dhcp_watcher.handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 1
@@ -132,3 +138,118 @@ async def test_dhcp_nomatch_hostname(hass):
         dhcp_watcher.handle_dhcp_packet(packet)
 
     assert len(mock_init.mock_calls) == 0
+
+
+async def test_dhcp_nomatch_non_dhcp_packet(hass):
+    """Test matching does not throw on a non-dhcp packet."""
+    dhcp_watcher = dhcp.DHCPWatcher(
+        hass, [{"domain": "mock-domain", "hostname": "nomatch*"}]
+    )
+
+    packet = Ether(b"")
+
+    with patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init:
+        dhcp_watcher.handle_dhcp_packet(packet)
+
+    assert len(mock_init.mock_calls) == 0
+
+
+async def test_dhcp_nomatch_non_dhcp_request_packet(hass):
+    """Test nothing happens with the wrong message-type."""
+    dhcp_watcher = dhcp.DHCPWatcher(
+        hass, [{"domain": "mock-domain", "hostname": "nomatch*"}]
+    )
+
+    packet = Ether(RAW_DHCP_REQUEST)
+
+    packet[DHCP].options = [
+        ("message-type", 4),
+        ("max_dhcp_size", 1500),
+        ("requested_addr", "192.168.210.56"),
+        ("server_id", "192.168.208.1"),
+        ("param_req_list", [1, 3, 28, 6]),
+        ("hostname", b"connect"),
+    ]
+
+    with patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init:
+        dhcp_watcher.handle_dhcp_packet(packet)
+
+    assert len(mock_init.mock_calls) == 0
+
+
+async def test_dhcp_invalid_hostname(hass):
+    """Test we ignore invalid hostnames."""
+    dhcp_watcher = dhcp.DHCPWatcher(
+        hass, [{"domain": "mock-domain", "hostname": "nomatch*"}]
+    )
+
+    packet = Ether(RAW_DHCP_REQUEST)
+
+    packet[DHCP].options = [
+        ("message-type", 3),
+        ("max_dhcp_size", 1500),
+        ("requested_addr", "192.168.210.56"),
+        ("server_id", "192.168.208.1"),
+        ("param_req_list", [1, 3, 28, 6]),
+        ("hostname", "connect"),
+    ]
+
+    with patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init:
+        dhcp_watcher.handle_dhcp_packet(packet)
+
+    assert len(mock_init.mock_calls) == 0
+
+
+async def test_dhcp_mssing_hostname(hass):
+    """Test we ignore missing hostnames."""
+    dhcp_watcher = dhcp.DHCPWatcher(
+        hass, [{"domain": "mock-domain", "hostname": "nomatch*"}]
+    )
+
+    packet = Ether(RAW_DHCP_REQUEST)
+
+    packet[DHCP].options = [
+        ("message-type", 3),
+        ("max_dhcp_size", 1500),
+        ("requested_addr", "192.168.210.56"),
+        ("server_id", "192.168.208.1"),
+        ("param_req_list", [1, 3, 28, 6]),
+        ("hostname", None),
+    ]
+
+    with patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init:
+        dhcp_watcher.handle_dhcp_packet(packet)
+
+    assert len(mock_init.mock_calls) == 0
+
+
+async def test_setup_and_stop(hass):
+    """Test we can setup and stop."""
+
+    assert await async_setup_component(
+        hass,
+        dhcp.DOMAIN,
+        {},
+    )
+    await hass.async_block_till_done()
+
+    wait_event = threading.Event()
+
+    def _sniff_wait():
+        wait_event.wait()
+
+    with patch("homeassistant.components.dhcp.sniff", _sniff_wait):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    wait_event.set()
