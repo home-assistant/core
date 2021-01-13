@@ -1,6 +1,7 @@
 """Support for Soma sensors."""
 from datetime import timedelta
 import logging
+from requests import RequestException
 
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.helpers.entity import Entity

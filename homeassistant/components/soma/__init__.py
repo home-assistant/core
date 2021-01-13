@@ -2,7 +2,6 @@
 import asyncio
 
 from api.soma_api import SomaApi
-from requests import RequestException
 import voluptuous as vol
 
 from homeassistant import config_entries
