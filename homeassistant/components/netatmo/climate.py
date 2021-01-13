@@ -31,6 +31,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import (
     ATTR_HEATING_POWER_REQUEST,
     ATTR_SCHEDULE_NAME,
+    ATTR_SELECTED_SCHEDULE,
     DATA_HANDLER,
     DATA_HOMES,
     DATA_SCHEDULES,
@@ -212,6 +213,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self._hg_temperature = None
         self._boilerstatus = None
         self._setpoint_duration = None
+        self._selected_schedule = None
 
         if self._model == NA_THERM:
             self._operation_list.append(HVAC_MODE_OFF)
@@ -415,6 +417,8 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 "heating_power_request", 0
             )
 
+        attr[ATTR_SELECTED_SCHEDULE] = self._selected_schedule
+
         return attr
 
     def turn_off(self):
@@ -463,6 +467,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self._away_temperature = self._data.get_away_temp(self._home_id)
         self._hg_temperature = self._data.get_hg_temp(self._home_id)
         self._setpoint_duration = self._data.setpoint_duration[self._home_id]
+        self._selected_schedule = roomstatus.get("selected_schedule")
 
         if "current_temperature" not in roomstatus:
             return
@@ -492,6 +497,11 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 "module_id": None,
                 "heating_status": None,
                 "heating_power_request": None,
+                "selected_schedule": self._data._get_selected_schedule(  # pylint: disable=protected-access
+                    home_id=self._home_id
+                ).get(
+                    "name"
+                ),
             }
 
             batterylevel = None

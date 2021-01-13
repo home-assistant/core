@@ -69,6 +69,7 @@ ATTR_IS_KNOWN = "is_known"
 ATTR_FACE_URL = "face_url"
 ATTR_SCHEDULE_ID = "schedule_id"
 ATTR_SCHEDULE_NAME = "schedule_name"
+ATTR_SELECTED_SCHEDULE = "selected_schedule"
 ATTR_CAMERA_LIGHT_MODE = "camera_light_mode"
 
 SERVICE_SET_CAMERA_LIGHT = "set_camera_light"
