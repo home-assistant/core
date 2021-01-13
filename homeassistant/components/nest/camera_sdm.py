@@ -227,5 +227,4 @@ class NestCamera(Camera):
         """Clear images cached from events and scheduled callback."""
         self._event_id = None
         self._event_image_bytes = None
-        if self._event_image_cleanup_unsub is not None:
-            self._event_image_cleanup_unsub()
+        self._event_image_cleanup_unsub = None
