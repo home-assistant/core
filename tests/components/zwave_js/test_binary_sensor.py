@@ -4,6 +4,7 @@ from homeassistant.const import DEVICE_CLASS_BATTERY, STATE_OFF, STATE_ON
 
 from .common import (
     DISABLED_LEGACY_BINARY_SENSOR,
+    ENABLED_LEGACY_BINARY_SENSOR,
     LOW_BATTERY_BINARY_SENSOR,
     NOTIFICATION_MOTION_BINARY_SENSOR,
 )
@@ -16,6 +17,19 @@ async def test_low_battery_sensor(hass, multisensor_6, integration):
     assert state
     assert state.state == STATE_OFF
     assert state.attributes["device_class"] == DEVICE_CLASS_BATTERY
+
+
+async def test_enabled_legacy_sensor(hass, legacy_binary_sensor, integration):
+    """Test enabled legacy boolean binary sensor."""
+    # this node has Notification CC not (fully) implemented
+    # so legacy binary sensor should be enabled
+    import logging
+
+    logging.getLogger().error(hass.states.async_entity_ids())
+    state = hass.states.get(ENABLED_LEGACY_BINARY_SENSOR)
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get("device_class") is None
 
 
 async def test_disabled_legacy_sensor(hass, multisensor_6, integration):

@@ -306,11 +306,8 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         if self.info.primary_value.command_class == CommandClass.SENSOR_BINARY:
             # Legacy binary sensors are phased out (replaced by notification sensors)
             # Disable by default to not confuse users
-            for item in self.info.node.values.values():
-                if item.command_class == CommandClass.NOTIFICATION:
-                    # This device properly implements the Notification CC,
-                    # legacy sensor can be disabled
-                    return False
+            if self.info.node.device_class.generic != "Binary Sensor":
+                return False
         return True
 
 
@@ -359,6 +356,5 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
                     continue
                 # match found
                 mapping_info = mapping.copy()
-                mapping_info["name"] = mapping_info.get("name", state_value)
                 return mapping_info
         return {}
