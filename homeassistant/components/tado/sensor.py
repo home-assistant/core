@@ -99,7 +99,7 @@ class TadoHomeSensor(TadoHomeEntity, Entity):
 
         self._state = None
         self._state_attributes = None
-        self._tado_weather_data = None
+        self._tado_weather_data = self._tado.data["weather"]
 
     async def async_added_to_hass(self):
         """Register for sensor updates."""
