@@ -112,7 +112,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 STORAGE_DIR, f"lutron_caseta-{host}-{asset_key}.pem"
             )
             with open(target_file, "w") as fh:
-                os.fchmod(fh, 0o600)
+                os.fchmod(fh.fileno(), 0o600)
                 fh.write(assets[asset_key].encode("ASCII"))
             self.data[conf_key] = target_file
 
