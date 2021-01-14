@@ -14,7 +14,5 @@ async def test_websocket_api(hass, client, integration, hass_ws_client):
     msg = await client.receive_json()
     result = msg["result"]
 
-    print(result)
-
     assert result["client"]["ws_server_url"] == "ws://test:3000/zjs"
     assert result["client"]["version"]["server_version"] == "1.0.0"
