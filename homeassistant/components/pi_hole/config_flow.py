@@ -92,9 +92,8 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             CONF_API_KEY: api_key,
                         },
                     )
-                statistics_only = user_input[CONF_STATISTICS_ONLY]
-                self._config[CONF_STATISTICS_ONLY] = statistics_only
-                if statistics_only:
+                self._config[CONF_STATISTICS_ONLY] = user_input[CONF_STATISTICS_ONLY]
+                if self._config[CONF_STATISTICS_ONLY]:
                     return self.async_create_entry(title=name, data=self._config)
                 return await self.async_step_api_key()
 
@@ -103,30 +102,30 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
                     vol.Required(
-                        CONF_HOST, default=user_input.get(CONF_HOST) or ""
-                    ): str,
-                    vol.Required(
-                        CONF_PORT, default=user_input.get(CONF_PORT) or 80
+                        CONF_PORT, default=user_input.get(CONF_PORT, 80)
                     ): vol.Coerce(int),
                     vol.Required(
-                        CONF_NAME, default=user_input.get(CONF_NAME) or DEFAULT_NAME
+                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
                     ): str,
                     vol.Required(
                         CONF_LOCATION,
-                        default=user_input.get(CONF_LOCATION) or DEFAULT_LOCATION,
+                        default=user_input.get(CONF_LOCATION, DEFAULT_LOCATION),
                     ): str,
                     vol.Required(
                         CONF_STATISTICS_ONLY,
-                        default=user_input.get(CONF_STATISTICS_ONLY)
-                        or DEFAULT_STATISTICS_ONLY,
+                        default=user_input.get(
+                            CONF_STATISTICS_ONLY, DEFAULT_STATISTICS_ONLY
+                        ),
                     ): bool,
                     vol.Required(
-                        CONF_SSL, default=user_input.get(CONF_SSL) or DEFAULT_SSL
+                        CONF_SSL,
+                        default=user_input.get(CONF_SSL, DEFAULT_SSL),
                     ): bool,
                     vol.Required(
                         CONF_VERIFY_SSL,
-                        default=user_input.get(CONF_VERIFY_SSL) or DEFAULT_VERIFY_SSL,
+                        default=user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
                     ): bool,
                 }
             ),
@@ -140,7 +139,7 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 title=self._config[CONF_NAME],
                 data={
                     **self._config,
-                    CONF_API_KEY: user_input.get(CONF_API_KEY) or "",
+                    CONF_API_KEY: user_input.get(CONF_API_KEY, ""),
                 },
             )
 
