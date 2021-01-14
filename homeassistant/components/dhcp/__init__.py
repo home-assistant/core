@@ -1,5 +1,6 @@
 """The dhcp integration."""
 
+from abc import abstractmethod
 import fnmatch
 import logging
 import threading
@@ -119,6 +120,10 @@ class WatcherBase:
                     data={IP_ADDRESS: ip_address, **data},
                 )
             )
+
+    @abstractmethod
+    def add_job(self, job):
+        """Pass a job to based on which context we are in."""
 
 
 class DeviceTrackerWatcher(WatcherBase):
