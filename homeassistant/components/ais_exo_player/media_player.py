@@ -110,13 +110,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     def play_text_or_url(service):
         # text
         text = service.data["text"].strip()
-        # TODO parse url better
-        if text.startswith("http"):
+        if text.lower().startswith(("http:", "https:", "rtsp:", "mms:")):
             hass.services.call(
                 "media_player",
                 "play_media",
                 {
-                    "entity_id": "",
+                    "entity_id": "media_player.wbudowany_glosnik",
                     "media_content_type": "music",
                     "media_content_id": text,
                 },

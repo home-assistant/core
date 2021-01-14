@@ -3111,8 +3111,10 @@ async def async_setup(hass, config):
     return True
 
 
-async def _publish_command_to_frame(hass, key, val, ip):
+async def _publish_command_to_frame(hass, key, val, ip=None):
     # sent the command to the android frame via http
+    if ip is None:
+        ip = "localhost"
     url = ais_global.G_HTTP_REST_SERVICE_BASE_URL.format(ip)
 
     if key == "WifiConnectToSid":
