@@ -106,7 +106,7 @@ class RefreshToken:
     last_used_at: Optional[datetime] = attr.ib(default=None)
     last_used_ip: Optional[str] = attr.ib(default=None)
 
-    cred: Optional["Credentials"] = attr.ib(default=None)
+    credential: Optional["Credentials"] = attr.ib(default=None)
 
 
 @attr.s(slots=True)

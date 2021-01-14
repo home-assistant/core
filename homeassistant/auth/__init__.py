@@ -472,15 +472,19 @@ class AuthManager:
         Raises an exception if the expected provider is no longer available or return
         None if no provider was expected for this refresh token.
         """
-        if not refresh_token.cred or refresh_token.cred.auth_provider_id is None:
+        if (
+            not refresh_token.credential
+            or refresh_token.credential.auth_provider_id is None
+        ):
             return None
 
         provider = self.get_auth_provider(
-            refresh_token.cred.auth_provider_type, refresh_token.cred.auth_provider_id
+            refresh_token.credential.auth_provider_type,
+            refresh_token.credential.auth_provider_id,
         )
         if provider is None:
             raise InvalidProvider(
-                f"Auth provider {refresh_token.cred.auth_provider_type}, {refresh_token.cred.auth_provider_id} not available"
+                f"Auth provider {refresh_token.credential.auth_provider_type}, {refresh_token.credential.auth_provider_id} not available"
             )
         return provider
 

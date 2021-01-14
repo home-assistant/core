@@ -208,7 +208,7 @@ class AuthStore:
         client_icon: Optional[str] = None,
         token_type: str = models.TOKEN_TYPE_NORMAL,
         access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
-        cred: Optional[models.Credentials] = None,
+        credential: Optional[models.Credentials] = None,
     ) -> models.RefreshToken:
         """Create a new token for a user."""
         kwargs: Dict[str, Any] = {
@@ -216,7 +216,7 @@ class AuthStore:
             "client_id": client_id,
             "token_type": token_type,
             "access_token_expiration": access_token_expiration,
-            "cred": cred,
+            "credential": credential,
         }
         if client_name:
             kwargs["client_name"] = client_name
@@ -311,7 +311,7 @@ class AuthStore:
 
         users: Dict[str, models.User] = OrderedDict()
         groups: Dict[str, models.Group] = OrderedDict()
-        creds: Dict[str, models.Credentials] = OrderedDict()
+        credentials: Dict[str, models.Credentials] = OrderedDict()
 
         # Soft-migrating data as we load. We are going to make sure we have a
         # read only group and an admin group. There are two states that we can
@@ -418,15 +418,15 @@ class AuthStore:
             )
 
         for cred_dict in data["credentials"]:
-            cred = models.Credentials(
+            credential = models.Credentials(
                 id=cred_dict["id"],
                 is_new=False,
                 auth_provider_type=cred_dict["auth_provider_type"],
                 auth_provider_id=cred_dict["auth_provider_id"],
                 data=cred_dict["data"],
             )
-            creds[cred_dict["id"]] = cred
-            users[cred_dict["user_id"]].credentials.append(cred)
+            credentials[cred_dict["id"]] = credential
+            users[cred_dict["user_id"]].credentials.append(credential)
 
         for rt_dict in data["refresh_tokens"]:
             # Filter out the old keys that don't have jwt_key (pre-0.76)
@@ -472,7 +472,7 @@ class AuthStore:
                 jwt_key=rt_dict["jwt_key"],
                 last_used_at=last_used_at,
                 last_used_ip=rt_dict.get("last_used_ip"),
-                cred=creds.get(rt_dict.get("cred_id")),
+                credential=credentials.get(rt_dict.get("credential_id")),
             )
             users[rt_dict["user_id"]].refresh_tokens[token.id] = token
 
@@ -546,7 +546,9 @@ class AuthStore:
                 if refresh_token.last_used_at
                 else None,
                 "last_used_ip": refresh_token.last_used_ip,
-                "cred_id": refresh_token.cred.id if refresh_token.cred else None,
+                "credential_id": refresh_token.credential.id
+                if refresh_token.credential
+                else None,
             }
             for user in self._users.values()
             for refresh_token in user.refresh_tokens.values()
