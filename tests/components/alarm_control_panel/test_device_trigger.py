@@ -230,7 +230,6 @@ async def test_if_fires_on_state_change(hass, calls):
     )
 
     # Fake that the entity is armed home.
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_PENDING)
     hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_HOME)
     await hass.async_block_till_done()
     assert len(calls) == 3
@@ -240,7 +239,6 @@ async def test_if_fires_on_state_change(hass, calls):
     )
 
     # Fake that the entity is armed away.
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_PENDING)
     hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_AWAY)
     await hass.async_block_till_done()
     assert len(calls) == 4
@@ -250,7 +248,6 @@ async def test_if_fires_on_state_change(hass, calls):
     )
 
     # Fake that the entity is armed night.
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_PENDING)
     hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_NIGHT)
     await hass.async_block_till_done()
     assert len(calls) == 5
