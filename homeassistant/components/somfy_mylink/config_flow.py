@@ -99,7 +99,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, default=self.host): str,
+                    vol.Required(CONF_HOST, default=self.ip): str,
                     vol.Required(CONF_SYSTEM_ID): int,
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                 }
