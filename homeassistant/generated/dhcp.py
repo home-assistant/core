@@ -17,6 +17,21 @@ DHCP = [
         "macaddress": "B8B7F1*"
     },
     {
+        "domain": "axis",
+        "hostname": "axis-00408c*",
+        "macaddress": "00408C*"
+    },
+    {
+        "domain": "axis",
+        "hostname": "axis-accc8e*",
+        "macaddress": "ACCC8E*"
+    },
+    {
+        "domain": "axis",
+        "hostname": "axis-b8a44f*",
+        "macaddress": "B8A44F*"
+    },
+    {
         "domain": "flume",
         "hostname": "flume-gw-*",
         "macaddress": "ECFABC*"
