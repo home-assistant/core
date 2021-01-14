@@ -39,9 +39,9 @@ def register_node_in_dev_reg(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")},
         sw_version=node.firmware_version,
-        name=node.name or node.device_config.description,
-        model=node.device_config.label or str(node.product_type),
-        manufacturer=node.device_config.manufacturer or str(node.manufacturer_id),
+        name=node.name or node.device_config.description or f"Node {node.node_id}",
+        model=node.device_config.label,
+        manufacturer=node.device_config.manufacturer,
     )
 
 
@@ -84,13 +84,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @callback
     def async_on_node_added(node: ZwaveNode) -> None:
         """Handle node added event."""
-        LOGGER.debug("Node added: %s - waiting for it to become ready.", node.node_id)
         # we only want to run discovery when the node has reached ready state,
         # otherwise we'll have all kinds of missing info issues.
         if node.ready:
             async_on_node_ready(node)
             return
         # if node is not yet ready, register one-time callback for ready state
+        LOGGER.debug("Node added: %s - waiting for it to become ready.", node.node_id)
         node.once(
             "ready",
             lambda event: async_on_node_ready(event["node"]),
@@ -139,14 +139,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         # run discovery on all ready nodes
         for node in client.driver.controller.nodes.values():
-            if node.ready:
-                async_on_node_ready(node)
-                continue
-            # if node is not yet ready, register one-time callback for ready state
-            node.once(
-                "ready",
-                lambda event: async_on_node_ready(event["node"]),
-            )
+            async_on_node_added(node)
+
         # listen for new nodes being added to the mesh
         client.driver.controller.on(
             "node added", lambda event: async_on_node_added(event["node"])
