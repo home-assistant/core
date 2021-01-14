@@ -89,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     config = entry.data
     somfy_mylink = SomfyMyLinkSynergy(
-        config[CONF_SYSTEM_ID], config[CONF_HOST], config[CONF_PORT]
+        str(config[CONF_SYSTEM_ID]), config[CONF_HOST], config[CONF_PORT]
     )
 
     try:

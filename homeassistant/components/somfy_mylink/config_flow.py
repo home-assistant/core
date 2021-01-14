@@ -32,7 +32,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from schema with values provided by the user.
     """
     somfy_mylink = SomfyMyLinkSynergy(
-        data[CONF_SYSTEM_ID], data[CONF_HOST], data[CONF_PORT]
+        str(data[CONF_SYSTEM_ID]), data[CONF_HOST], data[CONF_PORT]
     )
 
     try:
