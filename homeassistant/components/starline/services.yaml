@@ -8,3 +8,10 @@ set_scan_interval:
     scan_interval:
       description: Update frequency (in seconds).
       example: 180
+set_scan_obd_interval:
+  description: >
+    Set OBD info update frequency.
+  fields:
+    scan_interval:
+      description: Update frequency (in seconds).
+      example: 10800

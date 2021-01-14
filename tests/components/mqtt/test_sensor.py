@@ -17,6 +17,8 @@ from .test_common import (
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
     help_test_default_availability_list_payload,
+    help_test_default_availability_list_payload_all,
+    help_test_default_availability_list_payload_any,
     help_test_default_availability_list_single,
     help_test_default_availability_payload,
     help_test_discovery_broken,
@@ -293,6 +295,20 @@ async def test_default_availability_payload(hass, mqtt_mock):
 async def test_default_availability_list_payload(hass, mqtt_mock):
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_list_payload(
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_default_availability_list_payload_all(hass, mqtt_mock):
+    """Test availability by default payload with defined topic."""
+    await help_test_default_availability_list_payload_all(
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_default_availability_list_payload_any(hass, mqtt_mock):
+    """Test availability by default payload with defined topic."""
+    await help_test_default_availability_list_payload_any(
         hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
     )
 
@@ -579,7 +595,7 @@ async def test_entity_device_info_with_hub(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
     assert device.via_device_id == hub.id
 
