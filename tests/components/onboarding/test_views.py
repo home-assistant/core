@@ -262,12 +262,30 @@ async def test_onboarding_integration(hass, hass_storage, hass_client):
     )
 
     assert resp.status == 200
+    data = await resp.json()
+    assert "auth_code" in data
 
+    # Validate refresh token
+    resp = await client.post(
+        "/auth/token",
+        data={
+            "client_id": CLIENT_ID,
+            "grant_type": "authorization_code",
+            "code": data["auth_code"],
+        },
+    )
+
+    assert resp.status == 200
     assert const.STEP_INTEGRATION in hass_storage[const.DOMAIN]["data"]["done"]
+    tokens = await resp.json()
+
+    assert (
+        await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
+    )
 
     # Onboarding refresh token and new refresh token
     for user in await hass.auth.async_get_users():
-        assert len(user.refresh_tokens) == 1, user
+        assert len(user.refresh_tokens) == 2, user
 
 
 async def test_onboarding_integration_invalid_redirect_uri(
