@@ -61,6 +61,8 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if hostname is None or not hostname.startswith("lutron-"):
             return self.async_abort(reason="not_lutron_device")
         lutron_id = hostname.partition("-")[1]
+        if lutron_id.endswith(".local"):
+            lutron_id = lutron_id[:-6]
         await self.async_set_unique_id(lutron_id)
 
         host = discovery_info[CONF_HOST]
