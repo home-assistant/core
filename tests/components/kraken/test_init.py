@@ -1,10 +1,11 @@
 """Tests for the kraken integration."""
+from unittest.mock import patch
+
 from homeassistant.components import kraken
 from homeassistant.components.kraken.const import DOMAIN
 
 from .const import TICKER_INFORMATION_RESPONSE, TRADEABLE_ASSET_PAIR_RESPONSE
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

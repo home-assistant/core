@@ -1,10 +1,11 @@
 """Tests for the kraken config_flow."""
+from unittest.mock import patch
+
 from homeassistant.components.kraken.const import CONF_TRACKED_ASSET_PAIRS, DOMAIN
 from homeassistant.const import CONF_SCAN_INTERVAL
 
 from .const import TICKER_INFORMATION_RESPONSE, TRADEABLE_ASSET_PAIR_RESPONSE
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -21,29 +22,6 @@ async def test_config_flow(hass):
     await hass.async_block_till_done()
     state = hass.states.get("sensor.xbt_usd_last_trade_closed")
     assert state
-
-
-async def test_form_already_configured(hass):
-    """Test is already configured."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-    assert result["type"] == "form"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == "create_entry"
-
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-    assert result["type"] == "form"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
 
 
 async def test_options(hass):

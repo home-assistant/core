@@ -1,5 +1,6 @@
 """Tests for the kraken sensor platform."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from pykrakenapi.pykrakenapi import KrakenAPIError
 
@@ -14,7 +15,6 @@ import homeassistant.util.dt as dt_util
 
 from .const import TICKER_INFORMATION_RESPONSE, TRADEABLE_ASSET_PAIR_RESPONSE
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 

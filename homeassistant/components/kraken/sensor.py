@@ -110,7 +110,16 @@ class KrakenSensor(CoordinatorEntity):
         """Return the state."""
         return self._state
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._update_internal_state()
+
     def _handle_coordinator_update(self):
+        self._update_internal_state()
+        return super()._handle_coordinator_update()
+
+    def _update_internal_state(self):
         try:
             self._state = self._try_get_state()
             self._received_data_at_least_once = True  # Received data at least one time.
@@ -122,7 +131,6 @@ class KrakenSensor(CoordinatorEntity):
                         self._device_name,
                     )
                     self._available = False
-        return super()._handle_coordinator_update()
 
     def _try_get_state(self) -> str:
         """Try to get the state or return a TypeError."""
