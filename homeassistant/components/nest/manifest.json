@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/nest",
   "requirements": ["python-nest==4.1.0", "google-nest-sdm==0.2.8"],
   "codeowners": ["@allenporter"],
-  "quality_scale": "platinum"
+  "quality_scale": "platinum",
+  "dhcp": [{"macaddress":"18B430*"}]
 }
