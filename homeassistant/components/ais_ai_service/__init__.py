@@ -2399,32 +2399,63 @@ async def async_setup(hass, config):
     async def set_context(service):
         """Set the context in app."""
         context = service.data[ATTR_TEXT]
-        for idx, menu in enumerate(GROUP_ENTITIES, start=0):
-            context_key_words = menu["context_key_words"]
-            if context_key_words is not None:
-                context_key_words = context_key_words.split(",")
-                if context in context_key_words:
-                    set_curr_group(hass, menu)
-                    set_curr_entity(hass, None)
-                    if context == "spotify":
-                        await hass.services.async_call(
-                            "input_select",
-                            "select_option",
-                            {
-                                "entity_id": "input_select.ais_music_service",
-                                "option": "Spotify",
-                            },
-                        )
-                    elif context == "youtube":
-                        await hass.services.async_call(
-                            "input_select",
-                            "select_option",
-                            {
-                                "entity_id": "input_select.ais_music_service",
-                                "option": "YouTube",
-                            },
-                        )
-                    break
+        if context == "ais_tv":
+            hass.states.async_set("sensor.ais_player_mode", "ais_tv")
+        elif context == "ais_tv_on":
+            hass.states.async_set("sensor.ais_tv_mode", "tv_on")
+            hass.states.async_set("sensor.ais_tv_activity", "")
+            _say_it(hass, "Sterowanie na monitorze")
+            await _publish_command_to_frame(hass, "goToActivity", "ActivityMenu")
+        elif context == "ais_tv_off":
+            hass.states.async_set("sensor.ais_tv_mode", "tv_off")
+            hass.states.async_set("sensor.ais_tv_activity", "")
+            _say_it(hass, "Sterowanie bez monitora")
+            await _publish_command_to_frame(
+                hass, "goToActivity", "SplashScreenActivity"
+            )
+        elif context == "ais_tv_youtube":
+            hass.states.async_set("sensor.ais_tv_activity", "youtube")
+            _say_it(hass, "Odtwarzacz wideo")
+            await _publish_command_to_frame(hass, "goToActivity", "ExoPlayerActivity")
+        elif context == "ais_tv_spotify":
+            hass.states.async_set("sensor.ais_tv_activity", "spotify")
+            _say_it(hass, "Odtwarzacz Spotify")
+            await _publish_command_to_frame(hass, "goToActivity", "SpotifyActivity")
+        elif context == "ais_tv_camera":
+            hass.states.async_set("sensor.ais_tv_activity", "camera")
+            _say_it(hass, "Podgląd z kamery")
+            await _publish_command_to_frame(hass, "goToActivity", "ExoPlayerActivity")
+        elif context == "ais_tv_settings":
+            hass.states.async_set("sensor.ais_tv_activity", "settings")
+            _say_it(hass, "Ustawienia aplikacji")
+            await _publish_command_to_frame(hass, "goToActivity", "SettingsActivity")
+        else:
+            for idx, menu in enumerate(GROUP_ENTITIES, start=0):
+                context_key_words = menu["context_key_words"]
+                if context_key_words is not None:
+                    context_key_words = context_key_words.split(",")
+                    if context in context_key_words:
+                        set_curr_group(hass, menu)
+                        set_curr_entity(hass, None)
+                        if context == "spotify":
+                            await hass.services.async_call(
+                                "input_select",
+                                "select_option",
+                                {
+                                    "entity_id": "input_select.ais_music_service",
+                                    "option": "Spotify",
+                                },
+                            )
+                        elif context == "youtube":
+                            await hass.services.async_call(
+                                "input_select",
+                                "select_option",
+                                {
+                                    "entity_id": "input_select.ais_music_service",
+                                    "option": "YouTube",
+                                },
+                            )
+                        break
 
     async def check_local_ip(service):
         """Set the local ip in app."""
