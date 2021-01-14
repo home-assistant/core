@@ -87,8 +87,13 @@ async def async_setup_entry(hass, entry):
         hass.config_entries.async_forward_entry_setup(entry, "cover")
     )
 
-    hass.services.async_register(DOMAIN, "pair", becker.handle_pair, PAIR_SCHEMA)
-    hass.services.async_register(DOMAIN, "log_units", becker.handle_log_units)
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN, "pair", becker.handle_pair, PAIR_SCHEMA
+    )
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN, "log_units", becker.handle_log_units
+    )
+
     return True
 
 
