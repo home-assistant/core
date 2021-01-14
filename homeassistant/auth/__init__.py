@@ -24,6 +24,12 @@ _ProviderKey = Tuple[str, Optional[str]]
 _ProviderDict = Dict[_ProviderKey, AuthProvider]
 
 
+class InvalidProvider(Exception):
+    """Authentication provider not found."""
+
+    pass
+
+
 async def auth_manager_from_config(
     hass: HomeAssistant,
     provider_configs: List[Dict[str, Any]],
@@ -473,7 +479,7 @@ class AuthManager:
             refresh_token.cred.auth_provider_type, refresh_token.cred.auth_provider_id
         )
         if provider is None:
-            raise ValueError(
+            raise InvalidProvider(
                 f"Auth provider {refresh_token.cred.auth_provider_type}, {refresh_token.cred.auth_provider_id} not available"
             )
         return provider
