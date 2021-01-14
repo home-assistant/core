@@ -3,6 +3,7 @@
 from abc import abstractmethod
 import fnmatch
 import logging
+import os
 import threading
 
 from scapy.error import Scapy_Exception
@@ -209,7 +210,12 @@ class DHCPWatcher(WatcherBase, threading.Thread):
                 stop_filter=lambda _: self._stop_event.is_set(),
             )
         except (Scapy_Exception, OSError) as ex:
-            _LOGGER.info("Cannot watch for dhcp packets: %s", ex)
+            if os.geteuid() == 0:
+                _LOGGER.error("Cannot watch for dhcp packets: %s", ex)
+            else:
+                _LOGGER.debug(
+                    "Cannot watch for dhcp packets without root or CAP_NET_RAW: %s", ex
+                )
             return
 
     def handle_dhcp_packet(self, packet):
