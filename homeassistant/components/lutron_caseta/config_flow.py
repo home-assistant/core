@@ -6,7 +6,7 @@ from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from . import DOMAIN  # pylint: disable=unused-import
@@ -69,7 +69,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.data[CONF_HOST] = host
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {CONF_HOST: self.data[CONF_HOST]}
+        self.context["title_placeholders"] = {CONF_NAME: lutron_id}
         return await self.async_step_link()
 
     async_step_homekit = async_step_zeroconf
@@ -115,13 +115,9 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("target_file: %s", target_file)
 
             with open(target_file, "w") as fh:
-                fh.write(assets[asset_key].encode("ASCII"))
+                fh.write(assets[asset_key])
 
-            _LOGGER.debug(
-                "wrote target_file: %s -> %s",
-                target_file,
-                assets[asset_key].encode("ASCII"),
-            )
+            _LOGGER.debug("wrote target_file: %s -> %s", target_file, assets[asset_key])
 
             self.data[conf_key] = target_file
 
@@ -162,7 +158,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Make failed import surfaced to user."""
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {CONF_HOST: self.data[CONF_HOST]}
+        self.context["title_placeholders"] = {CONF_NAME: self.data[CONF_HOST]}
 
         if user_input is None:
             return self.async_show_form(
