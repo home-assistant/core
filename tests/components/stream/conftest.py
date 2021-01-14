@@ -43,7 +43,6 @@ class WorkerSync:
             # the segments under test.
             logging.error("blocking worker")
             self._event.wait()
-        logging.error("put segment, %s", segment)
 
         # Forward to actual StreamOutput.put
         self._put_original(stream_output, segment)
