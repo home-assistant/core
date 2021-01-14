@@ -82,7 +82,7 @@ async def async_setup_entry(hass, entry):
 
     hass.data[DOMAIN]["connector"] = becker.connection
 
-    hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: becker})
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = becker
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "cover")
     )
