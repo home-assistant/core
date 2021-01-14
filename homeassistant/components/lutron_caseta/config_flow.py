@@ -43,7 +43,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize a Lutron Caseta flow."""
         self.data = {}
 
-    async def async_step_user(self, user_input):
+    async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if user_input is not None:
             self.data[CONF_HOST] = user_input[CONF_HOST]
@@ -61,7 +61,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.data[CONF_HOST] = host
         return await self.async_step_link()
 
-    async def async_step_link(self, user_input):
+    async def async_step_link(self, user_input=None):
         """Handle pairing with the hub."""
         errors = {}
 
