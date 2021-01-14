@@ -195,7 +195,7 @@ async def test_existing_node_not_ready(hass, client, multisensor_6, device_regis
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
     assert not state  # entity not yet added
-    assert device_registry.async_get_device( # device should be added
+    assert device_registry.async_get_device(  # device should be added
         identifiers={(DOMAIN, air_temperature_device_id)}
     )
 
