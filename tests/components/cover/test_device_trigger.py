@@ -9,7 +9,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    STATE_VENTILATING,
+    STATE_VENTILATION,
 )
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
@@ -260,7 +260,7 @@ async def test_get_triggers_set_ventilation(hass, device_reg, entity_reg):
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "ventilating",
+            "type": "ventilation",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
         },
@@ -514,13 +514,13 @@ async def test_if_fires_on_state_change(hass, calls):
                         "domain": DOMAIN,
                         "device_id": "",
                         "entity_id": "cover.entity",
-                        "type": "ventilating",
+                        "type": "ventilation",
                     },
                     "action": {
                         "service": "test.automation",
                         "data_template": {
                             "some": (
-                                "ventilating - {{ trigger.platform}} - "
+                                "ventilation - {{ trigger.platform}} - "
                                 "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
                                 "{{ trigger.to_state.state}} - {{ trigger.for }}"
                             )
@@ -563,25 +563,25 @@ async def test_if_fires_on_state_change(hass, calls):
         "some"
     ] == "closing - device - {} - opening - closing - None".format("cover.entity")
 
-    # Fake that the entity is ventilating after closed.
+    # Fake that the entity is ventilation after closed.
     hass.states.async_set("cover.entity", STATE_CLOSED)
-    hass.states.async_set("cover.entity", STATE_VENTILATING)
+    hass.states.async_set("cover.entity", STATE_VENTILATION)
     await hass.async_block_till_done()
     assert len(calls) == 6
     assert calls[5].data[
         "some"
-    ] == "ventilating - device - {} - closed - ventilating - None".format(
+    ] == "ventilation - device - {} - closed - ventilation - None".format(
         "cover.entity"
     )
 
-    # Fake that the entity is ventilating after open.
+    # Fake that the entity is ventilation after open.
     hass.states.async_set("cover.entity", STATE_OPEN)
-    hass.states.async_set("cover.entity", STATE_VENTILATING)
+    hass.states.async_set("cover.entity", STATE_VENTILATION)
     await hass.async_block_till_done()
     assert len(calls) == 8
     assert calls[7].data[
         "some"
-    ] == "ventilating - device - {} - open - ventilating - None".format("cover.entity")
+    ] == "ventilation - device - {} - open - ventilation - None".format("cover.entity")
 
 
 async def test_if_fires_on_position(hass, calls):

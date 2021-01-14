@@ -22,7 +22,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    STATE_VENTILATING,
+    STATE_VENTILATION,
 )
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
@@ -36,7 +36,7 @@ VALID_STATES = {
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    STATE_VENTILATING,
+    STATE_VENTILATION,
 }
 
 
@@ -78,7 +78,7 @@ async def _async_reproduce_state(
         and cur_state.attributes.get(ATTR_CURRENT_POSITION)
         == state.attributes.get(ATTR_CURRENT_POSITION)
     ):
-        # Open/Close/Ventilating
+        # Open/Close/Ventilation
         if state.state in [STATE_CLOSED, STATE_CLOSING]:
             service = SERVICE_CLOSE_COVER
         elif state.state in [STATE_OPEN, STATE_OPENING]:
@@ -90,7 +90,7 @@ async def _async_reproduce_state(
                 service_data[ATTR_POSITION] = state.attributes[ATTR_CURRENT_POSITION]
             else:
                 service = SERVICE_OPEN_COVER
-        elif state.state in [STATE_VENTILATING]:
+        elif state.state in [STATE_VENTILATION]:
             service = SERVICE_SET_COVER_VENTILATION
 
         await hass.services.async_call(

@@ -18,7 +18,7 @@
       "is_closing": "{entity_name} is closing",
       "is_position": "Current {entity_name} position is",
       "is_tilt_position": "Current {entity_name} tilt position is",
-      "is_ventilating": "{entity_name} has ventilation position"
+      "is_ventilation_position": "{entity_name} has ventilation position"
     },
     "trigger_type": {
       "opened": "{entity_name} opened",
@@ -27,7 +27,7 @@
       "closing": "{entity_name} closing",
       "position": "{entity_name} position changes",
       "tilt_position": "{entity_name} tilt position changes",
-      "ventilating": "{entity_name} is ventilating"
+      "ventilation": "{entity_name} changed to ventilation"
     }
   },
   "state": {
@@ -37,7 +37,7 @@
       "closed": "[%key:common::state::closed%]",
       "closing": "Closing",
       "stopped": "Stopped",
-      "ventilating": "Ventilating"
+      "ventilation": "Ventilation"
     }
   }
 }

@@ -15,7 +15,7 @@ from homeassistant.const import (
     SERVICE_SET_COVER_VENTILATION,
     STATE_CLOSED,
     STATE_OPEN,
-    STATE_VENTILATING,
+    STATE_VENTILATION,
 )
 from homeassistant.core import State
 
@@ -52,7 +52,7 @@ async def test_reproducing_states(hass, caplog):
         STATE_OPEN,
         {ATTR_CURRENT_POSITION: 100, ATTR_CURRENT_TILT_POSITION: 100},
     )
-    hass.states.async_set("cover.entity_ventilating", STATE_VENTILATING, {})
+    hass.states.async_set("cover.entity_ventilating", STATE_VENTILATION, {})
 
     close_calls = async_mock_service(hass, "cover", SERVICE_CLOSE_COVER)
     open_calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
@@ -97,7 +97,7 @@ async def test_reproducing_states(hass, caplog):
                 STATE_OPEN,
                 {ATTR_CURRENT_POSITION: 100, ATTR_CURRENT_TILT_POSITION: 100},
             ),
-            State("cover.entity_ventilating", STATE_VENTILATING),
+            State("cover.entity_ventilating", STATE_VENTILATION),
         ]
     )
 
@@ -210,14 +210,14 @@ async def test_reproducing_states(hass, caplog):
     # Make sure set_cover_ventilation service is called
     await hass.helpers.state.async_reproduce_state(
         [
-            State("cover.entity_close", STATE_VENTILATING),
-            State("cover.entity_close_attr", STATE_VENTILATING),
-            State("cover.entity_close_tilt", STATE_VENTILATING),
-            State("cover.entity_open", STATE_VENTILATING),
-            State("cover.entity_slightly_open", STATE_VENTILATING),
-            State("cover.entity_open_attr", STATE_VENTILATING),
-            State("cover.entity_open_tilt", STATE_VENTILATING),
-            State("cover.entity_entirely_open", STATE_VENTILATING),
+            State("cover.entity_close", STATE_VENTILATION),
+            State("cover.entity_close_attr", STATE_VENTILATION),
+            State("cover.entity_close_tilt", STATE_VENTILATION),
+            State("cover.entity_open", STATE_VENTILATION),
+            State("cover.entity_slightly_open", STATE_VENTILATION),
+            State("cover.entity_open_attr", STATE_VENTILATION),
+            State("cover.entity_open_tilt", STATE_VENTILATION),
+            State("cover.entity_entirely_open", STATE_VENTILATION),
         ],
     )
 

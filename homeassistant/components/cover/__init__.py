@@ -22,7 +22,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    STATE_VENTILATING,
+    STATE_VENTILATION,
 )
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -199,8 +199,8 @@ class CoverEntity(Entity):
         if self.is_closing:
             return STATE_CLOSING
 
-        if self.is_ventilating:
-            return STATE_VENTILATING
+        if self.is_ventilation_position:
+            return STATE_VENTILATION
 
         closed = self.is_closed
 
@@ -240,7 +240,7 @@ class CoverEntity(Entity):
                 | SUPPORT_SET_TILT_POSITION
             )
 
-        if self.is_ventilating is not None:
+        if self.is_ventilation_position is not None:
             supported_features |= SUPPORT_SET_VENTILATION
 
         return supported_features
@@ -259,7 +259,7 @@ class CoverEntity(Entity):
         raise NotImplementedError()
 
     @property
-    def is_ventilating(self):
+    def is_ventilation_position(self):
         """Return None is unknown, or if the cover is in ventilation position or not."""
 
     def open_cover(self, **kwargs: Any) -> None:

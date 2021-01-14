@@ -9,7 +9,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    STATE_VENTILATING,
+    STATE_VENTILATION,
 )
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
@@ -260,7 +260,7 @@ async def test_get_conditions_set_ventilation(hass, device_reg, entity_reg):
         {
             "condition": "device",
             "domain": DOMAIN,
-            "type": "is_ventilating",
+            "type": "is_ventilation_position",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_{ent.unique_id}",
         },
@@ -512,13 +512,13 @@ async def test_if_state(hass, calls):
                             "domain": DOMAIN,
                             "device_id": "",
                             "entity_id": "cover.entity",
-                            "type": "is_ventilating",
+                            "type": "is_ventilation_position",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_ventilating - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": "is_ventilation_position - {{ trigger.platform }} - {{ trigger.event.event_type }}"
                         },
                     },
                 },
@@ -552,12 +552,12 @@ async def test_if_state(hass, calls):
     assert len(calls) == 4
     assert calls[3].data["some"] == "is_closing - event - test_event4"
 
-    hass.states.async_set("cover.entity", STATE_VENTILATING)
+    hass.states.async_set("cover.entity", STATE_VENTILATION)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event5")
     await hass.async_block_till_done()
     assert len(calls) == 5
-    assert calls[4].data["some"] == "is_ventilating - event - test_event5"
+    assert calls[4].data["some"] == "is_ventilation_position - event - test_event5"
 
 
 async def test_if_position(hass, calls):
@@ -803,13 +803,13 @@ async def test_if_ventilating(hass, calls):
                             "domain": DOMAIN,
                             "device_id": "",
                             "entity_id": "cover.entity",
-                            "type": "is_ventilating",
+                            "type": "is_ventilation_position",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_ventilating - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": "is_ventilation_position - {{ trigger.platform }} - {{ trigger.event.event_type }}"
                         },
                     },
                 },
@@ -822,9 +822,9 @@ async def test_if_ventilating(hass, calls):
     assert len(calls) == 1
     assert calls[0].data["some"] == "is_open - event - test_event1"
 
-    hass.states.async_set("cover.entity", STATE_VENTILATING)
+    hass.states.async_set("cover.entity", STATE_VENTILATION)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[1].data["some"] == "is_ventilating - event - test_event2"
+    assert calls[1].data["some"] == "is_ventilation_position - event - test_event2"

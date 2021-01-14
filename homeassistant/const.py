@@ -260,7 +260,7 @@ STATE_UNLOCKED = "unlocked"
 STATE_UNAVAILABLE = "unavailable"
 STATE_OK = "ok"
 STATE_PROBLEM = "problem"
-STATE_VENTILATING = "ventilating"
+STATE_VENTILATION = "ventilation"
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution
