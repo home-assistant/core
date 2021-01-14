@@ -46,19 +46,16 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     async def _initialize(_):
         address_data = {}
         integration_matchers = await async_get_dhcp(hass)
+        watchers = []
 
-        dhcp_watcher = DHCPWatcher(hass, address_data, integration_matchers)
-        dhcp_watcher.async_start()
-
-        device_tracker_watcher = DeviceTrackerWatcher(
-            hass, address_data, integration_matchers
-        )
-        device_tracker_watcher.async_start()
+        for cls in (DHCPWatcher, DeviceTrackerWatcher):
+            watcher = cls(hass, address_data, integration_matchers)
+            watcher.async_start()
+            watchers.append(watcher)
 
         def _stop(*_):
-            dhcp_watcher.async_stop()
-            dhcp_watcher.join()
-            device_tracker_watcher.async_stop()
+            for watcher in watchers:
+                watcher.async_stop()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop)
 
@@ -189,6 +186,7 @@ class DHCPWatcher(WatcherBase, threading.Thread):
     def async_stop(self):
         """Stop the thread."""
         self._stop_event.set()
+        self.join()
 
     @callback
     def async_start(self):
