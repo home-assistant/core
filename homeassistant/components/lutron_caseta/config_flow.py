@@ -86,6 +86,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except OSError:
                 errors["base"] = "cannot_connect"
 
+            _LOGGER.debug("assets: %s", assets)
             if not errors:
                 await self.hass.async_add_executor_job(self._write_tls_assets, assets)
 
@@ -110,8 +111,17 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             target_file = self.hass.config.path(
                 STORAGE_DIR, f"lutron_caseta-{host}-{asset_key}.pem"
             )
+            _LOGGER.debug("target_file: %s", target_file)
+
             with open(target_file, "w") as fh:
                 fh.write(assets[asset_key].encode("ASCII"))
+
+            _LOGGER.debug(
+                "wrote target_file: %s -> %s",
+                target_file,
+                assets[asset_key].encode("ASCII"),
+            )
+
             self.data[conf_key] = target_file
 
     async def async_step_import(self, import_info):
