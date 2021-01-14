@@ -69,33 +69,29 @@ class MetOfficeData:
 
         return self._site is not None
 
-    async def async_update(self):
+    async def async_update_hourly(self):
         """Async wrapper for update method."""
-        return await self._hass.async_add_executor_job(self._update)
+        return await self._hass.async_add_executor_job(self._update_hourly)
 
-    def _update(self):
-        """Get the latest data from DataPoint."""
+    async def async_update_daily(self):
+        """Async wrapper for update method."""
+        return await self._hass.async_add_executor_job(self._update_daily)
+
+    def _update_hourly(self):
+        """Get the latest hourly data from DataPoint."""
         if self._site is None:
             _LOGGER.error("No Met Office sites held, check logs for problems")
             return
-
         try:
             forecast_3hourly = self._datapoint.get_forecast_for_site(
                 self._site.id, MODE_3HOURLY
             )
-            forecast_daily = self._datapoint.get_forecast_for_site(
-                self._site.id, MODE_DAILY
-            )
         except (ValueError, datapoint.exceptions.APIException) as err:
             _LOGGER.error("Check Met Office connection: %s", err.args)
             self.forecast_3hourly = None
-            self.forecast_daily = None
             self.now_3hourly = None
-            self.now_daily = None
         else:
             self.now_3hourly = forecast_3hourly.now()
-            self.now_daily = forecast_daily.now()
-
             time_now = utcnow()
             self.forecast_3hourly = [
                 timestep
@@ -103,6 +99,23 @@ class MetOfficeData:
                 for timestep in day.timesteps
                 if timestep.date > time_now
             ]
+
+    def _update_daily(self):
+        """Get the latest daily data from DataPoint."""
+        if self._site is None:
+            _LOGGER.error("No Met Office sites held, check logs for problems")
+            return
+        try:
+            forecast_daily = self._datapoint.get_forecast_for_site(
+                self._site.id, MODE_DAILY
+            )
+        except (ValueError, datapoint.exceptions.APIException) as err:
+            _LOGGER.error("Check Met Office connection: %s", err.args)
+            self.forecast_daily = None
+            self.now_daily = None
+        else:
+            self.now_daily = forecast_daily.now()
+            time_now = utcnow()
             self.forecast_daily = [
                 timestep
                 for day in forecast_daily.days

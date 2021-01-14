@@ -11,8 +11,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    METOFFICE_COORDINATOR,
+    METOFFICE_DAILY_COORDINATOR,
     METOFFICE_DATA,
+    METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
 )
 from .data import MetOfficeData
@@ -35,25 +36,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if metoffice_data.site_name is None:
         raise ConfigEntryNotReady()
 
-    metoffice_coordinator = DataUpdateCoordinator(
+    metoffice_daily_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name=f"MetOffice Coordinator for {site_name}",
-        update_method=metoffice_data.async_update,
+        name=f"MetOffice Daily Coordinator for {site_name}",
+        update_method=metoffice_data.async_update_daily,
+        update_interval=DEFAULT_SCAN_INTERVAL,
+    )
+
+    metoffice_hourly_coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"MetOffice Hourly Coordinator for {site_name}",
+        update_method=metoffice_data.async_update_hourly,
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
 
     metoffice_hass_data = hass.data.setdefault(DOMAIN, {})
     metoffice_hass_data[entry.entry_id] = {
         METOFFICE_DATA: metoffice_data,
-        METOFFICE_COORDINATOR: metoffice_coordinator,
+        METOFFICE_HOURLY_COORDINATOR: metoffice_hourly_coordinator,
+        METOFFICE_DAILY_COORDINATOR: metoffice_daily_coordinator,
         METOFFICE_NAME: site_name,
     }
 
     # Fetch initial data so we have data when entities subscribe
-    await metoffice_coordinator.async_refresh()
-    if metoffice_data.now_3hourly is None or metoffice_data.now_daily is None:
-        raise ConfigEntryNotReady()
+    await asyncio.gather(
+        metoffice_hourly_coordinator.async_refresh(),
+        metoffice_daily_coordinator.async_refresh(),
+    )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

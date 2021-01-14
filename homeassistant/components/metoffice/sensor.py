@@ -17,8 +17,9 @@ from .const import (
     ATTRIBUTION,
     CONDITION_CLASSES,
     DOMAIN,
-    METOFFICE_COORDINATOR,
+    METOFFICE_DAILY_COORDINATOR,
     METOFFICE_DATA,
+    METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
     MODE_3HOURLY_LABEL,
     MODE_DAILY,
@@ -108,7 +109,11 @@ class MetOfficeCurrentSensor(SensorEntity):
     def __init__(self, entry_data, hass_data, use_3hourly, sensor_type):
         """Initialize the sensor."""
         self._data = hass_data[METOFFICE_DATA]
-        self._coordinator = hass_data[METOFFICE_COORDINATOR]
+        self._coordinator = (
+            hass_data[METOFFICE_HOURLY_COORDINATOR]
+            if use_3hourly
+            else hass_data[METOFFICE_DAILY_COORDINATOR]
+        )
 
         self._type = sensor_type
         self._name = f"{hass_data[METOFFICE_NAME]} {SENSOR_TYPES[self._type][0]} {MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL}"

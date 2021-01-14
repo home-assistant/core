@@ -17,8 +17,9 @@ from .const import (
     CONDITION_CLASSES,
     DEFAULT_NAME,
     DOMAIN,
-    METOFFICE_COORDINATOR,
+    METOFFICE_DAILY_COORDINATOR,
     METOFFICE_DATA,
+    METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
     MODE_3HOURLY_LABEL,
     MODE_DAILY,
@@ -72,7 +73,11 @@ class MetOfficeWeather(WeatherEntity):
     def __init__(self, entry_data, hass_data, use_3hourly):
         """Initialise the platform with a data instance."""
         self._data = hass_data[METOFFICE_DATA]
-        self._coordinator = hass_data[METOFFICE_COORDINATOR]
+        self._coordinator = (
+            hass_data[METOFFICE_HOURLY_COORDINATOR]
+            if use_3hourly
+            else hass_data[METOFFICE_DAILY_COORDINATOR]
+        )
 
         self._name = f"{DEFAULT_NAME} {hass_data[METOFFICE_NAME]} {MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL}"
         self._unique_id = f"{self._data.latitude}_{self._data.longitude}"
