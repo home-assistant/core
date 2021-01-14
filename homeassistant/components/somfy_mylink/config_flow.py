@@ -61,7 +61,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, dhcp_discovery):
         """Handle dhcp discovery."""
-        if self._host_already_configured(dhcp_discovery[HOSTNAME]):
+        if self._host_already_configured(dhcp_discovery[IP_ADDRESS]):
             return self.async_abort(reason="already_configured")
 
         formatted_mac = format_mac(dhcp_discovery[MAC_ADDRESS])
