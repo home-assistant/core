@@ -41,6 +41,7 @@ async def test_dhcp_match_hostname_and_macaddress(hass):
     """Test matching based on hostname and macaddress."""
     dhcp_watcher = dhcp.DHCPWatcher(
         hass,
+        {},
         [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
     )
 
@@ -66,7 +67,7 @@ async def test_dhcp_match_hostname_and_macaddress(hass):
 async def test_dhcp_match_hostname(hass):
     """Test matching based on hostname only."""
     dhcp_watcher = dhcp.DHCPWatcher(
-        hass, [{"domain": "mock-domain", "hostname": "connect"}]
+        hass, {}, [{"domain": "mock-domain", "hostname": "connect"}]
     )
 
     packet = Ether(RAW_DHCP_REQUEST)
@@ -89,7 +90,7 @@ async def test_dhcp_match_hostname(hass):
 async def test_dhcp_match_macaddress(hass):
     """Test matching based on macaddress only."""
     dhcp_watcher = dhcp.DHCPWatcher(
-        hass, [{"domain": "mock-domain", "macaddress": "B8B7F1*"}]
+        hass, {}, [{"domain": "mock-domain", "macaddress": "B8B7F1*"}]
     )
 
     packet = Ether(RAW_DHCP_REQUEST)
@@ -112,7 +113,7 @@ async def test_dhcp_match_macaddress(hass):
 async def test_dhcp_nomatch(hass):
     """Test not matching based on macaddress only."""
     dhcp_watcher = dhcp.DHCPWatcher(
-        hass, [{"domain": "mock-domain", "macaddress": "ABC123*"}]
+        hass, {}, [{"domain": "mock-domain", "macaddress": "ABC123*"}]
     )
 
     packet = Ether(RAW_DHCP_REQUEST)
@@ -128,7 +129,7 @@ async def test_dhcp_nomatch(hass):
 async def test_dhcp_nomatch_hostname(hass):
     """Test not matching based on hostname only."""
     dhcp_watcher = dhcp.DHCPWatcher(
-        hass, [{"domain": "mock-domain", "hostname": "nomatch*"}]
+        hass, {}, [{"domain": "mock-domain", "hostname": "nomatch*"}]
     )
 
     packet = Ether(RAW_DHCP_REQUEST)
@@ -144,7 +145,7 @@ async def test_dhcp_nomatch_hostname(hass):
 async def test_dhcp_nomatch_non_dhcp_packet(hass):
     """Test matching does not throw on a non-dhcp packet."""
     dhcp_watcher = dhcp.DHCPWatcher(
-        hass, [{"domain": "mock-domain", "hostname": "nomatch*"}]
+        hass, {}, [{"domain": "mock-domain", "hostname": "nomatch*"}]
     )
 
     packet = Ether(b"")
@@ -160,7 +161,7 @@ async def test_dhcp_nomatch_non_dhcp_packet(hass):
 async def test_dhcp_nomatch_non_dhcp_request_packet(hass):
     """Test nothing happens with the wrong message-type."""
     dhcp_watcher = dhcp.DHCPWatcher(
-        hass, [{"domain": "mock-domain", "hostname": "nomatch*"}]
+        hass, {}, [{"domain": "mock-domain", "hostname": "nomatch*"}]
     )
 
     packet = Ether(RAW_DHCP_REQUEST)
@@ -185,7 +186,7 @@ async def test_dhcp_nomatch_non_dhcp_request_packet(hass):
 async def test_dhcp_invalid_hostname(hass):
     """Test we ignore invalid hostnames."""
     dhcp_watcher = dhcp.DHCPWatcher(
-        hass, [{"domain": "mock-domain", "hostname": "nomatch*"}]
+        hass, {}, [{"domain": "mock-domain", "hostname": "nomatch*"}]
     )
 
     packet = Ether(RAW_DHCP_REQUEST)
@@ -210,7 +211,7 @@ async def test_dhcp_invalid_hostname(hass):
 async def test_dhcp_missing_hostname(hass):
     """Test we ignore missing hostnames."""
     dhcp_watcher = dhcp.DHCPWatcher(
-        hass, [{"domain": "mock-domain", "hostname": "nomatch*"}]
+        hass, {}, [{"domain": "mock-domain", "hostname": "nomatch*"}]
     )
 
     packet = Ether(RAW_DHCP_REQUEST)
@@ -235,7 +236,7 @@ async def test_dhcp_missing_hostname(hass):
 async def test_dhcp_invalid_option(hass):
     """Test we ignore invalid hostname option."""
     dhcp_watcher = dhcp.DHCPWatcher(
-        hass, [{"domain": "mock-domain", "hostname": "nomatch*"}]
+        hass, {}, [{"domain": "mock-domain", "hostname": "nomatch*"}]
     )
 
     packet = Ether(RAW_DHCP_REQUEST)

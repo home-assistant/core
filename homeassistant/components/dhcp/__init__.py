@@ -2,17 +2,29 @@
 
 import fnmatch
 import logging
-import os
-from threading import Event, Thread
+import threading
 
 from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
 from scapy.layers.l2 import Ether
 from scapy.sendrecv import sniff
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
+from homeassistant.components.device_tracker.const import (
+    ATTR_HOST_NAME,
+    ATTR_IP,
+    ATTR_MAC,
+    ATTR_SOURCE_TYPE,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    SOURCE_TYPE_ROUTER,
+)
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_HOME,
+)
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.loader import async_get_dhcp
 
 from .const import DOMAIN
@@ -32,12 +44,18 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the dhcp component."""
 
     async def _initialize(_):
-        dhcp_watcher = DHCPWatcher(hass, await async_get_dhcp(hass))
-        dhcp_watcher.start()
+        address_data = {}
+        integration_matchers = await async_get_dhcp(hass)
+        watchers = []
+
+        for cls in (DHCPWatcher, DeviceTrackerWatcher):
+            watcher = cls(hass, address_data, integration_matchers)
+            watcher.async_start()
+            watchers.append(watcher)
 
         def _stop(*_):
-            dhcp_watcher.stop()
-            dhcp_watcher.join()
+            for watcher in watchers:
+                watcher.async_stop()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop)
 
@@ -45,59 +63,19 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
-class DHCPWatcher(Thread):
-    """Class to watch dhcp requests."""
+class WatcherBase:
+    """Base class for dhcp and device tracker watching."""
 
-    def __init__(self, hass, integration_matchers):
+    def __init__(self, hass, address_data, integration_matchers):
         """Initialize class."""
         super().__init__()
 
         self.hass = hass
-        self.name = "dhcp-discovery"
         self._integration_matchers = integration_matchers
-        self._address_data = {}
-        self._stop_event = Event()
+        self._address_data = address_data
 
-    def stop(self):
-        """Stop the thread."""
-        self._stop_event.set()
-
-    def run(self):
-        """Start watching for dhcp packets."""
-        try:
-            sniff(
-                filter=FILTER,
-                prn=self.handle_dhcp_packet,
-                stop_filter=lambda _: self._stop_event.is_set(),
-            )
-        except (Scapy_Exception, OSError) as ex:
-            if os.geteuid() == 0:
-                _LOGGER.error("Cannot watch for dhcp packets: %s", ex)
-            else:
-                _LOGGER.debug(
-                    "Cannot watch for dhcp packets without root or CAP_NET_RAW: %s", ex
-                )
-            return
-
-    def handle_dhcp_packet(self, packet):
-        """Process a dhcp packet."""
-        if DHCP not in packet:
-            return
-
-        options = packet[DHCP].options
-
-        request_type = _decode_dhcp_option(options, MESSAGE_TYPE)
-        if request_type != DHCP_REQUEST:
-            # DHCP request
-            return
-
-        ip_address = _decode_dhcp_option(options, REQUESTED_ADDR)
-        hostname = _decode_dhcp_option(options, HOSTNAME)
-        mac_address = _format_mac(packet[Ether].src)
-
-        if ip_address is None or hostname is None or mac_address is None:
-            return
-
+    def process_client(self, ip_address, hostname, mac_address):
+        """Process a client."""
         data = self._address_data.get(ip_address)
 
         if data and data[MAC_ADDRESS] == mac_address and data[HOSTNAME] == hostname:
@@ -134,13 +112,123 @@ class DHCPWatcher(Thread):
 
             _LOGGER.debug("Matched %s against %s", data, entry)
 
-            self.hass.add_job(
+            self.add_job(
                 self.hass.config_entries.flow.async_init(
                     entry["domain"],
                     context={"source": DOMAIN},
                     data={IP_ADDRESS: ip_address, **data},
                 )
             )
+
+
+class DeviceTrackerWatcher(WatcherBase):
+    """Class to watch dhcp data from routers."""
+
+    def __init__(self, hass, address_data, integration_matchers):
+        """Initialize class."""
+        super().__init__(hass, address_data, integration_matchers)
+        self._unsub = None
+
+    @callback
+    def async_stop(self):
+        """Stop watching for new device trackers."""
+        if self._unsub:
+            self._unsub()
+            self._unsub = None
+
+    @callback
+    def async_start(self):
+        """Stop watching for new device trackers."""
+        self._unsub = async_track_state_added_domain(
+            self.hass, [DEVICE_TRACKER_DOMAIN], self._async_process_device_event
+        )
+        for state in self.hass.states.async_all(DEVICE_TRACKER_DOMAIN):
+            self._async_process_device_state(state)
+
+    def _async_process_device_event(self, event: Event):
+        """Process a device tracker state change event."""
+        self._async_process_device(event.get("new_state"))
+
+    def _async_process_device_state(self, state: State):
+        """Process a device tracker state."""
+        if state.state != STATE_HOME:
+            return
+
+        attributes = state.attributes
+
+        if attributes.get(ATTR_SOURCE_TYPE) != SOURCE_TYPE_ROUTER:
+            return
+
+        ip_address = attributes.get(ATTR_IP)
+        hostname = attributes.get(ATTR_HOST_NAME)
+        mac_address = attributes.get(ATTR_MAC)
+
+        if ip_address is None or hostname is None or mac_address is None:
+            return
+
+        self.process_client(ip_address, hostname, _format_mac(mac_address))
+
+    def add_job(self, job):
+        """Pass a job to async_add_job since we are in async context."""
+        self.hass.async_add_job(job)
+
+
+class DHCPWatcher(WatcherBase, threading.Thread):
+    """Class to watch dhcp requests."""
+
+    def __init__(self, hass, address_data, integration_matchers):
+        """Initialize class."""
+        super().__init__(hass, address_data, integration_matchers)
+        self.name = "dhcp-discovery"
+        self._stop_event = threading.Event()
+
+    @callback
+    def async_stop(self):
+        """Stop the thread."""
+        self._stop_event.set()
+        self.join()
+
+    @callback
+    def async_start(self):
+        """Start the thread."""
+        self.start()
+
+    def run(self):
+        """Start watching for dhcp packets."""
+        try:
+            sniff(
+                filter=FILTER,
+                prn=self.handle_dhcp_packet,
+                stop_filter=lambda _: self._stop_event.is_set(),
+            )
+        except (Scapy_Exception, OSError) as ex:
+            _LOGGER.info("Cannot watch for dhcp packets: %s", ex)
+            return
+
+    def handle_dhcp_packet(self, packet):
+        """Process a dhcp packet."""
+        if DHCP not in packet:
+            return
+
+        options = packet[DHCP].options
+
+        request_type = _decode_dhcp_option(options, MESSAGE_TYPE)
+        if request_type != DHCP_REQUEST:
+            # DHCP request
+            return
+
+        ip_address = _decode_dhcp_option(options, REQUESTED_ADDR)
+        hostname = _decode_dhcp_option(options, HOSTNAME)
+        mac_address = _format_mac(packet[Ether].src)
+
+        if ip_address is None or hostname is None or mac_address is None:
+            return
+
+        self.process_client(ip_address, hostname, mac_address)
+
+    def add_job(self, job):
+        """Pass a job to add_job since we are in a thread."""
+        self.hass.add_job(job)
 
 
 def _decode_dhcp_option(dhcp_options, key):

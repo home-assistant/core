@@ -189,6 +189,10 @@ async def test_tracked_wireless_clients(hass):
 
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1.state == "home"
+    assert client_1.attributes["ip"] == "10.0.0.1"
+    assert client_1.attributes["mac"] == "00:00:00:00:00:01"
+    assert client_1.attributes["hostname"] == "client_1"
+    assert client_1.attributes["host_name"] == "client_1"
 
     # State change signalling works with events
     controller.api.websocket._data = {
