@@ -41,7 +41,7 @@ async def test_form_user(hass):
             {
                 CONF_HOST: "1.1.1.1",
                 CONF_PORT: 1234,
-                CONF_SYSTEM_ID: 456,
+                CONF_SYSTEM_ID: "456",
             },
         )
         await hass.async_block_till_done()
@@ -51,7 +51,7 @@ async def test_form_user(hass):
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: 1234,
-        CONF_SYSTEM_ID: 456,
+        CONF_SYSTEM_ID: "456",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -86,7 +86,7 @@ async def test_form_user_already_configured(hass):
             {
                 CONF_HOST: "1.1.1.1",
                 CONF_PORT: 1234,
-                CONF_SYSTEM_ID: 456,
+                CONF_SYSTEM_ID: "456",
             },
         )
         await hass.async_block_till_done()
@@ -195,7 +195,7 @@ async def test_form_import_already_exists(hass):
             data={
                 CONF_HOST: "1.1.1.1",
                 CONF_PORT: 1234,
-                CONF_SYSTEM_ID: 456,
+                CONF_SYSTEM_ID: "456",
             },
         )
         await hass.async_block_till_done()
@@ -224,7 +224,7 @@ async def test_form_invalid_auth(hass):
             {
                 CONF_HOST: "1.1.1.1",
                 CONF_PORT: 1234,
-                CONF_SYSTEM_ID: 456,
+                CONF_SYSTEM_ID: "456",
             },
         )
 
@@ -247,7 +247,7 @@ async def test_form_cannot_connect(hass):
             {
                 CONF_HOST: "1.1.1.1",
                 CONF_PORT: 1234,
-                CONF_SYSTEM_ID: 456,
+                CONF_SYSTEM_ID: "456",
             },
         )
 
@@ -270,7 +270,7 @@ async def test_form_unknown_error(hass):
             {
                 CONF_HOST: "1.1.1.1",
                 CONF_PORT: 1234,
-                CONF_SYSTEM_ID: 456,
+                CONF_SYSTEM_ID: "456",
             },
         )
 
@@ -284,7 +284,7 @@ async def test_options_not_loaded(hass):
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.1.1.1", CONF_PORT: 12, CONF_SYSTEM_ID: 46},
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 12, CONF_SYSTEM_ID: "46"},
     )
     config_entry.add_to_hass(hass)
 
@@ -304,7 +304,7 @@ async def test_options_with_targets(hass, reversed):
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.1.1.1", CONF_PORT: 12, CONF_SYSTEM_ID: 46},
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 12, CONF_SYSTEM_ID: "46"},
     )
     config_entry.add_to_hass(hass)
 
@@ -363,7 +363,7 @@ async def test_form_import_with_entity_config_modify_options(hass, reversed):
         data={
             CONF_HOST: "1.1.1.1",
             CONF_PORT: 1234,
-            CONF_SYSTEM_ID: 456,
+            CONF_SYSTEM_ID: "456",
             CONF_DEFAULT_REVERSE: True,
             CONF_ENTITY_CONFIG: {"cover.xyz": {CONF_REVERSE: False}},
         },
