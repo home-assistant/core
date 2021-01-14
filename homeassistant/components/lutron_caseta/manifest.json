@@ -5,7 +5,9 @@
   "requirements": [
     "pylutron-caseta==0.7.2"
   ],
+  "config_flow": true,
+  "zeroconf": ["_leap._tcp.local."],
   "codeowners": [
-    "@swails"
+    "@swails", "@bdraco"
   ]
 }

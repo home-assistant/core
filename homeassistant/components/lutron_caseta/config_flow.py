@@ -1,10 +1,13 @@
 """Config flow for Lutron Caseta."""
 import logging
 
+from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, pair
 from pylutron_caseta.smartbridge import Smartbridge
+import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from . import DOMAIN  # pylint: disable=unused-import
 from .const import (
@@ -17,9 +20,17 @@ from .const import (
     STEP_IMPORT_FAILED,
 )
 
+FILE_MAPPING = {
+    PAIR_KEY: CONF_KEYFILE,
+    PAIR_CERT: CONF_CERTFILE,
+    PAIR_CA: CONF_CA_CERTS,
+}
+
 _LOGGER = logging.getLogger(__name__)
 
 ENTRY_DEFAULT_TITLE = "Caséta bridge"
+
+DATA_SCHEMA_USER = vol.Schema({vol.Required(CONF_HOST): str})
 
 
 class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -31,6 +42,64 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize a Lutron Caseta flow."""
         self.data = {}
+
+    async def async_step_user(self, user_input):
+        """Handle a flow initialized by the user."""
+        if user_input is not None:
+            self.data[CONF_HOST] = user_input[CONF_HOST]
+            return await self.async_step_link()
+
+        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA_USER)
+
+    async def async_step_zeroconf(self, discovery_info):
+        """Handle a flow initialized by zeroconf discovery."""
+        name: str = discovery_info[CONF_NAME]
+        host: str = discovery_info[CONF_HOST]
+        lutron_id = name.partition("-")[1]
+        await self.async_set_unique_id(lutron_id)
+        self._abort_if_unique_id_configured({CONF_HOST: host})
+        self.data[CONF_HOST] = host
+        return await self.async_step_link()
+
+    async def async_step_link(self, user_input):
+        """Handle pairing with the hub."""
+        errors = {}
+
+        if user_input is not None:
+            assets = None
+            try:
+                assets = await self.hass.async_add_executor_job(
+                    pair, self.data[CONF_HOST]
+                )
+            except OSError:
+                errors["base"] = "cannot_connect"
+
+            if not errors:
+                await self.hass.async_add_executor_job(self._write_tls_assets, assets)
+
+                if await self.async_validate_connectable_bridge_config():
+                    return self.async_create_entry(
+                        title=self.data[CONF_HOST], data=self.data
+                    )
+
+                errors["base"] = "pairing_failed"
+
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context.update({"title_placeholders": self.data})
+        return self.async_show_form(step_id="link", errors=errors)
+
+    def _write_tls_assets(self, assets):
+        """Write the tls assets to disk."""
+        host = self.data[CONF_HOST]
+
+        for asset_key, conf_key in FILE_MAPPING.items():
+            target_file = self.hass.config.path(
+                STORAGE_DIR, f"lutron_caseta-{host}-{asset_key}.pem"
+            )
+            with open(target_file, "w") as fh:
+                fh.chmod(0o600)
+                fh.write(assets[asset_key].encode("ASCII"))
+            self.data[conf_key] = target_file
 
     async def async_step_import(self, import_info):
         """Import a new Caseta bridge as a config entry.

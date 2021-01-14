@@ -4,10 +4,22 @@
       "import_failed": {
         "title": "Failed to import Caséta bridge configuration.",
         "description": "Couldn’t setup bridge (host: {host}) imported from configuration.yaml."
-      }
+      },
+      "user": {
+        "title": "Automaticlly connect to the bridge",
+        "description": "Enter the ip address of the device.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },   
+      "link": {
+        "title": "Pair with the bridge {host}",
+        "description": "Press the black button on the back of the bridge."
+      }    
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "pairing_failed": "Unable to pair with the device"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
