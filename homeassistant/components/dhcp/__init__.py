@@ -22,7 +22,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_HOME,
 )
-from homeassistant.core import Event, HomeAssistant, State
+from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.loader import async_get_dhcp
@@ -48,16 +48,17 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         integration_matchers = await async_get_dhcp(hass)
 
         dhcp_watcher = DHCPWatcher(hass, address_data, integration_matchers)
-        dhcp_watcher.start()
+        dhcp_watcher.async_start()
+
         device_tracker_watcher = DeviceTrackerWatcher(
             hass, address_data, integration_matchers
         )
-        device_tracker_watcher.start()
+        device_tracker_watcher.async_start()
 
         def _stop(*_):
-            dhcp_watcher.stop()
+            dhcp_watcher.async_stop()
             dhcp_watcher.join()
-            device_tracker_watcher.stop()
+            device_tracker_watcher.async_stop()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop)
 
@@ -131,17 +132,21 @@ class DeviceTrackerWatcher(WatcherBase):
         super().__init__(hass, address_data, integration_matchers)
         self._unsub = None
 
-    def stop(self):
+    @callback
+    def async_stop(self):
         """Stop watching for new device trackers."""
         if self._unsub:
             self._unsub()
             self._unsub = None
 
-    def start(self):
+    @callback
+    def async_start(self):
         """Stop watching for new device trackers."""
         self._unsub = async_track_state_added_domain(
             self.hass, [DEVICE_TRACKER_DOMAIN], self._async_process_device_event
         )
+        for state in self.hass.states.async_all(DEVICE_TRACKER_DOMAIN):
+            self._async_process_device_state(state)
 
     def _async_process_device_event(self, event: Event):
         """Process a device tracker state change event."""
@@ -180,9 +185,15 @@ class DHCPWatcher(WatcherBase, threading.Thread):
         self.name = "dhcp-discovery"
         self._stop_event = threading.Event()
 
-    def stop(self):
+    @callback
+    def async_stop(self):
         """Stop the thread."""
         self._stop_event.set()
+
+    @callback
+    def async_start(self):
+        """Start the thread."""
+        self.start()
 
     def run(self):
         """Start watching for dhcp packets."""
