@@ -1,4 +1,5 @@
 """Component for interacting with a Lutron Caseta system."""
+import asyncio
 import logging
 
 from pylutron_caseta.smartbridge import Smartbridge
@@ -90,6 +91,26 @@ async def async_setup_entry(hass, config_entry):
         )
 
     return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload the bridge bridge from a config entry."""
+
+    hass.data[DOMAIN][config_entry.entry_id].disconnect()
+
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(config_entry, component)
+                for component in LUTRON_CASETA_COMPONENTS
+            ]
+        )
+    )
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(config_entry.entry_id)
+
+    return unload_ok
 
 
 class LutronCasetaDevice(Entity):
