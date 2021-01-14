@@ -1433,6 +1433,9 @@ pyhik==0.2.8
 # homeassistant.components.hive
 pyhiveapi==0.3.4.4
 
+# homeassistant.components.tahoma
+pyhoma==0.5.1
+
 # homeassistant.components.homematic
 pyhomematic==0.1.71
 
