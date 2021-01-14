@@ -30,6 +30,7 @@ from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER  # noqa: F401
 from .cors import setup_cors
 from .forwarded import async_setup_forwarded
 from .request_context import setup_request_context
+from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
 from .view import HomeAssistantView  # noqa: F401
 from .web_runner import HomeAssistantTCPSite
@@ -296,7 +297,10 @@ class HomeAssistantHTTP:
         )
         app[KEY_HASS] = hass
 
-        # Order matters, forwarded middleware needs to go first.
+        # Order matters, security filters middle ware needs to go first,
+        # forwarded middleware needs to go second.
+        setup_security_filter(app)
+
         # Only register middleware if `use_x_forwarded_for` is enabled
         # and trusted proxies are provided
         if use_x_forwarded_for and trusted_proxies:
