@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -56,26 +55,6 @@ ATTR_MOVEMENT = "movement"
 ATTR_TRAVELTIME = "travel_time"
 
 
-SERVICE_PTZ_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_MOVEMENT): vol.In(
-            [
-                DIR_UP,
-                DIR_DOWN,
-                DIR_LEFT,
-                DIR_RIGHT,
-                DIR_TOPLEFT,
-                DIR_TOPRIGHT,
-                DIR_BOTTOMLEFT,
-                DIR_BOTTOMRIGHT,
-            ]
-        ),
-        vol.Optional(ATTR_TRAVELTIME, default=DEFAULT_TRAVELTIME): cv.small_float,
-    }
-)
-
-
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a Foscam IP Camera."""
     LOGGER.warning(
@@ -102,7 +81,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a Foscam IP camera from a config entry."""
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
-        SERVICE_PTZ, SERVICE_PTZ_SCHEMA, "async_perform_ptz"
+        SERVICE_PTZ,
+        {
+            vol.Required(ATTR_MOVEMENT): vol.In(
+                [
+                    DIR_UP,
+                    DIR_DOWN,
+                    DIR_LEFT,
+                    DIR_RIGHT,
+                    DIR_TOPLEFT,
+                    DIR_TOPRIGHT,
+                    DIR_BOTTOMLEFT,
+                    DIR_BOTTOMRIGHT,
+                ]
+            ),
+            vol.Optional(ATTR_TRAVELTIME, default=DEFAULT_TRAVELTIME): cv.small_float,
+        },
+        "async_perform_ptz",
     )
 
     camera = FoscamCamera(
