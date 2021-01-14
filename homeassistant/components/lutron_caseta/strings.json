@@ -1,6 +1,6 @@
 {
-  "flow_title": "Lutron Caséta ({host})",
   "config": {
+    "flow_title": "Lutron Caséta ({host})",    
     "step": {
       "import_failed": {
         "title": "Failed to import Caséta bridge configuration.",
