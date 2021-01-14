@@ -56,7 +56,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle a flow initialized by zeroconf discovery."""
-        _LOGGER.debug("Discovered lutron device: %s", discovery_info)
         hostname = discovery_info.get(HOSTNAME)
         if hostname is None or not hostname.startswith("lutron-"):
             return self.async_abort(reason="not_lutron_device")
@@ -87,7 +86,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except OSError:
                 errors["base"] = "cannot_connect"
 
-            _LOGGER.debug("assets: %s", assets)
             if not errors:
                 await self.hass.async_add_executor_job(self._write_tls_assets, assets)
 
@@ -112,13 +110,8 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             target_file = self.hass.config.path(
                 STORAGE_DIR, f"lutron_caseta-{host}-{asset_key}.pem"
             )
-            _LOGGER.debug("target_file: %s", target_file)
-
             with open(target_file, "w") as fh:
                 fh.write(assets[asset_key])
-
-            _LOGGER.debug("wrote target_file: %s -> %s", target_file, assets[asset_key])
-
             self.data[conf_key] = target_file
 
     async def async_step_import(self, import_info):
