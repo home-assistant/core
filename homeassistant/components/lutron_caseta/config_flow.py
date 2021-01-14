@@ -1,5 +1,6 @@
 """Config flow for Lutron Caseta."""
 import logging
+import os
 
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, pair
 from pylutron_caseta.smartbridge import Smartbridge
@@ -113,7 +114,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 STORAGE_DIR, f"lutron_caseta-{host}-{asset_key}.pem"
             )
             with open(target_file, "w") as fh:
-                fh.chmod(0o600)
+                os.chmod(fh, 0o600)
                 fh.write(assets[asset_key].encode("ASCII"))
             self.data[conf_key] = target_file
 
