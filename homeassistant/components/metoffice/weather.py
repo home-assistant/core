@@ -1,6 +1,4 @@
 """Support for UK Met Office weather service."""
-import logging
-
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
@@ -45,6 +43,29 @@ async def async_setup_entry(
     )
 
 
+def _build_forecast_data(timestep):
+    data = {}
+    data[ATTR_FORECAST_TIME] = timestep.date
+    if timestep.weather:
+        data[ATTR_FORECAST_CONDITION] = _get_weather_condition(timestep.weather.value)
+    if timestep.precipitation:
+        data[ATTR_FORECAST_PRECIPITATION] = timestep.precipitation.value
+    if timestep.temperature:
+        data[ATTR_FORECAST_TEMP] = timestep.temperature.value
+    if timestep.wind_direction:
+        data[ATTR_FORECAST_WIND_BEARING] = timestep.wind_direction.value
+    if timestep.wind_speed:
+        data[ATTR_FORECAST_WIND_SPEED] = timestep.wind_speed.value
+    return data
+
+
+def _get_weather_condition(metoffice_code):
+    for hass_name, metoffice_codes in CONDITION_CLASSES.items():
+        if metoffice_code in metoffice_codes:
+            return hass_name
+    return None
+
+
 class MetOfficeWeather(WeatherEntity):
     """Implementation of a Met Office weather condition."""
 
@@ -75,24 +96,16 @@ class MetOfficeWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        return (
-            [
-                k
-                for k, v in CONDITION_CLASSES.items()
-                if self.metoffice_now.weather.value in v
-            ][0]
-            if self.metoffice_now
-            else None
-        )
+        if self.metoffice_now:
+            return _get_weather_condition(self.metoffice_now.weather.value)
+        return None
 
     @property
     def temperature(self):
         """Return the platform temperature."""
-        return (
-            self.metoffice_now.temperature.value
-            if self.metoffice_now and self.metoffice_now.temperature
-            else None
-        )
+        if self.metoffice_now and self.metoffice_now.temperature:
+            return self.metoffice_now.temperature.value
+        return None
 
     @property
     def temperature_unit(self):
@@ -104,7 +117,7 @@ class MetOfficeWeather(WeatherEntity):
         """Return the platform visibility."""
         _visibility = None
         if hasattr(self.metoffice_now, "visibility"):
-            _visibility = f"{VISIBILITY_CLASSES.get(self.metoffice_now.visibility.value)} ({VISIBILITY_DISTANCE_CLASSES.get(self.metoffice_now.visibility.value)})"
+            _visibility = f"{VISIBILITY_CLASSES.get(self.metoffice_now.visibility.value)} - {VISIBILITY_DISTANCE_CLASSES.get(self.metoffice_now.visibility.value)}"
         return _visibility
 
     @property
@@ -115,69 +128,35 @@ class MetOfficeWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the mean sea-level pressure."""
-        return (
-            self.metoffice_now.pressure.value
-            if self.metoffice_now and self.metoffice_now.pressure
-            else None
-        )
+        if self.metoffice_now and self.metoffice_now.pressure:
+            return self.metoffice_now.pressure.value
+        return None
 
     @property
     def humidity(self):
         """Return the relative humidity."""
-        return (
-            self.metoffice_now.humidity.value
-            if self.metoffice_now and self.metoffice_now.humidity
-            else None
-        )
+        if self.metoffice_now and self.metoffice_now.humidity:
+            return self.metoffice_now.humidity.value
+        return None
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return (
-            self.metoffice_now.wind_speed.value
-            if self.metoffice_now and self.metoffice_now.wind_speed
-            else None
-        )
+        if self.metoffice_now and self.metoffice_now.wind_speed:
+            return self.metoffice_now.wind_speed.value
+        return None
 
     @property
     def wind_bearing(self):
         """Return the wind bearing."""
-        return (
-            self.metoffice_now.wind_direction.value
-            if self.metoffice_now and self.metoffice_now.wind_direction
-            else None
-        )
+        if self.metoffice_now and self.metoffice_now.wind_direction:
+            return self.metoffice_now.wind_direction.value
+        return None
 
     @property
     def forecast(self):
         """Return the forecast array."""
-        data = [
-            {
-                ATTR_FORECAST_CONDITION: [
-                    k
-                    for k, v in CONDITION_CLASSES.items()
-                    if timestep.weather.value in v
-                ][0]
-                if timestep.weather
-                else None,
-                ATTR_FORECAST_PRECIPITATION: timestep.precipitation.value
-                if timestep.precipitation
-                else None,
-                ATTR_FORECAST_TEMP: timestep.temperature.value
-                if timestep.temperature
-                else None,
-                ATTR_FORECAST_TIME: timestep.date,
-                ATTR_FORECAST_WIND_BEARING: timestep.wind_direction.value
-                if timestep.wind_direction
-                else None,
-                ATTR_FORECAST_WIND_SPEED: timestep.wind_speed.value
-                if timestep.wind_speed
-                else None,
-            }
-            for timestep in self.metoffice_forecast
-        ]
-
-        return data
+        return [_build_forecast_data(timestep) for timestep in self.metoffice_forecast]
 
     @property
     def attribution(self):
@@ -194,14 +173,12 @@ class MetOfficeWeather(WeatherEntity):
     @callback
     def _update_callback(self) -> None:
         """Load data from integration."""
-        self.metoffice_now = (
-            self._data.now_3hourly if self.use_3hourly else self._data.now_daily
-        )
-        self.metoffice_forecast = (
-            self._data.forecast_3hourly
-            if self.use_3hourly
-            else self._data.forecast_daily
-        )
+        if self.use_3hourly:
+            self.metoffice_now = self._data.now_3hourly
+            self.metoffice_forecast = self._data.forecast_3hourly
+        else:
+            self.metoffice_now = self._data.now_daily
+            self.metoffice_forecast = self._data.forecast_daily
         self.async_write_ha_state()
 
     @property

@@ -37,7 +37,8 @@ async def test_one_sensor_site_running(hass, requests_mock, legacy_patchable_tim
         text=wavertree_hourly,
     )
     requests_mock.get(
-        "/public/data/val/wxfcs/all/json/354107?res=daily", text=wavertree_daily,
+        "/public/data/val/wxfcs/all/json/354107?res=daily",
+        text=wavertree_daily,
     )
 
     entry = MockConfigEntry(
