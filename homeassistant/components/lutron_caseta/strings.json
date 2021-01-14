@@ -1,4 +1,5 @@
 {
+  "flow_title": "Lutron Caséta ({host})",
   "config": {
     "step": {
       "import_failed": {
