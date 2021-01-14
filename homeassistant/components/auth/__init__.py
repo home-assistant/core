@@ -301,7 +301,6 @@ class TokenView(HomeAssistantView):
                 status_code=HTTP_BAD_REQUEST,
             )
 
-        # refresh user
         user = await hass.auth.async_get_or_create_user(cred)
 
         if not user.is_active:
