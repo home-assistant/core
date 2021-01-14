@@ -29,6 +29,7 @@ from .const import (
     DEFAULT_CONSIDER_HOME,
     DEFAULT_INTERFACE,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,6 +53,17 @@ class KeeneticRouter:
     def host(self):
         """Return the host of this hub."""
         return self.config_entry.data[CONF_HOST]
+
+    @property
+    def device_info(self):
+        """Return the host of this hub."""
+        return {
+            "identifiers": {(DOMAIN, f"router-{self.config_entry.entry_id}")},
+            "manufacturer": self.manufacturer,
+            "model": self.model,
+            "name": self.name,
+            "sw_version": self.firmware,
+        }
 
     @property
     def name(self):
@@ -86,7 +98,7 @@ class KeeneticRouter:
     @property
     def signal_update(self):
         """Event specific per router entry to signal updates."""
-        return f"keenetic-update-{self.host}"
+        return f"keenetic-update-{self.config_entry.entry_id}"
 
     async def async_add_defaults(self):
         """Populate default options."""
@@ -140,22 +152,16 @@ class KeeneticRouter:
 
         await self.async_add_defaults()
 
-        async def periodic_update(_now):
+        async def async_update_data(_now):
             await self.request_update()
             self._cancel_periodic_update = async_track_point_in_utc_time(
                 self.hass,
-                periodic_update,
+                async_update_data,
                 dt_util.utcnow()
                 + timedelta(seconds=self.config_entry.options[CONF_SCAN_INTERVAL]),
             )
 
-        await periodic_update(dt_util.utcnow())
-
-        self.hass.async_create_task(
-            self.hass.config_entries.async_forward_entry_setup(
-                self.config_entry, "device_tracker"
-            )
-        )
+        await async_update_data(dt_util.utcnow())
 
     async def async_teardown(self):
         """Teardown up the connection."""

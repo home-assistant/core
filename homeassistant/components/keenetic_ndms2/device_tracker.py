@@ -51,7 +51,11 @@ async def async_setup_entry(
                 restored.append(
                     KeeneticTracker(
                         Device(
-                            mac=mac, name=entity_entry.name, ip=None, interface=None
+                            mac=mac,
+                            # restore the original name as set by the router before
+                            name=entity_entry.original_name,
+                            ip=None,
+                            interface=None,
                         ),
                         router,
                     )
@@ -61,6 +65,8 @@ async def async_setup_entry(
         async_add_entities(restored)
 
     async_dispatcher_connect(hass, router.signal_update, update_from_router)
+
+    return True
 
 
 @callback
@@ -114,7 +120,7 @@ class KeeneticTracker(ScannerEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        return f"{self.device.mac}@{self.router.host}"
+        return f"{self.device.mac}@{self.router.config_entry.entry_id}"
 
     @property
     def available(self) -> bool:
@@ -137,7 +143,6 @@ class KeeneticTracker(ScannerEntity):
         info = {
             "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
             "identifiers": {(DOMAIN, self.device.mac)},
-            "via_device": (DOMAIN, self.router.host),
         }
 
         if self.device.name:
@@ -160,14 +165,11 @@ class KeeneticTracker(ScannerEntity):
             if new_device:
                 self.device = new_device
                 self._last_seen = dt_util.utcnow()
-            self.async_write_ha_state()
+
+            self.async_schedule_update_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, self.router.signal_update, update_device
             )
         )
-
-    async def async_update(self):
-        """Synchronize state with hub."""
-        await self.router.request_update()
