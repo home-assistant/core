@@ -11,11 +11,11 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }
-      },   
+      },
       "link": {
         "title": "Pair with the bridge {host}",
         "description": "Press the black button on the back of the bridge."
-      }    
+      }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
