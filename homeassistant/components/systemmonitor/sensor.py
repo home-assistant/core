@@ -316,7 +316,7 @@ class SystemMonitorSensor(Entity):
             else:
                 self._state = None
         elif self.type == "last_boot":
-            if self._state == None:
+            if self._state is None:
                 self._state = dt_util.as_local(
                     dt_util.utc_from_timestamp(psutil.boot_time())
                 ).isoformat()
