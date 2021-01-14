@@ -19,8 +19,7 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "pairing_failed": "Unable to pair with the device"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
       "not_lutron_device": "Discovered device not a Lutron device",
