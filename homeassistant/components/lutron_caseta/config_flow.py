@@ -90,13 +90,9 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 await self.hass.async_add_executor_job(self._write_tls_assets, assets)
-
-                if await self.async_validate_connectable_bridge_config():
-                    return self.async_create_entry(
-                        title=self.data[CONF_HOST], data=self.data
-                    )
-
-                errors["base"] = "pairing_failed"
+                return self.async_create_entry(
+                    title=self.data[CONF_HOST], data=self.data
+                )
 
         return self.async_show_form(
             step_id="link",
