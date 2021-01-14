@@ -112,8 +112,8 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         for asset_key, conf_key in FILE_MAPPING.items():
             file_name = f"lutron_caseta-{host}-{asset_key}.pem"
             target_file = self.hass.config.path(STORAGE_DIR, file_name)
-            with open(target_file, "w") as fh:
-                fh.write(assets[asset_key])
+            with open(target_file, "w") as file_handle:
+                file_handle.write(assets[asset_key])
             self.data[conf_key] = os.path.join(
                 STORAGE_DIR, f"lutron_caseta-{host}-{asset_key}.pem"
             )
