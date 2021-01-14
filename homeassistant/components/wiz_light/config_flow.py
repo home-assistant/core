@@ -30,15 +30,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                if self.is_valid_ip(user_input[CONF_HOST]):
-                    bulb = wizlight(user_input[CONF_HOST])
-                    mac = await bulb.getMac()
-                    await self.async_set_unique_id(mac)
-                    self._abort_if_unique_id_configured()
-                    return self.async_create_entry(
-                        title=user_input[CONF_NAME], data=user_input
-                    )
-                errors["base"] = "no_IP"
+                bulb = wizlight(user_input[CONF_HOST])
+                mac = await bulb.getMac()
+                await self.async_set_unique_id(mac)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input
+                )
             except WizLightTimeOutError:
                 errors["base"] = "bulb_time_out"
             except ConnectionRefusedError:
@@ -57,9 +55,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config):
         """Import from config."""
         return await self.async_step_user(user_input=import_config)
-
-    @staticmethod
-    def is_valid_ip(ip_address) -> bool:
-        """Check the IP address."""
-        ipv = re.match(r"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$", ip_address)
-        return bool(ipv) and all(map(lambda n: 0 <= int(n) <= 255, ipv.groups()))

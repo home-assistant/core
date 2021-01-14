@@ -95,38 +95,6 @@ async def test_user_form_exceptions(hass, side_effect, error_base):
     assert result2["errors"] == {"base": error_base}
 
 
-async def test_form_with_no_ip(hass):
-    """Test the from with not a ip input."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
-    # Patch functions
-    with patch(
-        "homeassistant.components.wiz_light.wizlight.getBulbConfig",
-        return_value=FAKE_BULB_CONFIG,
-    ), patch(
-        "homeassistant.components.wiz_light.wizlight.getMac",
-        return_value="ABCABCABCABC",
-    ), patch(
-        "homeassistant.components.wiz_light.async_setup",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.wiz_light.async_setup_entry",
-        return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TEST_NO_IP,
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "no_IP"}
-
-
 async def test_form_updates_unique_id(hass):
     """Test a duplicate id aborts and updates existing entry."""
     entry = MockConfigEntry(

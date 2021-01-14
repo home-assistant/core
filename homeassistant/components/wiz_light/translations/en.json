@@ -8,21 +8,21 @@
         "error": {
             "bulb_time_out": "Can not connect to the bulb. Maybe the bulb is offline or a wrong IP was entered. Please turn on the light and try again!",
             "cannot_connect": "Failed to connect",
-            "no_IP": "The enterd IP is not valid. Please use for example: 192.168.1.1.",
             "no_wiz_light": "The bulb can be connected via WiZ Light integration.",
             "unknown": "Unexpected error"
         },
         "step": {
             "confirm": {
-                "description": "Do you want to start set up?"
+                "description": "Do you want to add a new Bulb?"
             },
             "user": {
                 "data": {
-                    "ip_address": "IP Address",
+                    "host": "Hostname or IP",
                     "name": "Name"
-                }
+                },
+                "description": "Please enter a hostname or IP address and name to add a new bulb:"
             }
         }
     },
-    "title": "WiZ Light integration"
+    "title": "WiZ Light"
 }
