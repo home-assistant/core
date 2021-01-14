@@ -281,8 +281,8 @@ async def test_setup_and_stop(hass):
     wait_event.set()
 
 
-async def test_setup_fails(hass):
-    """Test we handle sniff setup failing."""
+async def test_setup_fails_as_root(hass, caplog):
+    """Test we handle sniff setup failing as root."""
 
     assert await async_setup_component(
         hass,
@@ -293,10 +293,37 @@ async def test_setup_fails(hass):
 
     wait_event = threading.Event()
 
-    with patch("homeassistant.components.dhcp.sniff", side_effect=Scapy_Exception):
+    with patch("os.geteuid", return_value=0), patch(
+        "homeassistant.components.dhcp.sniff", side_effect=Scapy_Exception
+    ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     wait_event.set()
+    assert "Cannot watch for dhcp packets" in caplog.text
+
+
+async def test_setup_fails_non_root(hass, caplog):
+    """Test we handle sniff setup failing as non-root."""
+
+    assert await async_setup_component(
+        hass,
+        dhcp.DOMAIN,
+        {},
+    )
+    await hass.async_block_till_done()
+
+    wait_event = threading.Event()
+
+    with patch("os.geteuid", return_value=10), patch(
+        "homeassistant.components.dhcp.sniff", side_effect=Scapy_Exception
+    ):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    wait_event.set()
+    assert "Cannot watch for dhcp packets without root or CAP_NET_RAW" in caplog.text
