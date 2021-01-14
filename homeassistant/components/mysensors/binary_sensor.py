@@ -1,4 +1,6 @@
 """Support for MySensors binary sensors."""
+from typing import Callable
+
 from homeassistant.components import mysensors
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOISTURE,
@@ -10,7 +12,9 @@ from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
+from homeassistant.helpers.typing import HomeAssistantType
 
 SENSORS = {
     "S_DOOR": "door",
@@ -24,7 +28,7 @@ SENSORS = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass: HomeAssistantType, config, async_add_entities, discovery_info=None):
     """Set up the mysensors platform for binary sensors."""
     mysensors.setup_mysensors_platform(
         hass,

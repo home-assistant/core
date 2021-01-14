@@ -13,12 +13,13 @@ from homeassistant.components.light import (
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
 import homeassistant.util.color as color_util
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.color import rgb_hex_to_rgb_list
 
 SUPPORT_MYSENSORS_RGBW = SUPPORT_COLOR | SUPPORT_WHITE_VALUE
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass: HomeAssistantType, config, async_add_entities, discovery_info=None):
     """Set up the mysensors platform for lights."""
     device_class_map = {
         "S_DIMMER": MySensorsLightDimmer,

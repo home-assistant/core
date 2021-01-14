@@ -6,7 +6,8 @@ import socket
 import sys
 
 import async_timeout
-from mysensors import mysensors
+from mysensors import mysensors, BaseAsyncGateway, Sensor, Message
+from typing import Optional, List, Any, Callable, Coroutine
 import voluptuous as vol
 
 from homeassistant.const import CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_STOP
@@ -30,8 +31,11 @@ from .const import (
     MYSENSORS_GATEWAY_READY,
     MYSENSORS_GATEWAYS,
 )
+from .const import GatewayId
 from .handler import HANDLERS
 from .helpers import discover_mysensors_platform, validate_child, validate_node
+from ...config_entries import ConfigEntry
+from ...helpers.typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,15 +62,15 @@ def is_socket_address(value):
         raise vol.Invalid("Device is not a valid domain name or ip address") from err
 
 
-def get_mysensors_gateway(hass, gateway_id):
-    """Return MySensors gateway."""
+def get_mysensors_gateway(hass: HomeAssistantType, gateway_id: GatewayId) -> Optional[BaseAsyncGateway]:
+    """Returns the Gateway for a given GatewayId."""
     if MYSENSORS_GATEWAYS not in hass.data:
         hass.data[MYSENSORS_GATEWAYS] = {}
     gateways = hass.data.get(MYSENSORS_GATEWAYS)
     return gateways.get(gateway_id)
 
 
-async def setup_gateways(hass, config):
+async def setup_gateways(hass: HomeAssistantType, config):
     """Set up all gateways."""
     conf = config[DOMAIN]
     gateways = {}
@@ -83,7 +87,7 @@ async def setup_gateways(hass, config):
     return gateways
 
 
-async def _get_gateway(hass, config, gateway_conf, persistence_file):
+async def _get_gateway(hass: HomeAssistantType, config, gateway_conf, persistence_file):
     """Return gateway after setup of the gateway."""
 
     conf = config[DOMAIN]
@@ -166,7 +170,7 @@ async def _get_gateway(hass, config, gateway_conf, persistence_file):
     return gateway
 
 
-async def finish_setup(hass, hass_config, gateways):
+async def finish_setup(hass: HomeAssistantType, hass_config, gateways: List[BaseAsyncGateway]):
     """Load any persistent devices and platforms and start gateway."""
     discover_tasks = []
     start_tasks = []
@@ -180,15 +184,15 @@ async def finish_setup(hass, hass_config, gateways):
         await asyncio.wait(start_tasks)
 
 
-async def _discover_persistent_devices(hass, hass_config, gateway):
+async def _discover_persistent_devices(hass: HomeAssistantType, hass_config, gateway: BaseAsyncGateway):
     """Discover platforms for devices loaded via persistence file."""
     tasks = []
     new_devices = defaultdict(list)
     for node_id in gateway.sensors:
         if not validate_node(gateway, node_id):
             continue
-        node = gateway.sensors[node_id]
-        for child in node.children.values():
+        node: Sensor = gateway.sensors[node_id]
+        for child in node.children.values():#child is of type ChildSensor
             validated = validate_child(gateway, node_id, child)
             for platform, dev_ids in validated.items():
                 new_devices[platform].extend(dev_ids)
@@ -198,7 +202,7 @@ async def _discover_persistent_devices(hass, hass_config, gateway):
         await asyncio.wait(tasks)
 
 
-async def _gw_start(hass, gateway):
+async def _gw_start(hass: HomeAssistantType, gateway: BaseAsyncGateway):
     """Start the gateway."""
     # Don't use hass.async_create_task to avoid holding up setup indefinitely.
     connect_task = hass.loop.create_task(gateway.start())
@@ -231,16 +235,18 @@ async def _gw_start(hass, gateway):
         hass.data.pop(gateway_ready_key, None)
 
 
-def _gw_callback_factory(hass, hass_config):
+def _gw_callback_factory(hass: HomeAssistantType, hass_config) -> Callable[[Message], None]:
     """Return a new callback for the gateway."""
 
     @callback
-    def mysensors_callback(msg):
+    def mysensors_callback(msg: Message):
         """Handle messages from a MySensors gateway."""
         _LOGGER.debug("Node update: node %s child %s", msg.node_id, msg.child_id)
 
         msg_type = msg.gateway.const.MessageType(msg.type)
-        msg_handler = HANDLERS.get(msg_type.name)
+        msg_handler: Callable[[Any, ConfigEntry, Message], Coroutine[None]] = HANDLERS.get(
+            msg_type.name
+        )
 
         if msg_handler is None:
             return

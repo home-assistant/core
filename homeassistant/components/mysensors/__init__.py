@@ -1,5 +1,6 @@
 """Connect to a MySensors gateway via pymysensors API."""
 import logging
+from typing import Optional, Dict, List, Type, Callable, Union, Tuple
 
 import voluptuous as vol
 
@@ -26,6 +27,8 @@ from .const import (
 )
 from .device import get_mysensors_devices
 from .gateway import finish_setup, get_mysensors_gateway, setup_gateways
+from ...config_entries import ConfigEntry
+from ...helpers.typing import HomeAssistantType, ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,8 +114,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-
-async def async_setup(hass, config):
+async def async_setup(hass, config: ConfigType) -> bool:
     """Set up the MySensors component."""
     gateways = await setup_gateways(hass, config)
 
@@ -144,27 +146,33 @@ def _get_mysensors_name(gateway, node_id, child_id):
 @callback
 def setup_mysensors_platform(
     hass,
-    domain,
-    discovery_info,
-    device_class,
-    device_args=None,
-    async_add_entities=None,
-):
-    """Set up a MySensors platform."""
+    domain: str,  # hass platform name
+    discovery_info: Optional[Dict[str, List[DevId]]],
+    device_class: Union[Type[MySensorsDevice], Dict[SensorType, Type[MySensorsEntity]]],
+    device_args: Optional[Tuple] = None,  # extra arguments that will be given to the entity constructor
+    async_add_entities: Callable = None,
+) -> Optional[List[MySensorsDevice]]:
+    """Set up a MySensors platform
+
+    Sets up a bunch of instances of a single platform that is supported by this integration.
+    The function is given a list of DevId, each one describing an instance to set up.
+    The function is also given a class.
+    A new instance of the class is created for every DevId, and the DevId is given to the constructor of the class
+    """
     # Only act if called via MySensors by discovery event.
     # Otherwise gateway is not set up.
     if not discovery_info:
         return None
     if device_args is None:
         device_args = ()
-    new_devices = []
-    new_dev_ids = discovery_info[ATTR_DEVICES]
+    new_devices: List[MySensorsDevice] = []
+    new_dev_ids: List[DevId] = discovery_info[ATTR_DEVICES]
     for dev_id in new_dev_ids:
-        devices = get_mysensors_devices(hass, domain)
+        devices: Dict[DevId, MySensorsDevice] = get_mysensors_devices(hass, domain)
         if dev_id in devices:
             continue
         gateway_id, node_id, child_id, value_type = dev_id
-        gateway = get_mysensors_gateway(hass, gateway_id)
+        gateway: Optional[BaseAsyncGateway] = get_mysensors_gateway(hass, gateway_id)
         if not gateway:
             continue
         device_class_copy = device_class

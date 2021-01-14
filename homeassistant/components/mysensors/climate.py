@@ -1,4 +1,6 @@
 """MySensors platform that offers a Climate (MySensors-HVAC) component."""
+from typing import Callable
+
 from homeassistant.components import mysensors
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -13,7 +15,9 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.helpers.typing import HomeAssistantType
 
 DICT_HA_TO_MYS = {
     HVAC_MODE_AUTO: "AutoChangeOver",
@@ -32,7 +36,7 @@ FAN_LIST = ["Auto", "Min", "Normal", "Max"]
 OPERATION_LIST = [HVAC_MODE_OFF, HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass: HomeAssistantType, config, async_add_entities, discovery_info=None):
     """Set up the mysensors climate."""
     mysensors.setup_mysensors_platform(
         hass,

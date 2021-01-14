@@ -18,6 +18,7 @@ from homeassistant.const import (
     VOLT,
     VOLUME_CUBIC_METERS,
 )
+from homeassistant.helpers.typing import HomeAssistantType
 
 SENSORS = {
     "V_TEMP": [None, "mdi:thermometer"],
@@ -54,7 +55,7 @@ SENSORS = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass: HomeAssistantType, config, async_add_entities, discovery_info=None):
     """Set up the MySensors platform for sensors."""
     mysensors.setup_mysensors_platform(
         hass,

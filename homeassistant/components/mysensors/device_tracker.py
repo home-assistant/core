@@ -1,7 +1,13 @@
 """Support for tracking MySensors devices."""
+from typing import Callable
+
 from homeassistant.components import mysensors
 from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.components.mysensors import DevId
+from homeassistant.components.mysensors.const import GatewayId
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 
 
@@ -18,9 +24,9 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
         return False
 
     for device in new_devices:
-        gateway_id = id(device.gateway)
-        dev_id = (gateway_id, device.node_id, device.child_id, device.value_type)
         async_dispatcher_connect(
+        gateway_id: GatewayId = id(gateway)
+        dev_id: DevId = (gateway_id, device.node_id, device.child_id, device.value_type)
             hass,
             mysensors.const.CHILD_CALLBACK.format(*dev_id),
             device.async_update_callback,

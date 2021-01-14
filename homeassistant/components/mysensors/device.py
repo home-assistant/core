@@ -1,11 +1,15 @@
 """Handle MySensors devices."""
 from functools import partial
 import logging
+from typing import Dict, Optional, Any
+from mysensors import BaseAsyncGateway
+from typing import Dict, List, Optional, Any
 
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from .const import DevId, PLATFORM_TYPES
 
 from .const import CHILD_CALLBACK, NODE_CALLBACK, UPDATE_DELAY
 
@@ -19,25 +23,18 @@ ATTR_HEARTBEAT = "heartbeat"
 MYSENSORS_PLATFORM_DEVICES = "mysensors_devices_{}"
 
 
-def get_mysensors_devices(hass, domain):
-    """Return MySensors devices for a platform."""
-    if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data:
-        hass.data[MYSENSORS_PLATFORM_DEVICES.format(domain)] = {}
-    return hass.data[MYSENSORS_PLATFORM_DEVICES.format(domain)]
-
-
 class MySensorsDevice:
     """Representation of a MySensors device."""
 
-    def __init__(self, gateway, node_id, child_id, name, value_type):
+    def __init__(self, gateway, node_id, child_id, value_type):
         """Set up the MySensors device."""
-        self.gateway = gateway
-        self.node_id = node_id
-        self.child_id = child_id
         self._name = name
-        self.value_type = value_type
         child = gateway.sensors[node_id].children[child_id]
         self.child_type = child.type
+        self.gateway: BaseAsyncGateway = gateway
+        self.node_id: int = node_id
+        self.child_id: int = child_id
+        self.value_type: int = value_type # value_type as int. string variant can be looked up in gateway consts
         self._values = {}
         self._update_scheduled = False
         self.hass = None
@@ -115,6 +112,12 @@ class MySensorsDevice:
         delayed_update = partial(self.hass.async_create_task, update())
         self.hass.loop.call_later(UPDATE_DELAY, delayed_update)
 
+
+def get_mysensors_devices(hass, domain: str) -> Dict[DevId, MySensorsDevice]:
+    """Return MySensors devices for a hass platform name"""
+    if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data:
+        hass.data[MYSENSORS_PLATFORM_DEVICES.format(domain)] = {}
+    return hass.data[MYSENSORS_PLATFORM_DEVICES.format(domain)]
 
 class MySensorsEntity(MySensorsDevice, Entity):
     """Representation of a MySensors entity."""

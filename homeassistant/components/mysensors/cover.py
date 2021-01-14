@@ -2,9 +2,10 @@
 from homeassistant.components import mysensors
 from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverEntity
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers.typing import HomeAssistantType
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass: HomeAssistantType, config, async_add_entities, discovery_info=None):
     """Set up the mysensors platform for covers."""
     mysensors.setup_mysensors_platform(
         hass,

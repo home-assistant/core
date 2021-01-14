@@ -7,6 +7,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN as MYSENSORS_DOMAIN, SERVICE_SEND_IR_CODE
+from ...helpers.typing import HomeAssistantType
 
 ATTR_IR_CODE = "V_IR_SEND"
 
@@ -15,7 +16,7 @@ SEND_IR_CODE_SERVICE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass: HomeAssistantType, config, async_add_entities, discovery_info=None):
     """Set up the mysensors platform for switches."""
     device_class_map = {
         "S_DOOR": MySensorsSwitch,
