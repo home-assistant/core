@@ -11,7 +11,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import DISCOVERY_INFO, DISCOVERY_INFO_WRONG_DEVICE, IP
+from .const import DISCOVERY_INFO, DISCOVERY_INFO_WRONG_DEVICE, IP
 
 from tests.async_mock import patch
 
@@ -26,9 +26,8 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     info = {
-        # TODO Use constants
-        "serial_number": "1234567890",
-        "title": "device name",
+        "serial_number": DISCOVERY_INFO["properties"]["SN"],
+        "title": DISCOVERY_INFO["properties"]["Product"],
     }
 
     with patch(
