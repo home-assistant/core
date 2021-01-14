@@ -373,7 +373,7 @@ class AuthManager:
         client_icon: Optional[str] = None,
         token_type: Optional[str] = None,
         access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
-        cred: Optional[models.Credentials] = None,
+        credential: Optional[models.Credentials] = None,
     ) -> models.RefreshToken:
         """Create a new refresh token for a user."""
         if not user.is_active:
@@ -422,7 +422,7 @@ class AuthManager:
             client_icon,
             token_type,
             access_token_expiration,
-            cred,
+            credential,
         )
 
     async def async_get_refresh_token(
