@@ -96,6 +96,11 @@ ZEROCONF = {
             "name": "gateway*"
         }
     ],
+    "_leap._tcp.local.": [
+        {
+            "domain": "lutron_caseta"
+        }
+    ],
     "_mediaremotetv._tcp.local.": [
         {
             "domain": "apple_tv"

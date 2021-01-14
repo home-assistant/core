@@ -7,7 +7,5 @@
   ],
   "config_flow": true,
   "zeroconf": ["_leap._tcp.local."],
-  "codeowners": [
-    "@swails", "@bdraco"
-  ]
+  "codeowners": ["@swails", "@bdraco"]
 }
