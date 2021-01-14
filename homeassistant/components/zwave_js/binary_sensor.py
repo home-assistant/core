@@ -60,7 +60,6 @@ class NotificationSensorMapping(TypedDict, total=False):
     states: List[int]  # required
     device_class: str
     enabled: bool
-    name: str
 
 
 # Mappings for Notification sensors
