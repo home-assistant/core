@@ -64,7 +64,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if lutron_id.endswith(".local"):
             lutron_id = lutron_id[:-6]
         await self.async_set_unique_id(lutron_id)
-
         host = discovery_info[CONF_HOST]
         self._abort_if_unique_id_configured({CONF_HOST: host})
         self.data[CONF_HOST] = host
