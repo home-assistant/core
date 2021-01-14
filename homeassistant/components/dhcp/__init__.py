@@ -145,10 +145,12 @@ class DeviceTrackerWatcher(WatcherBase):
         for state in self.hass.states.async_all(DEVICE_TRACKER_DOMAIN):
             self._async_process_device_state(state)
 
+    @callback
     def _async_process_device_event(self, event: Event):
         """Process a device tracker state change event."""
-        self._async_process_device(event.get("new_state"))
+        self._async_process_device_state(event.data.get("new_state"))
 
+    @callback
     def _async_process_device_state(self, state: State):
         """Process a device tracker state."""
         if state.state != STATE_HOME:

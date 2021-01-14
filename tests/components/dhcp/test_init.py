@@ -7,7 +7,19 @@ from scapy.layers.dhcp import DHCP
 from scapy.layers.l2 import Ether
 
 from homeassistant.components import dhcp
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.components.device_tracker.const import (
+    ATTR_HOST_NAME,
+    ATTR_IP,
+    ATTR_MAC,
+    ATTR_SOURCE_TYPE,
+    SOURCE_TYPE_ROUTER,
+)
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_HOME,
+    STATE_NOT_HOME,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
@@ -282,8 +294,8 @@ async def test_setup_and_stop(hass):
     wait_event.set()
 
 
-async def test_setup_fails_as_root(hass, caplog):
-    """Test we handle sniff setup failing as root."""
+async def test_setup_fails(hass):
+    """Test we handle sniff setup failing."""
 
     assert await async_setup_component(
         hass,
@@ -294,37 +306,174 @@ async def test_setup_fails_as_root(hass, caplog):
 
     wait_event = threading.Event()
 
-    with patch("os.geteuid", return_value=0), patch(
-        "homeassistant.components.dhcp.sniff", side_effect=Scapy_Exception
-    ):
+    with patch("homeassistant.components.dhcp.sniff", side_effect=Scapy_Exception):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     wait_event.set()
-    assert "Cannot watch for dhcp packets" in caplog.text
 
 
-async def test_setup_fails_non_root(hass, caplog):
-    """Test we handle sniff setup failing as non-root."""
-
-    assert await async_setup_component(
-        hass,
-        dhcp.DOMAIN,
-        {},
+async def test_device_tracker_hostname_and_macaddress_exists_before_start(hass):
+    """Test matching based on hostname and macaddress before start."""
+    hass.states.async_set(
+        "device_tracker.august_connect",
+        STATE_HOME,
+        {
+            ATTR_HOST_NAME: "connect",
+            ATTR_IP: "192.168.210.56",
+            ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
+            ATTR_MAC: "B8:B7:F1:6D:B5:33",
+        },
     )
-    await hass.async_block_till_done()
 
-    wait_event = threading.Event()
-
-    with patch("os.geteuid", return_value=10), patch(
-        "homeassistant.components.dhcp.sniff", side_effect=Scapy_Exception
-    ):
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    with patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init:
+        device_tracker_watcher = dhcp.DeviceTrackerWatcher(
+            hass,
+            {},
+            [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
+        )
+        device_tracker_watcher.async_start()
+        await hass.async_block_till_done()
+        device_tracker_watcher.async_stop()
         await hass.async_block_till_done()
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-    wait_event.set()
-    assert "Cannot watch for dhcp packets without root or CAP_NET_RAW" in caplog.text
+    assert len(mock_init.mock_calls) == 1
+    assert mock_init.mock_calls[0][1][0] == "mock-domain"
+    assert mock_init.mock_calls[0][2]["context"] == {"source": "dhcp"}
+    assert mock_init.mock_calls[0][2]["data"] == {
+        dhcp.IP_ADDRESS: "192.168.210.56",
+        dhcp.HOSTNAME: "connect",
+        dhcp.MAC_ADDRESS: "b8b7f16db533",
+    }
+
+
+async def test_device_tracker_hostname_and_macaddress_after_start(hass):
+    """Test matching based on hostname and macaddress after start."""
+
+    with patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init:
+        device_tracker_watcher = dhcp.DeviceTrackerWatcher(
+            hass,
+            {},
+            [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
+        )
+        device_tracker_watcher.async_start()
+        await hass.async_block_till_done()
+        hass.states.async_set(
+            "device_tracker.august_connect",
+            STATE_HOME,
+            {
+                ATTR_HOST_NAME: "connect",
+                ATTR_IP: "192.168.210.56",
+                ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
+                ATTR_MAC: "B8:B7:F1:6D:B5:33",
+            },
+        )
+        await hass.async_block_till_done()
+        device_tracker_watcher.async_stop()
+        await hass.async_block_till_done()
+
+    assert len(mock_init.mock_calls) == 1
+    assert mock_init.mock_calls[0][1][0] == "mock-domain"
+    assert mock_init.mock_calls[0][2]["context"] == {"source": "dhcp"}
+    assert mock_init.mock_calls[0][2]["data"] == {
+        dhcp.IP_ADDRESS: "192.168.210.56",
+        dhcp.HOSTNAME: "connect",
+        dhcp.MAC_ADDRESS: "b8b7f16db533",
+    }
+
+
+async def test_device_tracker_hostname_and_macaddress_after_start_not_home(hass):
+    """Test matching based on hostname and macaddress after start but not home."""
+
+    with patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init:
+        device_tracker_watcher = dhcp.DeviceTrackerWatcher(
+            hass,
+            {},
+            [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
+        )
+        device_tracker_watcher.async_start()
+        await hass.async_block_till_done()
+        hass.states.async_set(
+            "device_tracker.august_connect",
+            STATE_NOT_HOME,
+            {
+                ATTR_HOST_NAME: "connect",
+                ATTR_IP: "192.168.210.56",
+                ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
+                ATTR_MAC: "B8:B7:F1:6D:B5:33",
+            },
+        )
+        await hass.async_block_till_done()
+        device_tracker_watcher.async_stop()
+        await hass.async_block_till_done()
+
+    assert len(mock_init.mock_calls) == 0
+
+
+async def test_device_tracker_hostname_and_macaddress_after_start_not_router(hass):
+    """Test matching based on hostname and macaddress after start but not router."""
+
+    with patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init:
+        device_tracker_watcher = dhcp.DeviceTrackerWatcher(
+            hass,
+            {},
+            [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
+        )
+        device_tracker_watcher.async_start()
+        await hass.async_block_till_done()
+        hass.states.async_set(
+            "device_tracker.august_connect",
+            STATE_HOME,
+            {
+                ATTR_HOST_NAME: "connect",
+                ATTR_IP: "192.168.210.56",
+                ATTR_SOURCE_TYPE: "something_else",
+                ATTR_MAC: "B8:B7:F1:6D:B5:33",
+            },
+        )
+        await hass.async_block_till_done()
+        device_tracker_watcher.async_stop()
+        await hass.async_block_till_done()
+
+    assert len(mock_init.mock_calls) == 0
+
+
+async def test_device_tracker_hostname_and_macaddress_after_start_hostname_missing(
+    hass,
+):
+    """Test matching based on hostname and macaddress after start but missing hostname."""
+
+    with patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init:
+        device_tracker_watcher = dhcp.DeviceTrackerWatcher(
+            hass,
+            {},
+            [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
+        )
+        device_tracker_watcher.async_start()
+        await hass.async_block_till_done()
+        hass.states.async_set(
+            "device_tracker.august_connect",
+            STATE_HOME,
+            {
+                ATTR_IP: "192.168.210.56",
+                ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
+                ATTR_MAC: "B8:B7:F1:6D:B5:33",
+            },
+        )
+        await hass.async_block_till_done()
+        device_tracker_watcher.async_stop()
+        await hass.async_block_till_done()
+
+    assert len(mock_init.mock_calls) == 0
