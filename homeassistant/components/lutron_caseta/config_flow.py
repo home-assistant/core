@@ -7,7 +7,7 @@ from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from . import DOMAIN  # pylint: disable=unused-import
@@ -20,6 +20,9 @@ from .const import (
     ERROR_CANNOT_CONNECT,
     STEP_IMPORT_FAILED,
 )
+
+HOSTNAME = "hostname"
+
 
 FILE_MAPPING = {
     PAIR_KEY: CONF_KEYFILE,
@@ -55,28 +58,18 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(self, discovery_info):
         """Handle a flow initialized by zeroconf discovery."""
         _LOGGER.debug("Discovered lutron device: %s", discovery_info)
-        name = discovery_info[CONF_NAME]
-        if not name.startswith("lutron-"):
+        hostname = discovery_info.get(HOSTNAME)
+        if hostname is None or not hostname.startswith("lutron-"):
             return self.async_abort(reason="not_lutron_device")
-        host = discovery_info[CONF_HOST]
-        lutron_id = name.partition("-")[1]
+        lutron_id = hostname.partition("-")[1]
         await self.async_set_unique_id(lutron_id)
+
+        host = discovery_info[CONF_HOST]
         self._abort_if_unique_id_configured({CONF_HOST: host})
         self.data[CONF_HOST] = host
         return await self.async_step_link()
 
-    async def async_step_homekit(self, discovery_info):
-        """Handle a flow initialized by zeroconf discovery."""
-        _LOGGER.debug("Discovered lutron device: %s", discovery_info)
-        name = discovery_info[CONF_NAME]
-        if not name.startswith("lutron-"):
-            return self.async_abort(reason="not_lutron_device")
-        host = discovery_info[CONF_HOST]
-        lutron_id = name.partition("-")[1]
-        await self.async_set_unique_id(lutron_id)
-        self._abort_if_unique_id_configured({CONF_HOST: host})
-        self.data[CONF_HOST] = host
-        return await self.async_step_link()
+    async_step_homekit = async_step_zeroconf
 
     async def async_step_link(self, user_input=None):
         """Handle pairing with the hub."""
