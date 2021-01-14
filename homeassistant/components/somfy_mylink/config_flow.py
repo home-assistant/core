@@ -41,6 +41,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise CannotConnect from ex
 
     if not status_info or "error" in status_info:
+        _LOGGER.debug("Auth error: %s", status_info)
         raise InvalidAuth
 
     return {"title": f"MyLink {data[CONF_HOST]}"}
