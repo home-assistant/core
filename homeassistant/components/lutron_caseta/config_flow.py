@@ -20,6 +20,9 @@ from .const import (
     STEP_IMPORT_FAILED,
 )
 
+HOSTNAME = "hostname"
+
+
 FILE_MAPPING = {
     PAIR_KEY: CONF_KEYFILE,
     PAIR_CERT: CONF_CERTFILE,
@@ -43,7 +46,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize a Lutron Caseta flow."""
         self.data = {}
 
-    async def async_step_user(self, user_input):
+    async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if user_input is not None:
             self.data[CONF_HOST] = user_input[CONF_HOST]
@@ -53,15 +56,26 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle a flow initialized by zeroconf discovery."""
-        name: str = discovery_info[CONF_NAME]
-        host: str = discovery_info[CONF_HOST]
-        lutron_id = name.partition("-")[1]
+        hostname = discovery_info.get(HOSTNAME)
+        if hostname is None or not hostname.startswith("lutron-"):
+            return self.async_abort(reason="not_lutron_device")
+
+        lutron_id = hostname.split("-")[1]
+        if lutron_id.endswith(".local."):
+            lutron_id = lutron_id[:-7]
+
         await self.async_set_unique_id(lutron_id)
+        host = discovery_info[CONF_HOST]
         self._abort_if_unique_id_configured({CONF_HOST: host})
         self.data[CONF_HOST] = host
+
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {CONF_NAME: lutron_id}
         return await self.async_step_link()
 
-    async def async_step_link(self, user_input):
+    async_step_homekit = async_step_zeroconf
+
+    async def async_step_link(self, user_input=None):
         """Handle pairing with the hub."""
         errors = {}
 
@@ -84,9 +98,11 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 errors["base"] = "pairing_failed"
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context.update({"title_placeholders": self.data})
-        return self.async_show_form(step_id="link", errors=errors)
+        return self.async_show_form(
+            step_id="link",
+            errors=errors,
+            description_placeholders={CONF_HOST: self.data[CONF_HOST]},
+        )
 
     def _write_tls_assets(self, assets):
         """Write the tls assets to disk."""
@@ -97,8 +113,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 STORAGE_DIR, f"lutron_caseta-{host}-{asset_key}.pem"
             )
             with open(target_file, "w") as fh:
-                fh.chmod(0o600)
-                fh.write(assets[asset_key].encode("ASCII"))
+                fh.write(assets[asset_key])
             self.data[conf_key] = target_file
 
     async def async_step_import(self, import_info):
@@ -136,6 +151,9 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import_failed(self, user_input=None):
         """Make failed import surfaced to user."""
+
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {CONF_NAME: self.data[CONF_HOST]}
 
         if user_input is None:
             return self.async_show_form(

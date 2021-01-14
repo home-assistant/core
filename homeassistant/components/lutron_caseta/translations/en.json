@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "Lutron Caséta ({name})",    
     "step": {
       "import_failed": {
         "title": "Failed to import Caséta bridge configuration.",
@@ -13,8 +14,8 @@
         }
       },
       "link": {
-        "title": "Pair with the bridge {host}",
-        "description": "Press the black button on the back of the bridge."
+        "title": "Pair with the bridge",
+        "description": "To pair with {host}, after submitting this form, press the black button on the back of the bridge."
       }
     },
     "error": {
@@ -22,6 +23,7 @@
       "pairing_failed": "Unable to pair with the device"
     },
     "abort": {
+      "not_lutron_device": "Discovered device not a Lutron device",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }

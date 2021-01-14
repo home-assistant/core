@@ -7,7 +7,8 @@
   ],
   "config_flow": true,
   "zeroconf": ["_leap._tcp.local."],
-  "codeowners": [
-    "@swails", "@bdraco"
-  ]
+  "homekit": {
+    "models": ["Smart Bridge"]
+  },  
+  "codeowners": ["@swails", "@bdraco"]
 }
