@@ -304,12 +304,12 @@ class AisPlayerDevice(MediaPlayerEntity):
 
     async def async_media_pause(self):
         """Service to send the AIS Player the command for play/pause."""
-        await self._ais_gate.command("pauseAudio", False)
+        await self._ais_gate.command("pauseAudio", True)
         self._playing = False
 
     async def async_media_stop(self):
         """Service to send the AIS Player the command for stop."""
-        await self._ais_gate.command("pauseAudio", False)
+        await self._ais_gate.command("pauseAudio", True)
         self._playing = False
 
     async def async_media_next_track(self):

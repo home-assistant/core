@@ -2423,7 +2423,7 @@ async def async_setup(hass, config):
             await _publish_command_to_frame(hass, "goToActivity", "SpotifyActivity")
         elif context == "ais_tv_camera":
             hass.states.async_set("sensor.ais_tv_activity", "camera")
-            _say_it(hass, "Podgląd z kamery")
+            _say_it(hass, "Podgląd z kamery, funkcjonalność w przygotowaniu")
             await _publish_command_to_frame(hass, "goToActivity", "ExoPlayerActivity")
         elif context == "ais_tv_settings":
             hass.states.async_set("sensor.ais_tv_activity", "settings")
