@@ -5,5 +5,8 @@
   "documentation": "https://www.home-assistant.io/integrations/somfy",
   "dependencies": ["http"],
   "codeowners": ["@tetienne"],
-  "requirements": ["pymfy==0.9.3"]
+  "requirements": ["pymfy==0.9.3"],
+  "dhcp": [
+     {"hostname":"gateway-*","macaddress":"F8811A*"}
+  ]
 }

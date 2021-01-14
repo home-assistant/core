@@ -29,6 +29,7 @@ SOURCE_MQTT = "mqtt"
 SOURCE_SSDP = "ssdp"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
+SOURCE_DHCP = "dhcp"
 
 # If a user wants to hide a discovery from the UI they can "Ignore" it. The config_entries/ignore_flow
 # websocket command creates a config entry with this source and while it exists normal discoveries
@@ -1045,6 +1046,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     async_step_mqtt = async_step_discovery
     async_step_ssdp = async_step_discovery
     async_step_zeroconf = async_step_discovery
+    async_step_dhcp = async_step_discovery
 
 
 class OptionsFlowManager(data_entry_flow.FlowManager):

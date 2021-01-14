@@ -6,5 +6,8 @@
     "somfy-mylink-synergy==1.0.6"
   ],
   "codeowners": ["@bdraco"],
-  "config_flow": true
+  "config_flow": true,
+  "dhcp": [{
+    "hostname":"somfy_*", "macaddress":"B8B7F1*"
+  }]
 }

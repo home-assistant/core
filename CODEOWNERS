@@ -107,6 +107,7 @@ homeassistant/components/derivative/* @afaucogney
 homeassistant/components/device_automation/* @home-assistant/core
 homeassistant/components/devolo_home_control/* @2Fake @Shutgun
 homeassistant/components/dexcom/* @gagebenne
+homeassistant/components/dhcp/* @bdraco
 homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/directv/* @ctalkington
 homeassistant/components/discogs/* @thibmaek

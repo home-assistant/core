@@ -983,6 +983,9 @@ samsungctl[websocket]==0.7.1
 # homeassistant.components.samsungtv
 samsungtvws==1.4.0
 
+# homeassistant.components.dhcp
+scapy==2.4.4
+
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
 sense_energy==0.8.1

@@ -14,6 +14,7 @@ DATA_PKG_CACHE = "pkg_cache"
 DATA_INTEGRATIONS_WITH_REQS = "integrations_with_reqs"
 CONSTRAINT_FILE = "package_constraints.txt"
 DISCOVERY_INTEGRATIONS: Dict[str, Iterable[str]] = {
+    "dhcp": ("dhcp",),
     "mqtt": ("mqtt",),
     "ssdp": ("ssdp",),
     "zeroconf": ("zeroconf", "homekit"),

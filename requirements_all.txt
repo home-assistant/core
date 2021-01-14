@@ -1987,6 +1987,9 @@ samsungtvws==1.4.0
 # homeassistant.components.satel_integra
 satel_integra==0.3.4
 
+# homeassistant.components.dhcp
+scapy==2.4.4
+
 # homeassistant.components.deutsche_bahn
 schiene==0.23
 

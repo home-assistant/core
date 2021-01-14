@@ -4,5 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/roomba",
   "requirements": ["roombapy==1.6.2"],
-  "codeowners": ["@pschmitt", "@cyr-ius", "@shenxn"]
+  "codeowners": ["@pschmitt", "@cyr-ius", "@shenxn"],
+  "dhcp": [{"hostname":"irobot-*","macaddress":"501479*"}]
 }

@@ -71,6 +71,14 @@ MANIFEST_SCHEMA = vol.Schema(
             vol.All([vol.All(vol.Schema({}, extra=vol.ALLOW_EXTRA), vol.Length(min=1))])
         ),
         vol.Optional("homekit"): vol.Schema({vol.Optional("models"): [str]}),
+        vol.Optional("dhcp"): [
+            vol.Schema(
+                {
+                    vol.Optional("macaddress"): vol.All(str, verify_uppercase),
+                    vol.Optional("hostname"): vol.All(str, verify_lowercase),
+                }
+            )
+        ],
         vol.Required("documentation"): vol.All(
             vol.Url(), documentation_url  # pylint: disable=no-value-for-parameter
         ),
