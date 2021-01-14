@@ -12,7 +12,13 @@ from homeassistant.components.devolo_home_network.entity_classes import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import CONNECTED_STATIONS, DISCOVERY_INFO, IP, PLCNET
+from .const import (
+    CONNECTED_STATIONS,
+    DISCOVERY_INFO,
+    IP,
+    NEIGHBOR_ACCESS_POINTS,
+    PLCNET,
+)
 
 from tests.async_mock import AsyncMock, patch
 
@@ -21,7 +27,7 @@ async def test_network_overview_update(hass: HomeAssistant):
     """Test updating network overview."""
     with patch(
         "devolo_plc_api.plcnet_api.plcnetapi.PlcNetApi.async_get_network_overview",
-        return_value=PLCNET,
+        new=AsyncMock(return_value=PLCNET),
     ):
         device = Device(ip=IP)
         device.plcnet = PlcNetApi(ip=IP, session=None, info=DISCOVERY_INFO)
@@ -31,7 +37,7 @@ async def test_network_overview_update(hass: HomeAssistant):
         assert entity.available
 
 
-async def test_wifi_connected_station_update(hass: HomeAssistant):
+async def test_wifi_connected_stations_update(hass: HomeAssistant):
     """Test updating network overview."""
     with patch(
         "devolo_plc_api.device_api.deviceapi.DeviceApi.async_get_wifi_connected_station",
@@ -40,6 +46,20 @@ async def test_wifi_connected_station_update(hass: HomeAssistant):
         device = Device(ip=IP)
         device.device = DeviceApi(ip=IP, session=None, info=DISCOVERY_INFO)
         entity = DevoloWifiClientsEntity(device, "test_device")
+        await entity.async_update()
+        assert entity.state == 1
+        assert entity.available
+
+
+async def test_wifi_wifi_neighbor_access_points_update(hass: HomeAssistant):
+    """Test updating network overview."""
+    with patch(
+        "devolo_plc_api.device_api.deviceapi.DeviceApi.async_get_wifi_neighbor_access_points",
+        new=AsyncMock(return_value=NEIGHBOR_ACCESS_POINTS),
+    ):
+        device = Device(ip=IP)
+        device.device = DeviceApi(ip=IP, session=None, info=DISCOVERY_INFO)
+        entity = DevoloWifiNetworksEntity(device, "test_device")
         await entity.async_update()
         assert entity.state == 1
         assert entity.available
