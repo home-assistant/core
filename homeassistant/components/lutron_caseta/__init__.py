@@ -96,7 +96,7 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, config_entry):
     """Unload the bridge bridge from a config entry."""
 
-    hass.data[DOMAIN][config_entry.entry_id].disconnect()
+    hass.data[DOMAIN][config_entry.entry_id].close()
 
     unload_ok = all(
         await asyncio.gather(
