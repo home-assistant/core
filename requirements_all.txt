@@ -1539,7 +1539,7 @@ pymsteams==0.1.12
 pymusiccast==0.1.6
 
 # homeassistant.components.myq
-pymyq==2.0.13
+pymyq==2.0.14
 
 # homeassistant.components.mysensors
 pymysensors==0.18.0
