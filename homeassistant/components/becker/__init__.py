@@ -68,7 +68,7 @@ async def async_setup_entry(hass, entry):
     _LOGGER.info("Setting Centronic stick on port %s", stick_path)
 
     try:
-        becker = BeckerConnection(stick_path)
+        becker = await hass.async_add_executor_job(BeckerConnection, stick_path)
     except BeckerConnectionError as becker_connection_error:
         _LOGGER.error("Fail to connect to becker device")
         raise ConfigEntryNotReady from becker_connection_error
