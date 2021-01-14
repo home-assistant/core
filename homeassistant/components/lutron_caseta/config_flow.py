@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import callback
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from . import DOMAIN  # pylint: disable=unused-import
@@ -78,6 +79,9 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_link(self, user_input=None):
         """Handle pairing with the hub."""
         errors = {}
+        # Abort if existing entry with matching host exists.
+        if self._async_data_host_is_already_configured():
+            return self.async_abort(reason=ABORT_REASON_ALREADY_CONFIGURED)
 
         if user_input is not None:
             assets = None
@@ -112,21 +116,29 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 fh.write(assets[asset_key])
             self.data[conf_key] = target_file
 
+    @callback
+    def _async_data_host_is_already_configured(self):
+        """Check to see if the host is already configured."""
+        return any(
+            self.data[CONF_HOST] == entry.data[CONF_HOST]
+            for entry in self._async_current_entries()
+            if CONF_HOST in entry.data
+        )
+
     async def async_step_import(self, import_info):
         """Import a new Caseta bridge as a config entry.
 
         This flow is triggered by `async_setup`.
         """
 
-        # Abort if existing entry with matching host exists.
         host = import_info[CONF_HOST]
-        if any(
-            host == entry.data[CONF_HOST] for entry in self._async_current_entries()
-        ):
-            return self.async_abort(reason=ABORT_REASON_ALREADY_CONFIGURED)
-
         # Store the imported config for other steps in this flow to access.
         self.data[CONF_HOST] = host
+
+        # Abort if existing entry with matching host exists.
+        if self._async_data_host_is_already_configured():
+            return self.async_abort(reason=ABORT_REASON_ALREADY_CONFIGURED)
+
         self.data[CONF_KEYFILE] = import_info[CONF_KEYFILE]
         self.data[CONF_CERTFILE] = import_info[CONF_CERTFILE]
         self.data[CONF_CA_CERTS] = import_info[CONF_CA_CERTS]
