@@ -67,6 +67,9 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = discovery_info[CONF_HOST]
         self._abort_if_unique_id_configured({CONF_HOST: host})
         self.data[CONF_HOST] = host
+
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {CONF_HOST: self.data[CONF_HOST]}
         return await self.async_step_link()
 
     async_step_homekit = async_step_zeroconf
@@ -94,9 +97,11 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 errors["base"] = "pairing_failed"
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {CONF_HOST: self.data[CONF_HOST]}
-        return self.async_show_form(step_id="link", errors=errors)
+        return self.async_show_form(
+            step_id="link",
+            errors=errors,
+            description_placeholders={CONF_HOST: self.data[CONF_HOST]},
+        )
 
     def _write_tls_assets(self, assets):
         """Write the tls assets to disk."""

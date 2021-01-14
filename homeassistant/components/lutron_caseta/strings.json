@@ -13,8 +13,8 @@
         }
       },
       "link": {
-        "title": "Pair with the bridge {host}",
-        "description": "Press the black button on the back of the bridge."
+        "title": "Pair with the bridge",
+        "description": "To pair with {host}, after submitting this form, press the black button on the back of the bridge."
       }
     },
     "error": {
