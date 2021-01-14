@@ -17,7 +17,10 @@ from aiounifi.events import (
 
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker.const import (
+    ATTR_HOST_NAME,
+    SOURCE_TYPE_ROUTER,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -51,6 +54,7 @@ CLIENT_STATIC_ATTRIBUTES = [
     "name",
     "oui",
 ]
+
 
 CLIENT_CONNECTED_ALL_ATTRIBUTES = CLIENT_CONNECTED_ATTRIBUTES + CLIENT_STATIC_ATTRIBUTES
 
@@ -236,6 +240,9 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             attributes = {k: raw[k] for k in CLIENT_STATIC_ATTRIBUTES if k in raw}
 
         attributes["is_wired"] = self.is_wired
+
+        if "hostname" in attributes:
+            attributes[ATTR_HOST_NAME] = attributes["hostname"]
 
         return attributes
 
