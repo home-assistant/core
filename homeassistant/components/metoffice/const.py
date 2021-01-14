@@ -26,7 +26,8 @@ ATTRIBUTION = "Data provided by the Met Office"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=15)
 
 METOFFICE_DATA = "metoffice_data"
-METOFFICE_COORDINATOR = "metoffice_coordinator"
+METOFFICE_HOURLY_COORDINATOR = "metoffice_hourly_coordinator"
+METOFFICE_DAILY_COORDINATOR = "metoffice_daily_coordinator"
 METOFFICE_MONITORED_CONDITIONS = "metoffice_monitored_conditions"
 METOFFICE_NAME = "metoffice_name"
 
