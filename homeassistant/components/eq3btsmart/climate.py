@@ -60,6 +60,8 @@ CONF_MAX_TEMP = "max_temp"
 CONF_PRECISION = "precision"
 CONF_COLD_TOLERANCE = "cold_tolerance"
 CONF_HOT_TOLERANCE = "hot_tolerance"
+CONF_OFF_TEMP_OFFSET = "off_temp_offset"
+CONF_ON_TEMP_OFFSET = "on_temp_offset"
 
 DEFAULT_TOLERANCE = 0.3
 STATE_BOOST = "boost"
@@ -123,6 +125,8 @@ DEVICE_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
         vol.Optional(CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
+        vol.Optional(CONF_OFF_TEMP_OFFSET): vol.Coerce(float),
+        vol.Optional(CONF_ON_TEMP_OFFSET): vol.Coerce(float),
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
     }
@@ -170,9 +174,13 @@ class EQ3BTSmartThermostat(ClimateEntity, RestoreEntity):
         self._temp_precision = device_cfg.get(CONF_PRECISION)
         self._cold_tolerance = device_cfg.get(CONF_COLD_TOLERANCE)
         self._hot_tolerance = device_cfg.get(CONF_HOT_TOLERANCE)
+        self._off_temp_offset = device_cfg.get(CONF_OFF_TEMP_OFFSET)
+        self._on_temp_offset = device_cfg.get(CONF_ON_TEMP_OFFSET)
 
         self._cur_temp = None
         self._target_temp = None
+        self._off_temp = None
+        self._on_temp = None
         self._hvac_mode = None
         self._active = False
         self._temp_lock = asyncio.Lock()
@@ -226,6 +234,7 @@ class EQ3BTSmartThermostat(ClimateEntity, RestoreEntity):
                 self._name,
                 self._target_temp,
             )
+        self.update_control_temps()
 
         if old_state is None or old_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             # Set default state to off
@@ -380,6 +389,7 @@ class EQ3BTSmartThermostat(ClimateEntity, RestoreEntity):
                 self._target_temp = temperature
                 await self._async_control_heating()
                 self.async_write_ha_state()
+                self.update_control_temps()
             else:
                 self._thermostat.target_temperature = temperature
 
@@ -550,6 +560,33 @@ class EQ3BTSmartThermostat(ClimateEntity, RestoreEntity):
         else:
             self.set_device_mode(eq3.Mode.Manual)
             self._thermostat.target_temperature = self._on_temp
+
+    def update_control_temps(self):
+        """Update the off_temp and _on_temp."""
+
+        if self._off_temp_offset is not None:
+            self._off_temp = self._target_temp - self._off_temp_offset
+
+            if self._off_temp < self._thermostat.min_temp:
+                self._off_temp = self._thermostat.min_temp
+            elif self._off_temp > self._thermostat.max_temp:
+                self._off_temp = self._thermostat.max_temp
+
+            _LOGGER.debug("%s - Setting off_temp to %s", self._name, self._off_temp)
+        else:
+            self._off_temp = None
+
+        if self._on_temp_offset is not None:
+            self._on_temp = self._target_temp + self._on_temp_offset
+
+            if self._on_temp < self._thermostat.min_temp:
+                self._on_temp = self._thermostat.min_temp
+            elif self._on_temp > self._thermostat.max_temp:
+                self._on_temp = self._thermostat.max_temp
+
+            _LOGGER.debug("%s - Setting on_temp to %s", self._name, self._on_temp)
+        else:
+            self._on_temp = None
 
     def set_error(self, exc):
         """Set error attributes."""
