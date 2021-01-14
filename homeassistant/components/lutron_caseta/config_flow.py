@@ -1,5 +1,6 @@
 """Config flow for Lutron Caseta."""
 import logging
+import os
 
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, pair
 from pylutron_caseta.smartbridge import Smartbridge
@@ -113,7 +114,9 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             target_file = self.hass.config.path(STORAGE_DIR, file_name)
             with open(target_file, "w") as fh:
                 fh.write(assets[asset_key])
-            self.data[conf_key] = STORAGE_DIR / f"lutron_caseta-{host}-{asset_key}.pem"
+            self.data[conf_key] = os.path.join(
+                STORAGE_DIR, f"lutron_caseta-{host}-{asset_key}.pem"
+            )
 
     @callback
     def _async_data_host_is_already_configured(self):
