@@ -6,8 +6,8 @@ from typing import Callable, List, Optional, TypedDict
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
 
-
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_HEAT,
@@ -19,7 +19,6 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_SOUND,
-    DEVICE_CLASS_BATTERY,
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
 )
@@ -270,7 +269,7 @@ async def async_setup_entry(
             entities.append(ZWaveBooleanBinarySensor(client, info))
         elif info.platform_hint == "notification":
             entities.append(ZWaveNotificationBinarySensor(client, info))
-        if not entities:
+        else:
             LOGGER.warning(
                 "Binary Sensor not implemented for %s/%s",
                 info.platform_hint,
@@ -338,18 +337,10 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         return self._mapping_info.get("device_class")
 
     @property
-    def name(self) -> str:
-        """Return default name for this sensor."""
-        name = super().name
-        if "name" in self._mapping_info:
-            name += f': {self._mapping_info["name"]}'
-        return name
-
-    @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        # We hide the more advanced sensors by default to not overwhelm users
-        return self._mapping_info.get("enabled", False)
+        # We hide some more advanced sensors by default to not overwhelm users
+        return self._mapping_info.get("enabled", True)
 
     @callback
     def _get_sensor_mapping(self) -> NotificationSensorMapping:
