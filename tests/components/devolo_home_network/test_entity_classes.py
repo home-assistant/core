@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 
 from . import CONNECTED_STATIONS, DISCOVERY_INFO, IP, PLCNET
 
-from tests.async_mock import patch
+from tests.async_mock import AsyncMock, patch
 
 
 async def test_network_overview_update(hass: HomeAssistant):
@@ -35,7 +35,7 @@ async def test_wifi_connected_station_update(hass: HomeAssistant):
     """Test updating network overview."""
     with patch(
         "devolo_plc_api.device_api.deviceapi.DeviceApi.async_get_wifi_connected_station",
-        return_value=CONNECTED_STATIONS,
+        new=AsyncMock(return_value=CONNECTED_STATIONS),
     ):
         device = Device(ip=IP)
         device.device = DeviceApi(ip=IP, session=None, info=DISCOVERY_INFO)
