@@ -68,7 +68,7 @@ async def async_setup_entry(hass, entry):
     _LOGGER.info("Setting Centronic stick on port %s", stick_path)
 
     try:
-        becker = BeckerConnection(stick_path)
+        becker = await hass.async_add_executor_job(BeckerConnection, stick_path)
     except BeckerConnectionError as becker_connection_error:
         _LOGGER.error("Fail to connect to becker device")
         raise ConfigEntryNotReady from becker_connection_error
@@ -82,13 +82,18 @@ async def async_setup_entry(hass, entry):
 
     hass.data[DOMAIN]["connector"] = becker.connection
 
-    hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: becker})
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = becker
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "cover")
     )
 
-    hass.services.async_register(DOMAIN, "pair", becker.handle_pair, PAIR_SCHEMA)
-    hass.services.async_register(DOMAIN, "log_units", becker.handle_log_units)
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN, "pair", becker.handle_pair, PAIR_SCHEMA
+    )
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN, "log_units", becker.handle_log_units
+    )
+
     return True
 
 
