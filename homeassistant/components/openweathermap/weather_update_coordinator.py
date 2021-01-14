@@ -138,7 +138,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     def _convert_forecast(self, entry):
         forecast = {
-            ATTR_FORECAST_TIME: entry.reference_time("unix") * 1000,
+            ATTR_FORECAST_TIME: entry.reference_time("unix"),
             ATTR_FORECAST_PRECIPITATION: self._calc_precipitation(
                 entry.rain, entry.snow
             ),
