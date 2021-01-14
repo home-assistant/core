@@ -113,7 +113,8 @@ async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_ti
         text=wavertree_hourly,
     )
     requests_mock.get(
-        "/public/data/val/wxfcs/all/json/354107?res=daily", text=wavertree_daily,
+        "/public/data/val/wxfcs/all/json/354107?res=daily",
+        text=wavertree_daily,
     )
 
     entry = MockConfigEntry(
@@ -132,7 +133,7 @@ async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_ti
     assert entity.attributes.get("temperature") == 17
     assert entity.attributes.get("wind_speed") == 9
     assert entity.attributes.get("wind_bearing") == "SSE"
-    assert entity.attributes.get("visibility") == "Good (10-20)"
+    assert entity.attributes.get("visibility") == "Good - 10-20"
     assert entity.attributes.get("humidity") == 50
 
     # Forecasts added - just pick out 1 entry to check
@@ -155,7 +156,7 @@ async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_ti
     assert entity.attributes.get("temperature") == 19
     assert entity.attributes.get("wind_speed") == 9
     assert entity.attributes.get("wind_bearing") == "SSE"
-    assert entity.attributes.get("visibility") == "Good (10-20)"
+    assert entity.attributes.get("visibility") == "Good - 10-20"
     assert entity.attributes.get("humidity") == 50
 
     # Also has Forecasts added - again, just pick out 1 entry to check
@@ -222,7 +223,7 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
     assert entity.attributes.get("temperature") == 17
     assert entity.attributes.get("wind_speed") == 9
     assert entity.attributes.get("wind_bearing") == "SSE"
-    assert entity.attributes.get("visibility") == "Good (10-20)"
+    assert entity.attributes.get("visibility") == "Good - 10-20"
     assert entity.attributes.get("humidity") == 50
 
     # Forecasts added - just pick out 1 entry to check
@@ -245,7 +246,7 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
     assert entity.attributes.get("temperature") == 19
     assert entity.attributes.get("wind_speed") == 9
     assert entity.attributes.get("wind_bearing") == "SSE"
-    assert entity.attributes.get("visibility") == "Good (10-20)"
+    assert entity.attributes.get("visibility") == "Good - 10-20"
     assert entity.attributes.get("humidity") == 50
 
     # Also has Forecasts added - again, just pick out 1 entry to check
@@ -268,7 +269,7 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
     assert entity.attributes.get("temperature") == 14
     assert entity.attributes.get("wind_speed") == 2
     assert entity.attributes.get("wind_bearing") == "E"
-    assert entity.attributes.get("visibility") == "Very Good (20-40)"
+    assert entity.attributes.get("visibility") == "Very Good - 20-40"
     assert entity.attributes.get("humidity") == 60
 
     # Also has Forecast added - just pick out 1 entry to check
@@ -291,7 +292,7 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
     assert entity.attributes.get("temperature") == 9
     assert entity.attributes.get("wind_speed") == 4
     assert entity.attributes.get("wind_bearing") == "ESE"
-    assert entity.attributes.get("visibility") == "Very Good (20-40)"
+    assert entity.attributes.get("visibility") == "Very Good - 20-40"
     assert entity.attributes.get("humidity") == 75
 
     # All should have Forecast added - again, just picking out 1 entry to check
