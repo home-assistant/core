@@ -90,7 +90,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "pairing_failed"
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context.update({"title_placeholders": self.data})
+        self.context["title_placeholders"] = {CONF_HOST: self.data[CONF_HOST]}
         return self.async_show_form(step_id="link", errors=errors)
 
     def _write_tls_assets(self, assets):
