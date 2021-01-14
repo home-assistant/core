@@ -1,5 +1,6 @@
 """Tests for the here_weather sensor platform."""
 from datetime import timedelta
+from unittest.mock import patch
 
 import herepy
 
@@ -24,7 +25,6 @@ from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .const import astronomy_response, daily_simple_forecasts_response
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 

@@ -1,4 +1,6 @@
 """Tests for the here_weather config_flow."""
+from unittest.mock import patch
+
 import herepy
 
 from homeassistant.components.here_weather.const import (
@@ -18,7 +20,6 @@ from homeassistant.const import (
 
 from .const import daily_simple_forecasts_response
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
