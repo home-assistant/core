@@ -55,17 +55,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the somfy_mylink flow."""
         self.host = None
+        self.mac = None
+        self.ip = None
 
     async def async_step_dhcp(self, dhcp_discovery):
         """Handle dhcp discovery."""
         if self._host_already_configured(dhcp_discovery[HOSTNAME]):
             return self.async_abort(reason="already_configured")
 
-        await self.async_set_unique_id(format_mac(dhcp_discovery[MAC_ADDRESS]))
+        formatted_mac = format_mac(dhcp_discovery[MAC_ADDRESS])
+        await self.async_set_unique_id(format_mac(formatted_mac))
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: dhcp_discovery[IP_ADDRESS]}
         )
         self.host = dhcp_discovery[HOSTNAME]
+        self.mac = formatted_mac
+        self.ip = dhcp_discovery[IP_ADDRESS]
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {"ip": self.ip, "mac": self.mac}
         return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):
