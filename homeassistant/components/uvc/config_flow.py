@@ -59,12 +59,12 @@ def _test_connection(addr, port, key, ssl):
     try:
         nvrconn = nvr.UVCRemote(addr, port, key, ssl=ssl)
         nvrconn.index()
-    except nvr.NotAuthorized:
+    except nvr.NotAuthorized as ex:
         _LOGGER.error("Authorization failure while connecting to NVR")
-        raise InvalidAuth
+        raise InvalidAuth from ex
     except nvr.NvrError as ex:
         _LOGGER.error("NVR error: %s", str(ex))
-        raise CannotConnect
+        raise CannotConnect from ex
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

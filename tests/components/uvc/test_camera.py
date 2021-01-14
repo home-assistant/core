@@ -232,3 +232,34 @@ class TestUnifiVideoCamera(unittest.TestCase):
                 self.uvc.camera_image()
             assert mock_login.call_count == 1
             assert mock_login.call_args == mock.call()
+
+    def test_reboot(self):
+        """Test rebooting the camera."""
+        self.uvc._camera = mock.MagicMock()
+        self.uvc.reboot()
+
+        self.uvc._camera.reboot.assert_called_once()
+
+    def test_reboot_with_login(self):
+        """Test rebooting the camera."""
+        self.uvc._camera = None
+        with mock.patch.object(self.uvc, "_login") as mock_login:
+
+            def side_effect(*args, **kwargs):
+                self.uvc._camera = mock.MagicMock()
+
+            mock_login.side_effect = side_effect
+
+            self.uvc.reboot()
+            assert mock_login.call_count == 1
+            assert mock_login.call_args == mock.call()
+
+    def test_reboot_attempts_reauths_only_once(self):
+        """Test if the re-authentication only happens once."""
+        self.uvc._camera = mock.MagicMock()
+        self.uvc._camera.reboot.side_effect = camera.CameraAuthError
+        with mock.patch.object(self.uvc, "_login") as mock_login:
+            with pytest.raises(camera.CameraAuthError):
+                self.uvc.reboot()
+            assert mock_login.call_count == 1
+            assert mock_login.call_args == mock.call()

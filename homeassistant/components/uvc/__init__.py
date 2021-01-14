@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     hass.data[DOMAIN]["camera_id_field"],
                 )
         except Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -90,6 +90,7 @@ def _get_nvrconn(entry: ConfigEntry) -> nvr:
 
 def _get_cameras(nvrconn: nvr, id_field: str):
     try:
+        # pylint: disable=protected-access
         cameras = nvrconn._uvc_request("/api/2.0/camera")["data"]
     except nvr.NotAuthorized:
         _LOGGER.error("Authorization failure while connecting to NVR")
