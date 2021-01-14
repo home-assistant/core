@@ -16,8 +16,8 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "bulb_time_out": "Can not connect to the bulb. Maybe the bulb is offline or a wrong IP was entered. Please turn on the light and try again!",
-      "no_wiz_light": "The bulb can be connected via WiZ Light integration.",
+      "bulb_time_out": "Can not connect to the bulb. Maybe the bulb is offline or a wrong IP/host was entered. Please turn on the light and try again!",
+      "no_wiz_light": "The bulb can not be connected via WiZ Light integration."
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",

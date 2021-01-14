@@ -6,9 +6,9 @@
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
-            "bulb_time_out": "Can not connect to the bulb. Maybe the bulb is offline or a wrong IP was entered. Please turn on the light and try again!",
+            "bulb_time_out": "Can not connect to the bulb. Maybe the bulb is offline or a wrong IP/host was entered. Please turn on the light and try again!",
             "cannot_connect": "Failed to connect",
-            "no_wiz_light": "The bulb can be connected via WiZ Light integration.",
+            "no_wiz_light": "The bulb can not be connected via WiZ Light integration.",
             "unknown": "Unexpected error"
         },
         "step": {

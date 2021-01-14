@@ -1,6 +1,5 @@
 """Config flow for wiz_light."""
 import logging
-import re
 
 from pywizlight import wizlight
 from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
