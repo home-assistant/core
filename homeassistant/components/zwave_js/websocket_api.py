@@ -1,7 +1,7 @@
 """Websocket API for Z-Wave JS."""
 
+from dataclasses import asdict
 import logging
-from typing import Dict
 
 import voluptuous as vol
 
@@ -32,7 +32,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     {vol.Required(TYPE): "zwave_js/network_status", vol.Required(ENTRY_ID): str}
 )
 async def websocket_network_status(
-    hass: HomeAssistant, connection: ActiveConnection, msg: Dict
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ) -> None:
     """Get the status of the Z-Wave JS network."""
     entry_id = msg[ENTRY_ID]
@@ -41,7 +41,7 @@ async def websocket_network_status(
         "client": {
             "ws_server_url": client.ws_server_url,
             "state": client.state,
-            "version": client.version.__dict__,
+            "version": asdict(client.version),
         },
         "controller": client.driver.controller.data,
     }
