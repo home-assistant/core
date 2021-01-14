@@ -69,9 +69,9 @@ async def async_setup_entry(hass, entry):
 
     try:
         becker = BeckerConnection(stick_path)
-    except BeckerConnectionError:
+    except BeckerConnectionError as becker_connection_error:
         _LOGGER.error("Fail to connect to becker device")
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from becker_connection_error
 
     if not becker:
         raise ConfigEntryNotReady
