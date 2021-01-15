@@ -451,7 +451,7 @@ class AuthManager:
             },
             refresh_token.jwt_key,
             algorithm="HS256",
-        ).decode()
+        )
 
     async def async_validate_access_token(
         self, token: str
