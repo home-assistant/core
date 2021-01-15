@@ -1,13 +1,19 @@
 """Test the Cisco Webex config flow."""
+from webexteamssdk.api import PeopleAPI
+
 from homeassistant import config_entries, setup
+from webexteamssdk import WebexTeamsAPI
+import webexteamssdk
 from homeassistant.components.cisco_webex.config_flow import (
     CannotConnect,
     EmailNotFound,
     InvalidEmail,
     InvalidAuthTokenType,
-    InvalidAuth
+    InvalidAuth,
+    ConfigValidationHub
 )
 from homeassistant.components.cisco_webex.const import DOMAIN
+from homeassistant.const import CONF_EMAIL
 
 from tests.async_mock import patch
 
@@ -47,6 +53,46 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+class MockWebexTeamsAPI(WebexTeamsAPI):
+    """Mocked WebexTeamsAPI that doesn't do anything."""
+
+    def __init__(self, access_token=None):
+        self.people = MockPeopleAPI()
+
+
+class MockPeopleAPI:
+    def me(self):
+        return MockPerson()
+
+    def list(self, email):
+        return [MockPerson]
+
+
+class MockPerson:
+    @property
+    def type(self):
+        return "bot"
+
+    @property
+    def displayName(self):
+        return "Test user"
+
+
+@patch("webexteamssdk.WebexTeamsAPI", MockWebexTeamsAPI)
+async def test_validate_config(hass):
+    """Test validate_config method."""
+
+    hub = ConfigValidationHub()
+    api = webexteamssdk.WebexTeamsAPI(access_token="123")
+
+    data = {
+        "email": "fff@fff.com"
+    }
+    result = hub.validate_config(api, data)
+
+    assert result is True
+
+
 async def test_form_invalid_email(hass):
     """Test we handle invalid email format."""
     result = await hass.config_entries.flow.async_init(
@@ -54,7 +100,7 @@ async def test_form_invalid_email(hass):
     )
 
     with patch(
-        "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
+            "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
         side_effect=InvalidEmail,
     ):
         result2 = await hass.config_entries.flow.async_configure(
