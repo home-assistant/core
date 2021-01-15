@@ -112,7 +112,7 @@ class MeaterProbeTemperature(Entity):
         if device is None:
             return None
 
-        if TemperatureMeaturement.Internal == self.temperature_reading_type:
+        if TemperatureMeasurement.Internal == self.temperature_reading_type:
             return device.internal_temperature
 
         # Not an internal temperature, must be ambient
