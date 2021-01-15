@@ -231,9 +231,9 @@ class TokenView(HomeAssistantView):
     requires_auth = False
     cors_allowed = True
 
-    def __init__(self, retrieve_user):
+    def __init__(self, retrieve_auth):
         """Initialize the token view."""
-        self._retrieve_user = retrieve_user
+        self._retrieve_auth = retrieve_auth
 
     @log_invalid_auth
     async def post(self, request):
@@ -296,15 +296,15 @@ class TokenView(HomeAssistantView):
                 status_code=HTTP_BAD_REQUEST,
             )
 
-        cred = self._retrieve_user(client_id, RESULT_TYPE_CREDENTIALS, code)
+        credential = self._retrieve_auth(client_id, RESULT_TYPE_CREDENTIALS, code)
 
-        if cred is None or not isinstance(cred, Credentials):
+        if credential is None or not isinstance(credential, Credentials):
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid code"},
                 status_code=HTTP_BAD_REQUEST,
             )
 
-        user = await hass.auth.async_get_or_create_user(cred)
+        user = await hass.auth.async_get_or_create_user(credential)
 
         if not user.is_active:
             return self.json(
@@ -313,7 +313,7 @@ class TokenView(HomeAssistantView):
             )
 
         refresh_token = await hass.auth.async_create_refresh_token(
-            user, client_id, cred=cred
+            user, client_id, credential=credential
         )
         access_token = hass.auth.async_create_access_token(refresh_token, remote_addr)
 
