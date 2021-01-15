@@ -12,14 +12,7 @@ from homeassistant.components.cover import (
     SUPPORT_STOP,
     CoverEntity,
 )
-from homeassistant.const import (
-    CONF_COVERS,
-    CONF_NAME,
-    CONF_VALUE_TEMPLATE,
-    STATE_CLOSED,
-    STATE_OPEN,
-)
-from homeassistant.exceptions import TemplateError
+from homeassistant.const import CONF_COVERS, CONF_NAME, STATE_OPEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -32,7 +25,6 @@ from .const import (
     OPEN_POSITION,
     VENTILATION_POSITION,
 )
-from .utils import extract_entities, initialise_templates
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,13 +33,10 @@ COVER_FEATURES = (
 )
 
 
-_VALID_STATES = [STATE_OPEN, STATE_CLOSED, "true", "false"]
-
 COVER_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_CHANNEL): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 )
 
@@ -63,18 +52,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         name = device_config[CONF_NAME]
         _LOGGER.debug("SETUP cover on channel {channel} with name {name}")
 
-        state_template = device_config.get(CONF_VALUE_TEMPLATE)
         if channel is None:
             _LOGGER.error("Must specify {CONF_CHANNEL}")
             continue
-        templates = {
-            CONF_VALUE_TEMPLATE: state_template,
-        }
-        initialise_templates(hass, templates)
-        entity_ids = extract_entities(name, "cover", None, templates)
-        covers.append(
-            BeckerEntity(becker_connector, name, channel, state_template, entity_ids)
-        )
+        covers.append(BeckerEntity(becker_connector, name, channel))
 
     async_add_entities(covers)
 
@@ -86,13 +67,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class BeckerEntity(CoverEntity, RestoreEntity):
     """Representation of a Becker cover device."""
 
-    def __init__(self, becker, name, channel, state_template, entity_ids, position=0):
+    def __init__(self, becker, name, channel, position=0):
         """Init the Becker device."""
         self._becker = becker
         self._name = name
         self._channel = channel
-        self._template = state_template
-        self._entities = entity_ids
         self._position = position
         self._state = True
 
@@ -136,8 +115,7 @@ class BeckerEntity(CoverEntity, RestoreEntity):
 
     async def async_open_cover(self, **kwargs):
         """Set the cover to the open position."""
-        if self._template is None:
-            self._position = OPEN_POSITION
+        self._position = OPEN_POSITION
         await self._becker.move_up(self._channel)
 
     async def async_open_cover_tilt(self, **kwargs):
@@ -150,8 +128,7 @@ class BeckerEntity(CoverEntity, RestoreEntity):
 
     async def async_close_cover(self, **kwargs):
         """Set the cover to the closed position."""
-        if self._template is None:
-            self._position = CLOSED_POSITION
+        self._position = CLOSED_POSITION
         await self._becker.move_down(self._channel)
 
     async def async_close_cover_tilt(self, **kwargs):
@@ -164,28 +141,5 @@ class BeckerEntity(CoverEntity, RestoreEntity):
 
     async def async_stop_cover(self, **kwargs):
         """Set the cover to the stopped position."""
-        if self._template is None:
-            self._position = 50
+        self._position = 50
         await self._becker.stop(self._channel)
-
-    async def async_update(self):
-        """Update the position of the cover."""
-        if self._template is None:
-            return
-        try:
-            state = self._template.async_render().lower()
-            if state in _VALID_STATES:
-                if state in ("true", STATE_OPEN):
-                    self._position = 100
-                else:
-                    self._position = 0
-            else:
-                _LOGGER.error(
-                    "Received invalid cover is_on state: %s. Expected: %s",
-                    state,
-                    ", ".join(_VALID_STATES),
-                )
-                self._position = None
-        except TemplateError as ex:
-            _LOGGER.error(ex)
-            self._position = None
