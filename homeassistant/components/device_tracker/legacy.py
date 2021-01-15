@@ -47,7 +47,6 @@ from .const import (
     ATTR_DEV_ID,
     ATTR_GPS,
     ATTR_HOST_NAME,
-    ATTR_IP,
     ATTR_LOCATION_NAME,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
@@ -673,29 +672,7 @@ class Device(RestoreEntity):
         if self.battery:
             attributes[ATTR_BATTERY] = self.battery
 
-        if self.ip_address is not None:
-            attributes[ATTR_IP] = self.ip_address
-        if self.ip_address is not None:
-            attributes[ATTR_MAC] = self.mac_address
-        if self.hostname is not None:
-            attributes[ATTR_HOST_NAME] = self.hostname
-
         return attributes
-
-    @property
-    def ip_address(self) -> str:
-        """Return the primary ip address of the device."""
-        return None
-
-    @property
-    def mac_address(self) -> str:
-        """Return the mac address of the device."""
-        return None
-
-    @property
-    def hostname(self) -> str:
-        """Return hostname of the device."""
-        return None
 
     @property
     def device_state_attributes(self):
