@@ -338,6 +338,7 @@ omit =
     homeassistant/components/guardian/util.py
     homeassistant/components/habitica/__init__.py
     homeassistant/components/habitica/const.py
+    homeassistant/components/habitica/sensor.py
     homeassistant/components/hangouts/*
     homeassistant/components/hangouts/__init__.py
     homeassistant/components/hangouts/const.py

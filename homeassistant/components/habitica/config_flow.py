@@ -26,24 +26,22 @@ _LOGGER = logging.getLogger(__name__)
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
-    async def authenticate(username, password, url=DEFAULT_URL) -> bool:
-        websession = async_get_clientsession(hass)
-        api = HabitipyAsync(conf={"login": username, "password": password, "url": url})
-        try:
-            await api.user.get(session=websession)
-        except ClientResponseError:  # pylint: disable=broad-except
-            return False
-        return True
-
-    is_valid = await authenticate(
-        username=data[CONF_API_USER], password=data[CONF_API_KEY], url=data[CONF_URL]
+    websession = async_get_clientsession(hass)
+    api = HabitipyAsync(
+        conf={
+            "login": data[CONF_API_USER],
+            "password": data[CONF_API_KEY],
+            "url": data[CONF_URL] or DEFAULT_URL,
+        }
     )
-    if is_valid is False:
+    try:
+        await api.user.get(session=websession)
+        return {
+            "title": f"{data.get('name', 'Default username')}",
+            CONF_API_USER: data[CONF_API_USER],
+        }
+    except ClientResponseError:  # pylint: disable=broad-except
         raise InvalidAuth()
-    return {
-        "title": f"{data.get('name', 'Default username')}",
-        CONF_API_USER: data[CONF_API_USER],
-    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
