@@ -79,7 +79,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, dhcp_discovery):
         """Handle dhcp discovery."""
-        if self._host_already_configured(dhcp_discovery[IP_ADDRESS]):
+        if self._async_host_already_configured(dhcp_discovery[IP_ADDRESS]):
             return self.async_abort(reason="already_configured")
 
         if not dhcp_discovery[HOSTNAME].startswith("iRobot-"):
@@ -240,6 +240,14 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             errors=errors,
         )
+
+    @callback
+    def _async_host_already_configured(self, host):
+        """See if we already have an entry matching the host."""
+        for entry in self._async_current_entries():
+            if entry.data.get(CONF_HOST) == host:
+                return True
+        return False
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
