@@ -43,12 +43,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
             if dev.id not in hass.data[DOMAIN]["entities"]:
                 entities.append(
                     MeaterProbeTemperature(
-                        coordinator, dev.id, TemperatureMeaturement.Internal
+                        coordinator, dev.id, TemperatureMeasurement.Internal
                     )
                 )
                 entities.append(
                     MeaterProbeTemperature(
-                        coordinator, dev.id, TemperatureMeaturement.Ambient
+                        coordinator, dev.id, TemperatureMeasurement.Ambient
                     )
                 )
                 device_registry = await dr.async_get_registry(hass)
@@ -181,8 +181,8 @@ class MeaterProbeTemperature(Entity):
         await self.coordinator.async_request_refresh()
 
 
-class TemperatureMeaturement(Enum):
-    """Enumeration of possible temperature redings from the probe."""
+class TemperatureMeasurement(Enum):
+    """Enumeration of possible temperature readings from the probe."""
 
     Internal = 1
     Ambient = 2
