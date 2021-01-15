@@ -582,8 +582,68 @@ async def test_form_user_discovery_and_password_fetch_gets_connection_refused(ha
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_dhcp_discovery(hass):
-    """Test we can process the discovery from dhcp."""
+async def test_dhcp_discovery_and_roomba_discovery_finds(hass):
+    """Test we can process the discovery from dhcp and roomba discovery matches the device."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    mocked_roomba = _create_mocked_roomba(
+        roomba_connected=True,
+        master_state={"state": {"reported": {"name": "myroomba"}}},
+    )
+
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={
+                IP_ADDRESS: MOCK_IP,
+                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                HOSTNAME: "iRobot-blid",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] is None
+    assert result["step_id"] == "link"
+    assert result["description_placeholders"] == {"name": "robot_name"}
+
+    with patch(
+        "homeassistant.components.roomba.config_flow.Roomba",
+        return_value=mocked_roomba,
+    ), patch(
+        "homeassistant.components.roomba.config_flow.RoombaPassword",
+        _mocked_getpassword,
+    ), patch(
+        "homeassistant.components.roomba.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.roomba.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == "robot_name"
+    assert result2["result"].unique_id == "blid"
+    assert result2["data"] == {
+        CONF_BLID: "blid",
+        CONF_CONTINUOUS: True,
+        CONF_DELAY: 1,
+        CONF_HOST: MOCK_IP,
+        CONF_PASSWORD: "password",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_dhcp_discovery_falls_back_to_manual(hass):
+    """Test we can process the discovery from dhcp but roomba discovery cannot find the device."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     mocked_roomba = _create_mocked_roomba(
