@@ -63,8 +63,6 @@ class ConfigValidationHub:
             _LOGGER.error(connection_error)
             raise CannotConnect
 
-        return False
-
 
 async def validate_token_and_email(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.

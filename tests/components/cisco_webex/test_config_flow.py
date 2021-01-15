@@ -1,9 +1,9 @@
 """Test the Cisco Webex config flow."""
-from webexteamssdk.api import PeopleAPI
+import pytest
+import requests
+import webexteamssdk
 
 from homeassistant import config_entries, setup
-from webexteamssdk import WebexTeamsAPI
-import webexteamssdk
 from homeassistant.components.cisco_webex.config_flow import (
     CannotConnect,
     EmailNotFound,
@@ -13,9 +13,14 @@ from homeassistant.components.cisco_webex.config_flow import (
     ConfigValidationHub
 )
 from homeassistant.components.cisco_webex.const import DOMAIN
-from homeassistant.const import CONF_EMAIL
-
 from tests.async_mock import patch
+from tests.components.cisco_webex.mocks import MockWebexTeamsAPI, MockApiError
+
+TEST_DATA = {
+    "email": "fff@fff.com"
+}
+
+MOCK_API = MockWebexTeamsAPI(access_token="123")
 
 
 async def test_form(hass):
@@ -28,8 +33,8 @@ async def test_form(hass):
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
-        return_value=True,
+            "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
+            return_value=True,
     ), patch(
         "homeassistant.components.cisco_webex.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -53,44 +58,92 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-class MockWebexTeamsAPI(WebexTeamsAPI):
-    """Mocked WebexTeamsAPI that doesn't do anything."""
-
-    def __init__(self, access_token=None):
-        self.people = MockPeopleAPI()
-
-
-class MockPeopleAPI:
-    def me(self):
-        return MockPerson()
-
-    def list(self, email):
-        return [MockPerson]
-
-
-class MockPerson:
-    @property
-    def type(self):
-        return "bot"
-
-    @property
-    def displayName(self):
-        return "Test user"
-
-
-@patch("webexteamssdk.WebexTeamsAPI", MockWebexTeamsAPI)
-async def test_validate_config(hass):
+async def test_validate_config_ok(hass):
     """Test validate_config method."""
 
-    hub = ConfigValidationHub()
-    api = webexteamssdk.WebexTeamsAPI(access_token="123")
-
-    data = {
-        "email": "fff@fff.com"
-    }
-    result = hub.validate_config(api, data)
+    result = ConfigValidationHub().validate_config(
+        MOCK_API, TEST_DATA)
 
     assert result is True
+
+
+async def test_validate_config_not_bot_raises_invalid_token_type(hass):
+    """Test validate_config raises InvalidAuthTokenType."""
+
+    with patch(
+            "tests.components.cisco_webex.mocks.MockPerson.type",
+            return_value="person",
+    ):
+        with pytest.raises(InvalidAuthTokenType):
+            ConfigValidationHub().validate_config(
+                MOCK_API, TEST_DATA)
+
+
+async def test_validate_config_raises_email_not_found_api_error(hass):
+    """Test validate_config raises EmailNotFound."""
+
+    exception_to_raise = MockApiError
+    exception_to_raise.status_code = 400
+    with patch(
+            "tests.components.cisco_webex.mocks.MockPeopleAPI.me",
+            side_effect=exception_to_raise,
+    ):
+        with pytest.raises(EmailNotFound):
+            ConfigValidationHub().validate_config(
+                MOCK_API, TEST_DATA)
+
+
+async def test_validate_config_raises_email_not_found_person_none(hass):
+    """Test validate_config raises EmailNotFound."""
+    with patch(
+            "tests.components.cisco_webex.mocks.MockPeopleAPI.list",
+            return_value=[],
+    ):
+        with pytest.raises(EmailNotFound):
+            ConfigValidationHub().validate_config(
+                MOCK_API, TEST_DATA)
+
+
+async def test_validate_config_raises_invalid_auth_api_error(hass):
+    """Test validate_config raises InvalidAuth."""
+
+    exception_to_raise = MockApiError
+    exception_to_raise.status_code = 401
+    with patch(
+            "tests.components.cisco_webex.mocks.MockPeopleAPI.me",
+            side_effect=exception_to_raise,
+    ):
+        with pytest.raises(InvalidAuth):
+            ConfigValidationHub().validate_config(
+                MOCK_API, TEST_DATA)
+
+
+async def test_validate_config_raises_general_error(hass):
+    """Test validate_config raises api error."""
+
+    exception_to_raise = MockApiError
+    exception_to_raise.status_code = 500
+    with patch(
+            "tests.components.cisco_webex.mocks.MockPeopleAPI.me",
+            side_effect=exception_to_raise,
+    ):
+        with pytest.raises(exception_to_raise):
+            ConfigValidationHub().validate_config(
+                MOCK_API, TEST_DATA)
+
+
+async def test_validate_config_raises_cannot_connect_error(hass):
+    """Test validate_config raises api error."""
+
+    exception_to_raise = MockApiError
+    exception_to_raise.status_code = 500
+    with patch(
+            "tests.components.cisco_webex.mocks.MockPeopleAPI.me",
+            side_effect=requests.exceptions.ConnectionError,
+    ):
+        with pytest.raises(CannotConnect):
+            ConfigValidationHub().validate_config(
+                MOCK_API, TEST_DATA)
 
 
 async def test_form_invalid_email(hass):
@@ -101,7 +154,7 @@ async def test_form_invalid_email(hass):
 
     with patch(
             "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
-        side_effect=InvalidEmail,
+            side_effect=InvalidEmail,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -119,7 +172,7 @@ async def test_form_email_not_found(hass):
     )
 
     with patch(
-        "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
+            "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
             side_effect=EmailNotFound,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -196,7 +249,7 @@ async def test_form_cannot_connect(hass):
 
     with patch(
             "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
-        side_effect=CannotConnect,
+            side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
