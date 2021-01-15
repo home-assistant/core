@@ -31,10 +31,10 @@ def multisensor_6_state_fixture():
     return json.loads(load_fixture("zwave_js/multisensor_6_state.json"))
 
 
-@pytest.fixture(name="legacy_binary_sensor_state", scope="session")
-def legacy_binary_sensor_state_fixture():
-    """Load the legacy_binary_sensor node state fixture data."""
-    return json.loads(load_fixture("zwave_js/legacy_binary_sensor_state.json"))
+@pytest.fixture(name="ecolink_door_sensor_state", scope="session")
+def ecolink_door_sensor_state_fixture():
+    """Load the Ecolink Door/Window Sensor node state fixture data."""
+    return json.loads(load_fixture("zwave_js/ecolink_door_sensor_state.json"))
 
 
 @pytest.fixture(name="hank_binary_switch_state", scope="session")
@@ -68,10 +68,10 @@ def multisensor_6_fixture(client, multisensor_6_state):
     return node
 
 
-@pytest.fixture(name="legacy_binary_sensor")
-def legacy_binary_sensor_fixture(client, legacy_binary_sensor_state):
+@pytest.fixture(name="ecolink_door_sensor")
+def legacy_binary_sensor_fixture(client, ecolink_door_sensor_state):
     """Mock a legacy_binary_sensor node."""
-    node = Node(client, legacy_binary_sensor_state)
+    node = Node(client, ecolink_door_sensor_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
 
