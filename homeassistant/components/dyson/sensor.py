@@ -15,6 +15,7 @@ SENSOR_UNITS = {
     "filter_life": TIME_HOURS,
     "carbon_filter_state": PERCENTAGE,
     "hepa_filter_state": PERCENTAGE,
+    "combi_filter_state": PERCENTAGE,
     "humidity": PERCENTAGE,
 }
 
@@ -24,6 +25,7 @@ SENSOR_ICONS = {
     "filter_life": "mdi:filter-outline",
     "carbon_filter_state": "mdi:filter-outline",
     "hepa_filter_state": "mdi:filter-outline",
+    "combi_filter_state": "mdi:filter-outline",
     "humidity": "mdi:water-percent",
     "temperature": "mdi:thermometer",
 }
@@ -33,6 +35,9 @@ SENSOR_NAMES = {
     "dust": "Dust",
     "filter_life": "Filter Life",
     "humidity": "Humidity",
+    "carbon_filter_state": "Carbon Filter Remaining Life",
+    "hepa_filter_state": "HEPA Filter Remaining Life",
+    "combi_filter_state": "Combi Filter Remaining Life",
     "temperature": "Temperature",
 }
 
@@ -65,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             # It's reported with the HEPA state, while the Carbon state is set to INValid.
             if device.state and device.state.carbon_filter_state == "INV":
                 if f"{device.serial}-hepa_filter_state" not in device_ids:
-                    new_entities.append(DysonHepaFilterLifeSensor(device, "Combi"))
+                    new_entities.append(DysonHepaFilterLifeSensor(device, "combi"))
             else:
                 if f"{device.serial}-hepa_filter_state" not in device_ids:
                     new_entities.append(DysonHepaFilterLifeSensor(device))
@@ -143,7 +148,6 @@ class DysonCarbonFilterLifeSensor(DysonSensor):
     def __init__(self, device):
         """Create a new Dyson Carbon Filter Life sensor."""
         super().__init__(device, "carbon_filter_state")
-        self._name = f"{self._device.name} Carbon Filter Remaining Life"
 
     @property
     def state(self):
@@ -156,10 +160,9 @@ class DysonCarbonFilterLifeSensor(DysonSensor):
 class DysonHepaFilterLifeSensor(DysonSensor):
     """Representation of Dyson HEPA (or Combi) Filter Life sensor (in percent)."""
 
-    def __init__(self, device, filter_type="HEPA"):
+    def __init__(self, device, filter_type="hepa"):
         """Create a new Dyson Filter Life sensor."""
-        super().__init__(device, "hepa_filter_state")
-        self._name = f"{self._device.name} {filter_type} Filter Remaining Life"
+        super().__init__(device, f"{filter_type}_filter_state")
 
     @property
     def state(self):
