@@ -66,7 +66,7 @@ class TomatoDeviceScanner(DeviceScanner):
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
 
-        self.last_results = {"wldev": [], "dhcpd_lease": []}
+        self.last_results = {"arplist": [], "dhcpd_lease": []}
 
         self.success_init = self._update_tomato_info()
 
@@ -74,7 +74,7 @@ class TomatoDeviceScanner(DeviceScanner):
         """Scan for new devices and return a list with found device IDs."""
         self._update_tomato_info()
 
-        return [item[1] for item in self.last_results["wldev"]]
+        return [item[1] for item in self.last_results["arplist"]]
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
@@ -103,12 +103,12 @@ class TomatoDeviceScanner(DeviceScanner):
                 response = requests.Session().send(self.req, timeout=3)
 
             # Calling and parsing the Tomato api here. We only need the
-            # wldev and dhcpd_lease values.
+            # arplist and dhcpd_lease values.
             if response.status_code == HTTP_OK:
 
                 for param, value in self.parse_api_pattern.findall(response.text):
 
-                    if param in ("wldev", "dhcpd_lease"):
+                    if param in ("arplist", "dhcpd_lease"):
                         self.last_results[param] = json.loads(value.replace("'", '"'))
                 return True
 
