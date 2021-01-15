@@ -6,16 +6,21 @@ from typing import TYPE_CHECKING, Any, Generator
 from pytest import raises
 
 from homeassistant.components.switcher_kis import (
-    CONF_AUTO_OFF,
     DATA_DEVICE,
     DOMAIN,
+    SIGNAL_SWITCHER_DEVICE_UPDATE,
+)
+from homeassistant.components.switcher_kis.switch import (
+    CONF_AUTO_OFF,
+    CONF_TIMER_MINUTES,
     SERVICE_SET_AUTO_OFF_NAME,
     SERVICE_SET_AUTO_OFF_SCHEMA,
-    SIGNAL_SWITCHER_DEVICE_UPDATE,
+    SERVICE_TURN_ON_WITH_TIMER_NAME,
+    SERVICE_TURN_ON_WITH_TIMER_SCHEMA,
 )
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import Context, callback
-from homeassistant.exceptions import Unauthorized, UnknownUser
+from homeassistant.exceptions import UnknownUser
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
@@ -32,6 +37,7 @@ from .consts import (
     DUMMY_PHONE_ID,
     DUMMY_POWER_CONSUMPTION,
     DUMMY_REMAINING_TIME,
+    DUMMY_TIMER_MINUTES_SET,
     MANDATORY_CONFIGURATION,
     SWITCH_ENTITY_ID,
 )
@@ -84,7 +90,6 @@ async def test_set_auto_off_service(
     mock_bridge: Generator[None, Any, None],
     mock_api: Generator[None, Any, None],
     hass_owner_user: "MockUser",
-    hass_read_only_user: "MockUser",
 ) -> None:
     """Test the set_auto_off service."""
     assert await async_setup_component(hass, DOMAIN, MANDATORY_CONFIGURATION)
@@ -100,31 +105,6 @@ async def test_set_auto_off_service(
         blocking=True,
         context=Context(user_id=hass_owner_user.id),
     )
-
-    with raises(Unauthorized) as unauthorized_read_only_exc:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_AUTO_OFF_NAME,
-            {CONF_ENTITY_ID: SWITCH_ENTITY_ID, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
-            blocking=True,
-            context=Context(user_id=hass_read_only_user.id),
-        )
-
-    assert unauthorized_read_only_exc.type is Unauthorized
-
-    with raises(Unauthorized) as unauthorized_wrong_entity_exc:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_AUTO_OFF_NAME,
-            {
-                CONF_ENTITY_ID: "light.not_related_entity",
-                CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET,
-            },
-            blocking=True,
-            context=Context(user_id=hass_owner_user.id),
-        )
-
-    assert unauthorized_wrong_entity_exc.type is Unauthorized
 
     with raises(UnknownUser) as unknown_user_exc:
         await hass.services.async_call(
@@ -151,6 +131,59 @@ async def test_set_auto_off_service(
 
     assert len(service_calls) == 1
     assert str(service_calls[0].data[CONF_AUTO_OFF]) == DUMMY_AUTO_OFF_SET.lstrip("0")
+
+
+async def test_turn_on_with_timer_service(
+    hass: HomeAssistantType,
+    mock_bridge: Generator[None, Any, None],
+    mock_api: Generator[None, Any, None],
+    hass_owner_user: "MockUser",
+) -> None:
+    """Test the set_auto_off service."""
+    assert await async_setup_component(hass, DOMAIN, MANDATORY_CONFIGURATION)
+
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(DOMAIN, SERVICE_TURN_ON_WITH_TIMER_NAME)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_ON_WITH_TIMER_NAME,
+        {CONF_ENTITY_ID: SWITCH_ENTITY_ID, CONF_TIMER_MINUTES: DUMMY_TIMER_MINUTES_SET},
+        blocking=True,
+        context=Context(user_id=hass_owner_user.id),
+    )
+
+    with raises(UnknownUser) as unknown_user_exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TURN_ON_WITH_TIMER_NAME,
+            {
+                CONF_ENTITY_ID: SWITCH_ENTITY_ID,
+                CONF_TIMER_MINUTES: DUMMY_TIMER_MINUTES_SET,
+            },
+            blocking=True,
+            context=Context(user_id="not_real_user"),
+        )
+
+    assert unknown_user_exc.type is UnknownUser
+
+    service_calls = async_mock_service(
+        hass, DOMAIN, SERVICE_TURN_ON_WITH_TIMER_NAME, SERVICE_TURN_ON_WITH_TIMER_SCHEMA
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_ON_WITH_TIMER_NAME,
+        {CONF_ENTITY_ID: SWITCH_ENTITY_ID, CONF_TIMER_MINUTES: DUMMY_TIMER_MINUTES_SET},
+    )
+
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+    assert str(
+        service_calls[0].data[CONF_TIMER_MINUTES]
+    ) == DUMMY_TIMER_MINUTES_SET.lstrip("0")
 
 
 async def test_signal_dispatcher(

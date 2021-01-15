@@ -9,10 +9,13 @@ from aioswitcher.consts import (
     STATE_ON as SWITCHER_STATE_ON,
     WAITING_TEXT,
 )
+import voluptuous as vol
 
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchEntity
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType, ServiceCallType
 
 from . import (
     ATTR_AUTO_OFF_SET,
@@ -28,6 +31,8 @@ if TYPE_CHECKING:
     from aioswitcher.api.messages import SwitcherV2ControlResponseMSG
     from aioswitcher.devices import SwitcherV2Device
 
+CONF_AUTO_OFF = "auto_off"
+CONF_TIMER_MINUTES = "timer_minutes"
 
 DEVICE_PROPERTIES_TO_HA_ATTRIBUTES = {
     "power_consumption": ATTR_CURRENT_POWER_W,
@@ -35,6 +40,24 @@ DEVICE_PROPERTIES_TO_HA_ATTRIBUTES = {
     "remaining_time": ATTR_REMAINING_TIME,
     "auto_off_set": ATTR_AUTO_OFF_SET,
 }
+
+SERVICE_SET_AUTO_OFF_NAME = "set_auto_off"
+SERVICE_SET_AUTO_OFF_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_AUTO_OFF): cv.time_period_str,
+    }
+)
+
+SERVICE_TURN_ON_WITH_TIMER_NAME = "turn_on_with_timer"
+SERVICE_TURN_ON_WITH_TIMER_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_TIMER_MINUTES): vol.All(
+            cv.positive_int, vol.Range(min=1, max=150)
+        ),
+    }
+)
 
 
 async def async_setup_platform(
@@ -46,7 +69,51 @@ async def async_setup_platform(
     """Set up the switcher platform for the switch component."""
     if discovery_info is None:
         return
+
+    async def async_set_auto_off_service(entity, service_call: ServiceCallType) -> None:
+        """Use for handling setting device auto-off service calls."""
+
+        async with SwitcherV2Api(
+            hass.loop,
+            device_data.ip_addr,
+            device_data.phone_id,
+            device_data.device_id,
+            device_data.device_password,
+        ) as swapi:
+            await swapi.set_auto_shutdown(service_call.data[CONF_AUTO_OFF])
+
+    async def async_turn_on_with_timer_service(
+        entity, service_call: ServiceCallType
+    ) -> None:
+        """Use for handling turning device on with a timer service calls."""
+
+        async with SwitcherV2Api(
+            hass.loop,
+            device_data.ip_addr,
+            device_data.phone_id,
+            device_data.device_id,
+            device_data.device_password,
+        ) as swapi:
+            await swapi.control_device(
+                COMMAND_ON, service_call.data[CONF_TIMER_MINUTES]
+            )
+
+    device_data = hass.data[DOMAIN][DATA_DEVICE]
     async_add_entities([SwitcherControl(hass.data[DOMAIN][DATA_DEVICE])])
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_SET_AUTO_OFF_NAME,
+        SERVICE_SET_AUTO_OFF_SCHEMA,
+        async_set_auto_off_service,
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_TURN_ON_WITH_TIMER_NAME,
+        SERVICE_TURN_ON_WITH_TIMER_SCHEMA,
+        async_turn_on_with_timer_service,
+    )
 
 
 class SwitcherControl(SwitchEntity):
