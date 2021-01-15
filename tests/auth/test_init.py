@@ -298,15 +298,19 @@ async def test_saving_loading(hass, hass_storage):
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
-    cred = step["result"]
-    user = await manager.async_get_or_create_user(cred)
+    credential = step["result"]
+    user = await manager.async_get_or_create_user(credential)
 
     await manager.async_activate_user(user)
     # the first refresh token will be used to create access token
-    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID, cred=cred)
+    refresh_token = await manager.async_create_refresh_token(
+        user, CLIENT_ID, credential=credential
+    )
     manager.async_create_access_token(refresh_token, "192.168.0.1")
     # the second refresh token will not be used
-    await manager.async_create_refresh_token(user, "dummy-client", cred=cred)
+    await manager.async_create_refresh_token(
+        user, "dummy-client", credential=credential
+    )
 
     await flush_store(manager._store._store)
 
