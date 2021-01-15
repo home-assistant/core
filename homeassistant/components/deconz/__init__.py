@@ -2,8 +2,8 @@
 import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.typing import UNDEFINED
 
 from .config_flow import get_master_gateway
 from .const import CONF_BRIDGE_ID, CONF_GROUP_ID_BASE, CONF_MASTER_GATEWAY, DOMAIN
