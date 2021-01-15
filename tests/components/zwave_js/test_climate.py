@@ -75,6 +75,7 @@ async def test_thermostat_v2(
             "label": "Thermostat mode",
             "states": {"0": "Off", "1": "Heat", "2": "Cool", "3": "Auto"},
         },
+        "value": 1,
     }
     assert args["value"] == 1
 
@@ -110,6 +111,7 @@ async def test_thermostat_v2(
             "label": "Thermostat mode",
             "states": {"0": "Off", "1": "Heat", "2": "Cool", "3": "Auto"},
         },
+        "value": 1,
     }
     assert args["value"] == 2
 
@@ -142,6 +144,7 @@ async def test_thermostat_v2(
             "unit": "°F",
             "ccSpecific": {"setpointType": 1},
         },
+        "value": 72,
     }
     assert args["value"] == 77
 
@@ -167,7 +170,8 @@ async def test_thermostat_v2(
     )
     node.receive_event(event)
 
-    assert hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY).state == HVAC_MODE_COOL
+    state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
+    assert state.state == HVAC_MODE_COOL
     assert state.attributes[ATTR_TEMPERATURE] == 22.8
 
     # Test heat_cool mode update from value updated event

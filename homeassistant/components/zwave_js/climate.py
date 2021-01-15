@@ -37,7 +37,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -286,11 +285,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             setpoint: ZwaveValue = self._current_mode_setpoint_values[0]
             target_temp: Optional[float] = kwargs.get(ATTR_TEMPERATURE)
             if setpoint is not None and target_temp is not None:
-                target_temp = convert_temperature(
-                    target_temp,
-                    self.hass.config.units.temperature_unit,
-                    self.temperature_unit,
-                )
                 await self.info.node.async_set_value(setpoint, target_temp)
         elif len(self._current_mode_setpoint_values) == 2:
             setpoint_low: ZwaveValue = self._current_mode_setpoint_values[0]
@@ -298,18 +292,8 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             target_temp_low: Optional[float] = kwargs.get(ATTR_TARGET_TEMP_LOW)
             target_temp_high: Optional[float] = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             if setpoint_low is not None and target_temp_low is not None:
-                target_temp_low = convert_temperature(
-                    target_temp_low,
-                    self.hass.config.units.temperature_unit,
-                    self.temperature_unit,
-                )
                 await self.info.node.async_set_value(setpoint_low, target_temp_low)
             if setpoint_high is not None and target_temp_high is not None:
-                target_temp_high = convert_temperature(
-                    target_temp_high,
-                    self.hass.config.units.temperature_unit,
-                    self.temperature_unit,
-                )
                 await self.info.node.async_set_value(setpoint_high, target_temp_high)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
