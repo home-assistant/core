@@ -126,7 +126,7 @@ class WatcherBase:
             )
 
     @abstractmethod
-    def add_task(self, task):
+    def create_task(self, task):
         """Pass a task to async_add_task based on which context we are in."""
 
 
