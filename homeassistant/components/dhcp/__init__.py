@@ -1,7 +1,6 @@
 """The dhcp integration."""
 
 from abc import abstractmethod
-import asyncio
 import fnmatch
 import logging
 import os
@@ -243,10 +242,8 @@ class DHCPWatcher(WatcherBase, threading.Thread):
         self.process_client(ip_address, hostname, mac_address)
 
     def create_task(self, task):
-        """Pass a task to async_create_task via call_soon_threadsafe since we are in a thread."""
-        asyncio.get_running_loop().call_soon_threadsafe(
-            self.hass.async_create_task, task
-        )
+        """Pass a task to hass.add_job since we are in a thread."""
+        self.hass.add_job(task)
 
 
 def _decode_dhcp_option(dhcp_options, key):
