@@ -461,6 +461,25 @@ async def test_form_user_already_configured_from_dhcp(hass):
     assert len(mock_setup_entry.mock_calls) == 0
 
 
+async def test_already_configured_with_ignored(hass):
+    """Test ignored entries do not break checking for existing entries."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, source="ignore")
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data={
+            IP_ADDRESS: "1.1.1.1",
+            MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+            HOSTNAME: "somfy_eeff",
+        },
+    )
+    assert result["type"] == "form"
+
+
 async def test_dhcp_discovery(hass):
     """Test we can process the discovery from dhcp."""
     await setup.async_setup_component(hass, "persistent_notification", {})
