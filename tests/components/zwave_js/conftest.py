@@ -29,7 +29,12 @@ def controller_state_fixture():
 @pytest.fixture(name="version_state", scope="session")
 def version_state_fixture():
     """Load the version state fixture data."""
-    return json.loads(load_fixture("zwave_js/version_state.json"))
+    return {
+        "type": "version",
+        "driverVersion": "6.0.0-beta.0",
+        "serverVersion": "1.0.0",
+        "homeId": 1234567890,
+    }
 
 
 @pytest.fixture(name="multisensor_6_state", scope="session")

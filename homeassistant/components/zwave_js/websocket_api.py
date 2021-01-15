@@ -24,14 +24,12 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_network_status)
 
 
-# Decorator causes typing error from mypy, ignoring locally until it is
-# fixed in the core websocket_api class
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {vol.Required(TYPE): "zwave_js/network_status", vol.Required(ENTRY_ID): str}
 )
-async def websocket_network_status(
+@callback
+def websocket_network_status(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ) -> None:
     """Get the status of the Z-Wave JS network."""
