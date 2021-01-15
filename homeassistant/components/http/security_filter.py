@@ -40,9 +40,16 @@ def setup_security_filter(app):
     @middleware
     async def security_filter_middleware(request, handler):
         """Process request and block commonly known exploit attempts."""
-        if FILTERS.search(request.raw_path):
+        if FILTERS.search(request.path):
             _LOGGER.warning(
                 "Filtered a potential harmful request to: %s", request.raw_path
+            )
+            raise HTTPBadRequest
+
+        if FILTERS.search(request.query_string):
+            _LOGGER.warning(
+                "Filtered a request with a potential harmful query string: %s",
+                request.raw_path,
             )
             raise HTTPBadRequest
 
