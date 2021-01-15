@@ -1,7 +1,7 @@
 """Test security filter middleware."""
 from aiohttp import web
-import urllib3
 import pytest
+import urllib3
 
 from homeassistant.components.http.security_filter import setup_security_filter
 
