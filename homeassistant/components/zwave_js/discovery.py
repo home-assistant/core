@@ -74,6 +74,7 @@ DISCOVERY_SCHEMAS = [
         property={"currentMode", "locked"},
         type={"number", "boolean"},
     ),
+    # lights
     # primary value is the currentValue (brightness)
     ZWaveDiscoverySchema(
         platform="light",
