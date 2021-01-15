@@ -161,7 +161,7 @@ def validate_child(gateway: BaseAsyncGateway, node_id: int, child: ChildSensor, 
                     exc,
                 )
                 continue
-            dev_id: DevId = id(gateway), node_id, child.id, set_req[v_name].value
+            dev_id: DevId = gateway.unique_id, node_id, child.id, set_req[v_name].value
             validated[platform].append(dev_id)
 
     return validated

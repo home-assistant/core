@@ -87,23 +87,32 @@ async def setup_gateways(hass: HomeAssistantType, config):
     return gateways
 
 
-async def _get_gateway(hass: HomeAssistantType, config, gateway_conf, persistence_file):
+async def _get_gateway(hass: HomeAssistantType, entry: Union[ConfigEntry,Dict[str, Any]], unique_id: Optional[str]=None) -> Optional[BaseAsyncGateway]:
     """Return gateway after setup of the gateway."""
 
-    conf = config[DOMAIN]
-    persistence = conf[CONF_PERSISTENCE]
-    version = conf[CONF_VERSION]
-    device = gateway_conf[CONF_DEVICE]
-    baud_rate = gateway_conf[CONF_BAUD_RATE]
-    tcp_port = gateway_conf[CONF_TCP_PORT]
-    in_prefix = gateway_conf.get(CONF_TOPIC_IN_PREFIX, "")
-    out_prefix = gateway_conf.get(CONF_TOPIC_OUT_PREFIX, "")
+    if isinstance(entry, ConfigEntry):
+        data: Dict[str, Any] = entry.data
+        unique_id = entry.unique_id
+    else:
+        data: Dict[str, Any] = entry
+
+    if unique_id is None:
+        raise ValueError("no unique id! either give configEntry for auto-extraction or explicitly give one")
+    persistence_file = data.get(CONF_PERSISTENCE_FILE, hass.config.path(f"mysensors{unique_id}.pickle"))
+    persistence = data.get(CONF_PERSISTENCE)
+    version = data.get(CONF_VERSION)
+    device = data.get(CONF_DEVICE)
+    baud_rate = data.get(CONF_BAUD_RATE)
+    tcp_port = data.get(CONF_TCP_PORT)
+    in_prefix = data.get(CONF_TOPIC_IN_PREFIX, "")
+    out_prefix = data.get(CONF_TOPIC_OUT_PREFIX, "")
 
     if device == MQTT_COMPONENT:
-        if not await async_setup_component(hass, MQTT_COMPONENT, config):
-            return None
+        #what is the purpose of this?
+        #if not await async_setup_component(hass, MQTT_COMPONENT, entry):
+        #    return None
         mqtt = hass.components.mqtt
-        retain = conf[CONF_RETAIN]
+        retain = data.get(CONF_RETAIN)
 
         def pub_callback(topic, payload, qos, retain):
             """Call MQTT publish function."""
@@ -159,11 +168,12 @@ async def _get_gateway(hass: HomeAssistantType, config, gateway_conf, persistenc
             except vol.Invalid:
                 # invalid ip address
                 return None
+    # this adds extra properties to the pymysensors objects
     gateway.metric = hass.config.units.is_metric
-    gateway.optimistic = conf[CONF_OPTIMISTIC]
+    gateway.optimistic = data.get(CONF_OPTIMISTIC)
     gateway.device = device
-    gateway.event_callback = _gw_callback_factory(hass, config)
-    gateway.nodes_config = gateway_conf[CONF_NODES]
+    gateway.unique_id = unique_id
+    gateway.event_callback = _gw_callback_factory(hass, entry)
     if persistence:
         await gateway.start_persistence()
 
@@ -219,7 +229,7 @@ async def _gw_start(hass: HomeAssistantType, gateway: BaseAsyncGateway):
         # Gatways connected via mqtt doesn't send gateway ready message.
         return
     gateway_ready = asyncio.Future()
-    gateway_ready_key = MYSENSORS_GATEWAY_READY.format(id(gateway))
+    gateway_ready_key = MYSENSORS_GATEWAY_READY.format(gateway.unique_id)
     hass.data[gateway_ready_key] = gateway_ready
 
     try:

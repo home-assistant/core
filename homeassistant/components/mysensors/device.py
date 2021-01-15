@@ -138,8 +138,8 @@ class MySensorsEntity(MySensorsDevice, Entity):
 
     async def async_added_to_hass(self):
         """Register update callback."""
-        gateway_id = id(self.gateway)
         dev_id = gateway_id, self.node_id, self.child_id, self.value_type
+        gateway_id = self.gateway.unique_id
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, CHILD_CALLBACK.format(*dev_id), self.async_update_callback

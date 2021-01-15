@@ -25,7 +25,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
     for device in new_devices:
         async_dispatcher_connect(
-        gateway_id: GatewayId = id(gateway)
+        gateway_id: GatewayId = device.gateway.unique_id
         dev_id: DevId = (gateway_id, device.node_id, device.child_id, device.value_type)
             hass,
             mysensors.const.CHILD_CALLBACK.format(*dev_id),
