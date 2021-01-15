@@ -70,7 +70,8 @@ class BeckerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             user_input[CONF_DEVICE_PATH] = serial_by_id
             return self.async_create_entry(
-                title=user_input[CONF_DEVICE_PATH], data=user_input,
+                title=user_input[CONF_DEVICE_PATH],
+                data=user_input,
             )
 
         schema = {
@@ -80,7 +81,9 @@ class BeckerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         return self.async_show_form(
-            step_id="port_config", data_schema=vol.Schema(schema), errors=errors,
+            step_id="port_config",
+            data_schema=vol.Schema(schema),
+            errors=errors,
         )
 
 
