@@ -4,6 +4,7 @@ import os
 
 import pytest
 
+from homeassistant.auth.models import Credentials
 from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
 from homeassistant.const import HTTP_FORBIDDEN
@@ -247,9 +248,20 @@ async def test_onboarding_user_race(hass, hass_storage, aiohttp_client):
     assert sorted([res1.status, res2.status]) == [200, HTTP_FORBIDDEN]
 
 
-async def test_onboarding_integration(hass, hass_storage, hass_client):
+async def test_onboarding_integration(hass, hass_storage, hass_client, hass_admin_user):
     """Test finishing integration step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
+
+    # User step will have created credentials for user
+    hass_admin_user.credentials.append(
+        Credentials(
+            id="mock-id",
+            auth_provider_type="insecure_example",
+            auth_provider_id=None,
+            data={"username": "test-user"},
+            is_new=False,
+        )
+    )
 
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
