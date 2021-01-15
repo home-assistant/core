@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "iRobot device {bild} ({host})",
+    "flow_title": "iRobot ({host}) {blid}",
     "step": {
       "init": {
         "title": "Automaticlly connect to the device",
