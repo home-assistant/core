@@ -82,6 +82,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORTED_LANGUAGES),
         vol.Optional(CONF_GENDER, default=DEFAULT_GENDER): vol.In(GENDERS),
         vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): cv.string,
+        vol.Optional(CONF_OUTPUT, default=DEFAULT_OUTPUT): cv.string,
         vol.Optional(CONF_RATE, default=DEFAULT_RATE): vol.All(
             vol.Coerce(int), vol.Range(-100, 100)
         ),
@@ -102,6 +103,7 @@ def get_engine(hass, config, discovery_info=None):
         config[CONF_LANG],
         config[CONF_GENDER],
         config[CONF_TYPE],
+        config[CONF_OUTPUT],
         config[CONF_RATE],
         config[CONF_VOLUME],
         config[CONF_PITCH],
@@ -114,14 +116,14 @@ class MicrosoftProvider(Provider):
     """The Microsoft speech API provider."""
 
     def __init__(
-        self, apikey, lang, gender, ttype, rate, volume, pitch, contour, region
+        self, apikey, lang, gender, ttype, output, rate, volume, pitch, contour, region
     ):
         """Init Microsoft TTS service."""
         self._apikey = apikey
         self._lang = lang
         self._gender = gender
         self._type = ttype
-        self._output = DEFAULT_OUTPUT
+        self._output = output
         self._rate = f"{rate}{PERCENTAGE}"
         self._volume = f"{volume}{PERCENTAGE}"
         self._pitch = pitch
