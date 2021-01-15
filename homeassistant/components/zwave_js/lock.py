@@ -1,10 +1,14 @@
 """Representation of Z-Wave locks."""
-from enum import IntEnum
 import logging
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass
+from zwave_js_server.const import (
+    LOCK_CMD_CLASS_TO_LOCKED_STATE_MAP,
+    LOCK_CMD_CLASS_TO_PROPERTY_MAP,
+    CommandClass,
+    DoorLockMode,
+)
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity
@@ -18,31 +22,6 @@ from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
 LOGGER = logging.getLogger(__name__)
-
-
-class DoorLockMode(IntEnum):
-    """Enum with all (known/used) Z-Wave lock states for CommandClass.DOOR_LOCK."""
-
-    # https://github.com/zwave-js/node-zwave-js/blob/master/packages/zwave-js/src/lib/commandclass/DoorLockCC.ts#L56-L65
-    UNSECURED = 0
-    UNSECURED_WITH_TIMEOUT = 1
-    INSIDE_UNSECURED = 2
-    INSIDE_UNSECURED_WITH_TIMEOUT = 3
-    OUTSIDE_UNSECURED = 4
-    OUTSIDE_UNSECURED_WITH_TIMEOUT = 5
-    UNKNOWN = 254
-    SECURED = 255
-
-
-CMD_CLASS_TO_LOCKED_STATE_MAP = {
-    CommandClass.DOOR_LOCK: DoorLockMode.SECURED,
-    CommandClass.LOCK: 1,
-}
-
-CMD_CLASS_TO_PROPERTY_MAP = {
-    CommandClass.DOOR_LOCK: "targetMode",
-    CommandClass.LOCK: "locked",
-}
 
 STATE_TO_ZWAVE_MAP: Dict[int, Dict[str, Union[int, bool]]] = {
     CommandClass.DOOR_LOCK: {
@@ -83,16 +62,18 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         """Return true if the lock is locked."""
         if not self.info.primary_value:
             return None
-        return CMD_CLASS_TO_LOCKED_STATE_MAP[
-            self.info.primary_value.command_class
-        ] == int(self.info.primary_value.value)
+        return int(
+            LOCK_CMD_CLASS_TO_LOCKED_STATE_MAP[
+                CommandClass(self.info.primary_value.command_class)
+            ]
+        ) == int(self.info.primary_value.value)
 
     async def _set_lock_state(
         self, target_state: str, **kwargs: Dict[str, Any]
     ) -> None:
         """Set the lock state."""
         target_value: ZwaveValue = self.get_zwave_value(
-            CMD_CLASS_TO_PROPERTY_MAP[self.info.primary_value.command_class]
+            LOCK_CMD_CLASS_TO_PROPERTY_MAP[self.info.primary_value.command_class]
         )
         if target_value is not None:
             await self.info.node.async_set_value(
