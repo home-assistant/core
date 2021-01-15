@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "iRobot ({host}) {blid}",
+    "flow_title": "Roomba/Braava ({host}) {blid}",
     "step": {
       "init": {
         "title": "Automaticlly connect to the device",
