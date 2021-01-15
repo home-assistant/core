@@ -57,7 +57,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the somfy_mylink flow."""
         self.host = None
         self.mac = None
-        self.ip = None
+        self.ip_address = None
 
     async def async_step_dhcp(self, dhcp_discovery):
         """Handle dhcp discovery."""
@@ -71,9 +71,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         self.host = dhcp_discovery[HOSTNAME]
         self.mac = formatted_mac
-        self.ip = dhcp_discovery[IP_ADDRESS]
+        self.ip_address = dhcp_discovery[IP_ADDRESS]
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {"ip": self.ip, "mac": self.mac}
+        self.context["title_placeholders"] = {"ip": self.ip_address, "mac": self.mac}
         return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):
@@ -100,7 +100,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, default=self.ip): str,
+                    vol.Required(CONF_HOST, default=self.ip_address): str,
                     vol.Required(CONF_SYSTEM_ID): str,
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                 }

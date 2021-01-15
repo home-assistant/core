@@ -18,7 +18,7 @@ async def test_switch(hass, hank_binary_switch, integration, client):
         "switch", "turn_on", {"entity_id": SWITCH_ENTITY}, blocking=True
     )
 
-    args = client.async_send_json_message.call_args[0][0]
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 32
     assert args["valueId"] == {
@@ -65,7 +65,7 @@ async def test_switch(hass, hank_binary_switch, integration, client):
         "switch", "turn_off", {"entity_id": SWITCH_ENTITY}, blocking=True
     )
 
-    args = client.async_send_json_message.call_args[0][0]
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 32
     assert args["valueId"] == {
