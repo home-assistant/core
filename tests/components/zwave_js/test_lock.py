@@ -27,8 +27,8 @@ async def test_door_lock(hass, client, lock_schlage_be469, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_json_message.call_args_list) == 1
-    args = client.async_send_json_message.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 20
     assert args["valueId"] == {
@@ -58,7 +58,7 @@ async def test_door_lock(hass, client, lock_schlage_be469, integration):
     }
     assert args["value"] == 255
 
-    client.async_send_json_message.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test locked update from value updated event
     event = Event(
@@ -82,7 +82,7 @@ async def test_door_lock(hass, client, lock_schlage_be469, integration):
 
     assert hass.states.get(SCHLAGE_BE469_LOCK_ENTITY).state == STATE_LOCKED
 
-    client.async_send_json_message.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test unlocking
     await hass.services.async_call(
@@ -92,8 +92,8 @@ async def test_door_lock(hass, client, lock_schlage_be469, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_json_message.call_args_list) == 1
-    args = client.async_send_json_message.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 20
     assert args["valueId"] == {
