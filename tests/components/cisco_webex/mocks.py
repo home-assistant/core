@@ -16,8 +16,18 @@ class MockPeopleAPI:
     def list(self, email):
         return [MockPerson()]
 
+    def get(self, user_id):
+        return MockPerson()
+
 
 class MockPerson:
+    @property
+    def id(self):
+        return "77777"
+
+    def to_dict(self):
+        return {}
+
     @property
     def type(self):
         return "bot"
@@ -25,6 +35,14 @@ class MockPerson:
     @property
     def displayName(self):
         return "Test user"
+
+    @property
+    def status(self):
+        return "active"
+
+    @property
+    def avatar(self):
+        return "http://www.com/pic.png"
 
 
 class MockApiError(webexteamssdk.ApiError):

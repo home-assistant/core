@@ -1,20 +1,20 @@
 """Test the Cisco Webex config flow."""
 import pytest
 import requests
-import webexteamssdk
 
 from homeassistant import config_entries, setup
 from homeassistant.components.cisco_webex.config_flow import (
     CannotConnect,
+    ConfigValidationHub,
     EmailNotFound,
-    InvalidEmail,
-    InvalidAuthTokenType,
     InvalidAuth,
-    ConfigValidationHub
+    InvalidAuthTokenType,
+    InvalidEmail,
 )
 from homeassistant.components.cisco_webex.const import DOMAIN
+
 from tests.async_mock import patch
-from tests.components.cisco_webex.mocks import MockWebexTeamsAPI, MockApiError
+from tests.components.cisco_webex.mocks import MockApiError, MockWebexTeamsAPI
 
 TEST_DATA = {
     "email": "fff@fff.com"
