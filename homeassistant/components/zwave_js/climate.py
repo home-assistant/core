@@ -246,8 +246,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def target_temperature_high(self) -> Optional[float]:
         """Return the highbound target temperature we try to reach."""
-        if len(self._current_mode_setpoint_values) < 2:
-            return None
         return float(self._current_mode_setpoint_values[1].value)
 
     @property
@@ -280,7 +278,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
         if hvac_mode is not None:
             await self.async_set_hvac_mode(hvac_mode)
-
         if len(self._current_mode_setpoint_values) == 1:
             setpoint: ZwaveValue = self._current_mode_setpoint_values[0]
             target_temp: Optional[float] = kwargs.get(ATTR_TEMPERATURE)

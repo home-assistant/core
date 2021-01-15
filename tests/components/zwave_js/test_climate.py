@@ -198,3 +198,77 @@ async def test_thermostat_v2(
     assert state.state == HVAC_MODE_HEAT_COOL
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 22.8
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 22.2
+
+    client.async_send_command.reset_mock()
+
+    # Test setting temperature with heat_cool
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ATTR_TARGET_TEMP_HIGH: 30,
+            ATTR_TARGET_TEMP_LOW: 25,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 13
+    assert args["valueId"] == {
+        "commandClassName": "Thermostat Setpoint",
+        "commandClass": 67,
+        "endpoint": 1,
+        "property": "setpoint",
+        "propertyKey": 1,
+        "propertyName": "setpoint",
+        "propertyKeyName": "Heating",
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "unit": "°F",
+            "ccSpecific": {"setpointType": 1},
+        },
+        "value": 72,
+    }
+    assert args["value"] == 77
+
+    args = client.async_send_command.call_args_list[1][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 13
+    assert args["valueId"] == {
+        "commandClassName": "Thermostat Setpoint",
+        "commandClass": 67,
+        "endpoint": 1,
+        "property": "setpoint",
+        "propertyKey": 2,
+        "propertyName": "setpoint",
+        "propertyKeyName": "Cooling",
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "unit": "°F",
+            "ccSpecific": {"setpointType": 2},
+        },
+        "value": 73,
+    }
+    assert args["value"] == 86
+
+    client.async_send_command.reset_mock()
+
+    # Test setting unknown preset mode
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ATTR_PRESET_MODE: "unknown_preset",
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 0
