@@ -120,16 +120,6 @@ def split_entity_id(entity_id: str) -> List[str]:
     return entity_id.split(".", 1)
 
 
-def humanize_entity_id(entity_id: str) -> str:
-    """Convert an entity ID into a human friendly version."""
-    return humanize_entity_name(split_entity_id(entity_id)[1])
-
-
-def humanize_entity_name(entity_name: str) -> str:
-    """Convert an entity name into a human friendly version."""
-    return entity_name.replace("_", " ").capitalize()
-
-
 VALID_ENTITY_ID = re.compile(r"^(?!.+__)(?!_)[\da-z_]+(?<!_)\.(?!_)[\da-z_]+(?<!_)$")
 
 

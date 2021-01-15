@@ -505,16 +505,6 @@ def test_state_name_if_friendly_name_attr():
     assert state.name == name
 
 
-def test_humanize_entity_id():
-    """Test the humanize function for entity IDs."""
-    assert ha.humanize_entity_id("domain.hello_world") == "Hello world"
-
-
-def test_humanize_name():
-    """Test the humanize function for entity names."""
-    assert ha.humanize_entity_name("hello_world") == "Hello world"
-
-
 def test_state_dict_conversion():
     """Test conversion of dict."""
     state = ha.State("domain.hello", "world", {"some": "attr"})

@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import HomeAssistant, callback, humanize_entity_name
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -126,6 +126,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
                 title = title.template
 
             attr[ATTR_TITLE] = title
+            attr[ATTR_FRIENDLY_NAME] = title
 
         try:
             message.hass = hass
@@ -135,7 +136,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
             message = message.template
 
         attr[ATTR_MESSAGE] = message
-        attr[ATTR_FRIENDLY_NAME] = humanize_entity_name(notification_id)
 
         hass.states.async_set(entity_id, STATE, attr)
 
