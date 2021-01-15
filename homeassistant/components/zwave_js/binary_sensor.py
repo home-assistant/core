@@ -264,17 +264,11 @@ async def async_setup_entry(
         """Add Z-Wave Binary Sensor."""
         entities: List[ZWaveBaseEntity] = []
 
-        if info.platform_hint == "boolean":
-            entities.append(ZWaveBooleanBinarySensor(client, info))
-        elif info.platform_hint == "notification":
+        if info.platform_hint == "notification":
             entities.append(ZWaveNotificationBinarySensor(client, info))
         else:
-            LOGGER.warning(
-                "Binary Sensor not implemented for %s/%s",
-                info.platform_hint,
-                info.primary_value.property_name,
-            )
-            return
+            # boolean sensor
+            entities.append(ZWaveBooleanBinarySensor(client, info))
 
         async_add_entities(entities)
 
