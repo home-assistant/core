@@ -97,6 +97,15 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"host": self.host, "blid": self.blid}
         return await self.async_step_user()
 
+    async def _async_start_link(self):
+        """Start linking."""
+        device = self.discovered_robots[self.host]
+        self.blid = device.blid
+        self.name = device.robot_name
+        await self.async_set_unique_id(self.blid, raise_on_progress=False)
+        self._abort_if_unique_id_configured()
+        return await self.async_step_link()
+
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
         # Check if user chooses manual entry
@@ -109,12 +118,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             and user_input[CONF_HOST] in self.discovered_robots
         ):
             self.host = user_input[CONF_HOST]
-            device = self.discovered_robots[self.host]
-            self.blid = device.blid
-            self.name = device.robot_name
-            await self.async_set_unique_id(self.blid, raise_on_progress=False)
-            self._abort_if_unique_id_configured()
-            return await self.async_step_link()
+            return await self._async_start_link()
 
         already_configured = self._async_current_ids(False)
         discovery = _async_get_roomba_discovery()
@@ -129,6 +133,9 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 for device in devices
                 if device.blid not in already_configured
             }
+            if self.host and self.host in self.discovered_robots:
+                # From discovery
+                return await self._async_start_link()
 
         if not self.discovered_robots:
             return await self.async_step_manual()
@@ -137,7 +144,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Optional("host", default=self.host): vol.In(
+                    vol.Optional("host"): vol.In(
                         {
                             **{
                                 device.ip: f"{device.robot_name} ({device.ip})"
@@ -184,7 +191,10 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         to connect to the device.
         """
         if user_input is None:
-            return self.async_show_form(step_id="link")
+            return self.async_show_form(
+                step_id="link",
+                description_placeholders={CONF_NAME: self.name or self.blid},
+            )
 
         try:
             password = await self.hass.async_add_executor_job(
