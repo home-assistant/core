@@ -99,6 +99,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             "Unable to connect to the Somfy MyLink device, please check your settings"
         ) from ex
 
+    _LOGGER.warning("mylink %s: %s", config[CONF_HOST], mylink_status)
+
     if not mylink_status or "error" in mylink_status:
         _LOGGER.error(
             "mylink failed to setup because of an error: %s",
