@@ -43,3 +43,4 @@ async def test_setup_sigle(hass, requests_mock):
     right_side = devices[0]
     assert "SleepNumber ILE Test1 SleepNumber" == right_side.name
     assert 40 == right_side.state
+    
