@@ -61,6 +61,12 @@ def bulb_6_multi_color_state_fixture():
     return json.loads(load_fixture("zwave_js/bulb_6_multi_color_state.json"))
 
 
+@pytest.fixture(name="lock_schlage_be469_state", scope="session")
+def lock_schlage_be469_state_fixture():
+    """Load the schlage lock node state fixture data."""
+    return json.loads(load_fixture("zwave_js/lock_schlage_be469_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state):
     """Mock a client."""
@@ -104,6 +110,14 @@ def hank_binary_switch_fixture(client, hank_binary_switch_state):
 def bulb_6_multi_color_fixture(client, bulb_6_multi_color_state):
     """Mock a bulb 6 multi-color node."""
     node = Node(client, bulb_6_multi_color_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="lock_schlage_be469")
+def lock_schlage_be469_fixture(client, lock_schlage_be469_state):
+    """Mock a schlage lock node."""
+    node = Node(client, lock_schlage_be469_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
 
