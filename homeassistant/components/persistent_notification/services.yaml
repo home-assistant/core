@@ -8,7 +8,7 @@ create:
       description: Optional title for your notification. [Optional, Templates accepted]
       example: Test notification
     notification_id:
-      description: Target ID of the notification, will replace a notification with the same Id. [Optional]
+      description: Target ID of the notification, will replace a notification with the same ID. [Optional]
       example: 1234
 
 dismiss:
