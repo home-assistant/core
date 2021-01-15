@@ -417,10 +417,7 @@ homeassistant/components/simplisafe/* @bachya
 homeassistant/components/sinch/* @bendikrb
 homeassistant/components/sisyphus/* @jkeljo
 homeassistant/components/sky_hub/* @rogerselwyn
-<<<<<<< HEAD
 homeassistant/components/slack/* @bachya
-=======
->>>>>>> Ran isort and hassfest
 homeassistant/components/sleepiq/* @home-assistant @Jay2645 @Jpeterson37
 homeassistant/components/slide/* @ualex73
 homeassistant/components/sma/* @kellerza
