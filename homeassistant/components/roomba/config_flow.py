@@ -85,16 +85,16 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not dhcp_discovery[HOSTNAME].startswith("iRobot-"):
             return self.async_abort(reason="not_irobot_device")
 
-        bild = _async_bild_from_hostname(dhcp_discovery[HOSTNAME])
-        await self.async_set_unique_id(bild)
+        blid = _async_blid_from_hostname(dhcp_discovery[HOSTNAME])
+        await self.async_set_unique_id(blid)
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: dhcp_discovery[IP_ADDRESS]}
         )
 
         self.host = dhcp_discovery[IP_ADDRESS]
-        self.blid = bild
+        self.blid = blid
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {"host": self.host, "bild": self.blid}
+        self.context["title_placeholders"] = {"host": self.host, "blid": self.blid}
         return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):
@@ -119,7 +119,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         already_configured = self._async_current_ids(False)
         discovery = _async_get_roomba_discovery()
 
-        with self.hass.data[ROOMBA_DISCOVERY_LOCK].setdefault(asyncio.Lock()):
+        async with self.hass.data.setdefault(ROOMBA_DISCOVERY_LOCK, asyncio.Lock()):
             devices = await self.hass.async_add_executor_job(discovery.get_all)
 
         if devices:
@@ -160,7 +160,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema(
                     {
                         vol.Required(CONF_HOST, default=self.host): str,
-                        vol.Required(CONF_BLID, default=self.bild): str,
+                        vol.Required(CONF_BLID, default=self.blid): str,
                     }
                 ),
             )
@@ -292,6 +292,6 @@ def _async_get_roomba_discovery():
 
 
 @callback
-def _async_bild_from_hostname(hostname):
-    """Extract the bild from the hostname."""
+def _async_blid_from_hostname(hostname):
+    """Extract the blid from the hostname."""
     return hostname.split("-")[1].split(".")[0]
