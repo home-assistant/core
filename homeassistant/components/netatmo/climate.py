@@ -417,7 +417,8 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 "heating_power_request", 0
             )
 
-        attr[ATTR_SELECTED_SCHEDULE] = self._selected_schedule
+        if self._selected_schedule is not None:
+            attr[ATTR_SELECTED_SCHEDULE] = self._selected_schedule
 
         return attr
 
