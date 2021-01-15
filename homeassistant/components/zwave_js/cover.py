@@ -1,6 +1,6 @@
 """Support for Z-Wave cover devices."""
 import logging
-from typing import Callable, List
+from typing import Any, Callable, List
 
 from zwave_js_server.client import Client as ZwaveClient
 
@@ -26,7 +26,7 @@ SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
-    """Set up Z-Wave Light from Config Entry."""
+    """Set up Z-Wave Cover from Config Entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
 
     @callback
@@ -114,25 +114,19 @@ class ZWaveGarageDoorBarrier(ZWaveBaseEntity, CoverEntity):
         return DEVICE_CLASS_GARAGE
 
     @property
-    def is_opening(self) -> bool:
+    def is_opening(self) -> Any:
         """Return true if cover is in an opening state."""
-        if self.info.primary_value.value == 3:
-            return True
-        return False
+        return self.info.primary_value.value == 3
 
     @property
-    def is_closing(self) -> bool:
+    def is_closing(self) -> Any:
         """Return true if cover is in a closing state."""
-        if self.info.primary_value.value == 1:
-            return True
-        return False
+        return self.info.primary_value.value == 1
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> Any:
         """Return the current position of Zwave garage door."""
-        if self.info.primary_value.value == 0:
-            return True
-        return False
+        return self.info.primary_value.value == 0
 
     # TODO: update these functions once upstream PR for barriers is completed
     # async def async_close_cover(self, **kwargs: int) -> None:
