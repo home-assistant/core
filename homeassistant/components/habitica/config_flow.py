@@ -40,8 +40,8 @@ async def validate_input(hass: core.HomeAssistant, data):
             "title": f"{data.get('name', 'Default username')}",
             CONF_API_USER: data[CONF_API_USER],
         }
-    except ClientResponseError:  # pylint: disable=broad-except
-        raise InvalidAuth()
+    except ClientResponseError as ex:  # pylint: disable=broad-except
+        raise InvalidAuth() from ex
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
