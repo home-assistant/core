@@ -31,7 +31,7 @@ CONF_NODES = "nodes"
 CONF_VMS = "vms"
 CONF_CONTAINERS = "containers"
 
-COORDINATOR = "coordinator"
+COORDINATORS = "coordinators"
 API_DATA = "api_data"
 
 DEFAULT_PORT = 8006
@@ -118,83 +118,79 @@ async def async_setup(hass: HomeAssistant, config: dict):
             return proxmox_client
 
     proxmox_client = await hass.async_add_executor_job(build_client)
+    proxmox = proxmox_client.get_api_client()
 
-    async def async_update_data() -> dict:
-        """Fetch data from API endpoint."""
+    hass.data[DOMAIN][COORDINATORS] = {}
 
-        proxmox = proxmox_client.get_api_client()
+    # Create a coordinator for each vm/container
+    for host_config in config[DOMAIN]:
+        host_name = host_config["host"]
+        hass.data[DOMAIN][COORDINATORS][host_name] = {}
 
-        def poll_api() -> dict:
-            data = {}
+        for node_config in host_config["nodes"]:
+            node_name = node_config["node"]
+            hass.data[DOMAIN][COORDINATORS][host_name][node_name] = {}
 
-            for host_config in config[DOMAIN]:
-                host_name = host_config["host"]
+            for vm_id in node_config["vms"]:
+                coordinator = create_coordinator_container_vm(
+                    hass, proxmox, host_name, node_name, vm_id, TYPE_VM
+                )
 
-                data[host_name] = {}
+                # Fetch initial data
+                await coordinator.async_refresh()
 
-                for node_config in host_config["nodes"]:
-                    node_name = node_config["node"]
-                    data[host_name][node_name] = {}
+                hass.data[DOMAIN][COORDINATORS][host_name][node_name][
+                    vm_id
+                ] = coordinator
 
-                    for vm_id in node_config["vms"]:
-                        data[host_name][node_name][vm_id] = {}
+            for container_id in node_config["containers"]:
+                coordinator = create_coordinator_container_vm(
+                    hass, proxmox, host_name, node_name, container_id, TYPE_CONTAINER
+                )
 
-                        vm_status = call_api_container_vm(
-                            proxmox, node_name, vm_id, TYPE_VM
-                        )
+                # Fetch initial data
+                await coordinator.async_refresh()
 
-                        if vm_status is None:
-                            _LOGGER.warning("Vm/Container %s unable to be found", vm_id)
-                            data[host_name][node_name][vm_id] = None
-                            continue
+                hass.data[DOMAIN][COORDINATORS][host_name][node_name][
+                    container_id
+                ] = coordinator
 
-                        data[host_name][node_name][vm_id] = parse_api_container_vm(
-                            vm_status
-                        )
-
-                    for container_id in node_config["containers"]:
-                        data[host_name][node_name][container_id] = {}
-
-                        container_status = call_api_container_vm(
-                            proxmox, node_name, container_id, TYPE_CONTAINER
-                        )
-
-                        if container_status is None:
-                            _LOGGER.error(
-                                "Vm/Container %s unable to be found", container_id
-                            )
-                            data[host_name][node_name][container_id] = None
-                            continue
-
-                        data[host_name][node_name][
-                            container_id
-                        ] = parse_api_container_vm(container_status)
-
-            return data
-
-        return await hass.async_add_executor_job(poll_api)
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="proxmox_coordinator",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=UPDATE_INTERVAL),
-    )
-
-    hass.data[DOMAIN][COORDINATOR] = coordinator
-
-    # Fetch initial data
-    await coordinator.async_config_entry_first_refresh()
-
-    for platform in PLATFORMS:
+    for component in PLATFORMS:
         await hass.async_create_task(
             hass.helpers.discovery.async_load_platform(
-                platform, DOMAIN, {"config": config}, config
+                component, DOMAIN, {"config": config}, config
             )
         )
 
     return True
+
+
+def create_coordinator_container_vm(hass, proxmox, host_name, node_name, id, type):
+    """Create and return a DataUpdateCoordinator for a vm/container."""
+
+    async def async_update_data():
+        """Call the api and handle the response."""
+
+        def poll_api():
+            """Call the api."""
+            vm_status = call_api_container_vm(proxmox, node_name, id, type)
+            return vm_status
+
+        vm_status = await hass.async_add_executor_job(poll_api)
+
+        if vm_status is None:
+            _LOGGER.warning("Vm/Container %s unable to be found", id)
+            return None
+        else:
+            return parse_api_container_vm(vm_status)
+
+    return DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"proxmox_coordinator_{host_name}_{node_name}_{id}",
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=UPDATE_INTERVAL),
+    )
 
 
 def parse_api_container_vm(status):

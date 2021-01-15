@@ -2,7 +2,7 @@
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import COORDINATOR, DOMAIN, ProxmoxEntity
+from . import COORDINATORS, DOMAIN, ProxmoxEntity
 
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
@@ -10,7 +10,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
 
-    coordinator = hass.data[DOMAIN][COORDINATOR]
+    # coordinator = hass.data[DOMAIN][COORDINATOR]
 
     sensors = []
 
@@ -21,30 +21,36 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
             node_name = node_config["node"]
 
             for vm_id in node_config["vms"]:
-                coordinator_data = coordinator.data[host_name][node_name][vm_id]
+                coordinator = hass.data[DOMAIN][COORDINATORS][host_name][node_name][
+                    vm_id
+                ]
+                coordinator_data = coordinator.data
 
                 # unfound vm case
                 if coordinator_data is None:
                     continue
 
                 vm_name = coordinator_data["name"]
-                vm_status = create_binary_sensor(
+                vm_sensor = create_binary_sensor(
                     coordinator, host_name, node_name, vm_id, vm_name
                 )
-                sensors.append(vm_status)
+                sensors.append(vm_sensor)
 
             for container_id in node_config["containers"]:
-                coordinator_data = coordinator.data[host_name][node_name][container_id]
+                coordinator = hass.data[DOMAIN][COORDINATORS][host_name][node_name][
+                    container_id
+                ]
+                coordinator_data = coordinator.data
 
                 # unfound container case
                 if coordinator_data is None:
                     continue
 
                 container_name = coordinator_data["name"]
-                container_status = create_binary_sensor(
+                container_sensor = create_binary_sensor(
                     coordinator, host_name, node_name, container_id, container_name
                 )
-                sensors.append(container_status)
+                sensors.append(container_sensor)
 
     add_entities(sensors)
 
@@ -85,7 +91,6 @@ class ProxmoxBinarySensor(ProxmoxEntity):
     @property
     def state(self):
         """Return the state of the binary sensor."""
-        data = self.coordinator.data[self._host_name][self._node_name][self._vm_id]
-        if data["status"] == "running":
+        if self.coordinator.data["status"] == "running":
             return STATE_ON
         return STATE_OFF
