@@ -23,9 +23,7 @@ async def test_enabled_legacy_sensor(hass, legacy_binary_sensor, integration):
     """Test enabled legacy boolean binary sensor."""
     # this node has Notification CC not (fully) implemented
     # so legacy binary sensor should be enabled
-    import logging
 
-    logging.getLogger().error(hass.states.async_entity_ids())
     state = hass.states.get(ENABLED_LEGACY_BINARY_SENSOR)
     assert state
     assert state.state == STATE_OFF
