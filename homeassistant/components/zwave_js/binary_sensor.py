@@ -330,6 +330,9 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         # We hide some more advanced sensors by default to not overwhelm users
+        if not self._mapping_info:
+            # consider value for which we do not have a mapping as advanced.
+            return False
         return self._mapping_info.get("enabled", True)
 
     @callback
