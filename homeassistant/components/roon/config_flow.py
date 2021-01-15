@@ -23,7 +23,7 @@ DATA_SCHEMA = vol.Schema({"host": str})
 TIMEOUT = 120
 
 
-class RoonHub:  # pragma: no cover
+class RoonHub:
     """Interact with roon during config flow."""
 
     def __init__(self, hass):
@@ -58,7 +58,7 @@ class RoonHub:  # pragma: no cover
         else:
             apis = [RoonApi(ROON_APPINFO, None, host, blocking_init=False)]
 
-        while secs < TIMEOUT:
+        while secs <= TIMEOUT:
             # Roon can discover multiple devices - not all of which are proper servers, so try and authenticate with them all.
             # The user will only enable one - so look for a valid token
             auth_api = [api for api in apis if api.token is not None]
