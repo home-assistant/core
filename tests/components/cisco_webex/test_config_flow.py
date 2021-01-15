@@ -4,6 +4,8 @@ from homeassistant.components.cisco_webex.config_flow import (
     CannotConnect,
     EmailNotFound,
     InvalidEmail,
+    InvalidAuthTokenType,
+    InvalidAuth
 )
 from homeassistant.components.cisco_webex.const import DOMAIN
 
@@ -72,7 +74,7 @@ async def test_form_email_not_found(hass):
 
     with patch(
         "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
-        side_effect=EmailNotFound,
+            side_effect=EmailNotFound,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -83,6 +85,63 @@ async def test_form_email_not_found(hass):
     assert result2["errors"] == {"base": "email_not_found"}
 
 
+async def test_form_invalid_auth(hass):
+    """Test we handle invalid auth."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+            "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
+            side_effect=InvalidAuth,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"token": "asdasdas", "email": "test-email@test.com"},
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_general_exception(hass):
+    """Test we handle an unknown exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+            "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
+            side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"token": "asdasdas", "email": "test-email@test.com"},
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_invalid_auth_token_type(hass):
+    """Test we handle invalid auth token type."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+            "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
+            side_effect=InvalidAuthTokenType,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"token": "asdasdas", "email": "test-email@test.com"},
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_auth_token_type"}
+
+
 async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -90,7 +149,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
+            "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
