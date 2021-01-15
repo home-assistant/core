@@ -77,6 +77,7 @@ async def test_migrate_entry(hass):
 
     assert entry.data == legacy_config
     assert entry.version == 1
+    assert not entry.unique_id
 
     await entry.async_migrate(hass)
 
@@ -96,3 +97,4 @@ async def test_migrate_entry(hass):
         CONF_NAME: "name",
     }
     assert entry.version == 2
+    assert entry.unique_id == "mac"
