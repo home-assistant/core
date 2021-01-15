@@ -3,6 +3,7 @@ import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .config_flow import get_master_gateway
 from .const import CONF_BRIDGE_ID, CONF_GROUP_ID_BASE, CONF_MASTER_GATEWAY, DOMAIN
@@ -33,8 +34,11 @@ async def async_setup_entry(hass, config_entry):
 
     gateway = DeconzGateway(hass, config_entry)
 
-    if not await gateway.async_setup():
-        return False
+    try:
+        if not await gateway.async_setup():
+            return False
+    except Exception as error:
+        raise ConfigEntryNotReady from error
 
     # 0.104 introduced config entry unique id, this makes upgrading possible
     if config_entry.unique_id is None:
