@@ -94,7 +94,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host = dhcp_discovery[IP_ADDRESS]
         self.blid = blid
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {"host": self.host, "blid": self.blid}
+        self.context["title_placeholders"] = {"host": self.host, "name": self.blid}
         return await self.async_step_user()
 
     async def _async_start_link(self):
@@ -135,6 +135,11 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
             if self.host and self.host in self.discovered_robots:
                 # From discovery
+                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+                self.context["title_placeholders"] = {
+                    "host": self.host,
+                    "name": self.discovered_robots[self.host].robot_name,
+                }
                 return await self._async_start_link()
 
         if not self.discovered_robots:

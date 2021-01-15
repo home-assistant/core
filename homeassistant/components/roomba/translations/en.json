@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Roomba/Braava ({host}) {blid}",
+    "flow_title": "Roomba/Braava ({host}) {name}",
     "step": {
       "init": {
         "title": "Automaticlly connect to the device",
