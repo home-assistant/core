@@ -4,7 +4,12 @@ import logging
 from typing import Any, Callable, Dict, List, Optional
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass
+from zwave_js_server.const import (
+    THERMOSTAT_MODE_SETPOINT_MAP,
+    THERMOSTAT_MODES,
+    CommandClass,
+    ThermostatMode,
+)
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.climate import ClimateEntity
@@ -32,62 +37,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class ThermostatMode(IntEnum):
-    """Enum with all (known/used) Z-Wave ThermostatModes."""
-
-    # https://github.com/zwave-js/node-zwave-js/blob/master/packages/zwave-js/src/lib/commandclass/ThermostatModeCC.ts#L53-L70
-    OFF = 0
-    HEAT = 1
-    COOL = 2
-    AUTO = 3
-    AUXILIARY = 4
-    RESUME_ON = 5
-    FAN = 6
-    FURNANCE = 7
-    DRY = 8
-    MOIST = 9
-    AUTO_CHANGE_OVER = 10
-    HEATING_ECON = 11
-    COOLING_ECON = 12
-    AWAY = 13
-    FULL_POWER = 15
-    MANUFACTURER_SPECIFIC = 31
-
-
-# In Z-Wave the modes and presets are both in ThermostatMode.
-# This list contains thermostatmodes we should consider a mode only
-MODES_LIST = [
-    ThermostatMode.OFF,
-    ThermostatMode.HEAT,
-    ThermostatMode.COOL,
-    ThermostatMode.AUTO,
-    ThermostatMode.AUTO_CHANGE_OVER,
-]
-
-# https://github.com/zwave-js/node-zwave-js/blob/master/packages/zwave-js/src/lib/commandclass/ThermostatSetpointCC.ts#L53-L66
-MODE_SETPOINT_MAP: Dict[int, List[str]] = {
-    ThermostatMode.OFF: [],
-    ThermostatMode.HEAT: ["Heating"],
-    ThermostatMode.COOL: ["Cooling"],
-    ThermostatMode.AUTO: ["Heating", "Cooling"],
-    ThermostatMode.AUXILIARY: ["Heating"],
-    ThermostatMode.FURNANCE: ["Furnace"],
-    ThermostatMode.DRY: ["Dry Air"],
-    ThermostatMode.MOIST: ["Moist Air"],
-    ThermostatMode.AUTO_CHANGE_OVER: ["Auto Changeover"],
-    ThermostatMode.HEATING_ECON: ["Energy Save Heating"],
-    ThermostatMode.COOLING_ECON: ["Energy Save Cooling"],
-    ThermostatMode.AWAY: ["Away Heating", "Away Cooling"],
-    ThermostatMode.FULL_POWER: ["Full Power"],
-}
 
 # Map Z-Wave HVAC Mode to Home Assistant value
 # Note: We treat "auto" as "heat_cool" as most Z-Wave devices
@@ -192,7 +148,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             setpoint_keys = ["Heating"]
         else:
             current_mode = int(self.info.primary_value.value)
-            setpoint_keys = MODE_SETPOINT_MAP.get(current_mode, [])
+            setpoint_keys = THERMOSTAT_MODE_SETPOINT_MAP.get(current_mode, [])
         # we do not want None values in our list so check if the value exists
         return [
             self.get_zwave_value(
@@ -219,7 +175,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             # Iterate over all Z-Wave ThermostatModes and extract the hvac modes and presets.
             for mode_id, mode_name in self.info.primary_value.metadata.states.items():
                 mode_id = int(mode_id)
-                if mode_id in MODES_LIST:
+                if mode_id in THERMOSTAT_MODES:
                     # treat value as hvac mode
                     hass_mode = ZW_HVAC_MODE_MAP.get(mode_id)
                     if hass_mode:
@@ -306,7 +262,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         # A Zwave mode that can not be translated to a hass mode is considered a preset
         if not self.info.primary_value:
             return None
-        if int(self.info.primary_value.value) not in MODES_LIST:
+        if int(self.info.primary_value.value) not in THERMOSTAT_MODES:
             return_val: str = self.info.primary_value.metadata.states.get(
                 self.info.primary_value.value
             )
@@ -320,6 +276,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
+        assert self.hass
         hvac_mode: Optional[str] = kwargs.get(ATTR_HVAC_MODE)
 
         if hvac_mode is not None:
@@ -327,17 +284,32 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
         if len(self._current_mode_setpoint_values) == 1:
             setpoint: ZwaveValue = self._current_mode_setpoint_values[0]
-            target_temp = kwargs.get(ATTR_TEMPERATURE)
+            target_temp: Optional[float] = kwargs.get(ATTR_TEMPERATURE)
             if setpoint is not None and target_temp is not None:
+                target_temp = convert_temperature(
+                    target_temp,
+                    self.hass.config.units.temperature_unit,
+                    self.temperature_unit,
+                )
                 await self.info.node.async_set_value(setpoint, target_temp)
         elif len(self._current_mode_setpoint_values) == 2:
             setpoint_low: ZwaveValue = self._current_mode_setpoint_values[0]
             setpoint_high: ZwaveValue = self._current_mode_setpoint_values[1]
-            target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-            target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+            target_temp_low: Optional[float] = kwargs.get(ATTR_TARGET_TEMP_LOW)
+            target_temp_high: Optional[float] = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             if setpoint_low is not None and target_temp_low is not None:
+                target_temp_low = convert_temperature(
+                    target_temp_low,
+                    self.hass.config.units.temperature_unit,
+                    self.temperature_unit,
+                )
                 await self.info.node.async_set_value(setpoint_low, target_temp_low)
             if setpoint_high is not None and target_temp_high is not None:
+                target_temp_high = convert_temperature(
+                    target_temp_high,
+                    self.hass.config.units.temperature_unit,
+                    self.temperature_unit,
+                )
                 await self.info.node.async_set_value(setpoint_high, target_temp_high)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:

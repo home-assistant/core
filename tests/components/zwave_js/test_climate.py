@@ -40,8 +40,8 @@ async def test_thermostat_v2(
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT_COOL,
     ]
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 72
-    assert state.attributes[ATTR_TEMPERATURE] == 72
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.2
+    assert state.attributes[ATTR_TEMPERATURE] == 22.2
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
 
@@ -119,7 +119,7 @@ async def test_thermostat_v2(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY, ATTR_TEMPERATURE: 75},
+        {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY, ATTR_TEMPERATURE: 25},
         blocking=True,
     )
 
@@ -142,9 +142,8 @@ async def test_thermostat_v2(
             "unit": "°F",
             "ccSpecific": {"setpointType": 1},
         },
-        "value": 72,
     }
-    assert args["value"] == 75
+    assert args["value"] == 77
 
     client.async_send_json_message.reset_mock()
 
@@ -169,7 +168,7 @@ async def test_thermostat_v2(
     node.receive_event(event)
 
     assert hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY).state == HVAC_MODE_COOL
-    assert state.attributes[ATTR_TEMPERATURE] == 73
+    assert state.attributes[ATTR_TEMPERATURE] == 22.8
 
     # Test heat_cool mode update from value updated event
     event = Event(
@@ -193,5 +192,5 @@ async def test_thermostat_v2(
 
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
     assert state.state == HVAC_MODE_HEAT_COOL
-    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 73
-    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 72
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 22.8
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 22.2
