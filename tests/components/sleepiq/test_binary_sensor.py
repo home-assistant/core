@@ -43,3 +43,4 @@ async def test_setup_single(hass, requests_mock):
     right_side = devices[0]
     assert "SleepNumber ILE Test1 Is In Bed" == right_side.name
     assert "on" == right_side.state
+    
