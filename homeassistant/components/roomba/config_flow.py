@@ -1,11 +1,14 @@
 """Config flow to configure roomba component."""
 
+import asyncio
+
 from roombapy import Roomba
 from roombapy.discovery import RoombaDiscovery
 from roombapy.getpassword import RoombaPassword
 import voluptuous as vol
 
 from homeassistant import config_entries, core
+from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import callback
 
@@ -20,6 +23,8 @@ from .const import (
     ROOMBA_SESSION,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
+
+ROOMBA_DISCOVERY_LOCK = "roomba_discovery_lock"
 
 DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELAY}
 
@@ -72,6 +77,26 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
+    async def async_step_dhcp(self, dhcp_discovery):
+        """Handle dhcp discovery."""
+        if self._host_already_configured(dhcp_discovery[IP_ADDRESS]):
+            return self.async_abort(reason="already_configured")
+
+        if not dhcp_discovery[HOSTNAME].startswith("iRobot-"):
+            return self.async_abort(reason="not_irobot_device")
+
+        bild = _async_bild_from_hostname(dhcp_discovery[HOSTNAME])
+        await self.async_set_unique_id(bild)
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: dhcp_discovery[IP_ADDRESS]}
+        )
+
+        self.host = dhcp_discovery[IP_ADDRESS]
+        self.blid = bild
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {"host": self.host, "bild": self.blid}
+        return await self.async_step_user()
+
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
         # Check if user chooses manual entry
@@ -93,7 +118,9 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         already_configured = self._async_current_ids(False)
         discovery = _async_get_roomba_discovery()
-        devices = await self.hass.async_add_executor_job(discovery.get_all)
+
+        with self.hass.data[ROOMBA_DISCOVERY_LOCK].setdefault(asyncio.Lock()):
+            devices = await self.hass.async_add_executor_job(discovery.get_all)
 
         if devices:
             # Find already configured hosts
@@ -131,7 +158,10 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="manual",
                 description_placeholders={AUTH_HELP_URL_KEY: AUTH_HELP_URL_VALUE},
                 data_schema=vol.Schema(
-                    {vol.Required(CONF_HOST): str, vol.Required(CONF_BLID): str}
+                    {
+                        vol.Required(CONF_HOST, default=self.host): str,
+                        vol.Required(CONF_BLID, default=self.bild): str,
+                    }
                 ),
             )
 
@@ -251,3 +281,9 @@ def _async_get_roomba_discovery():
     discovery = RoombaDiscovery()
     discovery.amount_of_broadcasted_messages = MAX_NUM_DEVICES_TO_DISCOVER
     return discovery
+
+
+@callback
+def _async_bild_from_hostname(hostname):
+    """Extract the bild from the hostname."""
+    return hostname.split("-")[1].split(".")[0]
