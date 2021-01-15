@@ -788,6 +788,7 @@ def do_execute_upgrade(hass, call):
 
 
 def run_shell_command(command):
+    _LOGGER.info("run_shell_command: " + str(command))
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     while True:
         # returns None while subprocess is running
@@ -796,6 +797,7 @@ def run_shell_command(command):
         _LOGGER.info(str(line.decode("utf-8")))
         if ret_code is not None:
             break
+    _LOGGER.info("subprocess return code: " + str(p.returncode))
     return p.returncode
 
 
@@ -1046,7 +1048,7 @@ def do_install_upgrade(hass, call):
             command = command + "-beta"
         if force:
             command = command + "-force"
-        run_shell_command(
+        l_ret = run_shell_command(
             [
                 "am",
                 "start",
@@ -1057,6 +1059,16 @@ def do_install_upgrade(hass, call):
                 command,
             ]
         )
+        if l_ret != 0:
+            su_command = (
+                "su -c 'am start -n launcher.sviete.pl.domlauncherapp/.LauncherActivity -e command "
+                + command
+                + "'"
+            )
+            _LOGGER.info("ais_shell_command as su " + su_command)
+            hass.services.call(
+                "ais_shell_command", "execute_command", {"command": su_command}
+            )
 
     elif reinstall_dom_app:
         # set update status

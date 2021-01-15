@@ -396,6 +396,7 @@ async def _execute_command(hass, call):
         return
     else:
         command = call.data["command"]
+    _LOGGER.info("execute_command: " + command)
     if "entity_id" in call.data:
         ret_entity = call.data["entity_id"]
     if "friendly_name" in call.data:
