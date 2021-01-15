@@ -15,4 +15,4 @@ async def test_websocket_api(hass, integration, hass_ws_client):
     result = msg["result"]
 
     assert result["client"]["ws_server_url"] == "ws://test:3000/zjs"
-    assert result["client"]["version"]["server_version"] == "1.0.0"
+    assert result["client"]["server_version"] == "1.0.0"

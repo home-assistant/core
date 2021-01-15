@@ -1,6 +1,5 @@
 """Websocket API for Z-Wave JS."""
 
-from dataclasses import asdict
 import logging
 
 import voluptuous as vol
@@ -39,9 +38,13 @@ def websocket_network_status(
         "client": {
             "ws_server_url": client.ws_server_url,
             "state": client.state,
-            "version": asdict(client.version),
+            "driver_version": client.version.driver_version,
+            "server_version": client.version.server_version,
         },
-        "controller": client.driver.controller.data,
+        "controller": {
+            "home_id": client.driver.controller.data["homeId"],
+            "node_count": len(client.driver.controller.nodes),
+        },
     }
     connection.send_result(
         msg[ID],
