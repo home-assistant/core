@@ -34,8 +34,8 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_json_message.call_args_list) == 1
-    args = client.async_send_json_message.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 39
     assert args["valueId"] == {
@@ -56,7 +56,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     }
     assert args["value"] == 255
 
-    client.async_send_json_message.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test brightness update from value updated event
     event = Event(
@@ -91,9 +91,9 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_json_message.call_args_list) == 0
+    assert len(client.async_send_command.call_args_list) == 0
 
-    client.async_send_json_message.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test turning on with brightness
     await hass.services.async_call(
@@ -103,8 +103,8 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_json_message.call_args_list) == 1
-    args = client.async_send_json_message.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 39
     assert args["valueId"] == {
@@ -125,7 +125,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     }
     assert args["value"] == 50
 
-    client.async_send_json_message.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test turning on with rgb color
     await hass.services.async_call(
@@ -135,8 +135,8 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_json_message.call_args_list) == 4
-    warm_args = client.async_send_json_message.call_args_list[0][0][0]  # warm white 0
+    assert len(client.async_send_command.call_args_list) == 4
+    warm_args = client.async_send_command.call_args_list[0][0][0]  # warm white 0
     assert warm_args["command"] == "node.set_value"
     assert warm_args["nodeId"] == 39
     assert warm_args["valueId"]["commandClassName"] == "Color Switch"
@@ -146,7 +146,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert warm_args["valueId"]["property"] == "targetColor"
     assert warm_args["valueId"]["propertyName"] == "targetColor"
     assert warm_args["value"] == 0
-    red_args = client.async_send_json_message.call_args_list[1][0][0]  # red 255
+    red_args = client.async_send_command.call_args_list[1][0][0]  # red 255
     assert red_args["command"] == "node.set_value"
     assert red_args["nodeId"] == 39
     assert red_args["valueId"]["commandClassName"] == "Color Switch"
@@ -156,7 +156,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert red_args["valueId"]["property"] == "targetColor"
     assert red_args["valueId"]["propertyName"] == "targetColor"
     assert red_args["value"] == 255
-    green_args = client.async_send_json_message.call_args_list[2][0][0]  # green 76
+    green_args = client.async_send_command.call_args_list[2][0][0]  # green 76
     assert green_args["command"] == "node.set_value"
     assert green_args["nodeId"] == 39
     assert green_args["valueId"]["commandClassName"] == "Color Switch"
@@ -166,7 +166,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert green_args["valueId"]["property"] == "targetColor"
     assert green_args["valueId"]["propertyName"] == "targetColor"
     assert green_args["value"] == 76
-    blue_args = client.async_send_json_message.call_args_list[3][0][0]  # blue 255
+    blue_args = client.async_send_command.call_args_list[3][0][0]  # blue 255
     assert blue_args["command"] == "node.set_value"
     assert blue_args["nodeId"] == 39
     assert blue_args["valueId"]["commandClassName"] == "Color Switch"
@@ -214,7 +214,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert state.attributes[ATTR_COLOR_TEMP] == 370
     assert state.attributes[ATTR_RGB_COLOR] == (255, 76, 255)
 
-    client.async_send_json_message.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test turning on with same rgb color
     await hass.services.async_call(
@@ -224,9 +224,9 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_json_message.call_args_list) == 0
+    assert len(client.async_send_command.call_args_list) == 0
 
-    client.async_send_json_message.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test turning on with color temp
     await hass.services.async_call(
@@ -236,8 +236,8 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_json_message.call_args_list) == 5
-    red_args = client.async_send_json_message.call_args_list[0][0][0]  # red 0
+    assert len(client.async_send_command.call_args_list) == 5
+    red_args = client.async_send_command.call_args_list[0][0][0]  # red 0
     assert red_args["command"] == "node.set_value"
     assert red_args["nodeId"] == 39
     assert red_args["valueId"]["commandClassName"] == "Color Switch"
@@ -247,7 +247,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert red_args["valueId"]["property"] == "targetColor"
     assert red_args["valueId"]["propertyName"] == "targetColor"
     assert red_args["value"] == 0
-    red_args = client.async_send_json_message.call_args_list[1][0][0]  # green 0
+    red_args = client.async_send_command.call_args_list[1][0][0]  # green 0
     assert red_args["command"] == "node.set_value"
     assert red_args["nodeId"] == 39
     assert red_args["valueId"]["commandClassName"] == "Color Switch"
@@ -257,7 +257,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert red_args["valueId"]["property"] == "targetColor"
     assert red_args["valueId"]["propertyName"] == "targetColor"
     assert red_args["value"] == 0
-    red_args = client.async_send_json_message.call_args_list[2][0][0]  # blue 0
+    red_args = client.async_send_command.call_args_list[2][0][0]  # blue 0
     assert red_args["command"] == "node.set_value"
     assert red_args["nodeId"] == 39
     assert red_args["valueId"]["commandClassName"] == "Color Switch"
@@ -267,7 +267,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert red_args["valueId"]["property"] == "targetColor"
     assert red_args["valueId"]["propertyName"] == "targetColor"
     assert red_args["value"] == 0
-    warm_args = client.async_send_json_message.call_args_list[3][0][0]  # warm white 0
+    warm_args = client.async_send_command.call_args_list[3][0][0]  # warm white 0
     assert warm_args["command"] == "node.set_value"
     assert warm_args["nodeId"] == 39
     assert warm_args["valueId"]["commandClassName"] == "Color Switch"
@@ -277,7 +277,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert warm_args["valueId"]["property"] == "targetColor"
     assert warm_args["valueId"]["propertyName"] == "targetColor"
     assert warm_args["value"] == 20
-    red_args = client.async_send_json_message.call_args_list[4][0][0]  # cold white
+    red_args = client.async_send_command.call_args_list[4][0][0]  # cold white
     assert red_args["command"] == "node.set_value"
     assert red_args["nodeId"] == 39
     assert red_args["valueId"]["commandClassName"] == "Color Switch"
@@ -288,7 +288,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert red_args["valueId"]["propertyName"] == "targetColor"
     assert red_args["value"] == 235
 
-    client.async_send_json_message.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test color temp update from value updated event
     red_event = Event(
@@ -342,9 +342,9 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_json_message.call_args_list) == 0
+    assert len(client.async_send_command.call_args_list) == 0
 
-    client.async_send_json_message.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test turning off
     await hass.services.async_call(
@@ -354,8 +354,8 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_json_message.call_args_list) == 1
-    args = client.async_send_json_message.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 39
     assert args["valueId"] == {
