@@ -56,8 +56,8 @@ async def test_thermostat_v2(
         blocking=True,
     )
 
-    assert len(client.async_send_json_message.call_args_list) == 1
-    args = client.async_send_json_message.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -78,7 +78,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 1
 
-    client.async_send_json_message.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test setting hvac mode
     await hass.services.async_call(
@@ -91,8 +91,8 @@ async def test_thermostat_v2(
         blocking=True,
     )
 
-    assert len(client.async_send_json_message.call_args_list) == 1
-    args = client.async_send_json_message.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -113,7 +113,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 2
 
-    client.async_send_json_message.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test setting temperature
     await hass.services.async_call(
@@ -123,8 +123,8 @@ async def test_thermostat_v2(
         blocking=True,
     )
 
-    assert len(client.async_send_json_message.call_args_list) == 1
-    args = client.async_send_json_message.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -145,7 +145,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 77
 
-    client.async_send_json_message.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test cool mode update from value updated event
     event = Event(
