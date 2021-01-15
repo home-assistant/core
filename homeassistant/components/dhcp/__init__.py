@@ -1,6 +1,7 @@
 """The dhcp integration."""
 
 from abc import abstractmethod
+import asyncio
 import fnmatch
 import logging
 import os
@@ -55,11 +56,14 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
             watcher.async_start()
             watchers.append(watcher)
 
-        def _stop(*_):
+        async def _async_stop(*_):
             for watcher in watchers:
-                watcher.async_stop()
+                if hasattr(watcher, "async_stop"):
+                    watcher.async_stop()
+                else:
+                    await hass.async_add_executor_job(watcher.stop)
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _initialize)
     return True
@@ -114,7 +118,7 @@ class WatcherBase:
 
             _LOGGER.debug("Matched %s against %s", data, entry)
 
-            self.add_job(
+            self.create_task(
                 self.hass.config_entries.flow.async_init(
                     entry["domain"],
                     context={"source": DOMAIN},
@@ -123,8 +127,8 @@ class WatcherBase:
             )
 
     @abstractmethod
-    def add_job(self, job):
-        """Pass a job to based on which context we are in."""
+    def add_task(self, task):
+        """Pass a task to async_add_task based on which context we are in."""
 
 
 class DeviceTrackerWatcher(WatcherBase):
@@ -176,9 +180,9 @@ class DeviceTrackerWatcher(WatcherBase):
 
         self.process_client(ip_address, hostname, _format_mac(mac_address))
 
-    def add_job(self, job):
-        """Pass a job to async_add_job since we are in async context."""
-        self.hass.async_create_task(job)
+    def create_task(self, task):
+        """Pass a task to async_create_task since we are in async context."""
+        self.hass.async_create_task(task)
 
 
 class DHCPWatcher(WatcherBase, threading.Thread):
@@ -190,8 +194,7 @@ class DHCPWatcher(WatcherBase, threading.Thread):
         self.name = "dhcp-discovery"
         self._stop_event = threading.Event()
 
-    @callback
-    def async_stop(self):
+    def stop(self):
         """Stop the thread."""
         self._stop_event.set()
         self.join()
@@ -239,9 +242,11 @@ class DHCPWatcher(WatcherBase, threading.Thread):
 
         self.process_client(ip_address, hostname, mac_address)
 
-    def add_job(self, job):
-        """Pass a job to add_job since we are in a thread."""
-        self.hass.add_job(job)
+    def create_task(self, task):
+        """Pass a task to async_create_task via call_soon_threadsafe since we are in a thread."""
+        asyncio.get_running_loop().call_soon_threadsafe(
+            self.hass.async_create_task, task
+        )
 
 
 def _decode_dhcp_option(dhcp_options, key):
