@@ -263,3 +263,9 @@ class TestUnifiVideoCamera(unittest.TestCase):
                 self.uvc.reboot()
             assert mock_login.call_count == 1
             assert mock_login.call_args == mock.call()
+
+    def test_reboot_error(self):
+        """Test the camera image error."""
+        self.uvc._camera = mock.MagicMock()
+        self.uvc._camera.reboot.side_effect = camera.CameraConnectError
+        assert self.uvc.reboot() is None
