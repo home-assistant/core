@@ -1,4 +1,4 @@
-"""Representation of Z-Wave locks."""
+"""Representation of Z-Wave thermostats."""
 from enum import IntEnum
 import logging
 from typing import Any, Callable, Dict, List, Optional
