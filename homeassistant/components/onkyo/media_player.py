@@ -333,8 +333,8 @@ class OnkyoDevice(MediaPlayerEntity):
             self._receiver_max_volume * self._max_volume / 100
         )
 
-        self._parse_audio_inforamtion(audio_information_raw)
-        self._parse_video_inforamtion(video_information_raw)
+        self._parse_audio_information(audio_information_raw)
+        self._parse_video_information(video_information_raw)
 
         if not hdmi_out_raw:
             return
@@ -440,7 +440,7 @@ class OnkyoDevice(MediaPlayerEntity):
         """Set hdmi-out."""
         self.command(f"hdmi-output-selector={output}")
 
-    def _parse_audio_inforamtion(self, audio_information_raw):
+    def _parse_audio_information(self, audio_information_raw):
         values = _parse_onkyo_tuple(audio_information_raw)
         if values:
             info = {
@@ -455,7 +455,7 @@ class OnkyoDevice(MediaPlayerEntity):
         else:
             self._attributes.pop(ATTR_AUDIO_INFORMATION, None)
 
-    def _parse_video_inforamtion(self, video_information_raw):
+    def _parse_video_information(self, video_information_raw):
         values = _parse_onkyo_tuple(video_information_raw)
         if values:
             info = {
