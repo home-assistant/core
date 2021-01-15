@@ -18,7 +18,6 @@ from openzwavemqtt.const import (
 from openzwavemqtt.models.node import OZWNode
 from openzwavemqtt.models.value import OZWValue
 from openzwavemqtt.util.mqtt_client import MQTTClient
-import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.hassio.handler import HassioAPIError
@@ -52,7 +51,6 @@ from .websocket_api import async_register_api
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 DATA_DEVICES = "zwave-mqtt-devices"
 DATA_STOP_MQTT_CLIENT = "ozw_stop_mqtt_client"
 

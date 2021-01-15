@@ -1,4 +1,6 @@
 """Tests for various Plex services."""
+import pytest
+
 from homeassistant.components.plex.const import (
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
@@ -8,6 +10,7 @@ from homeassistant.components.plex.const import (
     SERVICE_SCAN_CLIENTS,
 )
 from homeassistant.const import CONF_URL
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_OPTIONS, SECONDARY_DATA
 
@@ -28,12 +31,13 @@ async def test_refresh_library(
     refresh = requests_mock.get(f"{url}/library/sections/1/refresh", status_code=200)
 
     # Test with non-existent server
-    assert await hass.services.async_call(
-        DOMAIN,
-        SERVICE_REFRESH_LIBRARY,
-        {"server_name": "Not a Server", "library_name": "Movies"},
-        True,
-    )
+    with pytest.raises(HomeAssistantError):
+        assert await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REFRESH_LIBRARY,
+            {"server_name": "Not a Server", "library_name": "Movies"},
+            True,
+        )
     assert not refresh.called
 
     # Test with non-existent library
@@ -78,12 +82,14 @@ async def test_refresh_library(
     await setup_plex_server(config_entry=entry_2)
 
     # Test multiple servers available but none specified
-    assert await hass.services.async_call(
-        DOMAIN,
-        SERVICE_REFRESH_LIBRARY,
-        {"library_name": "Movies"},
-        True,
-    )
+    with pytest.raises(HomeAssistantError) as excinfo:
+        assert await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REFRESH_LIBRARY,
+            {"library_name": "Movies"},
+            True,
+        )
+    assert "Multiple Plex servers configured" in str(excinfo.value)
     assert refresh.call_count == 1
 
 

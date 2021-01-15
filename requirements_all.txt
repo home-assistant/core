@@ -218,7 +218,7 @@ aiopylgtv==0.3.3
 aiorecollect==1.0.1
 
 # homeassistant.components.shelly
-aioshelly==0.5.1
+aioshelly==0.5.3
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -306,7 +306,7 @@ av==8.0.2
 # avion==0.10
 
 # homeassistant.components.axis
-axis==41
+axis==42
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.1.0
@@ -339,7 +339,7 @@ beautifulsoup4==4.9.1
 bellows==0.21.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.13
+bimmer_connected==0.7.14
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -916,7 +916,7 @@ magicseaweed==1.0.3
 matrix-client==0.3.2
 
 # homeassistant.components.maxcube
-maxcube-api==0.1.0
+maxcube-api==0.3.0
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
@@ -1539,7 +1539,7 @@ pymsteams==0.1.12
 pymusiccast==0.1.6
 
 # homeassistant.components.myq
-pymyq==2.0.13
+pymyq==2.0.14
 
 # homeassistant.components.mysensors
 pymysensors==0.18.0
@@ -1984,6 +1984,9 @@ samsungtvws==1.4.0
 # homeassistant.components.satel_integra
 satel_integra==0.3.4
 
+# homeassistant.components.dhcp
+scapy==2.4.4
+
 # homeassistant.components.deutsche_bahn
 schiene==0.23
 
@@ -2100,7 +2103,7 @@ sqlalchemy==1.3.22
 srpenergy==1.3.2
 
 # homeassistant.components.starline
-starline==0.1.3
+starline==0.1.5
 
 # homeassistant.components.starlingbank
 starlingbank==3.2
@@ -2370,3 +2373,6 @@ zigpy==0.29.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
+
+# homeassistant.components.zwave_js
+zwave-js-server-python==0.9.0

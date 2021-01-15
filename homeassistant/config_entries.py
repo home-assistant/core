@@ -29,6 +29,7 @@ SOURCE_MQTT = "mqtt"
 SOURCE_SSDP = "ssdp"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
+SOURCE_DHCP = "dhcp"
 
 # If a user wants to hide a discovery from the UI they can "Ignore" it. The config_entries/ignore_flow
 # websocket command creates a config entry with this source and while it exists normal discoveries
@@ -975,7 +976,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     async def async_step_ignore(self, user_input: Dict[str, Any]) -> Dict[str, Any]:
         """Ignore this config flow."""
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
-        return self.async_create_entry(title="Ignored", data={})
+        return self.async_create_entry(title=user_input["title"], data={})
 
     async def async_step_unignore(self, user_input: Dict[str, Any]) -> Dict[str, Any]:
         """Rediscover a config entry by it's unique_id."""
@@ -1045,6 +1046,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     async_step_mqtt = async_step_discovery
     async_step_ssdp = async_step_discovery
     async_step_zeroconf = async_step_discovery
+    async_step_dhcp = async_step_discovery
 
 
 class OptionsFlowManager(data_entry_flow.FlowManager):

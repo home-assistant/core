@@ -1,5 +1,10 @@
 """Constants for Foscam component."""
+import logging
+
+LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "foscam"
-DATA = "foscam"
-ENTITIES = "entities"
+
+CONF_STREAM = "stream"
+
+SERVICE_PTZ = "ptz"

@@ -74,7 +74,7 @@ async def test_lights(hass):
         "axis.light_control.LightControl.get_valid_intensity",
         return_value={"data": {"ranges": [{"high": 150}]}},
     ):
-        device.api.event.process_event(EVENT_ON)
+        device.api.event.update([EVENT_ON])
         await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 1
@@ -119,7 +119,7 @@ async def test_lights(hass):
         mock_deactivate.assert_called_once()
 
     # Event turn off light
-    device.api.event.process_event(EVENT_OFF)
+    device.api.event.update([EVENT_OFF])
     await hass.async_block_till_done()
 
     light_0 = hass.states.get(entity_id)

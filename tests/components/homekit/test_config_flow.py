@@ -28,7 +28,6 @@ def _mock_config_entry_with_options_populated():
                 ],
                 "exclude_entities": ["climate.front_gate"],
             },
-            "safe_mode": False,
         },
     )
 
@@ -159,7 +158,7 @@ async def test_options_flow_exclude_mode_advanced(auto_start, hass):
     with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
         result3 = await hass.config_entries.options.async_configure(
             result2["flow_id"],
-            user_input={"auto_start": auto_start, "safe_mode": True},
+            user_input={"auto_start": auto_start},
         )
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -172,7 +171,6 @@ async def test_options_flow_exclude_mode_advanced(auto_start, hass):
             "include_domains": ["fan", "vacuum", "climate", "humidifier"],
             "include_entities": [],
         },
-        "safe_mode": True,
     }
 
 
@@ -204,16 +202,7 @@ async def test_options_flow_exclude_mode_basic(hass):
         result["flow_id"],
         user_input={"entities": ["climate.old"], "include_exclude_mode": "exclude"},
     )
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["step_id"] == "advanced"
-
-    with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
-        result3 = await hass.config_entries.options.async_configure(
-            result2["flow_id"],
-            user_input={"safe_mode": True},
-        )
-
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": True,
         "mode": "bridge",
@@ -223,7 +212,6 @@ async def test_options_flow_exclude_mode_basic(hass):
             "include_domains": ["fan", "vacuum", "climate"],
             "include_entities": [],
         },
-        "safe_mode": True,
     }
 
 
@@ -257,16 +245,7 @@ async def test_options_flow_include_mode_basic(hass):
         result["flow_id"],
         user_input={"entities": ["climate.new"], "include_exclude_mode": "include"},
     )
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["step_id"] == "advanced"
-
-    with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
-        result3 = await hass.config_entries.options.async_configure(
-            result2["flow_id"],
-            user_input={"safe_mode": True},
-        )
-
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": True,
         "mode": "bridge",
@@ -276,7 +255,6 @@ async def test_options_flow_include_mode_basic(hass):
             "include_domains": ["fan", "vacuum"],
             "include_entities": ["climate.new"],
         },
-        "safe_mode": True,
     }
 
 
@@ -323,16 +301,7 @@ async def test_options_flow_exclude_mode_with_cameras(hass):
         user_input={"camera_copy": ["camera.native_h264"]},
     )
 
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result3["step_id"] == "advanced"
-
-    with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
-        result4 = await hass.config_entries.options.async_configure(
-            result3["flow_id"],
-            user_input={"safe_mode": True},
-        )
-
-    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": True,
         "mode": "bridge",
@@ -343,7 +312,6 @@ async def test_options_flow_exclude_mode_with_cameras(hass):
             "include_entities": [],
         },
         "entity_config": {"camera.native_h264": {"video_codec": "copy"}},
-        "safe_mode": True,
     }
 
     # Now run though again and verify we can turn off copy
@@ -378,16 +346,7 @@ async def test_options_flow_exclude_mode_with_cameras(hass):
         user_input={"camera_copy": []},
     )
 
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result3["step_id"] == "advanced"
-
-    with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
-        result4 = await hass.config_entries.options.async_configure(
-            result3["flow_id"],
-            user_input={"safe_mode": True},
-        )
-
-    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": True,
         "mode": "bridge",
@@ -398,7 +357,6 @@ async def test_options_flow_exclude_mode_with_cameras(hass):
             "include_entities": [],
         },
         "entity_config": {"camera.native_h264": {}},
-        "safe_mode": True,
     }
 
 
@@ -445,16 +403,7 @@ async def test_options_flow_include_mode_with_cameras(hass):
         user_input={"camera_copy": ["camera.native_h264"]},
     )
 
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result3["step_id"] == "advanced"
-
-    with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
-        result4 = await hass.config_entries.options.async_configure(
-            result3["flow_id"],
-            user_input={"safe_mode": True},
-        )
-
-    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": True,
         "mode": "bridge",
@@ -465,7 +414,6 @@ async def test_options_flow_include_mode_with_cameras(hass):
             "include_entities": ["camera.native_h264", "camera.transcode_h264"],
         },
         "entity_config": {"camera.native_h264": {"video_codec": "copy"}},
-        "safe_mode": True,
     }
 
     # Now run though again and verify we can turn off copy
@@ -500,16 +448,7 @@ async def test_options_flow_include_mode_with_cameras(hass):
         user_input={"camera_copy": []},
     )
 
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result3["step_id"] == "advanced"
-
-    with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
-        result4 = await hass.config_entries.options.async_configure(
-            result3["flow_id"],
-            user_input={"safe_mode": True},
-        )
-
-    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": True,
         "mode": "bridge",
@@ -520,7 +459,6 @@ async def test_options_flow_include_mode_with_cameras(hass):
             "include_entities": [],
         },
         "entity_config": {"camera.native_h264": {}},
-        "safe_mode": True,
     }
 
 
@@ -543,7 +481,6 @@ async def test_options_flow_blocked_when_from_yaml(hass):
                 ],
                 "exclude_entities": ["climate.front_gate"],
             },
-            "safe_mode": False,
         },
         source=SOURCE_IMPORT,
     )
@@ -594,16 +531,7 @@ async def test_options_flow_include_mode_basic_accessory(hass):
         result["flow_id"],
         user_input={"entities": "media_player.tv"},
     )
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["step_id"] == "advanced"
-
-    with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
-        result3 = await hass.config_entries.options.async_configure(
-            result2["flow_id"],
-            user_input={"safe_mode": False},
-        )
-
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": True,
         "mode": "accessory",
@@ -613,5 +541,4 @@ async def test_options_flow_include_mode_basic_accessory(hass):
             "include_domains": [],
             "include_entities": ["media_player.tv"],
         },
-        "safe_mode": False,
     }

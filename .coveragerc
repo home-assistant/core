@@ -300,8 +300,8 @@ omit =
     homeassistant/components/folder_watcher/*
     homeassistant/components/foobot/sensor.py
     homeassistant/components/fortios/device_tracker.py
+    homeassistant/components/foscam/__init__.py
     homeassistant/components/foscam/camera.py
-    homeassistant/components/foscam/const.py
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
     homeassistant/components/freebox/__init__.py
@@ -791,11 +791,9 @@ omit =
     homeassistant/components/shodan/sensor.py
     homeassistant/components/shelly/__init__.py
     homeassistant/components/shelly/binary_sensor.py
-    homeassistant/components/shelly/cover.py
     homeassistant/components/shelly/entity.py
     homeassistant/components/shelly/light.py
     homeassistant/components/shelly/sensor.py
-    homeassistant/components/shelly/switch.py
     homeassistant/components/shelly/utils.py
     homeassistant/components/sht31/sensor.py
     homeassistant/components/sigfox/sensor.py
@@ -838,7 +836,8 @@ omit =
     homeassistant/components/soma/cover.py
     homeassistant/components/soma/sensor.py
     homeassistant/components/somfy/*
-    homeassistant/components/somfy_mylink/*
+    homeassistant/components/somfy_mylink/__init__.py
+    homeassistant/components/somfy_mylink/cover.py
     homeassistant/components/sonos/*
     homeassistant/components/sony_projector/switch.py
     homeassistant/components/spc/*
@@ -1091,6 +1090,9 @@ omit =
     homeassistant/components/zoneminder/*
     homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
+    homeassistant/components/zwave_js/discovery.py
+    homeassistant/components/zwave_js/light.py
+    homeassistant/components/zwave_js/sensor.py
 
 [report]
 # Regexes for lines to exclude from consideration

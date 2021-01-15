@@ -1,6 +1,8 @@
 """Test Axis config flow."""
 from unittest.mock import patch
 
+import respx
+
 from homeassistant import data_entry_flow
 from homeassistant.components.axis import config_flow
 from homeassistant.components.axis.const import (
@@ -25,7 +27,13 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from .test_device import MAC, MODEL, NAME, setup_axis_integration, vapix_request
+from .test_device import (
+    MAC,
+    MODEL,
+    NAME,
+    mock_default_vapix_requests,
+    setup_axis_integration,
+)
 
 from tests.common import MockConfigEntry
 
@@ -41,7 +49,8 @@ async def test_flow_manual_configuration(hass):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == SOURCE_USER
 
-    with patch("axis.vapix.Vapix.request", new=vapix_request):
+    with respx.mock:
+        mock_default_vapix_requests(respx)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -80,7 +89,8 @@ async def test_manual_configuration_update_configuration(hass):
     with patch(
         "homeassistant.components.axis.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry, patch("axis.vapix.Vapix.request", new=vapix_request):
+    ) as mock_setup_entry, respx.mock:
+        mock_default_vapix_requests(respx, "2.3.4.5")
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -109,7 +119,8 @@ async def test_flow_fails_already_configured(hass):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == SOURCE_USER
 
-    with patch("axis.vapix.Vapix.request", new=vapix_request):
+    with respx.mock:
+        mock_default_vapix_requests(respx)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -196,7 +207,8 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == SOURCE_USER
 
-    with patch("axis.vapix.Vapix.request", new=vapix_request):
+    with respx.mock:
+        mock_default_vapix_requests(respx)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -238,7 +250,8 @@ async def test_zeroconf_flow(hass):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == SOURCE_USER
 
-    with patch("axis.vapix.Vapix.request", new=vapix_request):
+    with respx.mock:
+        mock_default_vapix_requests(respx)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -304,7 +317,8 @@ async def test_zeroconf_flow_updated_configuration(hass):
     with patch(
         "homeassistant.components.axis.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry, patch("axis.vapix.Vapix.request", new=vapix_request):
+    ) as mock_setup_entry, respx.mock:
+        mock_default_vapix_requests(respx, "2.3.4.5")
         result = await hass.config_entries.flow.async_init(
             AXIS_DOMAIN,
             data={
