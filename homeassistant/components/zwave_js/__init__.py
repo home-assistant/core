@@ -16,6 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN, PLATFORMS
 from .discovery import async_discover_values
+from .websocket_api import async_register_api
 
 LOGGER = logging.getLogger(__name__)
 CONNECT_TIMEOUT = 10
@@ -126,6 +127,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_CLIENT: client,
         DATA_UNSUBSCRIBE: unsubs,
     }
+
+    # Set up websocket API
+    async_register_api(hass)
 
     async def start_platforms() -> None:
         """Start platforms and perform discovery."""
