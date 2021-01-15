@@ -340,10 +340,7 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
                 self.info.primary_value.metadata.cc_specific["notificationType"]
             ):
                 continue
-            for (
-                state_key,
-                state_value,
-            ) in self.info.primary_value.metadata.states.items():
+            for state_key in self.info.primary_value.metadata.states:
                 # make sure the key is int
                 state_key = int(state_key)
                 if state_key not in mapping["states"]:
