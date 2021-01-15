@@ -5,6 +5,7 @@ from unittest.mock import DEFAULT, patch
 import pytest
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node
+from zwave_js_server.version import VersionInfo
 
 from homeassistant.helpers.device_registry import (
     async_get_registry as async_get_device_registry,
@@ -23,6 +24,17 @@ async def device_registry_fixture(hass):
 def controller_state_fixture():
     """Load the controller state fixture data."""
     return json.loads(load_fixture("zwave_js/controller_state.json"))
+
+
+@pytest.fixture(name="version_state", scope="session")
+def version_state_fixture():
+    """Load the version state fixture data."""
+    return {
+        "type": "version",
+        "driverVersion": "6.0.0-beta.0",
+        "serverVersion": "1.0.0",
+        "homeId": 1234567890,
+    }
 
 
 @pytest.fixture(name="multisensor_6_state", scope="session")
@@ -50,13 +62,17 @@ def bulb_6_multi_color_state_fixture():
 
 
 @pytest.fixture(name="client")
-def mock_client_fixture(controller_state):
+def mock_client_fixture(controller_state, version_state):
     """Mock a client."""
     with patch(
         "homeassistant.components.zwave_js.ZwaveClient", autospec=True
     ) as client_class:
         driver = Driver(client_class.return_value, controller_state)
+        version = VersionInfo.from_message(version_state)
         client_class.return_value.driver = driver
+        client_class.return_value.version = version
+        client_class.return_value.ws_server_url = "ws://test:3000/zjs"
+        client_class.return_value.state = "connected"
         yield client_class.return_value
 
 
