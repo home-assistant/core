@@ -72,6 +72,24 @@ DISCOVERY_SCHEMAS = [
         property={"currentValue"},
         type={"number"},
     ),
+    # binary sensors
+    ZWaveDiscoverySchema(
+        platform="binary_sensor",
+        hint="boolean",
+        command_class={
+            CommandClass.SENSOR_BINARY,
+            CommandClass.BATTERY,
+        },
+        type={"boolean"},
+    ),
+    ZWaveDiscoverySchema(
+        platform="binary_sensor",
+        hint="notification",
+        command_class={
+            CommandClass.NOTIFICATION,
+        },
+        type={"number"},
+    ),
     # generic text sensors
     ZWaveDiscoverySchema(
         platform="sensor",
