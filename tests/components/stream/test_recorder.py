@@ -73,6 +73,7 @@ async def test_recorder_timeout(hass, hass_client, worker_sync):
         worker_sync.resume()
         stream.stop()
         await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
 
 async def test_recorder_save(tmpdir):
