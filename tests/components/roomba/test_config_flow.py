@@ -611,12 +611,20 @@ async def test_dhcp_discovery(hass):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: MOCK_IP},
+        {},
     )
     await hass.async_block_till_done()
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] is None
-    assert result2["step_id"] == "link"
+    assert result2["step_id"] == "manual"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_BLID: "blid"},
+    )
+    await hass.async_block_till_done()
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result3["errors"] is None
 
     with patch(
         "homeassistant.components.roomba.config_flow.Roomba",
@@ -630,20 +638,20 @@ async def test_dhcp_discovery(hass):
         "homeassistant.components.roomba.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
             {},
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result3["title"] == "robot_name"
-    assert result3["result"].unique_id == "blid"
-    assert result3["data"] == {
+    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result4["title"] == "myroomba"
+    assert result4["result"].unique_id == "blid"
+    assert result4["data"] == {
         CONF_BLID: "blid",
         CONF_CONTINUOUS: True,
         CONF_DELAY: 1,
-        CONF_HOST: MOCK_IP,
+        CONF_HOST: "1.1.1.1",
         CONF_PASSWORD: "password",
     }
     assert len(mock_setup.mock_calls) == 1
