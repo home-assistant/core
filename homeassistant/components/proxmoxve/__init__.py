@@ -165,7 +165,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-def create_coordinator_container_vm(hass, proxmox, host_name, node_name, id, type):
+def create_coordinator_container_vm(
+    hass, proxmox, host_name, node_name, vm_id, vm_type
+):
     """Create and return a DataUpdateCoordinator for a vm/container."""
 
     async def async_update_data():
@@ -173,21 +175,21 @@ def create_coordinator_container_vm(hass, proxmox, host_name, node_name, id, typ
 
         def poll_api():
             """Call the api."""
-            vm_status = call_api_container_vm(proxmox, node_name, id, type)
+            vm_status = call_api_container_vm(proxmox, node_name, vm_id, vm_type)
             return vm_status
 
         vm_status = await hass.async_add_executor_job(poll_api)
 
         if vm_status is None:
-            _LOGGER.warning("Vm/Container %s unable to be found", id)
+            _LOGGER.warning("Vm/Container %s unable to be found", vm_id)
             return None
-        else:
-            return parse_api_container_vm(vm_status)
+
+        return parse_api_container_vm(vm_status)
 
     return DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name=f"proxmox_coordinator_{host_name}_{node_name}_{id}",
+        name=f"proxmox_coordinator_{host_name}_{node_name}_{vm_id}",
         update_method=async_update_data,
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
