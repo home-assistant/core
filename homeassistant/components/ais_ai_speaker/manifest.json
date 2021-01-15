@@ -1,6 +1,6 @@
 {
     "domain": "ais_ai_speaker",
-    "name": "AI Speaker",
+    "name": "AIS Speaker",
     "config_flow": true,
     "documentation": "https://www.ai-speaker.com",
     "requirements": ["aisapi==0.0.5"],
