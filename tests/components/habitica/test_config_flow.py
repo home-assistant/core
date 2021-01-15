@@ -1,12 +1,12 @@
 """Test the habitica config flow."""
 from asyncio import Future
+from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.habitica.config_flow import InvalidAuth
 from homeassistant.components.habitica.const import CONF_API_USER, DEFAULT_URL, DOMAIN
 from homeassistant.const import HTTP_OK
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 
