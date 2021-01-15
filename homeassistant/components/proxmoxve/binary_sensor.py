@@ -1,5 +1,11 @@
 """Binary sensor to read Proxmox VE data."""
+<<<<<<< HEAD
 from homeassistant.const import STATE_OFF, STATE_ON
+=======
+import logging
+
+from homeassistant.components.binary_sensor import BinarySensorEntity
+>>>>>>> Add changes requested from previous PR
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import COORDINATORS, DOMAIN, ProxmoxEntity
@@ -9,8 +15,6 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up binary sensors."""
     if discovery_info is None:
         return
-
-    # coordinator = hass.data[DOMAIN][COORDINATOR]
 
     sensors = []
 
@@ -68,7 +72,7 @@ def create_binary_sensor(coordinator, host_name, node_name, vm_id, name):
     )
 
 
-class ProxmoxBinarySensor(ProxmoxEntity):
+class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
     """A binary sensor for reading Proxmox VE data."""
 
     def __init__(
@@ -89,8 +93,6 @@ class ProxmoxBinarySensor(ProxmoxEntity):
         self._state = None
 
     @property
-    def state(self):
+    def is_on(self):
         """Return the state of the binary sensor."""
-        if self.coordinator.data["status"] == "running":
-            return STATE_ON
-        return STATE_OFF
+        return self.coordinator.data["status"] == "running"
