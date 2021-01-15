@@ -178,7 +178,7 @@ class DeviceTrackerWatcher(WatcherBase):
 
     def add_job(self, job):
         """Pass a job to async_add_job since we are in async context."""
-        self.hass.async_add_job(job)
+        self.hass.async_create_task(job)
 
 
 class DHCPWatcher(WatcherBase, threading.Thread):
