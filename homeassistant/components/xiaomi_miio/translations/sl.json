@@ -4,7 +4,6 @@
             "already_configured": "Naprava je \u017ee konfigurirana"
         },
         "error": {
-            "connect_error": "Povezava ni uspela",
             "no_device_selected": "Izbrana ni nobena naprava, izberite eno napravo."
         },
         "step": {

@@ -1,14 +1,29 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontroller on juba seadistatud"
+            "cannot_connect": "Ei saanud \u00fchendust URL-il {base_url} asuva kontrolleriga"
         },
         "step": {
             "user": {
                 "data": {
+                    "exclude": "Vera seadme ID-d mida Home Assistant'ist v\u00e4lja j\u00e4tta.",
+                    "lights": "Vera l\u00fclitite ID'd mida neid k\u00e4sitleda Home Assistantis tuledena.",
                     "vera_controller_url": "Kontrolleri URL"
                 },
+                "description": "Esita allpool Vera kontrolleri URL. See peaks v\u00e4lja n\u00e4gema selline: http://192.168.1.161:3480.",
                 "title": "Seadista Vera kontroller"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "exclude": "Vera seadme ID-d mida Home Assistant'ist v\u00e4lja j\u00e4tta.",
+                    "lights": "Vera l\u00fclitite ID'd mida neid k\u00e4sitleda Home Assistantis tuledena."
+                },
+                "description": "Valikuliste parameetrite kohta leiad lisateavet Vera dokumentatsioonist: https://www.home-assistant.io/integrations/vera/. M\u00e4rkus: K\u00f5ikide muudatuste puhul on vaja taask\u00e4ivitada Home Assistant'i server. V\u00e4\u00e4rtuste kustutamiseks sisesta t\u00fchik.",
+                "title": "Vera kontrolleri valikud"
             }
         }
     }

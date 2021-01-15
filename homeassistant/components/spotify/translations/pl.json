@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
             "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji",
             "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
             "no_url_available": "Brak dost\u0119pnego adresu URL. Aby uzyska\u0107 informacje na temat tego b\u0142\u0119du, [sprawd\u017a sekcj\u0119 pomocy] ({docs_url})",
@@ -18,6 +17,11 @@
                 "description": "Integracja Spotify wymaga ponownego uwierzytelnienia w Spotify dla konta: {account}",
                 "title": "Ponownie uwierzytelnij integracj\u0119"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Dost\u0119pno\u015b\u0107 punktu ko\u0144cowego API Spotify"
         }
     }
 }

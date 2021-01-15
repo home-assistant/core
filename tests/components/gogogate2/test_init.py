@@ -1,4 +1,6 @@
 """Tests for the GogoGate2 component."""
+from unittest.mock import MagicMock, patch
+
 from gogogate2_api import GogoGate2Api
 import pytest
 
@@ -15,7 +17,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 

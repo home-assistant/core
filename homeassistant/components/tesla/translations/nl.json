@@ -2,12 +2,7 @@
     "config": {
         "error": {
             "already_configured": "Account is al geconfigureerd",
-            "already_configured_account": "Account is al geconfigureerd",
-            "cannot_connect": "Kan geen verbinding maken",
-            "connection_error": "Fout bij verbinden; controleer het netwerk en probeer het opnieuw",
-            "identifier_exists": "E-mail al geregistreerd",
-            "invalid_credentials": "Ongeldige inloggegevens",
-            "unknown_error": "Onbekende fout, meldt u log info"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "user": {

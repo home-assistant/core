@@ -5,6 +5,7 @@ from ipaddress import ip_address
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -122,7 +123,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         same_model = [
             entry.data[CONF_NAME]
             for entry in self.hass.config_entries.async_entries(AXIS_DOMAIN)
-            if entry.data[CONF_MODEL] == model
+            if entry.source != SOURCE_IGNORE and entry.data[CONF_MODEL] == model
         ]
 
         name = model

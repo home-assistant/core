@@ -1,4 +1,6 @@
 """Test init of AccuWeather integration."""
+from unittest.mock import patch
+
 from homeassistant.components.accuweather.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
@@ -7,7 +9,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import STATE_UNAVAILABLE
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 from tests.components.accuweather import init_integration
 

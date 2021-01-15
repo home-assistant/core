@@ -1,6 +1,7 @@
 """Common code for tests."""
 from enum import Enum
 from typing import Callable, Dict, NamedTuple, Tuple
+from unittest.mock import MagicMock
 
 import pyvera as pv
 
@@ -13,7 +14,6 @@ from homeassistant.components.vera.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock
 from tests.common import MockConfigEntry
 
 SetupCallback = Callable[[pv.VeraController, dict], None]

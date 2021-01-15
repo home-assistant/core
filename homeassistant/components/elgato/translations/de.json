@@ -2,10 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Dieses Elgato Key Light-Ger\u00e4t ist bereits konfiguriert.",
-            "connection_error": "Verbindung zum Elgato Key Light-Ger\u00e4t fehlgeschlagen."
+            "cannot_connect": "Verbindungsfehler"
         },
         "error": {
-            "connection_error": "Verbindung zum Elgato Key Light-Ger\u00e4t fehlgeschlagen."
+            "cannot_connect": "Verbindungsfehler"
         },
         "flow_title": "Elgato Key Light: {serial_number}",
         "step": {

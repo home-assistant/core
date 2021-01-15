@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "service_unavailable": "Verbindung konnte nicht hergestellt werden"
+            "cannot_connect": "Verbindungsfehler"
         },
         "step": {
             "protocol": {

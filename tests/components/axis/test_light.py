@@ -1,6 +1,7 @@
 """Axis light platform tests."""
 
 from copy import deepcopy
+from unittest.mock import patch
 
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 from .test_device import API_DISCOVERY_RESPONSE, NAME, setup_axis_integration
-
-from tests.async_mock import patch
 
 API_DISCOVERY_LIGHT_CONTROL = {
     "id": "light-control",
@@ -75,7 +74,7 @@ async def test_lights(hass):
         "axis.light_control.LightControl.get_valid_intensity",
         return_value={"data": {"ranges": [{"high": 150}]}},
     ):
-        device.api.event.process_event(EVENT_ON)
+        device.api.event.update([EVENT_ON])
         await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 1
@@ -120,7 +119,7 @@ async def test_lights(hass):
         mock_deactivate.assert_called_once()
 
     # Event turn off light
-    device.api.event.process_event(EVENT_OFF)
+    device.api.event.update([EVENT_OFF])
     await hass.async_block_till_done()
 
     light_0 = hass.states.get(entity_id)

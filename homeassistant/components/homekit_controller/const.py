@@ -25,6 +25,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "motion": "binary_sensor",
     "carbon-dioxide": "sensor",
     "humidity": "sensor",
+    "humidifier-dehumidifier": "humidifier",
     "light": "sensor",
     "temperature": "sensor",
     "battery": "sensor",
@@ -37,4 +38,5 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "occupancy": "binary_sensor",
     "television": "media_player",
     "valve": "switch",
+    "camera-rtp-stream-management": "camera",
 }

@@ -5,8 +5,7 @@
         },
         "error": {
             "cannot_connect": "Anslutningen misslyckades",
-            "name_exists": "Namnet finns",
-            "wrong_credentials": "Fel autentiseringsuppgifter"
+            "name_exists": "Namnet finns"
         },
         "step": {
             "user": {

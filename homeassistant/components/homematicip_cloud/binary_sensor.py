@@ -6,6 +6,7 @@ from homematicip.aio.device import (
     AsyncContactInterface,
     AsyncDevice,
     AsyncFullFlushContactInterface,
+    AsyncFullFlushContactInterface6,
     AsyncMotionDetectorIndoor,
     AsyncMotionDetectorOutdoor,
     AsyncMotionDetectorPushButton,
@@ -43,7 +44,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
-from .generic_entity import async_add_base_multi_area_device
 from .hap import HomematicipHAP
 
 ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
@@ -88,12 +88,14 @@ async def async_setup_entry(
         if isinstance(device, AsyncTiltVibrationSensor):
             entities.append(HomematicipTiltVibrationSensor(hap, device))
         if isinstance(device, AsyncWiredInput32):
-            await async_add_base_multi_area_device(hass, config_entry, device)
             for channel in range(1, 33):
                 entities.append(
-                    HomematicipMultiContactInterface(
-                        hap, device, channel=channel, is_multi_area=True
-                    )
+                    HomematicipMultiContactInterface(hap, device, channel=channel)
+                )
+        elif isinstance(device, AsyncFullFlushContactInterface6):
+            for channel in range(1, 7):
+                entities.append(
+                    HomematicipMultiContactInterface(hap, device, channel=channel)
                 )
         elif isinstance(
             device, (AsyncContactInterface, AsyncFullFlushContactInterface)
@@ -150,7 +152,15 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the cloud connection sensor."""
-        super().__init__(hap, hap.home, "Cloud Connection")
+        super().__init__(hap, hap.home)
+
+    @property
+    def name(self) -> str:
+        """Return the name cloud connection entity."""
+
+        name = "Cloud Connection"
+        # Add a prefix to the name if the homematic ip home has a name.
+        return name if not self._home.name else f"{self._home.name} {name}"
 
     @property
     def device_info(self) -> Dict[str, Any]:
@@ -221,10 +231,16 @@ class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEnt
     """Representation of the HomematicIP multi room/area contact interface."""
 
     def __init__(
-        self, hap: HomematicipHAP, device, channel: int, is_multi_area: bool = False
+        self,
+        hap: HomematicipHAP,
+        device,
+        channel=1,
+        is_multi_channel=True,
     ) -> None:
         """Initialize the multi contact entity."""
-        super().__init__(hap, device, channel=channel, is_multi_area=is_multi_area)
+        super().__init__(
+            hap, device, channel=channel, is_multi_channel=is_multi_channel
+        )
 
     @property
     def device_class(self) -> str:
@@ -242,43 +258,28 @@ class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEnt
         )
 
 
-class HomematicipContactInterface(HomematicipGenericEntity, BinarySensorEntity):
+class HomematicipContactInterface(HomematicipMultiContactInterface, BinarySensorEntity):
     """Representation of the HomematicIP contact interface."""
 
-    @property
-    def device_class(self) -> str:
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_OPENING
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the contact interface is on/open."""
-        if self._device.windowState is None:
-            return None
-        return self._device.windowState != WindowState.CLOSED
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the multi contact entity."""
+        super().__init__(hap, device, is_multi_channel=False)
 
 
-class HomematicipShutterContact(HomematicipGenericEntity, BinarySensorEntity):
+class HomematicipShutterContact(HomematicipMultiContactInterface, BinarySensorEntity):
     """Representation of the HomematicIP shutter contact."""
 
     def __init__(
         self, hap: HomematicipHAP, device, has_additional_state: bool = False
     ) -> None:
         """Initialize the shutter contact."""
-        super().__init__(hap, device)
+        super().__init__(hap, device, is_multi_channel=False)
         self.has_additional_state = has_additional_state
 
     @property
     def device_class(self) -> str:
         """Return the class of this sensor."""
         return DEVICE_CLASS_DOOR
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the shutter contact is on/open."""
-        if self._device.windowState is None:
-            return None
-        return self._device.windowState != WindowState.CLOSED
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:

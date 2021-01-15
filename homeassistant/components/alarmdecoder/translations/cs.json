@@ -7,8 +7,7 @@
             "default": "\u00dasp\u011b\u0161n\u011b p\u0159ipojen k AlarmDecoder."
         },
         "error": {
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "service_unavailable": "Nepoda\u0159ilo se p\u0159ipojit"
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
             "protocol": {
@@ -34,6 +33,7 @@
         "step": {
             "arm_settings": {
                 "data": {
+                    "alt_night_mode": "Alternativn\u00ed no\u010dn\u00ed re\u017eim",
                     "code_arm_required": "K\u00f3d vy\u017eadovan\u00fd pro zabezpe\u010den\u00ed"
                 },
                 "title": "Konfigurovat AlarmDecoder"

@@ -11,10 +11,12 @@ from homeassistant.components.switch import (
     SwitchEntity,
 )
 from homeassistant.const import ATTR_VOLTAGE
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import CONF_SWITCH, DOMAIN as TPLINK_DOMAIN
+from .common import add_available_devices
 
 PARALLEL_UPDATES = 0
 
@@ -29,20 +31,15 @@ SLEEP_TIME = 2
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
     """Set up switches."""
-    devices = hass.data[TPLINK_DOMAIN][CONF_SWITCH]
-    entities = []
+    entities = await hass.async_add_executor_job(
+        add_available_devices, hass, CONF_SWITCH, SmartPlugSwitch
+    )
 
-    await hass.async_add_executor_job(get_devices_sysinfo, devices)
-    for device in devices:
-        entities.append(SmartPlugSwitch(device))
+    if entities:
+        async_add_entities(entities, update_before_add=True)
 
-    async_add_entities(entities, update_before_add=True)
-
-
-def get_devices_sysinfo(devices):
-    """Get sysinfo for all devices."""
-    for device in devices:
-        device.get_sysinfo()
+    if hass.data[TPLINK_DOMAIN][f"{CONF_SWITCH}_remaining"]:
+        raise PlatformNotReady
 
 
 class SmartPlugSwitch(SwitchEntity):

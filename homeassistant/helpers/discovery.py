@@ -44,13 +44,14 @@ def async_listen(
 
     job = core.HassJob(callback)
 
-    @core.callback
-    def discovery_event_listener(event: core.Event) -> None:
+    async def discovery_event_listener(event: core.Event) -> None:
         """Listen for discovery events."""
         if ATTR_SERVICE in event.data and event.data[ATTR_SERVICE] in service:
-            hass.async_add_hass_job(
+            task = hass.async_run_hass_job(
                 job, event.data[ATTR_SERVICE], event.data.get(ATTR_DISCOVERED)
             )
+            if task:
+                await task
 
     hass.bus.async_listen(EVENT_PLATFORM_DISCOVERED, discovery_event_listener)
 
@@ -114,8 +115,7 @@ def async_listen_platform(
     service = EVENT_LOAD_PLATFORM.format(component)
     job = core.HassJob(callback)
 
-    @core.callback
-    def discovery_platform_listener(event: core.Event) -> None:
+    async def discovery_platform_listener(event: core.Event) -> None:
         """Listen for platform discovery events."""
         if event.data.get(ATTR_SERVICE) != service:
             return
@@ -125,7 +125,9 @@ def async_listen_platform(
         if not platform:
             return
 
-        hass.async_run_hass_job(job, platform, event.data.get(ATTR_DISCOVERED))
+        task = hass.async_run_hass_job(job, platform, event.data.get(ATTR_DISCOVERED))
+        if task:
+            await task
 
     hass.bus.async_listen(EVENT_PLATFORM_DISCOVERED, discovery_platform_listener)
 

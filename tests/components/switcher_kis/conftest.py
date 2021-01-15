@@ -3,6 +3,7 @@
 from asyncio import Queue
 from datetime import datetime
 from typing import Any, Generator, Optional
+from unittest.mock import AsyncMock, patch
 
 from pytest import fixture
 
@@ -18,8 +19,6 @@ from .consts import (
     DUMMY_POWER_CONSUMPTION,
     DUMMY_REMAINING_TIME,
 )
-
-from tests.async_mock import AsyncMock, patch
 
 
 @patch("aioswitcher.devices.SwitcherV2Device")

@@ -1,9 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Standuert ass scho konfigur\u00e9iert"
+        },
         "error": {
-            "auth": "Api Schl\u00ebssel ass net korrekt.",
             "cannot_connect": "Feeler beim verbannen",
-            "connection": "Kann sech net mat der OWM API verbannen."
+            "invalid_api_key": "Ong\u00ebltegen API Schl\u00ebssel"
         },
         "step": {
             "user": {

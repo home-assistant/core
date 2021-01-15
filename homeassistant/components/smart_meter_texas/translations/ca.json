@@ -13,10 +13,8 @@
                 "data": {
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
-                },
-                "description": "Proporciona el nom d'usuari i contrasenya per a Smart Meter Texas."
+                }
             }
         }
-    },
-    "title": "Smart Meter Texas"
+    }
 }

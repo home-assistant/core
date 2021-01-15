@@ -7,8 +7,7 @@
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "general_error": "Errore imprevisto",
-            "invalid_api_key": "Chiave API non valida",
-            "unable_to_connect": "Impossibile connettersi all'unit\u00e0 Node/Pro."
+            "invalid_api_key": "Chiave API non valida"
         },
         "step": {
             "geography": {

@@ -7,6 +7,8 @@ from aiohttp import CookieJar
 import aiounifi
 from aiounifi.controller import (
     DATA_CLIENT_REMOVED,
+    DATA_DPI_GROUP,
+    DATA_DPI_GROUP_REMOVED,
     DATA_EVENT,
     SIGNAL_CONNECTION_STATE,
     SIGNAL_DATA,
@@ -30,6 +32,9 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
+import homeassistant.util.dt as dt_util
 
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
@@ -37,6 +42,7 @@ from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
     CONF_POE_CLIENTS,
     CONF_SITE_ID,
@@ -48,6 +54,7 @@ from .const import (
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
+    DEFAULT_DPI_RESTRICTIONS,
     DEFAULT_IGNORE_WIRED_BUG,
     DEFAULT_POE_CLIENTS,
     DEFAULT_TRACK_CLIENTS,
@@ -60,6 +67,7 @@ from .const import (
 from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
+CHECK_DISCONNECTED_INTERVAL = timedelta(seconds=1)
 SUPPORTED_PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
 CLIENT_CONNECTED = (
@@ -89,6 +97,9 @@ class UniFiController:
         self.listeners = []
         self._site_name = None
         self._site_role = None
+
+        self._cancel_disconnected_check = None
+        self._watch_disconnected_entites = []
 
         self.entities = {}
 
@@ -177,6 +188,13 @@ class UniFiController:
         """Config entry option with list of clients to control network access."""
         return self.config_entry.options.get(CONF_BLOCK_CLIENT, [])
 
+    @property
+    def option_dpi_restrictions(self):
+        """Config entry option to control DPI restriction groups."""
+        return self.config_entry.options.get(
+            CONF_DPI_RESTRICTIONS, DEFAULT_DPI_RESTRICTIONS
+        )
+
     # Statistics sensor options
 
     @property
@@ -246,6 +264,18 @@ class UniFiController:
             elif DATA_CLIENT_REMOVED in data:
                 async_dispatcher_send(
                     self.hass, self.signal_remove, data[DATA_CLIENT_REMOVED]
+                )
+
+            elif DATA_DPI_GROUP in data:
+                for key in data[DATA_DPI_GROUP]:
+                    if self.api.dpi_groups[key].dpiapp_ids:
+                        async_dispatcher_send(self.hass, self.signal_update)
+                    else:
+                        async_dispatcher_send(self.hass, self.signal_remove, {key})
+
+            elif DATA_DPI_GROUP_REMOVED in data:
+                async_dispatcher_send(
+                    self.hass, self.signal_remove, data[DATA_DPI_GROUP_REMOVED]
                 )
 
     @property
@@ -322,9 +352,9 @@ class UniFiController:
 
             mac = ""
             if entity.domain == TRACKER_DOMAIN:
-                mac, _ = entity.unique_id.split("-", 1)
+                mac = entity.unique_id.split("-", 1)[0]
             elif entity.domain == SWITCH_DOMAIN:
-                _, mac = entity.unique_id.split("-", 1)
+                mac = entity.unique_id.split("-", 1)[1]
 
             if mac in self.api.clients or mac not in self.api.clients_all:
                 continue
@@ -352,7 +382,31 @@ class UniFiController:
 
         self.config_entry.add_update_listener(self.async_config_entry_updated)
 
+        self._cancel_disconnected_check = async_track_time_interval(
+            self.hass, self._async_check_for_disconnected, CHECK_DISCONNECTED_INTERVAL
+        )
+
         return True
+
+    @callback
+    def add_disconnected_check(self, entity: Entity) -> None:
+        """Add an entity to watch for disconnection."""
+        self._watch_disconnected_entites.append(entity)
+
+    @callback
+    def remove_disconnected_check(self, entity: Entity) -> None:
+        """Remove an entity to watch for disconnection."""
+        self._watch_disconnected_entites.remove(entity)
+
+    @callback
+    def _async_check_for_disconnected(self, *_) -> None:
+        """Check for any devices scheduled to be marked disconnected."""
+        now = dt_util.utcnow()
+
+        for entity in self._watch_disconnected_entites:
+            disconnected_time = entity.disconnected_time
+            if disconnected_time is not None and now > disconnected_time:
+                entity.make_disconnected()
 
     @staticmethod
     async def async_config_entry_updated(hass, config_entry) -> None:
@@ -374,7 +428,12 @@ class UniFiController:
                 await self.api.login()
                 self.api.start_websocket()
 
-        except (asyncio.TimeoutError, aiounifi.AiounifiException):
+        except (
+            asyncio.TimeoutError,
+            aiounifi.BadGateway,
+            aiounifi.ServiceUnavailable,
+            aiounifi.AiounifiException,
+        ):
             self.hass.loop.call_later(RETRY_TIMER, self.reconnect)
 
     @callback
@@ -401,6 +460,10 @@ class UniFiController:
         for unsub_dispatcher in self.listeners:
             unsub_dispatcher()
         self.listeners = []
+
+        if self._cancel_disconnected_check:
+            self._cancel_disconnected_check()
+            self._cancel_disconnected_check = None
 
         return True
 
@@ -441,7 +504,12 @@ async def get_controller(
         LOGGER.warning("Connected to UniFi at %s but not registered.", host)
         raise AuthenticationRequired from err
 
-    except (asyncio.TimeoutError, aiounifi.RequestError) as err:
+    except (
+        asyncio.TimeoutError,
+        aiounifi.BadGateway,
+        aiounifi.ServiceUnavailable,
+        aiounifi.RequestError,
+    ) as err:
         LOGGER.error("Error connecting to the UniFi controller at %s", host)
         raise CannotConnect from err
 

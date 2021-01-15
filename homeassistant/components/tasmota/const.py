@@ -2,6 +2,7 @@
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
 
 DATA_REMOVE_DISCOVER_COMPONENT = "tasmota_discover_{}"
+DATA_UNSUB = "tasmota_subscriptions"
 
 DEFAULT_PREFIX = "tasmota/discovery"
 
@@ -9,6 +10,8 @@ DOMAIN = "tasmota"
 
 PLATFORMS = [
     "binary_sensor",
+    "cover",
+    "fan",
     "light",
     "sensor",
     "switch",

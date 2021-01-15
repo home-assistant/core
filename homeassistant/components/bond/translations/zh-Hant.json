@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
-            "old_firmware": "Bond \u8a2d\u5099\u4f7f\u7528\u4e0d\u652f\u63f4\u7684\u820a\u7248\u672c\u97cc\u9ad4 -  \u8acb\u66f4\u65b0\u5f8c\u518d\u7e7c\u7e8c",
+            "old_firmware": "Bond \u88dd\u7f6e\u4f7f\u7528\u4e0d\u652f\u63f4\u7684\u820a\u7248\u672c\u97cc\u9ad4 -  \u8acb\u66f4\u65b0\u5f8c\u518d\u7e7c\u7e8c",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "flow_title": "Bond\uff1a{bond_id} ({host})",

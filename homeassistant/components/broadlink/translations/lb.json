@@ -25,6 +25,7 @@
                 "title": "Numm auswielen fir den Apparat"
             },
             "reset": {
+                "description": "D\u00e4in Apparat ass gespaart fir Authentifikatioun. Folleg den Instruktiounen fir en z'entsp\u00e4rren:\n1. Factory Reset vum Apparat\n2. Benotz d\u00e9i offiziell App fir den Apparat zu dengem Netzwierk dob\u00e4izesetzen.\n3. Stop. Schl\u00e9iss den Setup net of. Maach d'app zou.\n4. Klick op ofsch\u00e9cken",
                 "title": "Apparat entsp\u00e4ren"
             },
             "unlock": {

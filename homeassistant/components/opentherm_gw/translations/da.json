@@ -2,9 +2,7 @@
     "config": {
         "error": {
             "already_configured": "Gateway allerede konfigureret",
-            "id_exists": "Gateway-id findes allerede",
-            "serial_error": "Fejl ved tilslutning til enheden",
-            "timeout": "Forbindelsesfors\u00f8g fik timeout"
+            "id_exists": "Gateway-id findes allerede"
         },
         "step": {
             "init": {

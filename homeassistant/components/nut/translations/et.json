@@ -8,13 +8,38 @@
             "unknown": "Tundmatu viga"
         },
         "step": {
+            "resources": {
+                "data": {
+                    "resources": "Ressursid"
+                },
+                "title": "Vali j\u00e4lgitavad ressursid"
+            },
+            "ups": {
+                "data": {
+                    "alias": "",
+                    "resources": "Ressursid"
+                },
+                "title": "Vali j\u00e4lgitava UPS"
+            },
             "user": {
                 "data": {
                     "host": "",
                     "password": "Salas\u00f5na",
                     "port": "",
                     "username": "Kasutajanimi"
-                }
+                },
+                "title": "Loo \u00fchendus NUT-serveriga"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "Ressursid",
+                    "scan_interval": "P\u00e4ringute intervall (sekundites)"
+                },
+                "description": "Vali anduri ressursid."
             }
         }
     }

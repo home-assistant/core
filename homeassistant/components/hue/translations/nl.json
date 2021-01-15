@@ -24,6 +24,11 @@
             "link": {
                 "description": "Druk op de knop van de bridge om Philips Hue te registreren met Home Assistant.  \n\n![Locatie van de knop op bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                }
             }
         }
     },

@@ -4,8 +4,7 @@
             "already_configured": "\u00da\u010det je ji\u017e nastaven"
         },
         "error": {
-            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
-            "invalid_credentials": "Nespr\u00e1vn\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no nebo heslo."
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
         },
         "step": {
             "user": {
@@ -14,10 +13,8 @@
                     "mydevolo_url": "mydevolo URL",
                     "password": "Heslo",
                     "username": "E-mail / Devolo ID"
-                },
-                "title": "devolo Home Control"
+                }
             }
         }
-    },
-    "title": "devolo Home Control"
+    }
 }

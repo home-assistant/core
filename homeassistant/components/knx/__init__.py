@@ -1,4 +1,5 @@
 """Support KNX devices."""
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -13,12 +14,14 @@ from xknx.io import (
     ConnectionType,
 )
 from xknx.telegram import AddressFilter, GroupAddress, Telegram
+from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -27,7 +30,11 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.reload import async_integration_yaml_config
+from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.typing import ServiceCallType
 
 from .const import DOMAIN, SupportedPlatforms
 from .factory import create_knx_device
@@ -125,14 +132,23 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_KNX_SEND_SCHEMA = vol.Schema(
-    {
-        vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
-        vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
-            cv.positive_int, [cv.positive_int]
-        ),
-        vol.Optional(SERVICE_KNX_ATTR_TYPE): vol.Any(int, float, str),
-    }
+SERVICE_KNX_SEND_SCHEMA = vol.Any(
+    vol.Schema(
+        {
+            vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+            vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
+            vol.Required(SERVICE_KNX_ATTR_TYPE): vol.Any(int, float, str),
+        }
+    ),
+    vol.Schema(
+        # without type given payload is treated as raw bytes
+        {
+            vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+            vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
+                cv.positive_int, [cv.positive_int]
+            ),
+        }
+    ),
 )
 
 
@@ -170,6 +186,28 @@ async def async_setup(hass, config):
         SERVICE_KNX_SEND,
         hass.data[DOMAIN].service_send_to_knx_bus,
         schema=SERVICE_KNX_SEND_SCHEMA,
+    )
+
+    async def reload_service_handler(service_call: ServiceCallType) -> None:
+        """Remove all KNX components and load new ones from config."""
+
+        # First check for config file. If for some reason it is no longer there
+        # or knx is no longer mentioned, stop the reload.
+        config = await async_integration_yaml_config(hass, DOMAIN)
+
+        if not config or DOMAIN not in config:
+            return
+
+        await hass.data[DOMAIN].xknx.stop()
+
+        await asyncio.gather(
+            *[platform.async_reset() for platform in async_get_platforms(hass, DOMAIN)]
+        )
+
+        await async_setup(hass, config)
+
+    async_register_admin_service(
+        hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
     )
 
     return True
@@ -294,12 +332,22 @@ class KNXModule:
 
     async def telegram_received_cb(self, telegram):
         """Call invoked after a KNX telegram was received."""
+        data = None
+
+        # Not all telegrams have serializable data.
+        if isinstance(telegram.payload, (GroupValueWrite, GroupValueResponse)):
+            data = telegram.payload.value.value
+
         self.hass.bus.async_fire(
             "knx_event",
-            {"address": str(telegram.group_address), "data": telegram.payload.value},
+            {
+                "data": data,
+                "destination": str(telegram.destination_address),
+                "direction": telegram.direction.value,
+                "source": str(telegram.source_address),
+                "telegramtype": telegram.payload.__class__.__name__,
+            },
         )
-        # False signals XKNX to proceed with processing telegrams.
-        return False
 
     async def service_send_to_knx_bus(self, call):
         """Service for sending an arbitrary KNX message to the KNX bus."""
@@ -318,10 +366,10 @@ class KNXModule:
                 return DPTBinary(attr_payload)
             return DPTArray(attr_payload)
 
-        payload = calculate_payload(attr_payload)
-        address = GroupAddress(attr_address)
-
-        telegram = Telegram(group_address=address, payload=payload)
+        telegram = Telegram(
+            destination_address=GroupAddress(attr_address),
+            payload=GroupValueWrite(calculate_payload(attr_payload)),
+        )
         await self.xknx.telegrams.put(telegram)
 
 

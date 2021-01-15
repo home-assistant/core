@@ -13,6 +13,8 @@ SENSOR_UNITS = {
     "air_quality": None,
     "dust": None,
     "filter_life": TIME_HOURS,
+    "carbon_filter_state": PERCENTAGE,
+    "hepa_filter_state": PERCENTAGE,
     "humidity": PERCENTAGE,
 }
 
@@ -20,6 +22,8 @@ SENSOR_ICONS = {
     "air_quality": "mdi:fan",
     "dust": "mdi:cloud",
     "filter_life": "mdi:filter-outline",
+    "carbon_filter_state": "mdi:filter-outline",
+    "hepa_filter_state": "mdi:filter-outline",
     "humidity": "mdi:water-percent",
     "temperature": "mdi:thermometer",
 }
@@ -48,6 +52,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 new_entities.append(DysonTemperatureSensor(device, unit))
             if f"{device.serial}-humidity" not in device_ids:
                 new_entities.append(DysonHumiditySensor(device))
+
+            # For PureCool+Humidify devices, a single filter exists, called "Combi Filter".
+            # It's reported with the HEPA state, while the Carbon state is set to INValid.
+            if device.state and device.state.carbon_filter_state == "INV":
+                if f"{device.serial}-hepa_filter_state" not in device_ids:
+                    new_entities.append(DysonHepaFilterLifeSensor(device, "Combi"))
+            else:
+                if f"{device.serial}-hepa_filter_state" not in device_ids:
+                    new_entities.append(DysonHepaFilterLifeSensor(device))
+                if f"{device.serial}-carbon_filter_state" not in device_ids:
+                    new_entities.append(DysonCarbonFilterLifeSensor(device))
         elif isinstance(device, DysonPureCoolLink):
             new_entities.append(DysonFilterLifeSensor(device))
             new_entities.append(DysonDustSensor(device))
@@ -123,6 +138,38 @@ class DysonFilterLifeSensor(DysonSensor):
         """Return filter life in hours."""
         if self._device.state:
             return int(self._device.state.filter_life)
+        return None
+
+
+class DysonCarbonFilterLifeSensor(DysonSensor):
+    """Representation of Dyson Carbon Filter Life sensor (in percent)."""
+
+    def __init__(self, device):
+        """Create a new Dyson Carbon Filter Life sensor."""
+        super().__init__(device, "carbon_filter_state")
+        self._name = f"{self._device.name} Carbon Filter Remaining Life"
+
+    @property
+    def state(self):
+        """Return filter life remaining in percent."""
+        if self._device.state:
+            return int(self._device.state.carbon_filter_state)
+        return None
+
+
+class DysonHepaFilterLifeSensor(DysonSensor):
+    """Representation of Dyson HEPA (or Combi) Filter Life sensor (in percent)."""
+
+    def __init__(self, device, filter_type="HEPA"):
+        """Create a new Dyson Filter Life sensor."""
+        super().__init__(device, "hepa_filter_state")
+        self._name = f"{self._device.name} {filter_type} Filter Remaining Life"
+
+    @property
+    def state(self):
+        """Return filter life remaining in percent."""
+        if self._device.state:
+            return int(self._device.state.hepa_filter_state)
         return None
 
 

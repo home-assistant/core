@@ -412,17 +412,19 @@ def async_log_exception(
     """
     if hass is not None:
         async_notify_setup_error(hass, domain, link)
-    _LOGGER.error(_format_config_error(ex, domain, config, link))
+    message, is_friendly = _format_config_error(ex, domain, config, link)
+    _LOGGER.error(message, exc_info=not is_friendly and ex)
 
 
 @callback
 def _format_config_error(
     ex: Exception, domain: str, config: Dict, link: Optional[str] = None
-) -> str:
+) -> Tuple[str, bool]:
     """Generate log exception for configuration validation.
 
     This method must be run in the event loop.
     """
+    is_friendly = False
     message = f"Invalid config for [{domain}]: "
     if isinstance(ex, vol.Invalid):
         if "extra keys not allowed" in ex.error_message:
@@ -433,8 +435,9 @@ def _format_config_error(
             )
         else:
             message += f"{humanize_error(config, ex)}."
+        is_friendly = True
     else:
-        message += str(ex)
+        message += str(ex) or repr(ex)
 
     try:
         domain_config = config.get(domain, config)
@@ -449,7 +452,7 @@ def _format_config_error(
     if domain != CONF_CORE and link:
         message += f"Please check the docs at {link}"
 
-    return message
+    return message, is_friendly
 
 
 async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> None:

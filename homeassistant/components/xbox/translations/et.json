@@ -3,7 +3,7 @@
         "abort": {
             "authorize_url_timeout": "Tuvastamise URL'i loomise ajal\u00f5pp.",
             "missing_configuration": "Osis pole seadistatud. Palun vaata dokumentatsiooni.",
-            "single_instance_allowed": "Seade on juba lisatud. Lubatud on ainult \u00fcks seadistamine."
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
         "create_entry": {
             "default": "Edukalt tuvastatud"
@@ -13,6 +13,5 @@
                 "title": "Vali tuvastusmeetod"
             }
         }
-    },
-    "title": ""
+    }
 }

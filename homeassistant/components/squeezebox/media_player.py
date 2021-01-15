@@ -168,8 +168,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
 
+    session = async_get_clientsession(hass)
     _LOGGER.debug("Creating LMS object for %s", host)
-    lms = Server(async_get_clientsession(hass), host, port, username, password)
+    lms = Server(session, host, port, username, password)
 
     async def _discovery(now=None):
         """Discover squeezebox players by polling server."""
@@ -587,4 +588,17 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             "search_id": media_content_id,
         }
 
-        return await build_item_response(self._player, payload)
+        return await build_item_response(self, self._player, payload)
+
+    async def async_get_browse_image(
+        self, media_content_type, media_content_id, media_image_id=None
+    ):
+        """Get album art from Squeezebox server."""
+        if media_image_id:
+            image_url = self._player.generate_image_url_from_track_id(media_image_id)
+            result = await self._async_fetch_image(image_url)
+            if result == (None, None):
+                _LOGGER.debug("Error retrieving proxied album art from %s", image_url)
+            return result
+
+        return (None, None)

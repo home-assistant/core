@@ -5,7 +5,6 @@
         },
         "error": {
             "invalid_auth": "Invalid authentication",
-            "invalid_credentials": "Invalid username or password",
             "no_devices": "No devices found in account"
         },
         "step": {

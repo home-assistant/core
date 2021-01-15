@@ -1,5 +1,6 @@
 """Support for Homekit sensors."""
 from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
@@ -216,11 +217,11 @@ class HomeKitBatterySensor(HomeKitEntity):
 
 
 ENTITY_TYPES = {
-    "humidity": HomeKitHumiditySensor,
-    "temperature": HomeKitTemperatureSensor,
-    "light": HomeKitLightSensor,
-    "carbon-dioxide": HomeKitCarbonDioxideSensor,
-    "battery": HomeKitBatterySensor,
+    ServicesTypes.HUMIDITY_SENSOR: HomeKitHumiditySensor,
+    ServicesTypes.TEMPERATURE_SENSOR: HomeKitTemperatureSensor,
+    ServicesTypes.LIGHT_SENSOR: HomeKitLightSensor,
+    ServicesTypes.CARBON_DIOXIDE_SENSOR: HomeKitCarbonDioxideSensor,
+    ServicesTypes.BATTERY_SERVICE: HomeKitBatterySensor,
 }
 
 
@@ -230,11 +231,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(aid, service):
-        entity_class = ENTITY_TYPES.get(service["stype"])
+    def async_add_service(service):
+        entity_class = ENTITY_TYPES.get(service.short_type)
         if not entity_class:
             return False
-        info = {"aid": aid, "iid": service["iid"]}
+        info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([entity_class(conn, info)], True)
         return True
 

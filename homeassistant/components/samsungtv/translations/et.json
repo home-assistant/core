@@ -3,8 +3,11 @@
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
-            "cannot_connect": "\u00dchendamine nurjus"
+            "auth_missing": "Home Assistant-il pole selle Samsungi teleriga \u00fchenduse loomiseks luba. Koduabilise autoriseerimiseks kontrolli oma teleri seadeid.",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "not_supported": "Seda Samsungi tv-seadet praegu ei toetata."
         },
+        "flow_title": "Samsungi teler: {model}",
         "step": {
             "confirm": {
                 "description": "Kas soovid seadistada Samsung TV-d  {model} ? Kui seda pole kunagi enne Home Assistantiga \u00fchendatud, n\u00e4ed oma teleris h\u00fcpikakent, mis k\u00fcsib tuvastamist. Selle teleri k\u00e4sitsi seadistused kirjutatakse \u00fcle.",
@@ -12,8 +15,10 @@
             },
             "user": {
                 "data": {
-                    "host": ""
-                }
+                    "host": "",
+                    "name": "Nimi"
+                },
+                "description": "Sisesta Samsungi teleri teave. Kui sa pole kunagi enne Home Assistanti \u00fchendanud, peaksid oma teleris n\u00e4gema h\u00fcpikakent, mis k\u00fcsib autoriseerimist."
             }
         }
     }

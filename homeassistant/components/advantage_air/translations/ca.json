@@ -6,7 +6,6 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
-        "flow_title": "Configuraci\u00f3 d'Advantage Air",
         "step": {
             "user": {
                 "data": {
@@ -17,6 +16,5 @@
                 "title": "Connecta"
             }
         }
-    },
-    "title": "Advantage Air"
+    }
 }

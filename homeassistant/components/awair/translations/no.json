@@ -2,12 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
-            "no_devices": "Ingen enheter funnet p\u00e5 nettverket",
             "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
-            "reauth_successful": "Reautentisering var vellykket"
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
-            "auth": "Ugyldig tilgangstoken",
             "invalid_access_token": "Ugyldig tilgangstoken",
             "unknown": "Uventet feil"
         },

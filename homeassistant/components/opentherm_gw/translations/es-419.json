@@ -2,9 +2,7 @@
     "config": {
         "error": {
             "already_configured": "Gateway ya configurado",
-            "id_exists": "La identificaci\u00f3n de la puerta ya existe",
-            "serial_error": "Error al conectarse al dispositivo",
-            "timeout": "Tiempo de intento de conexi\u00f3n agotado"
+            "id_exists": "La identificaci\u00f3n de la puerta ya existe"
         },
         "step": {
             "init": {

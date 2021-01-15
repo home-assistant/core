@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "all_configured": "No new Pulse hubs discovered.",
             "no_devices_found": "No devices found on the network"
         },
         "step": {
@@ -12,6 +11,5 @@
                 "title": "Pick a hub to add"
             }
         }
-    },
-    "title": "Rollease Acmeda Automate"
+    }
 }

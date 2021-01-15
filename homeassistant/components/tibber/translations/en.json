@@ -5,7 +5,6 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "connection_error": "Failed to connect",
             "invalid_access_token": "Invalid access token",
             "timeout": "Timeout connecting to Tibber"
         },
@@ -18,6 +17,5 @@
                 "title": "Tibber"
             }
         }
-    },
-    "title": "Tibber"
+    }
 }

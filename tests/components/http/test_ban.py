@@ -2,6 +2,7 @@
 # pylint: disable=protected-access
 from ipaddress import ip_address
 import os
+from unittest.mock import Mock, mock_open, patch
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
@@ -23,7 +24,6 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_real_ip
 
-from tests.async_mock import Mock, mock_open, patch
 from tests.common import async_mock_service
 
 SUPERVISOR_IP = "1.2.3.4"

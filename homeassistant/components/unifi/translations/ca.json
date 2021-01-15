@@ -27,6 +27,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Clients controlats amb acc\u00e9s a la xarxa",
+                    "dpi_restrictions": "Permet el control de grups de restricci\u00f3 DPI",
                     "poe_clients": "Permet control POE dels clients"
                 },
                 "description": "Configura els controls del client \n\nConfigura interruptors per als n\u00fameros de s\u00e8rie als quals vulguis controlar l'acc\u00e9s a la xarxa.",

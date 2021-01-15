@@ -1,11 +1,12 @@
 """Tests for the Atag water heater platform."""
 
+from unittest.mock import patch
+
 from homeassistant.components.atag import DOMAIN, WATER_HEATER
 from homeassistant.components.water_heater import SERVICE_SET_TEMPERATURE
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
 from tests.components.atag import UID, init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 

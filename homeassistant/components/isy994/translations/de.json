@@ -5,6 +5,8 @@
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "invalid_host": "Der Hosteintrag hatte nicht das vollst\u00e4ndige URL-Format, z. B. http://192.168.10.100:80",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
@@ -12,8 +14,11 @@
                 "data": {
                     "host": "URL",
                     "password": "Passwort",
+                    "tls": "Die TLS-Version des ISY-Controllers.",
                     "username": "Benutzername"
-                }
+                },
+                "description": "Der Hosteintrag muss im vollst\u00e4ndigen URL-Format vorliegen, z. B. http://192.168.10.100:80",
+                "title": "Stellen Sie eine Verbindung zu Ihrem ISY994 her"
             }
         }
     },
@@ -21,8 +26,10 @@
         "step": {
             "init": {
                 "data": {
-                    "ignore_string": "Zeichenfolge ignorieren"
-                }
+                    "ignore_string": "Zeichenfolge ignorieren",
+                    "restore_light_state": "Lichthelligkeit wiederherstellen"
+                },
+                "title": "ISY994 Optionen"
             }
         }
     }

@@ -1,0 +1,9 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindungsfehler",
+            "invalid_host": "Ung\u00fcltiger Hostname oder IP Adresse",
+            "unknown": "Unerwarteter Fehler"
+        }
+    }
+}

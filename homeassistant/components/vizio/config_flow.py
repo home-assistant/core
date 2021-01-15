@@ -348,9 +348,11 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         assert self.hass
 
-        discovery_info[
-            CONF_HOST
-        ] = f"{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}"
+        # If host already has port, no need to add it again
+        if ":" not in discovery_info[CONF_HOST]:
+            discovery_info[
+                CONF_HOST
+            ] = f"{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}"
 
         # Set default name to discovered device name by stripping zeroconf service
         # (`type`) from `name`
@@ -367,6 +369,10 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info[CONF_DEVICE_CLASS],
             session=async_get_clientsession(self.hass, False),
         )
+
+        if not unique_id:
+            return self.async_abort(reason="cannot_connect")
+
         await self.async_set_unique_id(unique_id=unique_id, raise_on_progress=True)
         self._abort_if_unique_id_configured()
 

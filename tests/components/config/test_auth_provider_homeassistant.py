@@ -290,7 +290,7 @@ async def test_change_password_wrong_pw(
 
     result = await client.receive_json()
     assert not result["success"], result
-    assert result["error"]["code"] == "invalid_password"
+    assert result["error"]["code"] == "invalid_current_password"
     with pytest.raises(prov_ha.InvalidAuth):
         await auth_provider.async_validate_login("test-user", "new-pass")
 

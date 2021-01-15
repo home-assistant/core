@@ -3,6 +3,14 @@
   "name": "Neato Botvac",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/neato",
-  "requirements": ["pybotvac==0.0.17"],
-  "codeowners": ["@dshokouhi", "@Santobert"]
+  "requirements": [
+    "pybotvac==0.0.19"
+  ],
+  "codeowners": [
+    "@dshokouhi",
+    "@Santobert"
+  ],
+  "dependencies": [
+    "http"
+  ]
 }

@@ -14,6 +14,16 @@
                     "host": "IP adresa",
                     "password": "Heslo",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                },
+                "description": "Zadejte pros\u00edm \u00fadaje o sv\u00e9m \u00fa\u010dtu Control4 a IP adresu m\u00edstn\u00edho ovlada\u010de."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Po\u010det sekund mezi aktualizacemi"
                 }
             }
         }

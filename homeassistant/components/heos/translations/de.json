@@ -1,10 +1,7 @@
 {
     "config": {
-        "abort": {
-            "already_setup": "Es kann nur eine einzige Heos-Verbindung konfiguriert werden, da diese alle Ger\u00e4te im Netzwerk unterst\u00fctzt."
-        },
         "error": {
-            "connection_failure": "Es kann keine Verbindung zum angegebenen Host hergestellt werden."
+            "cannot_connect": "Verbindungsfehler"
         },
         "step": {
             "user": {

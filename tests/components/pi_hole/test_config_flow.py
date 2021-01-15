@@ -1,5 +1,6 @@
 """Test pi_hole config flow."""
 import logging
+from unittest.mock import patch
 
 from homeassistant.components.pi_hole.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -16,8 +17,6 @@ from . import (
     _create_mocked_hole,
     _patch_config_flow_hole,
 )
-
-from tests.async_mock import patch
 
 
 def _flow_next(hass, flow_id):

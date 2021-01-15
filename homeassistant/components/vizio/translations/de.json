@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
+            "cannot_connect": "Verbindungsfehler",
             "updated_entry": "Dieser Eintrag wurde bereits eingerichtet, aber der Name, die Apps und / oder die in der Konfiguration definierten Optionen stimmen nicht mit der zuvor importierten Konfiguration \u00fcberein, sodass der Konfigurationseintrag entsprechend aktualisiert wurde."
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen",
-            "host_exists": "VIZIO-Ger\u00e4t mit angegebenem Host bereits konfiguriert.",
-            "name_exists": "VIZIO-Ger\u00e4t mit angegebenem Namen bereits konfiguriert."
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "pair_tv": {

@@ -6,15 +6,14 @@
             "not_huawei_lte": "Geen Huawei LTE-apparaat"
         },
         "error": {
-            "connection_failed": "Verbinding mislukt",
             "connection_timeout": "Time-out van de verbinding",
             "incorrect_password": "Onjuist wachtwoord",
             "incorrect_username": "Onjuiste gebruikersnaam",
-            "incorrect_username_or_password": "Onjuiste gebruikersnaam of wachtwoord",
+            "invalid_auth": "Ongeldige authenticatie",
             "invalid_url": "Ongeldige URL",
             "login_attempts_exceeded": "Maximale aanmeldingspogingen overschreden, probeer het later opnieuw.",
             "response_error": "Onbekende fout van het apparaat",
-            "unknown_connection_error": "Onbekende fout bij verbinden met apparaat"
+            "unknown": "Onverwachte fout"
         },
         "step": {
             "user": {

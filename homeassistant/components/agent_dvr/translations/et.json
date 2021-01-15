@@ -5,8 +5,7 @@
         },
         "error": {
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
-            "cannot_connect": "\u00dchendamine nurjus",
-            "device_unavailable": "Seade pole saadaval"
+            "cannot_connect": "\u00dchendamine nurjus"
         },
         "step": {
             "user": {
@@ -17,6 +16,5 @@
                 "title": "Seadista Agent DVR"
             }
         }
-    },
-    "title": ""
+    }
 }

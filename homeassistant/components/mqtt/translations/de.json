@@ -49,6 +49,9 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
         "step": {
             "broker": {
                 "data": {
@@ -56,6 +59,11 @@
                     "password": "Passwort",
                     "port": "Port",
                     "username": "Benutzername"
+                }
+            },
+            "options": {
+                "data": {
+                    "will_enable": "Letzten Willen aktivieren"
                 }
             }
         }

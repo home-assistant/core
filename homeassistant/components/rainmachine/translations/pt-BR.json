@@ -1,9 +1,5 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Conta j\u00e1 cadastrada",
-            "invalid_credentials": "Credenciais inv\u00e1lidas"
-        },
         "step": {
             "user": {
                 "data": {

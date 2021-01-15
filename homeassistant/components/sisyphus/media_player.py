@@ -65,6 +65,10 @@ class SisyphusPlayer(MediaPlayerEntity):
         """Add listeners after this object has been initialized."""
         self._table.add_listener(self.async_write_ha_state)
 
+    async def async_update(self):
+        """Force update table state."""
+        await self._table.refresh()
+
     @property
     def unique_id(self):
         """Return the UUID of the table."""
@@ -128,6 +132,24 @@ class SisyphusPlayer(MediaPlayerEntity):
     def media_content_id(self):
         """Return the track ID of the current track."""
         return self._table.active_track.id if self._table.active_track else None
+
+    @property
+    def media_duration(self):
+        """Return the total time it will take to run this track at the current speed."""
+        return self._table.active_track_total_time.total_seconds()
+
+    @property
+    def media_position(self):
+        """Return the current position within the track."""
+        return (
+            self._table.active_track_total_time
+            - self._table.active_track_remaining_time
+        ).total_seconds()
+
+    @property
+    def media_position_updated_at(self):
+        """Return the last time we got a position update."""
+        return self._table.active_track_remaining_time_as_of
 
     @property
     def supported_features(self):

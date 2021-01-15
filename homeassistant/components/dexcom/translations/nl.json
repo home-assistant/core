@@ -1,11 +1,17 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd"
+        },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
         },
         "step": {
             "user": {
                 "data": {
+                    "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
                 }
             }

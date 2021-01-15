@@ -46,7 +46,6 @@ from .const import (
     CHAR_TARGET_POSITION,
     CHAR_TARGET_TILT_ANGLE,
     CONF_LINKED_OBSTRUCTION_SENSOR,
-    DEVICE_PRECISION_LEEWAY,
     HK_DOOR_CLOSED,
     HK_DOOR_CLOSING,
     HK_DOOR_OPEN,
@@ -205,7 +204,6 @@ class OpeningDeviceBase(HomeAccessory):
 
         self.features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         self._supports_stop = self.features & SUPPORT_STOP
-        self._homekit_target_tilt = None
         self.chars = []
         if self._supports_stop:
             self.chars.append(CHAR_HOLD_POSITION)
@@ -238,7 +236,6 @@ class OpeningDeviceBase(HomeAccessory):
     @debounce
     def set_tilt(self, value):
         """Set tilt to value if call came from HomeKit."""
-        self._homekit_target_tilt = value
         _LOGGER.info("%s: Set tilt to %d", self.entity_id, value)
 
         # HomeKit sends values between -90 and 90.
@@ -261,17 +258,8 @@ class OpeningDeviceBase(HomeAccessory):
             current_tilt = int(current_tilt)
             if self.char_current_tilt.value != current_tilt:
                 self.char_current_tilt.set_value(current_tilt)
-
-            # We have to assume that the device has worse precision than HomeKit.
-            # If it reports back a state that is only _close_ to HK's requested
-            # state, we'll "fix" what HomeKit requested so that it won't appear
-            # out of sync.
-            if self._homekit_target_tilt is None or abs(
-                current_tilt - self._homekit_target_tilt < DEVICE_PRECISION_LEEWAY
-            ):
-                if self.char_target_tilt.value != current_tilt:
-                    self.char_target_tilt.set_value(current_tilt)
-                self._homekit_target_tilt = None
+            if self.char_target_tilt.value != current_tilt:
+                self.char_target_tilt.set_value(current_tilt)
 
 
 class OpeningDevice(OpeningDeviceBase, HomeAccessory):
@@ -284,7 +272,6 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         """Initialize a WindowCovering accessory object."""
         super().__init__(*args, category=category, service=service)
         state = self.hass.states.get(self.entity_id)
-        self._homekit_target = None
 
         self.char_current_position = self.serv_cover.configure_char(
             CHAR_CURRENT_POSITION, value=0
@@ -301,8 +288,6 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set position to %d", self.entity_id, value)
-        self._homekit_target = value
-
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_POSITION: value}
         self.call_service(DOMAIN, SERVICE_SET_COVER_POSITION, params, value)
 
@@ -314,28 +299,12 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
             current_position = int(current_position)
             if self.char_current_position.value != current_position:
                 self.char_current_position.set_value(current_position)
+            if self.char_target_position.value != current_position:
+                self.char_target_position.set_value(current_position)
 
-            # We have to assume that the device has worse precision than HomeKit.
-            # If it reports back a state that is only _close_ to HK's requested
-            # state, we'll "fix" what HomeKit requested so that it won't appear
-            # out of sync.
-            if (
-                self._homekit_target is None
-                or abs(current_position - self._homekit_target)
-                < DEVICE_PRECISION_LEEWAY
-            ):
-                if self.char_target_position.value != current_position:
-                    self.char_target_position.set_value(current_position)
-                self._homekit_target = None
-        if new_state.state == STATE_OPENING:
-            if self.char_position_state.value != HK_POSITION_GOING_TO_MAX:
-                self.char_position_state.set_value(HK_POSITION_GOING_TO_MAX)
-        elif new_state.state == STATE_CLOSING:
-            if self.char_position_state.value != HK_POSITION_GOING_TO_MIN:
-                self.char_position_state.set_value(HK_POSITION_GOING_TO_MIN)
-        else:
-            if self.char_position_state.value != HK_POSITION_STOPPED:
-                self.char_position_state.set_value(HK_POSITION_STOPPED)
+        position_state = _hass_state_to_position_start(new_state.state)
+        if self.char_position_state.value != position_state:
+            self.char_position_state.set_value(position_state)
 
         super().async_update_state(new_state)
 
@@ -426,14 +395,17 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
                 self.char_current_position.set_value(hk_position)
             if self.char_target_position.value != hk_position:
                 self.char_target_position.set_value(hk_position)
-        if new_state.state == STATE_OPENING:
-            if self.char_position_state.value != HK_POSITION_GOING_TO_MAX:
-                self.char_position_state.set_value(HK_POSITION_GOING_TO_MAX)
-        elif new_state.state == STATE_CLOSING:
-            if self.char_position_state.value != HK_POSITION_GOING_TO_MIN:
-                self.char_position_state.set_value(HK_POSITION_GOING_TO_MIN)
-        else:
-            if self.char_position_state.value != HK_POSITION_STOPPED:
-                self.char_position_state.set_value(HK_POSITION_STOPPED)
+        position_state = _hass_state_to_position_start(new_state.state)
+        if self.char_position_state.value != position_state:
+            self.char_position_state.set_value(position_state)
 
         super().async_update_state(new_state)
+
+
+def _hass_state_to_position_start(state):
+    """Convert hass state to homekit position state."""
+    if state == STATE_OPENING:
+        return HK_POSITION_GOING_TO_MAX
+    if state == STATE_CLOSING:
+        return HK_POSITION_GOING_TO_MIN
+    return HK_POSITION_STOPPED

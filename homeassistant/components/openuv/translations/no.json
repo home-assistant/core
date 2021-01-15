@@ -4,7 +4,6 @@
             "already_configured": "Plasseringen er allerede konfigurert"
         },
         "error": {
-            "identifier_exists": "Koordinatene er allerede registrert",
             "invalid_api_key": "Ugyldig API-n\u00f8kkel"
         },
         "step": {

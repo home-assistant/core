@@ -1,4 +1,7 @@
 """deCONZ services."""
+
+import asyncio
+
 from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
@@ -143,10 +146,10 @@ async def async_refresh_devices_service(hass, data):
     await gateway.api.refresh_state()
     gateway.ignore_state_updates = False
 
-    gateway.async_add_device_callback(NEW_GROUP, list(gateway.api.groups.values()))
-    gateway.async_add_device_callback(NEW_LIGHT, list(gateway.api.lights.values()))
-    gateway.async_add_device_callback(NEW_SCENE, list(gateway.api.scenes.values()))
-    gateway.async_add_device_callback(NEW_SENSOR, list(gateway.api.sensors.values()))
+    gateway.async_add_device_callback(NEW_GROUP, force=True)
+    gateway.async_add_device_callback(NEW_LIGHT, force=True)
+    gateway.async_add_device_callback(NEW_SCENE, force=True)
+    gateway.async_add_device_callback(NEW_SENSOR, force=True)
 
 
 async def async_remove_orphaned_entries_service(hass, data):
@@ -155,8 +158,10 @@ async def async_remove_orphaned_entries_service(hass, data):
     if CONF_BRIDGE_ID in data:
         gateway = hass.data[DOMAIN][normalize_bridge_id(data[CONF_BRIDGE_ID])]
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry, entity_registry = await asyncio.gather(
+        hass.helpers.device_registry.async_get_registry(),
+        hass.helpers.entity_registry.async_get_registry(),
+    )
 
     entity_entries = async_entries_for_config_entry(
         entity_registry, gateway.config_entry.entry_id
@@ -207,5 +212,12 @@ async def async_remove_orphaned_entries_service(hass, data):
 
     # Remove devices that don't belong to any entity
     for device_id in devices_to_be_removed:
-        if len(async_entries_for_device(entity_registry, device_id)) == 0:
+        if (
+            len(
+                async_entries_for_device(
+                    entity_registry, device_id, include_disabled_entities=True
+                )
+            )
+            == 0
+        ):
             device_registry.async_remove_device(device_id)

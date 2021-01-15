@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "credential_error": "Error al obtener las credenciales.",
-            "devices_configured": "Todos los dispositivos encontrados ya est\u00e1n configurados.",
             "no_devices_found": "No se encuentran dispositivos PlayStation 4 en la red.",
             "port_987_bind_error": "No se ha podido unir al puerto 987. Consulta la [documentaci\u00f3n](https://www.home-assistant.io/components/ps4/) para m\u00e1s informaci\u00f3n.",
             "port_997_bind_error": "No se ha podido unir al puerto 997. Consulta la [documentaci\u00f3n](https://www.home-assistant.io/components/ps4/) para m\u00e1s informaci\u00f3n."
@@ -12,8 +11,7 @@
             "cannot_connect": "No se pudo conectar",
             "credential_timeout": "Se agot\u00f3 el tiempo para el servicio de credenciales. Pulsa enviar para reiniciar.",
             "login_failed": "No se ha podido vincular con PlayStation 4. Verifica que el PIN sea correcto.",
-            "no_ipaddress": "Introduce la direcci\u00f3n IP de la PlayStation 4 que quieres configurar.",
-            "not_ready": "PlayStation 4 no est\u00e1 encendido o conectado a la red."
+            "no_ipaddress": "Introduce la direcci\u00f3n IP de la PlayStation 4 que quieres configurar."
         },
         "step": {
             "creds": {

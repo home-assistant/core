@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "one_instance_only": "Komponent obs\u0142uguje tylko jedn\u0105 instancj\u0119 ecobee",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {

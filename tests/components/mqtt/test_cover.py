@@ -1,4 +1,6 @@
 """The tests for the MQTT cover platform."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import cover
@@ -53,7 +55,6 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
 
 DEFAULT_CONFIG = {
@@ -702,7 +703,9 @@ async def test_set_position_templated(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("set-position-topic", 38, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "set-position-topic", "38", 0, False
+    )
 
 
 async def test_set_position_untemplated(hass, mqtt_mock):
@@ -732,7 +735,7 @@ async def test_set_position_untemplated(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("position-topic", 62, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("position-topic", "62", 0, False)
 
 
 async def test_set_position_untemplated_custom_percentage_range(hass, mqtt_mock):
@@ -764,7 +767,7 @@ async def test_set_position_untemplated_custom_percentage_range(hass, mqtt_mock)
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("position-topic", 62, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("position-topic", "62", 0, False)
 
 
 async def test_no_command_topic(hass, mqtt_mock):
@@ -896,7 +899,9 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 100, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "100", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
@@ -906,7 +911,7 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 0, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", "0", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     # Close tilt status would be received from device when non-optimistic
@@ -924,7 +929,9 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 100, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "100", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # Open tilt status would be received from device when non-optimistic
@@ -942,7 +949,7 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 0, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", "0", 0, False)
 
 
 async def test_tilt_given_value(hass, mqtt_mock):
@@ -976,7 +983,9 @@ async def test_tilt_given_value(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 80, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "80", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
@@ -986,7 +995,9 @@ async def test_tilt_given_value(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # Close tilt status would be received from device when non-optimistic
@@ -1004,7 +1015,9 @@ async def test_tilt_given_value(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 80, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "80", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # Open tilt status would be received from device when non-optimistic
@@ -1022,7 +1035,9 @@ async def test_tilt_given_value(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
 
 
 async def test_tilt_given_value_optimistic(hass, mqtt_mock):
@@ -1062,7 +1077,9 @@ async def test_tilt_given_value_optimistic(hass, mqtt_mock):
     ]
     assert current_cover_tilt_position == 80
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 80, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "80", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
@@ -1077,7 +1094,9 @@ async def test_tilt_given_value_optimistic(hass, mqtt_mock):
     ]
     assert current_cover_tilt_position == 25
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
 
 
 async def test_tilt_given_value_altered_range(hass, mqtt_mock):
@@ -1119,7 +1138,9 @@ async def test_tilt_given_value_altered_range(hass, mqtt_mock):
     ]
     assert current_cover_tilt_position == 50
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
@@ -1134,7 +1155,7 @@ async def test_tilt_given_value_altered_range(hass, mqtt_mock):
     ]
     assert current_cover_tilt_position == 0
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 0, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", "0", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
@@ -1149,7 +1170,9 @@ async def test_tilt_given_value_altered_range(hass, mqtt_mock):
     ]
     assert current_cover_tilt_position == 50
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
 
 
 async def test_tilt_via_topic(hass, mqtt_mock):
@@ -1353,7 +1376,9 @@ async def test_tilt_position(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 50, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "50", 0, False
+    )
 
 
 async def test_tilt_position_altered_range(hass, mqtt_mock):
@@ -1389,7 +1414,9 @@ async def test_tilt_position_altered_range(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
 
 
 async def test_find_percentage_in_range_defaults(hass, mqtt_mock):
