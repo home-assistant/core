@@ -1,7 +1,7 @@
 -c homeassistant/package_constraints.txt
 
 # Home Assistant Core
-aiohttp==3.7.1
+aiohttp==3.7.3
 astral==1.10.1
 async_timeout==3.0.1
 attrs==19.3.0
@@ -20,4 +20,4 @@ requests==2.25.1
 ruamel.yaml==0.15.100
 voluptuous==0.12.1
 voluptuous-serialize==2.4.0
-yarl==1.4.2
+yarl==1.6.3

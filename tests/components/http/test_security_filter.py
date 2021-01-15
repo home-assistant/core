@@ -1,6 +1,7 @@
 """Test security filter middleware."""
 from aiohttp import web
 import pytest
+import urllib3
 
 from homeassistant.components.http.security_filter import setup_security_filter
 
@@ -53,7 +54,7 @@ async def test_ok_requests(request_path, request_params, aiohttp_client):
     ],
 )
 async def test_bad_requests(
-    request_path, request_params, fail_on_query_string, aiohttp_client, caplog
+    request_path, request_params, fail_on_query_string, aiohttp_client, caplog, loop
 ):
     """Test request paths that should be filtered."""
     app = web.Application()
@@ -62,7 +63,22 @@ async def test_bad_requests(
     setup_security_filter(app)
 
     mock_api_client = await aiohttp_client(app)
-    resp = await mock_api_client.get(request_path, params=request_params)
+
+    # Manual params handling
+    if request_params:
+        raw_params = "&".join(f"{val}={key}" for val, key in request_params.items())
+        man_params = f"?{raw_params}"
+    else:
+        man_params = ""
+
+    http = urllib3.PoolManager()
+    resp = await loop.run_in_executor(
+        None,
+        http.request,
+        "GET",
+        f"http://{mock_api_client.host}:{mock_api_client.port}/{request_path}{man_params}",
+        request_params,
+    )
 
     assert resp.status == 400
 

@@ -32,7 +32,7 @@ PROJECT_URLS = {
 PACKAGES = find_packages(exclude=["tests", "tests.*"])
 
 REQUIRES = [
-    "aiohttp==3.7.1",
+    "aiohttp==3.7.3",
     "astral==1.10.1",
     "async_timeout==3.0.1",
     "attrs==19.3.0",
@@ -52,7 +52,7 @@ REQUIRES = [
     "ruamel.yaml==0.15.100",
     "voluptuous==0.12.1",
     "voluptuous-serialize==2.4.0",
-    "yarl==1.4.2",
+    "yarl==1.6.3",
 ]
 
 MIN_PY_VERSION = ".".join(map(str, hass_const.REQUIRED_PYTHON_VER))
