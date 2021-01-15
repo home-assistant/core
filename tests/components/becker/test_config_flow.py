@@ -49,7 +49,8 @@ async def test_user_flow(hass):
 async def test_user_flow_show_form(hass):
     """Test user step form."""
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={CONF_SOURCE: SOURCE_USER},
+        const.DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
     )
 
     assert result["type"] == RESULT_TYPE_FORM
