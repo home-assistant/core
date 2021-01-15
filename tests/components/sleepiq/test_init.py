@@ -62,4 +62,3 @@ async def test_setup_component_no_password(hass):
     del conf["sleepiq"]["password"]
 
     assert not await setup.async_setup_component(hass, sleepiq.DOMAIN, conf)
-    
