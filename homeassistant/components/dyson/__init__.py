@@ -122,9 +122,7 @@ class DysonEntity(Entity):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.hass.async_add_executor_job(
-            self._device.add_message_listener, self.on_message_filter
-        )
+        self._device.add_message_listener(self.on_message_filter)
 
     def on_message_filter(self, message):
         """Filter new messages received."""
