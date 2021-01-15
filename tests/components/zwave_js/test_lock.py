@@ -66,7 +66,7 @@ async def test_door_lock(hass, client, lock_schlage_be469, integration):
         data={
             "source": "node",
             "event": "value updated",
-            "nodeId": 98,
+            "nodeId": 20,
             "args": {
                 "commandClassName": "Door Lock",
                 "commandClass": 98,
