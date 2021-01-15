@@ -7,8 +7,10 @@ from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
     CONF_REVERSE,
@@ -23,19 +25,11 @@ from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_SYSTEM_ID): int,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-    }
-)
-
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+    Data has the keys from schema with values provided by the user.
     """
     somfy_mylink = SomfyMyLinkSynergy(
         data[CONF_SYSTEM_ID], data[CONF_HOST], data[CONF_PORT]
@@ -47,6 +41,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise CannotConnect from ex
 
     if not status_info or "error" in status_info:
+        _LOGGER.debug("Auth error: %s", status_info)
         raise InvalidAuth
 
     return {"title": f"MyLink {data[CONF_HOST]}"}
@@ -58,32 +53,59 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_ASSUMED
 
+    def __init__(self):
+        """Initialize the somfy_mylink flow."""
+        self.host = None
+        self.mac = None
+        self.ip_address = None
+
+    async def async_step_dhcp(self, dhcp_discovery):
+        """Handle dhcp discovery."""
+        if self._host_already_configured(dhcp_discovery[IP_ADDRESS]):
+            return self.async_abort(reason="already_configured")
+
+        formatted_mac = format_mac(dhcp_discovery[MAC_ADDRESS])
+        await self.async_set_unique_id(format_mac(formatted_mac))
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: dhcp_discovery[IP_ADDRESS]}
+        )
+        self.host = dhcp_discovery[HOSTNAME]
+        self.mac = formatted_mac
+        self.ip_address = dhcp_discovery[IP_ADDRESS]
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {"ip": self.ip_address, "mac": self.mac}
+        return await self.async_step_user()
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
 
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-            )
+        if user_input is not None:
+            if self._host_already_configured(user_input[CONF_HOST]):
+                return self.async_abort(reason="already_configured")
 
-        if self._host_already_configured(user_input[CONF_HOST]):
-            return self.async_abort(reason="already_configured")
-
-        try:
-            info = await validate_input(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return self.async_create_entry(title=info["title"], data=user_input)
+            try:
+                info = await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=self.ip_address): str,
+                    vol.Required(CONF_SYSTEM_ID): str,
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                }
+            ),
+            errors=errors,
         )
 
     async def async_step_import(self, user_input):

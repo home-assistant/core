@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.somfy_mylink.const import (
     CONF_DEFAULT_REVERSE,
     CONF_ENTITY_CONFIG,
@@ -41,7 +42,7 @@ async def test_form_user(hass):
             {
                 CONF_HOST: "1.1.1.1",
                 CONF_PORT: 1234,
-                CONF_SYSTEM_ID: 456,
+                CONF_SYSTEM_ID: "456",
             },
         )
         await hass.async_block_till_done()
@@ -51,7 +52,7 @@ async def test_form_user(hass):
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: 1234,
-        CONF_SYSTEM_ID: 456,
+        CONF_SYSTEM_ID: "456",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -86,7 +87,7 @@ async def test_form_user_already_configured(hass):
             {
                 CONF_HOST: "1.1.1.1",
                 CONF_PORT: 1234,
-                CONF_SYSTEM_ID: 456,
+                CONF_SYSTEM_ID: "456",
             },
         )
         await hass.async_block_till_done()
@@ -195,7 +196,7 @@ async def test_form_import_already_exists(hass):
             data={
                 CONF_HOST: "1.1.1.1",
                 CONF_PORT: 1234,
-                CONF_SYSTEM_ID: 456,
+                CONF_SYSTEM_ID: "456",
             },
         )
         await hass.async_block_till_done()
@@ -224,7 +225,7 @@ async def test_form_invalid_auth(hass):
             {
                 CONF_HOST: "1.1.1.1",
                 CONF_PORT: 1234,
-                CONF_SYSTEM_ID: 456,
+                CONF_SYSTEM_ID: "456",
             },
         )
 
@@ -247,7 +248,7 @@ async def test_form_cannot_connect(hass):
             {
                 CONF_HOST: "1.1.1.1",
                 CONF_PORT: 1234,
-                CONF_SYSTEM_ID: 456,
+                CONF_SYSTEM_ID: "456",
             },
         )
 
@@ -270,7 +271,7 @@ async def test_form_unknown_error(hass):
             {
                 CONF_HOST: "1.1.1.1",
                 CONF_PORT: 1234,
-                CONF_SYSTEM_ID: 456,
+                CONF_SYSTEM_ID: "456",
             },
         )
 
@@ -284,7 +285,7 @@ async def test_options_not_loaded(hass):
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.1.1.1", CONF_PORT: 12, CONF_SYSTEM_ID: 46},
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 12, CONF_SYSTEM_ID: "46"},
     )
     config_entry.add_to_hass(hass)
 
@@ -304,7 +305,7 @@ async def test_options_with_targets(hass, reversed):
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.1.1.1", CONF_PORT: 12, CONF_SYSTEM_ID: 46},
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 12, CONF_SYSTEM_ID: "46"},
     )
     config_entry.add_to_hass(hass)
 
@@ -363,7 +364,7 @@ async def test_form_import_with_entity_config_modify_options(hass, reversed):
         data={
             CONF_HOST: "1.1.1.1",
             CONF_PORT: 1234,
-            CONF_SYSTEM_ID: 456,
+            CONF_SYSTEM_ID: "456",
             CONF_DEFAULT_REVERSE: True,
             CONF_ENTITY_CONFIG: {"cover.xyz": {CONF_REVERSE: False}},
         },
@@ -422,3 +423,84 @@ async def test_form_import_with_entity_config_modify_options(hass, reversed):
         }
 
         await hass.async_block_till_done()
+
+
+async def test_form_user_already_configured_from_dhcp(hass):
+    """Test we abort if already configured from dhcp."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 12, CONF_SYSTEM_ID: 46},
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.somfy_mylink.config_flow.SomfyMyLinkSynergy.status_info",
+        return_value={"any": "data"},
+    ), patch(
+        "homeassistant.components.somfy_mylink.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.somfy_mylink.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={
+                IP_ADDRESS: "1.1.1.1",
+                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                HOSTNAME: "somfy_eeff",
+            },
+        )
+
+        await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+    assert len(mock_setup.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_dhcp_discovery(hass):
+    """Test we can process the discovery from dhcp."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data={
+            IP_ADDRESS: "1.1.1.1",
+            MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+            HOSTNAME: "somfy_eeff",
+        },
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.somfy_mylink.config_flow.SomfyMyLinkSynergy.status_info",
+        return_value={"any": "data"},
+    ), patch(
+        "homeassistant.components.somfy_mylink.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.somfy_mylink.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 1234,
+                CONF_SYSTEM_ID: "456",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "MyLink 1.1.1.1"
+    assert result2["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: 1234,
+        CONF_SYSTEM_ID: "456",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
