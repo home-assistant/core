@@ -17,10 +17,7 @@ from aiounifi.events import (
 
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.components.device_tracker.const import (
-    ATTR_HOST_NAME,
-    SOURCE_TYPE_ROUTER,
-)
+from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -241,10 +238,22 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
         attributes["is_wired"] = self.is_wired
 
-        if "hostname" in attributes:
-            attributes[ATTR_HOST_NAME] = attributes["hostname"]
-
         return attributes
+
+    @property
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return self.client.raw.get("ip")
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self.client.raw.get("mac")
+
+    @property
+    def hostname(self) -> str:
+        """Return hostname of the device."""
+        return self.client.raw.get("hostname")
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
