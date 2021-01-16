@@ -1,7 +1,7 @@
 """Test the roon config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.roon.const import DOMAIN
 
 
@@ -76,7 +76,6 @@ async def test_successful_discovery_and_auth(hass):
         return_value=True,
     ):
 
-        await setup.async_setup_component(hass, "persistent_notification", {})
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -116,7 +115,6 @@ async def test_unsuccessful_discovery_user_form_and_auth(hass):
         return_value=True,
     ):
 
-        await setup.async_setup_component(hass, "persistent_notification", {})
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -165,7 +163,6 @@ async def test_successful_discovery_no_auth(hass):
         return_value=True,
     ):
 
-        await setup.async_setup_component(hass, "persistent_notification", {})
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -200,7 +197,6 @@ async def test_unexpected_exception(hass):
         return_value=True,
     ):
 
-        await setup.async_setup_component(hass, "persistent_notification", {})
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )

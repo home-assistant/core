@@ -47,6 +47,11 @@ class RoonHub:
 
     async def authenticate(self, host, servers):
         """Authenticate with one or more roon servers."""
+
+        def stop_apis(apis):
+            for api in apis:
+                api.stop()
+
         token = None
         core_id = None
         secs = 0
@@ -71,8 +76,7 @@ class RoonHub:
 
             await asyncio.sleep(AUTHENTICATE_TIMEOUT)
 
-        for api in apis:
-            await self._hass.async_add_executor_job(api.stop)
+        await self._hass.async_add_executor_job(stop_apis, apis)
 
         return (token, core_id)
 
