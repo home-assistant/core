@@ -123,7 +123,7 @@ CONDITIONS_MAP = {
         "25",  # Muy nuboso con lluvia
         "25n",  # Muy nuboso con lluvia (de noche)
         "26",  # Cubierto con lluvia
-        "26n"  # Cubierto con lluvia (de noche)
+        "26n",  # Cubierto con lluvia (de noche)
         "43",  # Intervalos nubosos con lluvia escasa
         "43n",  # Intervalos nubosos con lluvia escasa (de noche)
         "44",  # Nuboso con lluvia escasa
