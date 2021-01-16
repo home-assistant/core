@@ -378,7 +378,7 @@ async def test_update_address(hass):
             data={
                 "host": "2.3.4.5",
                 "port": 80,
-                "hostname": "name",
+                "name": "name",
                 "properties": {"macaddress": MAC},
             },
             context={"source": SOURCE_ZEROCONF},

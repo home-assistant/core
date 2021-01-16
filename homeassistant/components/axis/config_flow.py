@@ -29,15 +29,6 @@ from .device import get_device
 from .errors import AuthenticationRequired, CannotConnect
 
 AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f"}
-
-CONFIG_FILE = "axis.conf"
-
-EVENT_TYPES = ["motion", "vmd3", "pir", "sound", "daynight", "tampering", "input"]
-
-PLATFORMS = ["camera"]
-
-AXIS_INCLUDE = EVENT_TYPES + PLATFORMS
-
 DEFAULT_PORT = 80
 
 
@@ -58,6 +49,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         self.device_config = {}
         self.discovery_schema = {}
         self.import_schema = {}
+        self.serial = None
 
     async def async_step_user(self, user_input=None):
         """Handle a Axis config flow start.
@@ -76,7 +68,8 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
                     password=user_input[CONF_PASSWORD],
                 )
 
-                await self.async_set_unique_id(format_mac(device.vapix.serial_number))
+                self.serial = device.vapix.serial_number
+                await self.async_set_unique_id(format_mac(self.serial))
 
                 self._abort_if_unique_id_configured(
                     updates={
@@ -135,7 +128,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
         self.device_config[CONF_NAME] = name
 
-        title = f"{model} - {self.unique_id}"
+        title = f"{model} - {self.serial}"
         return self.async_create_entry(title=title, data=self.device_config)
 
     async def async_step_dhcp(self, discovery_info: dict):
@@ -155,7 +148,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             {
                 CONF_HOST: discovery_info[CONF_HOST],
                 CONF_MAC: format_mac(discovery_info["properties"]["macaddress"]),
-                CONF_NAME: discovery_info["hostname"][:-7],
+                CONF_NAME: discovery_info["name"].split(".", 1)[0],
                 CONF_PORT: discovery_info[CONF_PORT],
             }
         )
