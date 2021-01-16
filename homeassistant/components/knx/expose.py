@@ -57,6 +57,7 @@ class KNXExposeSensor:
         self.expose_default = default
         self.address = address
         self.device = None
+        self._remove_listener = None
 
     @callback
     def async_register(self):
@@ -71,9 +72,16 @@ class KNXExposeSensor:
             group_address=self.address,
             value_type=self.type,
         )
-        async_track_state_change_event(
+        self._remove_listener = async_track_state_change_event(
             self.hass, [self.entity_id], self._async_entity_changed
         )
+
+    def shutdown(self) -> None:
+        """Prepare for deletion."""
+        if self._remove_listener is not None:
+            self._remove_listener()
+        if self.device is not None:
+            self.device.shutdown()
 
     async def _async_entity_changed(self, event):
         """Handle entity change."""
@@ -132,3 +140,8 @@ class KNXExposeTime:
             localtime=True,
             group_address=self.address,
         )
+
+    def shutdown(self):
+        """Prepare for deletion."""
+        if self.device is not None:
+            self.device.shutdown()

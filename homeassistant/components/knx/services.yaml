@@ -18,3 +18,25 @@ event_register:
       example: "1/1/0"
     remove:
       description: "Optional. If `True` the group address will be removed. Defaults to `False`."
+exposure_register:
+  description: "Add or remove exposures to KNX bus. Only exposures added with this service can be removed."
+  fields:
+    address:
+      description: "Required. Group address state or attribute updates will be sent to. GroupValueRead requests will be answered. Per address only one exposure can be registered."
+      example: "1/1/0"
+    type:
+      description: "Required. Telegrams will be encoded as given DPT. 'binary' and all Knx sensor types are valid values (see https://www.home-assistant.io/integrations/sensor.knx)"
+      example: "percentU8"
+    entity_id:
+      description: "Required. Entity id to be exposed."
+      example: "light.kitchen"
+      required: true
+    attribute:
+      description: "Optional. Attribute of the entity that shall be sent to the KNX bus. If not set the state will be sent. Eg. for a light the state is eigther “on” or “off” - with attribute you can expose its “brightness”."
+      example: "brightness"
+      required: false
+    default:
+      description: "Optional. Default value to send to the bus if the state or attribute value is None. Eg. a light with state “off” has no brightness attribute so a default value of 0 could be used. If not set (or None) no value would be sent to the bus and a GroupReadRequest to the address would return the last known value."
+      example: "0"
+    remove:
+      description: "Optional. If `True` the exposure will be removed. Only `address` is required for removal."
