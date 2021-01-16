@@ -60,7 +60,7 @@ from .const import (
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
-    HEATBEAT_MISSED_SIGNAL,
+    HEARTBEAT_MISSED_SIGNAL,
     LOGGER,
     UNIFI_WIRELESS_CLIENTS,
 )
@@ -407,7 +407,7 @@ class UniFiController:
         for unique_id, heartbeat_expire_time in self._heartbeat_time.items():
             if now > heartbeat_expire_time:
                 async_dispatcher_send(
-                    self.hass, f"{HEATBEAT_MISSED_SIGNAL}_{unique_id}"
+                    self.hass, f"{HEARTBEAT_MISSED_SIGNAL}_{unique_id}"
                 )
 
     @staticmethod

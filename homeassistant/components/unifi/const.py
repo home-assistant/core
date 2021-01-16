@@ -35,4 +35,4 @@ DEFAULT_DETECTION_TIME = 300
 
 ATTR_MANUFACTURER = "Ubiquiti Networks"
 
-HEATBEAT_MISSED_SIGNAL = "unifi_heartbeat_missed"
+HEARTBEAT_MISSED_SIGNAL = "unifi_heartbeat_missed"
