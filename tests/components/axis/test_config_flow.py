@@ -376,10 +376,15 @@ async def test_zeroconf_flow(hass):
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN,
         data={
-            CONF_HOST: "1.2.3.4",
-            CONF_PORT: 80,
-            "hostname": "name",
-            "properties": {"macaddress": MAC},
+            "host": "1.2.3.4",
+            "port": 80,
+            "hostname": f"axis-{MAC.lower()}.local.",
+            "type": "_axis-video._tcp.local.",
+            "name": f"AXIS M1065-L - {MAC}._axis-video._tcp.local.",
+            "properties": {
+                "_raw": {"macaddress": MAC.encode()},
+                "macaddress": MAC,
+            },
         },
         context={"source": SOURCE_ZEROCONF},
     )
@@ -424,7 +429,7 @@ async def test_zeroconf_flow_already_configured(hass):
         data={
             CONF_HOST: "1.2.3.4",
             CONF_PORT: 80,
-            "hostname": "name",
+            "name": "name",
             "properties": {"macaddress": MAC},
         },
         context={"source": SOURCE_ZEROCONF},
@@ -459,7 +464,7 @@ async def test_zeroconf_flow_updated_configuration(hass):
             data={
                 CONF_HOST: "2.3.4.5",
                 CONF_PORT: 8080,
-                "hostname": "name",
+                "name": "name",
                 "properties": {"macaddress": MAC},
             },
             context={"source": SOURCE_ZEROCONF},
@@ -486,7 +491,7 @@ async def test_zeroconf_flow_ignore_non_axis_device(hass):
         data={
             CONF_HOST: "169.254.3.4",
             CONF_PORT: 80,
-            "hostname": "",
+            "name": "",
             "properties": {"macaddress": "01234567890"},
         },
         context={"source": SOURCE_ZEROCONF},
@@ -503,7 +508,7 @@ async def test_zeroconf_flow_ignore_link_local_address(hass):
         data={
             CONF_HOST: "169.254.3.4",
             CONF_PORT: 80,
-            "hostname": "",
+            "name": "",
             "properties": {"macaddress": MAC},
         },
         context={"source": SOURCE_ZEROCONF},

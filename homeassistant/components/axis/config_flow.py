@@ -29,15 +29,6 @@ from .device import get_device
 from .errors import AuthenticationRequired, CannotConnect
 
 AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f"}
-
-CONFIG_FILE = "axis.conf"
-
-EVENT_TYPES = ["motion", "vmd3", "pir", "sound", "daynight", "tampering", "input"]
-
-PLATFORMS = ["camera"]
-
-AXIS_INCLUDE = EVENT_TYPES + PLATFORMS
-
 DEFAULT_PORT = 80
 
 
@@ -155,7 +146,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             {
                 CONF_HOST: discovery_info[CONF_HOST],
                 CONF_MAC: format_mac(discovery_info["properties"]["macaddress"]),
-                CONF_NAME: discovery_info["hostname"][:-7],
+                CONF_NAME: discovery_info["name"].split(".", 1)[0],
                 CONF_PORT: discovery_info[CONF_PORT],
             }
         )
