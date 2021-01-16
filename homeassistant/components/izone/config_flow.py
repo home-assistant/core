@@ -16,11 +16,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _async_has_devices(hass):
+    async def dispatch_discovered(_):
+        controller_ready.set()
 
     controller_ready = asyncio.Event()
-    async_dispatcher_connect(
-        hass, DISPATCH_CONTROLLER_DISCOVERED, lambda x: controller_ready.set()
-    )
+    async_dispatcher_connect(hass, DISPATCH_CONTROLLER_DISCOVERED, dispatch_discovered)
 
     disco = await async_start_discovery_service(hass)
 
