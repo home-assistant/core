@@ -28,19 +28,30 @@ class MySensorsDevice:
 
     def __init__(self, gateway, node_id, child_id, value_type):
         """Set up the MySensors device."""
-        child = gateway.sensors[node_id].children[child_id]
-        self.child_type = child.type
         self.gateway: BaseAsyncGateway = gateway
         self.node_id: int = node_id
         self.child_id: int = child_id
         self.value_type: int = value_type # value_type as int. string variant can be looked up in gateway consts
+        self.child_type = self._mysensors_childsensor.type
         self._values = {}
         self._update_scheduled = False
         self.hass = None
 
     @property
+    def dev_id(self) -> DevId:
+        return self.gateway_id, self.node_id, self.child_id, self.value_type
+
+    @property
     def gateway_id(self) -> str:
         return self.gateway.unique_id
+
+    @property
+    def _mysensors_sensor(self) -> Sensor:
+        return self.gateway.sensors[self.node_id]
+
+    @property
+    def _mysensors_childsensor(self) -> ChildSensor:
+        return self._mysensors_sensor.children[self.child_id]
 
     @property
     def sketch_name(self) -> str:
@@ -171,17 +182,15 @@ class MySensorsEntity(MySensorsDevice, Entity):
 
     async def async_added_to_hass(self):
         """Register update callback."""
-        dev_id = gateway_id, self.node_id, self.child_id, self.value_type
-        gateway_id = self.gateway.unique_id
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, CHILD_CALLBACK.format(*dev_id), self.async_update_callback
+                self.hass, CHILD_CALLBACK.format(*self.dev_id), self.async_update_callback
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                NODE_CALLBACK.format(gateway_id, self.node_id),
+                NODE_CALLBACK.format(self.gateway_id, self.node_id),
                 self.async_update_callback,
             )
         )
