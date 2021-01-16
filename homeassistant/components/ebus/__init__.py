@@ -1,20 +1,24 @@
 """EBUS Integration."""
 import asyncio
 import collections
+import copy
 import logging
 from typing import Dict
 
 from pyebus import CircuitMap, Ebus, FieldDef, get_icon
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     API,
+    CONF_CIRCUITMAP,
     CONF_MESSAGES,
+    CONF_MSGDEFCODES,
+    DEFAULT_CIRCUITMAP,
     DOMAIN,
     PRIO,
     TTL,
@@ -34,7 +38,8 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set Up A Config Entry."""
     undo_listener = config_entry.add_update_listener(update_listener)
-    api = EbusApi(hass, config_entry)
+    api = EbusApi(hass)
+    api.configure(config_entry)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {
@@ -42,12 +47,14 @@ async def async_setup_entry(hass, config_entry):
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    await api.async_init()
+    api.start()
 
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, api.async_stop)
 
     return True
 
@@ -64,6 +71,7 @@ async def async_unload_entry(hass, config_entry):
     )
 
     hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
+    await hass.data[DOMAIN][config_entry.entry_id][API].async_stop()
 
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
@@ -76,55 +84,74 @@ async def update_listener(hass, config_entry):
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
+async def _await_cancel(task):
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
+
+
 class EbusApi:
     """EBUS API."""
 
-    def __init__(self, hass: HomeAssistantType, entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistantType):
         """EBUS API."""
         self._hass = hass
-        self._entry = entry
         self._data = {}
-        self._listener = collections.defaultdict(list)
+        self._fieldlistener = collections.defaultdict(list)
+        self._ebussetter = None
+        self._ebus = None
+        self.circuitmap = None
+        self._observer = None
+        self._tasks = []
 
+    def configure(self, entry: ConfigEntry):
+        """Configure."""
+        # ebus
         host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
-        self.ebus = Ebus(host, port)
-        self.circuitmap = CircuitMap(
-            {
-                "broadcast": "*",
-                "bai": "Heater",
-                "bc": "Burner",
-                "hc": "Heating",
-                "mc": "Mixer",
-                "hwc": "Water",
-                "cc": "Circulation",
-                "sc": "Solar",
-            }
-        )
+        messages = entry.data[CONF_MESSAGES]
+        msgdefcodes = entry.data[CONF_MSGDEFCODES]
+        ebus = Ebus(host, port)
+        ebus.msgdefcodes = msgdefcodes
+        ebus.decode_msgdefcodes()
+        if messages:
+            ebus.msgdefs = ebus.msgdefs.resolve(messages)
+        self._ebus = ebus
+        self._ebussetter = copy.copy(ebus)
+
+        # circuitmap
+        circuitmap = entry.data.get(CONF_CIRCUITMAP, {})
+        self.circuitmap = CircuitMap(DEFAULT_CIRCUITMAP)
+        self.circuitmap.update(circuitmap)
 
     @property
     def ident(self):
         """Ident."""
-        return f"{self.ebus.host}:{self.ebus.port}"
+        return f"{self._ebus.host}:{self._ebus.port}"
 
-    async def async_init(self):
-        """Initialize."""
-        ebus = self.ebus
-        async for _ in self.ebus.wait_scancompleted():
-            pass
-        await ebus.load_msgdefs()
-        messages = self._entry.data[CONF_MESSAGES]
-        if messages:
-            ebus.msgdefs = ebus.msgdefs.resolve(messages)
-        self._hass.async_create_task(self.observe())
+    @property
+    def msgdefs(self):
+        """Message Definitions."""
+        return self._ebus.msgdefs
 
-    async def observe(self):
+    def start(self):
+        """Start."""
+        self._tasks.append(asyncio.create_task(self.async_observe()))
+
+    async def async_stop(self, **kwargs):
+        """Stop."""
+        asyncio.gather(*[_await_cancel(task) for task in self._tasks])
+        self._tasks.clear()
+
+    async def async_observe(self):
         """Observe EBUS."""
         data = self._data
         broken = False
         while True:
             try:
-                async for msg in self.ebus.observe(
+                async for msg in self._ebus.async_observe(
                     setprio=True, defaultprio=PRIO, ttl=TTL
                 ):
                     broken = False
@@ -146,18 +173,25 @@ class EbusApi:
 
     def notify(self, fielddef):
         """Notify about field update."""
-        for entity in self._listener[fielddef.ident]:
+        for entity in self._fieldlistener[fielddef.ident]:
             entity.async_write_ha_state()
+
+    async def async_set_field(self, fielddef, value):
+        """Set Field."""
+        msgdefs = self._ebussetter.msgdefs.resolve([fielddef.ident])
+        msgdef = tuple(msgdefs)[0]
+        if self._ebussetter:
+            await self._ebussetter.async_write(msgdef, value)
 
     @callback
     def subscribe(self, entity, fielddef):
         """Subscribe an entity from API fetches."""
-        self._listener[fielddef.ident].append(entity)
+        self._fieldlistener[fielddef.ident].append(entity)
 
         @callback
         def unsubscribe() -> None:
             """Unsubscribe an entity from API fetches (when disable)."""
-            self._listener[fielddef.ident].remove(entity)
+            self._fieldlistener[fielddef.ident].remove(entity)
 
         return unsubscribe
 
@@ -177,7 +211,7 @@ class EbusEntity(Entity):
         """EBUS Entity."""
         super().__init__()
         self._api = api
-        self._unique_id = f"{api.ident}-{ident}"
+        self._unique_id = f"{api.ident}/{ident}"
 
     @property
     def unique_id(self) -> str:
@@ -210,10 +244,9 @@ class EbusFieldEntity(EbusEntity):
     @property
     def name(self) -> str:
         """Return the name."""
-        fielddef = self._fielddef
-        msgdef = fielddef.parent
+        msgdef = self._fielddef.parent
         circuit = self._api.circuitmap.get_humanname(msgdef.circuit)
-        return f"{circuit} {msgdef.name} {fielddef.name}"
+        return f"{circuit} {msgdef.name} {self._fielddef.name}"
 
     @property
     def icon(self) -> str:
@@ -229,6 +262,16 @@ class EbusFieldEntity(EbusEntity):
     def device_class(self) -> str:
         """Return the class of this device."""
         return self._device_class
+
+    @property
+    def device_info(self) -> Dict[str, any]:
+        """Return the device information."""
+        msgdef = self._fielddef.parent
+        circuit = self._api.circuitmap.get_humanname(msgdef.circuit)
+        return {
+            "identifiers": {(DOMAIN, self._api.ident, msgdef.circuit)},
+            "name": f"EBUS - {circuit}",
+        }
 
     async def async_added_to_hass(self):
         """Register state update callback."""

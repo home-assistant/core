@@ -9,14 +9,15 @@
             "user": {
                 "data": {
                     "host": "Host",
+                    "messages": "Messages",
                     "port": "Port"
                 },
-                "description": "Set up EBUS integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/ebus.",
-                "title": "EBUS"
+                "description": "Set up EBUS integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/ebus.\n\nOptionally you can configure the monitored messages. Format: CIRCUIT/MESSAGE or CIRCUIT/MESSAGE/FIELD. Separated by semicolon (;). Wildcards and Placeholder (?) are supported. All by default.",
+                "title": "EBUS - Connect"
             },
             "wait": {
-                "description": "Congratulations. EBUS is working.\n\nEBUS will be scanned for messages. This takes some time. Please be patient.",
-                "title": "EBUS"
+                "description": "Congratulations. EBUS connection is working.\n\nEBUS will now be scanned for messages. This takes time. Please be patient.",
+                "title": "EBUS - Scan"
             }
         }
     }

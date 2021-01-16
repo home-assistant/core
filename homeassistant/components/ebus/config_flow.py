@@ -10,7 +10,16 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .const import CONF_MESSAGES, DEFAULT_HOST, DEFAULT_PORT, DOMAIN, PRIO, TTL
+from .const import (
+    CONF_MESSAGES,
+    CONF_MSGDEFCODES,
+    DEFAULT_HOST,
+    DEFAULT_MESSAGES,
+    DEFAULT_PORT,
+    DOMAIN,
+    PRIO,
+    TTL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +44,7 @@ class EbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self.host = DEFAULT_HOST
         self.port = DEFAULT_PORT
+        self.messages = DEFAULT_MESSAGES
         self.ebus = None
 
     async def async_step_user(self, user_input=None):
@@ -45,13 +55,15 @@ class EbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if host_valid(user_input[CONF_HOST]):
                 self.host = user_input[CONF_HOST]
                 self.port = user_input[CONF_PORT]
+                self.messages = user_input[CONF_MESSAGES]
                 self.ebus = Ebus(self.host, self.port, timeout=3)
                 try:
                     is_online = await self.ebus.is_online()
-                    async for _ in self.ebus.wait_scancompleted():
-                        _LOGGER.info("scanning")
+                    await self.ebus.wait_scancompleted()
                     if is_online:
-                        await self.async_set_unique_id(repr(self.ebus))
+                        await self.async_set_unique_id(
+                            f"{self.ebus.host}:{self.ebus.port}"
+                        )
                         self._abort_if_unique_id_configured()
                     else:
                         errors[CONF_HOST] = "ebus_error"
@@ -75,6 +87,7 @@ class EbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST, default=self.host): str,
                     vol.Required(CONF_PORT, default=self.port): str,
+                    vol.Optional(CONF_MESSAGES, default=self.messages): str,
                 }
             ),
             errors=errors,
@@ -86,9 +99,9 @@ class EbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             messages = []
 
-            async for _ in self.ebus.wait_scancompleted():
-                pass
             await ebus.load_msgdefs()
+            if self.messages:
+                ebus.msgdefs = ebus.msgdefs.resolve(self.messages.split(";"))
             for msgdef in ebus.msgdefs:
                 # only list readable messages
                 if msgdef.read:
@@ -120,6 +133,7 @@ class EbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: self.host,
                 CONF_PORT: self.port,
                 CONF_MESSAGES: messages,
+                CONF_MSGDEFCODES: self.ebus.msgdefcodes,
             }
             return self.async_create_entry(title=title, data=data)
         return self.async_show_form(step_id="wait", data_schema=vol.Schema({}))
