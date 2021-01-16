@@ -1221,50 +1221,6 @@ async def test_no_restore_state(hass):
     assert state.state == HVAC_MODE_OFF
 
 
-async def test_turn_on_while_restarting(hass):
-    """Ensure that restored state is coherent with real situation.
-
-    Thermostat status must follow the heater status.
-    """
-    # thermostat previous state OFF
-    mock_restore_cache(
-        hass,
-        (
-            State(
-                "climate.test_thermostat",
-                HVAC_MODE_OFF,
-                {ATTR_TEMPERATURE: "18", ATTR_PRESET_MODE: PRESET_NONE},
-            ),
-        ),
-    )
-
-    hass.state = CoreState.starting
-
-    # switch on heater before thermostat restart
-    _setup_switch(hass, True)
-    assert STATE_ON == hass.states.get(ENT_SWITCH).state
-
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            "climate": {
-                "platform": "generic_thermostat",
-                "name": "test_thermostat",
-                "heater": ENT_SWITCH,
-                "ac_mode": True,
-                "target_sensor": ENT_SENSOR,
-                "target_temp": 20,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    state = hass.states.get("climate.test_thermostat")
-    # NO initial_hvac_mode -> thermostat status must be ON
-    assert state.state == HVAC_MODE_COOL
-    assert STATE_ON == hass.states.get(ENT_SWITCH).state
-
-
 async def test_initial_hvac_off_force_heater_off(hass):
     """Ensure that restored state is coherent with real situation.
 
