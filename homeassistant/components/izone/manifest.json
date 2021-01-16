@@ -2,7 +2,7 @@
   "domain": "izone",
   "name": "iZone",
   "documentation": "https://www.home-assistant.io/integrations/izone",
-  "requirements": ["python-izone==1.1.2"],
+  "requirements": ["python-izone==1.1.3"],
   "codeowners": ["@Swamp-Ig"],
   "config_flow": true
 }
