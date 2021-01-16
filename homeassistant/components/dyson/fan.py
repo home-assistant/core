@@ -9,7 +9,6 @@ from libpurecool.dyson_pure_state_v2 import DysonPureCoolV2State
 import voluptuous as vol
 
 from homeassistant.components.fan import (
-    DOMAIN as FAN_DOMAIN,
     SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
@@ -185,7 +184,7 @@ class DysonFanEntity(DysonEntity, FanEntity):
 
     def __init__(self, device, state_type):
         """Initialize the fan."""
-        super().__init__(device, state_type, FAN_DOMAIN)
+        super().__init__(device, state_type)
 
     @property
     def night_mode(self):

@@ -4,10 +4,7 @@ import logging
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_state_v2 import DysonEnvironmentalSensorV2State
 
-from homeassistant.components.air_quality import (
-    DOMAIN as AIR_QUALITY_DOMAIN,
-    AirQualityEntity,
-)
+from homeassistant.components.air_quality import AirQualityEntity
 
 from . import DYSON_DEVICES, DysonEntity
 
@@ -47,7 +44,7 @@ class DysonAirSensor(DysonEntity, AirQualityEntity):
 
     def __init__(self, device):
         """Create a new generic air quality Dyson sensor."""
-        super().__init__(device, DysonEnvironmentalSensorV2State, AIR_QUALITY_DOMAIN)
+        super().__init__(device, DysonEnvironmentalSensorV2State)
         self._old_value = None
 
     def on_message(self, message):

@@ -95,7 +95,7 @@ class DysonSensor(DysonEntity, Entity):
 
     def __init__(self, device, sensor_type):
         """Create a new generic Dyson sensor."""
-        super().__init__(device, None, f"sensor/{sensor_type}")
+        super().__init__(device, None)
         self._old_value = None
         self._sensor_type = sensor_type
 

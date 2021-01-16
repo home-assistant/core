@@ -16,7 +16,7 @@ from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
 from libpurecool.dyson_pure_state import DysonPureHotCoolState
 from libpurecool.dyson_pure_state_v2 import DysonPureHotCoolV2State
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOAMIN, ClimateEntity
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
@@ -93,7 +93,7 @@ class DysonClimateEntity(DysonEntity, ClimateEntity):
 
     def __init__(self, device, state_type):
         """Initialize the fan."""
-        super().__init__(device, state_type, CLIMATE_DOAMIN)
+        super().__init__(device, state_type)
 
     @property
     def supported_features(self):

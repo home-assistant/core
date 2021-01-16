@@ -114,11 +114,10 @@ def setup(hass, config):
 class DysonEntity(Entity):
     """Representation of a Dyson entity."""
 
-    def __init__(self, device, state_type, entity_type):
+    def __init__(self, device, state_type):
         """Initialize the entity."""
         self._device = device
         self._state_type = state_type
-        self._entity_type = entity_type
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
@@ -128,8 +127,7 @@ class DysonEntity(Entity):
         """Filter new messages received."""
         if self._state_type is None or isinstance(message, self._state_type):
             _LOGGER.debug(
-                "Message received for %s device %s : %s",
-                self._entity_type,
+                "Message received for device %s : %s",
                 self.name,
                 message,
             )

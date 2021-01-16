@@ -5,7 +5,6 @@ from libpurecool.const import Dyson360EyeMode, PowerMode
 from libpurecool.dyson_360_eye import Dyson360Eye
 
 from homeassistant.components.vacuum import (
-    DOMAIN as VACUUM_DOMAIN,
     SUPPORT_BATTERY,
     SUPPORT_FAN_SPEED,
     SUPPORT_PAUSE,
@@ -60,7 +59,7 @@ class Dyson360EyeDevice(DysonEntity, VacuumEntity):
 
     def __init__(self, device):
         """Dyson 360 Eye robot vacuum device."""
-        super().__init__(device, None, VACUUM_DOMAIN)
+        super().__init__(device, None)
 
     @property
     def status(self):
