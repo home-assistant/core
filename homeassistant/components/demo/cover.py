@@ -5,10 +5,10 @@ from homeassistant.components.cover import (
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
-    CoverEntity,
     SUPPORT_OPEN_TILT,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP_TILT,
+    CoverEntity,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_utc_time_change
