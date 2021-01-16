@@ -1,8 +1,9 @@
 """Config flow for Lutron Caseta."""
+import asyncio
 import logging
 import os
 
-from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, pair
+from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, async_pair
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
@@ -87,10 +88,8 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             assets = None
             try:
-                assets = await self.hass.async_add_executor_job(
-                    pair, self.data[CONF_HOST]
-                )
-            except OSError:
+                assets = await async_pair(self.data[CONF_HOST])
+            except (asyncio.TimeoutError, OSError):
                 errors["base"] = "cannot_connect"
 
             if not errors:
