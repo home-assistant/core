@@ -1,5 +1,6 @@
 """The tests for UVC camera module."""
 from datetime import datetime
+import asyncio
 import logging
 import socket
 import unittest
@@ -10,11 +11,67 @@ from uvcclient import camera
 
 from homeassistant.components.camera import SUPPORT_STREAM
 from homeassistant.components.uvc import camera as uvc
+from homeassistant.components.uvc.const import DOMAIN
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class TestUVCSetup(unittest.TestCase):
+    """Test the UVC camera platform."""
+
+    def setUp(self):
+        """Set up things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+        self.addCleanup(self.hass.stop)
+        self.coordinator = DataUpdateCoordinator(
+            self.hass, _LOGGER, name="unifi-video-test"
+        )
+
+    @mock.patch("uvcclient.nvr.UVCRemote")
+    @mock.patch.object(uvc, "UnifiVideoCamera")
+    def test_setup_full_config(self, mock_uvc, mock_remote):
+        """Test the setup with full configuration."""
+        config = {
+            "platform": DOMAIN,
+            "nvr": "foo",
+            "password": "bar",
+            "port": 123,
+            "key": "secret",
+        }
+
+        with mock.patch.object(self.hass.config_entries.flow, "async_init") as init:
+            assert setup_component(self.hass, "camera", {"camera": config})
+            self.hass.block_till_done()
+            assert init.call_count == 1
+
+    @mock.patch("uvcclient.nvr.UVCRemote")
+    @mock.patch.object(uvc, "UnifiVideoCamera")
+    def test_setup_config(self, mock_uvc, mock_remote):
+        """Test component init."""
+        self.hass.data[DOMAIN] = {}
+        self.hass.data[DOMAIN]["coordinator"] = self.coordinator
+        self.hass.data[DOMAIN]["camera_id_field"] = "id"
+        self.hass.data[DOMAIN]["nvrconn"] = mock_uvc
+        self.hass.data[DOMAIN]["camera_password"] = "password"
+
+        self.coordinator.data = {
+            "uuid-1": {"id": "uuid-1", "name": "camera-1"},
+            "uuid-2": {"id": "uuid-2", "name": "camera-2"},
+        }
+
+        add_entities = mock.MagicMock()
+        with mock.patch.object(entity_platform, "current_platform"):
+            assert asyncio.run_coroutine_threadsafe(
+                uvc.async_setup_entry(self.hass, {}, add_entities), self.hass.loop
+            ).result()
+            self.hass.block_till_done()
+
+        assert add_entities.call_count == 1
 
 
 class TestUnifiVideoCamera(unittest.TestCase):

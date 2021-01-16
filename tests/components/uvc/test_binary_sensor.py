@@ -1,15 +1,49 @@
 """The tests for UVC camera module."""
+import asyncio
 import logging
 import unittest
+from unittest import mock
 
 from homeassistant.components.binary_sensor import DEVICE_CLASS_CONNECTIVITY
 from homeassistant.components.uvc import binary_sensor as sensor
+from homeassistant.components.uvc.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from tests.common import get_test_home_assistant
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class TestUVCBinarySensorSetup(unittest.TestCase):
+    """Test the UVC camera platform."""
+
+    def setUp(self):
+        """Set up things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+        self.addCleanup(self.hass.stop)
+        self.coordinator = DataUpdateCoordinator(
+            self.hass, _LOGGER, name="unifi-video-test"
+        )
+
+    def test_setup_config(self):
+        """Test component setup."""
+        self.hass.data[DOMAIN] = {}
+        self.hass.data[DOMAIN]["coordinator"] = self.coordinator
+        self.hass.data[DOMAIN]["camera_id_field"] = "id"
+
+        self.coordinator.data = {
+            "uuid-1": {"id": "uuid-1", "name": "camera-1"},
+            "uuid-2": {"id": "uuid-2", "name": "camera-2"},
+        }
+
+        add_entities = mock.MagicMock()
+        assert asyncio.run_coroutine_threadsafe(
+            sensor.async_setup_entry(self.hass, {}, add_entities), self.hass.loop
+        ).result()
+        self.hass.block_till_done()
+
+        assert add_entities.call_count == 1
 
 
 class TestUnifiVideoCameraConnectionSensor(unittest.TestCase):

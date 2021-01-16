@@ -14,7 +14,12 @@ from homeassistant.const import (
     CONF_SSL,
 )
 
-from .const import DEFAULT_PASSWORD, DEFAULT_PORT, DEFAULT_SSL, DOMAIN
+from .const import (  # noqa: F401 pylint: disable=unused-import
+    DEFAULT_PASSWORD,
+    DEFAULT_PORT,
+    DEFAULT_SSL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,7 +91,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors[CONF_BASE] = "invalid_auth"
             except InvalidHost:
-                errors[CONF_HOST] = "cannot_connect"
+                errors[CONF_HOST] = "invalid_host"
             except InvalidKey:
                 errors[CONF_API_KEY] = "invalid_key"
             except InvalidPort:
