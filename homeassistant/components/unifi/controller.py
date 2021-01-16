@@ -60,7 +60,6 @@ from .const import (
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
-    HEARTBEAT_MISSED_SIGNAL,
     LOGGER,
     UNIFI_WIRELESS_CLIENTS,
 )
@@ -299,6 +298,11 @@ class UniFiController:
         """Event specific per UniFi entry to signal new options."""
         return f"unifi-options-{self.controller_id}"
 
+    @property
+    def signal_heartbeat_missed(self):
+        """Event specific per UniFi device tracker to signal new heartbeat missed."""
+        return "unifi-heartbeat-missed"
+
     def update_wireless_clients(self):
         """Update set of known to be wireless clients."""
         new_wireless_clients = set()
@@ -407,7 +411,7 @@ class UniFiController:
         for unique_id, heartbeat_expire_time in self._heartbeat_time.items():
             if now > heartbeat_expire_time:
                 async_dispatcher_send(
-                    self.hass, f"{HEARTBEAT_MISSED_SIGNAL}_{unique_id}"
+                    self.hass, f"{self.signal_heartbeat_missed}_{unique_id}"
                 )
 
     @staticmethod

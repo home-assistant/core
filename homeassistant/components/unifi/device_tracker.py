@@ -23,7 +23,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN, HEARTBEAT_MISSED_SIGNAL
+from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
 from .unifi_entity_base import UniFiBase
 
@@ -161,7 +161,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{HEARTBEAT_MISSED_SIGNAL}_{self.unique_id}",
+                f"{self.controller.signal_heartbeat_missed}_{self.unique_id}",
                 self._make_disconnected,
             )
         )
@@ -301,7 +301,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{HEARTBEAT_MISSED_SIGNAL}_{self.unique_id}",
+                f"{self.controller.signal_heartbeat_missed}_{self.unique_id}",
                 self._make_disconnected,
             )
         )
