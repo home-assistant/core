@@ -24,8 +24,8 @@ async def test_update(hass):
 async def test_update_people_not_found(hass):
     """Test update finds no people."""
     with patch(
-            "tests.components.cisco_webex.mocks.MockPeopleAPI.list",
-            return_value=[],
+        "tests.components.cisco_webex.mocks.MockPeopleAPI.list",
+        return_value=[],
     ):
         sensor = WebexPresenceSensor(api=MOCK_API, email="test@123.com", name="Name")
         sensor.update()
