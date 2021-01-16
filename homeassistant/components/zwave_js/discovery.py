@@ -57,7 +57,24 @@ class ZWaveDiscoverySchema:
 
 
 DISCOVERY_SCHEMAS = [
-    # light
+    # locks
+    ZWaveDiscoverySchema(
+        platform="lock",
+        device_class_generic={"Entry Control"},
+        device_class_specific={
+            "Door Lock",
+            "Advanced Door Lock",
+            "Secure Keypad Door Lock",
+            "Secure Lockbox",
+        },
+        command_class={
+            CommandClass.LOCK,
+            CommandClass.DOOR_LOCK,
+        },
+        property={"currentMode", "locked"},
+        type={"number", "boolean"},
+    ),
+    # lights
     # primary value is the currentValue (brightness)
     ZWaveDiscoverySchema(
         platform="light",
