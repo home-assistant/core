@@ -121,6 +121,7 @@ async def test_form_unknown_error(hass):
 async def test_form_entry_exists(hass):
     """Test we handle an already existing entry."""
     MockConfigEntry(
+        unique_id="abcdefg",
         domain=DOMAIN,
         data={
             "id": "test-id",

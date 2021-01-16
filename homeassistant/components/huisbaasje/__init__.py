@@ -43,7 +43,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     )
 
     # Attempt authentication. If this fails, an exception is thrown
-    await huisbaasje.authenticate()
+    try:
+        await huisbaasje.authenticate()
+    except HuisbaasjeException as exception:
+        _LOGGER.error("Authentication failed: %s", str(exception))
+        return False
 
     async def async_update_data():
         return await async_update_huisbaasje(huisbaasje)

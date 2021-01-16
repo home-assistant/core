@@ -14,9 +14,13 @@ from tests.components.huisbaasje.test_data import (
 async def test_setup_entry(hass: HomeAssistant):
     """Test for successfully loading sensor states."""
     with patch(
+        "huisbaasje.Huisbaasje.authenticate", return_value=None
+    ) as mock_authenticate, patch(
+        "huisbaasje.Huisbaasje.is_authenticated", return_value=True
+    ) as mock_is_authenticated, patch(
         "huisbaasje.Huisbaasje.current_measurements",
         return_value=MOCK_CURRENT_MEASUREMENTS,
-    ):
+    ) as mock_current_measurements:
 
         hass.config.components.add(huisbaasje.DOMAIN)
         config_entry = ConfigEntry(
@@ -58,13 +62,22 @@ async def test_setup_entry(hass: HomeAssistant):
         assert hass.states.get("sensor.huisbaasje_gas_this_month").state == "39.1"
         assert hass.states.get("sensor.huisbaasje_gas_this_year").state == "116.7"
 
+        # Assert mocks are called
+        assert len(mock_authenticate.mock_calls) == 1
+        assert len(mock_is_authenticated.mock_calls) == 1
+        assert len(mock_current_measurements.mock_calls) == 1
+
 
 async def test_setup_entry_absent_measurement(hass: HomeAssistant):
     """Test for successfully loading sensor states when response does not contain all measurements."""
     with patch(
+        "huisbaasje.Huisbaasje.authenticate", return_value=None
+    ) as mock_authenticate, patch(
+        "huisbaasje.Huisbaasje.is_authenticated", return_value=True
+    ) as mock_is_authenticated, patch(
         "huisbaasje.Huisbaasje.current_measurements",
         return_value=MOCK_LIMITED_CURRENT_MEASUREMENTS,
-    ):
+    ) as mock_current_measurements:
 
         hass.config.components.add(huisbaasje.DOMAIN)
         config_entry = ConfigEntry(
@@ -99,3 +112,8 @@ async def test_setup_entry_absent_measurement(hass: HomeAssistant):
         assert hass.states.get("sensor.huisbaasje_current_gas").state == "unknown"
         assert hass.states.get("sensor.huisbaasje_energy_today").state == "3.3"
         assert hass.states.get("sensor.huisbaasje_gas_today").state == "unknown"
+
+        # Assert mocks are called
+        assert len(mock_authenticate.mock_calls) == 1
+        assert len(mock_is_authenticated.mock_calls) == 1
+        assert len(mock_current_measurements.mock_calls) == 1
