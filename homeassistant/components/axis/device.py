@@ -60,8 +60,23 @@ class AxisNetworkDevice:
 
     @property
     def host(self):
-        """Return the host of this device."""
+        """Return the host address of this device."""
         return self.config_entry.data[CONF_HOST]
+
+    @property
+    def port(self):
+        """Return the HTTP port of this device."""
+        return self.config_entry.data[CONF_PORT]
+
+    @property
+    def username(self):
+        """Return the username of this device."""
+        return self.config_entry.data[CONF_USERNAME]
+
+    @property
+    def password(self):
+        """Return the password of this device."""
+        return self.config_entry.data[CONF_PASSWORD]
 
     @property
     def model(self):
@@ -189,10 +204,10 @@ class AxisNetworkDevice:
         try:
             self.api = await get_device(
                 self.hass,
-                host=self.config_entry.data[CONF_HOST],
-                port=self.config_entry.data[CONF_PORT],
-                username=self.config_entry.data[CONF_USERNAME],
-                password=self.config_entry.data[CONF_PASSWORD],
+                host=self.host,
+                port=self.port,
+                username=self.username,
+                password=self.password,
             )
 
         except CannotConnect as err:
