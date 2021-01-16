@@ -1,10 +1,7 @@
 """Support for the OpenWeatherMap (OWM) service."""
-import datetime
-
 from .abstract_owm_sensor import AbstractOpenWeatherMapSensor
 from .const import (
     ATTR_API_FORECAST,
-    DEVICE_CLASS_TIMESTAMP,
     DOMAIN,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
@@ -98,10 +95,5 @@ class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):
         """Return the state of the device."""
         forecasts = self._weather_coordinator.data.get(ATTR_API_FORECAST)
         if forecasts is not None and len(forecasts) > 0:
-            value = forecasts[0].get(self._sensor_type, None)
-            if self._device_class is DEVICE_CLASS_TIMESTAMP:
-                value = datetime.datetime.fromtimestamp(
-                    value, datetime.timezone.utc
-                ).isoformat()
-            return value
+            return forecasts[0].get(self._sensor_type, None)
         return None
