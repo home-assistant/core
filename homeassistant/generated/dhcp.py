@@ -106,11 +106,6 @@ DHCP = [
         "macaddress": "002702*"
     },
     {
-        "domain": "somfy",
-        "hostname": "gateway-*",
-        "macaddress": "F8811A*"
-    },
-    {
         "domain": "somfy_mylink",
         "hostname": "somfy_*",
         "macaddress": "B8B7F1*"
