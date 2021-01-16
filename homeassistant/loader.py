@@ -34,7 +34,11 @@ from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
+# mypy: disallow-any-generics
+
+CALLABLE_T = TypeVar(  # pylint: disable=invalid-name
+    "CALLABLE_T", bound=Callable[..., Any]
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +58,7 @@ _UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular depe
 MAX_LOAD_CONCURRENTLY = 4
 
 
-def manifest_from_legacy_module(domain: str, module: ModuleType) -> Dict:
+def manifest_from_legacy_module(domain: str, module: ModuleType) -> Dict[str, Any]:
     """Generate a manifest from a legacy module."""
     return {
         "domain": domain,
@@ -205,10 +209,10 @@ async def async_get_homekit(hass: "HomeAssistant") -> Dict[str, str]:
     return homekit
 
 
-async def async_get_ssdp(hass: "HomeAssistant") -> Dict[str, List]:
+async def async_get_ssdp(hass: "HomeAssistant") -> Dict[str, List[Dict[str, str]]]:
     """Return cached list of ssdp mappings."""
 
-    ssdp: Dict[str, List] = SSDP.copy()
+    ssdp: Dict[str, List[Dict[str, str]]] = SSDP.copy()
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -220,10 +224,10 @@ async def async_get_ssdp(hass: "HomeAssistant") -> Dict[str, List]:
     return ssdp
 
 
-async def async_get_mqtt(hass: "HomeAssistant") -> Dict[str, List]:
+async def async_get_mqtt(hass: "HomeAssistant") -> Dict[str, List[str]]:
     """Return cached list of MQTT mappings."""
 
-    mqtt: Dict[str, List] = MQTT.copy()
+    mqtt: Dict[str, List[str]] = MQTT.copy()
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -357,29 +361,29 @@ class Integration:
         return cast(str, self.manifest.get("quality_scale"))
 
     @property
-    def mqtt(self) -> Optional[list]:
+    def mqtt(self) -> Optional[List[str]]:
         """Return Integration MQTT entries."""
-        return cast(List[dict], self.manifest.get("mqtt"))
+        return cast(List[str], self.manifest.get("mqtt"))
 
     @property
-    def ssdp(self) -> Optional[list]:
+    def ssdp(self) -> Optional[List[Dict[str, str]]]:
         """Return Integration SSDP entries."""
-        return cast(List[dict], self.manifest.get("ssdp"))
+        return cast(List[Dict[str, str]], self.manifest.get("ssdp"))
 
     @property
-    def zeroconf(self) -> Optional[list]:
+    def zeroconf(self) -> Optional[List[Union[str, Dict[str, str]]]]:
         """Return Integration zeroconf entries."""
-        return cast(List[str], self.manifest.get("zeroconf"))
+        return cast(List[Union[str, Dict[str, str]]], self.manifest.get("zeroconf"))
 
     @property
-    def dhcp(self) -> Optional[list]:
+    def dhcp(self) -> Optional[List[Dict[str, str]]]:
         """Return Integration dhcp entries."""
-        return cast(List[str], self.manifest.get("dhcp"))
+        return cast(List[Dict[str, str]], self.manifest.get("dhcp"))
 
     @property
-    def homekit(self) -> Optional[dict]:
+    def homekit(self) -> Optional[Dict[str, List[str]]]:
         """Return Integration homekit entries."""
-        return cast(Dict[str, List], self.manifest.get("homekit"))
+        return cast(Dict[str, List[str]], self.manifest.get("homekit"))
 
     @property
     def is_built_in(self) -> bool:
