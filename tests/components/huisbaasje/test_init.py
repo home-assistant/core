@@ -1,4 +1,6 @@
 """Test cases for the initialisation of the Huisbaasje integration."""
+from unittest.mock import patch
+
 from huisbaasje import HuisbaasjeException
 
 from homeassistant.components import huisbaasje
@@ -13,7 +15,6 @@ from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.components.huisbaasje.test_data import MOCK_CURRENT_MEASUREMENTS
 
 

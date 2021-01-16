@@ -1,10 +1,11 @@
 """Test cases for the sensors of the Huisbaasje integration."""
+from unittest.mock import patch
+
 from homeassistant.components import huisbaasje
 from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigEntry
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
 from tests.components.huisbaasje.test_data import (
     MOCK_CURRENT_MEASUREMENTS,
     MOCK_LIMITED_CURRENT_MEASUREMENTS,
