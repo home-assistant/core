@@ -60,14 +60,14 @@ from .const import (
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
-    HEATBEAT_MISSED_SIGNAL,
+    HEARTBEAT_MISSED_SIGNAL,
     LOGGER,
     UNIFI_WIRELESS_CLIENTS,
 )
 from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
-CHECK_HEATBEAT_INTERVAL = timedelta(seconds=1)
+CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
 SUPPORTED_PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
 CLIENT_CONNECTED = (
@@ -98,9 +98,9 @@ class UniFiController:
         self._site_name = None
         self._site_role = None
 
-        self._cancel_heatbeat_check = None
-        self._heatbeat_dispatch = {}
-        self._heatbeat_time = {}
+        self._cancel_heartbeat_check = None
+        self._heartbeat_dispatch = {}
+        self._heartbeat_time = {}
 
         self.entities = {}
 
@@ -383,31 +383,31 @@ class UniFiController:
 
         self.config_entry.add_update_listener(self.async_config_entry_updated)
 
-        self._cancel_heatbeat_check = async_track_time_interval(
-            self.hass, self._async_check_for_stale, CHECK_HEATBEAT_INTERVAL
+        self._cancel_heartbeat_check = async_track_time_interval(
+            self.hass, self._async_check_for_stale, CHECK_HEARTBEAT_INTERVAL
         )
 
         return True
 
     @callback
-    def async_heatbeat(self, unique_id: str, heatbeat_expire_time: datetime) -> None:
+    def async_heartbeat(self, unique_id: str, heartbeat_expire_time: datetime) -> None:
         """Signal when a device has fresh home state."""
-        if heatbeat_expire_time is not None:
-            self._heatbeat_time[unique_id] = heatbeat_expire_time
+        if heartbeat_expire_time is not None:
+            self._heartbeat_time[unique_id] = heartbeat_expire_time
             return
 
-        if unique_id in self._heatbeat_time:
-            del self._heatbeat_time[unique_id]
+        if unique_id in self._heartbeat_time:
+            del self._heartbeat_time[unique_id]
 
     @callback
     def _async_check_for_stale(self, *_) -> None:
         """Check for any devices scheduled to be marked disconnected."""
         now = dt_util.utcnow()
 
-        for unique_id, heatbeat_expire_time in self._heatbeat_time.items():
-            if now > heatbeat_expire_time:
+        for unique_id, heartbeat_expire_time in self._heartbeat_time.items():
+            if now > heartbeat_expire_time:
                 async_dispatcher_send(
-                    self.hass, f"{HEATBEAT_MISSED_SIGNAL}_{unique_id}"
+                    self.hass, f"{HEARTBEAT_MISSED_SIGNAL}_{unique_id}"
                 )
 
     @staticmethod
@@ -463,9 +463,9 @@ class UniFiController:
             unsub_dispatcher()
         self.listeners = []
 
-        if self._cancel_heatbeat_check:
-            self._cancel_heatbeat_check()
-            self._cancel_heatbeat_check = None
+        if self._cancel_heartbeat_check:
+            self._cancel_heartbeat_check()
+            self._cancel_heartbeat_check = None
 
         return True
 
