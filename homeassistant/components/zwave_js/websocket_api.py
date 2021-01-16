@@ -243,4 +243,7 @@ async def remove_from_device_registry(
     device = registry.async_get_device(
         {(DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")}
     )
+    if device is None:
+        return
+
     registry.async_remove_device(device.id)
