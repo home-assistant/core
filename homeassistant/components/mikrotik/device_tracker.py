@@ -94,6 +94,21 @@ class MikrotikHubTracker(ScannerEntity):
         return self.device.name
 
     @property
+    def hostname(self) -> str:
+        """Return the hostname of the client."""
+        return self.device.name
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the client."""
+        return self.device.mac
+
+    @property
+    def ip_address(self) -> str:
+        """Return the mac address of the client."""
+        return self.device.ip_address
+
+    @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
         return self.device.mac
