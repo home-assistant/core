@@ -1316,7 +1316,7 @@ pycmus==0.1.1
 pycocotools==2.0.1
 
 # homeassistant.components.comfoconnect
-pycomfoconnect==0.3
+pycomfoconnect==0.4
 
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.1.2
