@@ -241,6 +241,8 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     self._target_temp = float(old_state.attributes[ATTR_TEMPERATURE])
             if old_state.attributes.get(ATTR_PRESET_MODE) == PRESET_AWAY:
                 self._is_away = True
+            if not self._hvac_mode and old_state.state:
+                self._hvac_mode = old_state.state
 
         else:
             # No previous state, try and restore defaults
@@ -253,22 +255,13 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 "No previously saved temperature, setting to %s", self._target_temp
             )
 
-        # hvac_mode not initialized
+        # Set default state to off
         if not self._hvac_mode:
-            # Set hvac_mode from 'real' switch state
+            self._hvac_mode = HVAC_MODE_OFF
+            # Prevent the device from keep running if HVAC_MODE_OFF
             if self._is_device_active:
-                if not self.ac_mode:
-                    self._hvac_mode = HVAC_MODE_HEAT
-                else:
-                    self._hvac_mode = HVAC_MODE_COOL
-            else:
-                # Set default state to off
-                self._hvac_mode = HVAC_MODE_OFF
-
-        # Prevent the device from keep running if the thermostat is stopped
-        if self._hvac_mode == HVAC_MODE_OFF and self._is_device_active:
-            await self._async_heater_turn_off()
-            _LOGGER.warning("turning off heater %s", self.heater_entity_id)
+                await self._async_heater_turn_off()
+                _LOGGER.info("turning off heater %s", self.heater_entity_id)
 
     @property
     def should_poll(self):
@@ -410,7 +403,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     async def _async_control_heating(self, time=None, force=False):
         """Check if we need to turn heating on or off."""
         async with self._temp_lock:
-            if not self._active and None not in (self._cur_temp, self._target_temp):
+            if not self._active and None not in (self._cur_temp, self._target_temp, self._is_device_active):
                 self._active = True
                 _LOGGER.info(
                     "Obtained current and target temperature. "
@@ -468,7 +461,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     @property
     def _is_device_active(self):
         """If the toggleable device is currently active."""
-        return self.hass.states.is_state(self.heater_entity_id, STATE_ON)
+        if (self.hass.states.get((self.heater_entity_id))):
+            return self.hass.states.is_state(self.heater_entity_id, STATE_ON)
+        else:
+            return None
 
     @property
     def supported_features(self):
