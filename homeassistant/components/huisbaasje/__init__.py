@@ -96,7 +96,7 @@ async def async_update_huisbaasje(huisbaasje):
         # handled by the data update coordinator.
         async with async_timeout.timeout(FETCH_TIMEOUT):
             if not huisbaasje.is_authenticated():
-                _LOGGER.warn("Huisbaasje is unauthenticated. Reauthenticating...")
+                _LOGGER.warning("Huisbaasje is unauthenticated. Reauthenticating...")
                 huisbaasje.authenticate()
 
             current_measurements = await huisbaasje.current_measurements()
