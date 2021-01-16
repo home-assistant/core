@@ -91,10 +91,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DysonClimateEntity(DysonEntity, ClimateEntity):
     """Representation of a Dyson climate fan."""
 
-    def __init__(self, device, state_type):
-        """Initialize the fan."""
-        super().__init__(device, state_type)
-
     @property
     def supported_features(self):
         """Return the list of supported features."""
