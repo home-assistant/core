@@ -3,6 +3,6 @@
   "name": "Z-Wave JS",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zwave_js",
-  "requirements": ["zwave-js-server-python==0.10.0"],
+  "requirements": ["zwave-js-server-python==0.11.0"],
   "codeowners": ["@home-assistant/z-wave"]
 }
