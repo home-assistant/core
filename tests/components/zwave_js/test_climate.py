@@ -1,4 +1,5 @@
 """Test the Z-Wave JS climate platform."""
+import pytest
 from zwave_js_server.event import Event
 
 from homeassistant.components.climate.const import (
@@ -260,15 +261,16 @@ async def test_thermostat_v2(
 
     client.async_send_command.reset_mock()
 
-    # Test setting unknown preset mode
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_PRESET_MODE: "unknown_preset",
-        },
-        blocking=True,
-    )
+    with pytest.raises(ValueError):
+        # Test setting unknown preset mode
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {
+                ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                ATTR_PRESET_MODE: "unknown_preset",
+            },
+            blocking=True,
+        )
 
     assert len(client.async_send_command.call_args_list) == 0
