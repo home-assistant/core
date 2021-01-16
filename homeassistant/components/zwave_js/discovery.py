@@ -79,6 +79,7 @@ DISCOVERY_SCHEMAS = [
         platform="climate",
         device_class_generic={"Thermostat"},
         device_class_specific={
+            "Setback Thermostat",
             "Thermostat General",
             "Thermostat General V2",
         },

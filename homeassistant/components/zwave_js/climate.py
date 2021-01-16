@@ -1,14 +1,18 @@
 """Representation of Z-Wave thermostats."""
-from enum import IntEnum
 import logging
 from typing import Any, Callable, Dict, List, Optional
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
+    THERMOSTAT_CURRENT_TEMP_PROPERTY,
     THERMOSTAT_MODE_SETPOINT_MAP,
     THERMOSTAT_MODES,
+    THERMOSTAT_OPERATING_STATE_PROPERTY,
+    THERMOSTAT_SETPOINT_PROPERTY,
     CommandClass,
     ThermostatMode,
+    ThermostatOperatingMode,
+    ThermostatSetpointType,
 )
 from zwave_js_server.model.value import Value as ZwaveValue
 
@@ -64,41 +68,19 @@ ZW_HVAC_MODE_MAP: Dict[int, str] = {
     ThermostatMode.FULL_POWER: HVAC_MODE_HEAT,
 }
 
-ZWAVE_SETPOINT_PROPERTY = "setpoint"
-
-
-class OperatingMode(IntEnum):
-    """Enum with all (known/used) Z-Wave OperatingModes."""
-
-    # https://github.com/zwave-js/node-zwave-js/blob/master/packages/zwave-js/src/lib/commandclass/ThermostatOperatingStateCC.ts#L38-L51
-    IDLE = 0
-    HEATING = 1
-    COOLING = 2
-    FAN_ONLY = 3
-    PENDING_HEAT = 4
-    PENDING_COOL = 5
-    VENT_ECONOMIZER = 6
-    AUX_HEATING = 7
-    SECOND_STAGE_HEATING = 8
-    SECOND_STAGE_COOLING = 9
-    SECOND_STAGE_AUX_HEAT = 10
-    THIRD_STAGE_AUX_HEAT = 11
-
-
 HVAC_CURRENT_MAP: Dict[int, str] = {
-    OperatingMode.IDLE: CURRENT_HVAC_IDLE,
-    OperatingMode.PENDING_HEAT: CURRENT_HVAC_IDLE,
-    OperatingMode.HEATING: CURRENT_HVAC_HEAT,
-    OperatingMode.PENDING_COOL: CURRENT_HVAC_IDLE,
-    OperatingMode.COOLING: CURRENT_HVAC_COOL,
-    OperatingMode.FAN_ONLY: CURRENT_HVAC_FAN,
-    OperatingMode.VENT_ECONOMIZER: CURRENT_HVAC_FAN,
-    # not defined in ozw integration but we will provide them anyway
-    OperatingMode.AUX_HEATING: CURRENT_HVAC_HEAT,
-    OperatingMode.SECOND_STAGE_HEATING: CURRENT_HVAC_HEAT,
-    OperatingMode.SECOND_STAGE_COOLING: CURRENT_HVAC_COOL,
-    OperatingMode.SECOND_STAGE_AUX_HEAT: CURRENT_HVAC_HEAT,
-    OperatingMode.THIRD_STAGE_AUX_HEAT: CURRENT_HVAC_HEAT,
+    ThermostatOperatingMode.IDLE: CURRENT_HVAC_IDLE,
+    ThermostatOperatingMode.PENDING_HEAT: CURRENT_HVAC_IDLE,
+    ThermostatOperatingMode.HEATING: CURRENT_HVAC_HEAT,
+    ThermostatOperatingMode.PENDING_COOL: CURRENT_HVAC_IDLE,
+    ThermostatOperatingMode.COOLING: CURRENT_HVAC_COOL,
+    ThermostatOperatingMode.FAN_ONLY: CURRENT_HVAC_FAN,
+    ThermostatOperatingMode.VENT_ECONOMIZER: CURRENT_HVAC_FAN,
+    ThermostatOperatingMode.AUX_HEATING: CURRENT_HVAC_HEAT,
+    ThermostatOperatingMode.SECOND_STAGE_HEATING: CURRENT_HVAC_HEAT,
+    ThermostatOperatingMode.SECOND_STAGE_COOLING: CURRENT_HVAC_COOL,
+    ThermostatOperatingMode.SECOND_STAGE_AUX_HEAT: CURRENT_HVAC_HEAT,
+    ThermostatOperatingMode.THIRD_STAGE_AUX_HEAT: CURRENT_HVAC_HEAT,
 }
 
 
@@ -131,6 +113,24 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         super().__init__(client, info)
         self._hvac_modes: Dict[str, Optional[int]] = {}
         self._hvac_presets: Dict[str, Optional[int]] = {}
+        for enum in ThermostatSetpointType:
+            self.get_zwave_value(
+                THERMOSTAT_SETPOINT_PROPERTY,
+                command_class=CommandClass.THERMOSTAT_SETPOINT,
+                value_property_key_name=enum.value,
+                add_to_watched_value_ids=True,
+            )
+        self.get_zwave_value(
+            THERMOSTAT_OPERATING_STATE_PROPERTY,
+            command_class=CommandClass.THERMOSTAT_OPERATING_STATE,
+            add_to_watched_value_ids=True,
+        )
+        self.get_zwave_value(
+            THERMOSTAT_CURRENT_TEMP_PROPERTY,
+            command_class=CommandClass.SENSOR_MULTILEVEL,
+            add_to_watched_value_ids=True,
+        )
+
         self.on_value_update()
 
     @callback
@@ -142,28 +142,21 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     def _get_current_mode_setpoint_values(self) -> List[ZwaveValue]:
         """Return a list of current setpoint Z-Wave value(s)."""
-        setpoint_keys: List[str]
-        if not self.info.primary_value:
-            setpoint_keys = ["Heating"]
-        else:
-            current_mode = int(self.info.primary_value.value)
-            setpoint_keys = THERMOSTAT_MODE_SETPOINT_MAP.get(current_mode, [])
+        current_mode = int(self.info.primary_value.value)
+        setpoint_enums: List[ThermostatSetpointType] = THERMOSTAT_MODE_SETPOINT_MAP.get(
+            current_mode, []
+        )
         # we do not want None values in our list so check if the value exists
-        return [
-            self.get_zwave_value(
-                ZWAVE_SETPOINT_PROPERTY,
+        values = []
+        for enum in setpoint_enums:
+            value: Optional[ZwaveValue] = self.get_zwave_value(
+                THERMOSTAT_SETPOINT_PROPERTY,
                 CommandClass.THERMOSTAT_SETPOINT,
-                value_property_key_name=key,
-                add_to_watched_value_ids=True,
+                value_property_key_name=enum.value,
             )
-            for key in setpoint_keys
-            if self.get_zwave_value(
-                ZWAVE_SETPOINT_PROPERTY,
-                CommandClass.THERMOSTAT_SETPOINT,
-                value_property_key_name=key,
-                add_to_watched_value_ids=True,
-            )
-        ]
+            if value:
+                values.append(value)
+        return values
 
     def _set_modes_and_presets(self) -> None:
         """Convert Z-Wave Thermostat modes into Home Assistant modes and presets."""
@@ -190,11 +183,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
-        temp: ZwaveValue = (
-            self._current_mode_setpoint_values[0]
-            if self._current_mode_setpoint_values
-            else None
-        )
+        temp: Optional[ZwaveValue] = None
+        if self._current_mode_setpoint_values:
+            temp = self._current_mode_setpoint_values[0]
         if temp is not None and temp.metadata.unit == "°F":
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
@@ -202,9 +193,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
-        if not self.info.primary_value:
-            # Thermostat(valve) with no support for setting a mode is considered heating-only
-            return HVAC_MODE_HEAT
         return ZW_HVAC_MODE_MAP.get(
             int(self.info.primary_value.value), HVAC_MODE_HEAT_COOL
         )
@@ -218,9 +206,8 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     def hvac_action(self) -> Optional[str]:
         """Return the current running hvac operation if supported."""
         operating_state = self.get_zwave_value(
-            "state",
+            THERMOSTAT_OPERATING_STATE_PROPERTY,
             command_class=CommandClass.THERMOSTAT_OPERATING_STATE,
-            add_to_watched_value_ids=True,
         )
         if not operating_state:
             return None
@@ -230,9 +217,8 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
         temp = self.get_zwave_value(
-            "Air temperature",
+            THERMOSTAT_CURRENT_TEMP_PROPERTY,
             command_class=CommandClass.SENSOR_MULTILEVEL,
-            add_to_watched_value_ids=True,
         )
         if not temp:
             return None
@@ -256,9 +242,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        # A Zwave mode that can not be translated to a hass mode is considered a preset
-        if not self.info.primary_value:
-            return None
         if int(self.info.primary_value.value) not in THERMOSTAT_MODES:
             return_val: str = self.info.primary_value.metadata.states.get(
                 self.info.primary_value.value
@@ -271,6 +254,16 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         """Return a list of available preset modes."""
         return list(self._hvac_presets)
 
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        support = SUPPORT_PRESET_MODE
+        if len(self._current_mode_setpoint_values) == 1:
+            support |= SUPPORT_TARGET_TEMPERATURE
+        if len(self._current_mode_setpoint_values) > 1:
+            support |= SUPPORT_TARGET_TEMPERATURE_RANGE
+        return support
+
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         assert self.hass
@@ -281,30 +274,23 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if len(self._current_mode_setpoint_values) == 1:
             setpoint: ZwaveValue = self._current_mode_setpoint_values[0]
             target_temp: Optional[float] = kwargs.get(ATTR_TEMPERATURE)
-            if setpoint is not None and target_temp is not None:
+            if target_temp is not None:
                 await self.info.node.async_set_value(setpoint, target_temp)
         elif len(self._current_mode_setpoint_values) == 2:
             setpoint_low: ZwaveValue = self._current_mode_setpoint_values[0]
             setpoint_high: ZwaveValue = self._current_mode_setpoint_values[1]
             target_temp_low: Optional[float] = kwargs.get(ATTR_TARGET_TEMP_LOW)
             target_temp_high: Optional[float] = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-            if setpoint_low is not None and target_temp_low is not None:
+            if target_temp_low is not None:
                 await self.info.node.async_set_value(setpoint_low, target_temp_low)
-            if setpoint_high is not None and target_temp_high is not None:
+            if target_temp_high is not None:
                 await self.info.node.async_set_value(setpoint_high, target_temp_high)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        if not self.info.primary_value:
-            # Thermostat(valve) with no support for setting a mode
-            _LOGGER.warning(
-                "Thermostat %s does not support setting a mode", self.entity_id
-            )
-            return
         hvac_mode_value = self._hvac_modes.get(hvac_mode)
         if hvac_mode_value is None:
-            _LOGGER.warning("Received an invalid hvac mode: %s", hvac_mode)
-            return
+            raise ValueError(f"Received an invalid hvac mode: {hvac_mode}")
         await self.info.node.async_set_value(self.info.primary_value, hvac_mode_value)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -315,18 +301,5 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             return
         preset_mode_value = self._hvac_presets.get(preset_mode)
         if preset_mode_value is None:
-            _LOGGER.warning("Received an invalid preset mode: %s", preset_mode)
-            return
+            raise ValueError(f"Received an invalid preset mode: {preset_mode}")
         await self.info.node.async_set_value(self.info.primary_value, preset_mode_value)
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        support = 0
-        if len(self._current_mode_setpoint_values) == 1:
-            support |= SUPPORT_TARGET_TEMPERATURE
-        if len(self._current_mode_setpoint_values) > 1:
-            support |= SUPPORT_TARGET_TEMPERATURE_RANGE
-        if self.hvac_mode:
-            support |= SUPPORT_PRESET_MODE
-        return support
