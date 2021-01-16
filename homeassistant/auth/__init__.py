@@ -27,8 +27,6 @@ _ProviderDict = Dict[_ProviderKey, AuthProvider]
 class InvalidProvider(Exception):
     """Authentication provider not found."""
 
-    pass
-
 
 async def auth_manager_from_config(
     hass: HomeAssistant,
