@@ -40,6 +40,15 @@ class MySensorsDevice:
         self.hass = None
 
     @property
+    def gateway_id(self) -> str:
+        return self.gateway.unique_id
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"mys{self.gateway_id}-{self.node_id}-{self.child_id}-{self.value_type}"
+
+    @property
     def name(self):
         """Return the name of this entity."""
         return self._name

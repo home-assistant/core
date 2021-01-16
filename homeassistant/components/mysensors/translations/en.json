@@ -1,0 +1,32 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "Already configured. Only a single configuration possible."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_subscribe_topic":  "Invalid subscribe topic",
+      "invalid_publish_topic": "Invalid publish topic",
+      "invalid_port": "Invalid port number",
+      "invalid_persistence_file": "Invalid persistence file",
+      "invalid_device": "Invalid. Enter \"mqtt\" or a serial port or a hostname/ip-address"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "optimistic": "optimistic",
+          "persistence": "persistence",
+          "persistence_file": "persistence file name",
+          "retain": "mqtt retain",
+          "version": "gateway version",
+          "device": "hostname, ip address, or serial device",
+          "baud_rate": "baud rate if serial",
+          "tcp_port": "port if ethernet or mqtt",
+          "topic_in_prefix": "topic_in_prefix if mqtt",
+          "topic_out_prefix": "topic_out_prefix if mqtt"
+        },
+        "description": "Please enter the connection information of your gateway"
+      }
+    }
+  }
+}
