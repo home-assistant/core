@@ -1,6 +1,8 @@
 """The tests for hls streams."""
 from datetime import timedelta
+import logging
 import os
+import threading
 from unittest.mock import patch
 
 import av
@@ -13,19 +15,35 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video, preload_stream
 
+TEST_TIMEOUT = 10
+
 
 async def test_record_stream(hass, hass_client, worker_sync):
     """
     Test record stream.
 
-    Purposefully not mocking anything here to test full
-    integration with the stream component.
+    Tests full integration with the stream component, and captures the
+    stream worker and save worker to allow for clean shutdown of background
+    threads.  The actual save logic is tested in test_recorder_save below.
     """
     await async_setup_component(hass, "stream", {"stream": {}})
 
     worker_sync.pause()
 
-    with patch("homeassistant.components.stream.recorder.recorder_save_worker"):
+    save_thread = None
+    save_invoked = threading.Event()
+
+    def capture_save_worker(*args, **kwargs):
+        """Capture save worker thread for clean shutdown below."""
+        nonlocal save_thread
+        logging.debug("Recorder save worker invoked")
+        save_thread = threading.current_thread()
+        save_invoked.set()
+
+    with patch(
+        "homeassistant.components.stream.recorder.recorder_save_worker",
+        side_effect=capture_save_worker,
+    ):
         # Setup demo track
         source = generate_h264_video()
         stream = preload_stream(hass, source)
@@ -41,13 +59,21 @@ async def test_record_stream(hass, hass_client, worker_sync):
                 worker_sync.resume()
 
         stream.stop()
-        await hass.async_block_till_done()
-
         assert segments > 1
+
+        # Verify that the save worker was invoked, then block until its
+        # thread completes and is shutdown completely to avoid thread leaks.
+        assert save_invoked.wait(timeout=TEST_TIMEOUT)
+        save_thread.join()
 
 
 async def test_recorder_timeout(hass, hass_client, worker_sync):
-    """Test recorder timeout."""
+    """
+    Test recorder timeout.
+
+    Mocks out the cleanup to assert that it is invoked after a timeout.
+    This test does not start the recorder save thread.
+    """
     await async_setup_component(hass, "stream", {"stream": {}})
 
     worker_sync.pause()
