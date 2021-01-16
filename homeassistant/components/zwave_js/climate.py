@@ -113,6 +113,8 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         super().__init__(client, info)
         self._hvac_modes: Dict[str, Optional[int]] = {}
         self._hvac_presets: Dict[str, Optional[int]] = {}
+        self._set_modes_and_presets()
+
         for enum in ThermostatSetpointType:
             self.get_zwave_value(
                 THERMOSTAT_SETPOINT_PROPERTY,
@@ -137,8 +139,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     def on_value_update(self) -> None:
         """Call when a watched value is added or updated."""
         self._current_mode_setpoint_values = self._get_current_mode_setpoint_values()
-        if not self._hvac_modes:
-            self._set_modes_and_presets()
 
     def _get_current_mode_setpoint_values(self) -> List[ZwaveValue]:
         """Return a list of current setpoint Z-Wave value(s)."""
