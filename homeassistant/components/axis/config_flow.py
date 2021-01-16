@@ -49,6 +49,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         self.device_config = {}
         self.discovery_schema = {}
         self.import_schema = {}
+        self.serial = None
 
     async def async_step_user(self, user_input=None):
         """Handle a Axis config flow start.
@@ -67,7 +68,8 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
                     password=user_input[CONF_PASSWORD],
                 )
 
-                await self.async_set_unique_id(format_mac(device.vapix.serial_number))
+                self.serial = device.vapix.serial_number
+                await self.async_set_unique_id(format_mac(self.serial))
 
                 self._abort_if_unique_id_configured(
                     updates={
@@ -126,7 +128,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
         self.device_config[CONF_NAME] = name
 
-        title = f"{model} - {self.unique_id}"
+        title = f"{model} - {self.serial}"
         return self.async_create_entry(title=title, data=self.device_config)
 
     async def async_step_dhcp(self, discovery_info: dict):

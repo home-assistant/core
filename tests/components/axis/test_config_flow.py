@@ -33,7 +33,6 @@ from homeassistant.data_entry_flow import (
 )
 
 from .test_device import (
-    FORMATTED_MAC,
     MAC,
     MODEL,
     NAME,
@@ -68,7 +67,7 @@ async def test_flow_manual_configuration(hass):
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == f"M1065-LW - {FORMATTED_MAC}"
+    assert result["title"] == f"M1065-LW - {MAC}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "user",
@@ -225,7 +224,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == f"M1065-LW - {FORMATTED_MAC}"
+    assert result["title"] == f"M1065-LW - {MAC}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "user",
@@ -266,7 +265,7 @@ async def test_dhcp_flow(hass):
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == f"M1065-LW - {FORMATTED_MAC}"
+    assert result["title"] == f"M1065-LW - {MAC}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "user",
@@ -405,7 +404,7 @@ async def test_zeroconf_flow(hass):
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == f"M1065-LW - {FORMATTED_MAC}"
+    assert result["title"] == f"M1065-LW - {MAC}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "user",
