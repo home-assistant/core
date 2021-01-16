@@ -10,21 +10,22 @@ from homeassistant import config_entries, core
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
-from .const import CONF_REDIRECT_URI, CONF_SUBSCRIPTION_KEY, DOMAIN, PLANT_URL
+from .const import (
+    CONF_MODULE_STATUS_UPDATE_INTERVAL,
+    CONF_PLANT_TOPOLOGY_UPDATE_INTERVAL,
+    CONF_PLANT_UPDATE_INTERVAL,
+    CONF_REDIRECT_URI,
+    CONF_SUBSCRIPTION_KEY,
+    DEFAULT_UPDATE_INTERVALS,
+    DOMAIN,
+    PLANT_URL,
+)
 
-# The Legrand Home+ Control API has very limited request quotas - at the time of writing, it is limited
-# to 500 calls per day (resets at 00:00) - so we want to keep updates to a minimum.
 
-# Seconds between API checks for plant information updates. This is expected to change very little over time
-# because a user's plants (homes) should rarely change.
-PLANT_UPDATE_INTERVAL = 7200  # 120 minutes
-
-# Seconds between API checks for plant topology updates. This is expected to change  little over time
-# because the modules in the user's plant should be relatively stable.
-PLANT_TOPOLOGY_UPDATE_INTERVAL = 3600  # 60 minutes
-
-# Seconds between API checks for module status updates. This can change frequently so we check often
-MODULE_STATUS_UPDATE_INTERVAL = 300  # 5 minutes
+async def update_api_refresh_intervals(hass, config_entry):
+    """Update the refresh data intervals based on the config entry values."""
+    api = hass.data[DOMAIN][config_entry.entry_id]
+    api.update_refresh_intervals()
 
 
 class HomePlusControlAsyncApi(HomePlusOAuth2Async):
@@ -61,10 +62,17 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
         self.implementation = implementation
         self._domain = DOMAIN
         self._plants = {}
-        self.switches = {}
-        self.switches_to_remove = {}
+        self._switches = {}
+        self._switches_to_remove = {}
 
-        self._last_check = {"PLANT": time.monotonic(), "TOPOLOGY": -1, "STATUS": -1}
+        self._last_check = {
+            CONF_PLANT_UPDATE_INTERVAL: time.monotonic(),
+            CONF_PLANT_TOPOLOGY_UPDATE_INTERVAL: -1,
+            CONF_MODULE_STATUS_UPDATE_INTERVAL: -1,
+        }
+
+        self._refresh_intervals = {}
+        self.update_refresh_intervals()
 
         # Create the API authenticated client - external library
         super().__init__(
@@ -134,6 +142,22 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
         """Clean up the connection."""
         await self.oauth_client.close()
 
+    def update_refresh_intervals(self):
+        """Update the time intervals that determine whether or not to call the API."""
+        if self.config_entry.options is not None:
+            for interval_name in DEFAULT_UPDATE_INTERVALS:
+                try:
+                    new_interval_value = int(self.config_entry.options[interval_name])
+                except KeyError:
+                    new_interval_value = DEFAULT_UPDATE_INTERVALS[interval_name]
+
+                self._refresh_intervals[interval_name] = new_interval_value
+                self.logger.debug(
+                    "Updated API refresh interval: %s: %s",
+                    interval_name,
+                    self._refresh_intervals[interval_name],
+                )
+
     async def async_handle_plant_data(self):
         """Recover the plant data for this particular user.
 
@@ -147,12 +171,15 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
         # If it is not there, then we request it from the API and add it.
         # We also refresh from the API if the time has expired.
         plant_info = self.hass.data[self._domain].get("plant_info")
-        if plant_info is None or self._should_check("PLANT", PLANT_UPDATE_INTERVAL):
+        if plant_info is None or self._should_check(
+            CONF_PLANT_UPDATE_INTERVAL,
+            self._refresh_intervals[CONF_PLANT_UPDATE_INTERVAL],
+        ):
             result = await self.get_request(PLANT_URL)  # Call the API
             plant_info = await result.json()
 
             # If all goes well, we update the last check time
-            self._last_check["PLANT"] = time.monotonic()
+            self._last_check[CONF_PLANT_UPDATE_INTERVAL] = time.monotonic()
 
             self.hass.data[self._domain]["plant_info"] = plant_info
             self.logger.debug("Obtained plant information from API: %s", plant_info)
@@ -214,7 +241,10 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
         """
         for plant in self._plants.values():
 
-            if self._should_check("TOPOLOGY", PLANT_TOPOLOGY_UPDATE_INTERVAL):
+            if self._should_check(
+                CONF_PLANT_TOPOLOGY_UPDATE_INTERVAL,
+                self._refresh_intervals[CONF_PLANT_TOPOLOGY_UPDATE_INTERVAL],
+            ):
                 self.logger.debug(
                     "API update of plant topology for plant %s.", plant.id
                 )
@@ -229,9 +259,14 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
                     )
                 else:
                     # If all goes well, we update the last check time
-                    self._last_check["TOPOLOGY"] = time.monotonic()
+                    self._last_check[
+                        CONF_PLANT_TOPOLOGY_UPDATE_INTERVAL
+                    ] = time.monotonic()
 
-            if self._should_check("STATUS", MODULE_STATUS_UPDATE_INTERVAL):
+            if self._should_check(
+                CONF_MODULE_STATUS_UPDATE_INTERVAL,
+                self._refresh_intervals[CONF_MODULE_STATUS_UPDATE_INTERVAL],
+            ):
                 self.logger.debug("API update of module status for plant %s.", plant.id)
                 try:
                     await plant.update_module_status()  # Call the API
@@ -244,7 +279,9 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
                     )
                 else:
                     # If all goes well, we update the last check time
-                    self._last_check["STATUS"] = time.monotonic()
+                    self._last_check[
+                        CONF_MODULE_STATUS_UPDATE_INTERVAL
+                    ] = time.monotonic()
 
         return self._update_entities()
 

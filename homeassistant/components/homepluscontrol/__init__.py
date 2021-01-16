@@ -54,7 +54,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up Legrand Home+ Control from a config entry."""
 
     _LOGGER.debug("Configuring Legrand Home+ Control component from ConfigEntry")
@@ -62,20 +62,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Register the implementation from the config entry
     config_flow.HomePlusControlFlowHandler.async_register_implementation(
         hass,
-        HomePlusControlOAuth2Implementation(hass, entry.data),
+        HomePlusControlOAuth2Implementation(hass, config_entry.data),
     )
 
     # Retrieve the registered implementation
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+            hass, config_entry
         )
     )
 
     # Using an aiohttp-based API lib, so rely on async framework
     # Add the API object to the domain's data in HA
-    hass.data[DOMAIN][entry.entry_id] = api.HomePlusControlAsyncApi(
-        hass, entry, implementation
+    hass.data[DOMAIN][config_entry.entry_id] = api.HomePlusControlAsyncApi(
+        hass, config_entry, implementation
     )
 
     # Continue setting up the platform
@@ -83,28 +83,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     for component in PLATFORMS:
         _LOGGER.debug("Configuring %s", component)
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
     _LOGGER.debug("Hass config components %s", hass.config.components)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Unload the Legrand Home+ Control config entry."""
     _LOGGER.debug("Unloading the Legrand Home+ Control component and config entry.")
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
+                hass.config_entries.async_forward_entry_unload(config_entry, component)
                 for component in PLATFORMS
             ]
         )
     )
     if unload_ok:
-        api = hass.data[DOMAIN].pop(entry.entry_id)
-        await api.close_connection()
-        _LOGGER.debug("Legrand Home+ Control API connection closed.")
-        # TODO: Catch exceptions
+        hass.data[DOMAIN].pop(config_entry.entry_id, None)
+        # await api.close_connection() - No closing of the HA aiohttp session here
+        # _LOGGER.debug("Legrand Home+ Control API connection closed.")
+
+        # Unsubscribe the config_entry update listener
+        remover = hass.data[DOMAIN].pop("options_listener_remover", None)
+        if remover is not None:
+            remover()
+
+        _LOGGER.debug("Legrand Home+ Control config entry unloaded.")
 
     return unload_ok

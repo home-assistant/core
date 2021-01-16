@@ -29,5 +29,21 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {                
+                "title": "Home+ Control Polling Intervals",
+                "description": "Configure the API polling intervals in seconds:",
+                "data": {
+                    "plant_update_interval": "Plant information (sec)",
+                    "plant_topology_update_interval": "Plant Topology (sec)",
+                    "module_status_update_interval": "Plant Module Status (sec)"
+                }
+            }
+        },
+        "error": {
+            "invalid_update_interval": "Invalid time interval [should be a whole number of seconds between 1 and 86400]"
+        }
+    },
     "title": "Legrand Home+ Control"
 }

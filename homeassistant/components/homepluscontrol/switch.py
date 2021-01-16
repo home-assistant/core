@@ -22,19 +22,19 @@ from .const import DOMAIN, HW_TYPE
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Legrand Home+ Control Switch platform in HomeAssistant.
 
     Args:
         hass (HomeAssistant): HomeAssistant core object.
-        entry (ConfigEntry): ConfigEntry object that configures this platform.
+        config_entry (ConfigEntry): ConfigEntry object that configures this platform.
         async_add_entities (function): Function called to add entities of this platform.
     """
     # Dictionaty of entities of this integration
     hass.data[DOMAIN]["entities"] = {}
 
     # API object stored here by __init__.py
-    api = hass.data[DOMAIN][entry.entry_id]
+    api = hass.data[DOMAIN][config_entry.entry_id]
 
     async def async_update_data():
         """Fetch data from API endpoint.
@@ -54,7 +54,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         # Remove obsolete entities from the Entity and Device Registries
         if coordinator.data and len(coordinator.data.keys()) > 0:
             for id, ent in coordinator.data.items():
-                _LOGGER.debug("Coordinator item: " + id + ": " + str(ent))
+                _LOGGER.debug("Coordinator item: " + str(id) + ": " + str(ent))
 
         device_reg = await hass.helpers.device_registry.async_get_registry()
 
@@ -101,7 +101,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
     # Add the coordinator to the domain's data in HA
-    hass.data[DOMAIN][entry.entry_id + "_coordinator"] = coordinator
+    hass.data[DOMAIN][config_entry.entry_id + "_coordinator"] = coordinator
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
@@ -115,9 +115,9 @@ async def view_data(hass):
     device_reg = await hass.helpers.device_registry.async_get_registry()
     entity_reg = await hass.helpers.entity_registry.async_get_registry()
     for ent in entity_reg.entities:
-        _LOGGER.debug("Entity registry entity: %s", str(ent.entity_id))
+        _LOGGER.debug("Entity registry entity: %s", str(ent))
     for dev in device_reg.devices:
-        _LOGGER.debug("Device registry device: %s", dev)
+        _LOGGER.debug("Device registry device: %s", str(dev))
 
 
 class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
