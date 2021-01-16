@@ -105,7 +105,7 @@ class MpdDevice(MediaPlayerEntity):
         self._currentplaylist = None
         self._is_connected = False
         self._muted = False
-        self._muted_volume = 0
+        self._muted_volume = None
         self._media_position_updated_at = None
         self._media_position = None
         self._commands = None
@@ -401,7 +401,7 @@ class MpdDevice(MediaPlayerEntity):
             if mute:
                 self._muted_volume = self.volume_level
                 await self.async_set_volume_level(0)
-            else:
+            elif self._muted_volume is not None:
                 await self.async_set_volume_level(self._muted_volume)
             self._muted = mute
 
