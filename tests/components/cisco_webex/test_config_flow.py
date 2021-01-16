@@ -5,11 +5,10 @@ import requests
 from homeassistant import config_entries, setup
 from homeassistant.components.cisco_webex.config_flow import (
     CannotConnect,
-    ConfigValidationHub,
     EmailNotFound,
     InvalidAuth,
     InvalidAuthTokenType,
-    InvalidEmail,
+    InvalidEmail, validate_config,
 )
 from homeassistant.components.cisco_webex.const import DOMAIN
 
@@ -33,7 +32,7 @@ async def test_form(hass):
     assert result["errors"] is None
 
     with patch(
-            "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
+            "homeassistant.components.cisco_webex.config_flow.validate_config",
             return_value=True,
     ), patch(
         "homeassistant.components.cisco_webex.async_setup", return_value=True
@@ -61,7 +60,7 @@ async def test_form(hass):
 async def test_validate_config_ok(hass):
     """Test validate_config method."""
 
-    result = ConfigValidationHub().validate_config(
+    result = validate_config(
         MOCK_API, TEST_DATA)
 
     assert result is True
@@ -75,7 +74,7 @@ async def test_validate_config_not_bot_raises_invalid_token_type(hass):
             return_value="person",
     ):
         with pytest.raises(InvalidAuthTokenType):
-            ConfigValidationHub().validate_config(
+            validate_config(
                 MOCK_API, TEST_DATA)
 
 
@@ -89,7 +88,7 @@ async def test_validate_config_raises_email_not_found_api_error(hass):
             side_effect=exception_to_raise,
     ):
         with pytest.raises(EmailNotFound):
-            ConfigValidationHub().validate_config(
+            validate_config(
                 MOCK_API, TEST_DATA)
 
 
@@ -100,12 +99,12 @@ async def test_validate_config_raises_email_not_found_person_none(hass):
             return_value=[],
     ):
         with pytest.raises(EmailNotFound):
-            ConfigValidationHub().validate_config(
+            validate_config(
                 MOCK_API, TEST_DATA)
 
 
 async def test_validate_config_raises_invalid_auth_api_error(hass):
-    """Test validate_config raises InvalidAuth."""
+    """Test validate_config raises InvalidAuth via Api error."""
 
     exception_to_raise = MockApiError
     exception_to_raise.status_code = 401
@@ -114,12 +113,12 @@ async def test_validate_config_raises_invalid_auth_api_error(hass):
             side_effect=exception_to_raise,
     ):
         with pytest.raises(InvalidAuth):
-            ConfigValidationHub().validate_config(
+            validate_config(
                 MOCK_API, TEST_DATA)
 
 
 async def test_validate_config_raises_general_error(hass):
-    """Test validate_config raises api error."""
+    """Test validate_config raises general error."""
 
     exception_to_raise = MockApiError
     exception_to_raise.status_code = 500
@@ -128,12 +127,12 @@ async def test_validate_config_raises_general_error(hass):
             side_effect=exception_to_raise,
     ):
         with pytest.raises(exception_to_raise):
-            ConfigValidationHub().validate_config(
+            validate_config(
                 MOCK_API, TEST_DATA)
 
 
 async def test_validate_config_raises_cannot_connect_error(hass):
-    """Test validate_config raises api error."""
+    """Test validate_config raises cannot connect error."""
 
     exception_to_raise = MockApiError
     exception_to_raise.status_code = 500
@@ -142,18 +141,18 @@ async def test_validate_config_raises_cannot_connect_error(hass):
             side_effect=requests.exceptions.ConnectionError,
     ):
         with pytest.raises(CannotConnect):
-            ConfigValidationHub().validate_config(
+            validate_config(
                 MOCK_API, TEST_DATA)
 
 
 async def test_form_invalid_email(hass):
-    """Test we handle invalid email format."""
+    """Test form handles invalid email format."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-            "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
+            "homeassistant.components.cisco_webex.config_flow.validate_config",
             side_effect=InvalidEmail,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -166,13 +165,13 @@ async def test_form_invalid_email(hass):
 
 
 async def test_form_email_not_found(hass):
-    """Test we handle email not found."""
+    """Test form handles email not found."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-            "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
+            "homeassistant.components.cisco_webex.config_flow.validate_config",
             side_effect=EmailNotFound,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -191,7 +190,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-            "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
+            "homeassistant.components.cisco_webex.config_flow.validate_config",
             side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -210,7 +209,7 @@ async def test_form_general_exception(hass):
     )
 
     with patch(
-            "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
+            "homeassistant.components.cisco_webex.config_flow.validate_config",
             side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -229,7 +228,7 @@ async def test_form_invalid_auth_token_type(hass):
     )
 
     with patch(
-            "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
+            "homeassistant.components.cisco_webex.config_flow.validate_config",
             side_effect=InvalidAuthTokenType,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -248,7 +247,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-            "homeassistant.components.cisco_webex.config_flow.ConfigValidationHub.validate_config",
+            "homeassistant.components.cisco_webex.config_flow.validate_config",
             side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(

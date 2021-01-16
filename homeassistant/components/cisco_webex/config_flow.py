@@ -8,60 +8,59 @@ import webexteamssdk
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_EMAIL, CONF_TOKEN
 
-from .const import DATA_DISPLAY_NAME, DOMAIN
+from .const import DATA_DISPLAY_NAME, DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema({CONF_TOKEN: str, CONF_EMAIL: str})
 
 
+def validate_config(api, data) -> bool:
+    """Test if auth and email are OK."""
+    try:
+        try:
+            # maybe check here it is a bot token as personal access tokens expire after 12 hours.
+            _LOGGER.debug("Authenticating with Webex")
+            person_me = api.people.me()
+            _LOGGER.debug("Authenticated OK.")
+            _LOGGER.debug("api.people.me: %s", person_me)
+
+            if person_me.type != "bot":
+                _LOGGER.error(
+                    "Although auth passed, an invalid token type is being used: %s",
+                    person_me.type,
+                )
+                raise InvalidAuthTokenType
+
+            email = data[CONF_EMAIL]
+            _LOGGER.debug("Searching Webex for people with email: '%s'", email)
+
+            person = next(iter(api.people.list(email=email)), None)
+            if person is not None:
+                _LOGGER.debug(
+                    "Found person with email: '%s' success. person: %s",
+                    email,
+                    person,
+                )
+                data[DATA_DISPLAY_NAME] = person.displayName
+                return True
+            _LOGGER.error("Cannot find any Webex user with email: %s", email)
+            raise EmailNotFound
+
+        except webexteamssdk.ApiError as error:
+            _LOGGER.error(error)
+            if error.status_code == 400:
+                raise EmailNotFound from error
+            if error.status_code == 401:
+                raise InvalidAuth from error
+            raise error
+    except requests.exceptions.ConnectionError as connection_error:
+        _LOGGER.error(connection_error)
+        raise CannotConnect from connection_error
+
+
 class ConfigValidationHub:
     """Methods for config validation."""
-
-    def validate_config(self, api, data) -> bool:
-        """Test if auth and email are OK."""
-
-        try:
-            try:
-                # maybe check here it is a bot token as personal access tokens expire after 12 hours.
-                _LOGGER.debug("Authenticating with Webex")
-                person_me = api.people.me()
-                _LOGGER.debug("Authenticated OK.")
-                _LOGGER.debug("api.people.me: %s", person_me)
-
-                if person_me.type != "bot":
-                    _LOGGER.error(
-                        "Although auth passed, an invalid token type is being used: %s",
-                        person_me.type,
-                    )
-                    raise InvalidAuthTokenType
-
-                email = data[CONF_EMAIL]
-                _LOGGER.debug("Searching Webex for people with email: '%s'", email)
-
-                person = next(iter(api.people.list(email=email)), None)
-                if person is not None:
-                    _LOGGER.debug(
-                        "Found person with email: '%s' success. person: %s",
-                        email,
-                        person,
-                    )
-                    data[DATA_DISPLAY_NAME] = person.displayName
-                    return True
-                else:
-                    _LOGGER.error("Cannot find any Webex user with email: %s", email)
-                    raise EmailNotFound
-
-            except webexteamssdk.ApiError as error:
-                _LOGGER.error(error)
-                if error.status_code == 400:
-                    raise EmailNotFound
-                if error.status_code == 401:
-                    raise InvalidAuth
-                raise error
-        except requests.exceptions.ConnectionError as connection_error:
-            _LOGGER.error(connection_error)
-            raise CannotConnect
 
 
 async def validate_token_and_email(hass: core.HomeAssistant, data):
@@ -72,14 +71,13 @@ async def validate_token_and_email(hass: core.HomeAssistant, data):
     try:
         # pylint: disable=no-value-for-parameter
         vol.Email()(data[CONF_EMAIL])
-    except vol.error.EmailInvalid:
-        raise InvalidEmail
+    except vol.error.EmailInvalid as error:
+        raise InvalidEmail from error
 
-    hub = ConfigValidationHub()
     api = webexteamssdk.WebexTeamsAPI(access_token=data[CONF_TOKEN])
     data[DATA_DISPLAY_NAME] = "unknown"
 
-    await hass.async_add_executor_job(hub.validate_config, api, data)
+    await hass.async_add_executor_job(validate_config, api, data)
 
     # Return info that you want to store in the config entry.
     return {"title": f"{data[DATA_DISPLAY_NAME]} - {data[CONF_EMAIL]}"}

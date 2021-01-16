@@ -15,7 +15,6 @@ async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up Webex sensor based on a config entry."""
-
     webex_domain_data = hass.data[DOMAIN][config_entry.unique_id]
     config = config_entry.data
 
