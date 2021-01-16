@@ -13,6 +13,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_IDLE,
     DOMAIN as CLIMATE_DOMAIN,
     HVAC_MODE_COOL,
+    HVAC_MODE_DRY,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
@@ -122,12 +123,37 @@ async def test_thermostat_v2(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY, ATTR_TEMPERATURE: 25},
+        {
+            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ATTR_HVAC_MODE: HVAC_MODE_COOL,
+            ATTR_TEMPERATURE: 25,
+        },
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 13
+    assert args["valueId"] == {
+        "commandClassName": "Thermostat Mode",
+        "commandClass": 64,
+        "endpoint": 1,
+        "property": "mode",
+        "propertyName": "mode",
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "min": 0,
+            "max": 31,
+            "label": "Thermostat mode",
+            "states": {"0": "Off", "1": "Heat", "2": "Cool", "3": "Auto"},
+        },
+        "value": 1,
+    }
+    assert args["value"] == 2
+    args = client.async_send_command.call_args_list[1][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -274,3 +300,27 @@ async def test_thermostat_v2(
         )
 
     assert len(client.async_send_command.call_args_list) == 0
+
+    # Test setting invalid hvac mode
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {
+                ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                ATTR_HVAC_MODE: HVAC_MODE_DRY,
+            },
+            blocking=True,
+        )
+
+    # Test setting invalid preset mode
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {
+                ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                ATTR_PRESET_MODE: "invalid_mode",
+            },
+            blocking=True,
+        )
