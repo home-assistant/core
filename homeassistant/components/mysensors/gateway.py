@@ -7,7 +7,7 @@ import sys
 
 import async_timeout
 from mysensors import mysensors, BaseAsyncGateway, Sensor, Message
-from typing import Optional, List, Any, Callable, Coroutine
+from typing import Optional, List, Any, Callable, Coroutine, Union, Dict
 import voluptuous as vol
 
 from homeassistant.const import CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_STOP
@@ -70,21 +70,11 @@ def get_mysensors_gateway(hass: HomeAssistantType, gateway_id: GatewayId) -> Opt
     return gateways.get(gateway_id)
 
 
-async def setup_gateways(hass: HomeAssistantType, config):
+async def setup_gateway(hass: HomeAssistantType, entry: ConfigEntry) -> Optional[BaseAsyncGateway]:
     """Set up all gateways."""
-    conf = config[DOMAIN]
-    gateways = {}
 
-    for index, gateway_conf in enumerate(conf[CONF_GATEWAYS]):
-        persistence_file = gateway_conf.get(
-            CONF_PERSISTENCE_FILE,
-            hass.config.path(f"mysensors{index + 1}.pickle"),
-        )
-        ready_gateway = await _get_gateway(hass, config, gateway_conf, persistence_file)
-        if ready_gateway is not None:
-            gateways[id(ready_gateway)] = ready_gateway
-
-    return gateways
+    ready_gateway = await _get_gateway(hass, entry)
+    return ready_gateway
 
 
 async def _get_gateway(hass: HomeAssistantType, entry: Union[ConfigEntry,Dict[str, Any]], unique_id: Optional[str]=None) -> Optional[BaseAsyncGateway]:
@@ -180,13 +170,12 @@ async def _get_gateway(hass: HomeAssistantType, entry: Union[ConfigEntry,Dict[st
     return gateway
 
 
-async def finish_setup(hass: HomeAssistantType, hass_config, gateways: List[BaseAsyncGateway]):
+async def finish_setup(hass: HomeAssistantType, hass_config: ConfigEntry, gateway: BaseAsyncGateway):
     """Load any persistent devices and platforms and start gateway."""
     discover_tasks = []
     start_tasks = []
-    for gateway in gateways.values():
-        discover_tasks.append(_discover_persistent_devices(hass, hass_config, gateway))
-        start_tasks.append(_gw_start(hass, gateway))
+    discover_tasks.append(_discover_persistent_devices(hass, hass_config, gateway))
+    start_tasks.append(_gw_start(hass, gateway))
     if discover_tasks:
         # Make sure all devices and platforms are loaded before gateway start.
         await asyncio.wait(discover_tasks)
@@ -194,7 +183,7 @@ async def finish_setup(hass: HomeAssistantType, hass_config, gateways: List[Base
         await asyncio.wait(start_tasks)
 
 
-async def _discover_persistent_devices(hass: HomeAssistantType, hass_config, gateway: BaseAsyncGateway):
+async def _discover_persistent_devices(hass: HomeAssistantType, hass_config: ConfigEntry, gateway: BaseAsyncGateway):
     """Discover platforms for devices loaded via persistence file."""
     tasks = []
     new_devices = defaultdict(list)
@@ -206,25 +195,25 @@ async def _discover_persistent_devices(hass: HomeAssistantType, hass_config, gat
             validated = validate_child(gateway, node_id, child)
             for platform, dev_ids in validated.items():
                 new_devices[platform].extend(dev_ids)
+    _LOGGER.debug("discovering persistent devices: %s", new_devices)
     for platform, dev_ids in new_devices.items():
-        tasks.append(discover_mysensors_platform(hass, hass_config, platform, dev_ids))
+        discover_mysensors_platform(hass, hass_config, platform, dev_ids)
     if tasks:
         await asyncio.wait(tasks)
+
+async def gw_stop(hass, gateway: BaseAsyncGateway):
+    _LOGGER.info("stopping gateway %s", gateway.unique_id)
+    if hasattr(gateway, "connect_task") and gateway.connect_task is not None and not gateway.connect_task.done():
+        gateway.connect_task.cancel()
+    await gateway.stop()
 
 
 async def _gw_start(hass: HomeAssistantType, gateway: BaseAsyncGateway):
     """Start the gateway."""
     # Don't use hass.async_create_task to avoid holding up setup indefinitely.
-    connect_task = hass.loop.create_task(gateway.start())
+    gateway.connect_task = hass.loop.create_task(gateway.start())
 
-    @callback
-    def gw_stop(event):
-        """Trigger to stop the gateway."""
-        hass.async_create_task(gateway.stop())
-        if not connect_task.done():
-            connect_task.cancel()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gw_stop)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: gw_stop(hass, gateway))
     if gateway.device == "mqtt":
         # Gatways connected via mqtt doesn't send gateway ready message.
         return
@@ -245,7 +234,7 @@ async def _gw_start(hass: HomeAssistantType, gateway: BaseAsyncGateway):
         hass.data.pop(gateway_ready_key, None)
 
 
-def _gw_callback_factory(hass: HomeAssistantType, hass_config) -> Callable[[Message], None]:
+def _gw_callback_factory(hass: HomeAssistantType, hass_config: ConfigEntry) -> Callable[[Message], None]:
     """Return a new callback for the gateway."""
 
     @callback

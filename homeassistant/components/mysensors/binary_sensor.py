@@ -12,8 +12,11 @@ from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorEntity,
 )
+from homeassistant.components.mysensors import on_unload
+from homeassistant.components.mysensors.const import MYSENSORS_DISCOVERY
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
 SENSORS = {
@@ -30,14 +33,23 @@ SENSORS = {
 
 async def async_setup_platform(hass: HomeAssistantType, config, async_add_entities, discovery_info=None):
     """Set up the mysensors platform for binary sensors."""
-    mysensors.setup_mysensors_platform(
-        hass,
-        DOMAIN,
-        discovery_info,
-        MySensorsBinarySensor,
-        async_add_entities=async_add_entities,
-    )
+    pass
 
+
+async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable):
+    async def async_discover(discovery_info):
+        """Discover and add a MySensors binary_sensor."""
+        mysensors.setup_mysensors_platform(
+            hass,
+            DOMAIN,
+            discovery_info,
+            MySensorsBinarySensor,
+            async_add_entities=async_add_entities,
+        )
+
+    await on_unload(hass, config_entry, async_dispatcher_connect(
+        hass, MYSENSORS_DISCOVERY.format(config_entry.unique_id, DOMAIN), async_discover
+    ))
 
 class MySensorsBinarySensor(mysensors.device.MySensorsEntity, BinarySensorEntity):
     """Representation of a MySensors Binary Sensor child node."""

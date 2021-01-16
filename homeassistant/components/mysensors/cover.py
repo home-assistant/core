@@ -1,19 +1,39 @@
 """Support for MySensors covers."""
+import logging
+from typing import Callable
+
 from homeassistant.components import mysensors
 from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverEntity
+from homeassistant.components.mysensors import on_unload
+from homeassistant.components.mysensors.const import MYSENSORS_DISCOVERY
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass: HomeAssistantType, config, async_add_entities, discovery_info=None):
     """Set up the mysensors platform for covers."""
-    mysensors.setup_mysensors_platform(
-        hass,
-        DOMAIN,
-        discovery_info,
-        MySensorsCover,
-        async_add_entities=async_add_entities,
-    )
+    pass
+
+
+async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable):
+
+    async def async_discover(discovery_info):
+        """Discover and add a MySensors cover."""
+        mysensors.setup_mysensors_platform(
+            hass,
+            DOMAIN,
+            discovery_info,
+            MySensorsCover,
+            async_add_entities=async_add_entities,
+        )
+
+    await on_unload(hass, config_entry, async_dispatcher_connect(
+        hass, MYSENSORS_DISCOVERY.format(config_entry.unique_id, DOMAIN), async_discover
+    ))
 
 
 class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):

@@ -3,7 +3,9 @@ import logging
 from typing import Optional, Dict, List, Type, Callable, Union, Tuple
 
 import voluptuous as vol
+from mysensors import BaseAsyncGateway
 
+from .device import MySensorsEntity, MySensorsDevice
 from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
 from homeassistant.const import CONF_OPTIMISTIC
 from homeassistant.core import callback
@@ -23,10 +25,13 @@ from .const import (
     CONF_TOPIC_OUT_PREFIX,
     CONF_VERSION,
     DOMAIN,
-    MYSENSORS_GATEWAYS,
+    MYSENSORS_GATEWAYS, SensorType, PLATFORM_TYPES, SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT, GatewayId,
+    MYSENSORS_ON_UNLOAD,
 )
 from .device import get_mysensors_devices
-from .gateway import finish_setup, get_mysensors_gateway, setup_gateways
+from .gateway import finish_setup, get_mysensors_gateway, setup_gateway, gw_stop
+from .const import DevId
+from ... import config_entries
 from ...config_entries import ConfigEntry
 from ...helpers.typing import HomeAssistantType, ConfigType
 
@@ -37,7 +42,7 @@ CONF_NODE_NAME = "name"
 
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003
-DEFAULT_VERSION = "1.4"
+DEFAULT_VERSION = "2.3"
 
 
 def has_all_unique_files(value):
@@ -116,32 +121,90 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config: ConfigType) -> bool:
     """Set up the MySensors component."""
-    gateways = await setup_gateways(hass, config)
+    if config is None or DOMAIN not in config:
+        #when configured via ConfigEntry, hass calls async_setup(hass,None) and then calls async_setup_entry(...).
+        #so in async_setup we have to check if there are any ConfigEntries and then return True. This lets async_setup_entry run.
+        return bool(hass.config_entries.async_entries(DOMAIN))
 
-    if not gateways:
-        _LOGGER.error("No devices could be setup as gateways, check your configuration")
-        return False
+    config = config[DOMAIN]
+    user_inputs = [{
+        CONF_DEVICE: gw[CONF_DEVICE],
+        CONF_PERSISTENCE: gw.get(CONF_PERSISTENCE_FILE,None),
+        CONF_BAUD_RATE: gw.get(CONF_BAUD_RATE, None),
+        CONF_TCP_PORT: gw.get(CONF_TCP_PORT, None),
+        CONF_TOPIC_OUT_PREFIX: gw.get(CONF_TOPIC_OUT_PREFIX, None),
+        CONF_TOPIC_IN_PREFIX: gw.get(CONF_TOPIC_IN_PREFIX, None),
 
-    hass.data[MYSENSORS_GATEWAYS] = gateways
+        CONF_OPTIMISTIC: config.get(CONF_OPTIMISTIC, None),
+        CONF_RETAIN: config.get(CONF_RETAIN, None),
+        CONF_VERSION: config.get(CONF_VERSION, None),
+        #nodes config ignored at this time. renaming nodes can now be done from the frontend.
+    } for gw in config[CONF_GATEWAYS]]
+    user_inputs = [{k: v for k, v in userinput.items() if v is not None} for userinput in user_inputs]
 
-    hass.async_create_task(finish_setup(hass, config, gateways))
+    #there is an actual configuration in configuration.yaml, so we have to process it
+    for user_input in user_inputs:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=user_input
+            )
+        )
 
     return True
 
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
 
-def _get_mysensors_name(gateway, node_id, child_id):
-    """Return a name for a node child."""
-    node_name = f"{gateway.sensors[node_id].sketch_name} {node_id}"
-    node_name = next(
-        (
-            node[CONF_NODE_NAME]
-            for conf_id, node in gateway.nodes_config.items()
-            if node.get(CONF_NODE_NAME) is not None and conf_id == node_id
-        ),
-        node_name,
-    )
-    return f"{node_name} {child_id}"
+    _LOGGER.debug("async_setup_entry: %s (id: %s)", entry.title, entry.unique_id)
+    gateway = await setup_gateway(hass, entry)
 
+    if not gateway:
+        _LOGGER.error("gateway setup failed")
+        return False
+
+    if MYSENSORS_GATEWAYS not in hass.data:
+        hass.data[MYSENSORS_GATEWAYS] = {}
+    hass.data[MYSENSORS_GATEWAYS][entry.unique_id] = gateway
+
+    async def finish():
+        for platform in SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT:
+            await hass.config_entries.async_forward_entry_setup(entry, platform)
+        await finish_setup(hass, entry, gateway)
+    hass.async_create_task(finish())
+
+    return True
+
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+    _LOGGER.debug("unload entry: %s (id: %s)", entry.title, entry.unique_id)
+
+    gateway = get_mysensors_gateway(hass, entry.unique_id)
+    if not gateway:
+        _LOGGER.error("cant unload configentry %s, no gateway found", entry.unique_id)
+        return False
+
+    for platform in SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT:
+        _LOGGER.debug("forwarding unload to %s", platform)
+        await hass.config_entries.async_forward_entry_unload(entry, platform)
+
+    key = MYSENSORS_ON_UNLOAD.format(entry.unique_id)
+    if key in hass.data:
+        for fnct in hass.data[key]:
+            fnct()
+
+    del hass.data[MYSENSORS_GATEWAYS][entry.unique_id]
+
+    hass.async_create_task(gw_stop(hass, gateway))
+    return True
+
+
+async def on_unload(hass: HomeAssistantType, entry: Union[ConfigEntry,GatewayId], fnct: Callable) -> None:
+    if isinstance(entry, GatewayId):
+        uniqueid = entry
+    else:
+        uniqueid = entry.unique_id
+    key = MYSENSORS_ON_UNLOAD.format(uniqueid)
+    if key not in hass.data:
+        hass.data[key] = []
+    hass.data[key].append(fnct)
 
 @callback
 def setup_mysensors_platform(
@@ -162,6 +225,7 @@ def setup_mysensors_platform(
     # Only act if called via MySensors by discovery event.
     # Otherwise gateway is not set up.
     if not discovery_info:
+        _LOGGER.debug("skipping setup due to no discovery info")
         return None
     if device_args is None:
         device_args = ()
@@ -170,19 +234,20 @@ def setup_mysensors_platform(
     for dev_id in new_dev_ids:
         devices: Dict[DevId, MySensorsDevice] = get_mysensors_devices(hass, domain)
         if dev_id in devices:
+            _LOGGER.debug("skipping setup of %s for platform %s as it already exists", dev_id, domain)
             continue
         gateway_id, node_id, child_id, value_type = dev_id
         gateway: Optional[BaseAsyncGateway] = get_mysensors_gateway(hass, gateway_id)
         if not gateway:
+            _LOGGER.warning("skipping setup of %s, no gateway found.", dev_id)
             continue
         device_class_copy = device_class
         if isinstance(device_class, dict):
             child = gateway.sensors[node_id].children[child_id]
             s_type = gateway.const.Presentation(child.type).name
             device_class_copy = device_class[s_type]
-        name = _get_mysensors_name(gateway, node_id, child_id)
 
-        args_copy = (*device_args, gateway, node_id, child_id, name, value_type)
+        args_copy = (*device_args, gateway, node_id, child_id, value_type)
         devices[dev_id] = device_class_copy(*args_copy)
         new_devices.append(devices[dev_id])
     if new_devices:

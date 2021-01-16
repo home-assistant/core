@@ -1,15 +1,17 @@
 """Handle MySensors devices."""
 from functools import partial
 import logging
-from typing import Dict, Optional, Any
-from mysensors import BaseAsyncGateway
 from typing import Dict, List, Optional, Any
+
+from mysensors import Sensor, BaseAsyncGateway
+from mysensors.sensor import ChildSensor
 
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from .const import DevId, PLATFORM_TYPES
+from .const import DOMAIN
 
 from .const import CHILD_CALLBACK, NODE_CALLBACK, UPDATE_DELAY
 
@@ -40,6 +42,22 @@ class MySensorsDevice:
     @property
     def dev_id(self) -> DevId:
         return self.gateway_id, self.node_id, self.child_id, self.value_type
+
+    @property
+    def logger(self):
+        return logging.getLogger(f"{__name__}.{self.name}")
+
+    async def async_will_remove_from_hass(self):
+        for platform in PLATFORM_TYPES:
+            platform_str = MYSENSORS_PLATFORM_DEVICES.format(platform)
+            if platform_str in self.hass.data:
+                platform_dict = self.hass.data[platform_str]
+                if self.dev_id in platform_dict:
+                    if platform_dict[self.dev_id] is not self:
+                        self.logger.warning("possible duplicate device: %s", self.dev_id)
+                    del platform_dict[self.dev_id]
+                    self.logger.debug("deleted %s from platform %s", self.dev_id, platform)
+
 
     @property
     def gateway_id(self) -> str:

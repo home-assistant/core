@@ -3,13 +3,20 @@ from typing import Callable
 
 from homeassistant.components import mysensors
 from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.components.mysensors import DevId
+from homeassistant.components.mysensors import DevId, on_unload
 from homeassistant.components.mysensors.const import GatewayId
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 
+
+async def async_setup_platform(hass: HomeAssistantType, config, async_add_entities, discovery_info=None) -> None:
+    pass
+
+
+async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable) -> None:
+    pass
 
 async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up the MySensors device scanner."""
@@ -24,18 +31,18 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
         return False
 
     for device in new_devices:
-        async_dispatcher_connect(
         gateway_id: GatewayId = device.gateway.unique_id
         dev_id: DevId = (gateway_id, device.node_id, device.child_id, device.value_type)
+        await on_unload(hass, gateway_id, async_dispatcher_connect(
             hass,
             mysensors.const.CHILD_CALLBACK.format(*dev_id),
             device.async_update_callback,
-        )
-        async_dispatcher_connect(
+        ))
+        await on_unload(hass, gateway_id, async_dispatcher_connect(
             hass,
             mysensors.const.NODE_CALLBACK.format(gateway_id, device.node_id),
             device.async_update_callback,
-        )
+        ))
 
     return True
 

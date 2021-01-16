@@ -1,4 +1,6 @@
 """MySensors notification service."""
+from typing import Callable
+
 from homeassistant.components import mysensors
 from homeassistant.components.notify import ATTR_TARGET, DOMAIN, BaseNotificationService
 

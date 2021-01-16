@@ -568,7 +568,14 @@ omit =
     homeassistant/components/mychevy/*
     homeassistant/components/mycroft/*
     homeassistant/components/mycroft/notify.py
-    homeassistant/components/mysensors/*
+    homeassistant/components/mysensors/binary_sensor.py
+    homeassistant/components/mysensors/light.py
+    homeassistant/components/mysensors/climate.py
+    homeassistant/components/mysensors/cover.py
+    homeassistant/components/mysensors/device_tracker.py
+    homeassistant/components/mysensors/sensor.py
+    homeassistant/components/mysensors/switch.py
+    homeassistant/components/mysensors/gateway.py
     homeassistant/components/mystrom/binary_sensor.py
     homeassistant/components/mystrom/light.py
     homeassistant/components/mystrom/switch.py

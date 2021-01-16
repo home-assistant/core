@@ -1,6 +1,9 @@
 """MySensors constants."""
 from collections import defaultdict
+from typing import Set, Dict, Tuple, List
+
 ATTR_DEVICES: str = "devices"
+
 CONF_BAUD_RATE: str = "baud_rate"
 CONF_DEVICE: str = "device"
 CONF_GATEWAYS: str = "gateways"
@@ -21,6 +24,7 @@ SCHEMA: str = "schema"
 CHILD_CALLBACK: str = "mysensors_child_callback_{}_{}_{}_{}"
 NODE_CALLBACK: str = "mysensors_node_callback_{}_{}"
 MYSENSORS_DISCOVERY = "mysensors_discovery_{}_{}"
+MYSENSORS_ON_UNLOAD = "MYSENSORS_ON_UNLOAD_{}"
 TYPE: str = "type"
 UPDATE_DELAY: float = 0.1
 
@@ -142,3 +146,5 @@ TYPE_TO_PLATFORMS: Dict[SensorType, List[str]] = defaultdict(list)
 for platform, platform_types in PLATFORM_TYPES.items():
     for s_type_name in platform_types:
         TYPE_TO_PLATFORMS[s_type_name].append(platform)
+
+SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT = set(PLATFORM_TYPES.keys()) - {"notify"}
