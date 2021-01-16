@@ -11,7 +11,6 @@ from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
     CONF_PASSWORD,
-    CONF_PORT,
     CONF_USERNAME,
     HTTP_DIGEST_AUTHENTICATION,
 )
@@ -41,9 +40,9 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
         AxisEntityBase.__init__(self, device)
 
         config = {
-            CONF_NAME: device.config_entry.data[CONF_NAME],
-            CONF_USERNAME: device.config_entry.data[CONF_USERNAME],
-            CONF_PASSWORD: device.config_entry.data[CONF_PASSWORD],
+            CONF_NAME: device.name,
+            CONF_USERNAME: device.username,
+            CONF_PASSWORD: device.password,
             CONF_MJPEG_URL: self.mjpeg_source,
             CONF_STILL_IMAGE_URL: self.image_source,
             CONF_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
@@ -78,7 +77,7 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
     @property
     def image_source(self):
         """Return still image URL for device."""
-        return f"http://{self.device.host}:{self.device.config_entry.data[CONF_PORT]}/axis-cgi/jpg/image.cgi"
+        return f"http://{self.device.host}:{self.device.port}/axis-cgi/jpg/image.cgi"
 
     @property
     def mjpeg_source(self):
@@ -87,7 +86,7 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
         if self.device.option_stream_profile != DEFAULT_STREAM_PROFILE:
             options = f"?&streamprofile={self.device.option_stream_profile}"
 
-        return f"http://{self.device.host}:{self.device.config_entry.data[CONF_PORT]}/axis-cgi/mjpg/video.cgi{options}"
+        return f"http://{self.device.host}:{self.device.port}/axis-cgi/mjpg/video.cgi{options}"
 
     async def stream_source(self):
         """Return the stream source."""
@@ -95,4 +94,4 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
         if self.device.option_stream_profile != DEFAULT_STREAM_PROFILE:
             options = f"&streamprofile={self.device.option_stream_profile}"
 
-        return f"rtsp://{self.device.config_entry.data[CONF_USERNAME]}:{self.device.config_entry.data[CONF_PASSWORD]}@{self.device.host}/axis-media/media.amp?videocodec=h264{options}"
+        return f"rtsp://{self.device.username}:{self.device.password}@{self.device.host}/axis-media/media.amp?videocodec=h264{options}"
