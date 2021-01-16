@@ -1,4 +1,6 @@
 """Test the Cisco Webex config flow."""
+from unittest.mock import patch
+
 import pytest
 import requests
 
@@ -13,7 +15,6 @@ from homeassistant.components.cisco_webex.config_flow import (
 )
 from homeassistant.components.cisco_webex.const import DOMAIN
 
-from tests.async_mock import patch
 from tests.components.cisco_webex.mocks import MockApiError, MockWebexTeamsAPI
 
 TEST_DATA = {"email": "fff@fff.com"}

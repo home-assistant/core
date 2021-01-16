@@ -1,8 +1,9 @@
 """Test the Cisco Webex config flow."""
 
+from unittest.mock import patch
+
 from homeassistant.components.cisco_webex.sensor import WebexPresenceSensor
 
-from tests.async_mock import patch
 from tests.components.cisco_webex.mocks import MockWebexTeamsAPI
 
 MOCK_API = MockWebexTeamsAPI(access_token="123")
