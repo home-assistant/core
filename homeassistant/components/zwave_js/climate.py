@@ -11,7 +11,7 @@ from zwave_js_server.const import (
     THERMOSTAT_SETPOINT_PROPERTY,
     CommandClass,
     ThermostatMode,
-    ThermostatOperatingMode,
+    ThermostatOperatingState,
     ThermostatSetpointType,
 )
 from zwave_js_server.model.value import Value as ZwaveValue
@@ -69,18 +69,18 @@ ZW_HVAC_MODE_MAP: Dict[int, str] = {
 }
 
 HVAC_CURRENT_MAP: Dict[int, str] = {
-    ThermostatOperatingMode.IDLE: CURRENT_HVAC_IDLE,
-    ThermostatOperatingMode.PENDING_HEAT: CURRENT_HVAC_IDLE,
-    ThermostatOperatingMode.HEATING: CURRENT_HVAC_HEAT,
-    ThermostatOperatingMode.PENDING_COOL: CURRENT_HVAC_IDLE,
-    ThermostatOperatingMode.COOLING: CURRENT_HVAC_COOL,
-    ThermostatOperatingMode.FAN_ONLY: CURRENT_HVAC_FAN,
-    ThermostatOperatingMode.VENT_ECONOMIZER: CURRENT_HVAC_FAN,
-    ThermostatOperatingMode.AUX_HEATING: CURRENT_HVAC_HEAT,
-    ThermostatOperatingMode.SECOND_STAGE_HEATING: CURRENT_HVAC_HEAT,
-    ThermostatOperatingMode.SECOND_STAGE_COOLING: CURRENT_HVAC_COOL,
-    ThermostatOperatingMode.SECOND_STAGE_AUX_HEAT: CURRENT_HVAC_HEAT,
-    ThermostatOperatingMode.THIRD_STAGE_AUX_HEAT: CURRENT_HVAC_HEAT,
+    ThermostatOperatingState.IDLE: CURRENT_HVAC_IDLE,
+    ThermostatOperatingState.PENDING_HEAT: CURRENT_HVAC_IDLE,
+    ThermostatOperatingState.HEATING: CURRENT_HVAC_HEAT,
+    ThermostatOperatingState.PENDING_COOL: CURRENT_HVAC_IDLE,
+    ThermostatOperatingState.COOLING: CURRENT_HVAC_COOL,
+    ThermostatOperatingState.FAN_ONLY: CURRENT_HVAC_FAN,
+    ThermostatOperatingState.VENT_ECONOMIZER: CURRENT_HVAC_FAN,
+    ThermostatOperatingState.AUX_HEATING: CURRENT_HVAC_HEAT,
+    ThermostatOperatingState.SECOND_STAGE_HEATING: CURRENT_HVAC_HEAT,
+    ThermostatOperatingState.SECOND_STAGE_COOLING: CURRENT_HVAC_COOL,
+    ThermostatOperatingState.SECOND_STAGE_AUX_HEAT: CURRENT_HVAC_HEAT,
+    ThermostatOperatingState.THIRD_STAGE_AUX_HEAT: CURRENT_HVAC_HEAT,
 }
 
 
