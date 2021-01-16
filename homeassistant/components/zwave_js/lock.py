@@ -60,8 +60,6 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
     @property
     def is_locked(self) -> Optional[bool]:
         """Return true if the lock is locked."""
-        if not self.info.primary_value:
-            return None
         return int(
             LOCK_CMD_CLASS_TO_LOCKED_STATE_MAP[
                 CommandClass(self.info.primary_value.command_class)
