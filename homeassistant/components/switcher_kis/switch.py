@@ -1,7 +1,8 @@
 """Home Assistant Switcher Component Switch platform."""
-from typing import TYPE_CHECKING, Callable, Dict
+from typing import Callable, Dict
 
 from aioswitcher.api import SwitcherV2Api
+from aioswitcher.api.messages import SwitcherV2ControlResponseMSG
 from aioswitcher.consts import (
     COMMAND_OFF,
     COMMAND_ON,
@@ -9,10 +10,10 @@ from aioswitcher.consts import (
     STATE_ON as SWITCHER_STATE_ON,
     WAITING_TEXT,
 )
+from aioswitcher.devices import SwitcherV2Device
 import voluptuous as vol
 
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchEntity
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType, ServiceCallType
@@ -26,11 +27,6 @@ from . import (
     SIGNAL_SWITCHER_DEVICE_UPDATE,
 )
 
-# pylint: disable=ungrouped-imports
-if TYPE_CHECKING:
-    from aioswitcher.api.messages import SwitcherV2ControlResponseMSG
-    from aioswitcher.devices import SwitcherV2Device
-
 CONF_AUTO_OFF = "auto_off"
 CONF_TIMER_MINUTES = "timer_minutes"
 
@@ -42,22 +38,16 @@ DEVICE_PROPERTIES_TO_HA_ATTRIBUTES = {
 }
 
 SERVICE_SET_AUTO_OFF_NAME = "set_auto_off"
-SERVICE_SET_AUTO_OFF_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_AUTO_OFF): cv.time_period_str,
-    }
-)
+SERVICE_SET_AUTO_OFF_SCHEMA = {
+    vol.Required(CONF_AUTO_OFF): cv.time_period_str,
+}
 
 SERVICE_TURN_ON_WITH_TIMER_NAME = "turn_on_with_timer"
-SERVICE_TURN_ON_WITH_TIMER_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_TIMER_MINUTES): vol.All(
-            cv.positive_int, vol.Range(min=1, max=150)
-        ),
-    }
-)
+SERVICE_TURN_ON_WITH_TIMER_SCHEMA = {
+    vol.Required(CONF_TIMER_MINUTES): vol.All(
+        cv.positive_int, vol.Range(min=1, max=150)
+    ),
+}
 
 
 async def async_setup_platform(
@@ -119,7 +109,7 @@ async def async_setup_platform(
 class SwitcherControl(SwitchEntity):
     """Home Assistant switch entity."""
 
-    def __init__(self, device_data: "SwitcherV2Device") -> None:
+    def __init__(self, device_data: SwitcherV2Device) -> None:
         """Initialize the entity."""
         self._self_initiated = False
         self._device_data = device_data
@@ -178,7 +168,7 @@ class SwitcherControl(SwitchEntity):
             )
         )
 
-    async def async_update_data(self, device_data: "SwitcherV2Device") -> None:
+    async def async_update_data(self, device_data: SwitcherV2Device) -> None:
         """Update the entity data."""
         if device_data:
             if self._self_initiated:
@@ -199,7 +189,7 @@ class SwitcherControl(SwitchEntity):
     async def _control_device(self, send_on: bool) -> None:
         """Turn the entity on or off."""
 
-        response: "SwitcherV2ControlResponseMSG" = None
+        response: SwitcherV2ControlResponseMSG = None
         async with SwitcherV2Api(
             self.hass.loop,
             self._device_data.ip_addr,
