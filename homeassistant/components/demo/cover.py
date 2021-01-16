@@ -34,6 +34,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 hass,
                 "cover_5",
                 "Pergola Roof",
+                tilt_position=60,
                 supported_features=(
                     SUPPORT_OPEN_TILT
                     | SUPPORT_STOP_TILT
