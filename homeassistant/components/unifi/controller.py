@@ -390,24 +390,24 @@ class UniFiController:
         return True
 
     @callback
-    def async_heatbeat(self, entity_id: str, heatbeat_expire_time: datetime) -> None:
+    def async_heatbeat(self, unique_id: str, heatbeat_expire_time: datetime) -> None:
         """Signal when a device has fresh home state."""
         if heatbeat_expire_time is not None:
-            self._heatbeat_time[entity_id] = heatbeat_expire_time
+            self._heatbeat_time[unique_id] = heatbeat_expire_time
             return
 
-        if entity_id in self._heatbeat_time:
-            del self._heatbeat_time[entity_id]
+        if unique_id in self._heatbeat_time:
+            del self._heatbeat_time[unique_id]
 
     @callback
     def _async_check_for_stale(self, *_) -> None:
         """Check for any devices scheduled to be marked disconnected."""
         now = dt_util.utcnow()
 
-        for entity_id, heatbeat_expire_time in self._heatbeat_time.items():
+        for unique_id, heatbeat_expire_time in self._heatbeat_time.items():
             if now > heatbeat_expire_time:
                 async_dispatcher_send(
-                    self.hass, f"{HEATBEAT_MISSED_SIGNAL}_{entity_id}"
+                    self.hass, f"{HEATBEAT_MISSED_SIGNAL}_{unique_id}"
                 )
 
     @staticmethod

@@ -161,7 +161,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{HEATBEAT_MISSED_SIGNAL}_{self.entity_id}",
+                f"{HEATBEAT_MISSED_SIGNAL}_{self.unique_id}",
                 self._make_disconnected,
             )
         )
@@ -169,7 +169,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
-        self.controller.async_heatbeat(self.entity_id, None)
+        self.controller.async_heatbeat(self.unique_id, None)
         await super().async_will_remove_from_hass()
 
     @callback
@@ -182,7 +182,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             ):
                 self._is_connected = True
                 self.schedule_update = False
-                self.controller.async_heatbeat(self.entity_id, None)
+                self.controller.async_heatbeat(self.unique_id, None)
                 self.heatbeat_check = False
 
             # Ignore extra scheduled update from wired bug
@@ -197,7 +197,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         if self.schedule_update:
             self.schedule_update = False
             self.controller.async_heatbeat(
-                self.entity_id, dt_util.utcnow() + self.controller.option_detection_time
+                self.unique_id, dt_util.utcnow() + self.controller.option_detection_time
             )
             self.heatbeat_check = True
 
@@ -301,7 +301,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{HEATBEAT_MISSED_SIGNAL}_{self.entity_id}",
+                f"{HEATBEAT_MISSED_SIGNAL}_{self.unique_id}",
                 self._make_disconnected,
             )
         )
@@ -309,7 +309,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
-        self.controller.async_heatbeat(self.entity_id, None)
+        self.controller.async_heatbeat(self.unique_id, None)
         await super().async_will_remove_from_hass()
 
     @callback
@@ -319,7 +319,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         if self.device.last_updated == SOURCE_DATA:
             self._is_connected = True
             self.controller.async_heatbeat(
-                self.entity_id,
+                self.unique_id,
                 dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 60),
             )
 
