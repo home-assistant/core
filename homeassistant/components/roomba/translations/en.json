@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "iRobot {name} ({host})",
     "step": {
       "init": {
         "title": "Automaticlly connect to the device",
@@ -18,7 +19,7 @@
       },      
       "link": {
         "title": "Retrieve Password",
-        "description": "Press and hold the Home button until the device generates a sound (about two seconds)."
+        "description": "Press and hold the Home button on {name} until the device generates a sound (about two seconds)."
       },
       "link_manual": {
         "title": "Enter Password",
@@ -32,7 +33,9 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "not_irobot_device": "Discovered device not an iRobot device"
     }    
   },
   "options": {
