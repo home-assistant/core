@@ -79,11 +79,3 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await huisbaasje.authenticate()
 
         return huisbaasje.get_user_id()
-
-    async def _entry_exists(self, user_id):
-        entries = self._async_current_entries()
-        for entry in entries:
-            if entry.data[CONF_ID] == user_id:
-                return True
-
-        return False
