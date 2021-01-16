@@ -162,21 +162,19 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         """Convert Z-Wave Thermostat modes into Home Assistant modes and presets."""
         all_modes: Dict[str, Optional[int]] = {}
         all_presets: Dict[str, Optional[int]] = {PRESET_NONE: None}
-        if self.info.primary_value:
-            # Z-Wave uses one list for both modes and presets.
-            # Iterate over all Z-Wave ThermostatModes and extract the hvac modes and presets.
-            for mode_id, mode_name in self.info.primary_value.metadata.states.items():
-                mode_id = int(mode_id)
-                if mode_id in THERMOSTAT_MODES:
-                    # treat value as hvac mode
-                    hass_mode = ZW_HVAC_MODE_MAP.get(mode_id)
-                    if hass_mode:
-                        all_modes[hass_mode] = mode_id
-                else:
-                    # treat value as hvac preset
-                    all_presets[mode_name] = mode_id
-        else:
-            all_modes[HVAC_MODE_HEAT] = None
+
+        # Z-Wave uses one list for both modes and presets.
+        # Iterate over all Z-Wave ThermostatModes and extract the hvac modes and presets.
+        for mode_id, mode_name in self.info.primary_value.metadata.states.items():
+            mode_id = int(mode_id)
+            if mode_id in THERMOSTAT_MODES:
+                # treat value as hvac mode
+                hass_mode = ZW_HVAC_MODE_MAP.get(mode_id)
+                if hass_mode:
+                    all_modes[hass_mode] = mode_id
+            else:
+                # treat value as hvac preset
+                all_presets[mode_name] = mode_id
         self._hvac_modes = all_modes
         self._hvac_presets = all_presets
 
