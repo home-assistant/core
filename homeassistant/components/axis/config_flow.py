@@ -8,13 +8,13 @@ from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.network import is_link_local
 
 from .const import (
@@ -26,7 +26,7 @@ from .const import (
 from .device import get_device
 from .errors import AuthenticationRequired, CannotConnect
 
-AXIS_OUI = {"00408C", "ACCC8E", "B8A44F"}
+AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f"}
 
 CONFIG_FILE = "axis.conf"
 
@@ -42,7 +42,7 @@ DEFAULT_PORT = 80
 class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
     """Handle a Axis config flow."""
 
-    VERSION = 2
+    VERSION = 3
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     @staticmethod
@@ -74,7 +74,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
                     password=user_input[CONF_PASSWORD],
                 )
 
-                await self.async_set_unique_id(device.vapix.serial_number)
+                await self.async_set_unique_id(format_mac(device.vapix.serial_number))
 
                 self._abort_if_unique_id_configured(
                     updates={
@@ -88,7 +88,6 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
                     CONF_PORT: user_input[CONF_PORT],
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_MAC: device.vapix.serial_number,
                     CONF_MODEL: device.vapix.product_number,
                 }
 
@@ -134,14 +133,14 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
         self.device_config[CONF_NAME] = name
 
-        title = f"{model} - {self.device_config[CONF_MAC]}"
+        title = f"{model} - {self.unique_id}"
         return self.async_create_entry(title=title, data=self.device_config)
 
     async def async_step_zeroconf(self, discovery_info):
         """Prepare configuration for a discovered Axis device."""
-        serial_number = discovery_info["properties"]["macaddress"]
+        serial_number = format_mac(discovery_info["properties"]["macaddress"])
 
-        if serial_number[:6] not in AXIS_OUI:
+        if serial_number[:8] not in AXIS_OUI:
             return self.async_abort(reason="not_axis_device")
 
         if is_link_local(ip_address(discovery_info[CONF_HOST])):

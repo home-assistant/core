@@ -19,7 +19,6 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -29,7 +28,8 @@ from homeassistant.const import (
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 
-MAC = "00408C12345"
+MAC = "00408C123456"
+FORMATTED_MAC = "00:40:8c:12:34:56"
 MODEL = "model"
 NAME = "name"
 
@@ -42,7 +42,6 @@ ENTRY_CONFIG = {
     CONF_USERNAME: "root",
     CONF_PASSWORD: "pass",
     CONF_PORT: 80,
-    CONF_MAC: MAC,
     CONF_MODEL: MODEL,
     CONF_NAME: NAME,
 }
@@ -80,7 +79,7 @@ BASIC_DEVICE_INFO_RESPONSE = {
         "propertyList": {
             "ProdNbr": "M1065-LW",
             "ProdType": "Network Camera",
-            "SerialNumber": "00408C12345",
+            "SerialNumber": MAC,
             "Version": "9.80.1",
         }
     },
@@ -170,7 +169,7 @@ root.IOPort.I0.Input.Trig=closed
 root.Output.NbrOfOutputs=0
 """
 
-PROPERTIES_RESPONSE = """root.Properties.API.HTTP.Version=3
+PROPERTIES_RESPONSE = f"""root.Properties.API.HTTP.Version=3
 root.Properties.API.Metadata.Metadata=yes
 root.Properties.API.Metadata.Version=1.0
 root.Properties.EmbeddedDevelopment.Version=2.16
@@ -181,7 +180,7 @@ root.Properties.Image.Format=jpeg,mjpeg,h264
 root.Properties.Image.NbrOfViews=2
 root.Properties.Image.Resolution=1920x1080,1280x960,1280x720,1024x768,1024x576,800x600,640x480,640x360,352x240,320x240
 root.Properties.Image.Rotation=0,180
-root.Properties.System.SerialNumber=00408C12345
+root.Properties.System.SerialNumber={MAC}
 """
 
 PTZ_RESPONSE = ""
@@ -284,7 +283,8 @@ async def setup_axis_integration(hass, config=ENTRY_CONFIG, options=ENTRY_OPTION
         data=deepcopy(config),
         connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         options=deepcopy(options),
-        version=2,
+        version=3,
+        unique_id=FORMATTED_MAC,
     )
     config_entry.add_to_hass(hass)
 
@@ -308,7 +308,7 @@ async def test_device_setup(hass):
     assert device.api.vapix.firmware_version == "9.10.1"
     assert device.api.vapix.product_number == "M1065-LW"
     assert device.api.vapix.product_type == "Network Camera"
-    assert device.api.vapix.serial_number == "00408C12345"
+    assert device.api.vapix.serial_number == "00408C123456"
 
     entry = device.config_entry
 
@@ -321,7 +321,7 @@ async def test_device_setup(hass):
     assert device.host == ENTRY_CONFIG[CONF_HOST]
     assert device.model == ENTRY_CONFIG[CONF_MODEL]
     assert device.name == ENTRY_CONFIG[CONF_NAME]
-    assert device.serial == ENTRY_CONFIG[CONF_MAC]
+    assert device.unique_id == FORMATTED_MAC
 
 
 async def test_device_info(hass):
@@ -336,7 +336,7 @@ async def test_device_info(hass):
     assert device.api.vapix.firmware_version == "9.80.1"
     assert device.api.vapix.product_number == "M1065-LW"
     assert device.api.vapix.product_type == "Network Camera"
-    assert device.api.vapix.serial_number == "00408C12345"
+    assert device.api.vapix.serial_number == "00408C123456"
 
 
 async def test_device_support_mqtt(hass, mqtt_mock):

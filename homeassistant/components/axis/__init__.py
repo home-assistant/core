@@ -2,7 +2,10 @@
 
 import logging
 
-from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_DEVICE, CONF_MAC, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import callback
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.entity_registry import async_migrate_entries
 
 from .const import DOMAIN as AXIS_DOMAIN
 from .device import AxisNetworkDevice
@@ -23,12 +26,6 @@ async def async_setup_entry(hass, config_entry):
 
     if not await device.async_setup():
         return False
-
-    # 0.104 introduced config entry unique id, this makes upgrading possible
-    if config_entry.unique_id is None:
-        hass.config_entries.async_update_entry(
-            config_entry, unique_id=device.api.vapix.serial_number
-        )
 
     hass.data[AXIS_DOMAIN][config_entry.unique_id] = device
 
@@ -52,8 +49,27 @@ async def async_migrate_entry(hass, config_entry):
     #  Flatten configuration but keep old data if user rollbacks HASS prior to 0.106
     if config_entry.version == 1:
         config_entry.data = {**config_entry.data, **config_entry.data[CONF_DEVICE]}
-
+        config_entry.unique_id = config_entry.data[CONF_MAC]
         config_entry.version = 2
+
+    # Normalise MAC address of device which also affects entity unique IDs
+    if config_entry.version == 2:
+        old_unique_id = config_entry.unique_id
+        new_unique_id = format_mac(old_unique_id)
+
+        @callback
+        def update_unique_id(entity_entry):
+            """Update unique ID of entity entry."""
+            return {
+                "new_unique_id": entity_entry.unique_id.replace(
+                    old_unique_id, new_unique_id
+                )
+            }
+
+        await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+
+        config_entry.unique_id = new_unique_id
+        config_entry.version = 3
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 

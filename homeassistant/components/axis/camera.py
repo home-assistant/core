@@ -73,7 +73,7 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
     @property
     def unique_id(self):
         """Return a unique identifier for this device."""
-        return f"{self.device.serial}-camera"
+        return f"{self.device.unique_id}-camera"
 
     @property
     def image_source(self):
