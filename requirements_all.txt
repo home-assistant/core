@@ -955,7 +955,7 @@ motionblinds==0.4.7
 mutagen==1.45.1
 
 # homeassistant.components.mychevy
-mychevy==2.0.1
+mychevy==2.1.1
 
 # homeassistant.components.mycroft
 mycroftapi==2.0
