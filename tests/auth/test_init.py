@@ -637,14 +637,10 @@ async def test_login_with_auth_module(mock_hass):
         step["flow_id"], {"pin": "test-pin"}
     )
 
-    # Finally passed, get user
+    # Finally passed, get credential
     assert step["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    user = step["result"]
-    assert user is not None
-    assert user.id == "mock-user"
-    assert user.is_owner is False
-    assert user.is_active is False
-    assert user.name == "Paulus"
+    assert step["result"]
+    assert step["result"].id == "mock-id"
 
 
 async def test_login_with_multi_auth_module(mock_hass):
@@ -714,14 +710,10 @@ async def test_login_with_multi_auth_module(mock_hass):
         step["flow_id"], {"pin": "test-pin2"}
     )
 
-    # Finally passed, get user
+    # Finally passed, get credential
     assert step["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    user = step["result"]
-    assert user is not None
-    assert user.id == "mock-user"
-    assert user.is_owner is False
-    assert user.is_active is False
-    assert user.name == "Paulus"
+    assert step["result"]
+    assert step["result"].id == "mock-id"
 
 
 async def test_auth_module_expired_session(mock_hass):

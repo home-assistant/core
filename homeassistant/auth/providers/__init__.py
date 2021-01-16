@@ -188,6 +188,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
         self.created_at = dt_util.utcnow()
         self.invalid_mfa_times = 0
         self.user: Optional[User] = None
+        self.credential: Optional[Credentials] = None
 
     async def async_step_init(
         self, user_input: Optional[Dict[str, str]] = None
@@ -228,6 +229,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
         self, user_input: Optional[Dict[str, str]] = None
     ) -> Dict[str, Any]:
         """Handle the step of mfa validation."""
+        assert self.credential
         assert self.user
 
         errors = {}
@@ -263,7 +265,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
                     return self.async_abort(reason="too_many_retry")
 
             if not errors:
-                return await self.async_finish(self.user)
+                return await self.async_finish(self.credential)
 
         description_placeholders: Dict[str, Optional[str]] = {
             "mfa_module_name": auth_module.name,

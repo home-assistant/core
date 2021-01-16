@@ -102,7 +102,7 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
             return result
 
         # we got final result
-        if isinstance(result["data"], models.User):
+        if isinstance(result["data"], models.Credentials):
             result["result"] = result["data"]
             return result
 
@@ -126,6 +126,7 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
                 modules = await self.auth_manager.async_get_enabled_mfa(user)
 
                 if modules:
+                    flow.credential = credentials
                     flow.user = user
                     flow.available_mfa_modules = modules
                     return await flow.async_step_select_mfa_module()
