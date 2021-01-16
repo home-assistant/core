@@ -15,7 +15,6 @@ from homeassistant.components.axis.const import (
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -26,6 +25,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
+from homeassistant.helpers.device_registry import format_mac
 
 from .test_device import (
     MAC,
@@ -62,13 +62,12 @@ async def test_flow_manual_configuration(hass):
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == f"M1065-LW - {MAC}"
+    assert result["title"] == f"M1065-LW - {format_mac(MAC)}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "user",
         CONF_PASSWORD: "pass",
         CONF_PORT: 80,
-        CONF_MAC: MAC,
         CONF_MODEL: "M1065-LW",
         CONF_NAME: "M1065-LW 0",
     }
@@ -220,13 +219,12 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == f"M1065-LW - {MAC}"
+    assert result["title"] == f"M1065-LW - {format_mac(MAC)}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "user",
         CONF_PASSWORD: "pass",
         CONF_PORT: 80,
-        CONF_MAC: MAC,
         CONF_MODEL: "M1065-LW",
         CONF_NAME: "M1065-LW 2",
     }
@@ -263,13 +261,12 @@ async def test_zeroconf_flow(hass):
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == f"M1065-LW - {MAC}"
+    assert result["title"] == f"M1065-LW - {format_mac(MAC)}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "user",
         CONF_PASSWORD: "pass",
         CONF_PORT: 80,
-        CONF_MAC: MAC,
         CONF_MODEL: "M1065-LW",
         CONF_NAME: "M1065-LW 0",
     }
@@ -309,7 +306,6 @@ async def test_zeroconf_flow_updated_configuration(hass):
         CONF_PORT: 80,
         CONF_USERNAME: "root",
         CONF_PASSWORD: "pass",
-        CONF_MAC: MAC,
         CONF_MODEL: MODEL,
         CONF_NAME: NAME,
     }
@@ -338,7 +334,6 @@ async def test_zeroconf_flow_updated_configuration(hass):
         CONF_PORT: 8080,
         CONF_USERNAME: "root",
         CONF_PASSWORD: "pass",
-        CONF_MAC: MAC,
         CONF_MODEL: MODEL,
         CONF_NAME: NAME,
     }
