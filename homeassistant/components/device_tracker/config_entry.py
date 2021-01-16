@@ -13,7 +13,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
-from .const import ATTR_SOURCE_TYPE, DOMAIN, LOGGER
+from .const import ATTR_HOST_NAME, ATTR_IP, ATTR_MAC, ATTR_SOURCE_TYPE, DOMAIN, LOGGER
 
 
 async def async_setup_entry(hass, entry):
@@ -48,12 +48,33 @@ class BaseTrackerEntity(Entity):
         raise NotImplementedError
 
     @property
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return None
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return None
+
+    @property
+    def hostname(self) -> str:
+        """Return hostname of the device."""
+        return None
+
+    @property
     def state_attributes(self):
         """Return the device state attributes."""
         attr = {ATTR_SOURCE_TYPE: self.source_type}
 
         if self.battery_level:
             attr[ATTR_BATTERY_LEVEL] = self.battery_level
+        if self.ip_address is not None:
+            attr[ATTR_IP] = self.ip_address
+        if self.ip_address is not None:
+            attr[ATTR_MAC] = self.mac_address
+        if self.hostname is not None:
+            attr[ATTR_HOST_NAME] = self.hostname
 
         return attr
 
