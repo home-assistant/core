@@ -8,16 +8,15 @@ from homeassistant.components.cisco_webex.config_flow import (
     EmailNotFound,
     InvalidAuth,
     InvalidAuthTokenType,
-    InvalidEmail, validate_config,
+    InvalidEmail,
+    validate_config,
 )
 from homeassistant.components.cisco_webex.const import DOMAIN
 
 from tests.async_mock import patch
 from tests.components.cisco_webex.mocks import MockApiError, MockWebexTeamsAPI
 
-TEST_DATA = {
-    "email": "fff@fff.com"
-}
+TEST_DATA = {"email": "fff@fff.com"}
 
 MOCK_API = MockWebexTeamsAPI(access_token="123")
 
@@ -60,8 +59,7 @@ async def test_form(hass):
 async def test_validate_config_ok(hass):
     """Test validate_config method."""
 
-    result = validate_config(
-        MOCK_API, TEST_DATA)
+    result = validate_config(MOCK_API, TEST_DATA)
 
     assert result is True
 
@@ -74,8 +72,7 @@ async def test_validate_config_not_bot_raises_invalid_token_type(hass):
             return_value="person",
     ):
         with pytest.raises(InvalidAuthTokenType):
-            validate_config(
-                MOCK_API, TEST_DATA)
+            validate_config(MOCK_API, TEST_DATA)
 
 
 async def test_validate_config_raises_email_not_found_api_error(hass):
@@ -88,8 +85,7 @@ async def test_validate_config_raises_email_not_found_api_error(hass):
             side_effect=exception_to_raise,
     ):
         with pytest.raises(EmailNotFound):
-            validate_config(
-                MOCK_API, TEST_DATA)
+            validate_config(MOCK_API, TEST_DATA)
 
 
 async def test_validate_config_raises_email_not_found_person_none(hass):
@@ -99,8 +95,7 @@ async def test_validate_config_raises_email_not_found_person_none(hass):
             return_value=[],
     ):
         with pytest.raises(EmailNotFound):
-            validate_config(
-                MOCK_API, TEST_DATA)
+            validate_config(MOCK_API, TEST_DATA)
 
 
 async def test_validate_config_raises_invalid_auth_api_error(hass):
@@ -113,8 +108,7 @@ async def test_validate_config_raises_invalid_auth_api_error(hass):
             side_effect=exception_to_raise,
     ):
         with pytest.raises(InvalidAuth):
-            validate_config(
-                MOCK_API, TEST_DATA)
+            validate_config(MOCK_API, TEST_DATA)
 
 
 async def test_validate_config_raises_general_error(hass):
@@ -127,8 +121,7 @@ async def test_validate_config_raises_general_error(hass):
             side_effect=exception_to_raise,
     ):
         with pytest.raises(exception_to_raise):
-            validate_config(
-                MOCK_API, TEST_DATA)
+            validate_config(MOCK_API, TEST_DATA)
 
 
 async def test_validate_config_raises_cannot_connect_error(hass):
@@ -141,8 +134,7 @@ async def test_validate_config_raises_cannot_connect_error(hass):
             side_effect=requests.exceptions.ConnectionError,
     ):
         with pytest.raises(CannotConnect):
-            validate_config(
-                MOCK_API, TEST_DATA)
+            validate_config(MOCK_API, TEST_DATA)
 
 
 async def test_form_invalid_email(hass):

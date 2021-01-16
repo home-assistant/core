@@ -10,17 +10,11 @@ from homeassistant.components.cisco_webex.const import DOMAIN
 from tests.common import MockConfigEntry
 from tests.components.cisco_webex.mocks import MockWebexTeamsAPI
 
-TEST_DATA = {
-    "email": "fff@fff.com"
-}
+TEST_DATA = {"email": "fff@fff.com"}
 
 MOCK_API = MockWebexTeamsAPI(access_token="123")
 MOCK_CONFIG = {"token": "123", "email": "ff@ff.com"}
-MOCK_CONFIG_ENTRY = MockConfigEntry(
-    domain=DOMAIN,
-    data=MOCK_CONFIG,
-    unique_id="0923"
-)
+MOCK_CONFIG_ENTRY = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, unique_id="0923")
 
 
 async def test_init_setup(hass):
