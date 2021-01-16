@@ -9,6 +9,11 @@
     { "type": "_axis-video._tcp.local.", "macaddress": "ACCC8E*" },
     { "type": "_axis-video._tcp.local.", "macaddress": "B8A44F*" }
   ],
+  "dhcp": [
+    { "hostname": "axis-00408c*", "macaddress": "00408C*" },
+    { "hostname": "axis-accc8e*", "macaddress": "ACCC8E*" },
+    { "hostname": "axis-b8a44f*", "macaddress": "B8A44F*" }
+  ],
   "after_dependencies": ["mqtt"],
   "codeowners": ["@Kane610"]
 }
