@@ -67,7 +67,7 @@ from .const import (
 from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
-CHECK_HEATBEAT_INTERVAL = timedelta(seconds=1)
+CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
 SUPPORTED_PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
 CLIENT_CONNECTED = (
@@ -384,7 +384,7 @@ class UniFiController:
         self.config_entry.add_update_listener(self.async_config_entry_updated)
 
         self._cancel_heatbeat_check = async_track_time_interval(
-            self.hass, self._async_check_for_stale, CHECK_HEATBEAT_INTERVAL
+            self.hass, self._async_check_for_stale, CHECK_HEARTBEAT_INTERVAL
         )
 
         return True
