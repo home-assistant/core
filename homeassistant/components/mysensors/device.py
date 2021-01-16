@@ -28,7 +28,6 @@ class MySensorsDevice:
 
     def __init__(self, gateway, node_id, child_id, value_type):
         """Set up the MySensors device."""
-        self._name = name
         child = gateway.sensors[node_id].children[child_id]
         self.child_type = child.type
         self.gateway: BaseAsyncGateway = gateway
@@ -44,14 +43,39 @@ class MySensorsDevice:
         return self.gateway.unique_id
 
     @property
+    def sketch_name(self) -> str:
+        return self._mysensors_sensor.sketch_name
+
+    @property
+    def sketch_version(self) -> str:
+        return self._mysensors_sensor.sketch_version
+
+    @property
+    def node_name(self) -> str:
+        """Name of the whole node (will be the same for several entities!)"""
+        return f"{self.sketch_name} {self.node_id}"
+
+    @property
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"mys{self.gateway_id}-{self.node_id}-{self.child_id}-{self.value_type}"
 
     @property
+    def device_info(self) -> Optional[Dict[str, Any]]:
+        return {
+            "identifiers": {
+                (DOMAIN, f"mys{self.gateway_id}-{self.node_id}")
+            },
+            "name": self.node_name,
+            "manufacturer": DOMAIN,
+            "model": self.node_name,
+            "sw_version": self.sketch_version,
+        }
+
+    @property
     def name(self):
         """Return the name of this entity."""
-        return self._name
+        return f"{self.node_name} {self.child_id}"
 
     @property
     def device_state_attributes(self):
@@ -82,7 +106,7 @@ class MySensorsDevice:
         for value_type, value in child.values.items():
             _LOGGER.debug(
                 "Entity update: %s: value_type %s, value = %s",
-                self._name,
+                self.name,
                 value_type,
                 value,
             )
