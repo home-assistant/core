@@ -55,6 +55,11 @@ class Device:
         return self._params.get("host-name", self.mac)
 
     @property
+    def ip(self):
+        """Return device ip."""
+        return self._params.get("address")
+
+    @property
     def mac(self):
         """Return device mac."""
         return self._mac
