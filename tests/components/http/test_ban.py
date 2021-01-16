@@ -158,7 +158,9 @@ async def test_ip_bans_file_creation(hass, aiohttp_client):
     m_open = mock_open()
 
     with patch("homeassistant.components.http.ban.open", m_open, create=True):
-        resp = await client.get("/")
+        resp = await client.get(
+            "/", headers={"User-Agent": "Test Client 1.0/T1 <script>"}
+        )
         assert resp.status == 401
         assert len(app[KEY_BANNED_IPS]) == len(BANNED_IPS)
         assert m_open.call_count == 0
@@ -174,9 +176,10 @@ async def test_ip_bans_file_creation(hass, aiohttp_client):
 
         assert len(notification_calls) == 3
         assert (
-            "Login attempt or request with invalid authentication from example.com (200.201.202.204) (Python"
+            "Login attempt or request with invalid authentication from example.com (200.201.202.204) (Test Client 1.0/T1"
             in notification_calls[0].data["message"]
         )
+        assert "<script>" not in notification_calls[0].data["message"]
 
 
 async def test_failed_login_attempts_counter(hass, aiohttp_client):

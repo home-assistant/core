@@ -15,7 +15,7 @@ from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import dt as dt_util, yaml
+from homeassistant.util import dt as dt_util, re, yaml
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -107,8 +107,10 @@ async def process_wrong_login(request):
 
     msg = f"Login attempt or request with invalid authentication from {remote_host} ({remote_addr})"
 
-    user_agent = request.headers.get("user-agent")
-    if user_agent:
+    user_agent_raw = request.headers.get("user-agent")
+    if user_agent_raw:
+        # Sanitize user agent to limited charset
+        user_agent = re.sub(r"[^a-zA-Z0-9:;,./() ]", "_", user_agent_raw)
         msg = f"{msg} ({user_agent})"
 
     _LOGGER.warning(msg)
