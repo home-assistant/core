@@ -5,9 +5,11 @@ from ipaddress import ip_address
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -136,36 +138,56 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         title = f"{model} - {self.unique_id}"
         return self.async_create_entry(title=title, data=self.device_config)
 
-    async def async_step_zeroconf(self, discovery_info):
-        """Prepare configuration for a discovered Axis device."""
-        serial_number = format_mac(discovery_info["properties"]["macaddress"])
+    async def async_step_dhcp(self, discovery_info: dict):
+        """Prepare configuration for a DHCP discovered Axis device."""
+        return await self._process_discovered_device(
+            {
+                CONF_HOST: discovery_info[IP_ADDRESS],
+                CONF_MAC: format_mac(discovery_info.get(MAC_ADDRESS)),
+                CONF_NAME: discovery_info.get(HOSTNAME),
+                CONF_PORT: DEFAULT_PORT,
+            }
+        )
 
-        if serial_number[:8] not in AXIS_OUI:
+    async def async_step_zeroconf(self, discovery_info: dict):
+        """Prepare configuration for a discovered Axis device."""
+        return await self._process_discovered_device(
+            {
+                CONF_HOST: discovery_info[CONF_HOST],
+                CONF_MAC: format_mac(discovery_info["properties"]["macaddress"]),
+                CONF_NAME: discovery_info["hostname"][:-7],
+                CONF_PORT: discovery_info[CONF_PORT],
+            }
+        )
+
+    async def _process_discovered_device(self, device: dict):
+        """Prepare configuration for a discovered Axis device."""
+        if device[CONF_MAC][:8] not in AXIS_OUI:
             return self.async_abort(reason="not_axis_device")
 
-        if is_link_local(ip_address(discovery_info[CONF_HOST])):
+        if is_link_local(ip_address(device[CONF_HOST])):
             return self.async_abort(reason="link_local_address")
 
-        await self.async_set_unique_id(serial_number)
+        await self.async_set_unique_id(device[CONF_MAC])
 
         self._abort_if_unique_id_configured(
             updates={
-                CONF_HOST: discovery_info[CONF_HOST],
-                CONF_PORT: discovery_info[CONF_PORT],
+                CONF_HOST: device[CONF_HOST],
+                CONF_PORT: device[CONF_PORT],
             }
         )
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
-            CONF_NAME: discovery_info["hostname"][:-7],
-            CONF_HOST: discovery_info[CONF_HOST],
+            CONF_NAME: device[CONF_NAME],
+            CONF_HOST: device[CONF_HOST],
         }
 
         self.discovery_schema = {
-            vol.Required(CONF_HOST, default=discovery_info[CONF_HOST]): str,
+            vol.Required(CONF_HOST, default=device[CONF_HOST]): str,
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_PORT, default=discovery_info[CONF_PORT]): int,
+            vol.Required(CONF_PORT, default=device[CONF_PORT]): int,
         }
 
         return await self.async_step_user()

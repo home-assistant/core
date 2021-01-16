@@ -12,7 +12,13 @@ from homeassistant.components.axis.const import (
     DEFAULT_STREAM_PROFILE,
     DOMAIN as AXIS_DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_IGNORE,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -25,9 +31,9 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.helpers.device_registry import format_mac
 
 from .test_device import (
+    FORMATTED_MAC,
     MAC,
     MODEL,
     NAME,
@@ -62,7 +68,7 @@ async def test_flow_manual_configuration(hass):
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == f"M1065-LW - {format_mac(MAC)}"
+    assert result["title"] == f"M1065-LW - {FORMATTED_MAC}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "user",
@@ -219,7 +225,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == f"M1065-LW - {format_mac(MAC)}"
+    assert result["title"] == f"M1065-LW - {FORMATTED_MAC}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "user",
@@ -230,6 +236,139 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
     }
 
     assert result["data"][CONF_NAME] == "M1065-LW 2"
+
+
+async def test_dhcp_flow(hass):
+    """Test that DHCP discovery for new devices work."""
+    result = await hass.config_entries.flow.async_init(
+        AXIS_DOMAIN,
+        data={
+            HOSTNAME: "axis-123",
+            IP_ADDRESS: "1.2.3.4",
+            MAC_ADDRESS: MAC,
+        },
+        context={"source": SOURCE_DHCP},
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == SOURCE_USER
+
+    with respx.mock:
+        mock_default_vapix_requests(respx)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "1.2.3.4",
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pass",
+                CONF_PORT: 80,
+            },
+        )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == f"M1065-LW - {FORMATTED_MAC}"
+    assert result["data"] == {
+        CONF_HOST: "1.2.3.4",
+        CONF_USERNAME: "user",
+        CONF_PASSWORD: "pass",
+        CONF_PORT: 80,
+        CONF_MODEL: "M1065-LW",
+        CONF_NAME: "M1065-LW 0",
+    }
+
+    assert result["data"][CONF_NAME] == "M1065-LW 0"
+
+
+async def test_dhcp_flow_already_configured(hass):
+    """Test that DHCP doesn't setup already configured devices."""
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+    assert device.host == "1.2.3.4"
+
+    result = await hass.config_entries.flow.async_init(
+        AXIS_DOMAIN,
+        data={
+            HOSTNAME: "axis-123",
+            IP_ADDRESS: "1.2.3.4",
+            MAC_ADDRESS: MAC,
+        },
+        context={"source": SOURCE_DHCP},
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert device.host == "1.2.3.4"
+
+
+async def test_dhcp_flow_updated_configuration(hass):
+    """Test that DHCP update configuration with new parameters."""
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+    assert device.host == "1.2.3.4"
+    assert device.config_entry.data == {
+        CONF_HOST: "1.2.3.4",
+        CONF_PORT: 80,
+        CONF_USERNAME: "root",
+        CONF_PASSWORD: "pass",
+        CONF_MODEL: MODEL,
+        CONF_NAME: NAME,
+    }
+
+    with patch(
+        "homeassistant.components.axis.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, respx.mock:
+        mock_default_vapix_requests(respx, "2.3.4.5")
+        result = await hass.config_entries.flow.async_init(
+            AXIS_DOMAIN,
+            data={
+                HOSTNAME: "axis-123",
+                IP_ADDRESS: "2.3.4.5",
+                MAC_ADDRESS: MAC,
+            },
+            context={"source": SOURCE_DHCP},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert device.config_entry.data == {
+        CONF_HOST: "2.3.4.5",
+        CONF_PORT: 80,
+        CONF_USERNAME: "root",
+        CONF_PASSWORD: "pass",
+        CONF_MODEL: MODEL,
+        CONF_NAME: NAME,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_dhcp_flow_ignore_non_axis_device(hass):
+    """Test that DHCP doesn't setup devices with link local addresses."""
+    result = await hass.config_entries.flow.async_init(
+        AXIS_DOMAIN,
+        data={
+            HOSTNAME: "axis-123",
+            IP_ADDRESS: "169.254.3.4",
+            MAC_ADDRESS: "01234567890",
+        },
+        context={"source": SOURCE_DHCP},
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "not_axis_device"
+
+
+async def test_dhcp_flow_ignore_link_local_address(hass):
+    """Test that DHCP doesn't setup devices with link local addresses."""
+    result = await hass.config_entries.flow.async_init(
+        AXIS_DOMAIN,
+        data={HOSTNAME: "axis-123", IP_ADDRESS: "169.254.3.4", MAC_ADDRESS: MAC},
+        context={"source": SOURCE_DHCP},
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "link_local_address"
 
 
 async def test_zeroconf_flow(hass):
@@ -261,7 +400,7 @@ async def test_zeroconf_flow(hass):
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == f"M1065-LW - {format_mac(MAC)}"
+    assert result["title"] == f"M1065-LW - {FORMATTED_MAC}"
     assert result["data"] == {
         CONF_HOST: "1.2.3.4",
         CONF_USERNAME: "user",
@@ -344,7 +483,12 @@ async def test_zeroconf_flow_ignore_non_axis_device(hass):
     """Test that zeroconf doesn't setup devices with link local addresses."""
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN,
-        data={CONF_HOST: "169.254.3.4", "properties": {"macaddress": "01234567890"}},
+        data={
+            CONF_HOST: "169.254.3.4",
+            CONF_PORT: 80,
+            "hostname": "",
+            "properties": {"macaddress": "01234567890"},
+        },
         context={"source": SOURCE_ZEROCONF},
     )
 
@@ -356,7 +500,12 @@ async def test_zeroconf_flow_ignore_link_local_address(hass):
     """Test that zeroconf doesn't setup devices with link local addresses."""
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN,
-        data={CONF_HOST: "169.254.3.4", "properties": {"macaddress": MAC}},
+        data={
+            CONF_HOST: "169.254.3.4",
+            CONF_PORT: 80,
+            "hostname": "",
+            "properties": {"macaddress": MAC},
+        },
         context={"source": SOURCE_ZEROCONF},
     )
 
