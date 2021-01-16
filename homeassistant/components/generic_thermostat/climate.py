@@ -461,7 +461,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     @property
     def _is_device_active(self):
         """If the toggleable device is currently active."""
-        if (self.hass.states.get((self.heater_entity_id))):
+        if (self.hass.states.get(self.heater_entity_id)):
             return self.hass.states.is_state(self.heater_entity_id, STATE_ON)
         else:
             return None
