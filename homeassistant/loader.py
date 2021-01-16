@@ -44,7 +44,7 @@ DATA_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
 CUSTOM_WARNING = (
-    "You are using a custom integration for %s which has not "
+    "You are using a custom integration %s for %s which has not "
     "been tested by Home Assistant. This component might "
     "cause stability problems, be sure to disable it if you "
     "experience issues with Home Assistant."
@@ -482,7 +482,7 @@ async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integrati
     # components to find the integration.
     integration = (await async_get_custom_components(hass)).get(domain)
     if integration is not None:
-        _LOGGER.warning(CUSTOM_WARNING, domain)
+        _LOGGER.warning(CUSTOM_WARNING, integration.name, domain)
         cache[domain] = integration
         event.set()
         return integration
@@ -575,7 +575,7 @@ def _load_file(
             cache[comp_or_platform] = module
 
             if module.__name__.startswith(PACKAGE_CUSTOM_COMPONENTS):
-                _LOGGER.warning(CUSTOM_WARNING, comp_or_platform)
+                _LOGGER.warning(CUSTOM_WARNING, module.__name__, comp_or_platform)
 
             return module
 
