@@ -1,7 +1,7 @@
 """MediaPlayer platform for Roon integration."""
 import logging
-import os
 
+from roonapi import split_media_path
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerEntity
@@ -477,22 +477,7 @@ class RoonDevice(MediaPlayerEntity):
         """Send the play_media command to the media player."""
         # media_id is treated as a path matching the Roon menu structure
 
-        def splitall(path):
-            allparts = []
-            while 1:
-                parts = os.path.split(path)
-                if parts[0] == path:  # sentinel for absolute paths
-                    allparts.insert(0, parts[0])
-                    break
-                elif parts[1] == path:  # sentinel for relative paths
-                    allparts.insert(0, parts[1])
-                    break
-                else:
-                    path = parts[0]
-                    allparts.insert(0, parts[1])
-            return allparts
-
-        path_list = splitall(media_id)
+        path_list = split_media_path(media_id)
         if not self._server.roonapi.play_media(self.zone_id, path_list):
             _LOGGER.error(
                 "Playback request for %s / %s was unsuccessful", media_id, path_list
