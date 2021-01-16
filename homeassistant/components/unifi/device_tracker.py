@@ -52,6 +52,7 @@ CLIENT_STATIC_ATTRIBUTES = [
     "oui",
 ]
 
+
 CLIENT_CONNECTED_ALL_ATTRIBUTES = CLIENT_CONNECTED_ATTRIBUTES + CLIENT_STATIC_ATTRIBUTES
 
 DEVICE_UPGRADED = (ACCESS_POINT_UPGRADED, GATEWAY_UPGRADED, SWITCH_UPGRADED)
@@ -238,6 +239,21 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         attributes["is_wired"] = self.is_wired
 
         return attributes
+
+    @property
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return self.client.raw.get("ip")
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self.client.raw.get("mac")
+
+    @property
+    def hostname(self) -> str:
+        """Return hostname of the device."""
+        return self.client.raw.get("hostname")
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
