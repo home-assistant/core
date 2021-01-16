@@ -7,3 +7,5 @@ PLATFORMS = ["binary_sensor", "climate", "light", "lock", "sensor", "switch"]
 
 DATA_CLIENT = "client"
 DATA_UNSUBSCRIBE = "unsubs"
+
+EVENT_DEVICE_ADDED_TO_REGISTRY = "device_added_to_registry"
