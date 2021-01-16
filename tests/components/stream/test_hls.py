@@ -14,7 +14,7 @@ from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video, preload_stream
 
 
-async def test_hls_stream(hass, hass_client, worker_sync):
+async def test_hls_stream(hass, hass_client, stream_worker_sync):
     """
     Test hls stream.
 
@@ -23,7 +23,7 @@ async def test_hls_stream(hass, hass_client, worker_sync):
     """
     await async_setup_component(hass, "stream", {"stream": {}})
 
-    worker_sync.pause()
+    stream_worker_sync.pause()
 
     # Setup demo HLS track
     source = generate_h264_video()
@@ -54,7 +54,7 @@ async def test_hls_stream(hass, hass_client, worker_sync):
     segment_response = await http_client.get(segment_url)
     assert segment_response.status == 200
 
-    worker_sync.resume()
+    stream_worker_sync.resume()
 
     # Stop stream, if it hasn't quit already
     stream.stop()
@@ -64,11 +64,11 @@ async def test_hls_stream(hass, hass_client, worker_sync):
     assert fail_response.status == HTTP_NOT_FOUND
 
 
-async def test_stream_timeout(hass, hass_client, worker_sync):
+async def test_stream_timeout(hass, hass_client, stream_worker_sync):
     """Test hls stream timeout."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
-    worker_sync.pause()
+    stream_worker_sync.pause()
 
     # Setup demo HLS track
     source = generate_h264_video()
@@ -93,7 +93,7 @@ async def test_stream_timeout(hass, hass_client, worker_sync):
     playlist_response = await http_client.get(parsed_url.path)
     assert playlist_response.status == 200
 
-    worker_sync.resume()
+    stream_worker_sync.resume()
 
     # Wait 5 minutes
     future = dt_util.utcnow() + timedelta(minutes=5)
@@ -104,11 +104,11 @@ async def test_stream_timeout(hass, hass_client, worker_sync):
     assert fail_response.status == HTTP_NOT_FOUND
 
 
-async def test_stream_ended(hass, worker_sync):
+async def test_stream_ended(hass, stream_worker_sync):
     """Test hls stream packets ended."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
-    worker_sync.pause()
+    stream_worker_sync.pause()
 
     # Setup demo HLS track
     source = generate_h264_video()
@@ -126,7 +126,7 @@ async def test_stream_ended(hass, worker_sync):
         segments = segment.sequence
         # Allow worker to finalize once enough of the stream is been consumed
         if segments > 1:
-            worker_sync.resume()
+            stream_worker_sync.resume()
 
     assert segments > 1
     assert not track.get_segment()

@@ -49,7 +49,7 @@ class WorkerSync:
 
 
 @pytest.fixture()
-def worker_sync(hass):
+def stream_worker_sync(hass):
     """Patch StreamOutput to allow test to synchronize worker stream end."""
     sync = WorkerSync()
     with patch(
