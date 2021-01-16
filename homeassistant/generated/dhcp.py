@@ -116,6 +116,11 @@ DHCP = [
         "macaddress": "B8B7F1*"
     },
     {
+        "domain": "squeezebox",
+        "hostname": "squeezebox*",
+        "macaddress": "000420*"
+    },
+    {
         "domain": "tesla",
         "hostname": "tesla_*",
         "macaddress": "4CFCAA*"
