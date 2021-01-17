@@ -504,3 +504,32 @@ async def test_device_tracker_hostname_and_macaddress_after_start_hostname_missi
         await hass.async_block_till_done()
 
     assert len(mock_init.mock_calls) == 0
+
+
+async def test_device_tracker_ignore_self_assigned_ips_before_start(hass):
+    """Test matching ignores self assigned ip address."""
+    hass.states.async_set(
+        "device_tracker.august_connect",
+        STATE_HOME,
+        {
+            ATTR_HOST_NAME: "connect",
+            ATTR_IP: "169.254.210.56",
+            ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
+            ATTR_MAC: "B8:B7:F1:6D:B5:33",
+        },
+    )
+
+    with patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init:
+        device_tracker_watcher = dhcp.DeviceTrackerWatcher(
+            hass,
+            {},
+            [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
+        )
+        device_tracker_watcher.async_start()
+        await hass.async_block_till_done()
+        device_tracker_watcher.async_stop()
+        await hass.async_block_till_done()
+
+    assert len(mock_init.mock_calls) == 0

@@ -37,6 +37,7 @@ MESSAGE_TYPE = "message-type"
 HOSTNAME = "hostname"
 MAC_ADDRESS = "macaddress"
 IP_ADDRESS = "ip"
+SELF_ASSIGNED_BLOCK = "169.254."
 DHCP_REQUEST = 3
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,6 +82,10 @@ class WatcherBase:
 
     def process_client(self, ip_address, hostname, mac_address):
         """Process a client."""
+        if ip_address.startswith(SELF_ASSIGNED_BLOCK):
+            # Ignore self assigned addresses
+            return
+
         data = self._address_data.get(ip_address)
 
         if data and data[MAC_ADDRESS] == mac_address and data[HOSTNAME] == hostname:
