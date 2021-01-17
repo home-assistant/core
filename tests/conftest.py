@@ -13,6 +13,7 @@ import requests_mock as _requests_mock
 
 from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
+from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
 from homeassistant.components import mqtt
 from homeassistant.components.websocket_api.auth import (
@@ -203,8 +204,19 @@ def mock_device_tracker_conf():
 @pytest.fixture
 def hass_access_token(hass, hass_admin_user):
     """Return an access token to access Home Assistant."""
+    credential = Credentials(
+        id="mock-admin-credential-id",
+        auth_provider_type="insecure_example",
+        auth_provider_id=None,
+        data={"username": "admin"},
+        is_new=False,
+    )
+    hass_admin_user.credentials.append(credential)
+
     refresh_token = hass.loop.run_until_complete(
-        hass.auth.async_create_refresh_token(hass_admin_user, CLIENT_ID)
+        hass.auth.async_create_refresh_token(
+            hass_admin_user, CLIENT_ID, credential=credential
+        )
     )
     return hass.auth.async_create_access_token(refresh_token)
 
@@ -236,8 +248,19 @@ def hass_read_only_user(hass, local_auth):
 @pytest.fixture
 def hass_read_only_access_token(hass, hass_read_only_user):
     """Return a Home Assistant read only user."""
+    credential = Credentials(
+        id="mock-readonly-credential-id",
+        auth_provider_type="insecure_example",
+        auth_provider_id=None,
+        data={"username": "readonly"},
+        is_new=False,
+    )
+    hass_read_only_user.credentials.append(credential)
+
     refresh_token = hass.loop.run_until_complete(
-        hass.auth.async_create_refresh_token(hass_read_only_user, CLIENT_ID)
+        hass.auth.async_create_refresh_token(
+            hass_read_only_user, CLIENT_ID, credential=credential
+        )
     )
     return hass.auth.async_create_access_token(refresh_token)
 
