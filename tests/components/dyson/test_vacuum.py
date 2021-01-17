@@ -25,7 +25,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from .common import (
     ENTITY_NAME,
@@ -38,6 +38,7 @@ from .common import (
 ENTITY_ID = f"vacuum.{ENTITY_NAME}"
 
 
+@callback
 def _get_vacuum_device():
     device = get_device(Dyson360Eye)
     device.state = MagicMock()
