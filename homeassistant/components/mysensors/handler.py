@@ -7,11 +7,10 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import decorator
 
-from .const import CHILD_CALLBACK, MYSENSORS_GATEWAY_READY, NODE_CALLBACK
-from .const import DevId
+from ...config_entries import ConfigEntry
+from .const import CHILD_CALLBACK, MYSENSORS_GATEWAY_READY, NODE_CALLBACK, DevId
 from .device import get_mysensors_devices
 from .helpers import discover_mysensors_platform, validate_set_msg
-from ...config_entries import ConfigEntry
 
 HANDLERS = decorator.Registry()
 
@@ -70,7 +69,9 @@ async def handle_gateway_ready(hass, hass_config: ConfigEntry, msg: Message) -> 
 
 
 @callback
-def _handle_child_update(hass, hass_config: ConfigEntry, validated: Dict[str, List[DevId]]):
+def _handle_child_update(
+    hass, hass_config: ConfigEntry, validated: Dict[str, List[DevId]]
+):
     """Handle a child update."""
     signals: List[str] = []
 

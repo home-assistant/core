@@ -17,25 +17,31 @@ from homeassistant.components.mysensors.const import MYSENSORS_DISCOVERY
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import callback
-import homeassistant.util.color as color_util
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
+import homeassistant.util.color as color_util
 from homeassistant.util.color import rgb_hex_to_rgb_list
 
 SUPPORT_MYSENSORS_RGBW = SUPPORT_COLOR | SUPPORT_WHITE_VALUE
 
 
-async def async_setup_platform(hass: HomeAssistantType, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType, config, async_add_entities, discovery_info=None
+):
     """Set up the mysensors platform for lights."""
     pass
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable):
+async def async_setup_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+):
+    """Set up this platform for a specific ConfigEntry(==Gateway)."""
     device_class_map = {
         "S_DIMMER": MySensorsLightDimmer,
         "S_RGB_LIGHT": MySensorsLightRGB,
         "S_RGBW_LIGHT": MySensorsLightRGBW,
     }
+
     async def async_discover(discovery_info):
         """Discover and add a MySensors light."""
         mysensors.setup_mysensors_platform(
@@ -46,9 +52,16 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry, 
             async_add_entities=async_add_entities,
         )
 
-    await on_unload(hass, config_entry, async_dispatcher_connect(
-        hass, MYSENSORS_DISCOVERY.format(config_entry.unique_id, DOMAIN), async_discover
-    ))
+    await on_unload(
+        hass,
+        config_entry,
+        async_dispatcher_connect(
+            hass,
+            MYSENSORS_DISCOVERY.format(config_entry.unique_id, DOMAIN),
+            async_discover,
+        ),
+    )
+
 
 class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
     """Representation of a MySensors Light child node."""

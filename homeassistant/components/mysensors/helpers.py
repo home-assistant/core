@@ -1,80 +1,104 @@
 """Helper functions for mysensors package."""
 from collections import defaultdict
-import logging
 from enum import IntEnum
+import logging
+from typing import DefaultDict, Dict, List, Optional, Set
 
-import voluptuous as vol
 from mysensors import BaseAsyncGateway, Message
-from typing import Dict, Tuple, Optional, List, Set, Any, DefaultDict
-
 from mysensors.sensor import ChildSensor
+import voluptuous as vol
 
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.decorator import Registry
 
-from .const import ATTR_DEVICES, DOMAIN, FLAT_PLATFORM_TYPES, TYPE_TO_PLATFORMS, ValueType, SensorType, DevId, \
-    MYSENSORS_DISCOVERY
 from ...config_entries import ConfigEntry
 from ...helpers.dispatcher import async_dispatcher_send
+from .const import (
+    ATTR_DEVICES,
+    DOMAIN,
+    FLAT_PLATFORM_TYPES,
+    MYSENSORS_DISCOVERY,
+    TYPE_TO_PLATFORMS,
+    DevId,
+    SensorType,
+    ValueType,
+)
 
 _LOGGER = logging.getLogger(__name__)
 SCHEMAS = Registry()
 
 
 @callback
-def discover_mysensors_platform(hass, hass_config: ConfigEntry, platform: str, new_devices: List[DevId]) -> None:
+def discover_mysensors_platform(
+    hass, hass_config: ConfigEntry, platform: str, new_devices: List[DevId]
+) -> None:
     """Discover a MySensors platform."""
     _LOGGER.debug("discovering platform %s with devIds: %s", platform, new_devices)
     async_dispatcher_send(
-        hass, MYSENSORS_DISCOVERY.format(hass_config.unique_id, platform), {ATTR_DEVICES: new_devices, CONF_NAME: DOMAIN}
+        hass,
+        MYSENSORS_DISCOVERY.format(hass_config.unique_id, platform),
+        {ATTR_DEVICES: new_devices, CONF_NAME: DOMAIN},
     )
 
 
-def default_schema(gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType) -> vol.Schema:
+def default_schema(
+    gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType
+) -> vol.Schema:
     """Return a default validation schema for value types."""
     schema = {value_type_name: cv.string}
     return get_child_schema(gateway, child, value_type_name, schema)
 
 
 @SCHEMAS.register(("light", "V_DIMMER"))
-def light_dimmer_schema(gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType) -> vol.Schema:
+def light_dimmer_schema(
+    gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType
+) -> vol.Schema:
     """Return a validation schema for V_DIMMER."""
     schema = {"V_DIMMER": cv.string, "V_LIGHT": cv.string}
     return get_child_schema(gateway, child, value_type_name, schema)
 
 
 @SCHEMAS.register(("light", "V_PERCENTAGE"))
-def light_percentage_schema(gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType) -> vol.Schema:
+def light_percentage_schema(
+    gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType
+) -> vol.Schema:
     """Return a validation schema for V_PERCENTAGE."""
     schema = {"V_PERCENTAGE": cv.string, "V_STATUS": cv.string}
     return get_child_schema(gateway, child, value_type_name, schema)
 
 
 @SCHEMAS.register(("light", "V_RGB"))
-def light_rgb_schema(gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType) -> vol.Schema:
+def light_rgb_schema(
+    gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType
+) -> vol.Schema:
     """Return a validation schema for V_RGB."""
     schema = {"V_RGB": cv.string, "V_STATUS": cv.string}
     return get_child_schema(gateway, child, value_type_name, schema)
 
 
 @SCHEMAS.register(("light", "V_RGBW"))
-def light_rgbw_schema(gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType) -> vol.Schema:
+def light_rgbw_schema(
+    gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType
+) -> vol.Schema:
     """Return a validation schema for V_RGBW."""
     schema = {"V_RGBW": cv.string, "V_STATUS": cv.string}
     return get_child_schema(gateway, child, value_type_name, schema)
 
 
 @SCHEMAS.register(("switch", "V_IR_SEND"))
-def switch_ir_send_schema(gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType) -> vol.Schema:
+def switch_ir_send_schema(
+    gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType
+) -> vol.Schema:
     """Return a validation schema for V_IR_SEND."""
     schema = {"V_IR_SEND": cv.string, "V_LIGHT": cv.string}
     return get_child_schema(gateway, child, value_type_name, schema)
 
 
-def get_child_schema(gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType, schema) -> vol.Schema:
+def get_child_schema(
+    gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType, schema
+) -> vol.Schema:
     """Return a child schema."""
     set_req = gateway.const.SetReq
     child_schema = child.get_schema(gateway.protocol_version)
@@ -90,7 +114,9 @@ def get_child_schema(gateway: BaseAsyncGateway, child: ChildSensor, value_type_n
     return schema
 
 
-def invalid_msg(gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType):
+def invalid_msg(
+    gateway: BaseAsyncGateway, child: ChildSensor, value_type_name: ValueType
+):
     """Return a message for an invalid child during schema validation."""
     pres = gateway.const.Presentation
     set_req = gateway.const.SetReq
@@ -115,8 +141,13 @@ def validate_node(gateway: BaseAsyncGateway, node_id: int) -> bool:
     return True
 
 
-def validate_child(gateway: BaseAsyncGateway, node_id: int, child: ChildSensor, value_type: Optional[int] = None) -> DefaultDict[str, List[DevId]]:
-    """Validate a child. Returns a dict mapping hass platform names to list of DevId"""
+def validate_child(
+    gateway: BaseAsyncGateway,
+    node_id: int,
+    child: ChildSensor,
+    value_type: Optional[int] = None,
+) -> DefaultDict[str, List[DevId]]:
+    """Validate a child. Returns a dict mapping hass platform names to list of DevId."""
     validated: defaultdict[str, List[DevId]] = defaultdict(list)
     pres: IntEnum = gateway.const.Presentation
     set_req: IntEnum = gateway.const.SetReq
@@ -133,7 +164,9 @@ def validate_child(gateway: BaseAsyncGateway, node_id: int, child: ChildSensor, 
         return validated
 
     for platform in platforms:
-        platform_v_names: Set[ValueType] = FLAT_PLATFORM_TYPES[platform, child_type_name]
+        platform_v_names: Set[ValueType] = FLAT_PLATFORM_TYPES[
+            platform, child_type_name
+        ]
         v_names: Set[ValueType] = platform_v_names & value_type_names
         if not v_names:
             child_value_names: Set[ValueType] = {
@@ -155,7 +188,12 @@ def validate_child(gateway: BaseAsyncGateway, node_id: int, child: ChildSensor, 
                     exc,
                 )
                 continue
-            dev_id: DevId = gateway.unique_id, node_id, child.id, set_req[v_name].value
+            dev_id: DevId = (
+                gateway.unique_id,
+                node_id,
+                child.id,
+                set_req[v_name].value,
+            )
             validated[platform].append(dev_id)
 
     return validated

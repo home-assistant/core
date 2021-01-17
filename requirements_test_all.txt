@@ -788,7 +788,7 @@ pymonoprice==0.3
 pymyq==2.0.14
 
 # homeassistant.components.mysensors
-pymysensors==0.18.0
+pymysensors==0.20.1
 
 # homeassistant.components.nut
 pynut2==2.1.2

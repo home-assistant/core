@@ -39,12 +39,18 @@ FAN_LIST = ["Auto", "Min", "Normal", "Max"]
 OPERATION_LIST = [HVAC_MODE_OFF, HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT]
 
 
-async def async_setup_platform(hass: HomeAssistantType, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType, config, async_add_entities, discovery_info=None
+):
     """Set up the mysensors climate."""
     pass
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable):
+async def async_setup_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+):
+    """Set up this platform for a specific ConfigEntry(==Gateway)."""
+
     async def async_discover(discovery_info):
         """Discover and add a MySensors climate."""
         mysensors.setup_mysensors_platform(
@@ -55,9 +61,15 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry, 
             async_add_entities=async_add_entities,
         )
 
-    await on_unload(hass, config_entry, async_dispatcher_connect(
-        hass, MYSENSORS_DISCOVERY.format(config_entry.unique_id, DOMAIN), async_discover
-    ))
+    await on_unload(
+        hass,
+        config_entry,
+        async_dispatcher_connect(
+            hass,
+            MYSENSORS_DISCOVERY.format(config_entry.unique_id, DOMAIN),
+            async_discover,
+        ),
+    )
 
 
 class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):

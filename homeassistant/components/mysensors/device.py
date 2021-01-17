@@ -1,19 +1,24 @@
 """Handle MySensors devices."""
 from functools import partial
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, Optional
 
-from mysensors import Sensor, BaseAsyncGateway
+from mysensors import BaseAsyncGateway, Sensor
 from mysensors.sensor import ChildSensor
 
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from .const import DevId, PLATFORM_TYPES
-from .const import DOMAIN
 
-from .const import CHILD_CALLBACK, NODE_CALLBACK, UPDATE_DELAY
+from .const import (
+    CHILD_CALLBACK,
+    DOMAIN,
+    NODE_CALLBACK,
+    PLATFORM_TYPES,
+    UPDATE_DELAY,
+    DevId,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +38,7 @@ class MySensorsDevice:
         self.gateway: BaseAsyncGateway = gateway
         self.node_id: int = node_id
         self.child_id: int = child_id
-        self.value_type: int = value_type # value_type as int. string variant can be looked up in gateway consts
+        self.value_type: int = value_type  # value_type as int. string variant can be looked up in gateway consts
         self.child_type = self._mysensors_childsensor.type
         self._values = {}
         self._update_scheduled = False
@@ -41,26 +46,35 @@ class MySensorsDevice:
 
     @property
     def dev_id(self) -> DevId:
+        """Return the DevId of this device.
+
+        It is used to route incoming MySensors messages to the correct device/entity.
+        """
         return self.gateway_id, self.node_id, self.child_id, self.value_type
 
     @property
-    def logger(self):
+    def _logger(self):
         return logging.getLogger(f"{__name__}.{self.name}")
 
     async def async_will_remove_from_hass(self):
+        """Remove this entity from home assistant."""
         for platform in PLATFORM_TYPES:
             platform_str = MYSENSORS_PLATFORM_DEVICES.format(platform)
             if platform_str in self.hass.data:
                 platform_dict = self.hass.data[platform_str]
                 if self.dev_id in platform_dict:
                     if platform_dict[self.dev_id] is not self:
-                        self.logger.warning("possible duplicate device: %s", self.dev_id)
+                        self._logger.warning(
+                            "possible duplicate device: %s", self.dev_id
+                        )
                     del platform_dict[self.dev_id]
-                    self.logger.debug("deleted %s from platform %s", self.dev_id, platform)
-
+                    self._logger.debug(
+                        "deleted %s from platform %s", self.dev_id, platform
+                    )
 
     @property
     def gateway_id(self) -> str:
+        """Return the id of the gateway that this device belongs to."""
         return self.gateway.unique_id
 
     @property
@@ -73,28 +87,29 @@ class MySensorsDevice:
 
     @property
     def sketch_name(self) -> str:
+        """Return the name of the sketch running on the whole node (will be the same for several entities!)."""
         return self._mysensors_sensor.sketch_name
 
     @property
     def sketch_version(self) -> str:
+        """Return the version of the sketch running on the whole node (will be the same for several entities!)."""
         return self._mysensors_sensor.sketch_version
 
     @property
     def node_name(self) -> str:
-        """Name of the whole node (will be the same for several entities!)"""
+        """Name of the whole node (will be the same for several entities!)."""
         return f"{self.sketch_name} {self.node_id}"
 
     @property
     def unique_id(self) -> str:
-        """Return a unique ID."""
+        """Return a unique ID for use in home assistant."""
         return f"mys{self.gateway_id}-{self.node_id}-{self.child_id}-{self.value_type}"
 
     @property
     def device_info(self) -> Optional[Dict[str, Any]]:
+        """Return a dict that allows home assistant to puzzle all entities belonging to a node together."""
         return {
-            "identifiers": {
-                (DOMAIN, f"mys{self.gateway_id}-{self.node_id}")
-            },
+            "identifiers": {(DOMAIN, f"mys{self.gateway_id}-{self.node_id}")},
             "name": self.node_name,
             "manufacturer": DOMAIN,
             "model": self.node_name,
@@ -176,10 +191,11 @@ class MySensorsDevice:
 
 
 def get_mysensors_devices(hass, domain: str) -> Dict[DevId, MySensorsDevice]:
-    """Return MySensors devices for a hass platform name"""
+    """Return MySensors devices for a hass platform name."""
     if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data:
         hass.data[MYSENSORS_PLATFORM_DEVICES.format(domain)] = {}
     return hass.data[MYSENSORS_PLATFORM_DEVICES.format(domain)]
+
 
 class MySensorsEntity(MySensorsDevice, Entity):
     """Representation of a MySensors entity."""
@@ -202,7 +218,9 @@ class MySensorsEntity(MySensorsDevice, Entity):
         """Register update callback."""
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, CHILD_CALLBACK.format(*self.dev_id), self.async_update_callback
+                self.hass,
+                CHILD_CALLBACK.format(*self.dev_id),
+                self.async_update_callback,
             )
         )
         self.async_on_remove(

@@ -1,6 +1,6 @@
 """MySensors constants."""
 from collections import defaultdict
-from typing import Set, Dict, Tuple, List
+from typing import Dict, List, Set, Tuple
 
 ATTR_DEVICES: str = "devices"
 
@@ -62,7 +62,9 @@ BINARY_SENSOR_TYPES: Dict[SensorType, Set[ValueType]] = {
 
 CLIMATE_TYPES: Dict[SensorType, Set[ValueType]] = {"S_HVAC": {"V_HVAC_FLOW_STATE"}}
 
-COVER_TYPES: Dict[SensorType, Set[ValueType]] = {"S_COVER": {"V_DIMMER", "V_PERCENTAGE", "V_LIGHT", "V_STATUS"}}
+COVER_TYPES: Dict[SensorType, Set[ValueType]] = {
+    "S_COVER": {"V_DIMMER", "V_PERCENTAGE", "V_LIGHT", "V_STATUS"}
+}
 
 DEVICE_TRACKER_TYPES: Dict[SensorType, Set[ValueType]] = {"S_GPS": {"V_POSITION"}}
 
@@ -138,7 +140,7 @@ FLAT_PLATFORM_TYPES: Dict[Tuple[str, SensorType], Set[ValueType]] = {
 }
 """flatter version of PLATFORM_TYPES
 
-dict mapping tuples of hass platform name and mysensors s_type to mysensors v_type 
+dict mapping tuples of hass platform name and mysensors s_type to mysensors v_type
 """
 
 TYPE_TO_PLATFORMS: Dict[SensorType, List[str]] = defaultdict(list)

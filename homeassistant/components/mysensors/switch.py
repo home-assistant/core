@@ -7,12 +7,12 @@ from homeassistant.components import mysensors
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
-from . import on_unload
 
-from .const import DOMAIN as MYSENSORS_DOMAIN, SERVICE_SEND_IR_CODE, MYSENSORS_DISCOVERY
+from . import on_unload
 from ...config_entries import ConfigEntry
 from ...helpers.dispatcher import async_dispatcher_connect
 from ...helpers.typing import HomeAssistantType
+from .const import DOMAIN as MYSENSORS_DOMAIN, MYSENSORS_DISCOVERY, SERVICE_SEND_IR_CODE
 
 ATTR_IR_CODE = "V_IR_SEND"
 
@@ -21,12 +21,17 @@ SEND_IR_CODE_SERVICE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass: HomeAssistantType, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType, config, async_add_entities, discovery_info=None
+):
+    """Set up the mysensors platform for switches."""
     pass
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable):
-    """Set up the mysensors platform for switches."""
+async def async_setup_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+):
+    """Set up this platform for a specific ConfigEntry(==Gateway)."""
     device_class_map = {
         "S_DOOR": MySensorsSwitch,
         "S_MOTION": MySensorsSwitch,
@@ -64,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry, 
                     device
                     for device in devices.values()
                     if isinstance(device, MySensorsIRSwitch)
-                       and device.entity_id in entity_ids
+                    and device.entity_id in entity_ids
                 ]
             else:
                 _devices = [
@@ -84,9 +89,15 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry, 
             schema=SEND_IR_CODE_SERVICE_SCHEMA,
         )
 
-    await on_unload(hass, config_entry, async_dispatcher_connect(
-        hass, MYSENSORS_DISCOVERY.format(config_entry.unique_id, DOMAIN), async_discover
-    ))
+    await on_unload(
+        hass,
+        config_entry,
+        async_dispatcher_connect(
+            hass,
+            MYSENSORS_DISCOVERY.format(config_entry.unique_id, DOMAIN),
+            async_discover,
+        ),
+    )
 
 
 class MySensorsSwitch(mysensors.device.MySensorsEntity, SwitchEntity):
