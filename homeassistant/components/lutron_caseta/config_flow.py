@@ -8,6 +8,7 @@ from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.zeroconf import ATTR_HOSTNAME
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 
@@ -60,7 +61,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle a flow initialized by zeroconf discovery."""
-        hostname = discovery_info.get(HOSTNAME)
+        hostname = discovery_info[ATTR_HOSTNAME]
         if hostname is None or not hostname.startswith("lutron-"):
             return self.async_abort(reason="not_lutron_device")
 
@@ -72,6 +73,9 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(lutron_id)
         host = discovery_info[CONF_HOST]
         self._abort_if_unique_id_configured({CONF_HOST: host})
+
+        if self._host_already_configured(discovery_info[CONF_HOST]):
+            return self.async_abort(reason="already_configured")
         self.data[CONF_HOST] = host
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
@@ -138,10 +142,19 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return False
         return True
 
+    @callback
     def _configure_tls_assets(self):
         """Fill the tls asset locations in self.data."""
         for asset_key, conf_key in FILE_MAPPING.items():
             self.data[conf_key] = TLS_ASSET_TEMPLATE.format(self.bridge_id, asset_key)
+
+    @callback
+    def _host_already_configured(self, host):
+        """See if we already have an entry matching the host."""
+        for entry in self._async_current_entries():
+            if entry.data.get(CONF_HOST) == host:
+                return True
+        return False
 
     @callback
     def _async_data_host_is_already_configured(self):
