@@ -93,15 +93,15 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._configure_tls_assets()
 
-        if (
-            await self.hass.async_add_executor_job(self._tls_assets_exist)
-            and await self.async_validate_connectable_bridge_config()
-        ):
-            # If we previous paired and the tls assets already exist,
-            # we do not need to go though pairing again.
-            return self.async_create_entry(title=self.bridge_id, data=self.data)
-
         if user_input is not None:
+            if (
+                await self.hass.async_add_executor_job(self._tls_assets_exist)
+                and await self.async_validate_connectable_bridge_config()
+            ):
+                # If we previous paired and the tls assets already exist,
+                # we do not need to go though pairing again.
+                return self.async_create_entry(title=self.bridge_id, data=self.data)
+
             assets = None
             try:
                 assets = await async_pair(self.data[CONF_HOST])
