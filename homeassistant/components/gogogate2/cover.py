@@ -4,6 +4,7 @@ from typing import Callable, List, Optional
 from gogogate2_api.common import (
     AbstractDoor,
     DoorStatus,
+    TransitionDoorStatus,
     get_configured_doors,
     get_door_by_id,
 )
@@ -104,10 +105,10 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return true if cover is closed, else False."""
-        door = self._get_door()
-        if door.status == DoorStatus.OPENED:
+        door_status = self._get_door_status()
+        if door_status == DoorStatus.OPENED:
             return False
-        if door.status == DoorStatus.CLOSED:
+        if door_status == DoorStatus.CLOSED:
             return True
 
         return None
@@ -128,12 +129,12 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
     @property
     def is_closing(self):
         """Return if the cover is closing or not."""
-        return self._get_door().status == DoorStatus.CLOSING
+        return self._get_door_status() == TransitionDoorStatus.CLOSING
 
     @property
     def is_opening(self):
         """Return if the cover is opening or not."""
-        return self._get_door().status == DoorStatus.OPENING
+        return self._get_door_status() == TransitionDoorStatus.OPENING
 
     async def async_open_cover(self, **kwargs):
         """Open the door."""
@@ -154,6 +155,9 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
         door = get_door_by_id(self._door.door_id, self.coordinator.data)
         self._door = door or self._door
         return self._door
+
+    def _get_door_status(self) -> AbstractDoor:
+        return self._api._get_door_statuses(self.coordinator.data)[self._door.door_id]
 
     @property
     def device_info(self):
