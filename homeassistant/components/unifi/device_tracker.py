@@ -146,10 +146,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         self.heartbeat_check = False
         self.schedule_update = False
         self._is_connected = False
-        self._last_raw = {}
-        self._last_available = False
-        self._last_is_connected = False
-
         if client.last_seen:
             self._is_connected = (
                 self.is_wired == client.is_wired
@@ -179,7 +175,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the clients state."""
-        avoid_state_write_if_no_new_data = False
 
         if self.client.last_updated == SOURCE_EVENT:
             if (self.is_wired and self.client.event.event in WIRED_CONNECTION) or (
@@ -199,8 +194,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
                 self._is_connected = True
                 self.schedule_update = True
 
-            avoid_state_write_if_no_new_data = True
-
         if self.schedule_update:
             self.schedule_update = False
             self.controller.async_heartbeat(
@@ -208,35 +201,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             )
             self.heartbeat_check = True
 
-        if not self._visible_state_has_changed(avoid_state_write_if_no_new_data):
-            return
-
         super().async_update_callback()
-
-    def _visible_state_has_changed(self, avoid_state_write_if_no_new_data):
-        """Check to see if the state has changed to avoid writing entity state."""
-        raw = self.client.raw
-        hide_keys = [
-            key for key in raw if key.startswith("_") and key != "_is_guest_by_uap"
-        ]
-        for key in hide_keys:
-            del raw[key]
-        available = self.controller.available
-        is_connected = self.is_connected
-
-        if (
-            avoid_state_write_if_no_new_data
-            and is_connected == self._last_is_connected
-            and available == self._last_available
-            and raw == self._last_raw
-        ):
-            return False
-
-        self._last_is_connected = is_connected
-        self._last_raw = raw
-        self._last_available = available
-
-        return True
 
     @callback
     def _make_disconnected(self, *_):
