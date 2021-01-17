@@ -76,7 +76,10 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.data[CONF_HOST] = host
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {CONF_NAME: lutron_id}
+        self.context["title_placeholders"] = {
+            CONF_NAME: self.bridge_id,
+            CONF_HOST: host,
+        }
         return await self.async_step_link()
 
     async_step_homekit = async_step_zeroconf
@@ -112,7 +115,10 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="link",
             errors=errors,
-            description_placeholders={CONF_HOST: self.data[CONF_HOST]},
+            description_placeholders={
+                CONF_NAME: self.bridge_id,
+                CONF_HOST: self.data[CONF_HOST],
+            },
         )
 
     @property
