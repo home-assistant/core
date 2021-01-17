@@ -23,7 +23,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
+from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN, LOGGER
 from .unifi_client import UniFiClient
 from .unifi_entity_base import UniFiBase
 
@@ -177,6 +177,13 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         """Update the clients state."""
 
         if self.client.last_updated == SOURCE_EVENT:
+            LOGGER.warning(
+                "async_update_callback event: %s (%s): %s",
+                self.entity_id,
+                self.client.mac,
+                self.client.event,
+            )
+
             if (self.is_wired and self.client.event.event in WIRED_CONNECTION) or (
                 not self.is_wired and self.client.event.event in WIRELESS_CONNECTION
             ):
@@ -190,6 +197,13 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
                 self.schedule_update = True
 
         elif not self.client.event and self.client.last_updated == SOURCE_DATA:
+            LOGGER.warning(
+                "async_update_callback raw: %s (%s): %s",
+                self.entity_id,
+                self.client.mac,
+                self.client.raw,
+            )
+
             if self.is_wired == self.client.is_wired:
                 self._is_connected = True
                 self.schedule_update = True
