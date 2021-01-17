@@ -4,6 +4,7 @@ from typing import Callable, List, Optional
 from gogogate2_api.common import (
     AbstractDoor,
     DoorStatus,
+    TransitionDoorStatus,
     get_configured_doors,
     get_door_by_id,
 )
@@ -104,11 +105,10 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return true if cover is closed, else False."""
-        door = self._get_door()
-
-        if door.status == DoorStatus.OPENED:
+        door_status = self._get_door_status()
+        if door_status == DoorStatus.OPENED:
             return False
-        if door.status == DoorStatus.CLOSED:
+        if door_status == DoorStatus.CLOSED:
             return True
 
         return None
@@ -116,8 +116,7 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        door = self._get_door()
-        if door.gate:
+        if self._get_door().gate:
             return DEVICE_CLASS_GATE
 
         return DEVICE_CLASS_GARAGE
@@ -127,25 +126,38 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
 
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        return self._get_door_status() == TransitionDoorStatus.CLOSING
+
+    @property
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        return self._get_door_status() == TransitionDoorStatus.OPENING
+
     async def async_open_cover(self, **kwargs):
         """Open the door."""
         await self._api.async_open_door(self._get_door().door_id)
+        await self.coordinator.async_refresh()
 
     async def async_close_cover(self, **kwargs):
         """Close the door."""
         await self._api.async_close_door(self._get_door().door_id)
+        await self.coordinator.async_refresh()
 
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        attrs = super().state_attributes
-        attrs["door_id"] = self._get_door().door_id
-        return attrs
+        return {**super().state_attributes, "door_id": self._get_door().door_id}
 
     def _get_door(self) -> AbstractDoor:
         door = get_door_by_id(self._door.door_id, self.coordinator.data)
         self._door = door or self._door
         return self._door
+
+    def _get_door_status(self) -> AbstractDoor:
+        return self._api._get_door_statuses(self.coordinator.data)[self._door.door_id]
 
     @property
     def device_info(self):
