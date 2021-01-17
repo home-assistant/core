@@ -14,7 +14,6 @@ from aiounifi.events import (
     WIRELESS_GUEST_ROAM,
     WIRELESS_GUEST_ROAMRADIO,
 )
-from dictdiffer import diff
 
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
@@ -24,7 +23,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN, LOGGER
+from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
 from .unifi_entity_base import UniFiBase
 
@@ -55,8 +54,6 @@ CLIENT_STATIC_ATTRIBUTES = [
 
 
 CLIENT_CONNECTED_ALL_ATTRIBUTES = CLIENT_CONNECTED_ATTRIBUTES + CLIENT_STATIC_ATTRIBUTES
-
-COMPARE_ATTRIBUTES = set(CLIENT_CONNECTED_ALL_ATTRIBUTES)
 
 DEVICE_UPGRADED = (ACCESS_POINT_UPGRADED, GATEWAY_UPGRADED, SWITCH_UPGRADED)
 
@@ -234,10 +231,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             and raw == self._last_raw
         ):
             return False
-
-        LOGGER.debug(
-            "Device %s: changed: %s", self.entity_id, list(diff(self._last_raw, raw))
-        )
 
         self._last_is_connected = is_connected
         self._last_raw = raw
