@@ -1,6 +1,7 @@
 """Constants for the Shelly integration."""
 
 COAP = "coap"
+COAP_SUBSCRIBER = "coap_subscriber"
 DATA_CONFIG_ENTRY = "config_entry"
 DOMAIN = "shelly"
 REST = "rest"

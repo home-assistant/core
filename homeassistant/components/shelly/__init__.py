@@ -16,7 +16,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     device_registry,
@@ -31,6 +30,7 @@ from .const import (
     ATTR_DEVICE,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     COAP,
+    COAP_SUBSCRIBER,
     DATA_CONFIG_ENTRY,
     DOMAIN,
     EVENT_SHELLY_CLICK,
@@ -64,12 +64,14 @@ async def get_coap_context(hass):
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Shelly component."""
-    hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
+    hass.data[DOMAIN] = {COAP_SUBSCRIBER: {}, DATA_CONFIG_ENTRY: {}}
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Shelly from a config entry."""
+    hass.data[DOMAIN][COAP_SUBSCRIBER][entry.entry_id] = None
+
     temperature_unit = "C" if hass.config.units.is_metric else "F"
 
     ip_address = await hass.async_add_executor_job(gethostbyname, entry.data[CONF_HOST])
@@ -83,30 +85,50 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     coap_context = await get_coap_context(hass)
 
-    try:
-        async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-            device = await aioshelly.Device.create(
-                aiohttp_client.async_get_clientsession(hass),
-                coap_context,
-                options,
+    async def async_device_create():
+        try:
+            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
+                device = await aioshelly.Device.create(
+                    aiohttp_client.async_get_clientsession(hass),
+                    coap_context,
+                    options,
+                )
+        except (asyncio.TimeoutError, OSError):
+            return False
+
+        hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = {}
+        coap_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
+            COAP
+        ] = ShellyDeviceWrapper(hass, entry, device)
+        await coap_wrapper.async_setup()
+
+        hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
+            REST
+        ] = ShellyDeviceRestWrapper(hass, device)
+
+        for component in PLATFORMS:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, component)
             )
-    except (asyncio.TimeoutError, OSError) as err:
-        raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = {}
-    coap_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
-        COAP
-    ] = ShellyDeviceWrapper(hass, entry, device)
-    await coap_wrapper.async_setup()
+        return True
 
-    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
-        REST
-    ] = ShellyDeviceRestWrapper(hass, device)
+    if await async_device_create():
+        return True
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    _LOGGER.debug("Device not ready - IP:%s", ip_address)
+
+    @callback
+    def async_device_ready(msg):
+        _LOGGER.debug("Device ready - IP:%s", ip_address)
+        cancel_subscriber = hass.data[DOMAIN][COAP_SUBSCRIBER][entry.entry_id]
+        cancel_subscriber()
+        hass.data[DOMAIN][COAP_SUBSCRIBER][entry.entry_id] = None
+        hass.loop.create_task(async_device_create())
+
+    hass.data[DOMAIN][COAP_SUBSCRIBER][entry.entry_id] = coap_context.subscribe_updates(
+        ip_address, async_device_ready
+    )
 
     return True
 
@@ -282,6 +304,12 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+    cancel_subscriber = hass.data[DOMAIN][COAP_SUBSCRIBER].pop(entry.entry_id)
+    if cancel_subscriber:
+        cancel_subscriber()
+        # If subscriber is active device is not loaded yet
+        return True
+
     unload_ok = all(
         await asyncio.gather(
             *[
