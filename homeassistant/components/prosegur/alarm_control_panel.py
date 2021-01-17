@@ -59,8 +59,14 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
         """Return the list of supported features."""
         return SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME
 
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+
+        self.async_schedule_update_ha_state(True)
+
     async def async_update(self):
         """Update alarm status."""
+        _LOGGER.warn("Update")
 
         try:
             self._installation = await Installation.retrieve(self._auth)
