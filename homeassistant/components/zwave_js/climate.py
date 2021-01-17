@@ -115,7 +115,11 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         self._hvac_presets: Dict[str, Optional[int]] = {}
         self._set_modes_and_presets()
 
-        self._current_mode: ZwaveValue = self.info.primary_value
+        self._current_mode: Optional[ZwaveValue] = self.get_zwave_value(
+            "mode",
+            command_class=CommandClass.THERMOSTAT_MODE,
+            add_to_watched_value_ids=True,
+        )
         self._setpoint_values: Dict[ThermostatSetpointType, ZwaveValue] = {}
         for enum in ThermostatSetpointType:
             val = self.get_zwave_value(
@@ -167,7 +171,10 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
         # Z-Wave uses one list for both modes and presets.
         # Iterate over all Z-Wave ThermostatModes and extract the hvac modes and presets.
-        for mode_id, mode_name in self._current_mode.metadata.states.items():
+        current_mode = self._current_mode
+        if not current_mode:
+            return
+        for mode_id, mode_name in current_mode.metadata.states.items():
             mode_id = int(mode_id)
             if mode_id in THERMOSTAT_MODES:
                 # treat value as hvac mode
@@ -199,6 +206,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
+        if self._current_mode is None:
+            # Thermostat(valve) with no support for setting a mode is considered heating-only
+            return HVAC_MODE_HEAT
         return ZW_HVAC_MODE_MAP.get(int(self._current_mode.value), HVAC_MODE_HEAT_COOL)
 
     @property
@@ -238,7 +248,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        if int(self._current_mode.value) not in THERMOSTAT_MODES:
+        if self._current_mode and int(self._current_mode.value) not in THERMOSTAT_MODES:
             return_val: str = self._current_mode.metadata.states.get(
                 self._current_mode.value
             )
@@ -290,6 +300,11 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
+        if not self._current_mode:
+            # Thermostat(valve) with no support for setting a mode
+            raise ValueError(
+                f"Thermostat {self.entity_id} does not support setting a mode"
+            )
         hvac_mode_value = self._hvac_modes.get(hvac_mode)
         if hvac_mode_value is None:
             raise ValueError(f"Received an invalid hvac mode: {hvac_mode}")

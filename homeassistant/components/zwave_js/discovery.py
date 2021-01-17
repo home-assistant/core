@@ -84,8 +84,6 @@ DISCOVERY_SCHEMAS = [
             "Thermostat General V2",
         },
         command_class={CommandClass.THERMOSTAT_MODE},
-        property={"mode"},
-        type={"number"},
     ),
     # lights
     # primary value is the currentValue (brightness)
