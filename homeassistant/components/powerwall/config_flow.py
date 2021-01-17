@@ -5,19 +5,19 @@ from tesla_powerwall import MissingAttributeError, Powerwall, PowerwallUnreachab
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components.dhcp import IP_ADDRESS
 from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.core import callback
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
-
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
-    Data has the keys from DATA_SCHEMA with values provided by the user.
+    Data has the keys from schema with values provided by the user.
     """
 
     power_wall = Powerwall(data[CONF_IP_ADDRESS])
@@ -42,6 +42,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
+    def __init__(self):
+        """Initialize the powerwall flow."""
+        self.ip_address = None
+
+    async def async_step_dhcp(self, dhcp_discovery):
+        """Handle dhcp discovery."""
+        if self._async_ip_address_already_configured(dhcp_discovery[IP_ADDRESS]):
+            return self.async_abort(reason="already_configured")
+
+        self.ip_address = dhcp_discovery[IP_ADDRESS]
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {CONF_IP_ADDRESS: self.ip_address}
+        return await self.async_step_user()
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
@@ -62,7 +76,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_IP_ADDRESS, default=self.ip_address): str}
+            ),
+            errors=errors,
         )
 
     async def async_step_import(self, user_input):
@@ -71,6 +89,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         return await self.async_step_user(user_input)
+
+    @callback
+    def _async_ip_address_already_configured(self, ip_address):
+        """See if we already have an entry matching the ip_address."""
+        for entry in self._async_current_entries():
+            if entry.data.get(CONF_IP_ADDRESS) == ip_address:
+                return True
+        return False
 
 
 class CannotConnect(exceptions.HomeAssistantError):
