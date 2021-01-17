@@ -167,7 +167,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         self._hvac_presets = all_presets
 
     @property
-    def _current_mode_setpoint_enums(self) -> List[ThermostatSetpointType]:
+    def _current_mode_setpoint_enums(self) -> List[Optional[ThermostatSetpointType]]:
         """Return the list of enums that are relevant to the current thermostat mode."""
         return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])  # type: ignore
 
