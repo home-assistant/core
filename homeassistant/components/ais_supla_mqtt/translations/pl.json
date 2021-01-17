@@ -2,8 +2,8 @@
     "config": {
         "step": {
             "oauth": {
-                "description": "Access to SUPLA MQTT requires authorization in SUPLA Cloud. Click the **SUBMIT** below to start the authorization process\n\n ###### ![AIS logo](/static/icons/supla_zamel_logo.png)",
-                "title": "Authentication the access in SUPLA Cloud"
+                "description": "Pobranie parametrów połączenia do SUPLA MQTT Broker wymaga autoryzacji w SUPLA Cloud.\n\n ###### ![AIS logo](https://ai-speaker.com/images/brands/ais_supla_mqtt/mqtt_broker_ais_supla.png?v=2) \n\n Kliknij przycisk **ZATWIERDŹ** poniżej żeby rozpocząć proces autoryzacji.",
+                "title": "Uwierzytelnianie dostępu w SUPLA Cloud"
             }
         },
         "error": {
@@ -11,8 +11,8 @@
           "token_error": "Invalid code"
         },
         "abort": {
-            "abort_by_error": "Discontinued due to an error:\n\n {error_info}",
-            "single_instance_allowed": "You already have the integration to SUPLA MQTT set up.\n\n If you want to reconfigure, remove the current integration first."
+            "abort_by_error": "Przerwane z powodu błędu:\n\n {error_info}",
+            "single_instance_allowed": "Masz już integrację z SUPLA MQTT Broker skonfigurowaną.\n\n Jeśli chcesz zmienić konfigurację, najpierw usuń bieżącą integrację."
         }
     }
 }

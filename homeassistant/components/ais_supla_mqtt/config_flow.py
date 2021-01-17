@@ -61,20 +61,23 @@ class SuplaMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_oauth(user_input)
 
     async def async_step_oauth(self, user_input=None):
-        self.hass.http.register_view(AuthorizationCallbackView)
-        request = current_request.get()
-        url_host = yarl.URL(request.url).host
 
-        """Handle flow external step."""
-        ais_dom = ais_cloud.AisCloudWS(self.hass)
-        json_ws_resp = ais_dom.key("supla_mqtt_client_id")
-        self.client_id = json_ws_resp["key"]
-        gate_id = ais_global.get_sercure_android_id_dom()
-        auth_url = (
-            f"{OAUTH_URL}?client_id={self.client_id}&redirect_uri={REDIRECT_URL}&scope={AUTH_SCOPE}&response_type"
-            f"=code&state={gate_id}ais0dom{url_host}ais0domsupla-mqtt-{self.flow_id}"
-        )
-        return self.async_external_step(step_id="obtain_token", url=auth_url)
+        if user_input is not None:
+            self.hass.http.register_view(AuthorizationCallbackView)
+            request = current_request.get()
+            url_host = yarl.URL(request.url).host
+
+            """Handle flow external step."""
+            ais_dom = ais_cloud.AisCloudWS(self.hass)
+            json_ws_resp = ais_dom.key("supla_mqtt_client_id")
+            self.client_id = json_ws_resp["key"]
+            gate_id = ais_global.get_sercure_android_id_dom()
+            auth_url = (
+                f"{OAUTH_URL}?client_id={self.client_id}&redirect_uri={REDIRECT_URL}&scope={AUTH_SCOPE}&response_type"
+                f"=code&state={gate_id}ais0dom{url_host}ais0domsupla-mqtt-{self.flow_id}"
+            )
+            return self.async_external_step(step_id="obtain_token", url=auth_url)
+        return self.async_show_form(step_id="oauth")
 
     async def async_step_obtain_token(self, user_input=None):
         """Obtain token after external auth completed."""
