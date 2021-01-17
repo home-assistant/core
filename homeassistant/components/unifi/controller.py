@@ -159,7 +159,7 @@ class UniFiController:
     @property
     def option_ssid_filter(self):
         """Config entry option listing what SSIDs are being used to track clients."""
-        return self.config_entry.options.get(CONF_SSID_FILTER, [])
+        return set(self.config_entry.options.get(CONF_SSID_FILTER, []))
 
     @property
     def option_detection_time(self):

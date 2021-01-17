@@ -14,6 +14,7 @@ from aiounifi.events import (
     WIRELESS_GUEST_ROAM,
     WIRELESS_GUEST_ROAMRADIO,
 )
+from dictdiffer import diff
 
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
@@ -23,7 +24,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
+from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN, LOGGER
 from .unifi_client import UniFiClient
 from .unifi_entity_base import UniFiBase
 
@@ -146,6 +147,10 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         self.heartbeat_check = False
         self.schedule_update = False
         self._is_connected = False
+        self._last_raw = {}
+        self._last_available = False
+        self._last_is_connected = False
+
         if client.last_seen:
             self._is_connected = (
                 self.is_wired == client.is_wired
@@ -175,6 +180,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the clients state."""
+        avoid_state_write_if_no_new_data = False
 
         if self.client.last_updated == SOURCE_EVENT:
             if (self.is_wired and self.client.event.event in WIRED_CONNECTION) or (
@@ -194,12 +200,32 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
                 self._is_connected = True
                 self.schedule_update = True
 
+            avoid_state_write_if_no_new_data = True
+
         if self.schedule_update:
             self.schedule_update = False
             self.controller.async_heartbeat(
                 self.unique_id, dt_util.utcnow() + self.controller.option_detection_time
             )
             self.heartbeat_check = True
+
+        raw = self.client.raw
+        available = self.controller.available
+        is_connected = self.is_connected
+        if raw is self._last_raw:
+            raise ValueError
+
+        if (
+            avoid_state_write_if_no_new_data
+            and is_connected == self._last_is_connected
+            and available == self._last_available
+            and raw == self._last_raw
+        ):
+            return
+
+        self._last_is_connected = is_connected
+        self._last_raw = raw
+        self._last_available = available
 
         super().async_update_callback()
 

@@ -696,8 +696,9 @@ async def test_wireless_client_go_wired_issue(hass):
     assert client_1.attributes["is_wired"] is False
 
     # Make client wireless
-    client_1_client["is_wired"] = False
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_client]}
+    client_1_copy = client_1_client.copy()
+    client_1_copy["is_wired"] = False
+    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_copy]}
     controller.api.message_handler(event)
     await hass.async_block_till_done()
 
@@ -746,7 +747,9 @@ async def test_option_ignore_wired_bug(hass):
     assert client_1.attributes["is_wired"] is True
 
     # Mark client as connected again
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_client]}
+    client_1_copy = client_1_client.copy()
+    client_1_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_copy]}
     controller.api.message_handler(event)
     await hass.async_block_till_done()
 
@@ -756,8 +759,9 @@ async def test_option_ignore_wired_bug(hass):
     assert client_1.attributes["is_wired"] is True
 
     # Make client wireless
-    client_1_client["is_wired"] = False
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_client]}
+    client_1_copy = client_1_client.copy()
+    client_1_copy["is_wired"] = False
+    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_copy]}
     controller.api.message_handler(event)
     await hass.async_block_till_done()
 
