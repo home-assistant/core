@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from types import TracebackType
 from typing import Any, Dict, Optional, Type
-from unittest.mock import AsyncMock, Mock, patch  # type: ignore[attr-defined]
+from unittest.mock import AsyncMock, Mock, patch
 
 from hyperion import const
 
@@ -68,7 +68,7 @@ TEST_AUTH_NOT_REQUIRED_RESP = {
 _LOGGER = logging.getLogger(__name__)
 
 
-class AsyncContextManagerMock(Mock):  # type: ignore[misc]
+class AsyncContextManagerMock(Mock):
     """An async context manager mock for Hyperion."""
 
     async def __aenter__(self) -> Optional[AsyncContextManagerMock]:

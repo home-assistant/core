@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import re
 from types import MappingProxyType
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, cast
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from hyperion import client, const
 import voluptuous as vol
@@ -22,7 +22,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -46,14 +46,16 @@ from . import (
     get_hyperion_unique_id,
 )
 from .const import (
+    CONF_INSTANCE_CLIENTS,
     CONF_ON_UNLOAD,
     CONF_PRIORITY,
     CONF_ROOT_CLIENT,
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
     DOMAIN,
-    SIGNAL_INSTANCE_REMOVED,
-    SIGNAL_INSTANCES_UPDATED,
+    SIGNAL_ENTITY_REMOVE,
+    SIGNAL_INSTANCE_ADD,
+    SIGNAL_INSTANCE_REMOVE,
     TYPE_HYPERION_LIGHT,
 )
 
@@ -226,84 +228,61 @@ async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
 ) -> bool:
     """Set up a Hyperion platform from config entry."""
-    host = config_entry.data[CONF_HOST]
-    port = config_entry.data[CONF_PORT]
-    token = config_entry.data.get(CONF_TOKEN)
 
-    async def async_instances_to_entities(response: Dict[str, Any]) -> None:
-        if not response or const.KEY_DATA not in response:
-            return
-        await async_instances_to_entities_raw(response[const.KEY_DATA])
+    entry_data = hass.data[DOMAIN][config_entry.entry_id]
+    server_id = config_entry.unique_id
 
-    async def async_instances_to_entities_raw(instances: List[Dict[str, Any]]) -> None:
-        registry = await async_get_registry(hass)
-        entities_to_add: List[HyperionLight] = []
-        running_unique_ids: Set[str] = set()
-        stopped_unique_ids: Set[str] = set()
-        server_id = cast(str, config_entry.unique_id)
-
-        # In practice, an instance can be in 3 states as seen by this function:
-        #
-        #    * Exists, and is running: Should be present in HASS/registry.
-        #    * Exists, but is not running: Cannot add it yet, but entity may have be
-        #      registered from a previous time it was running.
-        #    * No longer exists at all: Should not be present in HASS/registry.
-
-        # Add instances that are missing.
-        for instance in instances:
-            instance_id = instance.get(const.KEY_INSTANCE)
-            if instance_id is None:
-                continue
-            unique_id = get_hyperion_unique_id(
-                server_id, instance_id, TYPE_HYPERION_LIGHT
-            )
-            if not instance.get(const.KEY_RUNNING, False):
-                stopped_unique_ids.add(unique_id)
-                continue
-            running_unique_ids.add(unique_id)
-
-            if unique_id in live_entities:
-                continue
-            hyperion_client = await async_create_connect_hyperion_client(
-                host, port, instance=instance_id, token=token
-            )
-            if not hyperion_client:
-                continue
-            live_entities.add(unique_id)
-            entities_to_add.append(
+    def instance_add(instance_num: int, instance_name: str) -> None:
+        """Add entities for a new Hyperion instance."""
+        assert server_id
+        entities = []
+        for light_type in LIGHT_TYPES:
+            entities.append(
                 HyperionLight(
-                    unique_id,
-                    instance.get(const.KEY_FRIENDLY_NAME, DEFAULT_NAME),
+                    get_hyperion_unique_id(server_id, instance_num, light_type),
+                    instance_name,
                     config_entry.options,
-                    hyperion_client,
+                    entry_data[CONF_INSTANCE_CLIENTS][instance_num],
                 )
             )
+        async_add_entities(entities)
 
-        # Remove entities that are are not running instances on Hyperion:
-        for unique_id in live_entities - running_unique_ids:
-            live_entities.remove(unique_id)
-            async_dispatcher_send(hass, SIGNAL_INSTANCE_REMOVED.format(unique_id))
+    def instance_remove(instance_num: int) -> None:
+        """Remove entities for an old Hyperion instance."""
+        assert server_id
+        for light_type in LIGHT_TYPES:
+            async_dispatcher_send(
+                hass,
+                SIGNAL_ENTITY_REMOVE.format(
+                    get_hyperion_unique_id(server_id, instance_num, light_type)
+                ),
+            )
 
-        # Deregister instances that are no longer present on this server.
-        for entry in async_entries_for_config_entry(registry, config_entry.entry_id):
-            if entry.unique_id not in running_unique_ids.union(stopped_unique_ids):
-                registry.async_remove(entry.entity_id)
+    # Note: When the YAML migration code is removed, this can be simplified by allowing
+    # instance_add(...) to be called directly via the signal in __init__.py without
+    # needing to be also called synchronously here.
+    for instance in entry_data[CONF_ROOT_CLIENT].instances:
+        instance_num = instance.get(const.KEY_INSTANCE)
+        if (
+            instance_num is not None
+            and instance_num in entry_data[CONF_INSTANCE_CLIENTS]
+        ):
+            instance_name = instance.get(const.KEY_FRIENDLY_NAME, DEFAULT_NAME)
+            instance_add(instance_num, instance_name)
 
-        async_add_entities(entities_to_add)
-
-    # Readability note: This variable is kept alive in the context of the callback to
-    # async_instances_to_entities below.
-    live_entities: Set[str] = set()
-
-    await async_instances_to_entities_raw(
-        hass.data[DOMAIN][config_entry.entry_id][CONF_ROOT_CLIENT].instances,
-    )
-    hass.data[DOMAIN][config_entry.entry_id][CONF_ON_UNLOAD].append(
-        async_dispatcher_connect(
-            hass,
-            SIGNAL_INSTANCES_UPDATED.format(config_entry.entry_id),
-            async_instances_to_entities,
-        )
+    hass.data[DOMAIN][config_entry.entry_id][CONF_ON_UNLOAD].extend(
+        [
+            async_dispatcher_connect(
+                hass,
+                SIGNAL_INSTANCE_ADD.format(config_entry.entry_id),
+                instance_add,
+            ),
+            async_dispatcher_connect(
+                hass,
+                SIGNAL_INSTANCE_REMOVE.format(config_entry.entry_id),
+                instance_remove,
+            ),
+        ]
     )
     return True
 
@@ -606,7 +585,7 @@ class HyperionLight(LightEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_INSTANCE_REMOVED.format(self._unique_id),
+                SIGNAL_ENTITY_REMOVE.format(self._unique_id),
                 self.async_remove,
             )
         )
@@ -627,3 +606,8 @@ class HyperionLight(LightEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect from server."""
         await self._client.async_client_disconnect()
+
+
+LIGHT_TYPES = {
+    TYPE_HYPERION_LIGHT: HyperionLight,
+}

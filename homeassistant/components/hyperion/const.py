@@ -3,6 +3,7 @@
 CONF_AUTH_ID = "auth_id"
 CONF_CREATE_TOKEN = "create_token"
 CONF_INSTANCE = "instance"
+CONF_INSTANCE_CLIENTS = "INSTANCE_CLIENTS"
 CONF_ON_UNLOAD = "ON_UNLOAD"
 CONF_PRIORITY = "priority"
 CONF_ROOT_CLIENT = "ROOT_CLIENT"
@@ -16,7 +17,8 @@ DOMAIN = "hyperion"
 HYPERION_RELEASES_URL = "https://github.com/hyperion-project/hyperion.ng/releases"
 HYPERION_VERSION_WARN_CUTOFF = "2.0.0-alpha.9"
 
-SIGNAL_INSTANCES_UPDATED = f"{DOMAIN}_instances_updated_signal." "{}"
-SIGNAL_INSTANCE_REMOVED = f"{DOMAIN}_instance_removed_signal." "{}"
+SIGNAL_INSTANCE_ADD = f"{DOMAIN}_instance_add_signal." "{}"
+SIGNAL_INSTANCE_REMOVE = f"{DOMAIN}_instance_remove_signal." "{}"
+SIGNAL_ENTITY_REMOVE = f"{DOMAIN}_entity_remove_signal." "{}"
 
 TYPE_HYPERION_LIGHT = "hyperion_light"

@@ -2,7 +2,7 @@
 import logging
 from types import MappingProxyType
 from typing import Any, Optional
-from unittest.mock import AsyncMock, call, patch  # type: ignore[attr-defined]
+from unittest.mock import AsyncMock, call, patch
 
 from hyperion import const
 
@@ -264,7 +264,7 @@ async def test_setup_config_entry_not_ready_load_state_fail(
 
 
 async def test_setup_config_entry_dynamic_instances(hass: HomeAssistantType) -> None:
-    """Test dynamic changes in the omstamce configuration."""
+    """Test dynamic changes in the instance configuration."""
     registry = await async_get_registry(hass)
 
     config_entry = add_test_config_entry(hass)
@@ -291,11 +291,12 @@ async def test_setup_config_entry_dynamic_instances(hass: HomeAssistantType) -> 
     instance_callback = master_client.set_callbacks.call_args[0][0][
         f"{const.KEY_INSTANCE}-{const.KEY_UPDATE}"
     ]
+
     with patch(
         "homeassistant.components.hyperion.client.HyperionClient",
         return_value=entity_client,
     ):
-        instance_callback(
+        await instance_callback(
             {
                 const.KEY_SUCCESS: True,
                 const.KEY_DATA: [
@@ -323,7 +324,7 @@ async def test_setup_config_entry_dynamic_instances(hass: HomeAssistantType) -> 
         "homeassistant.components.hyperion.client.HyperionClient",
         return_value=entity_client,
     ):
-        instance_callback(
+        await instance_callback(
             {
                 const.KEY_SUCCESS: True,
                 const.KEY_DATA: [TEST_INSTANCE_2, TEST_INSTANCE_3],
@@ -343,7 +344,7 @@ async def test_setup_config_entry_dynamic_instances(hass: HomeAssistantType) -> 
         "homeassistant.components.hyperion.client.HyperionClient",
         return_value=entity_client,
     ):
-        instance_callback(
+        await instance_callback(
             {
                 const.KEY_SUCCESS: True,
                 const.KEY_DATA: [
@@ -364,7 +365,7 @@ async def test_setup_config_entry_dynamic_instances(hass: HomeAssistantType) -> 
         "homeassistant.components.hyperion.client.HyperionClient",
         return_value=entity_client,
     ):
-        instance_callback(
+        await instance_callback(
             {
                 const.KEY_SUCCESS: True,
                 const.KEY_DATA: [TEST_INSTANCE_1, TEST_INSTANCE_2, TEST_INSTANCE_3],
