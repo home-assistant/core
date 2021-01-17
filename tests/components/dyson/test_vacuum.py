@@ -39,7 +39,7 @@ ENTITY_ID = f"vacuum.{ENTITY_NAME}"
 
 
 @callback
-def _get_vacuum_device():
+def _get_vacuum_device() -> Dyson360Eye:
     device = get_device(Dyson360Eye)
     device.state = MagicMock()
     device.state.state = Dyson360EyeMode.FULL_CLEAN_RUNNING
@@ -49,7 +49,7 @@ def _get_vacuum_device():
     return device
 
 
-async def test_state(hass: HomeAssistant):
+async def test_state(hass: HomeAssistant) -> None:
     """Test the state of the vacuum."""
     device = await async_setup_dyson(hass, _get_vacuum_device)
     state = hass.states.get(ENTITY_ID)
@@ -76,7 +76,7 @@ async def test_state(hass: HomeAssistant):
     assert state.attributes[ATTR_STATUS] == "Paused"
 
 
-async def test_commands(hass: HomeAssistant):
+async def test_commands(hass: HomeAssistant) -> None:
     """Test sending commands to the vacuum."""
     device = await async_setup_dyson(hass, _get_vacuum_device)
 
