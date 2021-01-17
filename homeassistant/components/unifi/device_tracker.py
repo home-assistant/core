@@ -56,6 +56,8 @@ CLIENT_STATIC_ATTRIBUTES = [
 
 CLIENT_CONNECTED_ALL_ATTRIBUTES = CLIENT_CONNECTED_ATTRIBUTES + CLIENT_STATIC_ATTRIBUTES
 
+COMPARE_ATTRIBUTES = set(CLIENT_CONNECTED_ALL_ATTRIBUTES)
+
 DEVICE_UPGRADED = (ACCESS_POINT_UPGRADED, GATEWAY_UPGRADED, SWITCH_UPGRADED)
 
 WIRED_CONNECTION = (WIRED_CLIENT_CONNECTED,)
@@ -209,8 +211,17 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             )
             self.heartbeat_check = True
 
+        if not self._visible_state_has_changed(avoid_state_write_if_no_new_data):
+            return
+
+        super().async_update_callback()
+
+    def _visible_state_has_changed(self, avoid_state_write_if_no_new_data):
+        """Check to see if the state has changed to avoid writing entity state."""
         raw = self.client.raw
-        hide_keys = [key for key in raw if key.startswith("_")]
+        hide_keys = [
+            key for key in raw if key.startswith("_") and key != "_is_guest_by_uap"
+        ]
         for key in hide_keys:
             del raw[key]
         available = self.controller.available
@@ -222,9 +233,9 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             and available == self._last_available
             and raw == self._last_raw
         ):
-            return
+            return False
 
-        LOGGER.warning(
+        LOGGER.debug(
             "Device %s: changed: %s", self.entity_id, list(diff(self._last_raw, raw))
         )
 
@@ -232,7 +243,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         self._last_raw = raw
         self._last_available = available
 
-        super().async_update_callback()
+        return True
 
     @callback
     def _make_disconnected(self, *_):
