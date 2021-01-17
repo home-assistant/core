@@ -126,7 +126,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             # We do this check so that we can check for existence for
             # a setpoint type later. If it's not in the dictionary, but
             # it is still needed, we should check again later to see if
-            # it exists as a Value
+            # it exists as a Value. See _setpoint_value
             if val:
                 self._setpoint_values[enum] = val
         self._operating_state = self.get_zwave_value(
