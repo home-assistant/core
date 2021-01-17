@@ -15,7 +15,7 @@ from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import dt as dt_util, re, yaml
+from homeassistant.util import dt as dt_util, yaml
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -105,18 +105,18 @@ async def process_wrong_login(request):
     except herror:
         pass
 
-    msg = f"Login attempt or request with invalid authentication from {remote_host} ({remote_addr})"
+    base_msg = f"Login attempt or request with invalid authentication from {remote_host} ({remote_addr})."
 
-    user_agent_raw = request.headers.get("user-agent")
-    if user_agent_raw:
-        # Sanitize user agent to limited charset
-        user_agent = re.sub(r"[^a-zA-Z0-9:;,./() ]", "_", user_agent_raw)
-        msg = f"{msg} ({user_agent})"
+    # The user-agent is unsanitized input so we only include it in the log
+    user_agent = request.headers.get("user-agent")
+    log_msg = f"{base_msg} ({user_agent})"
 
-    _LOGGER.warning(msg)
+    notification_msg = f"{base_msg} See the log for details."
+
+    _LOGGER.warning(log_msg)
 
     hass.components.persistent_notification.async_create(
-        msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
+        notification_msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
     )
 
     # Check if ban middleware is loaded
