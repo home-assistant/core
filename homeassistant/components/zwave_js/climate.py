@@ -113,7 +113,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         super().__init__(client, info)
         self._hvac_modes: Dict[str, Optional[int]] = {}
         self._hvac_presets: Dict[str, Optional[int]] = {}
-        self._set_modes_and_presets()
 
         self._current_mode = self.get_zwave_value(
             "mode",
@@ -138,6 +137,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             command_class=CommandClass.SENSOR_MULTILEVEL,
             add_to_watched_value_ids=True,
         )
+        self._set_modes_and_presets()
 
     def _setpoint_value(self, setpoint_type: ThermostatSetpointType) -> ZwaveValue:
         """Optionally return a ZwaveValue for a setpoint."""
