@@ -2,7 +2,7 @@
 import logging
 from types import MappingProxyType
 from typing import Any, Optional
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
 from hyperion import const
 
@@ -11,7 +11,11 @@ from homeassistant.components.hyperion import (
     get_hyperion_unique_id,
     light as hyperion_light,
 )
-from homeassistant.components.hyperion.const import DOMAIN, TYPE_HYPERION_LIGHT
+from homeassistant.components.hyperion.const import (
+    DEFAULT_ORIGIN,
+    DOMAIN,
+    TYPE_HYPERION_LIGHT,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
@@ -34,6 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import HomeAssistantType
+import homeassistant.util.color as color_util
 
 from . import (
     TEST_AUTH_NOT_REQUIRED_RESP,
@@ -58,6 +63,8 @@ from . import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+COLOR_BLACK = color_util.COLORS["black"]
 
 
 def _call_registered_callback(
@@ -414,7 +421,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
         **{
             const.KEY_PRIORITY: TEST_PRIORITY,
             const.KEY_COLOR: [255, 255, 255],
-            const.KEY_ORIGIN: hyperion_light.DEFAULT_ORIGIN,
+            const.KEY_ORIGIN: DEFAULT_ORIGIN,
         }
     )
 
@@ -438,7 +445,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
         **{
             const.KEY_PRIORITY: TEST_PRIORITY,
             const.KEY_COLOR: [255, 255, 255],
-            const.KEY_ORIGIN: hyperion_light.DEFAULT_ORIGIN,
+            const.KEY_ORIGIN: DEFAULT_ORIGIN,
         }
     )
 
@@ -474,7 +481,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
         **{
             const.KEY_PRIORITY: TEST_PRIORITY,
             const.KEY_COLOR: (0, 255, 255),
-            const.KEY_ORIGIN: hyperion_light.DEFAULT_ORIGIN,
+            const.KEY_ORIGIN: DEFAULT_ORIGIN,
         }
     )
 
@@ -510,7 +517,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
         **{
             const.KEY_PRIORITY: TEST_PRIORITY,
             const.KEY_COLOR: (0, 255, 255),
-            const.KEY_ORIGIN: hyperion_light.DEFAULT_ORIGIN,
+            const.KEY_ORIGIN: DEFAULT_ORIGIN,
         }
     )
     client.adjustment = [{const.KEY_BRIGHTNESS: 100}]
@@ -585,7 +592,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
         **{
             const.KEY_PRIORITY: TEST_PRIORITY,
             const.KEY_EFFECT: {const.KEY_NAME: effect},
-            const.KEY_ORIGIN: hyperion_light.DEFAULT_ORIGIN,
+            const.KEY_ORIGIN: DEFAULT_ORIGIN,
         }
     )
     client.visible_priority = {
@@ -613,7 +620,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
         **{
             const.KEY_PRIORITY: TEST_PRIORITY,
             const.KEY_COLOR: (0, 0, 255),
-            const.KEY_ORIGIN: hyperion_light.DEFAULT_ORIGIN,
+            const.KEY_ORIGIN: DEFAULT_ORIGIN,
         }
     )
     # Simulate a state callback from Hyperion.
@@ -640,6 +647,51 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
 
     assert not client.async_send_clear.called
     assert not client.async_send_set_effect.called
+
+
+async def test_light_async_turn_on_error_conditions(hass: HomeAssistantType) -> None:
+    """Test error conditions when turning the light on."""
+    client = create_mock_client()
+    client.async_send_set_component = AsyncMock(return_value=False)
+    client.is_on = Mock(return_value=False)
+    await setup_test_config_entry(hass, hyperion_client=client)
+
+    # On (=), 100% (=), solid (=), [255,255,255] (=)
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: TEST_ENTITY_ID_1}, blocking=True
+    )
+
+    assert client.async_send_set_component.call_args == call(
+        **{
+            const.KEY_COMPONENTSTATE: {
+                const.KEY_COMPONENT: const.KEY_COMPONENTID_ALL,
+                const.KEY_STATE: True,
+            }
+        }
+    )
+
+
+async def test_light_async_turn_off_error_conditions(hass: HomeAssistantType) -> None:
+    """Test error conditions when turning the light off."""
+    client = create_mock_client()
+    client.async_send_set_component = AsyncMock(return_value=False)
+    await setup_test_config_entry(hass, hyperion_client=client)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1},
+        blocking=True,
+    )
+
+    assert client.async_send_set_component.call_args == call(
+        **{
+            const.KEY_COMPONENTSTATE: {
+                const.KEY_COMPONENT: const.KEY_COMPONENTID_LEDDEVICE,
+                const.KEY_STATE: False,
+            }
+        }
+    )
 
 
 async def test_light_async_turn_off(hass: HomeAssistantType) -> None:
