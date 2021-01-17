@@ -210,9 +210,9 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             self.heartbeat_check = True
 
         raw = self.client.raw
-        for key in raw:
-            if key.startswith("_"):
-                del raw[key]
+        hide_keys = [key for key in raw if key.startswith("_")]
+        for key in hide_keys:
+            del raw[key]
         available = self.controller.available
         is_connected = self.is_connected
 
