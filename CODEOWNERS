@@ -446,6 +446,7 @@ homeassistant/components/surepetcare/* @benleb
 homeassistant/components/swiss_hydrological_data/* @fabaff
 homeassistant/components/swiss_public_transport/* @fabaff
 homeassistant/components/switchbot/* @danielhiversen
+homeassistant/components/switchbot_meter/* @khancyr
 homeassistant/components/switcher_kis/* @tomerfi
 homeassistant/components/switchmate/* @danielhiversen
 homeassistant/components/syncthru/* @nielstron

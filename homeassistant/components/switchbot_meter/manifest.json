@@ -1,0 +1,8 @@
+{
+  "domain": "switchbot_meter",
+  "name": "Switchbot Meter",
+  "documentation": "https://www.home-assistant.io/integrations/switchbot_meter",
+  "codeowners": ["@khancyr"],
+  "requirements": ["bluepy==1.3.0"],
+  "quality_scale": "silver"
+}
