@@ -182,7 +182,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             ):
                 self._is_connected = True
                 self.schedule_update = False
-                self.controller.async_heartbeat(self.unique_id, None)
+                self.controller.async_heartbeat(self.unique_id)
                 self.heartbeat_check = False
 
             # Ignore extra scheduled update from wired bug
