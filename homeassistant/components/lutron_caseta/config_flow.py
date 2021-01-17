@@ -74,10 +74,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = discovery_info[CONF_HOST]
         self._abort_if_unique_id_configured({CONF_HOST: host})
 
-        if self._host_already_configured(discovery_info[CONF_HOST]):
-            return self.async_abort(reason="already_configured")
         self.data[CONF_HOST] = host
-
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {CONF_NAME: lutron_id}
         return await self.async_step_link()
@@ -130,15 +127,13 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def _write_tls_assets(self, assets):
         """Write the tls assets to disk."""
         for asset_key, conf_key in FILE_MAPPING.items():
-            file_path = self.hass.config.path(self.data[conf_key])
-            with open(file_path, "w") as file_handle:
+            with open(self.hass.config.path(self.data[conf_key]), "w") as file_handle:
                 file_handle.write(assets[asset_key])
 
-    def _tls_assets_exist(self, assets):
+    def _tls_assets_exist(self):
         """Check to see if tls assets are already on disk."""
-        for asset_key, conf_key in FILE_MAPPING.items():
-            file_path = self.hass.config.path(self.data[conf_key])
-            if not os.path.exists(file_path):
+        for conf_key in FILE_MAPPING.values():
+            if not os.path.exists(self.hass.config.path(self.data[conf_key])):
                 return False
         return True
 
@@ -147,14 +142,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Fill the tls asset locations in self.data."""
         for asset_key, conf_key in FILE_MAPPING.items():
             self.data[conf_key] = TLS_ASSET_TEMPLATE.format(self.bridge_id, asset_key)
-
-    @callback
-    def _host_already_configured(self, host):
-        """See if we already have an entry matching the host."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_HOST) == host:
-                return True
-        return False
 
     @callback
     def _async_data_host_is_already_configured(self):
