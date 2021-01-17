@@ -197,7 +197,7 @@ SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
         ATTR_LABEL: "Preheater power usage",
         ATTR_UNIT: POWER_WATT,
-        ATTR_ICON: "mdi:flash",
+        ATTR_ICON: None,
         ATTR_ID: SENSOR_PREHEATER_POWER_CURRENT,
     },
 }
