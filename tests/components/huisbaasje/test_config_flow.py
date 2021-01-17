@@ -97,32 +97,10 @@ async def test_form_cannot_connect(hass):
     assert form_result["errors"] == {"base": "connection_exception"}
 
 
-async def test_form_unknown_error(hass):
-    """Test we handle an unknown error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "huisbaasje.Huisbaasje.authenticate",
-        side_effect=Exception,
-    ):
-        form_result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
-    assert form_result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert form_result["errors"] == {"base": "unknown"}
-
-
 async def test_form_entry_exists(hass):
     """Test we handle an already existing entry."""
     MockConfigEntry(
-        unique_id="abcdefg",
+        unique_id="test-id",
         domain=DOMAIN,
         data={
             "id": "test-id",
