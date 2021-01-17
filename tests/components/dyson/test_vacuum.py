@@ -1,5 +1,4 @@
 """Test the Dyson 360 eye robot vacuum component."""
-from typing import Optional
 from unittest.mock import MagicMock
 
 from libpurecool.const import Dyson360EyeMode, PowerMode
@@ -84,63 +83,43 @@ async def test_state(hass: HomeAssistant, device: Dyson360Eye) -> None:
     assert state.attributes[ATTR_STATUS] == "Paused"
 
 
-async def test_commands(hass: HomeAssistant, device: Dyson360Eye) -> None:
+@pytest.mark.parametrize(
+    "service,command,state",
+    [
+        (SERVICE_TURN_ON, "start", Dyson360EyeMode.INACTIVE_CHARGED),
+        (SERVICE_TURN_ON, "resume", Dyson360EyeMode.FULL_CLEAN_PAUSED),
+        (SERVICE_TURN_OFF, "pause", Dyson360EyeMode.FULL_CLEAN_RUNNING),
+        (SERVICE_STOP, "pause", Dyson360EyeMode.FULL_CLEAN_RUNNING),
+        (SERVICE_START_PAUSE, "pause", Dyson360EyeMode.FULL_CLEAN_RUNNING),
+        (SERVICE_START_PAUSE, "pause", Dyson360EyeMode.FULL_CLEAN_RUNNING),
+        (SERVICE_START_PAUSE, "start", Dyson360EyeMode.INACTIVE_CHARGED),
+        (SERVICE_START_PAUSE, "resume", Dyson360EyeMode.FULL_CLEAN_PAUSED),
+        (SERVICE_RETURN_TO_BASE, "abort", Dyson360EyeMode.FULL_CLEAN_PAUSED),
+    ],
+)
+async def test_commands(
+    hass: HomeAssistant, device: Dyson360Eye, service: str, command: str, state: str
+) -> None:
     """Test sending commands to the vacuum."""
+    device.state.state = state
+    await async_update_device(hass, device, None)
+    await hass.services.async_call(
+        VACUUM_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+    getattr(device, command).assert_called_once_with()
 
-    async def _async_call_service(
-        service: str,
-        attr_name: str,
-        device_params: Optional[list] = None,
-        state: Optional[str] = None,
-        service_data: Optional[dict] = None,
-    ) -> None:
-        if state is not None:
-            device.state.state = state
-            await async_update_device(hass, device, None)
-        if service_data is None:
-            service_data = {}
+
+async def test_set_fan_speed(hass: HomeAssistant, device: Dyson360Eye):
+    """Test setting fan speed of the vacuum."""
+    fan_speed_map = {
+        "Max": PowerMode.MAX,
+        "Quiet": PowerMode.QUIET,
+    }
+    for service_speed, command_speed in fan_speed_map.items():
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            service,
-            {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                **service_data,
-            },
+            SERVICE_SET_FAN_SPEED,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_SPEED: service_speed},
             blocking=True,
         )
-        if device_params is None:
-            device_params = []
-        attr = getattr(device, attr_name)
-        attr.assert_called_once_with(*device_params)
-        attr.reset_mock()
-
-    await _async_call_service(
-        SERVICE_TURN_ON, "start", state=Dyson360EyeMode.INACTIVE_CHARGED
-    )
-    await _async_call_service(
-        SERVICE_TURN_ON, "resume", state=Dyson360EyeMode.FULL_CLEAN_PAUSED
-    )
-    await _async_call_service(
-        SERVICE_TURN_OFF, "pause", state=Dyson360EyeMode.FULL_CLEAN_RUNNING
-    )
-    await _async_call_service(SERVICE_STOP, "pause")
-    await _async_call_service(SERVICE_START_PAUSE, "pause")
-    await _async_call_service(
-        SERVICE_START_PAUSE, "start", state=Dyson360EyeMode.INACTIVE_CHARGED
-    )
-    await _async_call_service(
-        SERVICE_START_PAUSE, "resume", state=Dyson360EyeMode.FULL_CLEAN_PAUSED
-    )
-    await _async_call_service(SERVICE_RETURN_TO_BASE, "abort")
-    await _async_call_service(
-        SERVICE_SET_FAN_SPEED,
-        "set_power_mode",
-        device_params=[PowerMode.MAX],
-        service_data={ATTR_FAN_SPEED: "Max"},
-    )
-    await _async_call_service(
-        SERVICE_SET_FAN_SPEED,
-        "set_power_mode",
-        device_params=[PowerMode.QUIET],
-        service_data={ATTR_FAN_SPEED: "Quiet"},
-    )
+        device.set_power_mode.assert_called_with(command_speed)
