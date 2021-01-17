@@ -167,13 +167,18 @@ async def async_setup(hass, config):
     """Set up the KNX component."""
     try:
         hass.data[DOMAIN] = KNXModule(hass, config)
-        hass.data[DOMAIN].async_create_exposures()
         await hass.data[DOMAIN].start()
     except XKNXException as ex:
         _LOGGER.warning("Could not connect to KNX interface: %s", ex)
         hass.components.persistent_notification.async_create(
             f"Could not connect to KNX interface: <br><b>{ex}</b>", title="KNX"
         )
+
+    if CONF_KNX_EXPOSE in config[DOMAIN]:
+        for expose_config in config[DOMAIN][CONF_KNX_EXPOSE]:
+            hass.data[DOMAIN].exposures.append(
+                create_knx_exposure(hass, hass.data[DOMAIN].xknx, expose_config)
+            )
 
     for platform in SupportedPlatforms:
         if platform.value in config[DOMAIN]:
