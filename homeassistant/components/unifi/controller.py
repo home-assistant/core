@@ -1,7 +1,8 @@
 """UniFi Controller abstraction."""
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import ssl
+from typing import Optional
 
 from aiohttp import CookieJar
 import aiounifi
@@ -32,7 +33,6 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
@@ -67,7 +67,7 @@ from .const import (
 from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
-CHECK_DISCONNECTED_INTERVAL = timedelta(seconds=1)
+CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
 SUPPORTED_PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
 CLIENT_CONNECTED = (
@@ -98,8 +98,9 @@ class UniFiController:
         self._site_name = None
         self._site_role = None
 
-        self._cancel_disconnected_check = None
-        self._watch_disconnected_entites = []
+        self._cancel_heartbeat_check = None
+        self._heartbeat_dispatch = {}
+        self._heartbeat_time = {}
 
         self.entities = {}
 
@@ -298,6 +299,11 @@ class UniFiController:
         """Event specific per UniFi entry to signal new options."""
         return f"unifi-options-{self.controller_id}"
 
+    @property
+    def signal_heartbeat_missed(self):
+        """Event specific per UniFi device tracker to signal new heartbeat missed."""
+        return "unifi-heartbeat-missed"
+
     def update_wireless_clients(self):
         """Update set of known to be wireless clients."""
         new_wireless_clients = set()
@@ -382,31 +388,34 @@ class UniFiController:
 
         self.config_entry.add_update_listener(self.async_config_entry_updated)
 
-        self._cancel_disconnected_check = async_track_time_interval(
-            self.hass, self._async_check_for_disconnected, CHECK_DISCONNECTED_INTERVAL
+        self._cancel_heartbeat_check = async_track_time_interval(
+            self.hass, self._async_check_for_stale, CHECK_HEARTBEAT_INTERVAL
         )
 
         return True
 
     @callback
-    def add_disconnected_check(self, entity: Entity) -> None:
-        """Add an entity to watch for disconnection."""
-        self._watch_disconnected_entites.append(entity)
+    def async_heartbeat(
+        self, unique_id: str, heartbeat_expire_time: Optional[datetime] = None
+    ) -> None:
+        """Signal when a device has fresh home state."""
+        if heartbeat_expire_time is not None:
+            self._heartbeat_time[unique_id] = heartbeat_expire_time
+            return
+
+        if unique_id in self._heartbeat_time:
+            del self._heartbeat_time[unique_id]
 
     @callback
-    def remove_disconnected_check(self, entity: Entity) -> None:
-        """Remove an entity to watch for disconnection."""
-        self._watch_disconnected_entites.remove(entity)
-
-    @callback
-    def _async_check_for_disconnected(self, *_) -> None:
+    def _async_check_for_stale(self, *_) -> None:
         """Check for any devices scheduled to be marked disconnected."""
         now = dt_util.utcnow()
 
-        for entity in self._watch_disconnected_entites:
-            disconnected_time = entity.disconnected_time
-            if disconnected_time is not None and now > disconnected_time:
-                entity.make_disconnected()
+        for unique_id, heartbeat_expire_time in self._heartbeat_time.items():
+            if now > heartbeat_expire_time:
+                async_dispatcher_send(
+                    self.hass, f"{self.signal_heartbeat_missed}_{unique_id}"
+                )
 
     @staticmethod
     async def async_config_entry_updated(hass, config_entry) -> None:
@@ -461,9 +470,9 @@ class UniFiController:
             unsub_dispatcher()
         self.listeners = []
 
-        if self._cancel_disconnected_check:
-            self._cancel_disconnected_check()
-            self._cancel_disconnected_check = None
+        if self._cancel_heartbeat_check:
+            self._cancel_heartbeat_check()
+            self._cancel_heartbeat_check = None
 
         return True
 
