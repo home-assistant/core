@@ -8,9 +8,9 @@ from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.zeroconf import ATTR_HOSTNAME
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.helpers.storage import STORAGE_DIR
 
 from . import DOMAIN  # pylint: disable=unused-import
 from .const import (
@@ -37,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 ENTRY_DEFAULT_TITLE = "Caséta bridge"
 
 DATA_SCHEMA_USER = vol.Schema({vol.Required(CONF_HOST): str})
+TLS_ASSET_TEMPLATE = "lutron_caseta-{}-{}.pem"
 
 
 class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -48,6 +49,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize a Lutron Caseta flow."""
         self.data = {}
+        self.lutron_id = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -59,21 +61,25 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle a flow initialized by zeroconf discovery."""
-        hostname = discovery_info.get(HOSTNAME)
+        hostname = discovery_info[ATTR_HOSTNAME]
         if hostname is None or not hostname.startswith("lutron-"):
             return self.async_abort(reason="not_lutron_device")
 
         lutron_id = hostname.split("-")[1]
         if lutron_id.endswith(".local."):
             lutron_id = lutron_id[:-7]
+        self.lutron_id = lutron_id
 
         await self.async_set_unique_id(lutron_id)
         host = discovery_info[CONF_HOST]
         self._abort_if_unique_id_configured({CONF_HOST: host})
-        self.data[CONF_HOST] = host
 
+        self.data[CONF_HOST] = host
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {CONF_NAME: lutron_id}
+        self.context["title_placeholders"] = {
+            CONF_NAME: self.bridge_id,
+            CONF_HOST: host,
+        }
         return await self.async_step_link()
 
     async_step_homekit = async_step_zeroconf
@@ -85,6 +91,16 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_data_host_is_already_configured():
             return self.async_abort(reason=ABORT_REASON_ALREADY_CONFIGURED)
 
+        self._configure_tls_assets()
+
+        if (
+            await self.hass.async_add_executor_job(self._tls_assets_exist)
+            and await self.async_validate_connectable_bridge_config()
+        ):
+            # If we previous paired and the tls assets already exist,
+            # we do not need to go though pairing again.
+            return self.async_create_entry(title=self.bridge_id, data=self.data)
+
         if user_input is not None:
             assets = None
             try:
@@ -94,28 +110,44 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 await self.hass.async_add_executor_job(self._write_tls_assets, assets)
-                return self.async_create_entry(
-                    title=self.data[CONF_HOST], data=self.data
-                )
+                return self.async_create_entry(title=self.bridge_id, data=self.data)
 
         return self.async_show_form(
             step_id="link",
             errors=errors,
-            description_placeholders={CONF_HOST: self.data[CONF_HOST]},
+            description_placeholders={
+                CONF_NAME: self.bridge_id,
+                CONF_HOST: self.data[CONF_HOST],
+            },
         )
+
+    @property
+    def bridge_id(self):
+        """Return the best identifier for the bridge.
+
+        If the bridge was not discovered via zeroconf,
+        we fallback to using the host.
+        """
+        return self.lutron_id or self.data[CONF_HOST]
 
     def _write_tls_assets(self, assets):
         """Write the tls assets to disk."""
-        host = self.data[CONF_HOST]
-
         for asset_key, conf_key in FILE_MAPPING.items():
-            file_name = f"lutron_caseta-{host}-{asset_key}.pem"
-            target_file = self.hass.config.path(STORAGE_DIR, file_name)
-            with open(target_file, "w") as file_handle:
+            with open(self.hass.config.path(self.data[conf_key]), "w") as file_handle:
                 file_handle.write(assets[asset_key])
-            self.data[conf_key] = os.path.join(
-                STORAGE_DIR, f"lutron_caseta-{host}-{asset_key}.pem"
-            )
+
+    def _tls_assets_exist(self):
+        """Check to see if tls assets are already on disk."""
+        for conf_key in FILE_MAPPING.values():
+            if not os.path.exists(self.hass.config.path(self.data[conf_key])):
+                return False
+        return True
+
+    @callback
+    def _configure_tls_assets(self):
+        """Fill the tls asset locations in self.data."""
+        for asset_key, conf_key in FILE_MAPPING.items():
+            self.data[conf_key] = TLS_ASSET_TEMPLATE.format(self.bridge_id, asset_key)
 
     @callback
     def _async_data_host_is_already_configured(self):
