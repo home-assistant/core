@@ -187,7 +187,7 @@ class DysonTest(unittest.TestCase):
     def test_dyson_set_speed(self):
         """Test set fan speed."""
         device = _get_device_on()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert not component.should_poll
         component.set_speed("1")
         set_config = device.set_configuration
@@ -202,7 +202,7 @@ class DysonTest(unittest.TestCase):
     def test_dyson_turn_on(self):
         """Test turn on fan."""
         device = _get_device_on()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert not component.should_poll
         component.turn_on()
         set_config = device.set_configuration
@@ -211,7 +211,7 @@ class DysonTest(unittest.TestCase):
     def test_dyson_turn_night_mode(self):
         """Test turn on fan with night mode."""
         device = _get_device_on()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert not component.should_poll
         component.set_night_mode(True)
         set_config = device.set_configuration
@@ -224,17 +224,17 @@ class DysonTest(unittest.TestCase):
     def test_is_night_mode(self):
         """Test night mode."""
         device = _get_device_on()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert not component.night_mode
 
         device = _get_device_off()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert component.night_mode
 
     def test_dyson_turn_auto_mode(self):
         """Test turn on/off fan with auto mode."""
         device = _get_device_on()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert not component.should_poll
         component.set_auto_mode(True)
         set_config = device.set_configuration
@@ -247,17 +247,17 @@ class DysonTest(unittest.TestCase):
     def test_is_auto_mode(self):
         """Test auto mode."""
         device = _get_device_on()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert not component.auto_mode
 
         device = _get_device_auto()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert component.auto_mode
 
     def test_dyson_turn_on_speed(self):
         """Test turn on fan with specified speed."""
         device = _get_device_on()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert not component.should_poll
         component.turn_on("1")
         set_config = device.set_configuration
@@ -272,7 +272,7 @@ class DysonTest(unittest.TestCase):
     def test_dyson_turn_off(self):
         """Test turn off fan."""
         device = _get_device_on()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert not component.should_poll
         component.turn_off()
         set_config = device.set_configuration
@@ -281,7 +281,7 @@ class DysonTest(unittest.TestCase):
     def test_dyson_oscillate_off(self):
         """Test turn off oscillation."""
         device = _get_device_on()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         component.oscillate(False)
         set_config = device.set_configuration
         set_config.assert_called_with(oscillation=Oscillation.OSCILLATION_OFF)
@@ -289,7 +289,7 @@ class DysonTest(unittest.TestCase):
     def test_dyson_oscillate_on(self):
         """Test turn on oscillation."""
         device = _get_device_on()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         component.oscillate(True)
         set_config = device.set_configuration
         set_config.assert_called_with(oscillation=Oscillation.OSCILLATION_ON)
@@ -297,71 +297,71 @@ class DysonTest(unittest.TestCase):
     def test_dyson_oscillate_value_on(self):
         """Test get oscillation value on."""
         device = _get_device_on()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert component.oscillating
 
     def test_dyson_oscillate_value_off(self):
         """Test get oscillation value off."""
         device = _get_device_off()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert not component.oscillating
 
     def test_dyson_on(self):
         """Test device is on."""
         device = _get_device_on()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert component.is_on
 
     def test_dyson_off(self):
         """Test device is off."""
         device = _get_device_off()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert not component.is_on
 
         device = _get_device_with_no_state()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert not component.is_on
 
     def test_dyson_get_speed(self):
         """Test get device speed."""
         device = _get_device_on()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert component.speed == 1
 
         device = _get_device_off()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert component.speed == 4
 
         device = _get_device_with_no_state()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert component.speed is None
 
         device = _get_device_auto()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert component.speed == "AUTO"
 
     def test_dyson_get_direction(self):
         """Test get device direction."""
         device = _get_device_on()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert component.current_direction is None
 
     def test_dyson_get_speed_list(self):
         """Test get speeds list."""
         device = _get_device_on()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert len(component.speed_list) == 11
 
     def test_dyson_supported_features(self):
         """Test supported features."""
         device = _get_device_on()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         assert component.supported_features == 3
 
     def test_on_message(self):
         """Test when message is received."""
         device = _get_device_on()
-        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureCoolLinkEntity(device)
         component.entity_id = "entity_id"
         component.schedule_update_ha_state = mock.Mock()
         component.on_message(MockDysonState())
@@ -788,7 +788,7 @@ async def test_purecool_update_state(devices, login, hass):
 
     for call in device.add_message_listener.call_args_list:
         callback = call[0][0]
-        if type(callback.__self__) == dyson.DysonPureCoolDevice:
+        if type(callback.__self__) == dyson.DysonPureCoolEntity:
             callback(device.state)
 
     await hass.async_block_till_done()
@@ -849,7 +849,7 @@ async def test_purecool_update_state_filter_inv(devices, login, hass):
 
     for call in device.add_message_listener.call_args_list:
         callback = call[0][0]
-        if type(callback.__self__) == dyson.DysonPureCoolDevice:
+        if type(callback.__self__) == dyson.DysonPureCoolEntity:
             callback(device.state)
 
     await hass.async_block_till_done()

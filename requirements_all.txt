@@ -668,6 +668,9 @@ gntp==1.0.3
 # homeassistant.components.goalzero
 goalzero==0.1.4
 
+# homeassistant.components.gogogate2
+gogogate2-api==3.0.0
+
 # homeassistant.components.google
 google-api-python-client==1.6.4
 
@@ -1235,7 +1238,7 @@ pyRFXtrx==0.26.1
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.16.0
+pyTibber==0.16.1
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1604,7 +1607,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.7.8
+pypck==0.7.9
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
