@@ -633,6 +633,7 @@ async def test_option_ssid_filter(hass):
     # Trigger update to get client marked as away
     event = {"meta": {"message": MESSAGE_CLIENT}, "data": [CLIENT_3]}
     controller.api.message_handler(event)
+    await hass.async_block_till_done()
 
     new_time = (
         dt_util.utcnow() + controller.option_detection_time + timedelta(seconds=1)

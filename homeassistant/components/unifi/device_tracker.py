@@ -143,8 +143,8 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         """Set up tracked client."""
         super().__init__(client, controller)
 
+        self.heartbeat_check = False
         self.schedule_update = False
-        self.disconnected_time = None
         self._is_connected = False
         if client.last_seen:
             self._is_connected = (
@@ -158,12 +158,18 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Watch object when added."""
-        self.controller.add_disconnected_check(self)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self.controller.signal_heartbeat_missed}_{self.unique_id}",
+                self._make_disconnected,
+            )
+        )
         await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
-        self.controller.remove_disconnected_check(self)
+        self.controller.async_heartbeat(self.unique_id)
         await super().async_will_remove_from_hass()
 
     @callback
@@ -176,10 +182,11 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             ):
                 self._is_connected = True
                 self.schedule_update = False
-                self.disconnected_time = None
+                self.controller.async_heartbeat(self.unique_id)
+                self.heartbeat_check = False
 
             # Ignore extra scheduled update from wired bug
-            elif not self.disconnected_time:
+            elif not self.heartbeat_check:
                 self.schedule_update = True
 
         elif not self.client.event and self.client.last_updated == SOURCE_DATA:
@@ -189,15 +196,16 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
         if self.schedule_update:
             self.schedule_update = False
-            self.disconnected_time = (
-                dt_util.utcnow() + self.controller.option_detection_time
+            self.controller.async_heartbeat(
+                self.unique_id, dt_util.utcnow() + self.controller.option_detection_time
             )
+            self.heartbeat_check = True
 
         super().async_update_callback()
 
     @callback
-    def make_disconnected(self, *_):
-        """Mark client as disconnected."""
+    def _make_disconnected(self, *_):
+        """No heart beat by device."""
         self._is_connected = False
         self.async_write_ha_state()
 
@@ -282,7 +290,6 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         super().__init__(device, controller)
 
         self._is_connected = device.state == 1
-        self.disconnected_time = None
 
     @property
     def device(self):
@@ -291,12 +298,18 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Watch object when added."""
-        self.controller.add_disconnected_check(self)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self.controller.signal_heartbeat_missed}_{self.unique_id}",
+                self._make_disconnected,
+            )
+        )
         await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
-        self.controller.remove_disconnected_check(self)
+        self.controller.async_heartbeat(self.unique_id)
         await super().async_will_remove_from_hass()
 
     @callback
@@ -305,8 +318,9 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
 
         if self.device.last_updated == SOURCE_DATA:
             self._is_connected = True
-            self.disconnected_time = dt_util.utcnow() + timedelta(
-                seconds=self.device.next_interval + 60
+            self.controller.async_heartbeat(
+                self.unique_id,
+                dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 60),
             )
 
         elif (
@@ -319,7 +333,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         super().async_update_callback()
 
     @callback
-    def make_disconnected(self, *_):
+    def _make_disconnected(self, *_):
         """No heart beat by device."""
         self._is_connected = False
         self.async_write_ha_state()
