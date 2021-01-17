@@ -43,7 +43,7 @@ async def test_entity_registry(hass):
     await setup_platform(hass, ALARM_DOMAIN)
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
-    entry = entity_registry.async_get(f"alarm_control_panel.contract_{CONTRACT}")
+    entry = entity_registry.async_get(PROSEGUR_ALARM_ENTITY)
     # Prosegur alarm device unique_id is the contract id associated to the alarm account
     assert entry.unique_id == CONTRACT
 
@@ -54,7 +54,7 @@ async def test_attributes(hass, aioclient_mock, mock_auth):
 
     await hass.async_block_till_done()
 
-    state = hass.states.get(f"alarm_control_panel.contract_{CONTRACT}")
+    state = hass.states.get(PROSEGUR_ALARM_ENTITY)
 
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "contract 1234abcd"
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 3
@@ -73,12 +73,8 @@ async def test_arm(hass, aioclient_mock, mock_auth, code, alarm_service, alarm_s
 
     await setup_platform(hass, ALARM_DOMAIN)
 
-    state = hass.states.get(f"alarm_control_panel.contract_{CONTRACT}")
-    assert len(aioclient_mock.mock_calls) == 2
-
     aioclient_mock.put(
         "https://smart.prosegur.com/smart-server/ws/installation/1234abcd/status",
-        json={},
     )
     await hass.services.async_call(
         ALARM_DOMAIN,
@@ -96,10 +92,9 @@ async def test_arm(hass, aioclient_mock, mock_auth, code, alarm_service, alarm_s
             "result": {"code": 200},
         },
     )
-
     await entity_component.async_update_entity(hass, PROSEGUR_ALARM_ENTITY)
     await hass.async_block_till_done()
 
     assert len(aioclient_mock.mock_calls) == 1
-    state = hass.states.get(f"alarm_control_panel.contract_{CONTRACT}")
+    state = hass.states.get(PROSEGUR_ALARM_ENTITY)
     assert state.state == alarm_state
