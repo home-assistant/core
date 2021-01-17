@@ -2,6 +2,7 @@
 import asyncio
 from datetime import datetime, timedelta
 import ssl
+from typing import Optional
 
 from aiohttp import CookieJar
 import aiounifi
@@ -394,7 +395,9 @@ class UniFiController:
         return True
 
     @callback
-    def async_heartbeat(self, unique_id: str, heartbeat_expire_time: datetime) -> None:
+    def async_heartbeat(
+        self, unique_id: str, heartbeat_expire_time: Optional[datetime] = None
+    ) -> None:
         """Signal when a device has fresh home state."""
         if heartbeat_expire_time is not None:
             self._heartbeat_time[unique_id] = heartbeat_expire_time

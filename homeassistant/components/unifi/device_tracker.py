@@ -169,7 +169,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
-        self.controller.async_heartbeat(self.unique_id, None)
+        self.controller.async_heartbeat(self.unique_id)
         await super().async_will_remove_from_hass()
 
     @callback
@@ -182,7 +182,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             ):
                 self._is_connected = True
                 self.schedule_update = False
-                self.controller.async_heartbeat(self.unique_id, None)
+                self.controller.async_heartbeat(self.unique_id)
                 self.heartbeat_check = False
 
             # Ignore extra scheduled update from wired bug
@@ -309,7 +309,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
-        self.controller.async_heartbeat(self.unique_id, None)
+        self.controller.async_heartbeat(self.unique_id)
         await super().async_will_remove_from_hass()
 
     @callback
