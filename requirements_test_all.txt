@@ -346,7 +346,7 @@ glances_api==0.2.0
 goalzero==0.1.4
 
 # homeassistant.components.gogogate2
-gogogate2-api==2.0.3
+gogogate2-api==3.0.0
 
 # homeassistant.components.google
 google-api-python-client==1.6.4
