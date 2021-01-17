@@ -121,6 +121,8 @@ class DysonClimateEntity(DysonEntity, ClimateEntity):
     @property
     def current_humidity(self):
         """Return the current humidity."""
+        # Humidity equaling to 0 means invalid value so we don't check for None here
+        # https://github.com/home-assistant/core/pull/45172#discussion_r559069756
         if (
             self._device.environmental_state
             and self._device.environmental_state.humidity
