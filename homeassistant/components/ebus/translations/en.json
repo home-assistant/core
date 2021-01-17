@@ -9,10 +9,10 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "messages": "Messages",
+                    "messages": "Messages - just leave the default",
                     "port": "Port"
                 },
-                "description": "Set up EBUS integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/ebus.\n\nOptionally you can configure the monitored messages. Format: CIRCUIT/MESSAGE or CIRCUIT/MESSAGE/FIELD. Separated by semicolon (;). Wildcards and Placeholder (?) are supported. All by default.",
+                "description": "Set up EBUS integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/ebus.",
                 "title": "EBUS - Connect"
             },
             "wait": {

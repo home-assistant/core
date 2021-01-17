@@ -25,7 +25,7 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = "8888"
 DEFAULT_MESSAGES = "*/*"
 DEFAULT_CIRCUITMAP = {
-    "broadcast": "*",
+    "broadcast": "",
     "ui": "UI",
     "bai": "Heater",
     "bc": "Burner",

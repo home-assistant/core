@@ -58,8 +58,8 @@ class EbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.messages = user_input[CONF_MESSAGES]
                 self.ebus = Ebus(self.host, self.port, timeout=3)
                 try:
-                    is_online = await self.ebus.is_online()
-                    await self.ebus.wait_scancompleted()
+                    is_online = await self.ebus.async_is_online()
+                    await self.ebus.async_wait_scancompleted()
                     if is_online:
                         await self.async_set_unique_id(
                             f"{self.ebus.host}:{self.ebus.port}"
@@ -99,13 +99,13 @@ class EbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             messages = []
 
-            await ebus.load_msgdefs()
+            await ebus.async_load_msgdefs()
             if self.messages:
                 ebus.msgdefs = ebus.msgdefs.resolve(self.messages.split(";"))
             for msgdef in ebus.msgdefs:
                 # only list readable messages
                 if msgdef.read:
-                    msg = await ebus.read(
+                    msg = await ebus.async_read(
                         msgdef, defaultprio=PRIO, setprio=True, ttl=TTL
                     )
                     if msg.valid:

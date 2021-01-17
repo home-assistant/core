@@ -2,10 +2,11 @@
 import asyncio
 import collections
 import copy
+import itertools
 import logging
 from typing import Dict
 
-from pyebus import CircuitMap, Ebus, FieldDef, get_icon
+from pyebus import OK, CircuitMap, Ebus, FieldDef, get_icon
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
@@ -47,7 +48,7 @@ async def async_setup_entry(hass, config_entry):
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    api.start()
+    await api.async_start()
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -95,16 +96,17 @@ async def _await_cancel(task):
 class EbusApi:
     """EBUS API."""
 
-    def __init__(self, hass: HomeAssistantType):
+    def __init__(self, hass: HomeAssistantType, checkinterval=5):
         """EBUS API."""
         self._hass = hass
+        self._checkinterval = checkinterval
         self._data = {}
         self._fieldlistener = collections.defaultdict(list)
-        self._ebussetter = None
         self._ebus = None
         self.circuitmap = None
-        self._observer = None
         self._tasks = []
+        self._state = None
+        self._info = {}
 
     def configure(self, entry: ConfigEntry):
         """Configure."""
@@ -119,7 +121,6 @@ class EbusApi:
         if messages:
             ebus.msgdefs = ebus.msgdefs.resolve(messages)
         self._ebus = ebus
-        self._ebussetter = copy.copy(ebus)
 
         # circuitmap
         circuitmap = entry.data.get(CONF_CIRCUITMAP, {})
@@ -132,26 +133,64 @@ class EbusApi:
         return f"{self._ebus.host}:{self._ebus.port}"
 
     @property
+    def state(self):
+        """Return Connection State."""
+        return self._state
+
+    @property
+    def info(self):
+        """Bus Info."""
+        return self._info
+
+    @property
     def msgdefs(self):
         """Message Definitions."""
         return self._ebus.msgdefs
 
-    def start(self):
+    async def async_start(self):
         """Start."""
         self._tasks.append(asyncio.create_task(self.async_observe()))
 
-    async def async_stop(self, **kwargs):
+    async def async_stop(self, *_):
         """Stop."""
         asyncio.gather(*[_await_cancel(task) for task in self._tasks])
         self._tasks.clear()
 
     async def async_observe(self):
         """Observe EBUS."""
+        ebus = copy.copy(self._ebus)
+        task = None
+        while True:
+            state = await ebus.async_get_state()
+            _LOGGER.debug(f"Connection {self.ident}: {state}")
+            if self._state != state:
+                if state == OK:
+                    if self._state:
+                        # Reconnect
+                        _LOGGER.warning(f"Reconnecting {self.ident}")
+                        self._state = "scanning"
+                        self.notify()
+                        await ebus.async_wait_scancompleted()
+                    # start observing
+                    task = asyncio.create_task(self._async_observe())
+                    self._tasks.append(task)
+                elif task:
+                    # stop observing
+                    _LOGGER.warning(f"Connection {self.ident}: {state}")
+                    await _await_cancel(task)
+                    task = None
+                self._state = state
+                self.notify()
+            await asyncio.sleep(self._checkinterval)
+
+    async def _async_observe(self):
+        ebus = copy.copy(self._ebus)
         data = self._data
         broken = False
         while True:
             try:
-                async for msg in self._ebus.async_observe(
+                self._info = await ebus.async_get_info()
+                async for msg in ebus.async_observe(
                     setprio=True, defaultprio=PRIO, ttl=TTL
                 ):
                     broken = False
@@ -171,37 +210,41 @@ class EbusApi:
                 broken = True
                 await asyncio.sleep(60)
 
-    def notify(self, fielddef):
+    def notify(self, fielddef=None):
         """Notify about field update."""
-        for entity in self._fieldlistener[fielddef.ident]:
+        if fielddef:
+            entities = self._fieldlistener[fielddef.ident]
+        else:
+            entities = itertools.chain.from_iterable(self._fieldlistener.values())
+        for entity in entities:
             entity.async_write_ha_state()
 
     async def async_set_field(self, fielddef, value):
         """Set Field."""
-        msgdefs = self._ebussetter.msgdefs.resolve([fielddef.ident])
-        msgdef = tuple(msgdefs)[0]
-        if self._ebussetter:
-            await self._ebussetter.async_write(msgdef, value)
+        msgdef = fielddef.msgdef.replace(children=[fielddef])
+        if self._ebus:
+            await self._ebus.async_write(msgdef, value)
+
+    def get_field_state(self, fielddef):
+        """Get Field State."""
+        return self._data.get(fielddef.ident, None)
+
+    def is_field_available(self, fielddef):
+        """Get Field Available."""
+        return self._state == OK and fielddef.ident in self._data
 
     @callback
-    def subscribe(self, entity, fielddef):
+    def subscribe(self, entity, fielddef=None):
         """Subscribe an entity from API fetches."""
-        self._fieldlistener[fielddef.ident].append(entity)
+        ident = fielddef.ident if fielddef else None
+        self._fieldlistener[ident].append(entity)
 
         @callback
         def unsubscribe() -> None:
             """Unsubscribe an entity from API fetches (when disable)."""
-            self._fieldlistener[fielddef.ident].remove(entity)
+            self._fieldlistener[ident].remove(entity)
 
         return unsubscribe
-
-    def get_state(self, fielddef):
-        """Get Field State."""
-        return self._data.get(fielddef.ident, None)
-
-    def get_available(self, fielddef):
-        """Get Field Available."""
-        return fielddef.ident in self._data
 
 
 class EbusEntity(Entity):
@@ -246,7 +289,10 @@ class EbusFieldEntity(EbusEntity):
         """Return the name."""
         msgdef = self._fielddef.parent
         circuit = self._api.circuitmap.get_humanname(msgdef.circuit)
-        return f"{circuit} {msgdef.name} {self._fielddef.name}"
+        if circuit:
+            return f"{circuit} {msgdef.name} {self._fielddef.name}"
+        else:
+            return f"{msgdef.name} {self._fielddef.name}"
 
     @property
     def icon(self) -> str:
@@ -270,12 +316,8 @@ class EbusFieldEntity(EbusEntity):
         circuit = self._api.circuitmap.get_humanname(msgdef.circuit)
         return {
             "identifiers": {(DOMAIN, self._api.ident, msgdef.circuit)},
-            "name": f"EBUS - {circuit}",
+            "name": f"EBUS - {circuit}" if circuit else "EBUS",
         }
-
-    async def async_added_to_hass(self):
-        """Register state update callback."""
-        self.async_on_remove(self._api.subscribe(self, self._fielddef))
 
     @property
     def device_state_attributes(self):
