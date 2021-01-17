@@ -66,8 +66,6 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
 
     async def async_update(self):
         """Update alarm status."""
-        _LOGGER.warn("Update")
-
         try:
             self._installation = await Installation.retrieve(self._auth)
         except ConnectionError as err:
