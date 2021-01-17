@@ -60,9 +60,7 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input:
             api = get_api(user_input)
             try:
-                data: AbstractInfoResponse = await self.hass.async_add_executor_job(
-                    api.info
-                )
+                data: AbstractInfoResponse = await api.async_info()
                 data_dict = dataclasses.asdict(data)
                 title = data_dict.get(
                     "gogogatename", data_dict.get("ismartgatename", "Cover")
