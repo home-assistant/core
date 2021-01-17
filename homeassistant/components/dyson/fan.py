@@ -19,7 +19,7 @@ from homeassistant.components.fan import (
 from homeassistant.const import ATTR_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
 
-from . import DYSON_DEVICES
+from . import DYSON_DEVICES, DysonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,10 +105,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if device.serial not in device_serials:
             if isinstance(device, DysonPureCool):
                 has_purecool_devices = True
-                dyson_entity = DysonPureCoolDevice(device)
+                dyson_entity = DysonPureCoolEntity(device)
                 hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
             elif isinstance(device, DysonPureCoolLink):
-                dyson_entity = DysonPureCoolLinkDevice(hass, device)
+                dyson_entity = DysonPureCoolLinkEntity(device)
                 hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
 
     add_entities(hass.data[DYSON_FAN_DEVICES])
@@ -179,35 +179,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
 
 
-class DysonPureCoolLinkDevice(FanEntity):
+class DysonFanEntity(DysonEntity, FanEntity):
     """Representation of a Dyson fan."""
 
-    def __init__(self, hass, device):
+    @property
+    def night_mode(self):
+        """Return Night mode."""
+        return self._device.state.night_mode == "ON"
+
+
+class DysonPureCoolLinkEntity(DysonFanEntity):
+    """Representation of a Dyson fan."""
+
+    def __init__(self, device):
         """Initialize the fan."""
-        _LOGGER.debug("Creating device %s", device.name)
-        self.hass = hass
-        self._device = device
-
-    async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
-        self._device.add_message_listener(self.on_message)
-
-    def on_message(self, message):
-        """Call when new messages received from the fan."""
-
-        if isinstance(message, DysonPureCoolState):
-            _LOGGER.debug("Message received for fan device %s: %s", self.name, message)
-            self.schedule_update_ha_state()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the display name of this fan."""
-        return self._device.name
+        super().__init__(device, DysonPureCoolState)
 
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan. Never called ??."""
@@ -274,11 +260,6 @@ class DysonPureCoolLinkDevice(FanEntity):
         """Return direction of the fan [forward, reverse]."""
         return None
 
-    @property
-    def night_mode(self):
-        """Return Night mode."""
-        return self._device.state.night_mode == "ON"
-
     def set_night_mode(self, night_mode: bool) -> None:
         """Turn fan in night mode."""
         _LOGGER.debug("Set %s night mode %s", self.name, night_mode)
@@ -330,32 +311,12 @@ class DysonPureCoolLinkDevice(FanEntity):
         return {ATTR_NIGHT_MODE: self.night_mode, ATTR_AUTO_MODE: self.auto_mode}
 
 
-class DysonPureCoolDevice(FanEntity):
+class DysonPureCoolEntity(DysonFanEntity):
     """Representation of a Dyson Purecool (TP04/DP04) fan."""
 
     def __init__(self, device):
         """Initialize the fan."""
-        self._device = device
-
-    async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
-        self._device.add_message_listener(self.on_message)
-
-    def on_message(self, message):
-        """Call when new messages received from the fan."""
-        if isinstance(message, DysonPureCoolV2State):
-            _LOGGER.debug("Message received for fan device %s: %s", self.name, message)
-            self.schedule_update_ha_state()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the display name of this fan."""
-        return self._device.name
+        super().__init__(device, DysonPureCoolV2State)
 
     def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""
@@ -455,6 +416,7 @@ class DysonPureCoolDevice(FanEntity):
         """Return true if the entity is on."""
         if self._device.state:
             return self._device.state.fan_power == "ON"
+        return False
 
     @property
     def speed(self):
@@ -482,11 +444,6 @@ class DysonPureCoolDevice(FanEntity):
             if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
                 return self._device.state.speed
             return int(self._device.state.speed)
-
-    @property
-    def night_mode(self):
-        """Return Night mode."""
-        return self._device.state.night_mode == "ON"
 
     @property
     def auto_mode(self):
