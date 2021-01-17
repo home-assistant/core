@@ -463,6 +463,43 @@ async def test_refresh_token_type_long_lived_access_token(hass):
     assert token.token_type == auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
 
 
+async def test_refresh_token_provider_validation(mock_hass):
+    """Test that creating access token from refresh token checks with provider."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [
+            {
+                "type": "insecure_example",
+                "users": [{"username": "test-user", "password": "test-pass"}],
+            }
+        ],
+        [],
+    )
+
+    credential = auth_models.Credentials(
+        id="mock-credential-id",
+        auth_provider_type="insecure_example",
+        auth_provider_id=None,
+        data={"username": "test-user"},
+        is_new=False,
+    )
+
+    user = MockUser().add_to_auth_manager(manager)
+    user.credentials.append(credential)
+    refresh_token = await manager.async_create_refresh_token(
+        user, CLIENT_ID, credential=credential
+    )
+
+    assert manager.async_create_access_token(refresh_token) is not None
+
+    with patch(
+        "homeassistant.auth.providers.insecure_example.ExampleAuthProvider.async_validate_refresh_token",
+        side_effect=Exception("Invalid access"),
+    ):
+        with pytest.raises(Exception):
+            manager.async_create_access_token(refresh_token)
+
+
 async def test_cannot_deactive_owner(mock_hass):
     """Test that we cannot deactivate the owner."""
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
