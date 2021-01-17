@@ -1,6 +1,6 @@
 """Common utils for Dyson tests."""
 
-from typing import Callable, Optional, Type
+from typing import Optional, Type
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
@@ -49,11 +49,8 @@ def get_device(spec: Type[DysonDevice]) -> DysonDevice:
     return device
 
 
-async def async_setup_dyson(
-    hass: HomeAssistant, get_device: Callable[[], DysonDevice]
-) -> DysonDevice:
+async def async_setup_dyson(hass: HomeAssistant, device: DysonDevice) -> DysonDevice:
     """Set up the Dyson integration."""
-    device = get_device()
     with patch(f"{BASE_PATH}.DysonAccount.login", return_value=True), patch(
         f"{BASE_PATH}.DysonAccount.devices", return_value=[device]
     ):

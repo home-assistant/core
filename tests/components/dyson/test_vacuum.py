@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from libpurecool.const import Dyson360EyeMode, PowerMode
 from libpurecool.dyson_360_eye import Dyson360Eye
+import pytest
 
 from homeassistant.components.dyson.vacuum import ATTR_POSITION, SUPPORT_DYSON
 from homeassistant.components.vacuum import (
@@ -25,7 +26,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 
 from .common import (
@@ -40,21 +41,20 @@ from .common import (
 ENTITY_ID = f"vacuum.{ENTITY_NAME}"
 
 
-@callback
-def _get_vacuum_device() -> Dyson360Eye:
+@pytest.fixture
+async def device(hass: HomeAssistant) -> Dyson360Eye:
+    """Fixture to provide Dyson 360 Eye device."""
     device = get_device(Dyson360Eye)
     device.state = MagicMock()
     device.state.state = Dyson360EyeMode.FULL_CLEAN_RUNNING
     device.state.battery_level = 85
     device.state.power_mode = PowerMode.QUIET
     device.state.position = (0, 0)
-    return device
+    return await async_setup_dyson(hass, device)
 
 
-async def test_state(hass: HomeAssistant) -> None:
+async def test_state(hass: HomeAssistant, device: Dyson360Eye) -> None:
     """Test the state of the vacuum."""
-    device = await async_setup_dyson(hass, _get_vacuum_device)
-
     er = await entity_registry.async_get_registry(hass)
     assert er.async_get(ENTITY_ID).unique_id == SERIAL
 
@@ -84,9 +84,8 @@ async def test_state(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_STATUS] == "Paused"
 
 
-async def test_commands(hass: HomeAssistant) -> None:
+async def test_commands(hass: HomeAssistant, device: Dyson360Eye) -> None:
     """Test sending commands to the vacuum."""
-    device = await async_setup_dyson(hass, _get_vacuum_device)
 
     async def _async_call_service(
         service: str,
