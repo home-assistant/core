@@ -230,12 +230,10 @@ class AxisOptionsFlowHandler(config_entries.OptionsFlow):
             await self.device.api.vapix.params.update_image()
 
             video_sources = {DEFAULT_VIDEO_SOURCE: DEFAULT_VIDEO_SOURCE}
-            for index, video_source in enumerate(
-                self.device.api.vapix.params.image_sources, start=1
-            ):
-                if not video_source["enabled"]:
+            for idx, video_source in self.device.api.vapix.params.image_sources.items():
+                if not video_source["Enabled"]:
                     continue
-                video_sources[index] = video_source["name"]
+                video_sources[idx + 1] = video_source["Name"]
 
             schema[
                 vol.Optional(CONF_VIDEO_SOURCE, default=self.device.option_video_source)

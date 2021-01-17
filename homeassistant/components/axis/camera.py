@@ -80,32 +80,12 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
     def image_source(self) -> str:
         """Return still image URL for device."""
         options = self.generate_options(skip_stream_profile=True)
-        # options_dict = {}
-
-        # if self.device.option_video_source != DEFAULT_VIDEO_SOURCE:
-        #     options_dict["camera"] = self.device.option_video_source
-
-        # if options_dict:
-        #     options = f"?{urlencode(options_dict)}"
-
         return f"http://{self.device.host}:{self.device.port}/axis-cgi/jpg/image.cgi{options}"
 
     @property
     def mjpeg_source(self) -> str:
         """Return mjpeg URL for device."""
         options = self.generate_options()
-        # options = ""
-        # options_dict = {}
-
-        # if self.device.option_stream_profile != DEFAULT_STREAM_PROFILE:
-        #     options_dict["streamprofile"] = self.device.option_stream_profile
-
-        # if self.device.option_video_source != DEFAULT_VIDEO_SOURCE:
-        #     options_dict["camera"] = self.device.option_video_source
-
-        # if options_dict:
-        #     options = f"?{urlencode(options_dict)}"
-
         return f"http://{self.device.host}:{self.device.port}/axis-cgi/mjpg/video.cgi{options}"
 
     async def stream_source(self) -> str:
