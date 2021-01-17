@@ -351,6 +351,16 @@ async def test_form_user_reuses_existing_assets_when_pairing_again(hass, tmpdir)
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "1.1.1.1",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "link"
+
     with patch.object(Smartbridge, "create_tls") as create_tls, patch(
         "homeassistant.components.lutron_caseta.async_setup", return_value=True
     ), patch(
@@ -358,15 +368,15 @@ async def test_form_user_reuses_existing_assets_when_pairing_again(hass, tmpdir)
         return_value=True,
     ):
         create_tls.return_value = MockBridge(can_connect=True)
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: "1.1.1.1"},
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "1.1.1.1"
-    assert result2["data"] == {
+    assert result3["type"] == "create_entry"
+    assert result3["title"] == "1.1.1.1"
+    assert result3["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_KEYFILE: "lutron_caseta-1.1.1.1-key.pem",
         CONF_CERTFILE: "lutron_caseta-1.1.1.1-cert.pem",
