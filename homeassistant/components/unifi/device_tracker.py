@@ -210,10 +210,11 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
             self.heartbeat_check = True
 
         raw = self.client.raw
+        for key in raw:
+            if key.startswith("_"):
+                del raw[key]
         available = self.controller.available
         is_connected = self.is_connected
-        if raw is self._last_raw:
-            raise ValueError
 
         if (
             avoid_state_write_if_no_new_data
