@@ -169,7 +169,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
-        self.controller.async_heartbeat(self.unique_id, None)
+        self.controller.async_heartbeat(self.unique_id)
         await super().async_will_remove_from_hass()
 
     @callback
