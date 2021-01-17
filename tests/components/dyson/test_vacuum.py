@@ -33,7 +33,7 @@ from .common import (
     NAME,
     SERIAL,
     async_setup_dyson,
-    async_update_entity,
+    async_update_device,
     get_device,
 )
 
@@ -71,13 +71,15 @@ async def test_state(hass: HomeAssistant) -> None:
 
     device.state.state = Dyson360EyeMode.INACTIVE_CHARGING
     device.state.power_mode = PowerMode.MAX
-    state = await async_update_entity(hass, ENTITY_ID)
+    await async_update_device(hass, device, None)
+    state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_STATUS] == "Stopped - Charging"
     assert state.attributes[ATTR_FAN_SPEED] == "Max"
 
     device.state.state = Dyson360EyeMode.FULL_CLEAN_PAUSED
-    state = await async_update_entity(hass, ENTITY_ID)
+    await async_update_device(hass, device, None)
+    state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_STATUS] == "Paused"
 
@@ -95,7 +97,7 @@ async def test_commands(hass: HomeAssistant) -> None:
     ) -> None:
         if state is not None:
             device.state.state = state
-            await async_update_entity(hass, ENTITY_ID)
+            await async_update_device(hass, device, None)
         if service_data is None:
             service_data = {}
         await hass.services.async_call(

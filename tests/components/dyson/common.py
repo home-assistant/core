@@ -1,6 +1,6 @@
 """Common utils for Dyson tests."""
 
-from typing import Callable, Type
+from typing import Callable, Optional, Type
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
@@ -8,14 +8,8 @@ from libpurecool.dyson_device import DysonDevice
 from libpurecool.dyson_pure_cool import FanSpeed
 
 from homeassistant.components.dyson import CONF_LANGUAGE, DOMAIN
-from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_DEVICES,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
-from homeassistant.core import DOMAIN as HOME_ASSISTANT_DOMAIN, HomeAssistant, State
+from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant, State
 
 from tests.common import async_setup_component
 
@@ -59,9 +53,6 @@ async def async_setup_dyson(
     hass: HomeAssistant, get_device: Callable[[], DysonDevice]
 ) -> DysonDevice:
     """Set up the Dyson integration."""
-    # Set up homeassistant integration for the update_entity service
-    await async_setup_component(hass, HOME_ASSISTANT_DOMAIN, {})
-
     device = get_device()
     with patch(f"{BASE_PATH}.DysonAccount.login", return_value=True), patch(
         f"{BASE_PATH}.DysonAccount.devices", return_value=[device]
@@ -88,12 +79,11 @@ async def async_setup_dyson(
     return device
 
 
-async def async_update_entity(hass: HomeAssistant, entity_id: str) -> State:
-    """Update the entity state."""
-    await hass.services.async_call(
-        HOME_ASSISTANT_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    return hass.states.get(entity_id)
+async def async_update_device(
+    hass: HomeAssistant, device: DysonDevice, state_type: Optional[Type]
+) -> State:
+    """Update the device using callback function."""
+    callback = device.add_message_listener.call_args[0][0]
+    message = MagicMock(spec=state_type)
+    callback(message)
+    await hass.async_block_till_done()
