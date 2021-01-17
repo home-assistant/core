@@ -4,9 +4,9 @@ import logging
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_state_v2 import DysonEnvironmentalSensorV2State
 
-from homeassistant.components.air_quality import DOMAIN, AirQualityEntity
+from homeassistant.components.air_quality import AirQualityEntity
 
-from . import DYSON_DEVICES
+from . import DYSON_DEVICES, DysonEntity
 
 ATTRIBUTION = "Dyson purifier air quality sensor"
 
@@ -39,40 +39,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(hass.data[DYSON_AIQ_DEVICES])
 
 
-class DysonAirSensor(AirQualityEntity):
+class DysonAirSensor(DysonEntity, AirQualityEntity):
     """Representation of a generic Dyson air quality sensor."""
 
     def __init__(self, device):
         """Create a new generic air quality Dyson sensor."""
-        self._device = device
+        super().__init__(device, DysonEnvironmentalSensorV2State)
         self._old_value = None
-        self._name = device.name
-
-    async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
-        self._device.add_message_listener(self.on_message)
 
     def on_message(self, message):
         """Handle new messages which are received from the fan."""
-        _LOGGER.debug(
-            "%s: Message received for %s device: %s", DOMAIN, self.name, message
-        )
         if (
             self._old_value is None
             or self._old_value != self._device.environmental_state
-        ) and isinstance(message, DysonEnvironmentalSensorV2State):
+        ):
             self._old_value = self._device.environmental_state
             self.schedule_update_ha_state()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the Dyson sensor."""
-        return self._name
 
     @property
     def attribution(self):
@@ -116,11 +98,6 @@ class DysonAirSensor(AirQualityEntity):
         if self._device.environmental_state:
             return int(self._device.environmental_state.volatile_organic_compounds)
         return None
-
-    @property
-    def unique_id(self):
-        """Return the sensor's unique id."""
-        return self._device.serial
 
     @property
     def device_state_attributes(self):
