@@ -10,6 +10,8 @@ from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.dyson import sensor as dyson
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     STATE_OFF,
     TEMP_CELSIUS,
@@ -203,6 +205,7 @@ class DysonTest(unittest.TestCase):
         assert sensor.unit_of_measurement == PERCENTAGE
         assert sensor.name == "Device_name Humidity"
         assert sensor.entity_id == "sensor.dyson_1"
+        assert sensor.device_class == DEVICE_CLASS_HUMIDITY
 
     def test_dyson_humidity_sensor_with_values(self):
         """Test humidity sensor with values."""
@@ -236,6 +239,7 @@ class DysonTest(unittest.TestCase):
         assert sensor.unit_of_measurement == TEMP_CELSIUS
         assert sensor.name == "Device_name Temperature"
         assert sensor.entity_id == "sensor.dyson_1"
+        assert sensor.device_class == DEVICE_CLASS_TEMPERATURE
 
     def test_dyson_temperature_sensor_with_values(self):
         """Test temperature sensor with values."""
