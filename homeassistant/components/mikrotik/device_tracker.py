@@ -16,7 +16,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# These are normalized to ATTR_IP and ATTR_MAC to comform
+# These are normalized to ATTR_IP and ATTR_MAC to conform
 # to device_tracker
 FILTER_ATTRS = ("ip_address", "mac_address")
 
