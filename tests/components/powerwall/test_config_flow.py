@@ -140,13 +140,11 @@ async def test_form_wrong_version(hass):
     assert result3["errors"] == {"base": "wrong_version"}
 
 
-async def test_already_configured_(hass):
+async def test_already_configured(hass):
     """Test we abort when already configured."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_IP_ADDRESS: "1.1.1.1"}, source="ignore"
-    )
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.1.1.1"})
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
