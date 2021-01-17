@@ -46,7 +46,5 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_unload(config_entry, COVER_DOMAIN)
     )
-    data_update_coordinator = get_data_update_coordinator(hass, config_entry)
-    await data_update_coordinator.api.async_remove()
 
     return True
