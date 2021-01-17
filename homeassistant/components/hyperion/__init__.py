@@ -292,6 +292,13 @@ async def async_unload_entry(
         config_data = hass.data[DOMAIN].pop(config_entry.entry_id)
         for func in config_data[CONF_ON_UNLOAD]:
             func()
+
+        # Disconnect the shared instance clients.
+        for instance_num in list(config_data[CONF_INSTANCE_CLIENTS]):
+            instance_client = config_data[CONF_INSTANCE_CLIENTS][instance_num]
+            await instance_client.async_client_disconnect()
+
+        # Disconnect the root client.
         root_client = config_data[CONF_ROOT_CLIENT]
         await root_client.async_client_disconnect()
     return unload_ok

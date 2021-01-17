@@ -53,10 +53,13 @@ from .const import (
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
     DOMAIN,
+    NAME_SUFFIX_HYPERION_LIGHT,
+    NAME_SUFFIX_HYPERION_PRIORITY_LIGHT,
     SIGNAL_ENTITY_REMOVE,
     SIGNAL_INSTANCE_ADD,
     SIGNAL_INSTANCE_REMOVE,
     TYPE_HYPERION_LIGHT,
+    TYPE_HYPERION_PRIORITY_LIGHT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -237,17 +240,26 @@ async def async_setup_entry(
     def instance_add(instance_num: int, instance_name: str) -> None:
         """Add entities for a new Hyperion instance."""
         assert server_id
-        entities = []
-        for light_type in LIGHT_TYPES:
-            entities.append(
+        async_add_entities(
+            [
                 HyperionLight(
-                    get_hyperion_unique_id(server_id, instance_num, light_type),
-                    instance_name,
+                    get_hyperion_unique_id(
+                        server_id, instance_num, TYPE_HYPERION_LIGHT
+                    ),
+                    f"{instance_name} {NAME_SUFFIX_HYPERION_LIGHT}",
                     config_entry.options,
                     entry_data[CONF_INSTANCE_CLIENTS][instance_num],
-                )
-            )
-        async_add_entities(entities)
+                ),
+                HyperionPriorityLight(
+                    get_hyperion_unique_id(
+                        server_id, instance_num, TYPE_HYPERION_PRIORITY_LIGHT
+                    ),
+                    f"{instance_name} {NAME_SUFFIX_HYPERION_PRIORITY_LIGHT}",
+                    config_entry.options,
+                    entry_data[CONF_INSTANCE_CLIENTS][instance_num],
+                ),
+            ]
+        )
 
     def instance_remove(instance_num: int) -> None:
         """Remove entities for an old Hyperion instance."""
@@ -311,6 +323,11 @@ class HyperionPriorityLight(LightEntity):
         self._effect: str = KEY_EFFECT_SOLID
 
         self._effect_list: List[str] = []
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Whether or not the entity is enabled by default."""
+        return False
 
     @property
     def should_poll(self) -> bool:
@@ -618,10 +635,6 @@ class HyperionPriorityLight(LightEntity):
         # Load initial state.
         self._update_full_state()
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect from server."""
-        await self._client.async_client_disconnect()
-
 
 class HyperionLight(HyperionPriorityLight):
     """A Hyperion light that acts in absolute (vs priority) manner.
@@ -630,6 +643,11 @@ class HyperionLight(HyperionPriorityLight):
     than color based at a particular priority, and the 'winning' priority determines
     shown state rather than exclusively the HA priority.
     """
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Whether or not the entity is enabled by default."""
+        return True
 
     def _get_priority_entry_that_dictates_state(self) -> Optional[Dict[str, Any]]:
         """Get the relevant Hyperion priority entry to consider."""
@@ -685,4 +703,5 @@ class HyperionLight(HyperionPriorityLight):
 
 LIGHT_TYPES = {
     TYPE_HYPERION_LIGHT: HyperionLight,
+    TYPE_HYPERION_PRIORITY_LIGHT: HyperionPriorityLight,
 }
