@@ -293,7 +293,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         if station_data:
             if AEMET_ATTR_STATION_DATE in station_data:
                 station_dt = dt_util.parse_datetime(
-                    station_data[AEMET_ATTR_STATION_DATE]
+                    station_data[AEMET_ATTR_STATION_DATE] + "Z"
                 )
                 station_timestamp = dt_util.as_utc(station_dt)
             if AEMET_ATTR_STATION_HUMIDITY in station_data:
