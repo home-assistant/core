@@ -1,31 +1,8 @@
 """The Growatt server PV inverter sensor integration."""
-import voluptuous as vol
-
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_PLANT_ID, DOMAIN
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_USERNAME): cv.string,
-                        vol.Required(CONF_PASSWORD): cv.string,
-                        vol.Optional(CONF_NAME): cv.string,
-                        vol.Optional(CONF_PLANT_ID): cv.string,
-                    }
-                )
-            ],
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+from .const import DOMAIN
 
 
 async def async_setup(hass, config):

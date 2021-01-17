@@ -21,32 +21,6 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.plants = {}
         self.user_id = None
 
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        if CONF_PLANT_ID in import_config and CONF_NAME in import_config:
-            return self.async_create_entry(
-                title=import_config[CONF_NAME], data=import_config
-            )
-
-        login_response = await self.hass.async_add_executor_job(
-            self.api.login, import_config[CONF_USERNAME], import_config[CONF_PASSWORD]
-        )
-        user_id = login_response["userId"]
-        plant_info = await self.hass.async_add_executor_job(
-            self.api.plant_list, user_id
-        )
-        self.plants = {}
-        for plant in plant_info["data"]:
-            self.plants[plant["plantId"]] = plant["plantName"]
-        if CONF_PLANT_ID not in import_config:
-            import_config[CONF_PLANT_ID] = plant_info["data"][0]["plantId"]
-        if CONF_NAME not in import_config:
-            import_config[CONF_NAME] = self.plants[import_config[CONF_PLANT_ID]]
-
-        return self.async_create_entry(
-            title=import_config[CONF_NAME], data=import_config
-        )
-
     async def _show_user_form(self, errors=None):
         """Show the form to the user."""
         data_schema = vol.Schema(
@@ -81,7 +55,7 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_plant(user_input)
 
     async def async_step_plant(self, user_input=None):
-        """Handle a flow initialized by the user."""
+        """Handle adding a "plant" to Home Assistant."""
         user_input = {**self.user_input, **user_input}
 
         if CONF_PLANT_ID not in user_input:
