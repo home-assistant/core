@@ -38,8 +38,8 @@ def mock_config_entry():
         },
         "test",
         config_entries.CONN_CLASS_LOCAL_POLL,
-        system_options={},
-        options={"disable_new_entities": False},
+        options={},
+        system_options={"disable_new_entities": False},
         unique_id=DOMAIN,
         entry_id="homepluscontrol_entry_id",
     )
