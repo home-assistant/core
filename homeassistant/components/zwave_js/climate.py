@@ -143,7 +143,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         """Optionally return a ZwaveValue for a setpoint."""
         val = self._setpoint_values[setpoint_type]
         if val is None:
-            raise TypeError("Value requested is not available")
+            raise ValueError("Value requested is not available")
 
         return val
 
