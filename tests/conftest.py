@@ -204,9 +204,25 @@ def mock_device_tracker_conf():
 @pytest.fixture
 def hass_access_token(hass, hass_admin_user):
     """Return an access token to access Home Assistant."""
+    hass.loop.run_until_complete(
+        async_setup_component(
+            hass,
+            "homeassistant",
+            {
+                "homeassistant": {
+                    "auth_providers": [
+                        {
+                            "type": "homeassistant",
+                        }
+                    ]
+                }
+            },
+        )
+    )
+
     credential = Credentials(
         id="mock-admin-credential-id",
-        auth_provider_type="insecure_example",
+        auth_provider_type="homeassistant",
         auth_provider_id=None,
         data={"username": "admin"},
         is_new=False,

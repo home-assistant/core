@@ -161,7 +161,7 @@ class AuthManager:
         return list(self._mfa_modules.values())
 
     def get_auth_provider(
-        self, provider_type: str, provider_id: str
+        self, provider_type: str, provider_id: Optional[str]
     ) -> Optional[AuthProvider]:
         """Return an auth provider, None if not found."""
         return self._providers.get((provider_type, provider_id))
@@ -471,10 +471,7 @@ class AuthManager:
         Raises an exception if the expected provider is no longer available or return
         None if no provider was expected for this refresh token.
         """
-        if (
-            not refresh_token.credential
-            or refresh_token.credential.auth_provider_id is None
-        ):
+        if refresh_token.credential is None:
             return None
 
         provider = self.get_auth_provider(

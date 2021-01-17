@@ -1,7 +1,6 @@
 """Integration tests for the auth component."""
 from datetime import timedelta
 
-from homeassistant.auth.models import Credentials
 from homeassistant.components import auth
 from homeassistant.components.auth import RESULT_TYPE_USER
 from homeassistant.setup import async_setup_component
@@ -107,12 +106,6 @@ async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
 
     refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
     user = refresh_token.user
-    credential = Credentials(
-        auth_provider_type="homeassistant", auth_provider_id=None, data={}, id="test-id"
-    )
-    user.credentials.append(credential)
-    assert len(user.credentials) == 1
-
     client = await hass_ws_client(hass, hass_access_token)
 
     await client.send_json({"id": 5, "type": auth.WS_TYPE_CURRENT_USER})
