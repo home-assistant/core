@@ -114,11 +114,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         self._hvac_modes: Dict[str, Optional[int]] = {}
         self._hvac_presets: Dict[str, Optional[int]] = {}
 
-        self._current_mode = self.get_zwave_value(
-            "mode",
-            command_class=CommandClass.THERMOSTAT_MODE,
-            add_to_watched_value_ids=True,
-        )
+        self._current_mode = self.info.primary_value
         self._setpoint_values: Dict[ThermostatSetpointType, ZwaveValue] = {}
         for enum in ThermostatSetpointType:
             self._setpoint_values[enum] = self.get_zwave_value(
