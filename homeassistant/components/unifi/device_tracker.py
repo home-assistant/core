@@ -223,6 +223,10 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         ):
             return
 
+        LOGGER.warning(
+            "Device %s: changed: %s", self.entity_id, list(diff(self._last_raw, raw))
+        )
+
         self._last_is_connected = is_connected
         self._last_raw = raw
         self._last_available = available
