@@ -4,14 +4,19 @@ import logging
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 
-from homeassistant.const import PERCENTAGE, STATE_OFF, TEMP_CELSIUS, TIME_HOURS
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    STATE_OFF,
+    TEMP_CELSIUS,
+    TIME_HOURS,
+)
 from homeassistant.helpers.entity import Entity
 
 from . import DYSON_DEVICES, DysonEntity
 
 SENSOR_UNITS = {
-    "air_quality": None,
-    "dust": None,
     "filter_life": TIME_HOURS,
     "carbon_filter_state": PERCENTAGE,
     "hepa_filter_state": PERCENTAGE,
@@ -26,8 +31,6 @@ SENSOR_ICONS = {
     "carbon_filter_state": "mdi:filter-outline",
     "hepa_filter_state": "mdi:filter-outline",
     "combi_filter_state": "mdi:filter-outline",
-    "humidity": "mdi:water-percent",
-    "temperature": "mdi:thermometer",
 }
 
 SENSOR_NAMES = {
@@ -39,6 +42,11 @@ SENSOR_NAMES = {
     "hepa_filter_state": "HEPA Filter Remaining Life",
     "combi_filter_state": "Combi Filter Remaining Life",
     "temperature": "Temperature",
+}
+
+SENSOR_DEVICE_CLASSES = {
+    "humidity": DEVICE_CLASS_HUMIDITY,
+    "temperature": DEVICE_CLASS_TEMPERATURE,
 }
 
 DYSON_SENSOR_DEVICES = "dyson_sensor_devices"
@@ -119,12 +127,17 @@ class DysonSensor(DysonEntity, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return SENSOR_UNITS[self._sensor_type]
+        return SENSOR_UNITS.get(self._sensor_type)
 
     @property
     def icon(self):
         """Return the icon for this sensor."""
-        return SENSOR_ICONS[self._sensor_type]
+        return SENSOR_ICONS.get(self._sensor_type)
+
+    @property
+    def device_class(self):
+        """Return the device class of this sensor."""
+        return SENSOR_DEVICE_CLASSES.get(self._sensor_type)
 
 
 class DysonFilterLifeSensor(DysonSensor):
