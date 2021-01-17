@@ -3,6 +3,7 @@ import json
 from unittest.mock import DEFAULT, patch
 
 import pytest
+from zwave_js_server.event import Event
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
@@ -138,6 +139,14 @@ def climate_radio_thermostat_ct100_plus_fixture(
     node = Node(client, climate_radio_thermostat_ct100_plus_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
+
+
+@pytest.fixture(name="nortek_thermostat_added_event")
+def nortek_thermostat_added_event_fixture(client):
+    """Mock a Nortek thermostat node added event."""
+    event_data = json.loads(load_fixture("zwave_js/nortek_thermostat_added_event.json"))
+    event = Event("node added", event_data)
+    return event
 
 
 @pytest.fixture(name="integration")
