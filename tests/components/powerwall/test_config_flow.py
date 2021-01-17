@@ -145,7 +145,7 @@ async def test_already_configured_(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_IP_ADDRESS: "1.1.1.1"}, source="ignore"
+        domain=DOMAIN, data={CONF_IP_ADDRESS: "1.1.1.1"}
     )
     config_entry.add_to_hass(hass)
 
