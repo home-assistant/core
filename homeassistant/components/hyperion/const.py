@@ -22,3 +22,4 @@ SIGNAL_INSTANCE_REMOVE = f"{DOMAIN}_instance_remove_signal." "{}"
 SIGNAL_ENTITY_REMOVE = f"{DOMAIN}_entity_remove_signal." "{}"
 
 TYPE_HYPERION_LIGHT = "hyperion_light"
+TYPE_HYPERION_PRIORITY_LIGHT = "hyperion_priority_light"
