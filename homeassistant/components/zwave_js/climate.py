@@ -115,6 +115,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         self._hvac_presets: Dict[str, Optional[int]] = {}
         self._set_modes_and_presets()
 
+        self._current_mode: ZwaveValue = self.info.primary_value
         self._setpoint_values: Dict[ThermostatSetpointType, ZwaveValue] = {}
         for enum in ThermostatSetpointType:
             val = self.get_zwave_value(
@@ -166,7 +167,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
         # Z-Wave uses one list for both modes and presets.
         # Iterate over all Z-Wave ThermostatModes and extract the hvac modes and presets.
-        for mode_id, mode_name in self.info.primary_value.metadata.states.items():
+        for mode_id, mode_name in self._current_mode.metadata.states.items():
             mode_id = int(mode_id)
             if mode_id in THERMOSTAT_MODES:
                 # treat value as hvac mode
@@ -182,7 +183,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def _current_mode_setpoint_enums(self) -> List[ThermostatSetpointType]:
         """Return the list of enums that are relevant to the current thermostat mode."""
-        return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self.info.primary_value.value), [])  # type: ignore
+        return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])  # type: ignore
 
     @property
     def temperature_unit(self) -> str:
@@ -198,9 +199,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
-        return ZW_HVAC_MODE_MAP.get(
-            int(self.info.primary_value.value), HVAC_MODE_HEAT_COOL
-        )
+        return ZW_HVAC_MODE_MAP.get(int(self._current_mode.value), HVAC_MODE_HEAT_COOL)
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -239,9 +238,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
-        if int(self.info.primary_value.value) not in THERMOSTAT_MODES:
-            return_val: str = self.info.primary_value.metadata.states.get(
-                self.info.primary_value.value
+        if int(self._current_mode.value) not in THERMOSTAT_MODES:
+            return_val: str = self._current_mode.metadata.states.get(
+                self._current_mode.value
             )
             return return_val
         return PRESET_NONE
@@ -294,7 +293,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         hvac_mode_value = self._hvac_modes.get(hvac_mode)
         if hvac_mode_value is None:
             raise ValueError(f"Received an invalid hvac mode: {hvac_mode}")
-        await self.info.node.async_set_value(self.info.primary_value, hvac_mode_value)
+        await self.info.node.async_set_value(self._current_mode, hvac_mode_value)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
@@ -305,4 +304,4 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         preset_mode_value = self._hvac_presets.get(preset_mode)
         if preset_mode_value is None:
             raise ValueError(f"Received an invalid preset mode: {preset_mode}")
-        await self.info.node.async_set_value(self.info.primary_value, preset_mode_value)
+        await self.info.node.async_set_value(self._current_mode, preset_mode_value)
