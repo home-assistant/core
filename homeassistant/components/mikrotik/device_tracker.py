@@ -16,6 +16,10 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+# These are normalized to ATTR_IP and ATTR_MAC to conform
+# to device_tracker
+FILTER_ATTRS = ("ip_address", "mac_address")
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up device tracker for Mikrotik component."""
@@ -122,7 +126,7 @@ class MikrotikHubTracker(ScannerEntity):
     def device_state_attributes(self):
         """Return the device state attributes."""
         if self.is_connected:
-            return self.device.attrs
+            return {k: v for k, v in self.device.attrs.items() if k not in FILTER_ATTRS}
         return None
 
     @property
