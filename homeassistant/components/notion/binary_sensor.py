@@ -1,5 +1,4 @@
 """Support for Notion binary sensors."""
-import logging
 from typing import Callable
 
 from homeassistant.components.binary_sensor import (
@@ -28,8 +27,6 @@ from .const import (
     SENSOR_WINDOW_HINGED_HORIZONTAL,
     SENSOR_WINDOW_HINGED_VERTICAL,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 BINARY_SENSOR_TYPES = {
     SENSOR_BATTERY: ("Low Battery", "battery"),
@@ -80,7 +77,12 @@ class NotionBinarySensor(NotionEntity, BinarySensorEntity):
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Fetch new state data for the sensor."""
-        self._state = self.coordinator.data["tasks"][self._task_id]["status"]["value"]
+        task = self.coordinator.data["tasks"][self._task_id]
+
+        if "value" in task["status"]:
+            self._state = task["status"]["value"]
+        elif task["task_type"] == SENSOR_BATTERY:
+            self._state = task["status"]["data"]["to_state"]
 
     @property
     def is_on(self) -> bool:
@@ -88,7 +90,7 @@ class NotionBinarySensor(NotionEntity, BinarySensorEntity):
         task = self.coordinator.data["tasks"][self._task_id]
 
         if task["task_type"] == SENSOR_BATTERY:
-            return self._state != "battery_good"
+            return self._state == "critical"
         if task["task_type"] in (
             SENSOR_DOOR,
             SENSOR_GARAGE_DOOR,

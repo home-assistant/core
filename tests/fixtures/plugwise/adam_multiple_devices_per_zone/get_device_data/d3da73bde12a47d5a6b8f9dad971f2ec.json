@@ -1,1 +1,1 @@
-{"setpoint": 15.0, "temperature": 17.1, "battery": 0.62, "valve_position": 0.0, "temperature_difference": 0.1}
+{"temperature": 17.1, "setpoint": 15.0, "battery": 0.62, "temperature_difference": 0.1, "valve_position": 0.0}

@@ -637,7 +637,7 @@ class ZHAGateway:
         _LOGGER.debug("Shutting down ZHA ControllerApplication")
         for unsubscribe in self._unsubs:
             unsubscribe()
-        await self.application_controller.shutdown()
+        await self.application_controller.pre_shutdown()
 
 
 @callback

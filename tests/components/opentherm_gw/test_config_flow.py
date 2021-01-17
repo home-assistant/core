@@ -40,6 +40,7 @@ async def test_form_user(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Test Entry 1"
@@ -48,7 +49,6 @@ async def test_form_user(hass):
         CONF_DEVICE: "/dev/ttyUSB0",
         CONF_ID: "test_entry_1",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_pyotgw_connect.mock_calls) == 1
@@ -148,7 +148,7 @@ async def test_form_connection_timeout(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "timeout"}
+    assert result2["errors"] == {"base": "cannot_connect"}
     assert len(mock_connect.mock_calls) == 1
 
 
@@ -164,7 +164,7 @@ async def test_form_connection_error(hass):
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "serial_error"}
+    assert result2["errors"] == {"base": "cannot_connect"}
     assert len(mock_connect.mock_calls) == 1
 
 
@@ -206,5 +206,5 @@ async def test_options_form(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_PRECISION] is None
+    assert result["data"][CONF_PRECISION] == 0.0
     assert result["data"][CONF_FLOOR_TEMP] is True

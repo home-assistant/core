@@ -4,7 +4,6 @@
             "already_configured": "Ein Tibber-Konto ist bereits konfiguriert."
         },
         "error": {
-            "connection_error": "Fehler beim Verbinden mit Tibber",
             "invalid_access_token": "Ung\u00fcltiger Zugriffs-Token",
             "timeout": "Zeit\u00fcberschreitung beim Verbinden mit Tibber"
         },
@@ -17,6 +16,5 @@
                 "title": "Tibber"
             }
         }
-    },
-    "title": "Tibber"
+    }
 }

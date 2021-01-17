@@ -1,6 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
         "error": {
+            "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
         "step": {

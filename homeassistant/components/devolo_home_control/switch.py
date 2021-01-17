@@ -1,6 +1,4 @@
 """Platform for switch integration."""
-import logging
-
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
@@ -8,28 +6,27 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import DOMAIN
 from .devolo_device import DevoloDeviceEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Get all devices and setup the switch devices via config entry."""
-    devices = hass.data[DOMAIN]["homecontrol"].binary_switch_devices
-
     entities = []
-    for device in devices:
-        for binary_switch in device.binary_switch_property:
-            # Exclude the binary switch which also has multi_level_switches here,
-            # because those are implemented as light entities now.
-            if not hasattr(device, "multi_level_switch_property"):
-                entities.append(
-                    DevoloSwitch(
-                        homecontrol=hass.data[DOMAIN]["homecontrol"],
-                        device_instance=device,
-                        element_uid=binary_switch,
+
+    for gateway in hass.data[DOMAIN][entry.entry_id]["gateways"]:
+        for device in gateway.binary_switch_devices:
+            for binary_switch in device.binary_switch_property:
+                # Exclude the binary switch which also has multi_level_switches here,
+                # because those are implemented as light entities now.
+                if not hasattr(device, "multi_level_switch_property"):
+                    entities.append(
+                        DevoloSwitch(
+                            homecontrol=gateway,
+                            device_instance=device,
+                            element_uid=binary_switch,
+                        )
                     )
-                )
+
     async_add_entities(entities)
 
 

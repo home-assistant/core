@@ -3,12 +3,12 @@
         "_": {
             "armed": "Etkin",
             "armed_away": "Etkin d\u0131\u015far\u0131da",
-            "armed_custom_bypass": "\u00d6zel alarm atlatmas\u0131",
+            "armed_custom_bypass": "Alarm etkin \u00f6zel baypas",
             "armed_home": "Etkin evde",
             "armed_night": "Etkin gece",
-            "arming": "Etkinle\u015fiyor",
+            "arming": "Alarm etkinle\u015fiyor",
             "disarmed": "Etkisiz",
-            "disarming": "Etkisizle\u015ftiriliyor",
+            "disarming": "Alarm devre d\u0131\u015f\u0131",
             "pending": "Beklemede",
             "triggered": "Tetiklendi"
         }

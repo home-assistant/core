@@ -9,7 +9,6 @@ from io import StringIO
 import json
 import logging
 import os
-import sys
 import threading
 import time
 import uuid
@@ -109,24 +108,21 @@ def get_test_config_dir(*add_path):
 
 def get_test_home_assistant():
     """Return a Home Assistant object pointing at test config directory."""
-    if sys.platform == "win32":
-        loop = asyncio.ProactorEventLoop()
-    else:
-        loop = asyncio.new_event_loop()
-
+    loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     hass = loop.run_until_complete(async_test_home_assistant(loop))
 
-    stop_event = threading.Event()
+    loop_stop_event = threading.Event()
 
     def run_loop():
         """Run event loop."""
         # pylint: disable=protected-access
         loop._thread_ident = threading.get_ident()
         loop.run_forever()
-        stop_event.set()
+        loop_stop_event.set()
 
     orig_stop = hass.stop
+    hass._stopped = Mock(set=loop.stop)
 
     def start_hass(*mocks):
         """Start hass."""
@@ -135,7 +131,7 @@ def get_test_home_assistant():
     def stop_hass():
         """Stop hass."""
         orig_stop()
-        stop_event.wait()
+        loop_stop_event.wait()
         loop.close()
 
     hass.start = start_hass
@@ -300,7 +296,7 @@ def async_fire_time_changed(hass, datetime_, fire_all=False):
 
         if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
-                "homeassistant.helpers.event.pattern_utc_now",
+                "homeassistant.helpers.event.time_tracker_utcnow",
                 return_value=date_util.as_utc(datetime_),
             ):
                 task._run()
@@ -964,7 +960,7 @@ async def flush_store(store):
 
 async def get_system_health_info(hass, domain):
     """Get system health info."""
-    return await hass.data["system_health"]["info"][domain](hass)
+    return await hass.data["system_health"][domain].info_callback(hass)
 
 
 def mock_integration(hass, module):
@@ -972,6 +968,14 @@ def mock_integration(hass, module):
     integration = loader.Integration(
         hass, f"homeassistant.components.{module.DOMAIN}", None, module.mock_manifest()
     )
+
+    def mock_import_platform(platform_name):
+        raise ImportError(
+            f"Mocked unable to import platform '{platform_name}'",
+            name=f"{integration.pkg_path}.{platform_name}",
+        )
+
+    integration._import_platform = mock_import_platform
 
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
     hass.data.setdefault(loader.DATA_INTEGRATIONS, {})[module.DOMAIN] = integration

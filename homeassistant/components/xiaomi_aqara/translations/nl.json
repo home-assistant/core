@@ -1,10 +1,24 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "flow_title": "Xiaomi Aqara Gateway: {name}",
         "step": {
+            "select": {
+                "description": "Voer de installatie opnieuw uit als u extra gateways wilt aansluiten",
+                "title": "Selecteer de Xiaomi Aqara Gateway waarmee u verbinding wilt maken"
+            },
+            "settings": {
+                "description": "De sleutel (wachtwoord) kan worden opgehaald met behulp van deze tutorial: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. Als de sleutel niet wordt meegeleverd, zijn alleen sensoren toegankelijk"
+            },
             "user": {
                 "data": {
+                    "host": "IP-adres (optioneel)",
                     "mac": "MAC-adres (optioneel)"
-                }
+                },
+                "description": "Maak verbinding met uw Xiaomi Aqara Gateway, als de IP- en mac-adressen leeg worden gelaten, wordt automatische detectie gebruikt",
+                "title": "Xiaomi Aqara Gateway"
             }
         }
     }

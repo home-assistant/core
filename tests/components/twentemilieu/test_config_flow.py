@@ -43,7 +43,7 @@ async def test_connection_error(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "connection_error"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_invalid_address(hass, aioclient_mock):
@@ -80,7 +80,7 @@ async def test_address_already_set_up(hass, aioclient_mock):
     result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "address_already_set_up"
+    assert result["reason"] == "already_configured"
 
 
 async def test_full_flow_implementation(hass, aioclient_mock):

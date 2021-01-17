@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "login": "Erro de autentica\u00e7\u00e3o: verifique seu nome de utilizador e palavra-passe"
-        },
         "step": {
             "2sa": {
                 "data": {

@@ -1,0 +1,13 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "query_interval": "Ayg\u0131t yoklama aral\u0131\u011f\u0131 saniye cinsinden"
+                },
+                "description": "Yoklama aral\u0131\u011f\u0131 de\u011ferlerini \u00e7ok d\u00fc\u015f\u00fck ayarlamay\u0131n, aksi takdirde \u00e7a\u011fr\u0131lar g\u00fcnl\u00fckte hata mesaj\u0131 olu\u015fturarak ba\u015far\u0131s\u0131z olur",
+                "title": "Tuya Se\u00e7eneklerini Konfig\u00fcre Et"
+            }
+        }
+    }
+}

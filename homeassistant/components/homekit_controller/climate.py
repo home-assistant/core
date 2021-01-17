@@ -10,6 +10,7 @@ from aiohomekit.model.characteristics import (
     SwingModeValues,
     TargetHeaterCoolerStateValues,
 )
+from aiohomekit.model.services import ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
 
 from homeassistant.components.climate import (
@@ -87,11 +88,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(aid, service):
-        entity_class = ENTITY_TYPES.get(service["stype"])
+    def async_add_service(service):
+        entity_class = ENTITY_TYPES.get(service.short_type)
         if not entity_class:
             return False
-        info = {"aid": aid, "iid": service["iid"]}
+        info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([entity_class(conn, info)], True)
         return True
 
@@ -454,6 +455,6 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
 
 
 ENTITY_TYPES = {
-    "heater-cooler": HomeKitHeaterCoolerEntity,
-    "thermostat": HomeKitClimateEntity,
+    ServicesTypes.HEATER_COOLER: HomeKitHeaterCoolerEntity,
+    ServicesTypes.THERMOSTAT: HomeKitClimateEntity,
 }

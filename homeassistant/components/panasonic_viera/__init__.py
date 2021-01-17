@@ -14,7 +14,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
 from .const import (
+    ATTR_DEVICE_INFO,
     ATTR_REMOTE,
+    ATTR_UDN,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
     CONF_ON_ACTION,
@@ -85,6 +87,22 @@ async def async_setup_entry(hass, config_entry):
     await remote.async_create_remote_control(during_setup=True)
 
     panasonic_viera_data[config_entry.entry_id] = {ATTR_REMOTE: remote}
+
+    # Add device_info to older config entries
+    if ATTR_DEVICE_INFO not in config or config[ATTR_DEVICE_INFO] is None:
+        device_info = await remote.async_get_device_info()
+        unique_id = config_entry.unique_id
+        if device_info is None:
+            _LOGGER.error(
+                "Couldn't gather device info. Please restart Home Assistant with your TV turned on and connected to your network."
+            )
+        else:
+            unique_id = device_info[ATTR_UDN]
+        hass.config_entries.async_update_entry(
+            config_entry,
+            unique_id=unique_id,
+            data={**config, ATTR_DEVICE_INFO: device_info},
+        )
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -223,6 +241,14 @@ class Remote:
         _LOGGER.debug("Play media: %s (%s)", media_id, media_type)
         await self._handle_errors(self._control.open_webpage, media_id)
 
+    async def async_get_device_info(self):
+        """Return device info."""
+        if self._control is None:
+            return None
+        device_info = await self._handle_errors(self._control.get_device_info)
+        _LOGGER.debug("Fetched device info: %s", str(device_info))
+        return device_info
+
     async def _handle_errors(self, func, *args):
         """Handle errors from func, set available and reconnect if needed."""
         try:
@@ -234,6 +260,7 @@ class Remote:
         except (TimeoutError, URLError, SOAPError, OSError):
             self.state = STATE_OFF
             self.available = self._on_action is not None
+            await self.async_create_remote_control()
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception("An unknown error occurred: %s", err)
             self.state = STATE_OFF

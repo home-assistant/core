@@ -1,21 +1,21 @@
 {
     "config": {
         "abort": {
-            "name_exists": "Nazwa ju\u017c istnieje."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "step": {
             "user": {
                 "data": {
-                    "advertise_ip": "IP rozg\u0142aszania",
+                    "advertise_ip": "Adres IP rozg\u0142aszania",
                     "advertise_port": "Port rozg\u0142aszania",
                     "host_ip": "Adres IP",
                     "listen_port": "Port nas\u0142uchu",
                     "name": "Nazwa",
                     "upnp_bind_multicast": "Powi\u0105\u017c multicast (prawda/fa\u0142sz)"
                 },
-                "title": "Zdefiniuj konfiguracj\u0119 serwera"
+                "title": "Definiowanie konfiguracji serwera"
             }
         }
     },
-    "title": "EmulatedRoku"
+    "title": "Emulated Roku"
 }

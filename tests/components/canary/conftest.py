@@ -5,6 +5,12 @@ from pytest import fixture
 from tests.async_mock import MagicMock, patch
 
 
+@fixture(autouse=True)
+def mock_ffmpeg(hass):
+    """Mock ffmpeg is loaded."""
+    hass.config.components.add("ffmpeg")
+
+
 @fixture
 def canary(hass):
     """Mock the CanaryApi for easier testing."""

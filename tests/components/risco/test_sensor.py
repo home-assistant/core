@@ -1,6 +1,4 @@
 """Tests for the Risco event sensors."""
-import pytest
-
 from homeassistant.components.risco import (
     LAST_EVENT_TIMESTAMP_KEY,
     CannotConnectError,
@@ -9,6 +7,7 @@ from homeassistant.components.risco import (
 from homeassistant.components.risco.const import DOMAIN, EVENTS_COORDINATOR
 
 from .util import TEST_CONFIG, setup_risco
+from .util import two_zone_alarm  # noqa: F401
 
 from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
@@ -60,7 +59,7 @@ TEST_EVENTS = [
         name="Alarm is on",
         text="Yes it is.",
         partition_id=0,
-        zone_id=12,
+        zone_id=1,
         user_id=None,
         group=None,
         priority=0,
@@ -106,16 +105,6 @@ CATEGORIES_TO_EVENTS = {
 }
 
 
-@pytest.fixture
-def emptry_alarm():
-    """Fixture to mock an empty alarm."""
-    with patch(
-        "homeassistant.components.risco.RiscoAPI.get_state",
-        return_value=MagicMock(paritions={}, zones={}),
-    ):
-        yield
-
-
 async def test_cannot_connect(hass):
     """Test connection error."""
 
@@ -151,23 +140,29 @@ async def test_unauthorized(hass):
 
 
 def _check_state(hass, category, entity_id):
-    event = TEST_EVENTS[CATEGORIES_TO_EVENTS[category]]
-    assert hass.states.get(entity_id).state == event.time
-    assert hass.states.get(entity_id).attributes["category_id"] == event.category_id
-    assert hass.states.get(entity_id).attributes["category_name"] == event.category_name
-    assert hass.states.get(entity_id).attributes["type_id"] == event.type_id
-    assert hass.states.get(entity_id).attributes["type_name"] == event.type_name
-    assert hass.states.get(entity_id).attributes["name"] == event.name
-    assert hass.states.get(entity_id).attributes["text"] == event.text
-    assert hass.states.get(entity_id).attributes["partition_id"] == event.partition_id
-    assert hass.states.get(entity_id).attributes["zone_id"] == event.zone_id
-    assert hass.states.get(entity_id).attributes["user_id"] == event.user_id
-    assert hass.states.get(entity_id).attributes["group"] == event.group
-    assert hass.states.get(entity_id).attributes["priority"] == event.priority
-    assert hass.states.get(entity_id).attributes["raw"] == event.raw
+    event_index = CATEGORIES_TO_EVENTS[category]
+    event = TEST_EVENTS[event_index]
+    state = hass.states.get(entity_id)
+    assert state.state == event.time
+    assert state.attributes["category_id"] == event.category_id
+    assert state.attributes["category_name"] == event.category_name
+    assert state.attributes["type_id"] == event.type_id
+    assert state.attributes["type_name"] == event.type_name
+    assert state.attributes["name"] == event.name
+    assert state.attributes["text"] == event.text
+    assert state.attributes["partition_id"] == event.partition_id
+    assert state.attributes["zone_id"] == event.zone_id
+    assert state.attributes["user_id"] == event.user_id
+    assert state.attributes["group"] == event.group
+    assert state.attributes["priority"] == event.priority
+    assert state.attributes["raw"] == event.raw
+    if event_index == 2:
+        assert state.attributes["zone_entity_id"] == "binary_sensor.zone_1"
+    else:
+        assert "zone_entity_id" not in state.attributes
 
 
-async def test_setup(hass, emptry_alarm):
+async def test_setup(hass, two_zone_alarm):  # noqa: F811
     """Test entity setup."""
     registry = await hass.helpers.entity_registry.async_get_registry()
 

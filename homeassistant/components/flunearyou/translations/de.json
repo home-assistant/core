@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "Diese Koordinaten sind bereits registriert."
         },
-        "error": {
-            "general_error": "Es gab einen unbekannten Fehler."
-        },
         "step": {
             "user": {
                 "data": {

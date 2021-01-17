@@ -76,21 +76,22 @@ async def test_unload_config_entry(mock_now, hass):
     assert len(config_entries) == 1
     assert entry is config_entries[0]
 
+    timestamp = future_timestamp(100)
     with patch(
         "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
-        return_value=future_timestamp(100),
+        return_value=timestamp,
     ):
         assert await async_setup_component(hass, DOMAIN, {}) is True
         await hass.async_block_till_done()
 
     assert entry.state == ENTRY_STATE_LOADED
-    state = hass.states.get("sensor.cert_expiry_example_com")
-    assert state.state == "100"
+    state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
+    assert state.state == timestamp.isoformat()
     assert state.attributes.get("error") == "None"
     assert state.attributes.get("is_valid")
 
     await hass.config_entries.async_unload(entry.entry_id)
 
     assert entry.state == ENTRY_STATE_NOT_LOADED
-    state = hass.states.get("sensor.cert_expiry_example_com")
+    state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
     assert state is None

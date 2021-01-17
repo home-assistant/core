@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 import yaml
 
-from .objects import NodeListClass
+from .objects import NodeListClass, Placeholder
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
@@ -59,4 +59,9 @@ yaml.SafeDumper.add_representer(
 yaml.SafeDumper.add_representer(
     NodeListClass,
     lambda dumper, value: dumper.represent_sequence("tag:yaml.org,2002:seq", value),
+)
+
+yaml.SafeDumper.add_representer(
+    Placeholder,
+    lambda dumper, value: dumper.represent_scalar("!placeholder", value.name),
 )

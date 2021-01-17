@@ -1,7 +1,6 @@
 """The tests for the utility_meter sensor platform."""
 from contextlib import contextmanager
 from datetime import timedelta
-import logging
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.utility_meter.const import (
@@ -22,8 +21,6 @@ import homeassistant.util.dt as dt_util
 
 from tests.async_mock import patch
 from tests.common import async_fire_time_changed
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @contextmanager
@@ -265,6 +262,34 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
     else:
         assert state.attributes.get("last_period") == 0
         assert state.state == "5"
+
+
+async def test_self_reset_quarter_hourly(hass, legacy_patchable_time):
+    """Test quarter-hourly reset of meter."""
+    await _test_self_reset(
+        hass, gen_config("quarter-hourly"), "2017-12-31T23:59:00.000000+00:00"
+    )
+
+
+async def test_self_reset_quarter_hourly_first_quarter(hass, legacy_patchable_time):
+    """Test quarter-hourly reset of meter."""
+    await _test_self_reset(
+        hass, gen_config("quarter-hourly"), "2017-12-31T23:14:00.000000+00:00"
+    )
+
+
+async def test_self_reset_quarter_hourly_second_quarter(hass, legacy_patchable_time):
+    """Test quarter-hourly reset of meter."""
+    await _test_self_reset(
+        hass, gen_config("quarter-hourly"), "2017-12-31T23:29:00.000000+00:00"
+    )
+
+
+async def test_self_reset_quarter_hourly_third_quarter(hass, legacy_patchable_time):
+    """Test quarter-hourly reset of meter."""
+    await _test_self_reset(
+        hass, gen_config("quarter-hourly"), "2017-12-31T23:44:00.000000+00:00"
+    )
 
 
 async def test_self_reset_hourly(hass, legacy_patchable_time):

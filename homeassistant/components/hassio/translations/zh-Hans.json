@@ -1,3 +1,8 @@
 {
+    "system_health": {
+        "info": {
+            "version_api": "API\u7248\u672c"
+        }
+    },
     "title": "Hass.io"
 }

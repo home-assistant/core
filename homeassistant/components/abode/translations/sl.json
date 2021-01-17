@@ -3,11 +3,6 @@
         "abort": {
             "single_instance_allowed": "Dovoljena je samo ena konfiguracija Abode."
         },
-        "error": {
-            "connection_error": "Ni mogo\u010de vzpostaviti povezave z Abode.",
-            "identifier_exists": "Ra\u010dun je \u017ee registriran.",
-            "invalid_credentials": "Neveljavne poverilnice."
-        },
         "step": {
             "user": {
                 "data": {

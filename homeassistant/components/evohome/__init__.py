@@ -140,8 +140,8 @@ def _handle_exception(err) -> bool:
     except evohomeasync2.AuthenticationError:
         _LOGGER.error(
             "Failed to authenticate with the vendor's server. "
-            "Check your network and the vendor's service status page. "
-            "Also check that your username and password are correct. "
+            "Check your username and password. NB: Some special password characters "
+            "that work correctly via the website will not work via the web API. "
             "Message is: %s",
             err,
         )
@@ -422,20 +422,20 @@ class EvoBroker:
 
         await self._store.async_save(app_storage)
 
-    async def call_client_api(self, api_function, refresh=True) -> Any:
-        """Call a client API."""
+    async def call_client_api(self, api_function, update_state=True) -> Any:
+        """Call a client API and update the broker state if required."""
         try:
             result = await api_function
         except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
             if not _handle_exception(err):
                 return
 
-        if refresh:
-            self.hass.helpers.event.async_call_later(1, self.async_update())
+        if update_state:  # wait a moment for system to quiesce before updating state
+            self.hass.helpers.event.async_call_later(1, self._update_v2_api_state)
 
         return result
 
-    async def _update_v1(self, *args, **kwargs) -> None:
+    async def _update_v1_api_temps(self, *args, **kwargs) -> None:
         """Get the latest high-precision temperatures of the default Location."""
 
         def get_session_id(client_v1) -> Optional[str]:
@@ -476,7 +476,7 @@ class EvoBroker:
         if session_id != get_session_id(self.client_v1):
             await self.save_auth_tokens()
 
-    async def _update_v2(self, *args, **kwargs) -> None:
+    async def _update_v2_api_state(self, *args, **kwargs) -> None:
         """Get the latest modes, temperatures, setpoints of a Location."""
         access_token = self.client.access_token
 
@@ -500,13 +500,10 @@ class EvoBroker:
         operating mode of the Controller and the current temp of its children (e.g.
         Zones, DHW controller).
         """
-        await self._update_v2()
-
         if self.client_v1:
-            await self._update_v1()
+            await self._update_v1_api_temps()
 
-        # inform the evohome devices that state data has been updated
-        async_dispatcher_send(self.hass, DOMAIN)
+        await self._update_v2_api_state()
 
 
 class EvoDevice(Entity):
@@ -690,7 +687,7 @@ class EvoChild(EvoDevice):
                 return  # avoid unnecessary I/O - there's nothing to update
 
         self._schedule = await self._evo_broker.call_client_api(
-            self._evo_device.schedule(), refresh=False
+            self._evo_device.schedule(), update_state=False
         )
 
         _LOGGER.debug("Schedule['%s'] = %s", self.name, self._schedule)

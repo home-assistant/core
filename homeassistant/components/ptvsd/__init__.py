@@ -36,6 +36,10 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up ptvsd debugger."""
+    _LOGGER.warning(
+        "ptvsd is deprecated and will be removed in Home Assistant Core 0.120."
+        "The debugpy integration can be used as a full replacement for ptvsd"
+    )
 
     # This is a local import, since importing this at the top, will cause
     # ptvsd to hook into `sys.settrace`. So does `coverage` to generate

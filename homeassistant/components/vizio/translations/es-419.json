@@ -3,10 +3,6 @@
         "abort": {
             "updated_entry": "Esta entrada ya se configur\u00f3, pero el nombre, las aplicaciones o las opciones definidas en la configuraci\u00f3n no coinciden con la configuraci\u00f3n importada anteriormente, por lo que la entrada de configuraci\u00f3n se actualiz\u00f3 en consecuencia."
         },
-        "error": {
-            "host_exists": "Dispositivo VIZIO con el host especificado ya configurado.",
-            "name_exists": "Dispositivo VIZIO con el nombre especificado ya configurado."
-        },
         "step": {
             "pair_tv": {
                 "data": {

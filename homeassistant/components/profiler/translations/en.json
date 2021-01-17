@@ -1,12 +1,12 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "description": "Are you sure you want to set up the Profiler?"
-      }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "user": {
+                "description": "Do you want to start set up?"
+            }
+        }
     }
-  }
 }

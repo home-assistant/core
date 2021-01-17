@@ -1,11 +1,5 @@
 {
     "config": {
-        "error": {
-            "connection_error": "Fehler beim Verbinden; \u00dcberpr\u00fcfe dein Netzwerk und versuche es erneut",
-            "identifier_exists": "E-Mail bereits registriert",
-            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen",
-            "unknown_error": "Unbekannter Fehler, bitte Log-Info melden"
-        },
         "step": {
             "user": {
                 "data": {

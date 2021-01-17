@@ -4,7 +4,6 @@ from concurrent.futures import ThreadPoolExecutor
 import dataclasses
 import logging
 import sys
-import threading
 from typing import Any, Dict, Optional
 
 from homeassistant import bootstrap
@@ -77,29 +76,14 @@ class HassEventLoopPolicy(PolicyBase):  # type: ignore
             loop.set_default_executor, "sets default executor on the event loop"
         )
 
-        # Python 3.9+
-        if hasattr(loop, "shutdown_default_executor"):
-            return loop
+        # Shut down executor when we shut down loop
+        orig_close = loop.close
 
-        # Copied from Python 3.9 source
-        def _do_shutdown(future: asyncio.Future) -> None:
-            try:
-                executor.shutdown(wait=True)
-                loop.call_soon_threadsafe(future.set_result, None)
-            except Exception as ex:  # pylint: disable=broad-except
-                loop.call_soon_threadsafe(future.set_exception, ex)
+        def close() -> None:
+            executor.shutdown(wait=True)
+            orig_close()
 
-        async def shutdown_default_executor() -> None:
-            """Schedule the shutdown of the default executor."""
-            future = loop.create_future()
-            thread = threading.Thread(target=_do_shutdown, args=(future,))
-            thread.start()
-            try:
-                await future
-            finally:
-                thread.join()
-
-        setattr(loop, "shutdown_default_executor", shutdown_default_executor)
+        loop.close = close  # type: ignore
 
         return loop
 

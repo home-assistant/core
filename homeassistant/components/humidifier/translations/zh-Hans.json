@@ -6,6 +6,13 @@
             "toggle": "\u5207\u6362 {entity_name} \u5f00\u5173",
             "turn_off": "\u5173\u95ed {entity_name}",
             "turn_on": "\u6253\u5f00 {entity_name}"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} \u5df2\u5173\u95ed"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} \u88ab\u5173\u95ed",
+            "turned_on": "{entity_name} \u88ab\u6253\u5f00"
         }
     },
     "state": {

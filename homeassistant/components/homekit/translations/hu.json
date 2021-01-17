@@ -1,0 +1,17 @@
+{
+    "options": {
+        "step": {
+            "include_exclude": {
+                "data": {
+                    "entities": "Entit\u00e1sok",
+                    "mode": "M\u00f3d"
+                }
+            },
+            "init": {
+                "data": {
+                    "mode": "M\u00f3d"
+                }
+            }
+        }
+    }
+}

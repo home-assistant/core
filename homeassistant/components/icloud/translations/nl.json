@@ -5,11 +5,16 @@
             "no_device": "Op geen van uw apparaten is \"Find my iPhone\" geactiveerd"
         },
         "error": {
-            "login": "Aanmeldingsfout: controleer uw e-mailadres en wachtwoord",
             "send_verification_code": "Kan verificatiecode niet verzenden",
             "validate_verification_code": "Kan uw verificatiecode niet verifi\u00ebren, kies een vertrouwensapparaat en start de verificatie opnieuw"
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Wachtwoord"
+                },
+                "description": "Uw eerder ingevoerde wachtwoord voor {username} werkt niet meer. Update uw wachtwoord om deze integratie te blijven gebruiken."
+            },
             "trusted_device": {
                 "data": {
                     "trusted_device": "Vertrouwd apparaat"

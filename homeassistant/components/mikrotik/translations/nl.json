@@ -5,8 +5,8 @@
         },
         "error": {
             "cannot_connect": "Verbinding niet geslaagd",
-            "name_exists": "Naam bestaat al",
-            "wrong_credentials": "Ongeldige inloggegevens"
+            "invalid_auth": "Ongeldige authenticatie",
+            "name_exists": "Naam bestaat al"
         },
         "step": {
             "user": {

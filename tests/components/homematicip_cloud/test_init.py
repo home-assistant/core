@@ -145,6 +145,7 @@ async def test_unload_entry(hass):
         instance.home.id = "1"
         instance.home.modelType = "mock-type"
         instance.home.name = "mock-name"
+        instance.home.label = "mock-label"
         instance.home.currentAPVersion = "mock-ap-version"
         instance.async_reset = AsyncMock(return_value=True)
 
@@ -158,7 +159,7 @@ async def test_unload_entry(hass):
     assert config_entries[0].state == ENTRY_STATE_LOADED
     await hass.config_entries.async_unload(config_entries[0].entry_id)
     assert config_entries[0].state == ENTRY_STATE_NOT_LOADED
-    assert mock_hap.return_value.mock_calls[3][0] == "async_reset"
+    assert mock_hap.return_value.mock_calls[2][0] == "async_reset"
     # entry is unloaded
     assert hass.data[HMIPC_DOMAIN] == {}
 
@@ -187,6 +188,7 @@ async def test_setup_services_and_unload_services(hass):
         instance.home.id = "1"
         instance.home.modelType = "mock-type"
         instance.home.name = "mock-name"
+        instance.home.label = "mock-label"
         instance.home.currentAPVersion = "mock-ap-version"
         instance.async_reset = AsyncMock(return_value=True)
 
@@ -220,6 +222,7 @@ async def test_setup_two_haps_unload_one_by_one(hass):
         instance.home.id = "1"
         instance.home.modelType = "mock-type"
         instance.home.name = "mock-name"
+        instance.home.label = "mock-label"
         instance.home.currentAPVersion = "mock-ap-version"
         instance.async_reset = AsyncMock(return_value=True)
 

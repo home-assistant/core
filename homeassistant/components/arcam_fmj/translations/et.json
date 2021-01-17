@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "flow_title": "Arcam FMJ saidil {host}",
+        "step": {
+            "confirm": {
+                "description": "Kas soovid lisada Arcam FMJ \u00fcksuse {host} Home Assistanti?"
+            },
+            "user": {
+                "data": {
+                    "host": "",
+                    "port": ""
+                },
+                "description": "Sisesta seadme hostinimi v\u00f5i IP-aadress."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "{entity_name} paluti sisse l\u00fclitada"
+        }
+    }
+}

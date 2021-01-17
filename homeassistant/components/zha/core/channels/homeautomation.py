@@ -1,5 +1,4 @@
 """Home automation channels module for Zigbee Home Automation."""
-import logging
 from typing import Optional
 
 import zigpy.zcl.clusters.homeautomation as homeautomation
@@ -11,8 +10,6 @@ from ..const import (
     SIGNAL_ATTR_UPDATED,
 )
 from .base import ZigbeeChannel
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(

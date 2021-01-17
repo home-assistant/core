@@ -113,6 +113,7 @@ async def test_devices(
                 0,
                 expect_reply=True,
                 manufacturer=None,
+                tries=1,
                 tsn=None,
             )
 

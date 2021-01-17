@@ -1,13 +1,18 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "\u00dchendus nurjus"
+            "already_configured": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
+            "cannot_connect": "\u00dchendamine nurjus"
         },
         "error": {
-            "cannot_connect": "\u00dchendus nurjus"
+            "cannot_connect": "\u00dchendamine nurjus"
         },
         "step": {
             "setup_network": {
+                "data": {
+                    "host": "",
+                    "port": ""
+                },
                 "title": "Vali \u00fchenduse aadress"
             },
             "setup_serial": {
@@ -64,6 +69,5 @@
                 "title": "Seadista seadme valikud"
             }
         }
-    },
-    "title": "Rfxtrx"
+    }
 }

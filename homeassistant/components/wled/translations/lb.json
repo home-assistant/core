@@ -1,13 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebsen WLED Apparat ass scho konfigur\u00e9iert.",
-            "cannot_connect": "Feeler beim verbannen",
-            "connection_error": "Feeler beim verbannen mam WLED Apparat."
+            "already_configured": "Apparat ass scho konfigur\u00e9iert.",
+            "cannot_connect": "Feeler beim verbannen"
         },
         "error": {
-            "cannot_connect": "Feeler beim verbannen",
-            "connection_error": "Feeler beim verbannen mam WLED Apparat."
+            "cannot_connect": "Feeler beim verbannen"
         },
         "flow_title": "WLED: {name}",
         "step": {

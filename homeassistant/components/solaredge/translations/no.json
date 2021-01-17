@@ -9,9 +9,9 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API n\u00f8kkel",
+                    "api_key": "API-n\u00f8kkel",
                     "name": "Navnet p\u00e5 denne installasjonen",
-                    "site_id": "SolarEdge nettsted-id"
+                    "site_id": "SolarEdge nettsted ID"
                 },
                 "title": "Definer API-parametrene for denne installasjonen"
             }

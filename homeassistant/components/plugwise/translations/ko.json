@@ -11,11 +11,6 @@
         "flow_title": "Smile: {name}",
         "step": {
             "user": {
-                "data": {
-                    "host": "Smile IP \uc8fc\uc18c",
-                    "password": "Smile ID",
-                    "port": "\uc2a4\ub9c8\uc77c \ud3ec\ud2b8 \ubc88\ud638"
-                },
                 "description": "\uc138\ubd80 \uc815\ubcf4",
                 "title": "Smile \uc5d0 \uc5f0\uacb0\ud558\uae30"
             }

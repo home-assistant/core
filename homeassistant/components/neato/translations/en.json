@@ -2,16 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "invalid_auth": "Invalid authentication",
-            "invalid_credentials": "Invalid credentials"
+            "invalid_auth": "Invalid authentication"
         },
         "create_entry": {
             "default": "See [Neato documentation]({docs_url})."
         },
         "error": {
             "invalid_auth": "Invalid authentication",
-            "invalid_credentials": "Invalid credentials",
-            "unexpected_error": "Unexpected error",
             "unknown": "Unexpected error"
         },
         "step": {

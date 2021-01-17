@@ -7,6 +7,8 @@ from aiohttp import CookieJar
 import aiounifi
 from aiounifi.controller import (
     DATA_CLIENT_REMOVED,
+    DATA_DPI_GROUP,
+    DATA_DPI_GROUP_REMOVED,
     DATA_EVENT,
     SIGNAL_CONNECTION_STATE,
     SIGNAL_DATA,
@@ -37,6 +39,7 @@ from .const import (
     CONF_BLOCK_CLIENT,
     CONF_CONTROLLER,
     CONF_DETECTION_TIME,
+    CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
     CONF_POE_CLIENTS,
     CONF_SITE_ID,
@@ -48,6 +51,7 @@ from .const import (
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
+    DEFAULT_DPI_RESTRICTIONS,
     DEFAULT_IGNORE_WIRED_BUG,
     DEFAULT_POE_CLIENTS,
     DEFAULT_TRACK_CLIENTS,
@@ -177,6 +181,13 @@ class UniFiController:
         """Config entry option with list of clients to control network access."""
         return self.config_entry.options.get(CONF_BLOCK_CLIENT, [])
 
+    @property
+    def option_dpi_restrictions(self):
+        """Config entry option to control DPI restriction groups."""
+        return self.config_entry.options.get(
+            CONF_DPI_RESTRICTIONS, DEFAULT_DPI_RESTRICTIONS
+        )
+
     # Statistics sensor options
 
     @property
@@ -246,6 +257,18 @@ class UniFiController:
             elif DATA_CLIENT_REMOVED in data:
                 async_dispatcher_send(
                     self.hass, self.signal_remove, data[DATA_CLIENT_REMOVED]
+                )
+
+            elif DATA_DPI_GROUP in data:
+                for key in data[DATA_DPI_GROUP]:
+                    if self.api.dpi_groups[key].dpiapp_ids:
+                        async_dispatcher_send(self.hass, self.signal_update)
+                    else:
+                        async_dispatcher_send(self.hass, self.signal_remove, {key})
+
+            elif DATA_DPI_GROUP_REMOVED in data:
+                async_dispatcher_send(
+                    self.hass, self.signal_remove, data[DATA_DPI_GROUP_REMOVED]
                 )
 
     @property

@@ -36,6 +36,7 @@ from .const import (
     ATTR_PARAM,
     ATTR_PARAMSET,
     ATTR_PARAMSET_KEY,
+    ATTR_RX_MODE,
     ATTR_TIME,
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
@@ -201,6 +202,7 @@ SCHEMA_SERVICE_PUT_PARAMSET = vol.Schema(
         vol.Required(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
         vol.Required(ATTR_PARAMSET_KEY): vol.All(cv.string, vol.Upper),
         vol.Required(ATTR_PARAMSET): dict,
+        vol.Optional(ATTR_RX_MODE): vol.All(cv.string, vol.Upper),
     }
 )
 
@@ -256,7 +258,7 @@ def setup(hass, config):
 
     # Init homematic hubs
     entity_hubs = []
-    for hub_name in conf[CONF_HOSTS].keys():
+    for hub_name in conf[CONF_HOSTS]:
         entity_hubs.append(HMHub(hass, homematic, hub_name))
 
     def _hm_service_virtualkey(service):
@@ -392,15 +394,17 @@ def setup(hass, config):
         # here instead of a dict, so add this explicit cast.
         # The service schema makes sure that this cast works.
         paramset = dict(service.data.get(ATTR_PARAMSET))
+        rx_mode = service.data.get(ATTR_RX_MODE)
 
         _LOGGER.debug(
-            "Calling putParamset: %s, %s, %s, %s",
+            "Calling putParamset: %s, %s, %s, %s, %s",
             interface,
             address,
             paramset_key,
             paramset,
+            rx_mode,
         )
-        homematic.putParamset(interface, address, paramset_key, paramset)
+        homematic.putParamset(interface, address, paramset_key, paramset, rx_mode)
 
     hass.services.register(
         DOMAIN,

@@ -2,6 +2,6 @@
   "domain": "rpi_gpio_pwm",
   "name": "pigpio Daemon PWM LED",
   "documentation": "https://www.home-assistant.io/integrations/rpi_gpio_pwm",
-  "requirements": ["pwmled==1.5.0"],
-  "codeowners": []
+  "requirements": ["pwmled==1.6.7"],
+  "codeowners": ["@soldag"]
 }

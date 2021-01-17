@@ -1,6 +1,7 @@
 """Config flow for Shelly integration."""
 import asyncio
 import logging
+from socket import gethostbyname
 
 import aiohttp
 import aioshelly
@@ -16,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import aiohttp_client
 
+from . import get_coap_context
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,24 +27,38 @@ HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 HTTP_CONNECT_ERRORS = (asyncio.TimeoutError, aiohttp.ClientError)
 
 
+def _remove_prefix(shelly_str):
+    if shelly_str.startswith("shellyswitch"):
+        return shelly_str[6:]
+    return shelly_str
+
+
 async def validate_input(hass: core.HomeAssistant, host, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
+    ip_address = await hass.async_add_executor_job(gethostbyname, host)
+
     options = aioshelly.ConnectionOptions(
-        host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
+        ip_address, data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
     )
+    coap_context = await get_coap_context(hass)
+
     async with async_timeout.timeout(5):
         device = await aioshelly.Device.create(
             aiohttp_client.async_get_clientsession(hass),
+            coap_context,
             options,
         )
 
-    await device.shutdown()
+    device.shutdown()
 
     # Return info that you want to store in the config entry.
-    return {"title": device.settings["name"], "mac": device.settings["device"]["mac"]}
+    return {
+        "title": device.settings["name"],
+        "hostname": device.settings["device"]["hostname"],
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -83,7 +99,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "unknown"
                 else:
                     return self.async_create_entry(
-                        title=device_info["title"] or self.host,
+                        title=device_info["title"] or device_info["hostname"],
                         data=user_input,
                     )
 
@@ -109,7 +125,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=device_info["title"] or self.host,
+                    title=device_info["title"] or device_info["hostname"],
                     data={**user_input, CONF_HOST: self.host},
                 )
         else:
@@ -142,7 +158,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured({CONF_HOST: zeroconf_info["host"]})
         self.host = zeroconf_info["host"]
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {"name": zeroconf_info["host"]}
+        self.context["title_placeholders"] = {
+            "name": _remove_prefix(zeroconf_info["properties"]["id"])
+        }
         return await self.async_step_confirm_discovery()
 
     async def async_step_confirm_discovery(self, user_input=None):
@@ -161,7 +179,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=device_info["title"] or self.host, data={"host": self.host}
+                    title=device_info["title"] or device_info["hostname"],
+                    data={"host": self.host},
                 )
 
         return self.async_show_form(

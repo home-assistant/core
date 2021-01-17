@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "conn_error": "Verbindung fehlgeschlagen"
-        },
         "flow_title": "Tuya Konfiguration",
         "step": {
             "user": {
@@ -13,6 +10,12 @@
                 "description": "Geben Sie Ihre Tuya-Anmeldeinformationen ein.",
                 "title": "Tuya"
             }
+        }
+    },
+    "options": {
+        "error": {
+            "dev_not_config": "Ger\u00e4tetyp nicht konfigurierbar",
+            "dev_not_found": "Ger\u00e4t nicht gefunden"
         }
     }
 }

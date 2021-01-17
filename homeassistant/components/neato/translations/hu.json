@@ -1,15 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "M\u00e1r konfigur\u00e1lva van",
-            "invalid_credentials": "\u00c9rv\u00e9nytelen hiteles\u00edt\u0151 adatok"
+            "already_configured": "M\u00e1r konfigur\u00e1lva van"
         },
         "create_entry": {
             "default": "L\u00e1sd: [Neato dokument\u00e1ci\u00f3] ( {docs_url} )."
-        },
-        "error": {
-            "invalid_credentials": "\u00c9rv\u00e9nytelen hiteles\u00edt\u0151 adatok",
-            "unexpected_error": "V\u00e1ratlan hiba"
         },
         "step": {
             "user": {

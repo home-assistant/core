@@ -17,10 +17,8 @@
                 "data": {
                     "host": "H\u00f4te"
                 },
-                "description": "Veuillez entrer votre nom d\u2019h\u00f4te ou votre adresse IP sur votre serveur Roon.",
-                "title": "Configurer le serveur Roon"
+                "description": "Veuillez entrer votre nom d\u2019h\u00f4te ou votre adresse IP sur votre serveur Roon."
             }
         }
-    },
-    "title": "Roon"
+    }
 }

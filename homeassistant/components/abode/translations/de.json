@@ -3,11 +3,6 @@
         "abort": {
             "single_instance_allowed": "Es ist nur eine einzige Konfiguration von Abode erlaubt."
         },
-        "error": {
-            "connection_error": "Es kann keine Verbindung zu Abode hergestellt werden.",
-            "identifier_exists": "Das Konto ist bereits registriert.",
-            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen"
-        },
         "step": {
             "user": {
                 "data": {

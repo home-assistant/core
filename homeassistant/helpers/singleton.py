@@ -1,14 +1,14 @@
 """Helper to help coordinating calls."""
 import asyncio
 import functools
-from typing import Awaitable, Callable, TypeVar, cast
+from typing import Callable, Optional, TypeVar, cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 
 T = TypeVar("T")
 
-FUNC = Callable[[HomeAssistant], Awaitable[T]]
+FUNC = Callable[[HomeAssistant], T]
 
 
 def singleton(data_key: str) -> Callable[[FUNC], FUNC]:
@@ -19,10 +19,21 @@ def singleton(data_key: str) -> Callable[[FUNC], FUNC]:
 
     def wrapper(func: FUNC) -> FUNC:
         """Wrap a function with caching logic."""
+        if not asyncio.iscoroutinefunction(func):
+
+            @bind_hass
+            @functools.wraps(func)
+            def wrapped(hass: HomeAssistant) -> T:
+                obj: Optional[T] = hass.data.get(data_key)
+                if obj is None:
+                    obj = hass.data[data_key] = func(hass)
+                return obj
+
+            return wrapped
 
         @bind_hass
         @functools.wraps(func)
-        async def wrapped(hass: HomeAssistant) -> T:
+        async def async_wrapped(hass: HomeAssistant) -> T:
             obj_or_evt = hass.data.get(data_key)
 
             if not obj_or_evt:
@@ -41,6 +52,6 @@ def singleton(data_key: str) -> Callable[[FUNC], FUNC]:
 
             return cast(T, obj_or_evt)
 
-        return wrapped
+        return async_wrapped
 
     return wrapper

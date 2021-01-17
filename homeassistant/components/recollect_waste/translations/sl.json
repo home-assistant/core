@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Naprava je \u017ee konfigurirana"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "service_id": "ID storitve"
+                }
+            }
+        }
+    }
+}

@@ -6,15 +6,12 @@
             "not_huawei_lte": "Ni naprava Huawei LTE"
         },
         "error": {
-            "connection_failed": "Povezava ni uspela",
             "connection_timeout": "\u010casovna omejitev povezave",
             "incorrect_password": "Nepravilno geslo",
             "incorrect_username": "Nepravilno uporabni\u0161ko ime",
-            "incorrect_username_or_password": "Nepravilno uporabni\u0161ko ime ali geslo",
             "invalid_url": "Neveljaven URL",
             "login_attempts_exceeded": "Najve\u010d poskusov prijave prese\u017eeno, prosimo, poskusite znova pozneje",
-            "response_error": "Neznana napaka iz naprave",
-            "unknown_connection_error": "Neznana napaka pri povezovanju z napravo"
+            "response_error": "Neznana napaka iz naprave"
         },
         "step": {
             "user": {

@@ -11,5 +11,15 @@
             "one": "uno",
             "other": "altri"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Tempo minimo tra gli aggiornamenti dell'entit\u00e0 [s]."
+                },
+                "title": "Opzioni DSMR"
+            }
+        }
     }
 }

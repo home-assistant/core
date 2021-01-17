@@ -11,5 +11,30 @@
                 "title": "ZHA"
             }
         }
+    },
+    "device_automation": {
+        "action_type": {
+            "warn": "\u8b66\u544a"
+        },
+        "trigger_subtype": {
+            "both_buttons": "\u4e24\u4e2a\u6309\u94ae",
+            "button_1": "\u7b2c\u4e00\u4e2a\u6309\u94ae",
+            "button_2": "\u7b2c\u4e8c\u4e2a\u6309\u94ae",
+            "button_3": "\u7b2c\u4e09\u4e2a\u6309\u94ae",
+            "button_4": "\u7b2c\u56db\u4e2a\u6309\u94ae",
+            "button_5": "\u7b2c\u4e94\u4e2a\u6309\u94ae",
+            "button_6": "\u7b2c\u516d\u4e2a\u6309\u94ae",
+            "dim_down": "\u8c03\u6697",
+            "dim_up": "\u8c03\u4eae",
+            "left": "\u5de6",
+            "open": "\u5f00\u542f",
+            "right": "\u53f3",
+            "turn_off": "\u5173\u95ed"
+        },
+        "trigger_type": {
+            "device_offline": "\u8bbe\u5907\u79bb\u7ebf",
+            "device_tilted": "\u8bbe\u5907\u540d\u79f0",
+            "remote_button_short_press": "\"{subtype}\" \u6309\u94ae\u5df2\u6309\u4e0b"
+        }
     }
 }

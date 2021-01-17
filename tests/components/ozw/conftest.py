@@ -7,6 +7,7 @@ from .common import MQTTMessage
 
 from tests.async_mock import patch
 from tests.common import load_fixture
+from tests.components.light.conftest import mock_light_profiles  # noqa
 
 
 @pytest.fixture(name="generic_data", scope="session")
@@ -31,18 +32,6 @@ def light_data_fixture():
 def light_new_ozw_data_fixture():
     """Load light dimmer MQTT data and return it."""
     return load_fixture("ozw/light_new_ozw_network_dump.csv")
-
-
-@pytest.fixture(name="light_pure_rgb_dimmer_data", scope="session")
-def light_pure_rgb_dimmer_data_fixture():
-    """Load light rgb and dimmer MQTT data and return it."""
-    return load_fixture("ozw/light_pure_rgb_dimmer_dump.csv")
-
-
-@pytest.fixture(name="light_no_rgb_data", scope="session")
-def light_no_rgb_data_fixture():
-    """Load light dimmer MQTT data and return it."""
-    return load_fixture("ozw/light_no_rgb_network_dump.csv")
 
 
 @pytest.fixture(name="light_no_ww_data", scope="session")
@@ -248,3 +237,19 @@ async def lock_msg_fixture(hass):
     message = MQTTMessage(topic=lock_json["topic"], payload=lock_json["payload"])
     message.encode()
     return message
+
+
+@pytest.fixture(name="stop_addon")
+def mock_install_addon():
+    """Mock stop add-on."""
+    with patch("homeassistant.components.hassio.async_stop_addon") as stop_addon:
+        yield stop_addon
+
+
+@pytest.fixture(name="uninstall_addon")
+def mock_uninstall_addon():
+    """Mock uninstall add-on."""
+    with patch(
+        "homeassistant.components.hassio.async_uninstall_addon"
+    ) as uninstall_addon:
+        yield uninstall_addon

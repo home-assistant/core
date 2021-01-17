@@ -1,8 +1,7 @@
 {
     "config": {
         "error": {
-            "already_configured": "El servicio ya est\u00e1 configurado",
-            "name_exists": "La ubicaci\u00f3n ya existe"
+            "already_configured": "El servicio ya est\u00e1 configurado"
         },
         "step": {
             "user": {

@@ -458,7 +458,13 @@ def async_template(
         _LOGGER.error("Error during template condition: %s", ex)
         return False
 
-    return value.lower() == "true"
+    if isinstance(value, bool):
+        return value
+
+    if isinstance(value, str):
+        return value.lower() == "true"
+
+    return False
 
 
 def async_template_from_config(

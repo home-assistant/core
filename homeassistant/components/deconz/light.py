@@ -53,7 +53,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entities.append(DeconzLight(light, gateway))
 
         if entities:
-            async_add_entities(entities, True)
+            async_add_entities(entities)
 
     gateway.listeners.append(
         async_dispatcher_connect(
@@ -79,7 +79,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entities.append(new_group)
 
         if entities:
-            async_add_entities(entities, True)
+            async_add_entities(entities)
 
     gateway.listeners.append(
         async_dispatcher_connect(
@@ -209,10 +209,7 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attributes = {}
-        attributes["is_deconz_group"] = self._device.type == "LightGroup"
-
-        return attributes
+        return {"is_deconz_group": self._device.type == "LightGroup"}
 
 
 class DeconzLight(DeconzBaseLight):

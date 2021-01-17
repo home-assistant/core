@@ -140,8 +140,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         websocket.websocket_lovelace_dashboards
     )
 
-    hass.components.system_health.async_register_info(DOMAIN, system_health_info)
-
     hass.data[DOMAIN] = {
         # We store a dictionary mapping url_path: config. None is the default.
         "dashboards": {None: default_config},
@@ -231,14 +229,6 @@ async def create_yaml_resource_col(hass, yaml_resources):
                 yaml_resources = ll_conf[CONF_RESOURCES]
 
     return resources.ResourceYAMLCollection(yaml_resources or [])
-
-
-async def system_health_info(hass):
-    """Get info for the info page."""
-    health_info = {"dashboards": len(hass.data[DOMAIN]["dashboards"])}
-    health_info.update(await hass.data[DOMAIN]["dashboards"][None].async_get_info())
-    health_info.update(await hass.data[DOMAIN]["resources"].async_get_info())
-    return health_info
 
 
 @callback

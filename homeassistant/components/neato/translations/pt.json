@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "unexpected_error": "Erro inesperado"
-        },
         "step": {
             "user": {
                 "data": {

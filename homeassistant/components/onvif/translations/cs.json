@@ -1,13 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Za\u0159\u00edzen\u00ed ONVIF je ji\u017e nakonfigurov\u00e1no",
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
             "no_h264": "Nebyly k dispozici \u017e\u00e1dn\u00e9 H264 streamy. Zkontrolujte konfiguraci profilu v za\u0159\u00edzen\u00ed.",
             "no_mac": "Nelze nakonfigurovat jedine\u010dn\u00e9 ID pro za\u0159\u00edzen\u00ed ONVIF.",
             "onvif_error": "P\u0159i nastavov\u00e1n\u00ed za\u0159\u00edzen\u00ed ONVIF do\u0161lo k chyb\u011b. Dal\u0161\u00ed informace naleznete v protokolech."
         },
         "error": {
-            "connection_failed": "Nelze se p\u0159ipojit ke slu\u017eb\u011b ONVIF s poskytnut\u00fdmi p\u0159ihla\u0161ovac\u00edmi \u00fadaji."
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
             "auth": {
@@ -32,8 +33,8 @@
             },
             "manual_input": {
                 "data": {
-                    "host": "Adresa za\u0159\u00edzen\u00ed",
-                    "name": "N\u00e1zev",
+                    "host": "Hostitel",
+                    "name": "Jm\u00e9no",
                     "port": "Port"
                 },
                 "title": "Konfigurovat za\u0159\u00edzen\u00ed ONVIF"

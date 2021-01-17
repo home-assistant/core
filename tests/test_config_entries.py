@@ -609,7 +609,8 @@ async def test_discovery_notification(hass):
                     title="Test Title", data={"token": "abcd"}
                 )
 
-        result = await hass.config_entries.flow.async_init(
+        # Start first discovery flow to assert that reconfigure notification fires
+        flow1 = await hass.config_entries.flow.async_init(
             "test", context={"source": config_entries.SOURCE_DISCOVERY}
         )
 
@@ -617,11 +618,92 @@ async def test_discovery_notification(hass):
         state = hass.states.get("persistent_notification.config_entry_discovery")
         assert state is not None
 
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        # Start a second discovery flow so we can finish the first and assert that
+        # the discovery notification persists until the second one is complete
+        flow2 = await hass.config_entries.flow.async_init(
+            "test", context={"source": config_entries.SOURCE_DISCOVERY}
+        )
+
+        flow1 = await hass.config_entries.flow.async_configure(flow1["flow_id"], {})
+        assert flow1["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
         await hass.async_block_till_done()
         state = hass.states.get("persistent_notification.config_entry_discovery")
+        assert state is not None
+
+        flow2 = await hass.config_entries.flow.async_configure(flow2["flow_id"], {})
+        assert flow2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_discovery")
+        assert state is None
+
+
+async def test_reauth_notification(hass):
+    """Test that we create/dismiss a notification when source is reauth."""
+    mock_integration(hass, MockModule("test"))
+    mock_entity_platform(hass, "config_flow.test", None)
+    await async_setup_component(hass, "persistent_notification", {})
+
+    with patch.dict(config_entries.HANDLERS):
+
+        class TestFlow(config_entries.ConfigFlow, domain="test"):
+            """Test flow."""
+
+            VERSION = 5
+
+            async def async_step_user(self, user_input):
+                """Test user step."""
+                return self.async_show_form(step_id="user_confirm")
+
+            async def async_step_user_confirm(self, user_input):
+                """Test user confirm step."""
+                return self.async_show_form(step_id="user_confirm")
+
+            async def async_step_reauth(self, user_input):
+                """Test reauth step."""
+                return self.async_show_form(step_id="reauth_confirm")
+
+            async def async_step_reauth_confirm(self, user_input):
+                """Test reauth confirm step."""
+                return self.async_abort(reason="test")
+
+        # Start user flow to assert that reconfigure notification doesn't fire
+        await hass.config_entries.flow.async_init(
+            "test", context={"source": config_entries.SOURCE_USER}
+        )
+
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_reconfigure")
+        assert state is None
+
+        # Start first reauth flow to assert that reconfigure notification fires
+        flow1 = await hass.config_entries.flow.async_init(
+            "test", context={"source": config_entries.SOURCE_REAUTH}
+        )
+
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_reconfigure")
+        assert state is not None
+
+        # Start a second reauth flow so we can finish the first and assert that
+        # the reconfigure notification persists until the second one is complete
+        flow2 = await hass.config_entries.flow.async_init(
+            "test", context={"source": config_entries.SOURCE_REAUTH}
+        )
+
+        flow1 = await hass.config_entries.flow.async_configure(flow1["flow_id"], {})
+        assert flow1["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_reconfigure")
+        assert state is not None
+
+        flow2 = await hass.config_entries.flow.async_configure(flow2["flow_id"], {})
+        assert flow2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_reconfigure")
         assert state is None
 
 
@@ -779,10 +861,43 @@ async def test_entry_options(hass, manager):
 
     flow.handler = entry.entry_id  # Used to keep reference to config entry
 
-    await manager.options.async_finish_flow(flow, {"data": {"second": True}})
+    await manager.options.async_finish_flow(
+        flow,
+        {"data": {"second": True}, "type": data_entry_flow.RESULT_TYPE_CREATE_ENTRY},
+    )
 
     assert entry.data == {"first": True}
     assert entry.options == {"second": True}
+
+
+async def test_entry_options_abort(hass, manager):
+    """Test that we can abort options flow."""
+    entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
+    entry.add_to_manager(manager)
+
+    class TestFlow:
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Test options flow."""
+
+            class OptionsFlowHandler(data_entry_flow.FlowHandler):
+                """Test options flow handler."""
+
+            return OptionsFlowHandler()
+
+    config_entries.HANDLERS["test"] = TestFlow()
+    flow = await manager.options.async_create_flow(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+
+    flow.handler = entry.entry_id  # Used to keep reference to config entry
+
+    assert await manager.options.async_finish_flow(
+        flow, {"type": data_entry_flow.RESULT_TYPE_ABORT, "reason": "test"}
+    )
 
 
 async def test_entry_setup_succeed(hass, manager):
@@ -1074,11 +1189,7 @@ async def test_reload_entry_entity_registry_works(hass):
 
     async_fire_time_changed(
         hass,
-        dt.utcnow()
-        + timedelta(
-            seconds=config_entries.EntityRegistryDisabledHandler.RELOAD_AFTER_UPDATE_DELAY
-            + 1
-        ),
+        dt.utcnow() + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 

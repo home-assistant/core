@@ -1,7 +1,6 @@
 """Provide a way to connect devices to one physical location."""
-from asyncio import Event
+from asyncio import Event, gather
 from collections import OrderedDict
-import logging
 from typing import Dict, Iterable, List, MutableMapping, Optional, cast
 
 import attr
@@ -11,8 +10,6 @@ from homeassistant.loader import bind_hass
 import homeassistant.util.uuid as uuid_util
 
 from .typing import HomeAssistantType
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_REGISTRY = "area_registry"
 EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
@@ -26,7 +23,7 @@ class AreaEntry:
     """Area Registry Entry."""
 
     name: Optional[str] = attr.ib(default=None)
-    id: str = attr.ib(factory=uuid_util.uuid_v1mc_hex)
+    id: str = attr.ib(factory=uuid_util.random_uuid_hex)
 
 
 class AreaRegistry:
@@ -67,8 +64,12 @@ class AreaRegistry:
 
     async def async_delete(self, area_id: str) -> None:
         """Delete area."""
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_registry, entity_registry = await gather(
+            self.hass.helpers.device_registry.async_get_registry(),
+            self.hass.helpers.entity_registry.async_get_registry(),
+        )
         device_registry.async_clear_area_id(area_id)
+        entity_registry.async_clear_area_id(area_id)
 
         del self.areas[area_id]
 

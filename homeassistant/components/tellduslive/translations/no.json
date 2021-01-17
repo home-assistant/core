@@ -1,13 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "TelldusLive er allerede konfigurert",
+            "already_configured": "Tjenesten er allerede konfigurert",
             "authorize_url_fail": "Ukjent feil ved oppretting av godkjenningsadresse.",
-            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse.",
-            "unknown": "Ukjent feil oppstod"
+            "authorize_url_timeout": "Tidsavbrudd som genererer autorer URL-adresse.",
+            "unknown": "Uventet feil"
         },
         "error": {
-            "auth_error": "Godkjenningsfeil, vennligst pr\u00f8v igjen"
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "auth": {

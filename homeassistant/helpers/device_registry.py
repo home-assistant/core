@@ -47,12 +47,12 @@ class DeletedDeviceEntry:
     identifiers: Set[Tuple[str, str]] = attr.ib()
     id: str = attr.ib()
 
-    def to_device_entry(self):
+    def to_device_entry(self, config_entry_id, connections, identifiers):
         """Create DeviceEntry from DeletedDeviceEntry."""
         return DeviceEntry(
-            config_entries=self.config_entries,
-            connections=self.connections,
-            identifiers=self.identifiers,
+            config_entries={config_entry_id},
+            connections=self.connections & connections,
+            identifiers=self.identifiers & identifiers,
             id=self.id,
             is_new=True,
         )
@@ -73,7 +73,7 @@ class DeviceEntry:
     area_id: str = attr.ib(default=None)
     name_by_user: str = attr.ib(default=None)
     entry_type: str = attr.ib(default=None)
-    id: str = attr.ib(factory=uuid_util.uuid_v1mc_hex)
+    id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
 
@@ -236,7 +236,9 @@ class DeviceRegistry:
                 device = DeviceEntry(is_new=True)
             else:
                 self._remove_device(deleted_device)
-                device = deleted_device.to_device_entry()
+                device = deleted_device.to_device_entry(
+                    config_entry_id, connections, identifiers
+                )
             self._add_device(device)
 
         if default_manufacturer is not _UNDEF and device.manufacturer is None:
@@ -338,7 +340,7 @@ class DeviceRegistry:
 
             config_entries = config_entries - {remove_config_entry_id}
 
-        if config_entries is not old.config_entries:
+        if config_entries != old.config_entries:
             changes["config_entries"] = config_entries
 
         for attr_name, value in (

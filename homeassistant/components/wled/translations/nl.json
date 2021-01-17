@@ -2,10 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Dit WLED-apparaat is al geconfigureerd.",
-            "connection_error": "Kan geen verbinding maken met WLED-apparaat."
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "error": {
-            "connection_error": "Kan geen verbinding maken met WLED-apparaat."
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "flow_title": "WLED: {name}",
         "step": {

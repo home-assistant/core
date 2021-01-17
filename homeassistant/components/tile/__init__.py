@@ -119,19 +119,17 @@ class TileEntity(CoordinatorEntity):
         return self._unique_id
 
     @callback
+    def _handle_coordinator_update(self):
+        """Respond to a DataUpdateCoordinator update."""
+        self._update_from_latest_data()
+        self.async_write_ha_state()
+
+    @callback
     def _update_from_latest_data(self):
         """Update the entity from the latest data."""
         raise NotImplementedError
 
     async def async_added_to_hass(self):
-        """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self._update_from_latest_data()
-            self.async_write_ha_state()
-
-        self.async_on_remove(self.coordinator.async_add_listener(update))
-
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
         self._update_from_latest_data()

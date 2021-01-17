@@ -7,7 +7,6 @@
         "error": {
             "invalid_dongle_path": "\u6b64\u8def\u5f91\u7121\u6709\u6548\u8a2d\u5099"
         },
-        "flow_title": "ENOcean \u8a2d\u5b9a",
         "step": {
             "detect": {
                 "data": {
@@ -22,6 +21,5 @@
                 "title": "\u8f38\u5165 ENOcean \u8a2d\u5099\u8def\u5f91"
             }
         }
-    },
-    "title": "EnOcean"
+    }
 }

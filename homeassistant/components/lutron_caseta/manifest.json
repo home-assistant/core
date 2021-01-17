@@ -3,7 +3,7 @@
   "name": "Lutron Caséta",
   "documentation": "https://www.home-assistant.io/integrations/lutron_caseta",
   "requirements": [
-    "pylutron-caseta==0.7.0"
+    "pylutron-caseta==0.7.2"
   ],
   "codeowners": [
     "@swails"

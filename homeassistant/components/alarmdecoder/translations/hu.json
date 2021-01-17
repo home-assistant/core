@@ -1,0 +1,10 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Sikeres csatlakoz\u00e1s az AlarmDecoderhez."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        }
+    }
+}
