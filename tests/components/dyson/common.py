@@ -2,16 +2,12 @@
 
 from typing import Optional, Type
 from unittest import mock
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from libpurecool.dyson_device import DysonDevice
 from libpurecool.dyson_pure_cool import FanSpeed
 
-from homeassistant.components.dyson import CONF_LANGUAGE, DOMAIN
-from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, State
-
-from tests.common import async_setup_component
 
 SERIAL = "XX-XXXXX-XX"
 NAME = "Temp Name"
@@ -42,37 +38,10 @@ def load_mock_device(device: DysonDevice) -> None:
         device.environmental_state.temperature = 250
 
 
-def get_device(spec: Type[DysonDevice]) -> DysonDevice:
-    """Return a mocked device."""
+def get_basic_device(spec: Type[DysonDevice]) -> DysonDevice:
+    """Return a basic device with common fields filled out."""
     device = MagicMock(spec=spec)
     load_mock_device(device)
-    return device
-
-
-async def async_setup_dyson(hass: HomeAssistant, device: DysonDevice) -> DysonDevice:
-    """Set up the Dyson integration."""
-    with patch(f"{BASE_PATH}.DysonAccount.login", return_value=True), patch(
-        f"{BASE_PATH}.DysonAccount.devices", return_value=[device]
-    ):
-        await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: {
-                    CONF_USERNAME: "user@example.com",
-                    CONF_PASSWORD: "password",
-                    CONF_LANGUAGE: "US",
-                    CONF_DEVICES: [
-                        {
-                            "device_id": SERIAL,
-                            "device_ip": "0.0.0.0",
-                        }
-                    ],
-                }
-            },
-        )
-        await hass.async_block_till_done()
-
     return device
 
 

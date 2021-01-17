@@ -25,31 +25,24 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 
-from .common import (
-    ENTITY_NAME,
-    NAME,
-    SERIAL,
-    async_setup_dyson,
-    async_update_device,
-    get_device,
-)
+from .common import ENTITY_NAME, NAME, SERIAL, async_update_device, get_basic_device
 
 ENTITY_ID = f"vacuum.{ENTITY_NAME}"
 
 
-@pytest.fixture
-async def device(hass: HomeAssistant) -> Dyson360Eye:
+@callback
+def get_device() -> Dyson360Eye:
     """Fixture to provide Dyson 360 Eye device."""
-    device = get_device(Dyson360Eye)
+    device = get_basic_device(Dyson360Eye)
     device.state = MagicMock()
     device.state.state = Dyson360EyeMode.FULL_CLEAN_RUNNING
     device.state.battery_level = 85
     device.state.power_mode = PowerMode.QUIET
     device.state.position = (0, 0)
-    return await async_setup_dyson(hass, device)
+    return device
 
 
 async def test_state(hass: HomeAssistant, device: Dyson360Eye) -> None:
