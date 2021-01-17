@@ -140,7 +140,7 @@ async def test_form_wrong_version(hass):
     assert result3["errors"] == {"base": "wrong_version"}
 
 
-async def test_already_configured_(hass):
+async def test_already_configured(hass):
     """Test we abort when already configured."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
