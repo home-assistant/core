@@ -299,6 +299,7 @@ FLOWS = [
     "withings",
     "wled",
     "wolflink",
+    "workday",
     "xbox",
     "xiaomi_aqara",
     "xiaomi_miio",

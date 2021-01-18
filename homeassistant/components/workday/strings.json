@@ -1,0 +1,70 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Workday",
+        "description": "Select your workday sensor according to [holidays](https://pypi.org/project/holidays/) notation.",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "country": "Country",
+          "subcountry": "Province/State code according to holidays notation",
+          "days_offset": "Set days offset",
+          "advanced_conf": "Configure advanced options (workdays, excludes, ...)"
+        }
+      },
+      "advanced_conf": {
+        "title": "Advanced configuration",
+        "description": "Advanced configuration",
+        "data": {
+          "days_offset": "Set days offset (e.g., -1 for yesterday, 1 for tomorrow)",
+          "workdays": "List of workdays",
+          "excludes": "List of workday excludes"
+        }
+      },
+      "import_confirm": {
+        "title": "Import Workday sensor",
+        "description": "A {id} sensor has been discovered in configuration.yaml. This flow will allow you to import it into a config entry."
+      }
+    },
+    "error": {
+      "no_country_err": "This country is not supported",
+      "no_subcountry_err": "Province/state could not be find in country"
+    },
+    "abort": {
+      "config_cannot_be_imported": "Config from configuration.yaml can not be imported",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "prompt_options": {
+        "data": {
+          "options_action": "Select what do you want configure"
+        },
+        "title": "Workday Options"
+      },
+      "add_holidays": {
+        "title": "Manage extra holidays",
+        "description": "Here you can add o delete your extra holidays",
+        "data": {
+          "new_holiday": "Add a new holiday (YYYY-MM-DD)",
+          "add_holidays": "Unselect any date to delete from list"
+        }
+      },
+      "remove_holidays": {
+        "title": "Manage holidays to remove",
+        "description": "Here you can exclude official holidays and made it as workday",
+        "data": {
+          "holiday_to_remove": "Official holiday to exclude (YYYY-MM-DD)",
+          "remove_holidays": "Unselect any date to delete from list"
+        }
+      }
+    },
+    "error": {
+      "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_event_code": "Invalid event code",
+      "bad_date_format": "New date must be in 'YYYY-MM-DD' format",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}
