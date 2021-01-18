@@ -1,6 +1,4 @@
 """EBUS sensors."""
-import logging
-
 from pyebus import get_icon
 import voluptuous as vol
 
@@ -10,8 +8,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from . import EbusApi, EbusEntity, EbusFieldEntity
 from .const import API, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

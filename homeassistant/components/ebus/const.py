@@ -15,11 +15,13 @@ UNIT_DEVICE_CLASS_MAP = {
     "kWh": "energy",
     "V": "voltage",
 }
-TTL = 10000
+TTL = 60
+CHECKINTERVAL = 60
+
 CONF_MESSAGES = "messages"
 CONF_MSGDEFCODES = "msgdefcodes"
 CONF_CIRCUITMAP = "circuitmap"
-PRIO = 9
+CONF_SCAN = "scan"
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = "8888"

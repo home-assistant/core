@@ -6,7 +6,7 @@ import itertools
 import logging
 from typing import Dict
 
-from pyebus import OK, CircuitMap, Ebus, FieldDef, get_icon
+from pyebus import AUTO, OK, CircuitMap, Ebus, FieldDef, get_icon
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
@@ -16,12 +16,12 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     API,
+    CHECKINTERVAL,
     CONF_CIRCUITMAP,
     CONF_MESSAGES,
     CONF_MSGDEFCODES,
     DEFAULT_CIRCUITMAP,
     DOMAIN,
-    PRIO,
     TTL,
     UNDO_UPDATE_LISTENER,
     UNIT_DEVICE_CLASS_MAP,
@@ -75,7 +75,7 @@ async def async_unload_entry(hass, config_entry):
     await hass.data[DOMAIN][config_entry.entry_id][API].async_stop()
 
     if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
+        hass.data[DOMAIN].pop(config_entry.entry_id, None)
 
     return unload_ok
 
@@ -96,7 +96,7 @@ async def _await_cancel(task):
 class EbusApi:
     """EBUS API."""
 
-    def __init__(self, hass: HomeAssistantType, checkinterval=5):
+    def __init__(self, hass: HomeAssistantType, checkinterval=CHECKINTERVAL):
         """EBUS API."""
         self._hass = hass
         self._checkinterval = checkinterval
@@ -120,6 +120,7 @@ class EbusApi:
         ebus.decode_msgdefcodes()
         if messages:
             ebus.msgdefs = ebus.msgdefs.resolve(messages)
+        ebus.msgdefs.set_defaultprio(AUTO)
         self._ebus = ebus
 
         # circuitmap
@@ -153,6 +154,7 @@ class EbusApi:
 
     async def async_stop(self, *_):
         """Stop."""
+        self._state = "stopping"
         asyncio.gather(*[_await_cancel(task) for task in self._tasks])
         self._tasks.clear()
 
@@ -165,59 +167,63 @@ class EbusApi:
             _LOGGER.debug(f"Connection {self.ident}: {state}")
             if self._state != state:
                 if state == OK:
+                    # Reconnect
                     if self._state:
-                        # Reconnect
-                        _LOGGER.warning(f"Reconnecting {self.ident}")
-                        self._state = "scanning"
-                        self.notify()
+                        _LOGGER.warning(f"Connecting {self.ident}")
+                        self._set_state("scanning")
                         await ebus.async_wait_scancompleted()
                     # start observing
+                    self._set_state(state)
                     task = asyncio.create_task(self._async_observe())
                     self._tasks.append(task)
                 elif task:
                     # stop observing
                     _LOGGER.warning(f"Connection {self.ident}: {state}")
+                    self._set_state(state)
                     await _await_cancel(task)
                     task = None
-                self._state = state
-                self.notify()
             await asyncio.sleep(self._checkinterval)
 
     async def _async_observe(self):
         ebus = copy.copy(self._ebus)
-        data = self._data
-        broken = False
-        while True:
-            try:
-                self._info = await ebus.async_get_info()
-                async for msg in ebus.async_observe(
-                    setprio=True, defaultprio=PRIO, ttl=TTL
-                ):
-                    broken = False
-                    _LOGGER.info(msg)
-                    if msg.valid:
-                        for field in msg.fields:
-                            data[field.fielddef.ident] = field.value
-                            self.notify(field.fielddef)
-                    else:
-                        # remove outdated values
-                        for fielddef in msg.msgdef.fields:
-                            data.pop(fielddef.ident, None)
-                            self.notify(fielddef)
-            except Exception as exc:
-                if not broken:
-                    _LOGGER.error(exc)
-                broken = True
-                await asyncio.sleep(60)
+        self._set_info(await ebus.async_get_info())
+        try:
+            async for msg in ebus.async_observe(ttl=TTL):
+                _LOGGER.info(msg)
+                self._set_msg(msg)
+                if self._state != OK:
+                    break
+        finally:
+            self._state = "error"
 
-    def notify(self, fielddef=None):
+    def _set_state(self, state):
         """Notify about field update."""
-        if fielddef:
-            entities = self._fieldlistener[fielddef.ident]
-        else:
-            entities = itertools.chain.from_iterable(self._fieldlistener.values())
-        for entity in entities:
+        self._state = state
+        for entity in itertools.chain.from_iterable(self._fieldlistener.values()):
             entity.async_write_ha_state()
+
+    def _set_info(self, info):
+        self._info = info
+        for entity in self._fieldlistener[None]:
+            entity.async_write_ha_state()
+
+    def _set_msg(self, msg):
+        data = self._data
+        if msg.valid:
+            for field in msg.fields:
+                data[field.fielddef.ident] = field.value
+                self._notify_field(field.fielddef)
+        else:
+            # remove outdated values
+            for fielddef in msg.msgdef.fields:
+                data.pop(fielddef.ident, None)
+                self._notify_field(fielddef)
+
+    def _notify_field(self, fielddef):
+        """Notify about field update."""
+        for entity in self._fieldlistener[fielddef.ident]:
+            if entity.enabled:
+                entity.async_write_ha_state()
 
     async def async_set_field(self, fielddef, value):
         """Set Field."""
@@ -317,6 +323,7 @@ class EbusFieldEntity(EbusEntity):
         return {
             "identifiers": {(DOMAIN, self._api.ident, msgdef.circuit)},
             "name": f"EBUS - {circuit}" if circuit else "EBUS",
+            "model": msgdef.circuit,
         }
 
     @property

@@ -2,7 +2,7 @@
   "domain": "ebus",
   "name": "EBUS",
   "documentation": "https://www.home-assistant.io/integrations/ebus",
-  "requirements": ["pyebus==0.9.2"],
+  "requirements": ["pyebus==0.10.3"],
   "codeowners": ["@c0fec0de"],
   "config_flow": true
 }

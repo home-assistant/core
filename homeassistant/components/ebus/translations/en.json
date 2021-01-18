@@ -6,18 +6,21 @@
             "invalid_host": "Invalid hostname or IP address"
         },
         "step": {
+            "scan": {
+                "data": {
+                    "scan": "Scan EBUS for valid messages. This avoids invalid/broken sensors but takes time. Please be patient. Very patient."
+                },
+                "description": "Congratulations. EBUS connection is working.",
+                "title": "EBUS - Scan"
+            },
             "user": {
                 "data": {
                     "host": "Host",
-                    "messages": "Messages - just leave the default",
+                    "messages": "Messages",
                     "port": "Port"
                 },
-                "description": "Set up EBUS integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/ebus.",
+                "description": "Set up EBUS integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/ebus.\n\nThe connection test takes a moment.",
                 "title": "EBUS - Connect"
-            },
-            "wait": {
-                "description": "Congratulations. EBUS connection is working.\n\nEBUS will now be scanned for messages. This takes time. Please be patient.",
-                "title": "EBUS - Scan"
             }
         }
     }
