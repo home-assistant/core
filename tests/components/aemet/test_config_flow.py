@@ -14,7 +14,6 @@ from homeassistant.components.aemet.const import (
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
-    ENTRY_STATE_SETUP_RETRY,
     SOURCE_USER,
 )
 from homeassistant.const import (
@@ -132,4 +131,4 @@ async def test_form_options(hass):
 
         await hass.async_block_till_done()
 
-        assert config_entry.state == ENTRY_STATE_SETUP_RETRY
+        assert config_entry.state == ENTRY_STATE_LOADED
