@@ -143,6 +143,7 @@ def climate_radio_thermostat_ct100_plus_fixture(
 ):
     """Mock a climate radio thermostat ct100 plus node."""
     node = Node(client, climate_radio_thermostat_ct100_plus_state)
+    return node
 
 
 @pytest.fixture(name="nortek_thermostat")
