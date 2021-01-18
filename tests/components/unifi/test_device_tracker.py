@@ -606,6 +606,7 @@ async def test_option_ssid_filter(hass):
         controller.config_entry,
         options={CONF_SSID_FILTER: []},
     )
+    await hass.async_block_till_done()
     event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_copy]}
     controller.api.message_handler(event)
     event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_3_copy]}
@@ -626,6 +627,9 @@ async def test_option_ssid_filter(hass):
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1.state == "not_home"
 
+    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_3_copy]}
+    controller.api.message_handler(event)
+    await hass.async_block_till_done()
     # Client won't go away until after next update
     client_3 = hass.states.get("device_tracker.client_3")
     assert client_3.state == "home"
@@ -696,9 +700,8 @@ async def test_wireless_client_go_wired_issue(hass):
     assert client_1.attributes["is_wired"] is False
 
     # Make client wireless
-    client_1_copy = client_1_client.copy()
-    client_1_copy["is_wired"] = False
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_copy]}
+    client_1_client["is_wired"] = False
+    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_client]}
     controller.api.message_handler(event)
     await hass.async_block_till_done()
 
@@ -747,9 +750,7 @@ async def test_option_ignore_wired_bug(hass):
     assert client_1.attributes["is_wired"] is True
 
     # Mark client as connected again
-    client_1_copy = client_1_client.copy()
-    client_1_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_copy]}
+    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_client]}
     controller.api.message_handler(event)
     await hass.async_block_till_done()
 
@@ -759,9 +760,8 @@ async def test_option_ignore_wired_bug(hass):
     assert client_1.attributes["is_wired"] is True
 
     # Make client wireless
-    client_1_copy = client_1_client.copy()
-    client_1_copy["is_wired"] = False
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_copy]}
+    client_1_client["is_wired"] = False
+    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_client]}
     controller.api.message_handler(event)
     await hass.async_block_till_done()
 

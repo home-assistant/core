@@ -88,7 +88,6 @@ class UniFiController:
     def __init__(self, hass, config_entry):
         """Initialize the system."""
         self.hass = hass
-        self.config_entry = config_entry
         self.available = True
         self.api = None
         self.progress = None
@@ -102,13 +101,15 @@ class UniFiController:
         self._heartbeat_dispatch = {}
         self._heartbeat_time = {}
 
-        self._set_cached_properties()
+        self.cache_config_entry_properties(config_entry)
 
         self.entities = {}
 
-    def _set_cached_properties(self):
+    def cache_config_entry_properties(self, config_entry):
         """Set properties in self.__dict__ to avoid slow lookups."""
         # Device tracker options
+        self.config_entry = config_entry
+
         options = self.config_entry.options
         controller_data = self.config_entry.data[CONF_CONTROLLER]
 
@@ -392,10 +393,11 @@ class UniFiController:
                     self.hass, f"{self.signal_heartbeat_missed}_{unique_id}"
                 )
 
-    async def async_config_entry_updated(self, hass, config_entry) -> None:
+    @staticmethod
+    async def async_config_entry_updated(hass, config_entry) -> None:
         """Handle signals of config entry being updated."""
-        self._set_cached_properties()
         controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+        controller.cache_config_entry_properties(config_entry)
         async_dispatcher_send(hass, controller.signal_options_update)
 
     @callback
@@ -448,10 +450,6 @@ class UniFiController:
         if self._cancel_heartbeat_check:
             self._cancel_heartbeat_check()
             self._cancel_heartbeat_check = None
-
-        if self._config_undo_listener:
-            self._config_undo_listener()
-            self._config_undo_listener = None
 
         return True
 
