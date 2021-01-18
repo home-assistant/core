@@ -208,6 +208,9 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
                 self._is_connected = True
                 self.schedule_update = True
 
+        else:
+            raise ValueError
+
         if self.schedule_update:
             self.schedule_update = False
             self.controller.async_heartbeat(
