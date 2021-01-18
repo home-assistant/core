@@ -95,6 +95,22 @@ def format_condition(condition: str) -> str:
     return condition
 
 
+def format_float(value) -> float:
+    """Try converting string to float."""
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
+def format_int(value) -> int:
+    """Try converting string to int."""
+    try:
+        return int(value)
+    except ValueError:
+        return None
+
+
 class WeatherUpdateCoordinator(DataUpdateCoordinator):
     """Weather data update coordinator."""
 
@@ -297,13 +313,13 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 )
                 station_timestamp = dt_util.as_utc(station_dt)
             if AEMET_ATTR_STATION_HUMIDITY in station_data:
-                humidity = float(station_data[AEMET_ATTR_STATION_HUMIDITY])
+                humidity = format_float(station_data[AEMET_ATTR_STATION_HUMIDITY])
             if AEMET_ATTR_STATION_PRESSURE_SEA in station_data:
-                pressure = float(station_data[AEMET_ATTR_STATION_PRESSURE_SEA])
+                pressure = format_float(station_data[AEMET_ATTR_STATION_PRESSURE_SEA])
             if AEMET_ATTR_STATION_TEMPERATURE in station_data:
-                temperature = float(station_data[AEMET_ATTR_STATION_TEMPERATURE])
+                temperature = format_float(station_data[AEMET_ATTR_STATION_TEMPERATURE])
             if AEMET_ATTR_STATION_TEMPERATURE_RELATIVE in station_data:
-                temperature_feeling = float(
+                temperature_feeling = format_float(
                     station_data[AEMET_ATTR_STATION_TEMPERATURE_RELATIVE]
                 )
 
@@ -467,7 +483,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         """Get humidity from weather data."""
         val = get_forecast_hour_value(day_data[AEMET_ATTR_HUMIDITY], hour)
         if val:
-            return int(val)
+            return format_int(val)
         return None
 
     @staticmethod
@@ -475,7 +491,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         """Get humidity from weather data."""
         val = get_forecast_day_value(day_data[AEMET_ATTR_PRECIPITATION_PROBABILITY])
         if val:
-            return int(val)
+            return format_int(val)
         return None
 
     @staticmethod
@@ -483,7 +499,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         """Get rain from weather data."""
         val = get_forecast_hour_value(day_data[AEMET_ATTR_PRECIPITATION], hour)
         if val:
-            return float(val)
+            return format_float(val)
         return None
 
     @staticmethod
@@ -493,7 +509,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             day_data[AEMET_ATTR_PRECIPITATION_PROBABILITY], hour
         )
         if val:
-            return int(val)
+            return format_int(val)
         return None
 
     @staticmethod
@@ -501,7 +517,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         """Get snow from weather data."""
         val = get_forecast_hour_value(day_data[AEMET_ATTR_SNOW], hour)
         if val:
-            return float(val)
+            return format_float(val)
         return None
 
     @staticmethod
@@ -509,7 +525,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         """Get snow probability from weather data."""
         val = get_forecast_interval_value(day_data[AEMET_ATTR_SNOW_PROBABILITY], hour)
         if val:
-            return int(val)
+            return format_int(val)
         return None
 
     def _get_station_id(self):
@@ -529,7 +545,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         """Get storm probability from weather data."""
         val = get_forecast_interval_value(day_data[AEMET_ATTR_STORM_PROBABILITY], hour)
         if val:
-            return int(val)
+            return format_int(val)
         return None
 
     @staticmethod
@@ -537,7 +553,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         """Get temperature (hour) from weather data."""
         val = get_forecast_hour_value(day_data[AEMET_ATTR_TEMPERATURE], hour)
         if val:
-            return int(val)
+            return format_int(val)
         return None
 
     @staticmethod
@@ -547,7 +563,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             day_data[AEMET_ATTR_TEMPERATURE], key=AEMET_ATTR_MAX
         )
         if val:
-            return int(val)
+            return format_int(val)
         return None
 
     @staticmethod
@@ -557,7 +573,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             day_data[AEMET_ATTR_TEMPERATURE], key=AEMET_ATTR_MIN
         )
         if val:
-            return int(val)
+            return format_int(val)
         return None
 
     @staticmethod
@@ -565,7 +581,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         """Get temperature from weather data."""
         val = get_forecast_hour_value(day_data[AEMET_ATTR_TEMPERATURE_FEELING], hour)
         if val:
-            return int(val)
+            return format_int(val)
         return None
 
     def _get_town_id(self):
@@ -607,7 +623,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         """Get wind max speed from weather data."""
         val = get_forecast_hour_value(day_data[AEMET_ATTR_WIND_GUST], hour)
         if val:
-            return int(val)
+            return format_int(val)
         return None
 
     @staticmethod
@@ -617,7 +633,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             day_data[AEMET_ATTR_WIND_GUST], hour, key=AEMET_ATTR_SPEED
         )[0]
         if val:
-            return int(val)
+            return format_int(val)
         return None
 
     @staticmethod
@@ -625,7 +641,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         """Get wind speed (day) from weather data."""
         val = get_forecast_day_value(day_data[AEMET_ATTR_WIND], key=AEMET_ATTR_SPEED)
         if val:
-            return int(val)
+            return format_int(val)
         return None
 
 
