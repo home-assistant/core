@@ -90,6 +90,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     def build_client() -> ProxmoxAPI:
         """Build the Proxmox client connection."""
         hass.data[PROXMOX_CLIENTS] = {}
+
         for entry in config[DOMAIN]:
             host = entry[CONF_HOST]
             port = entry[CONF_PORT]
@@ -108,17 +109,21 @@ async def async_setup(hass: HomeAssistant, config: dict):
                 _LOGGER.warning(
                     "Invalid credentials for proxmox instance %s:%d", host, port
                 )
+                hass.data[PROXMOX_CLIENTS][host] = None
                 continue
             except SSLError:
                 _LOGGER.error(
-                    'Unable to verify proxmox server SSL. Try using "verify_ssl: false"'
+                    'Unable to verify proxmox server SSL. "\
+                    "Try using "verify_ssl: false" for proxmox instance %s:%d',
+                    host,
+                    port,
                 )
+                hass.data[PROXMOX_CLIENTS][host] = None
                 continue
 
-            return proxmox_client
+            hass.data[PROXMOX_CLIENTS][host] = proxmox_client
 
-    proxmox_client = await hass.async_add_executor_job(build_client)
-    proxmox = proxmox_client.get_api_client()
+    await hass.async_add_executor_job(build_client)
 
     hass.data[DOMAIN][COORDINATORS] = {}
 
@@ -126,6 +131,14 @@ async def async_setup(hass: HomeAssistant, config: dict):
     for host_config in config[DOMAIN]:
         host_name = host_config["host"]
         hass.data[DOMAIN][COORDINATORS][host_name] = {}
+
+        proxmox_client = hass.data[PROXMOX_CLIENTS][host_name]
+
+        # Skip invalid hosts
+        if proxmox_client is None:
+            continue
+
+        proxmox = proxmox_client.get_api_client()
 
         for node_config in host_config["nodes"]:
             node_name = node_config["node"]
