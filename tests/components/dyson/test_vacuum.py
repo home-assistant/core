@@ -35,7 +35,7 @@ ENTITY_ID = f"vacuum.{ENTITY_NAME}"
 
 @callback
 def get_device() -> Dyson360Eye:
-    """Fixture to provide Dyson 360 Eye device."""
+    """Return a Dyson 360 Eye device."""
     device = get_basic_device(Dyson360Eye)
     device.state = MagicMock()
     device.state.state = Dyson360EyeMode.FULL_CLEAN_RUNNING
