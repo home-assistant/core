@@ -136,22 +136,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_user()
 
-    async def async_step_import(self, user_input=None):
-        """Handle the import."""
-        errors = {}
-        if user_input is not None:
-            if self._host_port_alias_already_configured(user_input):
-                return self.async_abort(reason="already_configured")
-            _, errors = await self._async_validate_or_error(user_input)
-
-            if not errors:
-                title = _format_host_port_alias(user_input)
-                return self.async_create_entry(title=title, data=user_input)
-
-        return self.async_show_form(
-            step_id="user", data_schema=_base_schema({}), errors=errors
-        )
-
     async def async_step_user(self, user_input=None):
         """Handle the user input."""
         errors = {}
