@@ -186,6 +186,7 @@ class LightSchema:
             }
         ),
         vol.Any(
+            # either global "address" or all addresses for individual colors are required
             vol.Schema(
                 {
                     vol.Required(CONF_INDIVIDUAL_COLORS): {
