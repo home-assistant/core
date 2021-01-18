@@ -9,6 +9,8 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.loader import Integration, IntegrationNotFound, async_get_integration
 import homeassistant.util.package as pkg_util
 
+# mypy: disallow-any-generics
+
 DATA_PIP_LOCK = "pip_lock"
 DATA_PKG_CACHE = "pkg_cache"
 DATA_INTEGRATIONS_WITH_REQS = "integrations_with_reqs"
@@ -24,7 +26,7 @@ DISCOVERY_INTEGRATIONS: Dict[str, Iterable[str]] = {
 class RequirementsNotFound(HomeAssistantError):
     """Raised when a component is not found."""
 
-    def __init__(self, domain: str, requirements: List) -> None:
+    def __init__(self, domain: str, requirements: List[str]) -> None:
         """Initialize a component not found error."""
         super().__init__(f"Requirements for {domain} not found: {requirements}.")
         self.domain = domain
@@ -124,7 +126,7 @@ async def async_process_requirements(
             if pkg_util.is_installed(req):
                 continue
 
-            def _install(req: str, kwargs: Dict) -> bool:
+            def _install(req: str, kwargs: Dict[str, Any]) -> bool:
                 """Install requirement."""
                 return pkg_util.install_package(req, **kwargs)
 
