@@ -71,7 +71,7 @@ class BaseTrackerEntity(Entity):
             attr[ATTR_BATTERY_LEVEL] = self.battery_level
         if self.ip_address is not None:
             attr[ATTR_IP] = self.ip_address
-        if self.ip_address is not None:
+        if self.mac_address is not None:
             attr[ATTR_MAC] = self.mac_address
         if self.hostname is not None:
             attr[ATTR_HOST_NAME] = self.hostname
