@@ -324,6 +324,14 @@ class HyperionPriorityLight(LightEntity):
 
         self._effect_list: List[str] = []
 
+        self._client_callbacks = {
+            f"{const.KEY_ADJUSTMENT}-{const.KEY_UPDATE}": self._update_adjustment,
+            f"{const.KEY_COMPONENTS}-{const.KEY_UPDATE}": self._update_components,
+            f"{const.KEY_EFFECTS}-{const.KEY_UPDATE}": self._update_effect_list,
+            f"{const.KEY_PRIORITIES}-{const.KEY_UPDATE}": self._update_priorities,
+            f"{const.KEY_CLIENT}-{const.KEY_UPDATE}": self._update_client,
+        }
+
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Whether or not the entity is enabled by default."""
@@ -622,18 +630,14 @@ class HyperionPriorityLight(LightEntity):
             )
         )
 
-        self._client.set_callbacks(
-            {
-                f"{const.KEY_ADJUSTMENT}-{const.KEY_UPDATE}": self._update_adjustment,
-                f"{const.KEY_COMPONENTS}-{const.KEY_UPDATE}": self._update_components,
-                f"{const.KEY_EFFECTS}-{const.KEY_UPDATE}": self._update_effect_list,
-                f"{const.KEY_PRIORITIES}-{const.KEY_UPDATE}": self._update_priorities,
-                f"{const.KEY_CLIENT}-{const.KEY_UPDATE}": self._update_client,
-            }
-        )
+        self._client.add_callbacks(self._client_callbacks)
 
         # Load initial state.
         self._update_full_state()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Cleanup prior to hass removal."""
+        self._client.remove_callbacks(self._client_callbacks)
 
 
 class HyperionLight(HyperionPriorityLight):

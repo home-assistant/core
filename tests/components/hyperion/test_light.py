@@ -71,7 +71,7 @@ def _call_registered_callback(
     client: AsyncMock, key: str, *args: Any, **kwargs: Any
 ) -> None:
     """Call a Hyperion entity callback that was registered with the client."""
-    client.set_callbacks.call_args[0][0][key](*args, **kwargs)
+    client.add_callbacks.call_args[0][0][key](*args, **kwargs)
 
 
 async def _setup_entity_yaml(hass: HomeAssistantType, client: AsyncMock = None) -> None:
