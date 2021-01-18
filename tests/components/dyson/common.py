@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 from libpurecool.dyson_device import DysonDevice
 from libpurecool.dyson_pure_cool import FanSpeed
 
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant
 
 SERIAL = "XX-XXXXX-XX"
 NAME = "Temp Name"
@@ -46,8 +46,8 @@ def get_basic_device(spec: Type[DysonDevice]) -> DysonDevice:
 
 
 async def async_update_device(
-    hass: HomeAssistant, device: DysonDevice, state_type: Optional[Type]
-) -> State:
+    hass: HomeAssistant, device: DysonDevice, state_type: Optional[Type] = None
+) -> None:
     """Update the device using callback function."""
     callback = device.add_message_listener.call_args[0][0]
     message = MagicMock(spec=state_type)

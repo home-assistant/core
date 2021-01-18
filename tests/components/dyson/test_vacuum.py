@@ -63,14 +63,14 @@ async def test_state(hass: HomeAssistant, device: Dyson360Eye) -> None:
 
     device.state.state = Dyson360EyeMode.INACTIVE_CHARGING
     device.state.power_mode = PowerMode.MAX
-    await async_update_device(hass, device, None)
+    await async_update_device(hass, device)
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_STATUS] == "Stopped - Charging"
     assert state.attributes[ATTR_FAN_SPEED] == "Max"
 
     device.state.state = Dyson360EyeMode.FULL_CLEAN_PAUSED
-    await async_update_device(hass, device, None)
+    await async_update_device(hass, device)
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_STATUS] == "Paused"
@@ -95,7 +95,7 @@ async def test_commands(
 ) -> None:
     """Test sending commands to the vacuum."""
     device.state.state = state
-    await async_update_device(hass, device, None)
+    await async_update_device(hass, device)
     await hass.services.async_call(
         VACUUM_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
