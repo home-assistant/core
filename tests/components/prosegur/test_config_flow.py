@@ -1,9 +1,9 @@
 """Test the Prosegur Alarm config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries, setup
 from homeassistant.components.prosegur.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.prosegur.const import DOMAIN
-
-from tests.async_mock import patch
 
 
 async def test_form(hass):
