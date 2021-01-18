@@ -193,7 +193,6 @@ class FluxLight(LightEntity):
 
     def _connect(self):
         """Connect to Flux light."""
-
         self._bulb = WifiLedBulb(self._ipaddr, timeout=5)
         if self._protocol:
             self._bulb.setProtocol(self._protocol)
@@ -267,11 +266,13 @@ class FluxLight(LightEntity):
 
     @property
     def temperature_cw(self):
+        """Return the cold white temperature."""
         rgbww = self._bulb.getRgbww()
         return [rgbww[4], rgbww[3]]
 
     @property
     def temperature_ww(self):
+        """Return the warm white temperature."""
         rgbww = self._bulb.getRgbww()
         return rgbww[3]
 
@@ -376,17 +377,21 @@ class FluxLight(LightEntity):
                 kelvinMin = 2700
                 kelvinMax = 6500
 
-                # Map mired to kelvin specifically for the setWhiteTemperature since it wants 2700~6500 kelvin and 
+                # Map mired to kelvin specifically for the setWhiteTemperature since it wants 2700~6500 kelvin and
                 # we have 153~500 mired as an input which doesn't match up the way we want
-                color_temp_kelvin = (color_temp-miredMin)/(miredMax-miredMin)*(kelvinMax-kelvinMin)+kelvinMin
+                color_temp_kelvin = (color_temp - miredMin) / (miredMax - miredMin) * (
+                    kelvinMax - kelvinMin
+                ) + kelvinMin
 
-                color_temp_kelvin = max(color_temp_kelvin-2700, 0)
-                warm = 255 * (1 - (color_temp_kelvin/3800))
-                cold = min(255 * color_temp_kelvin/3800, 255)
-                warm *= white/255 # White controls brightness
-                cold *= white/255
+                color_temp_kelvin = max(color_temp_kelvin - 2700, 0)
+                warm = 255 * (1 - (color_temp_kelvin / 3800))
+                cold = min(255 * color_temp_kelvin / 3800, 255)
+                warm *= white / 255  # White controls brightness
+                cold *= white / 255
 
-                if warm > cold: # Warm side will activate both cold and warm leds at same rate (much brighter warm mode)
+                if (
+                    warm > cold
+                ):  # Warm side will activate both cold and warm leds at same rate (much brighter warm mode)
                     cold = warm
 
                 self._bulb.setRgbw(w=warm, w2=cold)
@@ -405,8 +410,8 @@ class FluxLight(LightEntity):
                 if not current_temp[0] and not current_temp[1]:
                     current_temp[0] = 255
                     current_temp[1] = 255
-                current_temp[0] *= white/255
-                current_temp[1] *= white/255
+                current_temp[0] *= white / 255
+                current_temp[1] *= white / 255
                 self._bulb.setRgbw(w=current_temp[1], w2=current_temp[0])
                 return
             elif self._mode == MODE_RGBWW:
@@ -421,7 +426,7 @@ class FluxLight(LightEntity):
         if rgb is None:
             rgb = self._bulb.getRgb()
             if self._mode == MODE_RGBW and rgb[0] == 0 and rgb[1] == 0 and rgb[2] == 0:
-                rgb = (255,255,255)
+                rgb = (255, 255, 255)
 
         if white is None and self._mode == MODE_RGBW:
             white = self.white_value
