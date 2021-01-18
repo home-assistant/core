@@ -74,6 +74,19 @@ DISCOVERY_SCHEMAS = [
         property={"currentMode", "locked"},
         type={"number", "boolean"},
     ),
+    # climate
+    ZWaveDiscoverySchema(
+        platform="climate",
+        device_class_generic={"Thermostat"},
+        device_class_specific={
+            "Setback Thermostat",
+            "Thermostat General",
+            "Thermostat General V2",
+        },
+        command_class={CommandClass.THERMOSTAT_MODE},
+        property={"mode"},
+        type={"number"},
+    ),
     # lights
     # primary value is the currentValue (brightness)
     ZWaveDiscoverySchema(
