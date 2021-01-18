@@ -257,7 +257,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
         self._tado_zone_data = None
 
-        self._tado_zone_temp_offset = dict()
+        self._tado_zone_temp_offset = {}
 
         self._async_update_zone_data()
 
@@ -474,13 +474,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def _async_update_zone_data(self):
         """Load tado data into zone."""
         self._tado_zone_data = self._tado.data["zone"][self.zone_id]
-        self._update_offset()
-        self._current_tado_fan_speed = self._tado_zone_data.current_fan_speed
-        self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
-        self._current_tado_hvac_action = self._tado_zone_data.current_hvac_action
-        self._current_tado_swing_mode = self._tado_zone_data.current_swing_mode
-
-    def _update_offset(self):
         # Assign offset values to mapped attributes
         for offset_key, attr in TADO_TO_HA_OFFSET_MAP.items():
             if (
@@ -491,6 +484,10 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
                 self._tado_zone_temp_offset[attr] = self._tado.data["device"][
                     self._device_id
                 ][TEMP_OFFSET][offset_key]
+        self._current_tado_fan_speed = self._tado_zone_data.current_fan_speed
+        self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
+        self._current_tado_hvac_action = self._tado_zone_data.current_hvac_action
+        self._current_tado_swing_mode = self._tado_zone_data.current_swing_mode
 
     @callback
     def _async_update_callback(self):
