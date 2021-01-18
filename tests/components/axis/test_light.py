@@ -14,7 +14,12 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from .test_device import API_DISCOVERY_RESPONSE, NAME, setup_axis_integration
+from .test_device import (
+    API_DISCOVERY_RESPONSE,
+    LIGHT_CONTROL_RESPONSE,
+    NAME,
+    setup_axis_integration,
+)
 
 API_DISCOVERY_LIGHT_CONTROL = {
     "id": "light-control",
@@ -53,6 +58,26 @@ async def test_platform_manually_configured(hass):
 async def test_no_lights(hass):
     """Test that no light events in Axis results in no light entities."""
     await setup_axis_integration(hass)
+
+    assert not hass.states.async_entity_ids(LIGHT_DOMAIN)
+
+
+async def test_no_light_entity_without_light_control_representation(hass):
+    """Verify no lights entities get created without light control representation."""
+    api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
+    api_discovery["data"]["apiList"].append(API_DISCOVERY_LIGHT_CONTROL)
+
+    light_control = deepcopy(LIGHT_CONTROL_RESPONSE)
+    light_control["data"]["items"] = []
+
+    with patch.dict(API_DISCOVERY_RESPONSE, api_discovery), patch.dict(
+        LIGHT_CONTROL_RESPONSE, light_control
+    ):
+        config_entry = await setup_axis_integration(hass)
+        device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+
+    device.api.event.update([EVENT_ON])
+    await hass.async_block_till_done()
 
     assert not hass.states.async_entity_ids(LIGHT_DOMAIN)
 

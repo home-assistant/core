@@ -18,7 +18,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a Axis light."""
     device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
-    if not device.api.vapix.light_control:
+    if (
+        device.api.vapix.light_control is None
+        or len(device.api.vapix.light_control) == 0
+    ):
         return
 
     @callback
