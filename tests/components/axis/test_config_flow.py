@@ -113,33 +113,6 @@ async def test_manual_configuration_update_configuration(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_flow_fails_already_configured(hass):
-    """Test that config flow fails on already configured device."""
-    await setup_axis_integration(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == SOURCE_USER
-
-    with respx.mock:
-        mock_default_vapix_requests(respx)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_HOST: "1.2.3.4",
-                CONF_USERNAME: "user",
-                CONF_PASSWORD: "pass",
-                CONF_PORT: 80,
-            },
-        )
-
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-
 async def test_flow_fails_faulty_credentials(hass):
     """Test that config flow fails on faulty credentials."""
     result = await hass.config_entries.flow.async_init(
