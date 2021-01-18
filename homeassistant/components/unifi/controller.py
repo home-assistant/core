@@ -101,17 +101,16 @@ class UniFiController:
         self._heartbeat_dispatch = {}
         self._heartbeat_time = {}
 
-        self.cache_config_entry_properties(config_entry)
+        self.cache_config_entry(config_entry)
 
         self.entities = {}
 
-    def cache_config_entry_properties(self, config_entry):
+    def cache_config_entry(self, config_entry):
         """Set properties in self.__dict__ to avoid slow lookups."""
         # Device tracker options
         self.config_entry = config_entry
 
         options = self.config_entry.options
-        controller_data = self.config_entry.data[CONF_CONTROLLER]
 
         # Config entry option to not track clients.
         self.option_track_clients = options.get(
@@ -158,17 +157,20 @@ class UniFiController:
             CONF_ALLOW_UPTIME_SENSORS, DEFAULT_ALLOW_UPTIME_SENSORS
         )
 
-        # Config entry top level
-
-        # The host of this controller.
-        self.host = controller_data[CONF_HOST]
-        # The site of this config entry.
-        self.site = controller_data[CONF_SITE_ID]
-
     @property
     def controller_id(self):
         """Return the controller ID."""
         return CONTROLLER_ID.format(host=self.host, site=self.site)
+
+    @property
+    def host(self):
+        """Return the host of this controller."""
+        return self.config_entry.data[CONF_CONTROLLER][CONF_HOST]
+
+    @property
+    def site(self):
+        """Return the site of this config entry."""
+        return self.config_entry.data[CONF_CONTROLLER][CONF_SITE_ID]
 
     @property
     def site_name(self):
@@ -397,7 +399,7 @@ class UniFiController:
     async def async_config_entry_updated(hass, config_entry) -> None:
         """Handle signals of config entry being updated."""
         controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-        controller.cache_config_entry_properties(config_entry)
+        controller.cache_config_entry(config_entry)
         async_dispatcher_send(hass, controller.signal_options_update)
 
     @callback
