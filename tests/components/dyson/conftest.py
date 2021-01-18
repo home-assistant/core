@@ -19,9 +19,11 @@ BASE_PATH = "homeassistant.components.dyson"
 async def device(hass: HomeAssistant, request) -> DysonDevice:
     """Fixture to provide Dyson 360 Eye device."""
     device = request.module.get_device()
+    platform = request.module.PLATFORM_DOMAIN
     with patch(f"{BASE_PATH}.DysonAccount.login", return_value=True), patch(
         f"{BASE_PATH}.DysonAccount.devices", return_value=[device]
-    ):
+    ), patch(f"{BASE_PATH}.DYSON_PLATFORMS", [platform]):
+        # DYSON_PLATFORMS is patched so that only the platform being tested is set up
         await async_setup_component(
             hass,
             DOMAIN,

@@ -10,7 +10,7 @@ from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
     ATTR_STATUS,
-    DOMAIN as VACUUM_DOMAIN,
+    DOMAIN as PLATFORM_DOMAIN,
     SERVICE_RETURN_TO_BASE,
     SERVICE_SET_FAN_SPEED,
     SERVICE_START_PAUSE,
@@ -30,7 +30,7 @@ from homeassistant.helpers import entity_registry
 
 from .common import ENTITY_NAME, NAME, SERIAL, async_update_device, get_basic_device
 
-ENTITY_ID = f"vacuum.{ENTITY_NAME}"
+ENTITY_ID = f"{PLATFORM_DOMAIN}.{ENTITY_NAME}"
 
 
 @callback
@@ -97,7 +97,7 @@ async def test_commands(
     device.state.state = state
     await async_update_device(hass, device)
     await hass.services.async_call(
-        VACUUM_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        PLATFORM_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
     getattr(device, command).assert_called_once_with()
 
@@ -110,7 +110,7 @@ async def test_set_fan_speed(hass: HomeAssistant, device: Dyson360Eye):
     }
     for service_speed, command_speed in fan_speed_map.items():
         await hass.services.async_call(
-            VACUUM_DOMAIN,
+            PLATFORM_DOMAIN,
             SERVICE_SET_FAN_SPEED,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_SPEED: service_speed},
             blocking=True,
