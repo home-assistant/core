@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional, Set, Tuple, cast
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, cast
 
 from hyperion import client, const as hyperion_const
 from pkg_resources import parse_version
@@ -12,7 +12,10 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
     async_get_registry,
@@ -112,6 +115,48 @@ async def _create_reauth_flow(
             DOMAIN, context={CONF_SOURCE: SOURCE_REAUTH}, data=config_entry.data
         )
     )
+
+
+def listen_for_instance_updates(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    add_func: Callable,
+    remove_func: Callable,
+) -> None:
+    """Listen for instance additions/removals."""
+
+    hass.data[DOMAIN][config_entry.entry_id][CONF_ON_UNLOAD].extend(
+        [
+            async_dispatcher_connect(
+                hass,
+                SIGNAL_INSTANCE_ADD.format(config_entry.entry_id),
+                add_func,
+            ),
+            async_dispatcher_connect(
+                hass,
+                SIGNAL_INSTANCE_REMOVE.format(config_entry.entry_id),
+                remove_func,
+            ),
+        ]
+    )
+
+
+def add_instances_from_root_client(
+    hass: HomeAssistant, config_entry: ConfigEntry, add_func: Callable
+) -> None:
+    """Call the add_func for all instances in the root client."""
+    # Note: When the YAML migration code is removed, this can be simplified by allowing
+    # instance_add(...) to be called directly via the signal in __init__.py without
+    # needing to be also called synchronously here.
+    entry_data = hass.data[DOMAIN][config_entry.entry_id]
+    for instance in entry_data[CONF_ROOT_CLIENT].instances:
+        instance_num = instance.get(hyperion_const.KEY_INSTANCE)
+        if (
+            instance_num is not None
+            and instance_num in entry_data[CONF_INSTANCE_CLIENTS]
+        ):
+            instance_name = instance.get(hyperion_const.KEY_FRIENDLY_NAME, DEFAULT_NAME)
+            add_func(instance_num, instance_name)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

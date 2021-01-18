@@ -47,17 +47,13 @@ from . import (
 )
 from .const import (
     CONF_INSTANCE_CLIENTS,
-    CONF_ON_UNLOAD,
     CONF_PRIORITY,
-    CONF_ROOT_CLIENT,
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
     DOMAIN,
     NAME_SUFFIX_HYPERION_LIGHT,
     NAME_SUFFIX_HYPERION_PRIORITY_LIGHT,
     SIGNAL_ENTITY_REMOVE,
-    SIGNAL_INSTANCE_ADD,
-    SIGNAL_INSTANCE_REMOVE,
     TYPE_HYPERION_LIGHT,
     TYPE_HYPERION_PRIORITY_LIGHT,
 )
@@ -272,32 +268,7 @@ async def async_setup_entry(
                 ),
             )
 
-    # Note: When the YAML migration code is removed, this can be simplified by allowing
-    # instance_add(...) to be called directly via the signal in __init__.py without
-    # needing to be also called synchronously here.
-    for instance in entry_data[CONF_ROOT_CLIENT].instances:
-        instance_num = instance.get(const.KEY_INSTANCE)
-        if (
-            instance_num is not None
-            and instance_num in entry_data[CONF_INSTANCE_CLIENTS]
-        ):
-            instance_name = instance.get(const.KEY_FRIENDLY_NAME, DEFAULT_NAME)
-            instance_add(instance_num, instance_name)
-
-    hass.data[DOMAIN][config_entry.entry_id][CONF_ON_UNLOAD].extend(
-        [
-            async_dispatcher_connect(
-                hass,
-                SIGNAL_INSTANCE_ADD.format(config_entry.entry_id),
-                instance_add,
-            ),
-            async_dispatcher_connect(
-                hass,
-                SIGNAL_INSTANCE_REMOVE.format(config_entry.entry_id),
-                instance_remove,
-            ),
-        ]
-    )
+    listen_for_instance_updates(hass, config_entry, instance_add, instance_remove)
     return True
 
 
