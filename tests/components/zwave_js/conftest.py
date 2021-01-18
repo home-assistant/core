@@ -3,6 +3,7 @@ import json
 from unittest.mock import DEFAULT, patch
 
 import pytest
+from zwave_js_server.event import Event
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
@@ -75,6 +76,12 @@ def climate_radio_thermostat_ct100_plus_state_fixture():
     )
 
 
+@pytest.fixture(name="nortek_thermostat_state", scope="session")
+def nortek_thermostat_state_fixture():
+    """Load the nortek thermostat node state fixture data."""
+    return json.loads(load_fixture("zwave_js/nortek_thermostat_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state):
     """Mock a client."""
@@ -138,6 +145,32 @@ def climate_radio_thermostat_ct100_plus_fixture(
     node = Node(client, climate_radio_thermostat_ct100_plus_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
+
+
+@pytest.fixture(name="nortek_thermostat")
+def nortek_thermostat_fixture(client, nortek_thermostat_state):
+    """Mock a nortek thermostat node."""
+    node = Node(client, nortek_thermostat_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="nortek_thermostat_added_event")
+def nortek_thermostat_added_event_fixture(client):
+    """Mock a Nortek thermostat node added event."""
+    event_data = json.loads(load_fixture("zwave_js/nortek_thermostat_added_event.json"))
+    event = Event("node added", event_data)
+    return event
+
+
+@pytest.fixture(name="nortek_thermostat_removed_event")
+def nortek_thermostat_removed_event_fixture(client):
+    """Mock a Nortek thermostat node removed event."""
+    event_data = json.loads(
+        load_fixture("zwave_js/nortek_thermostat_removed_event.json")
+    )
+    event = Event("node removed", event_data)
+    return event
 
 
 @pytest.fixture(name="integration")
