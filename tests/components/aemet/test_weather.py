@@ -31,7 +31,10 @@ async def test_aemet_weather(hass):
     """Test states of the weather."""
 
     now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
-    with patch("homeassistant.util.dt.now", return_value=now):
+    with patch("homeassistant.util.dt.now", return_value=now), patch(
+        "homeassistant.util.dt.utcnow",
+        return_value=now,
+    ):
         await async_init_integration(hass)
 
     state = hass.states.get("weather.aemet")

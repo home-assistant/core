@@ -45,8 +45,8 @@ async def test_form(hass):
     """Test that the form is served with valid input."""
 
     now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
-    with patch(
-        "homeassistant.util.dt.now", return_value=now
+    with patch("homeassistant.util.dt.now", return_value=now), patch(
+        "homeassistant.util.dt.utcnow", return_value=now
     ), requests_mock.mock() as _m:
         aemet_requests_mock(_m)
 
@@ -83,8 +83,8 @@ async def test_form_options(hass):
     """Test that the options form."""
 
     now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
-    with patch(
-        "homeassistant.util.dt.now", return_value=now
+    with patch("homeassistant.util.dt.now", return_value=now), patch(
+        "homeassistant.util.dt.utcnow", return_value=now
     ), requests_mock.mock() as _m:
         aemet_requests_mock(_m)
 
