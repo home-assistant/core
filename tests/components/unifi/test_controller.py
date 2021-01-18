@@ -197,7 +197,7 @@ async def test_controller_setup(hass):
     assert controller.option_track_devices == DEFAULT_TRACK_DEVICES
     assert controller.option_track_wired_clients == DEFAULT_TRACK_WIRED_CLIENTS
     assert controller.option_detection_time == timedelta(seconds=DEFAULT_DETECTION_TIME)
-    assert isinstance(controller.option_ssid_filter, list)
+    assert isinstance(controller.option_ssid_filter, set)
 
     assert controller.mac is None
 
