@@ -5,11 +5,11 @@ from pyplaato.plaato import PlaatoDeviceType
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from ...config_entries import ConfigEntry
 from .const import (
     CONF_CLOUDHOOK,
     CONF_DEVICE_NAME,
