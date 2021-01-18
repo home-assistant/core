@@ -139,6 +139,8 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
     DOMAIN = DOMAIN
     TYPE = CLIENT_TRACKER
 
+    __slots__ = ("heartbeat_check", "schedule_update", "_is_connected")
+
     def __init__(self, client, controller):
         """Set up tracked client."""
         super().__init__(client, controller)
@@ -284,6 +286,8 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
 
     DOMAIN = DOMAIN
     TYPE = DEVICE_TRACKER
+
+    __slots__ = "_is_connected"
 
     def __init__(self, device, controller):
         """Set up tracked device."""
