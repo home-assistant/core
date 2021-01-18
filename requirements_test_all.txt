@@ -376,7 +376,7 @@ hangups==0.4.11
 hass-nabucasa==0.39.0
 
 # homeassistant.components.tasmota
-hatasmota==0.1.6
+hatasmota==0.2.5
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12
