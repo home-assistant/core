@@ -64,7 +64,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.4.0
 
 # homeassistant.components.vicare
-PyViCare==0.2.0
+PyViCare==0.2.5
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
