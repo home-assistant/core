@@ -246,7 +246,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             return None
 
         elaborated = dt_util.parse_datetime(
-            weather_response.hourly[ATTR_DATA][0][AEMET_ATTR_ELABORATED] + "Z"
+            weather_response.hourly[ATTR_DATA][0][AEMET_ATTR_ELABORATED]
         )
         now = dt_util.now()
         hour = now.hour
