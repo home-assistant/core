@@ -15,7 +15,7 @@ UNIT_DEVICE_CLASS_MAP = {
     "kWh": "energy",
     "V": "voltage",
 }
-TTL = 60
+TTL = 30000
 CHECKINTERVAL = 60
 
 CONF_MESSAGES = "messages"

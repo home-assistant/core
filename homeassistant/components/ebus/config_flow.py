@@ -18,6 +18,7 @@ from .const import (
     DEFAULT_MESSAGES,
     DEFAULT_PORT,
     DOMAIN,
+    TTL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -115,7 +116,7 @@ class EbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 for msgdef in ebus.msgdefs:
                     # only list readable messages
                     if msgdef.read:
-                        msg = await ebus.async_read(msgdef, ttl=10000)
+                        msg = await ebus.async_read(msgdef, ttl=TTL)
                         if msg.valid:
                             if all(field.value != NA for field in msg.fields):
                                 messages.append(msgdef.ident)
