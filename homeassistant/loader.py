@@ -20,6 +20,7 @@ from typing import (
     List,
     Optional,
     Set,
+    TypedDict,
     TypeVar,
     Union,
     cast,
@@ -34,7 +35,11 @@ from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
+# mypy: disallow-any-generics
+
+CALLABLE_T = TypeVar(  # pylint: disable=invalid-name
+    "CALLABLE_T", bound=Callable[..., Any]
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,12 +59,38 @@ _UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular depe
 MAX_LOAD_CONCURRENTLY = 4
 
 
-def manifest_from_legacy_module(domain: str, module: ModuleType) -> Dict:
+class Manifest(TypedDict, total=False):
+    """
+    Integration manifest.
+
+    Note that none of the attributes are marked Optional here. However, some of them may be optional in manifest.json
+    in the sense that they can be omitted altogether. But when present, they should not have null values in it.
+    """
+
+    name: str
+    disabled: str
+    domain: str
+    dependencies: List[str]
+    after_dependencies: List[str]
+    requirements: List[str]
+    config_flow: bool
+    documentation: str
+    issue_tracker: str
+    quality_scale: str
+    mqtt: List[str]
+    ssdp: List[Dict[str, str]]
+    zeroconf: List[Union[str, Dict[str, str]]]
+    dhcp: List[Dict[str, str]]
+    homekit: Dict[str, List[str]]
+    is_built_in: bool
+    codeowners: List[str]
+
+
+def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
     """Generate a manifest from a legacy module."""
     return {
         "domain": domain,
         "name": domain,
-        "documentation": None,
         "requirements": getattr(module, "REQUIREMENTS", []),
         "dependencies": getattr(module, "DEPENDENCIES", []),
         "codeowners": [],
@@ -205,10 +236,10 @@ async def async_get_homekit(hass: "HomeAssistant") -> Dict[str, str]:
     return homekit
 
 
-async def async_get_ssdp(hass: "HomeAssistant") -> Dict[str, List]:
+async def async_get_ssdp(hass: "HomeAssistant") -> Dict[str, List[Dict[str, str]]]:
     """Return cached list of ssdp mappings."""
 
-    ssdp: Dict[str, List] = SSDP.copy()
+    ssdp: Dict[str, List[Dict[str, str]]] = SSDP.copy()
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -220,10 +251,10 @@ async def async_get_ssdp(hass: "HomeAssistant") -> Dict[str, List]:
     return ssdp
 
 
-async def async_get_mqtt(hass: "HomeAssistant") -> Dict[str, List]:
+async def async_get_mqtt(hass: "HomeAssistant") -> Dict[str, List[str]]:
     """Return cached list of MQTT mappings."""
 
-    mqtt: Dict[str, List] = MQTT.copy()
+    mqtt: Dict[str, List[str]] = MQTT.copy()
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
@@ -288,7 +319,7 @@ class Integration:
         hass: "HomeAssistant",
         pkg_path: str,
         file_path: pathlib.Path,
-        manifest: Dict[str, Any],
+        manifest: Manifest,
     ):
         """Initialize an integration."""
         self.hass = hass
@@ -309,77 +340,77 @@ class Integration:
     @property
     def name(self) -> str:
         """Return name."""
-        return cast(str, self.manifest["name"])
+        return self.manifest["name"]
 
     @property
     def disabled(self) -> Optional[str]:
         """Return reason integration is disabled."""
-        return cast(Optional[str], self.manifest.get("disabled"))
+        return self.manifest.get("disabled")
 
     @property
     def domain(self) -> str:
         """Return domain."""
-        return cast(str, self.manifest["domain"])
+        return self.manifest["domain"]
 
     @property
     def dependencies(self) -> List[str]:
         """Return dependencies."""
-        return cast(List[str], self.manifest.get("dependencies", []))
+        return self.manifest.get("dependencies", [])
 
     @property
     def after_dependencies(self) -> List[str]:
         """Return after_dependencies."""
-        return cast(List[str], self.manifest.get("after_dependencies", []))
+        return self.manifest.get("after_dependencies", [])
 
     @property
     def requirements(self) -> List[str]:
         """Return requirements."""
-        return cast(List[str], self.manifest.get("requirements", []))
+        return self.manifest.get("requirements", [])
 
     @property
     def config_flow(self) -> bool:
         """Return config_flow."""
-        return cast(bool, self.manifest.get("config_flow", False))
+        return self.manifest.get("config_flow") or False
 
     @property
     def documentation(self) -> Optional[str]:
         """Return documentation."""
-        return cast(str, self.manifest.get("documentation"))
+        return self.manifest.get("documentation")
 
     @property
     def issue_tracker(self) -> Optional[str]:
         """Return issue tracker link."""
-        return cast(str, self.manifest.get("issue_tracker"))
+        return self.manifest.get("issue_tracker")
 
     @property
     def quality_scale(self) -> Optional[str]:
         """Return Integration Quality Scale."""
-        return cast(str, self.manifest.get("quality_scale"))
+        return self.manifest.get("quality_scale")
 
     @property
-    def mqtt(self) -> Optional[list]:
+    def mqtt(self) -> Optional[List[str]]:
         """Return Integration MQTT entries."""
-        return cast(List[dict], self.manifest.get("mqtt"))
+        return self.manifest.get("mqtt")
 
     @property
-    def ssdp(self) -> Optional[list]:
+    def ssdp(self) -> Optional[List[Dict[str, str]]]:
         """Return Integration SSDP entries."""
-        return cast(List[dict], self.manifest.get("ssdp"))
+        return self.manifest.get("ssdp")
 
     @property
-    def zeroconf(self) -> Optional[list]:
+    def zeroconf(self) -> Optional[List[Union[str, Dict[str, str]]]]:
         """Return Integration zeroconf entries."""
-        return cast(List[str], self.manifest.get("zeroconf"))
+        return self.manifest.get("zeroconf")
 
     @property
-    def dhcp(self) -> Optional[list]:
+    def dhcp(self) -> Optional[List[Dict[str, str]]]:
         """Return Integration dhcp entries."""
-        return cast(List[str], self.manifest.get("dhcp"))
+        return self.manifest.get("dhcp")
 
     @property
-    def homekit(self) -> Optional[dict]:
+    def homekit(self) -> Optional[Dict[str, List[str]]]:
         """Return Integration homekit entries."""
-        return cast(Dict[str, List], self.manifest.get("homekit"))
+        return self.manifest.get("homekit")
 
     @property
     def is_built_in(self) -> bool:
