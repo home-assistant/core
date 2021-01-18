@@ -1,5 +1,7 @@
 """Util to handle processes."""
 
+from __future__ import annotations
+
 import subprocess
 from typing import Any
 
