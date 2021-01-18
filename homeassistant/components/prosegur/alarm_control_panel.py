@@ -81,18 +81,12 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        if self._installation is None:
-            await self.async_update()
         await self._installation.disarm(self._auth)
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm away command."""
-        if self._installation is None:
-            await self.async_update()
         await self._installation.arm_partially(self._auth)
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        if self._installation is None:
-            await self.async_update()
         await self._installation.arm(self._auth)
