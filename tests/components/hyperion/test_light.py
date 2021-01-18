@@ -825,9 +825,12 @@ async def test_light_async_updates_from_hyperion_client(
     _call_registered_callback(client, "effects-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
-    assert entity_state.attributes["effect_list"] == [
-        effect[const.KEY_NAME] for effect in effects
-    ] + const.KEY_COMPONENTID_EXTERNAL_SOURCES + [hyperion_light.KEY_EFFECT_SOLID]
+    assert (
+        entity_state.attributes["effect_list"]
+        == [effect[const.KEY_NAME] for effect in effects]
+        + [hyperion_light.KEY_EFFECT_SOLID]
+        + const.KEY_COMPONENTID_EXTERNAL_SOURCES
+    )
 
     # Update connection status (e.g. disconnection).
 
@@ -1274,3 +1277,19 @@ async def test_priority_light_prior_color_preserved_after_black(
     assert entity_state
     assert entity_state.state == "on"
     assert entity_state.attributes["hs_color"] == hs_color
+
+
+async def test_priority_light_has_no_external_sources(hass: HomeAssistantType) -> None:
+    """Ensure a HyperionPriorityLight does not list external sources."""
+    client = create_mock_client()
+    client.priorities = []
+
+    with patch(
+        "homeassistant.components.hyperion.light.HyperionPriorityLight.entity_registry_enabled_default"
+    ) as enabled_by_default_mock:
+        enabled_by_default_mock.return_value = True
+        await setup_test_config_entry(hass, hyperion_client=client)
+
+    entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
+    assert entity_state
+    assert entity_state.attributes["effect_list"] == [hyperion_light.KEY_EFFECT_SOLID]

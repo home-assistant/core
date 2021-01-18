@@ -301,8 +301,8 @@ async def async_setup_entry(
     return True
 
 
-class HyperionPriorityLight(LightEntity):
-    """A Hyperion light that only acts on a single Hyperion priority."""
+class HyperionBaseLight(LightEntity):
+    """A Hyperion light base class."""
 
     def __init__(
         self,
@@ -335,7 +335,7 @@ class HyperionPriorityLight(LightEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Whether or not the entity is enabled by default."""
-        return False
+        return True
 
     @property
     def should_poll(self) -> bool:
@@ -357,38 +357,6 @@ class HyperionPriorityLight(LightEntity):
         """Return last color value set."""
         return color_util.color_RGB_to_hs(*self._rgb_color)
 
-    def _get_priority_entry_that_dictates_state(self) -> Optional[Dict[str, Any]]:
-        """Get the relevant Hyperion priority entry to consider."""
-        # Return the active priority (if any) at the configured HA priority.
-        for candidate in self._client.priorities or []:
-            if const.KEY_PRIORITY not in candidate:
-                continue
-            if candidate[const.KEY_PRIORITY] == self._get_option(
-                CONF_PRIORITY
-            ) and candidate.get(const.KEY_ACTIVE, False):
-                return candidate  # type: ignore[no-any-return]
-        return None
-
-    @classmethod
-    def _is_priority_entry_black(cls, priority: Optional[Dict[str, Any]]) -> bool:
-        """Determine if a given priority entry is the color black."""
-        if not priority:
-            return False
-        if priority.get(const.KEY_COMPONENTID) == const.KEY_COMPONENTID_COLOR:
-            rgb_color = priority.get(const.KEY_VALUE, {}).get(const.KEY_RGB)
-            if rgb_color is not None and tuple(rgb_color) == COLOR_BLACK:
-                return True
-        return False
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if light is on."""
-        priority = self._get_priority_entry_that_dictates_state()
-        return (
-            priority is not None
-            and not HyperionPriorityLight._is_priority_entry_black(priority)
-        )
-
     @property
     def icon(self) -> str:
         """Return state specific icon."""
@@ -407,11 +375,10 @@ class HyperionPriorityLight(LightEntity):
     @property
     def effect_list(self) -> List[str]:
         """Return the list of supported effects."""
-        return (
-            self._effect_list
-            + list(const.KEY_COMPONENTID_EXTERNAL_SOURCES)
-            + [KEY_EFFECT_SOLID]
-        )
+        effects = self._effect_list + [KEY_EFFECT_SOLID]
+        if self._support_external_effects:
+            effects += list(const.KEY_COMPONENTID_EXTERNAL_SOURCES)
+        return effects
 
     @property
     def supported_features(self) -> int:
@@ -464,7 +431,11 @@ class HyperionPriorityLight(LightEntity):
                         return
 
         # == Set an external source
-        if effect and effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+        if (
+            effect
+            and self._support_external_effects
+            and effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES
+        ):
 
             # Clear any color/effect.
             if not await self._client.async_send_clear(
@@ -512,21 +483,6 @@ class HyperionPriorityLight(LightEntity):
             ):
                 return
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the light."""
-        if not await self._client.async_send_clear(
-            **{const.KEY_PRIORITY: self._get_option(CONF_PRIORITY)}
-        ):
-            return
-        await self._client.async_send_set_color(
-            **{
-                const.KEY_PRIORITY: self._get_option(CONF_PRIORITY),
-                const.KEY_COLOR: COLOR_BLACK,
-                const.KEY_ORIGIN: DEFAULT_ORIGIN,
-            }
-        )
-        return
-
     def _set_internal_state(
         self,
         brightness: Optional[int] = None,
@@ -558,21 +514,15 @@ class HyperionPriorityLight(LightEntity):
             )
             self.async_write_ha_state()
 
-    # pylint: disable=no-self-use
-    def _allow_priority_update(self, priority: Optional[Dict[str, Any]] = None) -> bool:
-        """Determine whether to allow a Hyperion priority to update entity attributes."""
-        # Black is treated as 'off' (and Home Assistant does not support selecting black
-        # from the color selector). Do not set our internal attributes if the priority is
-        # 'off' (i.e. if black is active). Do this to ensure it seamlessly turns back on
-        # at the correct prior color on the next 'on' call.
-        return not HyperionPriorityLight._is_priority_entry_black(priority)
-
     def _update_priorities(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion priorities."""
         priority = self._get_priority_entry_that_dictates_state()
         if priority and self._allow_priority_update(priority):
             componentid = priority.get(const.KEY_COMPONENTID)
-            if componentid in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+            if (
+                self._support_external_effects
+                and componentid in const.KEY_COMPONENTID_EXTERNAL_SOURCES
+            ):
                 self._set_internal_state(rgb_color=DEFAULT_COLOR, effect=componentid)
             elif componentid == const.KEY_COMPONENTID_EFFECT:
                 # Owner is the effect name.
@@ -639,8 +589,23 @@ class HyperionPriorityLight(LightEntity):
         """Cleanup prior to hass removal."""
         self._client.remove_callbacks(self._client_callbacks)
 
+    @property
+    def _support_external_effects(self) -> bool:
+        """Whether or not to support setting external effects from the light entity."""
+        return True
 
-class HyperionLight(HyperionPriorityLight):
+    def _get_priority_entry_that_dictates_state(self) -> Optional[Dict[str, Any]]:
+        """Get the relevant Hyperion priority entry to consider."""
+        # Return the visible priority (whether or not it is the HA priority).
+        return self._client.visible_priority  # type: ignore[no-any-return]
+
+    # pylint: disable=no-self-use
+    def _allow_priority_update(self, priority: Optional[Dict[str, Any]] = None) -> bool:
+        """Determine whether to allow a priority to update internal state."""
+        return True
+
+
+class HyperionLight(HyperionBaseLight):
     """A Hyperion light that acts in absolute (vs priority) manner.
 
     Light state is the absolute Hyperion component state (e.g. LED device on/off) rather
@@ -649,23 +614,12 @@ class HyperionLight(HyperionPriorityLight):
     """
 
     @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Whether or not the entity is enabled by default."""
-        return True
-
-    def _get_priority_entry_that_dictates_state(self) -> Optional[Dict[str, Any]]:
-        """Get the relevant Hyperion priority entry to consider."""
-        # Return the visible priority (whether or not it is the HA priority).
-        return self._client.visible_priority  # type: ignore[no-any-return]
-
-    def _allow_priority_update(self, priority: Optional[Dict[str, Any]] = None) -> bool:
-        """Determine whether to allow a priority to update internal state."""
-        return True
-
-    @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return bool(self._client.is_on()) and self._client.visible_priority is not None
+        return (
+            bool(self._client.is_on())
+            and self._get_priority_entry_that_dictates_state() is not None
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -703,6 +657,75 @@ class HyperionLight(HyperionPriorityLight):
             }
         ):
             return
+
+
+class HyperionPriorityLight(HyperionBaseLight):
+    """A Hyperion light that only acts on a single Hyperion priority."""
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Whether or not the entity is enabled by default."""
+        return False
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if light is on."""
+        priority = self._get_priority_entry_that_dictates_state()
+        return (
+            priority is not None
+            and not HyperionPriorityLight._is_priority_entry_black(priority)
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the light."""
+        if not await self._client.async_send_clear(
+            **{const.KEY_PRIORITY: self._get_option(CONF_PRIORITY)}
+        ):
+            return
+        await self._client.async_send_set_color(
+            **{
+                const.KEY_PRIORITY: self._get_option(CONF_PRIORITY),
+                const.KEY_COLOR: COLOR_BLACK,
+                const.KEY_ORIGIN: DEFAULT_ORIGIN,
+            }
+        )
+
+    @property
+    def _support_external_effects(self) -> bool:
+        """Whether or not to support setting external effects from the light entity."""
+        return False
+
+    def _get_priority_entry_that_dictates_state(self) -> Optional[Dict[str, Any]]:
+        """Get the relevant Hyperion priority entry to consider."""
+        # Return the active priority (if any) at the configured HA priority.
+        for candidate in self._client.priorities or []:
+            if const.KEY_PRIORITY not in candidate:
+                continue
+            if candidate[const.KEY_PRIORITY] == self._get_option(
+                CONF_PRIORITY
+            ) and candidate.get(const.KEY_ACTIVE, False):
+                return candidate  # type: ignore[no-any-return]
+        return None
+
+    @classmethod
+    def _is_priority_entry_black(cls, priority: Optional[Dict[str, Any]]) -> bool:
+        """Determine if a given priority entry is the color black."""
+        if not priority:
+            return False
+        if priority.get(const.KEY_COMPONENTID) == const.KEY_COMPONENTID_COLOR:
+            rgb_color = priority.get(const.KEY_VALUE, {}).get(const.KEY_RGB)
+            if rgb_color is not None and tuple(rgb_color) == COLOR_BLACK:
+                return True
+        return False
+
+    # pylint: disable=no-self-use
+    def _allow_priority_update(self, priority: Optional[Dict[str, Any]] = None) -> bool:
+        """Determine whether to allow a Hyperion priority to update entity attributes."""
+        # Black is treated as 'off' (and Home Assistant does not support selecting black
+        # from the color selector). Do not set our internal attributes if the priority is
+        # 'off' (i.e. if black is active). Do this to ensure it seamlessly turns back on
+        # at the correct prior color on the next 'on' call.
+        return not HyperionPriorityLight._is_priority_entry_black(priority)
 
 
 LIGHT_TYPES = {
