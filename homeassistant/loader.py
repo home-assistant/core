@@ -60,23 +60,28 @@ MAX_LOAD_CONCURRENTLY = 4
 
 
 class Manifest(TypedDict, total=False):
-    """Integration manifest."""
+    """
+    Integration manifest.
+
+    Note that none of the attributes are marked Optional here. However, some of them may be optional in manifest.json
+    in the sense that they can be omitted altogether. But when present, they should not have null values in it.
+    """
 
     name: str
-    disabled: Optional[str]
+    disabled: str
     domain: str
     dependencies: List[str]
     after_dependencies: List[str]
     requirements: List[str]
     config_flow: bool
-    documentation: Optional[str]
-    issue_tracker: Optional[str]
-    quality_scale: Optional[str]
-    mqtt: Optional[List[str]]
-    ssdp: Optional[List[Dict[str, str]]]
-    zeroconf: Optional[List[Union[str, Dict[str, str]]]]
-    dhcp: Optional[List[Dict[str, str]]]
-    homekit: Optional[Dict[str, List[str]]]
+    documentation: str
+    issue_tracker: str
+    quality_scale: str
+    mqtt: List[str]
+    ssdp: List[Dict[str, str]]
+    zeroconf: List[Union[str, Dict[str, str]]]
+    dhcp: List[Dict[str, str]]
+    homekit: Dict[str, List[str]]
     is_built_in: bool
     codeowners: List[str]
 
@@ -86,7 +91,6 @@ def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
     return {
         "domain": domain,
         "name": domain,
-        "documentation": None,
         "requirements": getattr(module, "REQUIREMENTS", []),
         "dependencies": getattr(module, "DEPENDENCIES", []),
         "codeowners": [],
