@@ -202,37 +202,20 @@ def mock_device_tracker_conf():
 
 
 @pytest.fixture
-def hass_access_token(hass, hass_admin_user):
+async def hass_admin_credential(hass, local_auth):
+    """Provide credentials for admin user."""
+    await hass.async_add_executor_job(local_auth.data.add_auth, "admin", "admin-pass")
+
+    return await local_auth.async_get_or_create_credentials({"username": "admin"})
+
+
+@pytest.fixture
+async def hass_access_token(hass, hass_admin_user, hass_admin_credential):
     """Return an access token to access Home Assistant."""
-    hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            "homeassistant",
-            {
-                "homeassistant": {
-                    "auth_providers": [
-                        {
-                            "type": "homeassistant",
-                        }
-                    ]
-                }
-            },
-        )
-    )
+    await hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
 
-    credential = Credentials(
-        id="mock-admin-credential-id",
-        auth_provider_type="homeassistant",
-        auth_provider_id=None,
-        data={"username": "admin"},
-        is_new=False,
-    )
-    hass_admin_user.credentials.append(credential)
-
-    refresh_token = hass.loop.run_until_complete(
-        hass.auth.async_create_refresh_token(
-            hass_admin_user, CLIENT_ID, credential=credential
-        )
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID, credential=hass_admin_credential
     )
     return hass.auth.async_create_access_token(refresh_token)
 
@@ -262,11 +245,11 @@ def hass_read_only_user(hass, local_auth):
 
 
 @pytest.fixture
-def hass_read_only_access_token(hass, hass_read_only_user):
+def hass_read_only_access_token(hass, hass_read_only_user, local_auth):
     """Return a Home Assistant read only user."""
     credential = Credentials(
         id="mock-readonly-credential-id",
-        auth_provider_type="insecure_example",
+        auth_provider_type="homeassistant",
         auth_provider_id=None,
         data={"username": "readonly"},
         is_new=False,
@@ -299,6 +282,7 @@ def local_auth(hass):
     prv = homeassistant.HassAuthProvider(
         hass, hass.auth._store, {"type": "homeassistant"}
     )
+    hass.loop.run_until_complete(prv.async_initialize())
     hass.auth._providers[(prv.type, prv.id)] = prv
     return prv
 
