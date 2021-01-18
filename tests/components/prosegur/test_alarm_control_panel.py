@@ -78,7 +78,7 @@ async def test_arm(hass, aioclient_mock, mock_auth, code, alarm_service, alarm_s
     )
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_AWAY,
+        alarm_service,
         {ATTR_ENTITY_ID: PROSEGUR_ALARM_ENTITY},
         blocking=True,
     )
