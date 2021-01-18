@@ -7,8 +7,6 @@ from .unifi_entity_base import UniFiBase
 class UniFiClient(UniFiBase):
     """Base class for UniFi clients."""
 
-    __slots__ = ("_is_wired", "client")
-
     def __init__(self, client, controller) -> None:
         """Set up client."""
         super().__init__(client, controller)

@@ -16,8 +16,6 @@ class UniFiBase(Entity):
     DOMAIN = ""
     TYPE = ""
 
-    __slots__ = ("_item", "controller")
-
     def __init__(self, item, controller) -> None:
         """Set up UniFi entity base.
 
