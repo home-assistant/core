@@ -1,13 +1,11 @@
 """The tests for notify services that change targets."""
-import unittest
-
 from homeassistant.components import notify
 from homeassistant.core import HomeAssistant
 
 
 async def test_same_targets(hass: HomeAssistant):
     """Test not changing the targets in a notify service."""
-    test = TestNotificationService(hass)
+    test = NotificationService(hass)
     await test.async_setup(hass, "notify", "test")
     await test.async_register_services()
     await hass.async_block_till_done()
@@ -22,7 +20,7 @@ async def test_same_targets(hass: HomeAssistant):
 
 async def test_change_targets(hass: HomeAssistant):
     """Test changing the targets in a notify service."""
-    test = TestNotificationService(hass)
+    test = NotificationService(hass)
     await test.async_setup(hass, "notify", "test")
     await test.async_register_services()
     await hass.async_block_till_done()
@@ -39,7 +37,7 @@ async def test_change_targets(hass: HomeAssistant):
 
 async def test_add_targets(hass: HomeAssistant):
     """Test adding the targets in a notify service."""
-    test = TestNotificationService(hass)
+    test = NotificationService(hass)
     await test.async_setup(hass, "notify", "test")
     await test.async_register_services()
     await hass.async_block_till_done()
@@ -56,7 +54,7 @@ async def test_add_targets(hass: HomeAssistant):
 
 async def test_remove_targets(hass: HomeAssistant):
     """Test removing targets from the targets in a notify service."""
-    test = TestNotificationService(hass)
+    test = NotificationService(hass)
     await test.async_setup(hass, "notify", "test")
     await test.async_register_services()
     await hass.async_block_till_done()
@@ -71,7 +69,7 @@ async def test_remove_targets(hass: HomeAssistant):
     assert test.registered_targets == {"test_c": 1}
 
 
-class TestNotificationService(notify.BaseNotificationService, unittest.TestCase):
+class NotificationService(notify.BaseNotificationService):
     """A test class for notification services."""
 
     def __init__(self, hass):
