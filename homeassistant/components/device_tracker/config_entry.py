@@ -67,14 +67,18 @@ class BaseTrackerEntity(Entity):
         """Return the device state attributes."""
         attr = {ATTR_SOURCE_TYPE: self.source_type}
 
-        if self.battery_level:
-            attr[ATTR_BATTERY_LEVEL] = self.battery_level
-        if self.ip_address is not None:
-            attr[ATTR_IP] = self.ip_address
-        if self.ip_address is not None:
-            attr[ATTR_MAC] = self.mac_address
-        if self.hostname is not None:
-            attr[ATTR_HOST_NAME] = self.hostname
+        battery_level = self.battery_level
+        if battery_level:
+            attr[ATTR_BATTERY_LEVEL] = battery_level
+        ip_address = self.ip_address
+        if ip_address is not None:
+            attr[ATTR_IP] = ip_address
+        mac_address = self.mac_address
+        if mac_address is not None:
+            attr[ATTR_MAC] = mac_address
+        hostname = self.hostname
+        if hostname is not None:
+            attr[ATTR_HOST_NAME] = hostname
 
         return attr
 
