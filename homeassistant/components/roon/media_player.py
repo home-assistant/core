@@ -175,7 +175,7 @@ class RoonDevice(MediaPlayerEntity):
             "name": self.name,
             "manufacturer": "RoonLabs",
             "model": dev_model,
-            "via_hub": (DOMAIN, self._server.host),
+            "via_hub": (DOMAIN, self._server.roon_id),
         }
 
     def update_data(self, player_data=None):
