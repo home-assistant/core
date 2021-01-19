@@ -7,7 +7,7 @@ from homeassistant.helpers.device_registry import async_get_registry
 
 
 async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
-    """Test the network_status websocket command."""
+    """Test the network and node status websocket commands."""
     entry = integration
     ws_client = await hass_ws_client(hass)
 
@@ -31,8 +31,12 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     )
     msg = await ws_client.receive_json()
     result = msg["result"]
+
     assert result[NODE_ID] == 52
     assert result["ready"]
+    assert result["is_routing"]
+    assert not result["is_secure"]
+    assert result["status"] == 1
 
 
 async def test_add_node(
