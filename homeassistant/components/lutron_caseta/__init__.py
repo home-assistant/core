@@ -130,7 +130,9 @@ async def _async_subscribe_pico_remote_events(hass, lip, lip_response):
     """Subscribe to lutron events."""
     devices = lip_response.Body["LIPIdList"]["Devices"]
     button_devices_by_id = {
-        int(device["ID"]): device for device in devices if "Buttons" in device
+        int(device["ID"]): device
+        for device in devices
+        if "Buttons" in device and "ID" in device and "Name" in device
     }
 
     _LOGGER.debug("Button Devices: %s", button_devices_by_id)
