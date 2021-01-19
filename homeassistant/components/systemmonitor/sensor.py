@@ -316,6 +316,7 @@ class SystemMonitorSensor(Entity):
             else:
                 self._state = None
         elif self.type == "last_boot":
+            # Only update on initial setup
             if self._state is None:
                 self._state = dt_util.as_local(
                     dt_util.utc_from_timestamp(psutil.boot_time())
