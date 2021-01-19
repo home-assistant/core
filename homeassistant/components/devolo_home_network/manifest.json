@@ -15,5 +15,6 @@
   "codeowners": [
     "@2Fake",
     "@Shutgun"
-  ]
+  ],
+  "quality_scale": "platinum"
 }
