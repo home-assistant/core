@@ -4,7 +4,6 @@ from unittest.mock import patch
 from homeassistant import data_entry_flow
 from homeassistant.components.totalconnect.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.setup import async_setup_component
 
 from .common import CONFIG_DATA, CONFIG_DATA_NO_USERCODES, USERNAME
 
@@ -78,25 +77,3 @@ async def test_login_failed(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_reauth_started(hass):
-    """Test that reauth is started when we have login errors."""
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONFIG_DATA,
-    )
-    mock_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient",
-        autospec=True,
-    ) as mock_client, patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectConfigFlow.async_step_reauth"
-    ) as mock_async_step_reauth:
-        mock_client.return_value.is_valid_credentials.return_value = False
-        assert await async_setup_component(hass, DOMAIN, {})
-
-    await hass.async_block_till_done()
-    mock_client.assert_called_once()
-    mock_async_step_reauth.assert_called_once()
