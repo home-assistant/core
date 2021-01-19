@@ -111,10 +111,12 @@ async def async_setup_entry(hass, config_entry):
             try:
                 await lip.async_connect(host)
             except asyncio.TimeoutError:
-                # Only the PRO and Ra Select bridges support LIP
+                _LOGGER.error("Failed to connect to via LIP at %s:23", host)
                 pass
             else:
-                _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s", host)
+                _LOGGER.debug(
+                    "Connected to Lutron Caseta bridge via LIP at %s:23", host
+                )
                 data[LUTRON_CASETA_LIP] = lip
                 _async_subscribe_pico_remote_events(hass, lip, lip_response)
 
@@ -160,8 +162,10 @@ def _async_subscribe_pico_remote_events(hass, lip, lip_response):
         )
         _LOGGER.debug(lip_message)
 
+    _LOGGER.debug("Subscribed to lip events")
     lip.subscribe(_async_lip_event)
 
+    _LOGGER.debug("Starting LIP runniner")
     asyncio.create_task(lip.async_run())
 
 
