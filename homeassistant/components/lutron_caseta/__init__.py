@@ -149,6 +149,7 @@ def _async_merge_lip_leap_data(lip_devices, bridge):
         area = device.get("Area", {}).get("Name", "")
         name = device["Name"]
         leap_name = f"{area}_{name}"
+        device["leap_name"] = leap_name
         leap_device_data = sensor_devices_by_name.get(leap_name)
         if leap_device_data is None:
             continue
@@ -170,7 +171,7 @@ async def _async_register_button_devices(hass, config_entry_id, button_devices_b
             continue
 
         device_entry = {
-            "name": device["Name"],
+            "name": device["leap_name"],
             "manufacturer": MANUFACTURER,
             "config_entry_id": config_entry_id,
             "identifiers": {(DOMAIN, device["serial"])},
