@@ -237,28 +237,19 @@ class DysonPureCoolLinkEntity(DysonFanEntity):
     @property
     def oscillating(self):
         """Return the oscillation state."""
-        return self._device.state and self._device.state.oscillation == "ON"
+        return self._device.state.oscillation == "ON"
 
     @property
     def is_on(self):
         """Return true if the entity is on."""
-        if self._device.state:
-            return self._device.state.fan_mode in ["FAN", "AUTO"]
-        return False
+        return self._device.state.fan_mode in ["FAN", "AUTO"]
 
     @property
     def speed(self) -> str:
         """Return the current speed."""
-        if self._device.state:
-            if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
-                return self._device.state.speed
-            return int(self._device.state.speed)
-        return None
-
-    @property
-    def current_direction(self):
-        """Return direction of the fan [forward, reverse]."""
-        return None
+        if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
+            return self._device.state.speed
+        return int(self._device.state.speed)
 
     def set_night_mode(self, night_mode: bool) -> None:
         """Turn fan in night mode."""
@@ -414,9 +405,7 @@ class DysonPureCoolEntity(DysonFanEntity):
     @property
     def is_on(self):
         """Return true if the entity is on."""
-        if self._device.state:
-            return self._device.state.fan_power == "ON"
-        return False
+        return self._device.state.fan_power == "ON"
 
     @property
     def speed(self):
@@ -502,11 +491,6 @@ class DysonPureCoolEntity(DysonFanEntity):
             int(FanSpeed.FAN_SPEED_9.value),
             int(FanSpeed.FAN_SPEED_10.value),
         ]
-
-    @property
-    def device_serial(self):
-        """Return fan's serial number."""
-        return self._device.serial
 
     @property
     def supported_features(self) -> int:

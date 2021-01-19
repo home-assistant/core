@@ -1,6 +1,4 @@
 """Test the Dyson 360 eye robot vacuum component."""
-from unittest.mock import MagicMock
-
 from libpurecool.const import Dyson360EyeMode, PowerMode
 from libpurecool.dyson_360_eye import Dyson360Eye
 import pytest
@@ -34,11 +32,10 @@ ENTITY_ID = f"{PLATFORM_DOMAIN}.{ENTITY_NAME}"
 
 
 @callback
-def get_device() -> Dyson360Eye:
+def get_device(state=Dyson360EyeMode.FULL_CLEAN_RUNNING) -> Dyson360Eye:
     """Return a Dyson 360 Eye device."""
     device = get_basic_device(Dyson360Eye)
-    device.state = MagicMock()
-    device.state.state = Dyson360EyeMode.FULL_CLEAN_RUNNING
+    device.state.state = state
     device.state.battery_level = 85
     device.state.power_mode = PowerMode.QUIET
     device.state.position = (0, 0)
@@ -77,7 +74,7 @@ async def test_state(hass: HomeAssistant, device: Dyson360Eye) -> None:
 
 
 @pytest.mark.parametrize(
-    "service,command,state",
+    "service,command,device",
     [
         (SERVICE_TURN_ON, "start", Dyson360EyeMode.INACTIVE_CHARGED),
         (SERVICE_TURN_ON, "resume", Dyson360EyeMode.FULL_CLEAN_PAUSED),
@@ -89,13 +86,12 @@ async def test_state(hass: HomeAssistant, device: Dyson360Eye) -> None:
         (SERVICE_START_PAUSE, "resume", Dyson360EyeMode.FULL_CLEAN_PAUSED),
         (SERVICE_RETURN_TO_BASE, "abort", Dyson360EyeMode.FULL_CLEAN_PAUSED),
     ],
+    indirect=["device"],
 )
 async def test_commands(
-    hass: HomeAssistant, device: Dyson360Eye, service: str, command: str, state: str
+    hass: HomeAssistant, device: Dyson360Eye, service: str, command: str
 ) -> None:
     """Test sending commands to the vacuum."""
-    device.state.state = state
-    await async_update_device(hass, device)
     await hass.services.async_call(
         PLATFORM_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
