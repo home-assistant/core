@@ -12,7 +12,6 @@ from homeassistant.components.zeroconf import ATTR_HOSTNAME
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 
-from . import DOMAIN  # pylint: disable=unused-import
 from .const import (
     ABORT_REASON_ALREADY_CONFIGURED,
     ABORT_REASON_CANNOT_CONNECT,
@@ -22,6 +21,7 @@ from .const import (
     ERROR_CANNOT_CONNECT,
     STEP_IMPORT_FAILED,
 )
+from .const import DOMAIN  # pylint: disable=unused-import
 
 HOSTNAME = "hostname"
 
