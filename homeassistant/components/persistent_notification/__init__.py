@@ -38,6 +38,7 @@ SCHEMA_SERVICE_CREATE = vol.Schema(
         vol.Required(ATTR_MESSAGE): cv.template,
         vol.Optional(ATTR_TITLE): cv.template,
         vol.Optional(ATTR_NOTIFICATION_ID): cv.string,
+        vol.Optional(ATTR_CREATED_AT): cv.datetime,
     }
 )
 
@@ -54,9 +55,9 @@ STATUS_READ = "read"
 
 
 @bind_hass
-def create(hass, message, title=None, notification_id=None):
+def create(hass, message, title=None, notification_id=None, created_at=None):
     """Generate a notification."""
-    hass.add_job(async_create, hass, message, title, notification_id)
+    hass.add_job(async_create, hass, message, title, notification_id, created_at)
 
 
 @bind_hass
@@ -72,6 +73,7 @@ def async_create(
     message: str,
     title: Optional[str] = None,
     notification_id: Optional[str] = None,
+    created_at: Optional[str] = None,
 ) -> None:
     """Generate a notification."""
     data = {
@@ -80,6 +82,7 @@ def async_create(
             (ATTR_TITLE, title),
             (ATTR_MESSAGE, message),
             (ATTR_NOTIFICATION_ID, notification_id),
+            (ATTR_CREATED_AT, created_at),
         ]
         if value is not None
     }
@@ -107,6 +110,9 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         title = call.data.get(ATTR_TITLE)
         message = call.data.get(ATTR_MESSAGE)
         notification_id = call.data.get(ATTR_NOTIFICATION_ID)
+        created_at = call.data.get(ATTR_CREATED_AT)
+        if not created_at:
+            created_at = dt_util.utcnow()
 
         if notification_id is not None:
             entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
@@ -146,7 +152,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
             ATTR_NOTIFICATION_ID: notification_id,
             ATTR_STATUS: STATUS_UNREAD,
             ATTR_TITLE: title,
-            ATTR_CREATED_AT: dt_util.utcnow(),
+            ATTR_CREATED_AT: created_at,
         }
 
         hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)

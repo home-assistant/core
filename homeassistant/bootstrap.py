@@ -1,4 +1,4 @@
-"""Provide methods to bootstrap a Home Assistant instance."""
+"""Bootstrap Home Assistant."""
 import asyncio
 import contextlib
 from datetime import datetime
@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Set
 import voluptuous as vol
 import yarl
 
-from homeassistant import config as conf_util, config_entries, core, loader
+from homeassistant import alerts, config as conf_util, config_entries, core, loader
 from homeassistant.components import http
 from homeassistant.const import REQUIRED_NEXT_PYTHON_DATE, REQUIRED_NEXT_PYTHON_VER
 from homeassistant.exceptions import HomeAssistantError
@@ -165,6 +165,8 @@ async def async_setup_hass(
     if runtime_config.open_ui:
         hass.add_job(open_hass_ui, hass)
 
+    hass.async_create_task(alerts.async_setup_alerts(hass))
+
     return hass
 
 
@@ -212,7 +214,7 @@ async def async_from_config_dict(
             )
         )
     ):
-        _LOGGER.error("Home Assistant core failed to initialize. ")
+        _LOGGER.error("Home Assistant core failed to initialize")
         return None
 
     _LOGGER.debug("Home Assistant core initialized")
