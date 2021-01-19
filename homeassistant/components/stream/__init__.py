@@ -11,7 +11,6 @@ from homeassistant.const import CONF_FILENAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.loader import bind_hass
 
 from .const import (
     ATTR_ENDPOINTS,
@@ -42,44 +41,6 @@ SERVICE_RECORD_SCHEMA = STREAM_SERVICE_SCHEMA.extend(
 )
 
 
-@bind_hass
-def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=None):
-    """Set up stream with token."""
-    if DOMAIN not in hass.config.components:
-        raise HomeAssistantError("Stream integration is not set up.")
-
-    if options is None:
-        options = {}
-
-    # For RTSP streams, prefer TCP
-    if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
-        options = {
-            "rtsp_flags": "prefer_tcp",
-            "stimeout": "5000000",
-            **options,
-        }
-
-    try:
-        streams = hass.data[DOMAIN][ATTR_STREAMS]
-        stream = streams.get(stream_source)
-        if not stream:
-            stream = Stream(hass, stream_source, options=options, keepalive=keepalive)
-            streams[stream_source] = stream
-        else:
-            # Update keepalive option on existing stream
-            stream.keepalive = keepalive
-
-        # Add provider
-        stream.add_provider(fmt)
-
-        if not stream.access_token:
-            stream.access_token = secrets.token_hex()
-            stream.start()
-        return hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(stream.access_token)
-    except Exception as err:
-        raise HomeAssistantError("Unable to get stream") from err
-
-
 async def async_setup(hass, config):
     """Set up stream."""
     # Set log level to error for libav
@@ -92,7 +53,7 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
-    hass.data[DOMAIN][ATTR_STREAMS] = {}
+    hass.data[DOMAIN][ATTR_STREAMS] = []
 
     # Setup HLS
     hls_endpoint = async_setup_hls(hass)
@@ -104,7 +65,7 @@ async def async_setup(hass, config):
     @callback
     def shutdown(event):
         """Stop all stream workers."""
-        for stream in hass.data[DOMAIN][ATTR_STREAMS].values():
+        for stream in hass.data[DOMAIN][ATTR_STREAMS]:
             stream.keepalive = False
             stream.stop()
         _LOGGER.info("Stopped stream workers")
@@ -125,12 +86,12 @@ async def async_setup(hass, config):
 class Stream:
     """Represents a single stream."""
 
-    def __init__(self, hass, source, options=None, keepalive=False):
+    def __init__(self, hass, source, options=None):
         """Initialize a stream."""
         self.hass = hass
         self.source = source
         self.options = options
-        self.keepalive = keepalive
+        self.keepalive = False
         self.access_token = None
         self._thread = None
         self._thread_quit = None
@@ -138,6 +99,24 @@ class Stream:
 
         if self.options is None:
             self.options = {}
+
+        # For RTSP streams, prefer TCP
+        if isinstance(source, str) and source[:7] == "rtsp://":
+            self.options = {
+                "rtsp_flags": "prefer_tcp",
+                "stimeout": "5000000",
+                **self.options,
+            }
+
+    def stream_url(self, fmt):
+        """Return a stream url for the specified format."""
+        self.add_provider(fmt)
+        if fmt not in self._outputs:
+            raise ValueError(f"{fmt} not registered for stream")
+        if not self.access_token:
+            self.access_token = secrets.token_hex()
+        self.start()
+        return self.hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(self.access_token)
 
     @property
     def outputs(self):
@@ -245,6 +224,24 @@ class Stream:
             _LOGGER.info("Stopped stream: %s", self.source)
 
 
+def create_stream(hass, stream_source, options=None):
+    """Create a stream."""
+    if DOMAIN not in hass.config.components:
+        raise HomeAssistantError("Stream integration is not set up.")
+
+    stream = Stream(hass, stream_source, options=options)
+    hass.data[DOMAIN][ATTR_STREAMS].append(stream)
+    return stream
+
+
+def _get_stream_by_source(hass, stream_source):
+    """Find an existing stream by its source."""
+    for stream in hass.data[DOMAIN][ATTR_STREAMS]:
+        if stream.source == stream_source:
+            return stream
+    return None
+
+
 async def async_handle_record_service(hass, call):
     """Handle save video service calls."""
     stream_source = call.data[CONF_STREAM_SOURCE]
@@ -256,12 +253,9 @@ async def async_handle_record_service(hass, call):
     if not hass.config.is_allowed_path(video_path):
         raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
 
-    # Check for active stream
-    streams = hass.data[DOMAIN][ATTR_STREAMS]
-    stream = streams.get(stream_source)
+    stream = _get_stream_by_source(hass, stream_source)
     if not stream:
-        stream = Stream(hass, stream_source)
-        streams[stream_source] = stream
+        stream = create_stream(hass, stream_source)
 
     # Add recorder
     recorder = stream.outputs.get("recorder")

@@ -8,13 +8,14 @@ from unittest.mock import patch
 import av
 import pytest
 
+from homeassistant.components.stream import create_stream
 from homeassistant.components.stream.core import Segment
 from homeassistant.components.stream.recorder import recorder_save_worker
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.stream.common import generate_h264_video, preload_stream
+from tests.components.stream.common import generate_h264_video
 
 TEST_TIMEOUT = 10
 
@@ -75,7 +76,7 @@ async def test_record_stream(hass, hass_client, stream_worker_sync, record_worke
 
     # Setup demo track
     source = generate_h264_video()
-    stream = preload_stream(hass, source)
+    stream = create_stream(hass, source)
     recorder = stream.add_provider("recorder")
     stream.start()
 
@@ -109,7 +110,7 @@ async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
     with patch("homeassistant.components.stream.IdleTimer.fire") as mock_timeout:
         # Setup demo track
         source = generate_h264_video()
-        stream = preload_stream(hass, source)
+        stream = create_stream(hass, source)
         recorder = stream.add_provider("recorder", timeout=30)
         stream.start()
 
@@ -165,7 +166,7 @@ async def test_record_stream_audio(
         source = generate_h264_video(
             container_format="mov", audio_codec=a_codec
         )  # mov can store PCM
-        stream = preload_stream(hass, source)
+        stream = create_stream(hass, source)
         recorder = stream.add_provider("recorder")
         stream.start()
 

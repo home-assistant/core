@@ -146,6 +146,12 @@ class NestCamera(Camera):
             # Next attempt to catch a url will get a new one
             self._stream = None
             return
+        # Stop any existing stream worker since the url is invalid.  In the
+        # future this will work better to preserve keepalive, access tokens, and
+        # sequence numbers across url changes.
+        if self.stream:
+            self.stream.stop()
+            self.stream = None
         self._schedule_stream_refresh()
 
     async def async_will_remove_from_hass(self):

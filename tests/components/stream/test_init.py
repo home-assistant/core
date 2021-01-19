@@ -1,5 +1,5 @@
 """The tests for stream."""
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -41,15 +41,16 @@ async def test_record_service_init_stream(hass):
 
 
 async def test_record_service_existing_record_session(hass):
-    """Test record service call with invalid file."""
+    """Test record service call with existing record session."""
     await async_setup_component(hass, "stream", {"stream": {}})
     source = "rtsp://my.video"
     data = {CONF_STREAM_SOURCE: source, CONF_FILENAME: "/my/invalid/path"}
 
     # Setup stubs
     stream_mock = MagicMock()
+    type(stream_mock).source = PropertyMock(return_value=source)
     stream_mock.return_value.outputs = {"recorder": MagicMock()}
-    hass.data[DOMAIN][ATTR_STREAMS][source] = stream_mock
+    hass.data[DOMAIN][ATTR_STREAMS].append(stream_mock)
 
     with patch.object(hass.config, "is_allowed_path", return_value=True), pytest.raises(
         HomeAssistantError
@@ -59,7 +60,7 @@ async def test_record_service_existing_record_session(hass):
 
 
 async def test_record_service_lookback(hass):
-    """Test record service call with invalid file."""
+    """Test record service lookback."""
     await async_setup_component(hass, "stream", {"stream": {}})
     data = {
         CONF_STREAM_SOURCE: "rtsp://my.video",
