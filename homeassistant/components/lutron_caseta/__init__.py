@@ -103,6 +103,7 @@ async def async_setup_entry(hass, config_entry):
     }
 
     _LOGGER.debug("all devices: %s", bridge.get_devices())
+    # TODO: register and store the repeater data : {'1': {'device_id': '1', 'current_state': -1, 'fan_speed': None, 'zone': None, 'name': 'Smart Bridge 2', 'type': 'RA2SelectMainRepeater', 'model': 'RR-SEL-REP-XX', 'serial': 32663615}
 
     lip_devices = bridge.get_lip_devices()
     if lip_devices:
@@ -157,6 +158,7 @@ def _async_merge_lip_leap_data(lip_devices, bridge):
                 device[key] = val
 
     _LOGGER.debug("Button Devices: %s", button_devices_by_id)
+    return button_devices_by_id
 
 
 async def _async_register_button_devices(hass, config_entry_id, button_devices_by_id):
