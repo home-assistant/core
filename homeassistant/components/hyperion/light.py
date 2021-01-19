@@ -431,7 +431,7 @@ class HyperionLight(LightEntity):
                             const.KEY_BRIGHTNESS: int(
                                 round((float(brightness) * 100) / 255)
                             ),
-                            const.KEY_ID: item[const.KEY_ID]
+                            const.KEY_ID: item[const.KEY_ID],
                         }
                     }
                 ):
