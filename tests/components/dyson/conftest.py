@@ -18,8 +18,12 @@ BASE_PATH = "homeassistant.components.dyson"
 @pytest.fixture
 async def device(hass: HomeAssistant, request) -> DysonDevice:
     """Fixture to provide Dyson 360 Eye device."""
-    device = request.module.get_device()
     platform = request.module.PLATFORM_DOMAIN
+    get_device = request.module.get_device
+    if hasattr(request, "param"):
+        device = get_device(request.param)
+    else:
+        device = get_device()
     with patch(f"{BASE_PATH}.DysonAccount.login", return_value=True), patch(
         f"{BASE_PATH}.DysonAccount.devices", return_value=[device]
     ), patch(f"{BASE_PATH}.DYSON_PLATFORMS", [platform]):
