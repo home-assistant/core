@@ -265,16 +265,18 @@ async def async_setup_entry(
         entities: List[ZWaveBaseEntity] = []
 
         if info.platform_hint == "notification":
-            entities.append(ZWaveNotificationBinarySensor(client, info))
+            entities.append(ZWaveNotificationBinarySensor(config_entry, client, info))
         else:
             # boolean sensor
-            entities.append(ZWaveBooleanBinarySensor(client, info))
+            entities.append(ZWaveBooleanBinarySensor(config_entry, client, info))
 
         async_add_entities(entities)
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
         async_dispatcher_connect(
-            hass, f"{DOMAIN}_add_{BINARY_SENSOR_DOMAIN}", async_add_binary_sensor
+            hass,
+            f"{DOMAIN}_{config_entry.entry_id}_add_{BINARY_SENSOR_DOMAIN}",
+            async_add_binary_sensor,
         )
     )
 
@@ -308,9 +310,11 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
 class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
     """Representation of a Z-Wave binary_sensor from Notification CommandClass."""
 
-    def __init__(self, client: ZwaveClient, info: ZwaveDiscoveryInfo) -> None:
+    def __init__(
+        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+    ) -> None:
         """Initialize a ZWaveNotificationBinarySensor entity."""
-        super().__init__(client, info)
+        super().__init__(config_entry, client, info)
         # check if we have a custom mapping for this value
         self._mapping_info = self._get_sensor_mapping()
 

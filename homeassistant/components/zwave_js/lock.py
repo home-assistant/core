@@ -45,12 +45,14 @@ async def async_setup_entry(
     def async_add_lock(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Lock."""
         entities: List[ZWaveBaseEntity] = []
-        entities.append(ZWaveLock(client, info))
+        entities.append(ZWaveLock(config_entry, client, info))
 
         async_add_entities(entities)
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
-        async_dispatcher_connect(hass, f"{DOMAIN}_add_{LOCK_DOMAIN}", async_add_lock)
+        async_dispatcher_connect(
+            hass, f"{DOMAIN}_{config_entry.entry_id}_add_{LOCK_DOMAIN}", async_add_lock
+        )
     )
 
 
