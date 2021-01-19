@@ -27,13 +27,15 @@ async def async_setup_entry(
     def async_add_switch(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Switch."""
         entities: List[ZWaveBaseEntity] = []
-        entities.append(ZWaveSwitch(client, info))
+        entities.append(ZWaveSwitch(config_entry, client, info))
 
         async_add_entities(entities)
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
         async_dispatcher_connect(
-            hass, f"{DOMAIN}_add_{SWITCH_DOMAIN}", async_add_switch
+            hass,
+            f"{DOMAIN}_{config_entry.entry_id}_add_{SWITCH_DOMAIN}",
+            async_add_switch,
         )
     )
 
