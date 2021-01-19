@@ -2,6 +2,7 @@
 
 from abc import abstractmethod
 import fnmatch
+from ipaddress import ip_address as make_ip_address
 import logging
 import os
 import threading
@@ -28,6 +29,7 @@ from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.loader import async_get_dhcp
+from homeassistant.util.network import is_link_local
 
 from .const import DOMAIN
 
@@ -37,7 +39,6 @@ MESSAGE_TYPE = "message-type"
 HOSTNAME = "hostname"
 MAC_ADDRESS = "macaddress"
 IP_ADDRESS = "ip"
-SELF_ASSIGNED_BLOCK = "169.254."
 DHCP_REQUEST = 3
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,7 +83,7 @@ class WatcherBase:
 
     def process_client(self, ip_address, hostname, mac_address):
         """Process a client."""
-        if ip_address.startswith(SELF_ASSIGNED_BLOCK):
+        if is_link_local(make_ip_address(ip_address)):
             # Ignore self assigned addresses
             return
 
