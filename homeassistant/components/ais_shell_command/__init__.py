@@ -9,6 +9,7 @@ import logging
 import multiprocessing
 import os
 import platform
+import subprocess
 
 import homeassistant.components.ais_dom.ais_global as ais_global
 
@@ -23,6 +24,9 @@ if platform.machine() == "x86_64":
 async def async_setup(hass, config):
     """Register the service."""
     config = config.get(DOMAIN, {})
+
+    async def cec_command(service):
+        await _cec_command(hass, service)
 
     async def change_host_name(service):
         await _change_host_name(hass, service)
@@ -80,6 +84,7 @@ async def async_setup(hass, config):
 
     # register services
     hass.services.async_register(DOMAIN, "change_host_name", change_host_name)
+    hass.services.async_register(DOMAIN, "cec_command", cec_command)
     hass.services.async_register(DOMAIN, "execute_command", execute_command)
     hass.services.async_register(DOMAIN, "execute_script", execute_script)
     hass.services.async_register(DOMAIN, "execute_restart", execute_restart)
@@ -115,6 +120,19 @@ async def _run(cmd):
         _LOGGER.info(f"[stderr]\n{stderr.decode()}")
 
 
+async def _cec_command(hass, call):
+    if "command" not in call.data:
+        return
+    command = call.data["command"]
+    cec_cmd = f"su -c 'echo {command} > /sys/class/cec/cmd'"
+    process = subprocess.Popen(cec_cmd, shell=True, stdout=subprocess.PIPE)  # nosec
+    stdout, stderr = await process.communicate()
+    if stdout:
+        _LOGGER.info(f"[stdout]\n{stdout.decode()}")
+    if stderr:
+        _LOGGER.info(f"[stderr]\n{stderr.decode()}")
+
+
 async def _change_host_name(hass, call):
     if "hostname" not in call.data:
         return
@@ -123,7 +141,6 @@ async def _change_host_name(hass, call):
     new_host_name = call.data["hostname"]
     file = "/data/data/pl.sviete.dom/.ais/ais-hostname"
     command = 'echo "net.hostname = ' + new_host_name + '" > ' + file
-    import subprocess
 
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)  # nosec
     process.wait()
@@ -187,8 +204,6 @@ async def _change_wm_overscan(hass, call):
     cb = 0
 
     try:
-        import subprocess
-
         overscan = subprocess.check_output(
             "su -c \"dumpsys display  | grep -o 'overscan.*' | cut -d')' -f1 | rev | cut -d'(' -f1 | rev\"",
             shell=True,  # nosec
@@ -334,7 +349,6 @@ async def _key_event(hass, call):
     if not ais_global.has_root():
         return
     key_code = call.data["key_code"]
-    import subprocess
 
     subprocess.Popen(
         "su -c 'input keyevent " + key_code + "'",
@@ -353,8 +367,6 @@ async def _led(hass, call):
 
     script = str(os.path.dirname(__file__))
     script += "/scripts/led.sh"
-
-    import subprocess
 
     subprocess.Popen(
         "su -c ' " + script + " " + str(brightness) + "'",
@@ -381,8 +393,6 @@ async def _init_local_sdcard(hass, call):
         return
     script = str(os.path.dirname(__file__))
     script += "/scripts/init_local_sdcard.sh"
-    import subprocess
-
     subprocess.Popen(script, shell=True, stdout=None, stderr=None)  # nosec
 
 
@@ -403,8 +413,6 @@ async def _execute_command(hass, call):
         friendly_name = call.data["friendly_name"]
     if "icon" in call.data:
         icon = call.data["icon"]
-
-    import subprocess
 
     process = subprocess.Popen(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE  # nosec
@@ -427,15 +435,11 @@ async def _execute_script(hass, call):
         script += "/scripts/reset_usb.sh"
         ais_global.G_USB_INTERNAL_MIC_RESET = True
 
-    import subprocess
-
     process = subprocess.Popen(script, shell=True, stdout=subprocess.PIPE)  # nosec
     process.wait()
 
 
 async def _execute_restart(hass, call):
-    import subprocess
-
     if not ais_global.has_root():
         return
 
@@ -443,8 +447,6 @@ async def _execute_restart(hass, call):
 
 
 async def _restart_pm2_service(hass, call):
-    import subprocess
-
     service = call.data["service"]
     await hass.services.async_call(
         "ais_ai_service", "say_it", {"text": "Restartuje serwis " + service}
@@ -456,8 +458,6 @@ async def _restart_pm2_service(hass, call):
 
 
 async def _execute_stop(hass, call):
-    import subprocess
-
     if not ais_global.has_root():
         return
 
