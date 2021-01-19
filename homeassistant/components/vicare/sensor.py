@@ -16,6 +16,7 @@ from homeassistant.const import (
     POWER_WATT,
     PRESSURE_BAR,
     TEMP_CELSIUS,
+    TIME_HOURS,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -162,7 +163,7 @@ SENSOR_TYPES = {
     SENSOR_BURNER_HOURS: {
         CONF_NAME: "Burner Hours",
         CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: None,
+        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
         CONF_GETTER: lambda api: api.getBurnerHours(),
         CONF_DEVICE_CLASS: None,
     },
@@ -184,42 +185,42 @@ SENSOR_TYPES = {
     SENSOR_COMPRESSOR_HOURS: {
         CONF_NAME: "Compressor Hours",
         CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: None,
+        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
         CONF_GETTER: lambda api: api.getCompressorHours(),
         CONF_DEVICE_CLASS: None,
     },
     SENSOR_COMPRESSOR_HOURS_LOADCLASS1: {
         CONF_NAME: "Compressor Hours Load Class 1",
         CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: None,
+        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
         CONF_GETTER: lambda api: api.getCompressorHoursLoadClass1(),
         CONF_DEVICE_CLASS: None,
     },
     SENSOR_COMPRESSOR_HOURS_LOADCLASS2: {
         CONF_NAME: "Compressor Hours Load Class 2",
         CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: None,
+        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
         CONF_GETTER: lambda api: api.getCompressorHoursLoadClass2(),
         CONF_DEVICE_CLASS: None,
     },
     SENSOR_COMPRESSOR_HOURS_LOADCLASS3: {
         CONF_NAME: "Compressor Hours Load Class 3",
         CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: None,
+        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
         CONF_GETTER: lambda api: api.getCompressorHoursLoadClass3(),
         CONF_DEVICE_CLASS: None,
     },
     SENSOR_COMPRESSOR_HOURS_LOADCLASS4: {
         CONF_NAME: "Compressor Hours Load Class 4",
         CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: None,
+        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
         CONF_GETTER: lambda api: api.getCompressorHoursLoadClass4(),
         CONF_DEVICE_CLASS: None,
     },
     SENSOR_COMPRESSOR_HOURS_LOADCLASS5: {
         CONF_NAME: "Compressor Hours Load Class 5",
         CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: None,
+        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
         CONF_GETTER: lambda api: api.getCompressorHoursLoadClass5(),
         CONF_DEVICE_CLASS: None,
     },
