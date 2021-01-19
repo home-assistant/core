@@ -57,7 +57,37 @@ class ZWaveDiscoverySchema:
 
 
 DISCOVERY_SCHEMAS = [
-    # light
+    # locks
+    ZWaveDiscoverySchema(
+        platform="lock",
+        device_class_generic={"Entry Control"},
+        device_class_specific={
+            "Door Lock",
+            "Advanced Door Lock",
+            "Secure Keypad Door Lock",
+            "Secure Lockbox",
+        },
+        command_class={
+            CommandClass.LOCK,
+            CommandClass.DOOR_LOCK,
+        },
+        property={"currentMode", "locked"},
+        type={"number", "boolean"},
+    ),
+    # climate
+    ZWaveDiscoverySchema(
+        platform="climate",
+        device_class_generic={"Thermostat"},
+        device_class_specific={
+            "Setback Thermostat",
+            "Thermostat General",
+            "Thermostat General V2",
+        },
+        command_class={CommandClass.THERMOSTAT_MODE},
+        property={"mode"},
+        type={"number"},
+    ),
+    # lights
     # primary value is the currentValue (brightness)
     ZWaveDiscoverySchema(
         platform="light",
@@ -70,6 +100,24 @@ DISCOVERY_SCHEMAS = [
         },
         command_class={CommandClass.SWITCH_MULTILEVEL},
         property={"currentValue"},
+        type={"number"},
+    ),
+    # binary sensors
+    ZWaveDiscoverySchema(
+        platform="binary_sensor",
+        hint="boolean",
+        command_class={
+            CommandClass.SENSOR_BINARY,
+            CommandClass.BATTERY,
+        },
+        type={"boolean"},
+    ),
+    ZWaveDiscoverySchema(
+        platform="binary_sensor",
+        hint="notification",
+        command_class={
+            CommandClass.NOTIFICATION,
+        },
         type={"number"},
     ),
     # generic text sensors

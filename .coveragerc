@@ -300,8 +300,8 @@ omit =
     homeassistant/components/folder_watcher/*
     homeassistant/components/foobot/sensor.py
     homeassistant/components/fortios/device_tracker.py
+    homeassistant/components/foscam/__init__.py
     homeassistant/components/foscam/camera.py
-    homeassistant/components/foscam/const.py
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
     homeassistant/components/freebox/__init__.py
@@ -1091,7 +1091,6 @@ omit =
     homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
     homeassistant/components/zwave_js/discovery.py
-    homeassistant/components/zwave_js/entity.py
     homeassistant/components/zwave_js/light.py
     homeassistant/components/zwave_js/sensor.py
 

@@ -4,17 +4,23 @@ import logging
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 
-from homeassistant.const import PERCENTAGE, STATE_OFF, TEMP_CELSIUS, TIME_HOURS
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    STATE_OFF,
+    TEMP_CELSIUS,
+    TIME_HOURS,
+)
 from homeassistant.helpers.entity import Entity
 
-from . import DYSON_DEVICES
+from . import DYSON_DEVICES, DysonEntity
 
 SENSOR_UNITS = {
-    "air_quality": None,
-    "dust": None,
     "filter_life": TIME_HOURS,
     "carbon_filter_state": PERCENTAGE,
     "hepa_filter_state": PERCENTAGE,
+    "combi_filter_state": PERCENTAGE,
     "humidity": PERCENTAGE,
 }
 
@@ -24,8 +30,23 @@ SENSOR_ICONS = {
     "filter_life": "mdi:filter-outline",
     "carbon_filter_state": "mdi:filter-outline",
     "hepa_filter_state": "mdi:filter-outline",
-    "humidity": "mdi:water-percent",
-    "temperature": "mdi:thermometer",
+    "combi_filter_state": "mdi:filter-outline",
+}
+
+SENSOR_NAMES = {
+    "air_quality": "AQI",
+    "dust": "Dust",
+    "filter_life": "Filter Life",
+    "humidity": "Humidity",
+    "carbon_filter_state": "Carbon Filter Remaining Life",
+    "hepa_filter_state": "HEPA Filter Remaining Life",
+    "combi_filter_state": "Combi Filter Remaining Life",
+    "temperature": "Temperature",
+}
+
+SENSOR_DEVICE_CLASSES = {
+    "humidity": DEVICE_CLASS_HUMIDITY,
+    "temperature": DEVICE_CLASS_TEMPERATURE,
 }
 
 DYSON_SENSOR_DEVICES = "dyson_sensor_devices"
@@ -57,7 +78,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             # It's reported with the HEPA state, while the Carbon state is set to INValid.
             if device.state and device.state.carbon_filter_state == "INV":
                 if f"{device.serial}-hepa_filter_state" not in device_ids:
-                    new_entities.append(DysonHepaFilterLifeSensor(device, "Combi"))
+                    new_entities.append(DysonHepaFilterLifeSensor(device, "combi"))
             else:
                 if f"{device.serial}-hepa_filter_state" not in device_ids:
                     new_entities.append(DysonHepaFilterLifeSensor(device))
@@ -77,52 +98,46 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class DysonSensor(Entity):
+class DysonSensor(DysonEntity, Entity):
     """Representation of a generic Dyson sensor."""
 
     def __init__(self, device, sensor_type):
         """Create a new generic Dyson sensor."""
-        self._device = device
+        super().__init__(device, None)
         self._old_value = None
-        self._name = None
         self._sensor_type = sensor_type
-
-    async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
-        self._device.add_message_listener(self.on_message)
 
     def on_message(self, message):
         """Handle new messages which are received from the fan."""
         # Prevent refreshing if not needed
         if self._old_value is None or self._old_value != self.state:
-            _LOGGER.debug("Message received for %s device: %s", self.name, message)
             self._old_value = self.state
             self.schedule_update_ha_state()
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def name(self):
         """Return the name of the Dyson sensor name."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return SENSOR_UNITS[self._sensor_type]
-
-    @property
-    def icon(self):
-        """Return the icon for this sensor."""
-        return SENSOR_ICONS[self._sensor_type]
+        return f"{super().name} {SENSOR_NAMES[self._sensor_type]}"
 
     @property
     def unique_id(self):
         """Return the sensor's unique id."""
         return f"{self._device.serial}-{self._sensor_type}"
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return SENSOR_UNITS.get(self._sensor_type)
+
+    @property
+    def icon(self):
+        """Return the icon for this sensor."""
+        return SENSOR_ICONS.get(self._sensor_type)
+
+    @property
+    def device_class(self):
+        """Return the device class of this sensor."""
+        return SENSOR_DEVICE_CLASSES.get(self._sensor_type)
 
 
 class DysonFilterLifeSensor(DysonSensor):
@@ -131,7 +146,6 @@ class DysonFilterLifeSensor(DysonSensor):
     def __init__(self, device):
         """Create a new Dyson Filter Life sensor."""
         super().__init__(device, "filter_life")
-        self._name = f"{self._device.name} Filter Life"
 
     @property
     def state(self):
@@ -147,7 +161,6 @@ class DysonCarbonFilterLifeSensor(DysonSensor):
     def __init__(self, device):
         """Create a new Dyson Carbon Filter Life sensor."""
         super().__init__(device, "carbon_filter_state")
-        self._name = f"{self._device.name} Carbon Filter Remaining Life"
 
     @property
     def state(self):
@@ -160,10 +173,9 @@ class DysonCarbonFilterLifeSensor(DysonSensor):
 class DysonHepaFilterLifeSensor(DysonSensor):
     """Representation of Dyson HEPA (or Combi) Filter Life sensor (in percent)."""
 
-    def __init__(self, device, filter_type="HEPA"):
+    def __init__(self, device, filter_type="hepa"):
         """Create a new Dyson Filter Life sensor."""
-        super().__init__(device, "hepa_filter_state")
-        self._name = f"{self._device.name} {filter_type} Filter Remaining Life"
+        super().__init__(device, f"{filter_type}_filter_state")
 
     @property
     def state(self):
@@ -179,7 +191,6 @@ class DysonDustSensor(DysonSensor):
     def __init__(self, device):
         """Create a new Dyson Dust sensor."""
         super().__init__(device, "dust")
-        self._name = f"{self._device.name} Dust"
 
     @property
     def state(self):
@@ -195,7 +206,6 @@ class DysonHumiditySensor(DysonSensor):
     def __init__(self, device):
         """Create a new Dyson Humidity sensor."""
         super().__init__(device, "humidity")
-        self._name = f"{self._device.name} Humidity"
 
     @property
     def state(self):
@@ -213,7 +223,6 @@ class DysonTemperatureSensor(DysonSensor):
     def __init__(self, device, unit):
         """Create a new Dyson Temperature sensor."""
         super().__init__(device, "temperature")
-        self._name = f"{self._device.name} Temperature"
         self._unit = unit
 
     @property
@@ -240,7 +249,6 @@ class DysonAirQualitySensor(DysonSensor):
     def __init__(self, device):
         """Create a new Dyson Air Quality sensor."""
         super().__init__(device, "air_quality")
-        self._name = f"{self._device.name} AQI"
 
     @property
     def state(self):

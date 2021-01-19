@@ -9,6 +9,5 @@
       "plexwebsocket==0.0.12"
   ],
   "dependencies": ["http"],
-  "after_dependencies": ["sonos"],
   "codeowners": ["@jjlawren"]
 }

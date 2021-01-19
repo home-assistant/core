@@ -14,8 +14,15 @@ from homeassistant.helpers import device_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN, PLATFORMS
+from .const import (
+    DATA_CLIENT,
+    DATA_UNSUBSCRIBE,
+    DOMAIN,
+    EVENT_DEVICE_ADDED_TO_REGISTRY,
+    PLATFORMS,
+)
 from .discovery import async_discover_values
+from .websocket_api import async_register_api
 
 LOGGER = logging.getLogger(__name__)
 CONNECT_TIMEOUT = 10
@@ -29,20 +36,23 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 @callback
 def register_node_in_dev_reg(
+    hass: HomeAssistant,
     entry: ConfigEntry,
     dev_reg: device_registry.DeviceRegistry,
     client: ZwaveClient,
     node: ZwaveNode,
 ) -> None:
     """Register node in dev reg."""
-    dev_reg.async_get_or_create(
+    device = dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")},
         sw_version=node.firmware_version,
-        name=node.name or node.device_config.description,
-        model=node.device_config.label or str(node.product_type),
-        manufacturer=node.device_config.manufacturer or str(node.manufacturer_id),
+        name=node.name or node.device_config.description or f"Node {node.node_id}",
+        model=node.device_config.label,
+        manufacturer=node.device_config.manufacturer,
     )
+
+    async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -74,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.debug("Processing node %s", node)
 
         # register (or update) node in device registry
-        register_node_in_dev_reg(entry, dev_reg, client, node)
+        register_node_in_dev_reg(hass, entry, dev_reg, client, node)
 
         # run discovery on all node values and create/update entities
         for disc_info in async_discover_values(node):
@@ -84,20 +94,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @callback
     def async_on_node_added(node: ZwaveNode) -> None:
         """Handle node added event."""
-        LOGGER.debug("Node added: %s - waiting for it to become ready.", node.node_id)
         # we only want to run discovery when the node has reached ready state,
         # otherwise we'll have all kinds of missing info issues.
         if node.ready:
             async_on_node_ready(node)
             return
         # if node is not yet ready, register one-time callback for ready state
+        LOGGER.debug("Node added: %s - waiting for it to become ready.", node.node_id)
         node.once(
             "ready",
             lambda event: async_on_node_ready(event["node"]),
         )
         # we do submit the node to device registry so user has
         # some visual feedback that something is (in the process of) being added
-        register_node_in_dev_reg(entry, dev_reg, client, node)
+        register_node_in_dev_reg(hass, entry, dev_reg, client, node)
 
     async def handle_ha_shutdown(event: Event) -> None:
         """Handle HA shutdown."""
@@ -127,6 +137,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_UNSUBSCRIBE: unsubs,
     }
 
+    # Set up websocket API
+    async_register_api(hass)
+
     async def start_platforms() -> None:
         """Start platforms and perform discovery."""
         # wait until all required platforms are ready
@@ -139,14 +152,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         # run discovery on all ready nodes
         for node in client.driver.controller.nodes.values():
-            if node.ready:
-                async_on_node_ready(node)
-                continue
-            # if node is not yet ready, register one-time callback for ready state
-            node.once(
-                "ready",
-                lambda event: async_on_node_ready(event["node"]),
-            )
+            async_on_node_added(node)
+
         # listen for new nodes being added to the mesh
         client.driver.controller.on(
             "node added", lambda event: async_on_node_added(event["node"])

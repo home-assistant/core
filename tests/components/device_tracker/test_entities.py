@@ -59,3 +59,6 @@ def test_base_tracker_entity():
     assert entity.battery_level is None
     with pytest.raises(NotImplementedError):
         assert entity.state_attributes is None
+    assert entity.ip_address is None
+    assert entity.mac_address is None
+    assert entity.hostname is None

@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for device in cube.devices:
             name = f"{cube.room_by_id(device.room_id).name} {device.name}"
 
-            if cube.is_thermostat(device) or cube.is_wallthermostat(device):
+            if device.is_thermostat() or device.is_wallthermostat():
                 devices.append(MaxCubeClimate(handler, name, device.rf_address))
 
     if devices:
@@ -180,11 +180,11 @@ class MaxCubeClimate(ClimateEntity):
         device = cube.device_by_rf(self._rf_address)
         valve = 0
 
-        if cube.is_thermostat(device):
+        if device.is_thermostat():
             valve = device.valve_position
-        elif cube.is_wallthermostat(device):
+        elif device.is_wallthermostat():
             for device in cube.devices_by_room(cube.room_by_id(device.room_id)):
-                if cube.is_thermostat(device) and device.valve_position > 0:
+                if device.is_thermostat() and device.valve_position > 0:
                     valve = device.valve_position
                     break
         else:
@@ -287,7 +287,7 @@ class MaxCubeClimate(ClimateEntity):
         cube = self._cubehandle.cube
         device = cube.device_by_rf(self._rf_address)
 
-        if not cube.is_thermostat(device):
+        if not device.is_thermostat():
             return {}
         return {ATTR_VALVE_POSITION: device.valve_position}
 

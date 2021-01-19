@@ -189,6 +189,10 @@ async def test_tracked_wireless_clients(hass):
 
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1.state == "home"
+    assert client_1.attributes["ip"] == "10.0.0.1"
+    assert client_1.attributes["mac"] == "00:00:00:00:00:01"
+    assert client_1.attributes["hostname"] == "client_1"
+    assert client_1.attributes["host_name"] == "client_1"
 
     # State change signalling works with events
     controller.api.websocket._data = {
@@ -629,6 +633,7 @@ async def test_option_ssid_filter(hass):
     # Trigger update to get client marked as away
     event = {"meta": {"message": MESSAGE_CLIENT}, "data": [CLIENT_3]}
     controller.api.message_handler(event)
+    await hass.async_block_till_done()
 
     new_time = (
         dt_util.utcnow() + controller.option_detection_time + timedelta(seconds=1)
