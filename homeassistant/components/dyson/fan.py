@@ -176,6 +176,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.services.register(
         DYSON_DOMAIN, SERVICE_SET_AUTO_MODE, service_handle, schema=SET_AUTO_MODE_SCHEMA
     )
+
+    hass.services.register(
+        DYSON_DOMAIN,
+        SERVICE_SET_DYSON_SPEED,
+        service_handle,
+        schema=SET_DYSON_SPEED_SCHEMA,
+    )
+
     if has_purecool_devices:
         hass.services.register(
             DYSON_DOMAIN, SERVICE_SET_ANGLE, service_handle, schema=SET_ANGLE_SCHEMA
@@ -190,13 +198,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         hass.services.register(
             DYSON_DOMAIN, SERVICE_SET_TIMER, service_handle, schema=SET_TIMER_SCHEMA
-        )
-
-        hass.services.register(
-            DYSON_DOMAIN,
-            SERVICE_SET_DYSON_SPEED,
-            service_handle,
-            schema=SET_DYSON_SPEED_SCHEMA,
         )
 
 
@@ -290,6 +291,13 @@ class DysonPureCoolLinkEntity(DysonFanEntity):
         """Turn off the fan."""
         _LOGGER.debug("Turn off fan %s", self.name)
         self._device.set_configuration(fan_mode=FanMode.OFF)
+
+    def set_dyson_speed(self, speed: str = None) -> None:
+        """Set the exact speed of the purecool fan."""
+        _LOGGER.debug("Set exact speed for fan %s", self.name)
+
+        fan_speed = FanSpeed(f"{int(speed):04d}")
+        self._device.set_configuration(fan_mode=FanMode.FAN, fan_speed=fan_speed)
 
     def oscillate(self, oscillating: bool) -> None:
         """Turn on/off oscillating."""

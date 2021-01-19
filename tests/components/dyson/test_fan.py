@@ -298,6 +298,11 @@ async def test_commands_purecool(
         ),
         (SERVICE_SET_AUTO_MODE, {"auto_mode": True}, {"fan_mode": FanMode.AUTO}),
         (SERVICE_SET_AUTO_MODE, {"auto_mode": False}, {"fan_mode": FanMode.FAN}),
+        (
+            SERVICE_SET_DYSON_SPEED,
+            {ATTR_DYSON_SPEED: "4"},
+            {"fan_mode": FanMode.FAN, "fan_speed": FanSpeed.FAN_SPEED_4},
+        ),
     ],
 )
 @pytest.mark.parametrize("device", [DysonPureCoolLink], indirect=True)
