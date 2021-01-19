@@ -304,7 +304,7 @@ class HomeAssistant:
             _LOGGER.warning(
                 "Something is blocking Home Assistant from wrapping up the "
                 "start up phase. We're going to continue anyway. Please "
-                "report the following info at http://bit.ly/2ogP58T : %s",
+                "report the following info at https://github.com/home-assistant/core/issues: %s",
                 ", ".join(self.config.components),
             )
 
