@@ -1,8 +1,11 @@
 """Component for interacting with a Lutron Caseta system."""
 import asyncio
+import json
 import logging
 
 from aiolip import LIP
+from aiolip.data import LIPMode
+from aiolip.protocol import LIP_BUTTON_PRESS, LIP_BUTTON_RELEASE
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
@@ -17,7 +20,7 @@ from .const import (
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
-    LUTRON_CASETA_EVENT,
+    LUTRON_CASETA_BUTTON_EVENT,
     LUTRON_CASETA_LEAP,
     LUTRON_CASETA_LIP,
 )
@@ -107,7 +110,7 @@ async def async_setup_entry(hass, config_entry):
     else:
         _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s", host)
         data[LUTRON_CASETA_LIP] = lip
-        await _async_subscribe_remove_events(hass, lip, bridge)
+        await _async_subscribe_pico_remote_events(hass, lip, bridge)
 
     for component in LUTRON_CASETA_COMPONENTS:
         hass.async_create_task(
@@ -117,21 +120,31 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def _async_subscribe_remove_events(hass, lip, bridge):
+async def _async_subscribe_pico_remote_events(hass, lip, bridge):
     """Subscribe to lutron events."""
-    remotes = bridge.get_devices_by_domain("sensor")
-    _LOGGER.debug(await bridge._request("ReadRequest", "/server/2/id"))
-    _LOGGER.debug(remotes)
+    lip_response = json.loads(await bridge._request("ReadRequest", "/server/2/id"))
+    devices = lip_response["Body"]["LIPIdList"]["Devices"]
+    button_devices_by_id = {
+        device["ID"]: device for device in devices if "Buttons" in device
+    }
 
     @callback
     def _async_lip_event(lip_message):
+        if lip_message.mode != LIPMode.OUTPUT:
+            return
+
+        device = button_devices_by_id.get(lip_message.integration_id)
+        if not device:
+            return
+
         hass.bus.async_fire(
-            LUTRON_CASETA_EVENT,
+            LUTRON_CASETA_BUTTON_EVENT,
             {
-                "mode": lip_message.mode.name,
+                "device_name": device["Name"],
                 "integration_id": lip_message.integration_id,
-                "action_number": lip_message.action_number,
-                "value": lip_message.value,
+                "button_number": lip_message.action_number,
+                "press": lip_message.value == LIP_BUTTON_PRESS,
+                "release": lip_message.value == LIP_BUTTON_RELEASE,
             },
         )
         _LOGGER.debug(lip_message)
