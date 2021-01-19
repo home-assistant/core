@@ -12,7 +12,7 @@ from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN, SERIAL_NUMBER, TITLE  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,9 +33,8 @@ async def validate_input(hass: core.HomeAssistant, data: Dict):
     await device.async_disconnect()
 
     return {
-        # TODO Use constants
-        "serial_number": device.serial_number,
-        "title": device.hostname.split(".")[0],
+        SERIAL_NUMBER: device.serial_number,
+        TITLE: device.hostname.split(".")[0],
     }
 
 
@@ -66,9 +65,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(info["serial_number"])
+            await self.async_set_unique_id(info[SERIAL_NUMBER])
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=info["title"], data=user_input)
+            return self.async_create_entry(title=info[TITLE], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
