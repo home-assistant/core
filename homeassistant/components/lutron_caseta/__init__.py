@@ -2,15 +2,27 @@
 import asyncio
 import logging
 
+from aiolip import LIP
+from aiolip.data import LIPMode
+from aiolip.protocol import LIP_BUTTON_PRESS, LIP_BUTTON_RELEASE
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_CA_CERTS, CONF_CERTFILE, CONF_KEYFILE
+from .const import (
+    CONF_CA_CERTS,
+    CONF_CERTFILE,
+    CONF_KEYFILE,
+    LUTRON_CASETA_BUTTON_EVENT,
+    LUTRON_CASETA_LEAP,
+    LUTRON_CASETA_LIP,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,13 +89,32 @@ async def async_setup_entry(hass, config_entry):
     await bridge.connect()
     if not bridge.is_connected():
         _LOGGER.error("Unable to connect to Lutron Caseta bridge at %s", host)
-        return False
+        raise ConfigEntryNotReady
 
-    _LOGGER.debug("Connected to Lutron Caseta bridge at %s", host)
+    _LOGGER.debug("Connected to Lutron Caseta bridge via LEAP at %s", host)
 
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
     # components we're setting up.
-    hass.data[DOMAIN][config_entry.entry_id] = bridge
+    data = hass.data[DOMAIN][config_entry.entry_id] = {
+        LUTRON_CASETA_LEAP: bridge,
+        LUTRON_CASETA_LIP: None,
+    }
+
+    lip_devices = bridge.get_lip_devices()
+    if lip_devices:
+        # If the bridge also supports LIP (Lutron Integration Protocol)
+        # we can fire events when pico buttons are pressed to allow
+        # pico remotes to control other devices.
+        lip = LIP()
+        try:
+            await lip.async_connect(host)
+        except asyncio.TimeoutError:
+            _LOGGER.error("Failed to connect to via LIP at %s:23", host)
+            pass
+        else:
+            _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s:23", host)
+            data[LUTRON_CASETA_LIP] = lip
+            _async_subscribe_pico_remote_events(hass, lip, lip_devices)
 
     for component in LUTRON_CASETA_COMPONENTS:
         hass.async_create_task(
@@ -93,10 +124,49 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
+@callback
+def _async_subscribe_pico_remote_events(hass, lip, lip_devices):
+    """Subscribe to lutron events."""
+    button_devices_by_id = {
+        id: device for id, device in lip_devices.items() if "Buttons" in device
+    }
+
+    _LOGGER.debug("Button Devices: %s", button_devices_by_id)
+
+    @callback
+    def _async_lip_event(lip_message):
+        if lip_message.mode != LIPMode.DEVICE:
+            return
+
+        device = button_devices_by_id.get(lip_message.integration_id)
+
+        if not device:
+            return
+
+        hass.bus.async_fire(
+            LUTRON_CASETA_BUTTON_EVENT,
+            {
+                "device_id": lip_message.integration_id,
+                "button_number": lip_message.action_number,
+                "device_name": device["Name"],
+                "area_name": device.get("Area", {}).get("Name"),
+                "press": lip_message.value == LIP_BUTTON_PRESS,
+                "release": lip_message.value == LIP_BUTTON_RELEASE,
+            },
+        )
+
+    lip.subscribe(_async_lip_event)
+
+    asyncio.create_task(lip.async_run())
+
+
 async def async_unload_entry(hass, config_entry):
     """Unload the bridge bridge from a config entry."""
 
-    hass.data[DOMAIN][config_entry.entry_id].close()
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    data[LUTRON_CASETA_LEAP].close()
+    if data[LUTRON_CASETA_LIP]:
+        await data[LUTRON_CASETA_LIP].async_stop()
 
     unload_ok = all(
         await asyncio.gather(

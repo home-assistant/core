@@ -7,6 +7,7 @@ from homeassistant.components.binary_sensor import (
 )
 
 from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice
+from .const import LUTRON_CASETA_LEAP
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -17,7 +18,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """
 
     entities = []
-    bridge = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    bridge = hass.data[CASETA_DOMAIN][config_entry.entry_id][LUTRON_CASETA_LEAP]
     occupancy_groups = bridge.occupancy_groups
 
     for occupancy_group in occupancy_groups.values():

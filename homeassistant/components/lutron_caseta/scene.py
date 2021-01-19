@@ -4,6 +4,7 @@ from typing import Any
 from homeassistant.components.scene import Scene
 
 from . import DOMAIN as CASETA_DOMAIN
+from .const import LUTRON_CASETA_LEAP
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -14,7 +15,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """
 
     entities = []
-    bridge = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    bridge = hass.data[CASETA_DOMAIN][config_entry.entry_id][LUTRON_CASETA_LEAP]
     scenes = bridge.get_scenes()
 
     for scene in scenes:
