@@ -2,15 +2,25 @@
 import asyncio
 import logging
 
+from aiolip import LIP
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_CA_CERTS, CONF_CERTFILE, CONF_KEYFILE
+from .const import (
+    CONF_CA_CERTS,
+    CONF_CERTFILE,
+    CONF_KEYFILE,
+    LUTRON_CASETA_EVENT,
+    LUTRON_CASETA_LEAP,
+    LUTRON_CASETA_LIP,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,13 +87,27 @@ async def async_setup_entry(hass, config_entry):
     await bridge.connect()
     if not bridge.is_connected():
         _LOGGER.error("Unable to connect to Lutron Caseta bridge at %s", host)
-        return False
+        raise ConfigEntryNotReady
 
-    _LOGGER.debug("Connected to Lutron Caseta bridge at %s", host)
+    _LOGGER.debug("Connected to Lutron Caseta bridge via LEAP at %s", host)
 
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
     # components we're setting up.
-    hass.data[DOMAIN][config_entry.entry_id] = bridge
+    data = hass.data[DOMAIN][config_entry.entry_id] = {
+        LUTRON_CASETA_LEAP: bridge,
+        LUTRON_CASETA_LIP: None,
+    }
+
+    lip = LIP(host)
+    try:
+        lip.async_connect()
+    except asyncio.TimeoutError:
+        # Only the PRO and Ra Select bridges support LIP
+        pass
+    else:
+        _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s", host)
+        data[LUTRON_CASETA_LIP] = lip
+        _async_subscribe_remove_events(hass, config_entry)
 
     for component in LUTRON_CASETA_COMPONENTS:
         hass.async_create_task(
@@ -93,10 +117,39 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
+async def _async_subscribe_remove_events(hass, config_entry):
+    """Subscribe to lutron events."""
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    lip = data[LUTRON_CASETA_LIP]
+    bridge = data[LUTRON_CASETA_LEAP]
+    remotes = bridge.get_devices_by_domain("sensor")
+    _LOGGER.warning(remotes)
+
+    @callback
+    def _async_lip_event(lip_message):
+        hass.bus.async_fire(
+            LUTRON_CASETA_EVENT,
+            {
+                "mode": lip_message.mode,
+                "integration_id": lip_message.integration_id,
+                "action_number": lip_message.action_number,
+                "value": lip_message.value,
+            },
+        )
+        _LOGGER.warning(lip_message)
+
+    lip.subscribe(_async_lip_event)
+
+    asyncio.create_task(lip.async_run())
+
+
 async def async_unload_entry(hass, config_entry):
     """Unload the bridge bridge from a config entry."""
 
-    hass.data[DOMAIN][config_entry.entry_id].close()
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    data[LUTRON_CASETA_LEAP].close()
+    if data[LUTRON_CASETA_LIP]:
+        await data[LUTRON_CASETA_LIP].async_stop()
 
     unload_ok = all(
         await asyncio.gather(

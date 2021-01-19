@@ -118,6 +118,9 @@ aiohue==2.1.0
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
 
+# homeassistant.components.lutron_caseta
+aiolip==1.0.0
+
 # homeassistant.components.notion
 aionotion==1.1.0
 
