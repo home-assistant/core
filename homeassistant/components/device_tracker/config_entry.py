@@ -48,37 +48,12 @@ class BaseTrackerEntity(Entity):
         raise NotImplementedError
 
     @property
-    def ip_address(self) -> str:
-        """Return the primary ip address of the device."""
-        return None
-
-    @property
-    def mac_address(self) -> str:
-        """Return the mac address of the device."""
-        return None
-
-    @property
-    def hostname(self) -> str:
-        """Return hostname of the device."""
-        return None
-
-    @property
     def state_attributes(self):
         """Return the device state attributes."""
         attr = {ATTR_SOURCE_TYPE: self.source_type}
 
-        battery_level = self.battery_level
-        if battery_level:
-            attr[ATTR_BATTERY_LEVEL] = battery_level
-        ip_address = self.ip_address
-        if ip_address is not None:
-            attr[ATTR_IP] = ip_address
-        mac_address = self.mac_address
-        if mac_address is not None:
-            attr[ATTR_MAC] = mac_address
-        hostname = self.hostname
-        if hostname is not None:
-            attr[ATTR_HOST_NAME] = hostname
+        if self.battery_level:
+            attr[ATTR_BATTERY_LEVEL] = self.battery_level
 
         return attr
 
@@ -156,6 +131,21 @@ class ScannerEntity(BaseTrackerEntity):
     """Represent a tracked device that is on a scanned network."""
 
     @property
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return None
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return None
+
+    @property
+    def hostname(self) -> str:
+        """Return hostname of the device."""
+        return None
+
+    @property
     def state(self):
         """Return the state of the device."""
         if self.is_connected:
@@ -166,3 +156,17 @@ class ScannerEntity(BaseTrackerEntity):
     def is_connected(self):
         """Return true if the device is connected to the network."""
         raise NotImplementedError
+
+    @property
+    def state_attributes(self):
+        """Return the device state attributes."""
+        attr = {}
+        attr.update(super().state_attributes)
+        if self.ip_address is not None:
+            attr[ATTR_IP] = self.ip_address
+        if self.mac_address is not None:
+            attr[ATTR_MAC] = self.mac_address
+        if self.hostname is not None:
+            attr[ATTR_HOST_NAME] = self.hostname
+
+        return attr
