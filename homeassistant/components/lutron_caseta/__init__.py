@@ -143,7 +143,7 @@ def _async_subscribe_pico_remote_events(hass, lip, lip_response):
     @callback
     def _async_lip_event(lip_message):
         _LOGGER.debug("LIP Event: %s", lip_message)
-        if lip_message.mode != LIPMode.OUTPUT:
+        if lip_message.mode != LIPMode.DEVICE:
             return
 
         device = button_devices_by_id.get(lip_message.integration_id)
