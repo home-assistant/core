@@ -411,7 +411,6 @@ class HyperionLight(LightEntity):
                 return
 
         # == Get key parameters ==
-        brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
         if ATTR_EFFECT not in kwargs and ATTR_HS_COLOR in kwargs:
             effect = KEY_EFFECT_SOLID
         else:
@@ -423,7 +422,8 @@ class HyperionLight(LightEntity):
             rgb_color = self._rgb_color
 
         # == Set brightness ==
-        if self._brightness != brightness:
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS]
             for item in self._client.adjustment:
                 if not await self._client.async_send_set_adjustment(
                     **{
