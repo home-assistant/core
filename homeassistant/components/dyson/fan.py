@@ -183,9 +183,77 @@ class DysonFanEntity(DysonEntity, FanEntity):
     """Representation of a Dyson fan."""
 
     @property
+    def speed(self):
+        """Return the current speed."""
+        speed_map = {
+            FanSpeed.FAN_SPEED_1.value: SPEED_LOW,
+            FanSpeed.FAN_SPEED_2.value: SPEED_LOW,
+            FanSpeed.FAN_SPEED_3.value: SPEED_LOW,
+            FanSpeed.FAN_SPEED_4.value: SPEED_LOW,
+            FanSpeed.FAN_SPEED_AUTO.value: SPEED_MEDIUM,
+            FanSpeed.FAN_SPEED_5.value: SPEED_MEDIUM,
+            FanSpeed.FAN_SPEED_6.value: SPEED_MEDIUM,
+            FanSpeed.FAN_SPEED_7.value: SPEED_MEDIUM,
+            FanSpeed.FAN_SPEED_8.value: SPEED_HIGH,
+            FanSpeed.FAN_SPEED_9.value: SPEED_HIGH,
+            FanSpeed.FAN_SPEED_10.value: SPEED_HIGH,
+        }
+
+        return speed_map[self._device.state.speed]
+
+    @property
+    def speed_list(self) -> list:
+        """Get the list of available speeds."""
+        return [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+
+    @property
+    def dyson_speed(self):
+        """Return the current speed."""
+        if self._device.state:
+            if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
+                return self._device.state.speed
+            return int(self._device.state.speed)
+
+    @property
+    def dyson_speed_list(self) -> list:
+        """Get the list of available dyson speeds."""
+        return [
+            int(FanSpeed.FAN_SPEED_1.value),
+            int(FanSpeed.FAN_SPEED_2.value),
+            int(FanSpeed.FAN_SPEED_3.value),
+            int(FanSpeed.FAN_SPEED_4.value),
+            int(FanSpeed.FAN_SPEED_5.value),
+            int(FanSpeed.FAN_SPEED_6.value),
+            int(FanSpeed.FAN_SPEED_7.value),
+            int(FanSpeed.FAN_SPEED_8.value),
+            int(FanSpeed.FAN_SPEED_9.value),
+            int(FanSpeed.FAN_SPEED_10.value),
+        ]
+
+    @property
     def night_mode(self):
         """Return Night mode."""
         return self._device.state.night_mode == "ON"
+
+    @property
+    def auto_mode(self):
+        """Return auto mode."""
+        raise NotImplementedError
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED
+
+    @property
+    def device_state_attributes(self) -> dict:
+        """Return optional state attributes."""
+        return {
+            ATTR_NIGHT_MODE: self.night_mode,
+            ATTR_AUTO_MODE: self.auto_mode,
+            ATTR_DYSON_SPEED: self.dyson_speed,
+            ATTR_DYSON_SPEED_LIST: self.dyson_speed_list,
+        }
 
 
 class DysonPureCoolLinkEntity(DysonFanEntity):
@@ -244,13 +312,6 @@ class DysonPureCoolLinkEntity(DysonFanEntity):
         """Return true if the entity is on."""
         return self._device.state.fan_mode in ["FAN", "AUTO"]
 
-    @property
-    def speed(self) -> str:
-        """Return the current speed."""
-        if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
-            return self._device.state.speed
-        return int(self._device.state.speed)
-
     def set_night_mode(self, night_mode: bool) -> None:
         """Turn fan in night mode."""
         _LOGGER.debug("Set %s night mode %s", self.name, night_mode)
@@ -271,35 +332,6 @@ class DysonPureCoolLinkEntity(DysonFanEntity):
             self._device.set_configuration(fan_mode=FanMode.AUTO)
         else:
             self._device.set_configuration(fan_mode=FanMode.FAN)
-
-    @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        supported_speeds = [
-            FanSpeed.FAN_SPEED_AUTO.value,
-            int(FanSpeed.FAN_SPEED_1.value),
-            int(FanSpeed.FAN_SPEED_2.value),
-            int(FanSpeed.FAN_SPEED_3.value),
-            int(FanSpeed.FAN_SPEED_4.value),
-            int(FanSpeed.FAN_SPEED_5.value),
-            int(FanSpeed.FAN_SPEED_6.value),
-            int(FanSpeed.FAN_SPEED_7.value),
-            int(FanSpeed.FAN_SPEED_8.value),
-            int(FanSpeed.FAN_SPEED_9.value),
-            int(FanSpeed.FAN_SPEED_10.value),
-        ]
-
-        return supported_speeds
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED
-
-    @property
-    def device_state_attributes(self) -> dict:
-        """Return optional state attributes."""
-        return {ATTR_NIGHT_MODE: self.night_mode, ATTR_AUTO_MODE: self.auto_mode}
 
 
 class DysonPureCoolEntity(DysonFanEntity):
@@ -408,33 +440,6 @@ class DysonPureCoolEntity(DysonFanEntity):
         return self._device.state.fan_power == "ON"
 
     @property
-    def speed(self):
-        """Return the current speed."""
-        speed_map = {
-            FanSpeed.FAN_SPEED_1.value: SPEED_LOW,
-            FanSpeed.FAN_SPEED_2.value: SPEED_LOW,
-            FanSpeed.FAN_SPEED_3.value: SPEED_LOW,
-            FanSpeed.FAN_SPEED_4.value: SPEED_LOW,
-            FanSpeed.FAN_SPEED_AUTO.value: SPEED_MEDIUM,
-            FanSpeed.FAN_SPEED_5.value: SPEED_MEDIUM,
-            FanSpeed.FAN_SPEED_6.value: SPEED_MEDIUM,
-            FanSpeed.FAN_SPEED_7.value: SPEED_MEDIUM,
-            FanSpeed.FAN_SPEED_8.value: SPEED_HIGH,
-            FanSpeed.FAN_SPEED_9.value: SPEED_HIGH,
-            FanSpeed.FAN_SPEED_10.value: SPEED_HIGH,
-        }
-
-        return speed_map[self._device.state.speed]
-
-    @property
-    def dyson_speed(self):
-        """Return the current speed."""
-        if self._device.state:
-            if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
-                return self._device.state.speed
-            return int(self._device.state.speed)
-
-    @property
     def auto_mode(self):
         """Return Auto mode."""
         return self._device.state.auto_mode == "ON"
@@ -472,43 +477,14 @@ class DysonPureCoolEntity(DysonFanEntity):
         return int(self._device.state.carbon_filter_state)
 
     @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
-
-    @property
-    def dyson_speed_list(self) -> list:
-        """Get the list of available dyson speeds."""
-        return [
-            int(FanSpeed.FAN_SPEED_1.value),
-            int(FanSpeed.FAN_SPEED_2.value),
-            int(FanSpeed.FAN_SPEED_3.value),
-            int(FanSpeed.FAN_SPEED_4.value),
-            int(FanSpeed.FAN_SPEED_5.value),
-            int(FanSpeed.FAN_SPEED_6.value),
-            int(FanSpeed.FAN_SPEED_7.value),
-            int(FanSpeed.FAN_SPEED_8.value),
-            int(FanSpeed.FAN_SPEED_9.value),
-            int(FanSpeed.FAN_SPEED_10.value),
-        ]
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED
-
-    @property
     def device_state_attributes(self) -> dict:
         """Return optional state attributes."""
         return {
-            ATTR_NIGHT_MODE: self.night_mode,
-            ATTR_AUTO_MODE: self.auto_mode,
+            **super().device_state_attributes,
             ATTR_ANGLE_LOW: self.angle_low,
             ATTR_ANGLE_HIGH: self.angle_high,
             ATTR_FLOW_DIRECTION_FRONT: self.flow_direction_front,
             ATTR_TIMER: self.timer,
             ATTR_HEPA_FILTER: self.hepa_filter,
             ATTR_CARBON_FILTER: self.carbon_filter,
-            ATTR_DYSON_SPEED: self.dyson_speed,
-            ATTR_DYSON_SPEED_LIST: self.dyson_speed_list,
         }

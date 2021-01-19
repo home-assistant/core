@@ -93,10 +93,10 @@ async def test_state_purecoollink(
     attributes = state.attributes
     assert attributes[ATTR_NIGHT_MODE] is True
     assert attributes[ATTR_OSCILLATING] is True
-    assert attributes[ATTR_SPEED] == 1
-    assert attributes[ATTR_SPEED_LIST] == [FanSpeed.FAN_SPEED_AUTO.value] + list(
-        range(1, 11)
-    )
+    assert attributes[ATTR_SPEED] == SPEED_LOW
+    assert attributes[ATTR_SPEED_LIST] == [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+    assert attributes[ATTR_DYSON_SPEED] == 1
+    assert attributes[ATTR_DYSON_SPEED_LIST] == list(range(1, 11))
     assert attributes[ATTR_AUTO_MODE] is False
     assert attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_OSCILLATE | SUPPORT_SET_SPEED
 
@@ -115,7 +115,8 @@ async def test_state_purecoollink(
     attributes = state.attributes
     assert attributes[ATTR_NIGHT_MODE] is False
     assert attributes[ATTR_OSCILLATING] is False
-    assert attributes[ATTR_SPEED] == "AUTO"
+    assert attributes[ATTR_SPEED] == SPEED_MEDIUM
+    assert attributes[ATTR_DYSON_SPEED] == "AUTO"
     assert attributes[ATTR_AUTO_MODE] is True
 
 
