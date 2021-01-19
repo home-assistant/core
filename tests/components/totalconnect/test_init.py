@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.totalconnect.const import DOMAIN
+from homeassistant.config_entries import ENTRY_STATE_SETUP_ERROR
 from homeassistant.setup import async_setup_component
 
 from .common import CONFIG_DATA
@@ -20,12 +21,8 @@ async def test_reauth_started(hass):
     with patch(
         "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient",
         autospec=True,
-    ) as mock_client, patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectConfigFlow.async_step_reauth"
-    ) as mock_async_step_reauth:
+    ) as mock_client:
         mock_client.return_value.is_valid_credentials.return_value = False
         assert await async_setup_component(hass, DOMAIN, {})
 
-    await hass.async_block_till_done()
-    mock_client.assert_called_once()
-    mock_async_step_reauth.assert_called_once()
+    assert mock_entry.state == ENTRY_STATE_SETUP_ERROR
