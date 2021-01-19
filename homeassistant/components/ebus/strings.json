@@ -3,18 +3,10 @@
     "step": {
       "user": {
         "title": "EBUS - Connect",
-        "description": "Set up EBUS integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/ebus.\n\nThe connection test takes a moment.",
+        "description": "Set up EBUS integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/ebus.\n\nThe connection test takes a moment. Please be patient.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "messages": "Messages"
-        }
-      },
-      "scan": {
-        "title": "EBUS - Scan",
-        "description": "Congratulations. EBUS connection is working.",
-        "data": {
-          "scan": "Scan EBUS for valid messages. This avoids invalid/broken sensors but takes time. Please be patient. Very patient."
+          "port": "[%key:common::config_flow::data::port%]"
         }
       }
     },

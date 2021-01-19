@@ -6,7 +6,7 @@ import itertools
 import logging
 from typing import Dict
 
-from pyebus import AUTO, OK, CircuitMap, Ebus, FieldDef, get_icon
+from pyebus import OK, CircuitMap, Ebus, FieldDef, get_icon
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
@@ -18,7 +18,6 @@ from .const import (
     API,
     CHECKINTERVAL,
     CONF_CIRCUITMAP,
-    CONF_MESSAGES,
     CONF_MSGDEFCODES,
     DEFAULT_CIRCUITMAP,
     DOMAIN,
@@ -113,14 +112,10 @@ class EbusApi:
         # ebus
         host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
-        messages = entry.data[CONF_MESSAGES]
         msgdefcodes = entry.data[CONF_MSGDEFCODES]
         ebus = Ebus(host, port)
         ebus.msgdefcodes = msgdefcodes
         ebus.decode_msgdefcodes()
-        if messages:
-            ebus.msgdefs = ebus.msgdefs.resolve(messages)
-        ebus.msgdefs.set_defaultprio(AUTO)
         self._ebus = ebus
 
         # circuitmap
@@ -169,13 +164,17 @@ class EbusApi:
                 if state == OK:
                     # Reconnect
                     if self._state:
-                        _LOGGER.warning(f"Connecting {self.ident}")
-                        self._set_state("scanning")
+                        _LOGGER.warning(f"Reconnecting {self.ident}")
+                    self._set_state("scanning")
+                    try:
                         await ebus.async_wait_scancompleted()
-                    # start observing
-                    self._set_state(state)
-                    task = asyncio.create_task(self._async_observe())
-                    self._tasks.append(task)
+                    except Exception:
+                        self._set_state("no EBUSD connection")
+                    else:
+                        # start observing
+                        self._set_state(state)
+                        task = asyncio.create_task(self._async_observe())
+                        self._tasks.append(task)
                 elif task:
                     # stop observing
                     _LOGGER.warning(f"Connection {self.ident}: {state}")

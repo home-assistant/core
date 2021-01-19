@@ -3,23 +3,14 @@ import ipaddress
 import logging
 import re
 
-from pyebus import AUTO, NA, Ebus
+from pyebus import Ebus
 from pyebus.connection import ConnectionTimeout
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .const import (
-    CONF_MESSAGES,
-    CONF_MSGDEFCODES,
-    CONF_SCAN,
-    DEFAULT_HOST,
-    DEFAULT_MESSAGES,
-    DEFAULT_PORT,
-    DOMAIN,
-    TTL,
-)
+from .const import CONF_MSGDEFCODES, DEFAULT_HOST, DEFAULT_PORT, DOMAIN, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +35,6 @@ class EbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self.host = DEFAULT_HOST
         self.port = DEFAULT_PORT
-        self.messages = DEFAULT_MESSAGES
-        self.scan = True
         self.ebus = None
 
     async def async_step_user(self, user_input=None):
@@ -56,9 +45,7 @@ class EbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if host_valid(user_input[CONF_HOST]):
                 self.host = user_input[CONF_HOST]
                 self.port = user_input[CONF_PORT]
-                self.messages = user_input[CONF_MESSAGES]
-                self.scan = user_input.get(CONF_SCAN, False)
-                self.ebus = Ebus(self.host, self.port, timeout=3)
+                self.ebus = Ebus(self.host, self.port, timeout=TIMEOUT)
                 try:
                     is_online = await self.ebus.async_is_online()
                     await self.ebus.async_wait_scancompleted()
@@ -77,14 +64,14 @@ class EbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     _LOGGER.error(exc)
                     errors[CONF_HOST] = "invalid_host"
                 else:
-                    return self.async_show_form(
-                        step_id="scan",
-                        data_schema=vol.Schema(
-                            {
-                                vol.Required(CONF_SCAN, default=self.scan): bool,
-                            }
-                        ),
-                    )
+                    # Create Configuration Entry
+                    title = f"EBUS {self.host}:{self.port}"
+                    data = {
+                        CONF_HOST: self.host,
+                        CONF_PORT: self.port,
+                        CONF_MSGDEFCODES: self.ebus.msgdefcodes,
+                    }
+                    return self.async_create_entry(title=title, data=data)
             else:
                 errors[CONF_HOST] = "invalid_host"
 
@@ -94,59 +81,7 @@ class EbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST, default=self.host): str,
                     vol.Required(CONF_PORT, default=self.port): str,
-                    vol.Optional(CONF_MESSAGES, default=self.messages): str,
                 }
             ),
             errors=errors,
         )
-
-    async def async_step_scan(self, user_input=None):
-        """Handle The User Step."""
-        ebus = self.ebus
-        if user_input is not None:
-            self.scan = user_input[CONF_SCAN]
-
-            await ebus.async_load_msgdefs()
-            if self.messages:
-                ebus.msgdefs = ebus.msgdefs.resolve(self.messages.split(";"))
-            ebus.msgdefs.set_defaultprio(AUTO)
-            if self.scan:
-                _LOGGER.info("scanning")
-                messages = []
-                for msgdef in ebus.msgdefs:
-                    # only list readable messages
-                    if msgdef.read:
-                        msg = await ebus.async_read(msgdef, ttl=TTL)
-                        if msg.valid:
-                            if all(field.value != NA for field in msg.fields):
-                                messages.append(msgdef.ident)
-                                _LOGGER.info(f"Message found: {msgdef.ident}")
-                            else:
-                                for field in msg.fields:
-                                    if field.value != NA:
-                                        _LOGGER.info(
-                                            f"Field found: {field.fielddef.ident}"
-                                        )
-                                        messages.append(field.fielddef.ident)
-
-                                    else:
-                                        _LOGGER.warn(
-                                            f"Field broken: {field.fielddef.ident}"
-                                        )
-                        else:
-                            _LOGGER.warn(f"Message broken: {msgdef.ident}")
-                    else:
-                        messages.append(msgdef.ident)
-                        _LOGGER.info(f"Message found: {msgdef.ident}")
-            else:
-                messages = [msgdef.ident for msgdef in ebus.msgdefs]
-            # Create Configuration Entry
-            title = f"EBUS {self.host}:{self.port}"
-            data = {
-                CONF_HOST: self.host,
-                CONF_PORT: self.port,
-                CONF_MESSAGES: messages,
-                CONF_MSGDEFCODES: self.ebus.msgdefcodes,
-            }
-            return self.async_create_entry(title=title, data=data)
-        return self.async_show_form(step_id="wait", data_schema=vol.Schema({}))
