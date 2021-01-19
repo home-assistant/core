@@ -145,26 +145,21 @@ def _async_subscribe_pico_remote_events(hass, lip, lip_response):
         if lip_message.mode != LIPMode.DEVICE:
             return
 
-        _LOGGER.debug("LIP Event: %s", lip_message)
         device = button_devices_by_id.get(lip_message.integration_id)
-        _LOGGER.debug("LIP Device: %s", device)
 
         if not device:
             return
 
-        event_data = {
-            "device_name": device["Name"],
-            "area_name": device.get("Area", {}).get("Name"),
-            "integration_id": lip_message.integration_id,
-            "button_number": lip_message.action_number,
-            "press": lip_message.value == LIP_BUTTON_PRESS,
-            "release": lip_message.value == LIP_BUTTON_RELEASE,
-        }
-        _LOGGER.debug("fire event: %s", event_data)
-
         hass.bus.async_fire(
             LUTRON_CASETA_BUTTON_EVENT,
-            event_data,
+            {
+                "device_id": lip_message.integration_id,
+                "button_number": lip_message.action_number,
+                "device_name": device["Name"],
+                "area_name": device.get("Area", {}).get("Name"),
+                "press": lip_message.value == LIP_BUTTON_PRESS,
+                "release": lip_message.value == LIP_BUTTON_RELEASE,
+            },
         )
 
     _LOGGER.debug("Subscribed to lip events")
