@@ -1,6 +1,5 @@
 """Component for interacting with a Lutron Caseta system."""
 import asyncio
-import json
 import logging
 
 from aiolip import LIP
@@ -103,20 +102,21 @@ async def async_setup_entry(hass, config_entry):
     }
 
     try:
-        lip_response = json.loads(await bridge._request("ReadRequest", "/server/2/id"))
+        lip_response = await bridge._request("ReadRequest", "/server/2/id")
     except BridgeResponseError:
         pass
     else:
-        lip = LIP()
-        try:
-            await lip.async_connect(host)
-        except asyncio.TimeoutError:
-            # Only the PRO and Ra Select bridges support LIP
-            pass
-        else:
-            _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s", host)
-            data[LUTRON_CASETA_LIP] = lip
-            await _async_subscribe_pico_remote_events(hass, lip, lip_response)
+        if lip_response.Body is not None:
+            lip = LIP()
+            try:
+                await lip.async_connect(host)
+            except asyncio.TimeoutError:
+                # Only the PRO and Ra Select bridges support LIP
+                pass
+            else:
+                _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s", host)
+                data[LUTRON_CASETA_LIP] = lip
+                await _async_subscribe_pico_remote_events(hass, lip, lip_response)
 
     for component in LUTRON_CASETA_COMPONENTS:
         hass.async_create_task(
@@ -128,7 +128,7 @@ async def async_setup_entry(hass, config_entry):
 
 async def _async_subscribe_pico_remote_events(hass, lip, lip_response):
     """Subscribe to lutron events."""
-    devices = lip_response["Body"]["LIPIdList"]["Devices"]
+    devices = lip_response.Body["LIPIdList"]["Devices"]
     button_devices_by_id = {
         device["ID"]: device for device in devices if "Buttons" in device
     }
