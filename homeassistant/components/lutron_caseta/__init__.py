@@ -126,7 +126,8 @@ async def async_setup_entry(hass, config_entry):
 
 
 @callback
-def _async_merge_lip_leap_data(bridge, lip_devices):
+def _async_merge_lip_leap_data(lip_devices, bridge):
+    """Merge the leap data into the lip data."""
     sensor_devices = bridge.get_devices_by_domain("sensor")
 
     button_devices_by_id = {
