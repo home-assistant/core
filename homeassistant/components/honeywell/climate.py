@@ -312,7 +312,6 @@ class HoneywellUSThermostat(ClimateEntity):
     def _is_permanent_hold(self) -> bool:
         heat_status = self._device.raw_ui_data.get("StatusHeat", 0)
         cool_status = self._device.raw_ui_data.get("StatusCool", 0)
-        _LOGGER.warning("STATUS: %s::%s", heat_status, cool_status)
         return heat_status == 2 or cool_status == 2
 
     def _set_temperature(self, **kwargs) -> None:
