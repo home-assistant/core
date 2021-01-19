@@ -71,7 +71,7 @@ async def async_setup_alerts(hass: core.HomeAssistant) -> None:
     hass.async_create_task(async_retrieve_alerts())
 
     # Perform every hour
-    event.async_track_time_interval(hass, async_retrieve_alerts, timedelta(seconds=10))
+    event.async_track_time_interval(hass, async_retrieve_alerts, timedelta(hours=1))
 
 
 def check_version_relevant(current: str, min_version: str, max_version: str) -> bool:
