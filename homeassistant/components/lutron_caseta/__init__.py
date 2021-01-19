@@ -114,7 +114,8 @@ async def async_setup_entry(hass, config_entry):
         else:
             _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s:23", host)
             data[LUTRON_CASETA_LIP] = lip
-            _async_subscribe_pico_remote_events(hass, lip, bridge, lip_devices)
+            button_devices_by_id = _async_merge_lip_leap_data(lip_devices, bridge)
+            _async_subscribe_pico_remote_events(hass, lip, button_devices_by_id)
 
     for component in LUTRON_CASETA_COMPONENTS:
         hass.async_create_task(
@@ -125,16 +126,36 @@ async def async_setup_entry(hass, config_entry):
 
 
 @callback
-def _async_subscribe_pico_remote_events(hass, lip, bridge, lip_devices):
-    """Subscribe to lutron events."""
+def _async_merge_lip_leap_data(bridge, lip_devices):
     sensor_devices = bridge.get_devices_by_domain("sensor")
 
     button_devices_by_id = {
         id: device for id, device in lip_devices.items() if "Buttons" in device
     }
+    sensor_devices_by_name = {device["name"]: device for device in sensor_devices}
+
+    # Add the leap data into the lip data
+    # so we know the type, model, and serial
+    for device in button_devices_by_id.values():
+        area = device.get("Area", {}).get("Name")
+        name = device["Name"]
+        leap_name = f"{area}_{name}"
+        leap_device_data = sensor_devices_by_name.get(leap_name)
+        if leap_device_data is None:
+            continue
+        for key in ("type", "model", "serial"):
+            val = leap_device_data.get(key)
+            if val is not None:
+                device[key] = val
 
     _LOGGER.debug("Button Devices: %s", button_devices_by_id)
-    _LOGGER.debug("Sensor Devices: %s", sensor_devices)
+
+    return button_devices_by_id
+
+
+@callback
+def _async_subscribe_pico_remote_events(hass, lip, button_devices_by_id):
+    """Subscribe to lutron events."""
 
     @callback
     def _async_lip_event(lip_message):
@@ -150,6 +171,9 @@ def _async_subscribe_pico_remote_events(hass, lip, bridge, lip_devices):
             LUTRON_CASETA_BUTTON_EVENT,
             {
                 "device_id": lip_message.integration_id,
+                "serial": device.get("serial"),
+                "type": device.get("type"),
+                "model": device.get("model"),
                 "button_number": lip_message.action_number,
                 "device_name": device["Name"],
                 "area_name": device.get("Area", {}).get("Name"),
