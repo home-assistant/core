@@ -98,9 +98,9 @@ async def async_setup_entry(hass, config_entry):
         LUTRON_CASETA_LIP: None,
     }
 
-    lip = LIP(host)
+    lip = LIP()
     try:
-        lip.async_connect()
+        lip.async_connect(host)
     except asyncio.TimeoutError:
         # Only the PRO and Ra Select bridges support LIP
         pass
