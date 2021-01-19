@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import AbortFlow
 
 from .const import DOMAIN  # pylint: disable=unused-import
 
@@ -53,6 +54,11 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except HuisbaasjeException as exception:
             _LOGGER.warning(exception)
             errors["base"] = "invalid_auth"
+        except AbortFlow as exception:
+            raise exception
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
 
         return await self._show_setup_form(user_input, errors)
 
