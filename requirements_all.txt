@@ -196,6 +196,9 @@ aiolifx==0.6.7
 # homeassistant.components.lifx
 aiolifx_effects==0.2.2
 
+# homeassistant.components.lutron_caseta
+aiolip==1.0.1
+
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
 
