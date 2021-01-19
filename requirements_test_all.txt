@@ -243,6 +243,9 @@ buienradar==1.0.4
 # homeassistant.components.caldav
 caldav==0.7.1
 
+# homeassistant.components.coinbase
+coinbase==2.1.0
+
 # homeassistant.scripts.check_config
 colorlog==5.0.1
 

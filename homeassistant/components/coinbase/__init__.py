@@ -1,4 +1,5 @@
-"""Support for Coinbase."""
+"""The Coinbase integration."""
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -6,22 +7,21 @@ from coinbase.wallet.client import Client
 from coinbase.wallet.error import AuthenticationError
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "coinbase"
-
+PLATFORMS = ["sensor"]
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 CONF_API_SECRET = "api_secret"
 CONF_ACCOUNT_CURRENCIES = "account_balance_currencies"
 CONF_EXCHANGE_CURRENCIES = "exchange_rate_currencies"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
-
-DATA_COINBASE = "coinbase_cache"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -42,48 +42,65 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
-    """Set up the Coinbase component.
-
-    Will automatically setup sensors to support
-    wallets discovered on the network.
-    """
-    api_key = config[DOMAIN][CONF_API_KEY]
-    api_secret = config[DOMAIN][CONF_API_SECRET]
-    account_currencies = config[DOMAIN].get(CONF_ACCOUNT_CURRENCIES)
-    exchange_currencies = config[DOMAIN][CONF_EXCHANGE_CURRENCIES]
-
-    hass.data[DATA_COINBASE] = coinbase_data = CoinbaseData(api_key, api_secret)
-
-    if not hasattr(coinbase_data, "accounts"):
-        return False
-    for account in coinbase_data.accounts:
-        if account_currencies is None or account.currency in account_currencies:
-            load_platform(hass, "sensor", DOMAIN, {"account": account}, config)
-    for currency in exchange_currencies:
-        if currency not in coinbase_data.exchange_rates.rates:
-            _LOGGER.warning("Currency %s not found", currency)
-            continue
-        native = coinbase_data.exchange_rates.currency
-        load_platform(
-            hass,
-            "sensor",
+async def async_setup(hass: HomeAssistant, config: dict):
+    """Set up the Coinbase component."""
+    if DOMAIN not in config:
+        return True
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
             DOMAIN,
-            {"native_currency": native, "exchange_currency": currency},
-            config,
+            context={"source": SOURCE_IMPORT},
+            data=config[DOMAIN],
+        )
+    )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up Coinbase from a config entry."""
+    client = await hass.async_add_executor_job(
+        Client,
+        entry.data[CONF_API_KEY],
+        entry.data[CONF_API_TOKEN],
+    )
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(
+        CoinbaseData, client
+    )
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
     return True
 
 
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
+
+
 class CoinbaseData:
     """Get the latest data and update the states."""
 
-    def __init__(self, api_key, api_secret):
+    def __init__(self, client):
         """Init the coinbase data object."""
 
-        self.client = Client(api_key, api_secret)
-        self.update()
+        self.client = client
+        self.accounts = self.client.get_accounts()
+        self.exchange_rates = self.client.get_exchange_rates()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

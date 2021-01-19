@@ -2,6 +2,8 @@
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
 
+from .const import CONF_CURRENCIES, CONF_EXCAHNGE_RATES, DOMAIN
+
 ATTR_NATIVE_BALANCE = "Balance in native currency"
 
 CURRENCY_ICONS = {
@@ -19,36 +21,42 @@ ATTRIBUTION = "Data provided by coinbase.com"
 DATA_COINBASE = "coinbase_cache"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Coinbase sensors."""
-    if discovery_info is None:
-        return
-    if "account" in discovery_info:
-        account = discovery_info["account"]
-        sensor = AccountSensor(
-            hass.data[DATA_COINBASE], account["name"], account["balance"]["currency"]
-        )
-    if "exchange_currency" in discovery_info:
-        sensor = ExchangeRateSensor(
-            hass.data[DATA_COINBASE],
-            discovery_info["exchange_currency"],
-            discovery_info["native_currency"],
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Coinbase sensor platform."""
+    instance = hass.data[DOMAIN][config_entry.entry_id]
+    hass.async_add_executor_job(instance.update)
+
+    entities = []
+    exchange_native_currency = instance.exchange_rates.currency
+    for currency in config_entry.data[CONF_CURRENCIES]:
+        entities.append(AccountSensor(instance, currency))
+    for rate in config_entry.data[CONF_EXCAHNGE_RATES]:
+        entities.append(
+            ExchangeRateSensor(
+                instance,
+                rate,
+                exchange_native_currency,
+            )
         )
 
-    add_entities([sensor], True)
+    async_add_entities(entities)
 
 
 class AccountSensor(SensorEntity):
     """Representation of a Coinbase.com sensor."""
 
-    def __init__(self, coinbase_data, name, currency):
+    def __init__(self, coinbase_data, currency):
         """Initialize the sensor."""
         self._coinbase_data = coinbase_data
-        self._name = f"Coinbase {name}"
-        self._state = None
-        self._unit_of_measurement = currency
-        self._native_balance = None
-        self._native_currency = None
+        self._currency = currency
+        for account in coinbase_data.accounts["data"]:
+            if account.currency == currency:
+                self._name = f"Coinbase {account['name']}"
+                self._state = account["balance"]["amount"]
+                self._unit_of_measurement = account.currency
+                self._native_balance = account["native_balance"]["amount"]
+                self._native_currency = account["native_balance"]["currency"]
+                break
 
     @property
     def name(self):
@@ -81,11 +89,12 @@ class AccountSensor(SensorEntity):
     def update(self):
         """Get the latest state of the sensor."""
         self._coinbase_data.update()
-        for account in self._coinbase_data.accounts:
-            if self._name == f"Coinbase {account['name']}":
+        for account in self._coinbase_data.accounts["data"]:
+            if account.currency == self._currency:
                 self._state = account["balance"]["amount"]
                 self._native_balance = account["native_balance"]["amount"]
                 self._native_currency = account["native_balance"]["currency"]
+                break
 
 
 class ExchangeRateSensor(SensorEntity):
@@ -96,7 +105,9 @@ class ExchangeRateSensor(SensorEntity):
         self._coinbase_data = coinbase_data
         self.currency = exchange_currency
         self._name = f"{exchange_currency} Exchange Rate"
-        self._state = None
+        self._state = round(
+            1 / float(self._coinbase_data.exchange_rates.rates[self.currency]), 2
+        )
         self._unit_of_measurement = native_currency
 
     @property
@@ -127,5 +138,6 @@ class ExchangeRateSensor(SensorEntity):
     def update(self):
         """Get the latest state of the sensor."""
         self._coinbase_data.update()
-        rate = self._coinbase_data.exchange_rates.rates[self.currency]
-        self._state = round(1 / float(rate), 2)
+        self._state = round(
+            1 / float(self._coinbase_data.exchange_rates.rates[self.currency]), 2
+        )
