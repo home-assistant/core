@@ -12,6 +12,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -22,6 +23,7 @@ from .const import (
     LUTRON_CASETA_BUTTON_EVENT,
     LUTRON_CASETA_LEAP,
     LUTRON_CASETA_LIP,
+    MANUFACTURER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,7 +116,10 @@ async def async_setup_entry(hass, config_entry):
         else:
             _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s:23", host)
             data[LUTRON_CASETA_LIP] = lip
-            button_devices_by_id = _async_merge_lip_leap_data(lip_devices, bridge)
+            button_devices_by_id = await _async_merge_lip_leap_data(lip_devices, bridge)
+            await _async_register_button_devices(
+                hass, config_entry.entry_id, button_devices_by_id
+            )
             _async_subscribe_pico_remote_events(hass, lip, button_devices_by_id)
 
     for component in LUTRON_CASETA_COMPONENTS:
@@ -150,6 +155,27 @@ def _async_merge_lip_leap_data(lip_devices, bridge):
                 device[key] = val
 
     _LOGGER.debug("Button Devices: %s", button_devices_by_id)
+
+
+async def _async_register_button_devices(hass, config_entry_id, button_devices_by_id):
+    """Register button devices (Pico Remotes) in the device registry."""
+    device_registry = await dr.async_get_registry(hass)
+
+    for device in button_devices_by_id.values():
+        if "serial" not in device:
+            continue
+
+        device_entry = {
+            "name": device["Name"],
+            "manufacturer": MANUFACTURER,
+            "config_entry_id": config_entry_id,
+            "identifiers": {(DOMAIN, device["serial"])},
+        }
+
+        if "model" in device:
+            device_entry["model"] = device["model"]
+
+        device_registry.async_get_or_create(**device_entry)
 
     return button_devices_by_id
 
@@ -253,7 +279,7 @@ class LutronCasetaDevice(Entity):
         return {
             "identifiers": {(DOMAIN, self.serial)},
             "name": self.name,
-            "manufacturer": "Lutron",
+            "manufacturer": MANUFACTURER,
             "model": self._device["model"],
         }
 
