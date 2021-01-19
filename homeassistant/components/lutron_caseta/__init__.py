@@ -137,7 +137,7 @@ def _async_merge_lip_leap_data(bridge, lip_devices):
     # Add the leap data into the lip data
     # so we know the type, model, and serial
     for device in button_devices_by_id.values():
-        area = device.get("Area", {}).get("Name")
+        area = device.get("Area", {}).get("Name", "")
         name = device["Name"]
         leap_name = f"{area}_{name}"
         leap_device_data = sensor_devices_by_name.get(leap_name)
