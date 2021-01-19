@@ -5,7 +5,6 @@ import logging
 from aiolip import LIP
 from aiolip.data import LIPMode
 from aiolip.protocol import LIP_BUTTON_PRESS, LIP_BUTTON_RELEASE
-from pylutron_caseta import BridgeResponseError
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
@@ -101,24 +100,21 @@ async def async_setup_entry(hass, config_entry):
         LUTRON_CASETA_LIP: None,
     }
 
-    try:
-        lip_response = await bridge._request("ReadRequest", "/server/2/id")
-    except BridgeResponseError:
-        pass
-    else:
-        if lip_response.Body is not None:
-            lip = LIP()
-            try:
-                await lip.async_connect(host)
-            except asyncio.TimeoutError:
-                _LOGGER.error("Failed to connect to via LIP at %s:23", host)
-                pass
-            else:
-                _LOGGER.debug(
-                    "Connected to Lutron Caseta bridge via LIP at %s:23", host
-                )
-                data[LUTRON_CASETA_LIP] = lip
-                _async_subscribe_pico_remote_events(hass, lip, lip_response)
+    lip_devices = bridge.get_lip_devices()
+    if lip_devices:
+        # If the bridge also supports LIP (Lutron Integration Protocol)
+        # we can fire events when pico buttons are pressed to allow
+        # pico remotes to control other devices.
+        lip = LIP()
+        try:
+            await lip.async_connect(host)
+        except asyncio.TimeoutError:
+            _LOGGER.error("Failed to connect to via LIP at %s:23", host)
+            pass
+        else:
+            _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s:23", host)
+            data[LUTRON_CASETA_LIP] = lip
+            _async_subscribe_pico_remote_events(hass, lip, lip_devices)
 
     for component in LUTRON_CASETA_COMPONENTS:
         hass.async_create_task(
@@ -129,13 +125,10 @@ async def async_setup_entry(hass, config_entry):
 
 
 @callback
-def _async_subscribe_pico_remote_events(hass, lip, lip_response):
+def _async_subscribe_pico_remote_events(hass, lip, lip_devices):
     """Subscribe to lutron events."""
-    devices = lip_response.Body["LIPIdList"]["Devices"]
     button_devices_by_id = {
-        int(device["ID"]): device
-        for device in devices
-        if "Buttons" in device and "ID" in device and "Name" in device
+        id: device for id, device in lip_devices.items() if "Buttons" in device
     }
 
     _LOGGER.debug("Button Devices: %s", button_devices_by_id)
@@ -162,10 +155,8 @@ def _async_subscribe_pico_remote_events(hass, lip, lip_response):
             },
         )
 
-    _LOGGER.debug("Subscribed to lip events")
     lip.subscribe(_async_lip_event)
 
-    _LOGGER.debug("Starting LIP runniner")
     asyncio.create_task(lip.async_run())
 
 
