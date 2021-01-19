@@ -213,7 +213,6 @@ class DHCPWatcher(WatcherBase):
             sniff_socket = conf.L2socket(type=ETH_P_ALL)
             self._sniffer = AsyncSniffer(
                 filter=FILTER,
-                name="dhcp-discovery",
                 opened_socket=[sniff_socket],
                 started_callback=self.started.set,
                 prn=self.handle_dhcp_packet,
