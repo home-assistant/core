@@ -280,18 +280,14 @@ async def test_setup_and_stop(hass):
     )
     await hass.async_block_till_done()
 
-    wait_event = threading.Event()
-
-    def _sniff_wait():
-        wait_event.wait()
-
-    with patch("homeassistant.components.dhcp.sniff", _sniff_wait):
+    with patch("homeassistant.components.dhcp.AsyncSniffer.start") as start_call:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-    wait_event.set()
+
+    start_call.assert_called_once()
 
 
 async def test_setup_fails_as_root(hass, caplog):
@@ -307,7 +303,7 @@ async def test_setup_fails_as_root(hass, caplog):
     wait_event = threading.Event()
 
     with patch("os.geteuid", return_value=0), patch(
-        "homeassistant.components.dhcp.sniff", side_effect=Scapy_Exception
+        "homeassistant.components.dhcp.AsyncSniffer.start", side_effect=Scapy_Exception
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
@@ -331,7 +327,7 @@ async def test_setup_fails_non_root(hass, caplog):
     wait_event = threading.Event()
 
     with patch("os.geteuid", return_value=10), patch(
-        "homeassistant.components.dhcp.sniff", side_effect=Scapy_Exception
+        "homeassistant.components.dhcp.AsyncSniffer.start", side_effect=Scapy_Exception
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
@@ -363,9 +359,9 @@ async def test_device_tracker_hostname_and_macaddress_exists_before_start(hass):
             {},
             [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
         )
-        device_tracker_watcher.async_start()
+        await device_tracker_watcher.async_start()
         await hass.async_block_till_done()
-        device_tracker_watcher.async_stop()
+        await device_tracker_watcher.async_stop()
         await hass.async_block_till_done()
 
     assert len(mock_init.mock_calls) == 1
@@ -389,7 +385,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start(hass):
             {},
             [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
         )
-        device_tracker_watcher.async_start()
+        await device_tracker_watcher.async_start()
         await hass.async_block_till_done()
         hass.states.async_set(
             "device_tracker.august_connect",
@@ -402,7 +398,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start(hass):
             },
         )
         await hass.async_block_till_done()
-        device_tracker_watcher.async_stop()
+        await device_tracker_watcher.async_stop()
         await hass.async_block_till_done()
 
     assert len(mock_init.mock_calls) == 1
@@ -426,7 +422,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_not_home(hass)
             {},
             [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
         )
-        device_tracker_watcher.async_start()
+        await device_tracker_watcher.async_start()
         await hass.async_block_till_done()
         hass.states.async_set(
             "device_tracker.august_connect",
@@ -439,7 +435,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_not_home(hass)
             },
         )
         await hass.async_block_till_done()
-        device_tracker_watcher.async_stop()
+        await device_tracker_watcher.async_stop()
         await hass.async_block_till_done()
 
     assert len(mock_init.mock_calls) == 0
@@ -456,7 +452,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_not_router(has
             {},
             [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
         )
-        device_tracker_watcher.async_start()
+        await device_tracker_watcher.async_start()
         await hass.async_block_till_done()
         hass.states.async_set(
             "device_tracker.august_connect",
@@ -469,7 +465,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_not_router(has
             },
         )
         await hass.async_block_till_done()
-        device_tracker_watcher.async_stop()
+        await device_tracker_watcher.async_stop()
         await hass.async_block_till_done()
 
     assert len(mock_init.mock_calls) == 0
@@ -488,7 +484,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_hostname_missi
             {},
             [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
         )
-        device_tracker_watcher.async_start()
+        await device_tracker_watcher.async_start()
         await hass.async_block_till_done()
         hass.states.async_set(
             "device_tracker.august_connect",
@@ -500,7 +496,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_hostname_missi
             },
         )
         await hass.async_block_till_done()
-        device_tracker_watcher.async_stop()
+        await device_tracker_watcher.async_stop()
         await hass.async_block_till_done()
 
     assert len(mock_init.mock_calls) == 0
@@ -527,9 +523,9 @@ async def test_device_tracker_ignore_self_assigned_ips_before_start(hass):
             {},
             [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
         )
-        device_tracker_watcher.async_start()
+        await device_tracker_watcher.async_start()
         await hass.async_block_till_done()
-        device_tracker_watcher.async_stop()
+        await device_tracker_watcher.async_stop()
         await hass.async_block_till_done()
 
     assert len(mock_init.mock_calls) == 0
