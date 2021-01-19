@@ -121,7 +121,7 @@ async def async_setup_entry(hass, config_entry):
 def _async_subscribe_remove_events(hass, lip, bridge):
     """Subscribe to lutron events."""
     remotes = bridge.get_devices_by_domain("sensor")
-    _LOGGER.warning(remotes)
+    _LOGGER.debug(remotes)
 
     @callback
     def _async_lip_event(lip_message):
@@ -134,7 +134,7 @@ def _async_subscribe_remove_events(hass, lip, bridge):
                 "value": lip_message.value,
             },
         )
-        _LOGGER.warning(lip_message)
+        _LOGGER.debug(lip_message)
 
     lip.subscribe(_async_lip_event)
 
