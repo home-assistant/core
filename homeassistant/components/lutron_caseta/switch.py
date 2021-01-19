@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 
 from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice
-from .const import LUTRON_CASETA_LEAP
+from .const import LUTRON_CASETA_BRIDGE_DEVICE, LUTRON_CASETA_LEAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,11 +17,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """
 
     entities = []
-    bridge = hass.data[CASETA_DOMAIN][config_entry.entry_id][LUTRON_CASETA_LEAP]
+    data = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    bridge = data[LUTRON_CASETA_LEAP]
+    bridge_device = data[LUTRON_CASETA_BRIDGE_DEVICE]
     switch_devices = bridge.get_devices_by_domain(DOMAIN)
 
     for switch_device in switch_devices:
-        entity = LutronCasetaLight(switch_device, bridge)
+        entity = LutronCasetaLight(switch_device, bridge, bridge_device)
         entities.append(entity)
 
     async_add_entities(entities, True)

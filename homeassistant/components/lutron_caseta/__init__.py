@@ -20,6 +20,7 @@ from .const import (
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
+    LUTRON_CASETA_BRIDGE_DEVICE,
     LUTRON_CASETA_BUTTON_EVENT,
     LUTRON_CASETA_LEAP,
     LUTRON_CASETA_LIP,
@@ -95,15 +96,16 @@ async def async_setup_entry(hass, config_entry):
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LEAP at %s", host)
 
+    devices = bridge.get_devices()
+    bridge_device = devices["1"]
+    await _async_register_bridge_device(hass, config_entry.entry_id, bridge_device)
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
     # components we're setting up.
     data = hass.data[DOMAIN][config_entry.entry_id] = {
         LUTRON_CASETA_LEAP: bridge,
+        LUTRON_CASETA_BRIDGE_DEVICE: bridge_device,
         LUTRON_CASETA_LIP: None,
     }
-
-    _LOGGER.debug("all devices: %s", bridge.get_devices())
-    # TODO: register and store the repeater data : {'1': {'device_id': '1', 'current_state': -1, 'fan_speed': None, 'zone': None, 'name': 'Smart Bridge 2', 'type': 'RA2SelectMainRepeater', 'model': 'RR-SEL-REP-XX', 'serial': 32663615}
 
     lip_devices = bridge.get_lip_devices()
     if lip_devices:
@@ -121,7 +123,7 @@ async def async_setup_entry(hass, config_entry):
             data[LUTRON_CASETA_LIP] = lip
             button_devices_by_id = _async_merge_lip_leap_data(lip_devices, bridge)
             await _async_register_button_devices(
-                hass, config_entry.entry_id, button_devices_by_id
+                hass, config_entry.entry_id, bridge_device, button_devices_by_id
             )
             _async_subscribe_pico_remote_events(hass, lip, button_devices_by_id)
 
@@ -162,7 +164,21 @@ def _async_merge_lip_leap_data(lip_devices, bridge):
     return button_devices_by_id
 
 
-async def _async_register_button_devices(hass, config_entry_id, button_devices_by_id):
+async def _async_register_bridge_device(hass, config_entry_id, bridge_device):
+    """Register the bridge device in the device registry."""
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        name=bridge_device["name"],
+        manufacturer=MANUFACTURER,
+        config_entry_id=config_entry_id,
+        identifiers={(DOMAIN, bridge_device["serial"])},
+        model=bridge_device["model"],
+    )
+
+
+async def _async_register_button_devices(
+    hass, config_entry_id, bridge_device, button_devices_by_id
+):
     """Register button devices (Pico Remotes) in the device registry."""
     device_registry = await dr.async_get_registry(hass)
 
@@ -175,6 +191,7 @@ async def _async_register_button_devices(hass, config_entry_id, button_devices_b
             "manufacturer": MANUFACTURER,
             "config_entry_id": config_entry_id,
             "identifiers": {(DOMAIN, device["serial"])},
+            "via_device": (DOMAIN, bridge_device["serial"]),
         }
 
         if "model" in device:
@@ -245,14 +262,16 @@ async def async_unload_entry(hass, config_entry):
 class LutronCasetaDevice(Entity):
     """Common base class for all Lutron Caseta devices."""
 
-    def __init__(self, device, bridge):
+    def __init__(self, device, bridge, bridge_device):
         """Set up the base class.
 
         [:param]device the device metadata
         [:param]bridge the smartbridge object
+        [:param]bridge_device a dict with the details of the bridge
         """
         self._device = device
         self._smartbridge = bridge
+        self._bridge_device = bridge_device
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -286,6 +305,7 @@ class LutronCasetaDevice(Entity):
             "name": self.name,
             "manufacturer": MANUFACTURER,
             "model": self._device["model"],
+            "via_device": (DOMAIN, self._bridge_device["serial"]),
         }
 
     @property

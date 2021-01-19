@@ -15,7 +15,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """
 
     entities = []
-    bridge = hass.data[CASETA_DOMAIN][config_entry.entry_id][LUTRON_CASETA_LEAP]
+    data = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    bridge = data[LUTRON_CASETA_LEAP]
     scenes = bridge.get_scenes()
 
     for scene in scenes:
