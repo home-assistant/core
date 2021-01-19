@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ID = "id"
 ENTRY_ID = "entry_id"
+NODE_ID = "node_id"
 TYPE = "type"
 
 
@@ -26,6 +27,7 @@ TYPE = "type"
 def async_register_api(hass: HomeAssistant) -> None:
     """Register all of our api endpoints."""
     websocket_api.async_register_command(hass, websocket_network_status)
+    websocket_api.async_register_command(hass, websocket_node_status)
     websocket_api.async_register_command(hass, websocket_add_node)
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_remove_node)
@@ -54,6 +56,35 @@ def websocket_network_status(
             "home_id": client.driver.controller.data["homeId"],
             "node_count": len(client.driver.controller.nodes),
         },
+    }
+    connection.send_result(
+        msg[ID],
+        data,
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/node_status",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(NODE_ID): int,
+    }
+)
+@callback
+def websocket_node_status(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
+    """Get the status of a Z-Wave JS node."""
+    entry_id = msg[ENTRY_ID]
+    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    node_id = msg[NODE_ID]
+    node = client.driver.controller.nodes[node_id]
+    data = {
+        "node_id": node.node_id,
+        "is_routing": node.is_routing,
+        "status": node.status,
+        "is_secure": node.is_secure,
+        "ready": node.ready,
     }
     connection.send_result(
         msg[ID],
