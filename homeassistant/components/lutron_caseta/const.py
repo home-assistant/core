@@ -13,3 +13,5 @@ LUTRON_CASETA_LEAP = "lutron_caseta_leap"
 LUTRON_CASETA_LIP = "lutron_caseta_lip"
 
 LUTRON_CASETA_BUTTON_EVENT = "lutron_caseta_button_event"
+
+MANUFACTURER = "Lutron"
