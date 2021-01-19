@@ -116,7 +116,7 @@ async def async_setup_entry(hass, config_entry):
         else:
             _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s:23", host)
             data[LUTRON_CASETA_LIP] = lip
-            button_devices_by_id = await _async_merge_lip_leap_data(lip_devices, bridge)
+            button_devices_by_id = _async_merge_lip_leap_data(lip_devices, bridge)
             await _async_register_button_devices(
                 hass, config_entry.entry_id, button_devices_by_id
             )
