@@ -66,12 +66,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.info("Connected to Zwave JS Server")
         if initialized.is_set():
             # update entity availability
-            async_dispatcher_send(hass, f"{DOMAIN}_connection_state")
+            async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
 
     async def async_on_disconnect() -> None:
         """Handle websocket is disconnected."""
         LOGGER.info("Disconnected from Zwave JS Server")
-        async_dispatcher_send(hass, f"{DOMAIN}_connection_state")
+        async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
 
     async def async_on_initialized() -> None:
         """Handle initial full state received."""
@@ -89,7 +89,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # run discovery on all node values and create/update entities
         for disc_info in async_discover_values(node):
             LOGGER.debug("Discovered entity: %s", disc_info)
-            async_dispatcher_send(hass, f"{DOMAIN}_add_{disc_info.platform}", disc_info)
+            async_dispatcher_send(
+                hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
+            )
 
     @callback
     def async_on_node_added(node: ZwaveNode) -> None:

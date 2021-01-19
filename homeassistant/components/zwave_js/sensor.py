@@ -36,9 +36,9 @@ async def async_setup_entry(
         entities: List[ZWaveBaseEntity] = []
 
         if info.platform_hint == "string_sensor":
-            entities.append(ZWaveStringSensor(client, info))
+            entities.append(ZWaveStringSensor(config_entry, client, info))
         elif info.platform_hint == "numeric_sensor":
-            entities.append(ZWaveNumericSensor(client, info))
+            entities.append(ZWaveNumericSensor(config_entry, client, info))
         else:
             LOGGER.warning(
                 "Sensor not implemented for %s/%s",
@@ -51,7 +51,9 @@ async def async_setup_entry(
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
         async_dispatcher_connect(
-            hass, f"{DOMAIN}_add_{SENSOR_DOMAIN}", async_add_sensor
+            hass,
+            f"{DOMAIN}_{config_entry.entry_id}_add_{SENSOR_DOMAIN}",
+            async_add_sensor,
         )
     )
 

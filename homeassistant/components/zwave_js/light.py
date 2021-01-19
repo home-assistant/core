@@ -41,11 +41,15 @@ async def async_setup_entry(
     def async_add_light(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Light."""
 
-        light = ZwaveLight(client, info)
+        light = ZwaveLight(config_entry, client, info)
         async_add_entities([light])
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
-        async_dispatcher_connect(hass, f"{DOMAIN}_add_{LIGHT_DOMAIN}", async_add_light)
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_{config_entry.entry_id}_add_{LIGHT_DOMAIN}",
+            async_add_light,
+        )
     )
 
 
@@ -62,9 +66,11 @@ def byte_to_zwave_brightness(value: int) -> int:
 class ZwaveLight(ZWaveBaseEntity, LightEntity):
     """Representation of a Z-Wave light."""
 
-    def __init__(self, client: ZwaveClient, info: ZwaveDiscoveryInfo) -> None:
+    def __init__(
+        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+    ) -> None:
         """Initialize the light."""
-        super().__init__(client, info)
+        super().__init__(config_entry, client, info)
         self._supports_color = False
         self._supports_white_value = False
         self._supports_color_temp = False

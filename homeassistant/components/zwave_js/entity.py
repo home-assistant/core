@@ -6,6 +6,7 @@ from typing import Optional, Union
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -21,8 +22,11 @@ EVENT_VALUE_UPDATED = "value updated"
 class ZWaveBaseEntity(Entity):
     """Generic Entity Class for a Z-Wave Device."""
 
-    def __init__(self, client: ZwaveClient, info: ZwaveDiscoveryInfo) -> None:
+    def __init__(
+        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+    ) -> None:
         """Initialize a generic Z-Wave device entity."""
+        self.config_entry = config_entry
         self.client = client
         self.info = info
         # entities requiring additional values, can add extra ids to this list
@@ -42,9 +46,12 @@ class ZWaveBaseEntity(Entity):
         self.async_on_remove(
             self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed)
         )
+
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, f"{DOMAIN}_connection_state", self.async_write_ha_state
+                self.hass,
+                f"{DOMAIN}_{self.config_entry.entry_id}_connection_state",
+                self.async_write_ha_state,
             )
         )
 
