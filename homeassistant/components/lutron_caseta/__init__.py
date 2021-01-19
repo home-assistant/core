@@ -125,13 +125,16 @@ async def async_setup_entry(hass, config_entry):
 
 
 @callback
-def _async_subscribe_pico_remote_events(hass, lip, lip_devices):
+def _async_subscribe_pico_remote_events(hass, lip, bridge, lip_devices):
     """Subscribe to lutron events."""
+    sensor_devices = bridge.get_devices_by_domain("sensor")
+
     button_devices_by_id = {
         id: device for id, device in lip_devices.items() if "Buttons" in device
     }
 
     _LOGGER.debug("Button Devices: %s", button_devices_by_id)
+    _LOGGER.debug("Sensor Devices: %s", sensor_devices)
 
     @callback
     def _async_lip_event(lip_message):
