@@ -193,7 +193,6 @@ class DHCPWatcher(WatcherBase):
     def __init__(self, hass, address_data, integration_matchers):
         """Initialize class."""
         super().__init__(hass, address_data, integration_matchers)
-        self.name = "dhcp-discovery"
         self._sniffer = None
         self._stop_event = threading.Event()
         self.started = threading.Event()
@@ -214,6 +213,7 @@ class DHCPWatcher(WatcherBase):
             sniff_socket = conf.L2socket(type=ETH_P_ALL)
             self._sniffer = AsyncSniffer(
                 filter=FILTER,
+                name="dhcp-discovery",
                 opened_socket=[sniff_socket],
                 started_callback=self.started.set,
                 prn=self.handle_dhcp_packet,
