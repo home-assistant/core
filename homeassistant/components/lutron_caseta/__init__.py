@@ -107,7 +107,7 @@ async def async_setup_entry(hass, config_entry):
     else:
         _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s", host)
         data[LUTRON_CASETA_LIP] = lip
-        _async_subscribe_remove_events(hass, lip, bridge)
+        await _async_subscribe_remove_events(hass, lip, bridge)
 
     for component in LUTRON_CASETA_COMPONENTS:
         hass.async_create_task(
@@ -117,10 +117,10 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-@callback
-def _async_subscribe_remove_events(hass, lip, bridge):
+async def _async_subscribe_remove_events(hass, lip, bridge):
     """Subscribe to lutron events."""
     remotes = bridge.get_devices_by_domain("sensor")
+    _LOGGER.debug(await bridge._request("ReadRequest", "/server/2/id"))
     _LOGGER.debug(remotes)
 
     @callback
