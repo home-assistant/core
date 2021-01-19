@@ -162,10 +162,10 @@ async def test_create_new_user(hass):
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
     assert step["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    cred = step["result"]
-    assert cred is not None
+    credential = step["result"]
+    assert credential is not None
 
-    user = await manager.async_get_or_create_user(cred)
+    user = await manager.async_get_or_create_user(credential)
     assert user is not None
     assert user.is_owner is False
     assert user.name == "Test Name"
@@ -232,8 +232,8 @@ async def test_login_as_existing_user(mock_hass):
     )
     assert step["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
-    cred = step["result"]
-    user = await manager.async_get_user_by_credentials(cred)
+    credential = step["result"]
+    user = await manager.async_get_user_by_credentials(credential)
     assert user is not None
     assert user.id == "mock-user"
     assert user.is_owner is False
@@ -263,8 +263,8 @@ async def test_linking_user_to_two_auth_providers(hass, hass_storage):
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
-    cred = step["result"]
-    user = await manager.async_get_or_create_user(cred)
+    credential = step["result"]
+    user = await manager.async_get_or_create_user(credential)
     assert user is not None
 
     step = await manager.login_flow.async_init(
@@ -832,8 +832,8 @@ async def test_enable_mfa_for_user(hass, hass_storage):
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
-    cred = step["result"]
-    user = await manager.async_get_or_create_user(cred)
+    credential = step["result"]
+    user = await manager.async_get_or_create_user(credential)
     assert user is not None
 
     # new user don't have mfa enabled
