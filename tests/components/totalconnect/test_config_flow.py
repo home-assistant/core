@@ -77,3 +77,40 @@ async def test_login_failed(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_reauth(hass):
+    """Test reauth."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG_DATA,
+        unique_id=USERNAME,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reauth"}, data=entry.data
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.totalconnect.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.totalconnect.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
+    ) as client_mock:
+        client_mock.return_value.is_valid_credentials.return_value = False
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG_DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
