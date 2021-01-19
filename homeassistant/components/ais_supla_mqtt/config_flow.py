@@ -53,6 +53,7 @@ class SuplaMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize supla mqtt configuration flow."""
         self.client_id = None
         self.bridge_config = {}
+        self.bridge_config_answer_status = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -103,16 +104,23 @@ class SuplaMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         access_token = result["access_token"]
         target_url = result["target_url"]
         bearer_token = f"Bearer {access_token}"
-        user_response = await web_session.get(
+        supla_mqtt_settings_response = await web_session.post(
             f"{target_url}{API_ENDPOINT}",
             headers={"Authorization": bearer_token},
         )
-        self.bridge_config = await user_response.json()
+        self.bridge_config_answer_status = supla_mqtt_settings_response.status
+        self.bridge_config = await supla_mqtt_settings_response.json()
         return self.async_external_step_done(next_step_id="use_bridge_settings")
 
     async def async_step_use_bridge_settings(self, user_input=None):
         """Continue broker configuration with external token."""
-
+        if "host" not in self.bridge_config:
+            return self.async_abort(
+                reason="abort_by_error",
+                description_placeholders={
+                    "error_info": f"Error code: {self.bridge_config_answer_status}. Response: {self.bridge_config}"
+                },
+            )
         return self.async_create_entry(
             title="SUPLA MQTT BRIDGE", data=self.bridge_config
         )
