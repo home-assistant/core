@@ -102,6 +102,8 @@ async def async_setup_entry(hass, config_entry):
         LUTRON_CASETA_LIP: None,
     }
 
+    _LOGGER.debug("all devices: %s", bridge.get_devices())
+
     lip_devices = bridge.get_lip_devices()
     if lip_devices:
         # If the bridge also supports LIP (Lutron Integration Protocol)
