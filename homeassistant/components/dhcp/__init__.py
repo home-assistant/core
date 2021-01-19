@@ -194,7 +194,6 @@ class DHCPWatcher(WatcherBase):
         """Initialize class."""
         super().__init__(hass, address_data, integration_matchers)
         self._sniffer = None
-        self._stop_event = threading.Event()
         self.started = threading.Event()
 
     async def async_stop(self):
@@ -203,7 +202,6 @@ class DHCPWatcher(WatcherBase):
 
     def _stop(self):
         """Stop the thread."""
-        self._stop_event.set()
         if self.started.is_set():
             self._sniffer.stop()
 
@@ -216,7 +214,6 @@ class DHCPWatcher(WatcherBase):
                 opened_socket=[sniff_socket],
                 started_callback=self.started.set,
                 prn=self.handle_dhcp_packet,
-                stop_filter=lambda _: self._stop_event.is_set(),
             )
             self._sniffer.start()
         except (Scapy_Exception, OSError) as ex:
