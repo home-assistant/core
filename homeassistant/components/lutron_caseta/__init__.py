@@ -128,7 +128,7 @@ def _async_subscribe_remove_events(hass, lip, bridge):
         hass.bus.async_fire(
             LUTRON_CASETA_EVENT,
             {
-                "mode": lip_message.mode,
+                "mode": lip_message.mode.name,
                 "integration_id": lip_message.integration_id,
                 "action_number": lip_message.action_number,
                 "value": lip_message.value,
