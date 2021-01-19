@@ -116,7 +116,7 @@ async def async_setup_entry(hass, config_entry):
             else:
                 _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s", host)
                 data[LUTRON_CASETA_LIP] = lip
-                await _async_subscribe_pico_remote_events(hass, lip, lip_response)
+                _async_subscribe_pico_remote_events(hass, lip, lip_response)
 
     for component in LUTRON_CASETA_COMPONENTS:
         hass.async_create_task(
@@ -126,7 +126,8 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def _async_subscribe_pico_remote_events(hass, lip, lip_response):
+@callback
+def _async_subscribe_pico_remote_events(hass, lip, lip_response):
     """Subscribe to lutron events."""
     devices = lip_response.Body["LIPIdList"]["Devices"]
     button_devices_by_id = {
