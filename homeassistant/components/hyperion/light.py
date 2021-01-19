@@ -346,6 +346,9 @@ class HyperionLight(LightEntity):
     @property
     def icon(self) -> str:
         """Return state specific icon."""
+        if not self._client.is_on():
+            return ICON_LIGHTBULB
+
         return self._icon
 
     @property
