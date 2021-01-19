@@ -114,7 +114,7 @@ async def async_setup_entry(hass, config_entry):
         else:
             _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s:23", host)
             data[LUTRON_CASETA_LIP] = lip
-            _async_subscribe_pico_remote_events(hass, lip, lip_devices)
+            _async_subscribe_pico_remote_events(hass, lip, bridge, lip_devices)
 
     for component in LUTRON_CASETA_COMPONENTS:
         hass.async_create_task(
