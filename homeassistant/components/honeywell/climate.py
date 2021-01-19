@@ -53,6 +53,8 @@ CONF_LOC_ID = "location"
 DEFAULT_COOL_AWAY_TEMPERATURE = 88
 DEFAULT_HEAT_AWAY_TEMPERATURE = 61
 
+PERMANENT_HOLD = "permanent_hold"
+
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_REGION),
     PLATFORM_SCHEMA.extend(
@@ -199,6 +201,7 @@ class HoneywellUSThermostat(ClimateEntity):
         """Return the device specific state attributes."""
         data = {}
         data[ATTR_FAN_ACTION] = "running" if self._device.fan_running else "idle"
+        data[PERMANENT_HOLD] = self._is_permanent_hold()
         if self._device.raw_dr_data:
             data["dr_phase"] = self._device.raw_dr_data.get("Phase")
         return data
@@ -305,6 +308,12 @@ class HoneywellUSThermostat(ClimateEntity):
     def fan_modes(self) -> Optional[List[str]]:
         """Return the list of available fan modes."""
         return list(self._fan_mode_map)
+
+    def _is_permanent_hold(self) -> bool:
+        heat_status = self._device.raw_ui_data.get("StatusHeat", 0)
+        cool_status = self._device.raw_ui_data.get("StatusCool", 0)
+        _LOGGER.warning("STATUS: %s::%s", heat_status, cool_status)
+        return heat_status == 2 or cool_status == 2
 
     def _set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
