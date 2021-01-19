@@ -379,7 +379,7 @@ hangups==0.4.11
 hass-nabucasa==0.39.0
 
 # homeassistant.components.tasmota
-hatasmota==0.1.6
+hatasmota==0.2.5
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12
@@ -969,7 +969,7 @@ rokuecp==0.6.0
 roombapy==1.6.2
 
 # homeassistant.components.roon
-roonapi==0.0.30
+roonapi==0.0.31
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
