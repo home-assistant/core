@@ -8,6 +8,7 @@ from hyperion import client, const as hyperion_const
 from pkg_resources import parse_version
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE, CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -34,7 +35,7 @@ from .const import (
     SIGNAL_INSTANCE_REMOVE,
 )
 
-PLATFORMS = [LIGHT_DOMAIN]
+PLATFORMS = [LIGHT_DOMAIN, SWITCH_DOMAIN]
 
 _LOGGER = logging.getLogger(__name__)
 

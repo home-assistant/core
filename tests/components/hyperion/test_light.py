@@ -1,7 +1,7 @@
 """Tests for the Hyperion integration."""
 import logging
 from types import MappingProxyType
-from typing import Any, Optional
+from typing import Optional
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from hyperion import const
@@ -59,6 +59,7 @@ from . import (
     TEST_YAML_ENTITY_ID,
     TEST_YAML_NAME,
     add_test_config_entry,
+    call_registered_callback,
     create_mock_client,
     setup_test_config_entry,
 )
@@ -66,13 +67,6 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 COLOR_BLACK = color_util.COLORS["black"]
-
-
-def _call_registered_callback(
-    client: AsyncMock, key: str, *args: Any, **kwargs: Any
-) -> None:
-    """Call a Hyperion entity callback that was registered with the client."""
-    client.add_callbacks.call_args[0][0][key](*args, **kwargs)
 
 
 async def _setup_entity_yaml(hass: HomeAssistantType, client: AsyncMock = None) -> None:
@@ -462,7 +456,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
 
     # Simulate a state callback from Hyperion.
     client.adjustment = [{const.KEY_BRIGHTNESS: 50}]
-    _call_registered_callback(client, "adjustment-update")
+    call_registered_callback(client, "adjustment-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.state == "on"
@@ -492,7 +486,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
         const.KEY_VALUE: {const.KEY_RGB: (0, 255, 255)},
     }
 
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.attributes["hs_color"] == hs_color
@@ -522,7 +516,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
         }
     )
     client.adjustment = [{const.KEY_BRIGHTNESS: 100}]
-    _call_registered_callback(client, "adjustment-update")
+    call_registered_callback(client, "adjustment-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.attributes["brightness"] == brightness
@@ -568,7 +562,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
         ),
     ]
     client.visible_priority = {const.KEY_COMPONENTID: effect}
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.attributes["icon"] == hyperion_light.ICON_EXTERNAL_SOURCE
@@ -600,7 +594,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
         const.KEY_COMPONENTID: const.KEY_COMPONENTID_EFFECT,
         const.KEY_OWNER: effect,
     }
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.attributes["icon"] == hyperion_light.ICON_EFFECT
@@ -629,7 +623,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
         const.KEY_COMPONENTID: const.KEY_COMPONENTID_COLOR,
         const.KEY_VALUE: {const.KEY_RGB: (0, 0, 255)},
     }
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.attributes["hs_color"] == hs_color
@@ -638,7 +632,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
 
     # No calls if disconnected.
     client.has_loaded_state = False
-    _call_registered_callback(client, "client-update", {"loaded-state": False})
+    call_registered_callback(client, "client-update", {"loaded-state": False})
     client.async_send_clear = AsyncMock(return_value=True)
     client.async_send_set_effect = AsyncMock(return_value=True)
 
@@ -725,7 +719,7 @@ async def test_light_async_turn_off(hass: HomeAssistantType) -> None:
     # No calls if no state loaded.
     client.has_loaded_state = False
     client.async_send_set_component = AsyncMock(return_value=True)
-    _call_registered_callback(client, "client-update", {"loaded-state": False})
+    call_registered_callback(client, "client-update", {"loaded-state": False})
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -747,7 +741,7 @@ async def test_light_async_updates_from_hyperion_client(
     # Bright change gets accepted.
     brightness = 10
     client.adjustment = [{const.KEY_BRIGHTNESS: brightness}]
-    _call_registered_callback(client, "adjustment-update")
+    call_registered_callback(client, "adjustment-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.attributes["brightness"] == round(255 * (brightness / 100.0))
@@ -755,20 +749,20 @@ async def test_light_async_updates_from_hyperion_client(
     # Broken brightness value is ignored.
     bad_brightness = -200
     client.adjustment = [{const.KEY_BRIGHTNESS: bad_brightness}]
-    _call_registered_callback(client, "adjustment-update")
+    call_registered_callback(client, "adjustment-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.attributes["brightness"] == round(255 * (brightness / 100.0))
 
     # Update components.
     client.is_on.return_value = True
-    _call_registered_callback(client, "components-update")
+    call_registered_callback(client, "components-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.state == "on"
 
     client.is_on.return_value = False
-    _call_registered_callback(client, "components-update")
+    call_registered_callback(client, "components-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.state == "off"
@@ -776,7 +770,7 @@ async def test_light_async_updates_from_hyperion_client(
     # Update priorities (V4L)
     client.is_on.return_value = True
     client.visible_priority = {const.KEY_COMPONENTID: const.KEY_COMPONENTID_V4L}
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.attributes["icon"] == hyperion_light.ICON_EXTERNAL_SOURCE
@@ -790,7 +784,7 @@ async def test_light_async_updates_from_hyperion_client(
         const.KEY_OWNER: effect,
     }
 
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.attributes["effect"] == effect
@@ -804,7 +798,7 @@ async def test_light_async_updates_from_hyperion_client(
         const.KEY_VALUE: {const.KEY_RGB: rgb},
     }
 
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.attributes["effect"] == hyperion_light.KEY_EFFECT_SOLID
@@ -814,7 +808,7 @@ async def test_light_async_updates_from_hyperion_client(
     # Update priorities (None)
     client.visible_priority = None
 
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.state == "off"
@@ -822,7 +816,7 @@ async def test_light_async_updates_from_hyperion_client(
     # Update effect list
     effects = [{const.KEY_NAME: "One"}, {const.KEY_NAME: "Two"}]
     client.effects = effects
-    _call_registered_callback(client, "effects-update")
+    call_registered_callback(client, "effects-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert (
@@ -836,7 +830,7 @@ async def test_light_async_updates_from_hyperion_client(
 
     # Turn on late, check state, disconnect, ensure it cannot be turned off.
     client.has_loaded_state = False
-    _call_registered_callback(client, "client-update", {"loaded-state": False})
+    call_registered_callback(client, "client-update", {"loaded-state": False})
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.state == "unavailable"
@@ -847,7 +841,7 @@ async def test_light_async_updates_from_hyperion_client(
         const.KEY_COMPONENTID: const.KEY_COMPONENTID_COLOR,
         const.KEY_VALUE: {const.KEY_RGB: rgb},
     }
-    _call_registered_callback(client, "client-update", {"loaded-state": True})
+    call_registered_callback(client, "client-update", {"loaded-state": True})
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.state == "on"
@@ -987,7 +981,7 @@ async def test_priority_light_async_updates(
     ]
     client.visible_priority = client.priorities[0]
 
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entity_state
     assert entity_state.state == "off"
@@ -1003,7 +997,7 @@ async def test_priority_light_async_updates(
     ]
     client.visible_priority = client.priorities[0]
 
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entity_state
     assert entity_state.state == "off"
@@ -1020,7 +1014,7 @@ async def test_priority_light_async_updates(
     ]
     client.visible_priority = client.priorities[0]
 
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entity_state
     assert entity_state.state == "on"
@@ -1033,7 +1027,7 @@ async def test_priority_light_async_updates(
     client.priorities = []
     client.visible_priority = None
 
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entity_state
     assert entity_state.state == "off"
@@ -1049,7 +1043,7 @@ async def test_priority_light_async_updates(
     ]
     client.visible_priority = client.priorities[0]
 
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entity_state
     assert entity_state.state == "off"
@@ -1074,7 +1068,7 @@ async def test_priority_light_async_updates(
     ]
 
     client.visible_priority = client.priorities[0]
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entity_state
     assert entity_state.state == "off"
@@ -1090,7 +1084,7 @@ async def test_priority_light_async_updates(
         }
     ]
     client.visible_priority = None
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entity_state
     assert entity_state.state == "off"
@@ -1105,7 +1099,7 @@ async def test_priority_light_async_updates(
         }
     ]
     client.visible_priority = None
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entity_state
     assert entity_state.state == "off"
@@ -1211,7 +1205,7 @@ async def test_priority_light_prior_color_preserved_after_black(
         }
     ]
     client.visible_priority = client.priorities[0]
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
 
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entity_state
@@ -1241,7 +1235,7 @@ async def test_priority_light_prior_color_preserved_after_black(
         }
     ]
     client.visible_priority = client.priorities[0]
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
 
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entity_state
@@ -1271,7 +1265,7 @@ async def test_priority_light_prior_color_preserved_after_black(
         }
     ]
     client.visible_priority = client.priorities[0]
-    _call_registered_callback(client, "priorities-update")
+    call_registered_callback(client, "priorities-update")
 
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entity_state

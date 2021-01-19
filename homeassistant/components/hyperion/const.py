@@ -18,7 +18,8 @@ HYPERION_RELEASES_URL = "https://github.com/hyperion-project/hyperion.ng/release
 HYPERION_VERSION_WARN_CUTOFF = "2.0.0-alpha.9"
 
 NAME_SUFFIX_HYPERION_LIGHT = ""
-NAME_SUFFIX_HYPERION_PRIORITY_LIGHT = "Priority Light"
+NAME_SUFFIX_HYPERION_PRIORITY_LIGHT = "Priority"
+NAME_SUFFIX_HYPERION_COMPONENT_SWITCH = "Component"
 
 SIGNAL_INSTANCE_ADD = f"{DOMAIN}_instance_add_signal." "{}"
 SIGNAL_INSTANCE_REMOVE = f"{DOMAIN}_instance_remove_signal." "{}"
@@ -26,3 +27,4 @@ SIGNAL_ENTITY_REMOVE = f"{DOMAIN}_entity_remove_signal." "{}"
 
 TYPE_HYPERION_LIGHT = "hyperion_light"
 TYPE_HYPERION_PRIORITY_LIGHT = "hyperion_priority_light"
+TYPE_HYPERION_COMPONENT_SWITCH_BASE = "hyperion_component_switch"
