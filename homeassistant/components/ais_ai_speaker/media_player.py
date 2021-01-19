@@ -117,6 +117,9 @@ class AisPlayerDevice(MediaPlayerEntity):
     async def async_fetch_status(self):
         """Fetch status from AIS."""
         ais_info = await self._ais_gate.get_gate_info()
+        if ais_info is None:
+            _LOGGER.warning("Problem to fetch status from AI Speaker %s", ais_info)
+            return
         self._ais_id = ais_info["ais_id"]
         self._ais_product = ais_info["Product"]
         self._ais_manufacturer = ais_info["Manufacturer"]
