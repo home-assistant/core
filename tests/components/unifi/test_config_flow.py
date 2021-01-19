@@ -184,8 +184,8 @@ async def test_flow_works_multiple_sites(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "site"
-    assert result["data_schema"]({"site": "site name"})
-    assert result["data_schema"]({"site": "site2 name"})
+    assert result["data_schema"]({"site": "default"})
+    assert result["data_schema"]({"site": "site2"})
 
 
 async def test_flow_fails_site_already_configured(hass, aioclient_mock):

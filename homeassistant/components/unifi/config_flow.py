@@ -66,7 +66,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     def __init__(self):
         """Initialize the UniFi flow."""
         self.config = None
-        self.desc = None
         self.sites = None
 
     async def async_step_user(self, user_input=None):
@@ -87,7 +86,8 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
                 controller = await get_controller(self.hass, **self.config)
 
-                self.sites = await controller.sites()
+                sites = await controller.sites()
+                self.sites = {site["name"]: site["desc"] for site in sites.values()}
 
                 return await self.async_step_site()
 
@@ -128,12 +128,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
         if user_input is not None:
             try:
-                desc = user_input.get(CONF_SITE_ID, self.desc)
-
-                for site in self.sites.values():
-                    if desc == site["desc"]:
-                        self.config[CONF_SITE_ID] = site["name"]
-                        break
+                self.config[CONF_SITE_ID] = user_input[CONF_SITE_ID]
 
                 for entry in self._async_current_entries():
                     controller = entry.data[CONF_CONTROLLER]
@@ -145,22 +140,18 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
                 data = {CONF_CONTROLLER: self.config}
 
-                return self.async_create_entry(title=desc, data=data)
+                site_nice_name = self.sites[self.config[CONF_SITE_ID]]
+                return self.async_create_entry(title=site_nice_name, data=data)
 
             except AlreadyConfigured:
                 return self.async_abort(reason="already_configured")
 
         if len(self.sites) == 1:
-            self.desc = next(iter(self.sites.values()))["desc"]
-            return await self.async_step_site(user_input={})
-
-        sites = []
-        for site in self.sites.values():
-            sites.append(site["desc"])
+            return await self.async_step_site({CONF_SITE_ID: next(iter(self.sites))})
 
         return self.async_show_form(
             step_id="site",
-            data_schema=vol.Schema({vol.Required(CONF_SITE_ID): vol.In(sites)}),
+            data_schema=vol.Schema({vol.Required(CONF_SITE_ID): vol.In(self.sites)}),
             errors=errors,
         )
 
