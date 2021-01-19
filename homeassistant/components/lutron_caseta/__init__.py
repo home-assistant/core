@@ -142,7 +142,7 @@ def _async_subscribe_pico_remote_events(hass, lip, lip_response):
 
     @callback
     def _async_lip_event(lip_message):
-        _LOGGER.debug("LIP Event:", lip_message)
+        _LOGGER.debug("LIP Event: %s", lip_message)
         if lip_message.mode != LIPMode.OUTPUT:
             return
 
