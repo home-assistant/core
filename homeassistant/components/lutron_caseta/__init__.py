@@ -100,7 +100,7 @@ async def async_setup_entry(hass, config_entry):
 
     lip = LIP()
     try:
-        lip.async_connect(host)
+        await lip.async_connect(host)
     except asyncio.TimeoutError:
         # Only the PRO and Ra Select bridges support LIP
         pass
