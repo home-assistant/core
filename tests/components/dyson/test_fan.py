@@ -174,11 +174,10 @@ async def test_state_purecool(hass: HomeAssistant, device: DysonPureCool) -> Non
     "service,service_data,configuration_args",
     [
         (SERVICE_TURN_ON, {}, {"fan_mode": FanMode.FAN}),
-        (SERVICE_TURN_ON, {ATTR_SPEED: "AUTO"}, {"fan_mode": FanMode.AUTO}),
         (
             SERVICE_TURN_ON,
-            {ATTR_SPEED: 5},
-            {"fan_mode": FanMode.FAN, "fan_speed": FanSpeed("0005")},
+            {ATTR_SPEED: SPEED_LOW},
+            {"fan_mode": FanMode.FAN, "fan_speed": FanSpeed.FAN_SPEED_4},
         ),
         (SERVICE_TURN_OFF, {}, {"fan_mode": FanMode.OFF}),
         (
@@ -191,11 +190,20 @@ async def test_state_purecool(hass: HomeAssistant, device: DysonPureCool) -> Non
             {ATTR_OSCILLATING: False},
             {"oscillation": Oscillation.OSCILLATION_OFF},
         ),
-        (SERVICE_SET_SPEED, {ATTR_SPEED: "AUTO"}, {"fan_mode": FanMode.AUTO}),
         (
             SERVICE_SET_SPEED,
-            {ATTR_SPEED: 5},
-            {"fan_mode": FanMode.FAN, "fan_speed": FanSpeed("0005")},
+            {ATTR_SPEED: SPEED_LOW},
+            {"fan_mode": FanMode.FAN, "fan_speed": FanSpeed.FAN_SPEED_4},
+        ),
+        (
+            SERVICE_SET_SPEED,
+            {ATTR_SPEED: SPEED_MEDIUM},
+            {"fan_mode": FanMode.FAN, "fan_speed": FanSpeed.FAN_SPEED_7},
+        ),
+        (
+            SERVICE_SET_SPEED,
+            {ATTR_SPEED: SPEED_HIGH},
+            {"fan_mode": FanMode.FAN, "fan_speed": FanSpeed.FAN_SPEED_10},
         ),
     ],
 )

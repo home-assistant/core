@@ -88,6 +88,27 @@ SET_DYSON_SPEED_SCHEMA = vol.Schema(
 )
 
 
+SPEED_DYSON_TO_HA = {
+    FanSpeed.FAN_SPEED_1.value: SPEED_LOW,
+    FanSpeed.FAN_SPEED_2.value: SPEED_LOW,
+    FanSpeed.FAN_SPEED_3.value: SPEED_LOW,
+    FanSpeed.FAN_SPEED_4.value: SPEED_LOW,
+    FanSpeed.FAN_SPEED_AUTO.value: SPEED_MEDIUM,
+    FanSpeed.FAN_SPEED_5.value: SPEED_MEDIUM,
+    FanSpeed.FAN_SPEED_6.value: SPEED_MEDIUM,
+    FanSpeed.FAN_SPEED_7.value: SPEED_MEDIUM,
+    FanSpeed.FAN_SPEED_8.value: SPEED_HIGH,
+    FanSpeed.FAN_SPEED_9.value: SPEED_HIGH,
+    FanSpeed.FAN_SPEED_10.value: SPEED_HIGH,
+}
+
+SPEED_HA_TO_DYSON = {
+    SPEED_LOW: FanSpeed.FAN_SPEED_4,
+    SPEED_MEDIUM: FanSpeed.FAN_SPEED_7,
+    SPEED_HIGH: FanSpeed.FAN_SPEED_10,
+}
+
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson fan components."""
 
@@ -185,21 +206,7 @@ class DysonFanEntity(DysonEntity, FanEntity):
     @property
     def speed(self):
         """Return the current speed."""
-        speed_map = {
-            FanSpeed.FAN_SPEED_1.value: SPEED_LOW,
-            FanSpeed.FAN_SPEED_2.value: SPEED_LOW,
-            FanSpeed.FAN_SPEED_3.value: SPEED_LOW,
-            FanSpeed.FAN_SPEED_4.value: SPEED_LOW,
-            FanSpeed.FAN_SPEED_AUTO.value: SPEED_MEDIUM,
-            FanSpeed.FAN_SPEED_5.value: SPEED_MEDIUM,
-            FanSpeed.FAN_SPEED_6.value: SPEED_MEDIUM,
-            FanSpeed.FAN_SPEED_7.value: SPEED_MEDIUM,
-            FanSpeed.FAN_SPEED_8.value: SPEED_HIGH,
-            FanSpeed.FAN_SPEED_9.value: SPEED_HIGH,
-            FanSpeed.FAN_SPEED_10.value: SPEED_HIGH,
-        }
-
-        return speed_map[self._device.state.speed]
+        return SPEED_DYSON_TO_HA[self._device.state.speed]
 
     @property
     def speed_list(self) -> list:
@@ -266,24 +273,15 @@ class DysonPureCoolLinkEntity(DysonFanEntity):
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan. Never called ??."""
         _LOGGER.debug("Set fan speed to: %s", speed)
-
-        if speed == FanSpeed.FAN_SPEED_AUTO.value:
-            self._device.set_configuration(fan_mode=FanMode.AUTO)
-        else:
-            fan_speed = FanSpeed(f"{int(speed):04d}")
-            self._device.set_configuration(fan_mode=FanMode.FAN, fan_speed=fan_speed)
+        self._device.set_configuration(
+            fan_mode=FanMode.FAN, fan_speed=SPEED_HA_TO_DYSON[speed]
+        )
 
     def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""
         _LOGGER.debug("Turn on fan %s with speed %s", self.name, speed)
-        if speed:
-            if speed == FanSpeed.FAN_SPEED_AUTO.value:
-                self._device.set_configuration(fan_mode=FanMode.AUTO)
-            else:
-                fan_speed = FanSpeed(f"{int(speed):04d}")
-                self._device.set_configuration(
-                    fan_mode=FanMode.FAN, fan_speed=fan_speed
-                )
+        if speed is not None:
+            self.set_speed(speed)
         else:
             # Speed not set, just turn on
             self._device.set_configuration(fan_mode=FanMode.FAN)
@@ -352,12 +350,7 @@ class DysonPureCoolEntity(DysonFanEntity):
 
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
-        if speed == SPEED_LOW:
-            self._device.set_fan_speed(FanSpeed.FAN_SPEED_4)
-        elif speed == SPEED_MEDIUM:
-            self._device.set_fan_speed(FanSpeed.FAN_SPEED_7)
-        elif speed == SPEED_HIGH:
-            self._device.set_fan_speed(FanSpeed.FAN_SPEED_10)
+        self._device.set_fan_speed(SPEED_HA_TO_DYSON[speed])
 
     def turn_off(self, **kwargs):
         """Turn off the fan."""
