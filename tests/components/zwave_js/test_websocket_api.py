@@ -2,12 +2,12 @@
 from zwave_js_server.event import Event
 
 from homeassistant.components.zwave_js.const import DOMAIN
-from homeassistant.components.zwave_js.websocket_api import ENTRY_ID, ID, TYPE
+from homeassistant.components.zwave_js.websocket_api import ENTRY_ID, ID, NODE_ID, TYPE
 from homeassistant.helpers.device_registry import async_get_registry
 
 
-async def test_websocket_api(hass, integration, hass_ws_client):
-    """Test the network_status websocket command."""
+async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
+    """Test the network and node status websocket commands."""
     entry = integration
     ws_client = await hass_ws_client(hass)
 
@@ -19,6 +19,24 @@ async def test_websocket_api(hass, integration, hass_ws_client):
 
     assert result["client"]["ws_server_url"] == "ws://test:3000/zjs"
     assert result["client"]["server_version"] == "1.0.0"
+
+    node = multisensor_6
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/node_status",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: node.node_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+    result = msg["result"]
+
+    assert result[NODE_ID] == 52
+    assert result["ready"]
+    assert result["is_routing"]
+    assert not result["is_secure"]
+    assert result["status"] == 1
 
 
 async def test_add_node(
