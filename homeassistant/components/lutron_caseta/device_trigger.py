@@ -270,6 +270,7 @@ def get_button_device_by_dr_id(hass: HomeAssistant, device_id: str):
 
     for config_entry in hass.data[DOMAIN]:
         button_devices = hass.data[DOMAIN][config_entry][BUTTON_DEVICES]
+        _LOGGER.debug("Button Devices (requested=%s): %s", device_id, button_devices)
         device = button_devices.get(device_id)
         if device:
             return device
