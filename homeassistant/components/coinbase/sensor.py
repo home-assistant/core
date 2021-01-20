@@ -2,7 +2,17 @@
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
 
-from .const import CONF_CURRENCIES, CONF_EXCAHNGE_RATES, DOMAIN
+from .const import (
+    API_ACCOUNT_AMOUNT,
+    API_ACCOUNT_BALANCE,
+    API_ACCOUNT_CURRENCY,
+    API_ACCOUNT_NAME,
+    API_ACCOUNT_NATIVE_BALANCE,
+    API_ACCOUNTS_DATA,
+    CONF_CURRENCIES,
+    CONF_EXCAHNGE_RATES,
+    DOMAIN,
+)
 
 ATTR_NATIVE_BALANCE = "Balance in native currency"
 
@@ -49,13 +59,17 @@ class AccountSensor(SensorEntity):
         """Initialize the sensor."""
         self._coinbase_data = coinbase_data
         self._currency = currency
-        for account in coinbase_data.accounts["data"]:
+        for account in coinbase_data.accounts[API_ACCOUNTS_DATA]:
             if account.currency == currency:
-                self._name = f"Coinbase {account['name']}"
-                self._state = account["balance"]["amount"]
-                self._unit_of_measurement = account.currency
-                self._native_balance = account["native_balance"]["amount"]
-                self._native_currency = account["native_balance"]["currency"]
+                self._name = f"Coinbase {account[API_ACCOUNT_NAME]}"
+                self._state = account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
+                self._unit_of_measurement = account[API_ACCOUNT_CURRENCY]
+                self._native_balance = account[API_ACCOUNT_NATIVE_BALANCE][
+                    API_ACCOUNT_AMOUNT
+                ]
+                self._native_currency = account[API_ACCOUNT_NATIVE_BALANCE][
+                    API_ACCOUNT_CURRENCY
+                ]
                 break
 
     @property
@@ -89,11 +103,15 @@ class AccountSensor(SensorEntity):
     def update(self):
         """Get the latest state of the sensor."""
         self._coinbase_data.update()
-        for account in self._coinbase_data.accounts["data"]:
+        for account in self._coinbase_data.accounts[API_ACCOUNTS_DATA]:
             if account.currency == self._currency:
-                self._state = account["balance"]["amount"]
-                self._native_balance = account["native_balance"]["amount"]
-                self._native_currency = account["native_balance"]["currency"]
+                self._state = account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
+                self._native_balance = account[API_ACCOUNT_NATIVE_BALANCE][
+                    API_ACCOUNT_AMOUNT
+                ]
+                self._native_currency = account[API_ACCOUNT_NATIVE_BALANCE][
+                    API_ACCOUNT_CURRENCY
+                ]
                 break
 
 

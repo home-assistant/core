@@ -13,26 +13,30 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-from .const import DOMAIN
+from .const import (
+    CONF_YAML_API_KEY,
+    CONF_YAML_API_TOKEN,
+    CONF_YAML_CURRENCIES,
+    CONF_YAML_EXCHANGE_RATES,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
-CONF_API_SECRET = "api_secret"
-CONF_ACCOUNT_CURRENCIES = "account_balance_currencies"
-CONF_EXCHANGE_CURRENCIES = "exchange_rate_currencies"
+
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Required(CONF_API_SECRET): cv.string,
-                vol.Optional(CONF_ACCOUNT_CURRENCIES): vol.All(
+                vol.Required(CONF_YAML_API_KEY): cv.string,
+                vol.Required(CONF_YAML_API_TOKEN): cv.string,
+                vol.Optional(CONF_YAML_CURRENCIES): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
-                vol.Optional(CONF_EXCHANGE_CURRENCIES, default=[]): vol.All(
+                vol.Optional(CONF_YAML_EXCHANGE_RATES, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
             }

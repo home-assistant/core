@@ -9,8 +9,15 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 
 from .const import (  # pylint:disable=unused-import
+    API_ACCOUNT_CURRENCY,
+    API_ACCOUNTS_DATA,
+    API_RATES,
     CONF_CURRENCIES,
     CONF_EXCAHNGE_RATES,
+    CONF_YAML_API_KEY,
+    CONF_YAML_API_TOKEN,
+    CONF_YAML_CURRENCIES,
+    CONF_YAML_EXCHANGE_RATES,
     DOMAIN,
 )
 
@@ -43,14 +50,16 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise CannotConnect from error
 
     accounts = await hass.async_add_executor_job(client.get_accounts)
-    accounts_currencies = [account["currency"] for account in accounts["data"]]
+    accounts_currencies = [
+        account[API_ACCOUNT_CURRENCY] for account in accounts[API_ACCOUNTS_DATA]
+    ]
     available_rates = await hass.async_add_executor_job(client.get_exchange_rates)
 
     for currency in data[CONF_CURRENCIES]:
         if currency not in accounts_currencies:
             raise CurrencyUnavaliable
     for rate in data[CONF_EXCAHNGE_RATES]:
-        if rate not in available_rates["rates"]:
+        if rate not in available_rates[API_RATES]:
             raise ExchangeRateUnavaliable
 
     return {"title": user["name"]}
@@ -105,10 +114,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, config):
         """Handle import of Coinbase config from YAML."""
         cleaned_data = {}
-        cleaned_data[CONF_API_KEY] = config["api_key"]
-        cleaned_data[CONF_API_TOKEN] = config["api_secret"]
-        cleaned_data[CONF_CURRENCIES] = ",".join(config["account_balance_currencies"])
-        cleaned_data[CONF_EXCAHNGE_RATES] = ",".join(config["exchange_rate_currencies"])
+        cleaned_data[CONF_API_KEY] = config[CONF_YAML_API_KEY]
+        cleaned_data[CONF_API_TOKEN] = config[CONF_YAML_API_TOKEN]
+        cleaned_data[CONF_CURRENCIES] = ",".join(config[CONF_YAML_CURRENCIES])
+        cleaned_data[CONF_EXCAHNGE_RATES] = ",".join(config[CONF_YAML_EXCHANGE_RATES])
 
         return await self.async_step_user(user_input=cleaned_data)
 
