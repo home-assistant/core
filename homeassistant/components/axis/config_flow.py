@@ -144,7 +144,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         self.discovery_schema = {
             vol.Required(CONF_HOST, default=device_config[CONF_HOST]): str,
             vol.Required(CONF_USERNAME, default=device_config[CONF_USERNAME]): str,
-            vol.Required(CONF_PASSWORD, default=device_config[CONF_PASSWORD]): str,
+            vol.Required(CONF_PASSWORD): str,
             vol.Required(CONF_PORT, default=device_config[CONF_PORT]): int,
         }
 
