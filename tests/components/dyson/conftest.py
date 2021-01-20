@@ -15,7 +15,7 @@ from tests.common import async_setup_component
 BASE_PATH = "homeassistant.components.dyson"
 
 
-@pytest.fixture
+@pytest.fixture()
 async def device(hass: HomeAssistant, request) -> DysonDevice:
     """Fixture to provide Dyson 360 Eye device."""
     platform = request.module.PLATFORM_DOMAIN

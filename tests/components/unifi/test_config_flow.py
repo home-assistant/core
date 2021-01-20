@@ -491,7 +491,8 @@ async def test_form_ssdp(hass):
         if flow["flow_id"] == result["flow_id"]
     )
     assert context["title_placeholders"] == {
-        "name": "UniFi Dream Machine",
+        "host": "192.168.208.1",
+        "site": "default",
     }
 
 
@@ -568,5 +569,6 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass):
         if flow["flow_id"] == result["flow_id"]
     )
     assert context["title_placeholders"] == {
-        "name": "UniFi Dream Machine New",
+        "host": "1.2.3.4",
+        "site": "default",
     }
