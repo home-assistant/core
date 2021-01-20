@@ -43,6 +43,9 @@ repos:
     rev: 5.5.3
     hooks:
       - id: isort
+        args:
+          - --profile
+          - black
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0
     hooks:
