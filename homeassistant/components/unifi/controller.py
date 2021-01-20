@@ -28,7 +28,6 @@ import async_timeout
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -89,6 +88,7 @@ class UniFiController:
     def __init__(self, hass, config_entry):
         """Initialize the system."""
         self.hass = hass
+        self.config_entry = config_entry
         self.available = True
         self.api = None
         self.progress = None
@@ -102,15 +102,13 @@ class UniFiController:
         self._heartbeat_dispatch = {}
         self._heartbeat_time = {}
 
-        self.load_config_entry_options(config_entry)
+        self.load_config_entry_options()
 
         self.entities = {}
 
-    def load_config_entry_options(self, config_entry):
+    def load_config_entry_options(self):
         """Store attributes to avoid property call overhead since they are called frequently."""
         # Device tracker options
-        self.config_entry = config_entry
-
         options = self.config_entry.options
 
         # Config entry option to not track clients.
@@ -322,14 +320,8 @@ class UniFiController:
         except CannotConnect as err:
             raise ConfigEntryNotReady from err
 
-        except AuthenticationRequired:
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_init(
-                    UNIFI_DOMAIN,
-                    context={"source": SOURCE_REAUTH},
-                    data=self.config_entry,
-                )
-            )
+        except Exception as err:  # pylint: disable=broad-except
+            LOGGER.error("Unknown error connecting with UniFi controller: %s", err)
             return False
 
         # Restore clients that is not a part of active clients list.
@@ -404,15 +396,9 @@ class UniFiController:
 
     @staticmethod
     async def async_config_entry_updated(hass, config_entry) -> None:
-        """Handle signals of config entry being updated.
-
-        If config entry is updated due to reauth flow
-        the entry might already have been reset and thus is not available.
-        """
-        if config_entry.entry_id not in hass.data[UNIFI_DOMAIN]:
-            return
+        """Handle signals of config entry being updated."""
         controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-        controller.load_config_entry_options(config_entry)
+        controller.load_config_entry_options()
         async_dispatcher_send(hass, controller.signal_options_update)
 
     @callback
@@ -502,7 +488,7 @@ async def get_controller(
         return controller
 
     except aiounifi.Unauthorized as err:
-        LOGGER.warning("Connected to UniFi at %s but not registered: %s", host, err)
+        LOGGER.warning("Connected to UniFi at %s but not registered.", host)
         raise AuthenticationRequired from err
 
     except (
@@ -511,13 +497,9 @@ async def get_controller(
         aiounifi.ServiceUnavailable,
         aiounifi.RequestError,
     ) as err:
-        LOGGER.error("Error connecting to the UniFi controller at %s: %s", host, err)
+        LOGGER.error("Error connecting to the UniFi controller at %s", host)
         raise CannotConnect from err
 
-    except aiounifi.LoginRequired as err:
-        LOGGER.warning("Connected to UniFi at %s but login required: %s", host, err)
-        raise AuthenticationRequired from err
-
     except aiounifi.AiounifiException as err:
-        LOGGER.exception("Unknown UniFi communication error occurred: %s", err)
+        LOGGER.exception("Unknown UniFi communication error occurred")
         raise AuthenticationRequired from err
