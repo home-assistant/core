@@ -8,6 +8,7 @@
             "service_unavailable": "Failed to connect",
             "unknown_client_mac": "No client available on that MAC address"
         },
+        "flow_title": "Ubiquiti UniFi {name}",
         "step": {
             "user": {
                 "data": {
