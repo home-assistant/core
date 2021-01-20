@@ -103,7 +103,59 @@ class UniFiController:
         self._heartbeat_dispatch = {}
         self._heartbeat_time = {}
 
+        self.load_config_entry_options()
+
         self.entities = {}
+
+    def load_config_entry_options(self):
+        """Store attributes to avoid property call overhead since they are called frequently."""
+        # Device tracker options
+        options = self.config_entry.options
+
+        # Config entry option to not track clients.
+        self.option_track_clients = options.get(
+            CONF_TRACK_CLIENTS, DEFAULT_TRACK_CLIENTS
+        )
+        # Config entry option to not track wired clients.
+        self.option_track_wired_clients = options.get(
+            CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
+        )
+        # Config entry option to not track devices.
+        self.option_track_devices = options.get(
+            CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES
+        )
+        # Config entry option listing what SSIDs are being used to track clients.
+        self.option_ssid_filter = set(options.get(CONF_SSID_FILTER, []))
+        # Config entry option defining number of seconds from last seen to away
+        self.option_detection_time = timedelta(
+            seconds=options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME)
+        )
+        # Config entry option to ignore wired bug.
+        self.option_ignore_wired_bug = options.get(
+            CONF_IGNORE_WIRED_BUG, DEFAULT_IGNORE_WIRED_BUG
+        )
+
+        # Client control options
+
+        # Config entry option to control poe clients.
+        self.option_poe_clients = options.get(CONF_POE_CLIENTS, DEFAULT_POE_CLIENTS)
+        # Config entry option with list of clients to control network access.
+        self.option_block_clients = options.get(CONF_BLOCK_CLIENT, [])
+        # Config entry option to control DPI restriction groups.
+        self.option_dpi_restrictions = options.get(
+            CONF_DPI_RESTRICTIONS, DEFAULT_DPI_RESTRICTIONS
+        )
+
+        # Statistics sensor options
+
+        # Config entry option to allow bandwidth sensors.
+        self.option_allow_bandwidth_sensors = options.get(
+            CONF_ALLOW_BANDWIDTH_SENSORS, DEFAULT_ALLOW_BANDWIDTH_SENSORS
+        )
+        # Config entry option to allow uptime sensors.
+        self.option_allow_uptime_sensors = options.get(
+            CONF_ALLOW_UPTIME_SENSORS, DEFAULT_ALLOW_UPTIME_SENSORS
+        )
 
     @property
     def controller_id(self):
@@ -137,81 +189,6 @@ class UniFiController:
             if self.host == client.ip:
                 return client.mac
         return None
-
-    # Device tracker options
-
-    @property
-    def option_track_clients(self):
-        """Config entry option to not track clients."""
-        return self.config_entry.options.get(CONF_TRACK_CLIENTS, DEFAULT_TRACK_CLIENTS)
-
-    @property
-    def option_track_wired_clients(self):
-        """Config entry option to not track wired clients."""
-        return self.config_entry.options.get(
-            CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
-        )
-
-    @property
-    def option_track_devices(self):
-        """Config entry option to not track devices."""
-        return self.config_entry.options.get(CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES)
-
-    @property
-    def option_ssid_filter(self):
-        """Config entry option listing what SSIDs are being used to track clients."""
-        return self.config_entry.options.get(CONF_SSID_FILTER, [])
-
-    @property
-    def option_detection_time(self):
-        """Config entry option defining number of seconds from last seen to away."""
-        return timedelta(
-            seconds=self.config_entry.options.get(
-                CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
-            )
-        )
-
-    @property
-    def option_ignore_wired_bug(self):
-        """Config entry option to ignore wired bug."""
-        return self.config_entry.options.get(
-            CONF_IGNORE_WIRED_BUG, DEFAULT_IGNORE_WIRED_BUG
-        )
-
-    # Client control options
-
-    @property
-    def option_poe_clients(self):
-        """Config entry option to control poe clients."""
-        return self.config_entry.options.get(CONF_POE_CLIENTS, DEFAULT_POE_CLIENTS)
-
-    @property
-    def option_block_clients(self):
-        """Config entry option with list of clients to control network access."""
-        return self.config_entry.options.get(CONF_BLOCK_CLIENT, [])
-
-    @property
-    def option_dpi_restrictions(self):
-        """Config entry option to control DPI restriction groups."""
-        return self.config_entry.options.get(
-            CONF_DPI_RESTRICTIONS, DEFAULT_DPI_RESTRICTIONS
-        )
-
-    # Statistics sensor options
-
-    @property
-    def option_allow_bandwidth_sensors(self):
-        """Config entry option to allow bandwidth sensors."""
-        return self.config_entry.options.get(
-            CONF_ALLOW_BANDWIDTH_SENSORS, DEFAULT_ALLOW_BANDWIDTH_SENSORS
-        )
-
-    @property
-    def option_allow_uptime_sensors(self):
-        """Config entry option to allow uptime sensors."""
-        return self.config_entry.options.get(
-            CONF_ALLOW_UPTIME_SENSORS, DEFAULT_ALLOW_UPTIME_SENSORS
-        )
 
     @callback
     def async_unifi_signalling_callback(self, signal, data):
@@ -434,6 +411,7 @@ class UniFiController:
         if config_entry.entry_id not in hass.data[UNIFI_DOMAIN]:
             return
         controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+        controller.load_config_entry_options()
         async_dispatcher_send(hass, controller.signal_options_update)
 
     @callback
