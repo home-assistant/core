@@ -37,17 +37,29 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.async_add_executor_job(instance.update)
 
     entities = []
+
+    if CONF_CURRENCIES in config_entry.data:
+        desired_currencies = config_entry.data[CONF_CURRENCIES]
+    else:
+        desired_currencies = [
+            account[API_ACCOUNT_CURRENCY]
+            for account in instance.accounts[API_ACCOUNTS_DATA]
+        ]
+
     exchange_native_currency = instance.exchange_rates.currency
-    for currency in config_entry.data[CONF_CURRENCIES]:
+
+    for currency in desired_currencies:
         entities.append(AccountSensor(instance, currency))
-    for rate in config_entry.data[CONF_EXCAHNGE_RATES]:
-        entities.append(
-            ExchangeRateSensor(
-                instance,
-                rate,
-                exchange_native_currency,
+
+    if CONF_EXCAHNGE_RATES in config_entry.data:
+        for rate in config_entry.data[CONF_EXCAHNGE_RATES]:
+            entities.append(
+                ExchangeRateSensor(
+                    instance,
+                    rate,
+                    exchange_native_currency,
+                )
             )
-        )
 
     async_add_entities(entities)
 

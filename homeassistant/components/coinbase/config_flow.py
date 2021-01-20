@@ -54,13 +54,15 @@ async def validate_input(hass: core.HomeAssistant, data):
         account[API_ACCOUNT_CURRENCY] for account in accounts[API_ACCOUNTS_DATA]
     ]
     available_rates = await hass.async_add_executor_job(client.get_exchange_rates)
+    if CONF_CURRENCIES in data:
+        for currency in data[CONF_CURRENCIES]:
+            if currency not in accounts_currencies:
+                raise CurrencyUnavaliable
 
-    for currency in data[CONF_CURRENCIES]:
-        if currency not in accounts_currencies:
-            raise CurrencyUnavaliable
-    for rate in data[CONF_EXCAHNGE_RATES]:
-        if rate not in available_rates[API_RATES]:
-            raise ExchangeRateUnavaliable
+    if CONF_EXCAHNGE_RATES in data:
+        for rate in data[CONF_EXCAHNGE_RATES]:
+            if rate not in available_rates[API_RATES]:
+                raise ExchangeRateUnavaliable
 
     return {"title": user["name"]}
 
@@ -80,11 +82,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         try:
-            if user_input[CONF_CURRENCIES] is not None:
+            if CONF_CURRENCIES in user_input:
                 user_input[CONF_CURRENCIES] = (
                     user_input[CONF_CURRENCIES].upper().replace(" ", "").split(",")
                 )
-            if user_input[CONF_EXCAHNGE_RATES] is not None:
+            if CONF_EXCAHNGE_RATES in user_input:
                 user_input[CONF_EXCAHNGE_RATES] = (
                     user_input[CONF_EXCAHNGE_RATES].upper().replace(" ", "").split(",")
                 )
@@ -116,8 +118,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         cleaned_data = {}
         cleaned_data[CONF_API_KEY] = config[CONF_YAML_API_KEY]
         cleaned_data[CONF_API_TOKEN] = config[CONF_YAML_API_TOKEN]
-        cleaned_data[CONF_CURRENCIES] = ",".join(config[CONF_YAML_CURRENCIES])
-        cleaned_data[CONF_EXCAHNGE_RATES] = ",".join(config[CONF_YAML_EXCHANGE_RATES])
+        if CONF_YAML_CURRENCIES in config:
+            cleaned_data[CONF_CURRENCIES] = ",".join(config[CONF_YAML_CURRENCIES])
+        if CONF_YAML_EXCHANGE_RATES in config:
+            cleaned_data[CONF_EXCAHNGE_RATES] = ",".join(
+                config[CONF_YAML_EXCHANGE_RATES]
+            )
 
         return await self.async_step_user(user_input=cleaned_data)
 
