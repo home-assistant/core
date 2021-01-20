@@ -555,7 +555,7 @@ class DeviceRegistry:
                 # Add a time stamp when the deleted device
                 # became orphened
                 self.deleted_devices[deleted_device.id] = attr.evolve(
-                    deleted_device, orphened_time=now
+                    deleted_device, orphened_time=now, config_entries=set()
                 )
             else:
                 config_entries = config_entries - {config_entry_id}
