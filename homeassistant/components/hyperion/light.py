@@ -520,6 +520,7 @@ class HyperionLight(LightEntity):
 
     def _update_components(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion components."""
+        self._set_internal_state()
         self.async_write_ha_state()
 
     def _update_adjustment(self, _: Optional[Dict[str, Any]] = None) -> None:
