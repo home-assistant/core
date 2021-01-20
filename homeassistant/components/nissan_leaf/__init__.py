@@ -340,13 +340,18 @@ class LeafDataStore:
         try:
             # Request battery update from the car
             _LOGGER.debug("Requesting battery update, %s", self.leaf.vin)
-            start_server_info = await self.hass.async_add_executor_job(
-                self.leaf.get_latest_battery_status
-            )
-            if not start_server_info:
-                _LOGGER.error("Battery status check failed")
-                return None
-            start_date = _extract_start_date(start_server_info)
+            start_date = None
+            try:
+                start_server_info = await self.hass.async_add_executor_job(
+                    self.leaf.get_latest_battery_status
+                )
+            except TypeError:  # pycarwings2 can fail if Nissan returns nothing
+                _LOGGER.debug("Battery status check returned nothing")
+            else:
+                if not start_server_info:
+                    _LOGGER.debug("Battery status check failed")
+                else:
+                    start_date = _extract_start_date(start_server_info)
             await asyncio.sleep(1)  # Critical sleep
             request = await self.hass.async_add_executor_job(self.leaf.request_update)
             if not request:
@@ -375,7 +380,7 @@ class LeafDataStore:
                     server_info = await self.hass.async_add_executor_job(
                         self.leaf.get_latest_battery_status
                     )
-                    if start_date and start_date != _extract_start_date(server_info):
+                    if not start_date or start_date != _extract_start_date(server_info):
                         return server_info
                     # get_status_from_update returned {"resultFlag": "1"}
                     # but the data didn't change, make a fresh request.
