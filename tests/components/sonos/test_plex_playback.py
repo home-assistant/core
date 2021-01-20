@@ -27,30 +27,30 @@ async def test_plex_play_media(
         '{"library_name": "Music", "artist_name": "Artist", "album_name": "Album"}'
     )
 
-    # Test successful Plex service call
     with patch(
         "homeassistant.components.sonos.media_player.play_on_sonos"
     ) as mock_play:
+        # Test successful Plex service call
         assert await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: media_player,
                 ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
-                ATTR_MEDIA_CONTENT_ID: PLEX_URI_SCHEME + media_content_id,
+                ATTR_MEDIA_CONTENT_ID: f"{PLEX_URI_SCHEME}{media_content_id}",
             },
             True,
         )
-    assert len(mock_play.mock_calls) == 1
-    assert mock_play.mock_calls[0][1][1] == MEDIA_TYPE_MUSIC
-    assert mock_play.mock_calls[0][1][2] == media_content_id
-    assert mock_play.mock_calls[0][1][3] == "Zone A"
 
-    # Test failed Plex service call
-    with patch(
-        "homeassistant.components.sonos.media_player.play_on_sonos",
-        side_effect=HomeAssistantError,
-    ) as mock_play:
+        assert len(mock_play.mock_calls) == 1
+        assert mock_play.mock_calls[0][1][1] == MEDIA_TYPE_MUSIC
+        assert mock_play.mock_calls[0][1][2] == media_content_id
+        assert mock_play.mock_calls[0][1][3] == "Zone A"
+
+        # Test failed Plex service call
+        mock_play.reset_mock()
+        mock_play.side_effect = HomeAssistantError
+
         assert (
             await hass.services.async_call(
                 MP_DOMAIN,
@@ -58,9 +58,9 @@ async def test_plex_play_media(
                 {
                     ATTR_ENTITY_ID: media_player,
                     ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
-                    ATTR_MEDIA_CONTENT_ID: PLEX_URI_SCHEME + media_content_id,
+                    ATTR_MEDIA_CONTENT_ID: f"{PLEX_URI_SCHEME}{media_content_id}",
                 },
             )
             is None
         )
-    assert len(mock_play.mock_calls) == 0
+        assert len(mock_play.mock_calls) == 0

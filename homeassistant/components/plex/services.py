@@ -70,12 +70,11 @@ def refresh_library(hass, service_call):
 
 def get_plex_server(hass, plex_server_name=None):
     """Retrieve a configured Plex server by name."""
-    if DOMAIN in hass.data:
-        plex_servers = hass.data[DOMAIN][SERVERS].values()
-        if not plex_servers:
-            raise HomeAssistantError("No Plex servers available")
-    else:
+    if DOMAIN not in hass.data:
         raise HomeAssistantError("Plex integration not configured")
+    plex_servers = hass.data[DOMAIN][SERVERS].values()
+    if not plex_servers:
+        raise HomeAssistantError("No Plex servers available")
 
     if plex_server_name:
         plex_server = next(
