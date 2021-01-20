@@ -227,8 +227,12 @@ class _ScriptRun:
         # pylint: disable=protected-access
         return await self._script._async_get_condition(config)
 
-    def _log(self, msg: str, *args: Any, level: int = logging.INFO) -> None:
-        self._script._log(msg, *args, level=level)  # pylint: disable=protected-access
+    def _log(
+        self, msg: str, *args: Any, level: int = logging.INFO, **kwargs: Any
+    ) -> None:
+        self._script._log(  # pylint: disable=protected-access
+            msg, *args, level=level, **kwargs
+        )
 
     async def async_run(self) -> None:
         """Run script."""
@@ -623,8 +627,8 @@ class _ScriptRun:
             }
             done.set()
 
-        def log_cb(level, msg):
-            self._log(msg, level=level)
+        def log_cb(level, msg, **kwargs):
+            self._log(msg, level=level, **kwargs)
 
         to_context = None
         remove_triggers = await async_initialize_triggers(
@@ -1128,11 +1132,13 @@ class Script:
             self._choose_data[step] = choose_data
         return choose_data
 
-    def _log(self, msg: str, *args: Any, level: int = logging.INFO) -> None:
+    def _log(
+        self, msg: str, *args: Any, level: int = logging.INFO, **kwargs: Any
+    ) -> None:
         msg = f"%s: {msg}"
         args = (self.name, *args)
 
         if level == _LOG_EXCEPTION:
-            self._logger.exception(msg, *args)
+            self._logger.exception(msg, *args, **kwargs)
         else:
-            self._logger.log(level, msg, *args)
+            self._logger.log(level, msg, *args, **kwargs)
