@@ -15,8 +15,8 @@
                 "data": {
                     "api_key": "API Key",
                     "api_token": "API Token",
-                    "currencies": "Currencies to show balances for.",
-                    "exchange_rates": "Currencies to show exchange rates for."
+                    "currencies": "Currencies to show balances for",
+                    "exchange_rates": "Currencies to show exchange rates for"
                 },
                 "description": "Please enter the details of your API key as provided by Coinbase. Seperate multiple currencies with a comma (e.g. \"BTC, EUR\")",
                 "title": "API Key Details"

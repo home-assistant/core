@@ -8,8 +8,8 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "api_token": "[%key:common::config_flow::data::api_token%]",
-          "currencies": "Currencies to show balances for.",
-          "exchange_rates": "Currencies to show exchange rates for."
+          "currencies": "Currencies to show balances for",
+          "exchange_rates": "Currencies to show exchange rates for"
         }
       }
     },
