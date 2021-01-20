@@ -1,4 +1,5 @@
 """Provides device triggers for lutron caseta."""
+import logging
 from typing import List
 
 import voluptuous as vol
@@ -30,6 +31,9 @@ from .const import (
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
 )
+
+_LOGGER = logging.getLogger(__name__)
+
 
 SUPPORTED_INPUTS_EVENTS_TYPES = [ACTION_PRESS, ACTION_RELEASE]
 
@@ -124,17 +128,15 @@ MODEL_SUBTYPE_MAP = {
 }
 
 
-async def async_validate_trigger_config(hass, config):
+async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType):
     """Validate config."""
-
     # if device is available verify parameters against device capabilities
-    device = get_device_wrapper(hass, config[CONF_DEVICE_ID])
+    device = get_button_device_by_dr_id(hass, config[CONF_DEVICE_ID])
 
     if not device:
         return config
 
     device_model_tup = get_device_model_tuple(device)
-
     schema = MODEL_SCHEMA_MAP.get(device_model_tup)
 
     if not schema:
@@ -144,16 +146,22 @@ async def async_validate_trigger_config(hass, config):
 
 
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
-    """List device triggers for Shelly devices."""
+    """List device triggers for lutron caseta devices."""
     triggers = []
 
-    device = get_device_wrapper(hass, device_id)
+    device = get_button_device_by_dr_id(hass, device_id)
+    _LOGGER.debug("async_get_triggers: %s = %s", device_id, device)
+
     if not device:
         raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
 
     device_model_tup = get_device_model_tuple(device)
 
+    _LOGGER.debug("device_model_tup: %s = %s", device_id, device_model_tup)
+
     valid_buttons = MODEL_SUBTYPE_MAP.get(device_model_tup)
+    _LOGGER.debug("valid_buttons: %s = %s", device_id, valid_buttons)
+
     if not valid_buttons:
         raise InvalidDeviceAutomationConfig(
             f"Device model {device['model']} not supported: {device_id}"
@@ -181,7 +189,7 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    device = get_device_wrapper(hass, config[CONF_DEVICE_ID])
+    device = get_button_device_by_dr_id(hass, config[CONF_DEVICE_ID])
     device_model_tup = get_device_model_tuple(device)
     schema = MODEL_SCHEMA_MAP.get(device_model_tup)
     config = schema(config)
@@ -202,8 +210,8 @@ async def async_attach_trigger(
     )
 
 
-def get_device_wrapper(hass: HomeAssistant, device_id: str):
-    """Get a Shelly device wrapper for the given device id."""
+def get_button_device_by_dr_id(hass: HomeAssistant, device_id: str):
+    """Get a lutron device for the given device id."""
     for config_entry in hass.data[DOMAIN]:
         button_devices = hass.data[DOMAIN][config_entry][BUTTON_DEVICES]
         device = button_devices.get(device_id)
