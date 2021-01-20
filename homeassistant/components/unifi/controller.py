@@ -344,8 +344,7 @@ class UniFiController:
         except CannotConnect as err:
             raise ConfigEntryNotReady from err
 
-        except AuthenticationRequired as err:
-            LOGGER.error("Authentication error with (%s): %s", self.host, err)
+        except AuthenticationRequired:
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_init(
                     UNIFI_DOMAIN,
@@ -535,6 +534,10 @@ async def get_controller(
     ) as err:
         LOGGER.error("Error connecting to the UniFi controller at %s: %s", host, err)
         raise CannotConnect from err
+
+    except aiounifi.LoginRequired as err:
+        LOGGER.warning("Connected to UniFi at %s but login required: %s", host, err)
+        raise AuthenticationRequired from err
 
     except aiounifi.AiounifiException as err:
         LOGGER.exception("Unknown UniFi communication error occurred: %s", err)
