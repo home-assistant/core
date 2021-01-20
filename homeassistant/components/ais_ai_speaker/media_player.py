@@ -337,4 +337,6 @@ class AisPlayerDevice(MediaPlayerEntity):
             media_content_id,
             self._ais_gate,
         )
+        # TODO
+        # await self._ais_gate.cache_browse_media(result.as_dict())
         return result
