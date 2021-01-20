@@ -11,8 +11,6 @@ from homeassistant.components.lutron_caseta import (
     ATTR_AREA_NAME,
     ATTR_BUTTON_NUMBER,
     ATTR_DEVICE_NAME,
-    ATTR_INTERGRATION_ID,
-    ATTR_MODEL,
     ATTR_SERIAL,
     ATTR_TYPE,
 )
@@ -216,10 +214,8 @@ async def test_if_fires_on_button_event(hass, calls, device_reg):
     )
 
     message = {
-        ATTR_INTERGRATION_ID: 1,
         ATTR_SERIAL: device.get("serial"),
         ATTR_TYPE: device.get("type"),
-        ATTR_MODEL: device.get("model"),
         ATTR_BUTTON_NUMBER: 2,
         ATTR_DEVICE_NAME: device["Name"],
         ATTR_AREA_NAME: device.get("Area", {}).get("Name"),
@@ -258,10 +254,8 @@ async def test_validate_trigger_config_no_device(hass, calls, device_reg):
         },
     )
     message = {
-        ATTR_INTERGRATION_ID: 1,
         ATTR_SERIAL: "123",
         ATTR_TYPE: "any",
-        ATTR_MODEL: "any",
         ATTR_BUTTON_NUMBER: 3,
         ATTR_DEVICE_NAME: "any",
         ATTR_AREA_NAME: "area",
@@ -304,10 +298,8 @@ async def test_validate_trigger_config_unknown_device(hass, calls, device_reg):
         },
     )
     message = {
-        ATTR_INTERGRATION_ID: 1,
         ATTR_SERIAL: "123",
         ATTR_TYPE: "any",
-        ATTR_MODEL: "any",
         ATTR_BUTTON_NUMBER: 3,
         ATTR_DEVICE_NAME: "any",
         ATTR_AREA_NAME: "area",

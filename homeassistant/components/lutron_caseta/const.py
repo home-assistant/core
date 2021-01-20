@@ -21,10 +21,8 @@ BRIDGE_DEVICE_ID = "1"
 
 MANUFACTURER = "Lutron"
 
-ATTR_INTERGRATION_ID = "integration_id"
 ATTR_SERIAL = "serial"
 ATTR_TYPE = "type"
-ATTR_MODEL = "model"
 ATTR_BUTTON_NUMBER = "button_number"
 ATTR_DEVICE_NAME = "device_name"
 ATTR_AREA_NAME = "area_name"

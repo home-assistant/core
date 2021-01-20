@@ -9,6 +9,6 @@
   "zeroconf": ["_leap._tcp.local."],
   "homekit": {
     "models": ["Smart Bridge"]
-  },  
+  },
   "codeowners": ["@swails", "@bdraco"]
 }

@@ -24,8 +24,6 @@ from .const import (
     ATTR_AREA_NAME,
     ATTR_BUTTON_NUMBER,
     ATTR_DEVICE_NAME,
-    ATTR_INTERGRATION_ID,
-    ATTR_MODEL,
     ATTR_SERIAL,
     ATTR_TYPE,
     BRIDGE_DEVICE,
@@ -157,7 +155,6 @@ async def async_setup_lip(hass, config_entry, lip_devices):
     )
     _async_subscribe_pico_remote_events(hass, lip, button_devices_by_lip_id)
     data[BUTTON_DEVICES] = button_devices_by_dr_id
-    _LOGGER.debug("Button devices: %s", data[BUTTON_DEVICES])
     data[BRIDGE_LIP] = lip
 
 
@@ -249,10 +246,8 @@ def _async_subscribe_pico_remote_events(hass, lip, button_devices_by_id):
         hass.bus.async_fire(
             LUTRON_CASETA_BUTTON_EVENT,
             {
-                ATTR_INTERGRATION_ID: lip_message.integration_id,
                 ATTR_SERIAL: device.get("serial"),
                 ATTR_TYPE: device.get("type"),
-                ATTR_MODEL: device.get("model"),
                 ATTR_BUTTON_NUMBER: lip_message.action_number,
                 ATTR_DEVICE_NAME: device["Name"],
                 ATTR_AREA_NAME: device.get("Area", {}).get("Name"),
