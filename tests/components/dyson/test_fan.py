@@ -397,7 +397,7 @@ async def test_custom_services_invalid_data(
     hass: HomeAssistant, domain: str, service: str, data: dict
 ) -> None:
     """Test custom services calling with invalid data."""
-    try:
+    with pytest.raises(ValueError):
         await hass.services.async_call(
             domain,
             service,
@@ -407,7 +407,3 @@ async def test_custom_services_invalid_data(
             },
             blocking=True,
         )
-    except ValueError:
-        pass
-    else:
-        assert False
