@@ -217,6 +217,7 @@ async def async_attach_trigger(
         }
     )
     event_config = event_trigger.TRIGGER_SCHEMA(event_config)
+    _LOGGER.debug("async_attach_trigger: %s %s", config, event_config)
     return await event_trigger.async_attach_trigger(
         hass, event_config, action, automation_info, platform_type="device"
     )
