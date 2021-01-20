@@ -89,12 +89,13 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         model_description = discovery_info[ssdp.ATTR_UPNP_MODEL_DESCRIPTION]
         mac_address = format_mac(discovery_info[ssdp.ATTR_UPNP_SERIAL])
 
-        if self._host_already_configured(parsed_url.hostname):
-            return self.async_abort(reason="already_configured")
-
         self.config = {
             CONF_HOST: parsed_url.hostname,
         }
+        _LOGGER.debug("SSDP host: %s", self.config[CONF_HOST])
+
+        if self._host_already_configured(self.config[CONF_HOST]):
+            return self.async_abort(reason="already_configured")
 
         await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.config[CONF_HOST]})
