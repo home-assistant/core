@@ -102,6 +102,7 @@ async def async_setup_entry(hass, config_entry):
 
     await bridge.connect()
     if not bridge.is_connected():
+        await bridge.close()
         _LOGGER.error("Unable to connect to Lutron Caseta bridge at %s", host)
         raise ConfigEntryNotReady
 
