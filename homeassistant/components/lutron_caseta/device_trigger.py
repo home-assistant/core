@@ -194,9 +194,7 @@ async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType)
     device = get_button_device_by_dr_id(hass, config[CONF_DEVICE_ID])
 
     if not device:
-        raise InvalidDeviceAutomationConfig(
-            f"Device id does not exist: {config[CONF_DEVICE_ID]}"
-        )
+        return None
 
     schema = DEVICE_TYPE_SCHEMA_MAP.get(device["type"])
 
@@ -270,7 +268,6 @@ def get_button_device_by_dr_id(hass: HomeAssistant, device_id: str):
 
     for config_entry in hass.data[DOMAIN]:
         button_devices = hass.data[DOMAIN][config_entry][BUTTON_DEVICES]
-        _LOGGER.debug("Button Devices (requested=%s): %s", device_id, button_devices)
         device = button_devices.get(device_id)
         if device:
             return device
