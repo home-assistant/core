@@ -46,9 +46,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         sensors.append(EcoNetSensor(water_heater, WATER_USAGE_TODAY))
         sensors.append(EcoNetSensor(water_heater, POWER_USAGE_TODAY))
         sensors.append(EcoNetSensor(water_heater, WIFI_SIGNAL))
-    async_add_entities(
-        sensors,
-    )
+    async_add_entities(sensors)
 
 
 class EcoNetSensor(EcoNetEntity):
@@ -85,6 +83,7 @@ class EcoNetSensor(EcoNetEntity):
             return None
         if self._device_name == ALERT_COUNT:
             return self._econet.alert_count
+        return None
 
     @property
     def unit_of_measurement(self):

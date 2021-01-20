@@ -34,22 +34,22 @@ class EcoNetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(user_input[CONF_EMAIL])
         self._abort_if_unique_id_configured()
-        errors = None
+        errors = {}
 
         try:
             await EcoNetApiInterface.login(
                 user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
             )
         except InvalidCredentialsError:
-            errors = "invalid_auth"
+            errors["base"] = "invalid_auth"
         except PyeconetError:
-            errors = "cannot_connect"
+            errors["base"] = "cannot_connect"
 
         if errors:
             return self.async_show_form(
                 step_id="user",
                 data_schema=self.data_schema,
-                errors={"base": errors},
+                errors=errors,
             )
 
         return self.async_create_entry(

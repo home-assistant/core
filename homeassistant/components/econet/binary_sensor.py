@@ -37,9 +37,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             binary_sensors.append(
                 EcoNetBinarySensor(water_heater, SENSOR_NAME_VACATION)
             )
-    async_add_entities(
-        binary_sensors,
-    )
+    async_add_entities(binary_sensors)
 
 
 class EcoNetBinarySensor(EcoNetEntity, BinarySensorEntity):
@@ -60,6 +58,7 @@ class EcoNetBinarySensor(EcoNetEntity, BinarySensorEntity):
             return self._econet.running
         if self._device_name == SENSOR_NAME_VACATION:
             return self._econet.vacation
+        return False
 
     @property
     def device_class(self):

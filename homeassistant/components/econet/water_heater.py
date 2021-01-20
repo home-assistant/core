@@ -109,7 +109,7 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        if len(self.water_heater.modes) > 0:
+        if self.water_heater.modes:
             if self.water_heater.supports_away:
                 return SUPPORT_FLAGS_HEATER | SUPPORT_AWAY_MODE
             return SUPPORT_FLAGS_HEATER
@@ -131,7 +131,7 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
         if op_mode_to_set is not None:
             self.water_heater.set_mode(op_mode_to_set)
         else:
-            _LOGGER.error("An operation mode must be provided")
+            _LOGGER.error("Invalid operation mode: %s", operation_mode)
 
     @property
     def target_temperature(self):
