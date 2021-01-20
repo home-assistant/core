@@ -241,8 +241,6 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     device = get_button_device_by_dr_id(hass, config[CONF_DEVICE_ID])
-    if not device:
-        return None
     schema = DEVICE_TYPE_SCHEMA_MAP.get(device["type"])
     valid_buttons = DEVICE_TYPE_SUBTYPE_MAP.get(device["type"])
     config = schema(config)
