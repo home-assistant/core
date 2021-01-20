@@ -824,9 +824,11 @@ async def test_wait_template_with_utcnow(hass):
     start_time = dt_util.utcnow().replace(minute=1) + timedelta(hours=48)
 
     try:
-        hass.async_create_task(script_obj.async_run(context=Context()))
-        await asyncio.wait_for(wait_started_flag.wait(), 1)
-        assert script_obj.is_running
+        non_maching_time = start_time.replace(hour=3)
+        with patch("homeassistant.util.dt.utcnow", return_value=non_maching_time):
+            hass.async_create_task(script_obj.async_run(context=Context()))
+            await asyncio.wait_for(wait_started_flag.wait(), 1)
+            assert script_obj.is_running
 
         match_time = start_time.replace(hour=12)
         with patch("homeassistant.util.dt.utcnow", return_value=match_time):
@@ -848,13 +850,17 @@ async def test_wait_template_with_utcnow_no_match(hass):
     timed_out = False
 
     try:
-        hass.async_create_task(script_obj.async_run(context=Context()))
-        await asyncio.wait_for(wait_started_flag.wait(), 1)
-        assert script_obj.is_running
-
         non_maching_time = start_time.replace(hour=3)
         with patch("homeassistant.util.dt.utcnow", return_value=non_maching_time):
-            async_fire_time_changed(hass, non_maching_time)
+            hass.async_create_task(script_obj.async_run(context=Context()))
+            await asyncio.wait_for(wait_started_flag.wait(), 1)
+            assert script_obj.is_running
+
+        second_non_maching_time = start_time.replace(hour=4)
+        with patch(
+            "homeassistant.util.dt.utcnow", return_value=second_non_maching_time
+        ):
+            async_fire_time_changed(hass, second_non_maching_time)
 
         with timeout(0.1):
             await hass.async_block_till_done()
