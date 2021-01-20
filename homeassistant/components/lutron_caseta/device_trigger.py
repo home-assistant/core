@@ -127,6 +127,13 @@ MODEL_SUBTYPE_MAP = {
     ("C", "Y"): SHADE_REMOTE_BUTTON_TYPES,  # CS-YJ-4GC-WH
 }
 
+TRIGGER_SCHEMA = vol.Any(
+    PICO_REMOTE_2_TRIGGER_SCHEMA,
+    PICO_REMOTE_3_TRIGGER_SCHEMA,
+    PICO_REMOTE_4_TRIGGER_SCHEMA,
+    SHADE_REMOTE_TRIGGER_SCHEMA,
+)
+
 
 async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType):
     """Validate config."""
