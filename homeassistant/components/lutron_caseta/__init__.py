@@ -157,6 +157,7 @@ async def async_setup_lip(hass, config_entry, lip_devices):
     )
     _async_subscribe_pico_remote_events(hass, lip, button_devices_by_lip_id)
     data[BUTTON_DEVICES] = button_devices_by_dr_id
+    _LOGGER.debug("Button devices: %s", data[BUTTON_DEVICES])
     data[BRIDGE_LIP] = lip
 
 
