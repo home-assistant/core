@@ -211,18 +211,14 @@ async def _async_register_button_devices(
         if "serial" not in device:
             continue
 
-        device_entry = {
-            "name": device["leap_name"],
-            "manufacturer": MANUFACTURER,
-            "config_entry_id": config_entry_id,
-            "identifiers": {(DOMAIN, device["serial"])},
-            "via_device": (DOMAIN, bridge_device["serial"]),
-        }
-
-        if "model" in device:
-            device_entry["model"] = device["model"]
-
-        dr_device = device_registry.async_get_or_create(**device_entry)
+        dr_device = device_registry.async_get_or_create(
+            name=device["leap_name"],
+            manufacturer=MANUFACTURER,
+            config_entry_id=config_entry_id,
+            identifiers={(DOMAIN, device["serial"])},
+            model=f"{device['model']} ({device['type']})",
+            via_device=(DOMAIN, bridge_device["serial"]),
+        )
 
         button_devices_by_dr_id[dr_device.id] = device
 
@@ -335,7 +331,7 @@ class LutronCasetaDevice(Entity):
             "identifiers": {(DOMAIN, self.serial)},
             "name": self.name,
             "manufacturer": MANUFACTURER,
-            "model": self._device["model"],
+            "model": f"{self._device['model']} ({self._device['type']})",
             "via_device": (DOMAIN, self._bridge_device["serial"]),
         }
 
