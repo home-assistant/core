@@ -1,6 +1,8 @@
 """Tests for the Sonos Media Player platform."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -39,7 +41,7 @@ async def test_plex_play_media(
                 ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
                 ATTR_MEDIA_CONTENT_ID: f"{PLEX_URI_SCHEME}{media_content_id}",
             },
-            True,
+            blocking=True,
         )
 
         assert len(mock_play.mock_calls) == 1
@@ -51,7 +53,7 @@ async def test_plex_play_media(
         mock_play.reset_mock()
         mock_play.side_effect = HomeAssistantError
 
-        assert (
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 MP_DOMAIN,
                 SERVICE_PLAY_MEDIA,
@@ -60,7 +62,6 @@ async def test_plex_play_media(
                     ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
                     ATTR_MEDIA_CONTENT_ID: f"{PLEX_URI_SCHEME}{media_content_id}",
                 },
+                blocking=True,
             )
-            is None
-        )
-        assert len(mock_play.mock_calls) == 0
+        assert mock_play.called
