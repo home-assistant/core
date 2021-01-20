@@ -139,11 +139,11 @@ class WorkdayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if user_input.get(CONF_ADVANCED):
                     self._init_info = user_input
                     return await self.async_step_advanced_conf()
-                else:
-                    user_input[CONF_WORKDAYS] = DEFAULT_WORKDAYS
-                    user_input[CONF_EXCLUDES] = DEFAULT_EXCLUDES
-                    user_input[CONF_OFFSET] = DEFAULT_OFFSET
-                    return self.async_create_entry(title=self._title, data=user_input)
+
+                user_input[CONF_WORKDAYS] = DEFAULT_WORKDAYS
+                user_input[CONF_EXCLUDES] = DEFAULT_EXCLUDES
+                user_input[CONF_OFFSET] = DEFAULT_OFFSET
+                return self.async_create_entry(title=self._title, data=user_input)
 
         previous_input = user_input or {}
         _LOGGER.info("previous_input %s", previous_input)
@@ -279,9 +279,11 @@ class WorkdayOptionsFlow(config_entries.OptionsFlow):
         """Manage extra holidays."""
         errors = {}
         data_schema = vol.Schema({})
+        _LOGGER.debug("async_step_add_holidays: init...")
 
         if user_input is None:
             holidays_to_add = self._config_entry.options.get(CONF_ADD_HOLIDAYS, [])
+            _LOGGER.debug("holidays_to_add: %s", holidays_to_add)
         else:
             new_holiday = user_input.get(CONF_NEW_HOLIDAY)
             holidays_to_add = user_input.get(CONF_ADD_HOLIDAYS, [])
@@ -289,15 +291,13 @@ class WorkdayOptionsFlow(config_entries.OptionsFlow):
             _LOGGER.debug("holidays_to_add: %s", holidays_to_add)
             if new_holiday:
                 try:
-                    cv.matches_regex(
-                        "([12]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01]))"
-                    )(new_holiday)
+                    cv.date(new_holiday)  # just validate format
                     holidays_to_add.append(new_holiday)
-                    holidays_to_add.sort()
                 except vol.Invalid:
                     _LOGGER.error("bad format: %s", new_holiday)
                     errors[CONF_NEW_HOLIDAY] = "bad_date_format"
             else:
+                holidays_to_add.sort(reverse=True)
                 return self._save_config(user_input)
 
         if holidays_to_add:
@@ -310,16 +310,19 @@ class WorkdayOptionsFlow(config_entries.OptionsFlow):
                 }
             )
 
+        # holiday_format = '%Y-%m-%d'
         data_schema = data_schema.extend(
             {
                 # vol.Required(CONF_NEW_HOLIDAY, default="123456"): cv.matches_regex("[0-9a-f]{12}"),
-                vol.Optional(CONF_NEW_HOLIDAY): cv.matches_regex(
-                    "([12]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01]))"
-                ),
+                # vol.Optional(CONF_NEW_HOLIDAY): cv.matches_regex("([12]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01]))"),
                 # vol.Optional(CONF_NEW_HOLIDAY): vol.Any("", cv.matches_regex("([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))")),
                 # vol.Optional(CONF_NEW_HOLIDAY): vol.All(str, cv.matches_regex("([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))")),
                 # vol.Optional(CONF_NEW_HOLIDAY): cv.date,
-                # vol.Optional(CONF_NEW_HOLIDAY): str,
+                # vol.Optional(CONF_NEW_HOLIDAY): lambda v: datetime.datetime.strptime(v, holiday_format),
+                # vol.Optional(CONF_NEW_HOLIDAY): vol.All(str, lambda v: datetime.datetime.strptime(v, holiday_format)),
+                # vol.Optional(CONF_NEW_HOLIDAY): vol.Date(format=holiday_format),
+                # vol.Optional(CONF_NEW_HOLIDAY): vol.All(str, vol.Date(format=holiday_format)),
+                vol.Optional(CONF_NEW_HOLIDAY): str,
             }
         )
 
@@ -329,6 +332,7 @@ class WorkdayOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_remove_holidays(self, user_input=None):
         """Manage holidays to remove."""
+        errors = {}
         data_schema = vol.Schema({})
 
         if user_input is None:
@@ -341,9 +345,14 @@ class WorkdayOptionsFlow(config_entries.OptionsFlow):
             _LOGGER.debug("remove_holiday: %s", remove_holiday)
             _LOGGER.debug("holidays_to_remove: %s", holidays_to_remove)
             if remove_holiday:
-                holidays_to_remove.append(remove_holiday)
-                holidays_to_remove.sort()
+                try:
+                    cv.date(remove_holiday)  # just validate format
+                    holidays_to_remove.append(remove_holiday)
+                except vol.Invalid:
+                    _LOGGER.error("bad format: %s", remove_holiday)
+                    errors[CONF_HOLIDAY_TO_REMOVE] = "bad_date_format"
             else:
+                holidays_to_remove.sort(reverse=True)
                 return self._save_config(user_input)
 
         if holidays_to_remove:
@@ -363,7 +372,9 @@ class WorkdayOptionsFlow(config_entries.OptionsFlow):
             }
         )
 
-        return self.async_show_form(step_id="remove_holidays", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="remove_holidays", data_schema=data_schema, errors=errors
+        )
 
     def _save_config(self, data):
         """Save the updated options."""
