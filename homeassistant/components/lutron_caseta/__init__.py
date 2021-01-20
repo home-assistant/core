@@ -224,7 +224,7 @@ async def _async_register_button_devices(
 
         dr_device = device_registry.async_get_or_create(**device_entry)
 
-        button_devices_by_dr_id[dr_device.device_id] = device
+        button_devices_by_dr_id[dr_device.id] = device
 
     return button_devices_by_dr_id
 
