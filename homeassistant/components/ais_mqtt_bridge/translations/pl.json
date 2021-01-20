@@ -1,0 +1,26 @@
+{   "title": "AIS MQTT Bridge",
+    "config": {
+        "step": {
+            "info": {
+                "description": "Access to AIS MQTT Bridge requires authorization in AIS.\n\n ###### ![AIS logo](https://ai-speaker.com/images/brands/ais_mqtt_bridge/ais_mqtt_bridge.png?v=8) \n\n Click the **SUBMIT** below to start the authorization process",
+                "title": "Authentication in AI-Speaker."
+            },
+            "authentication": {
+                "title": "Authentication in AI-Speaker",
+                "description": "To get data from xxx you need to login,  [Details in the documentation ](https://www.ai-speaker.com)\n\n Fill in the form below and click **SUBMIT** button.",
+                "data": {
+                    "username": "Username",
+                    "password": "Password"
+                }
+            }
+        },
+        "error": {
+          "oauth_error": "Invalid oAuth data",
+          "token_error": "Invalid code"
+        },
+        "abort": {
+            "abort_by_error": "Discontinued due to an error:\n\n {error_info}",
+            "single_instance_allowed": "You already have the integration to AIS MQTT BRIDGE set up.\n\n If you want to reconfigure, remove the current integration first."
+        }
+    }
+}

@@ -25,6 +25,7 @@ FLOWS = [
     "ais_wear_os",
     "ais_wifi_service",
     "ais_ai_speaker",
+    "ais_mqtt_bridge",
     "ais_supla_mqtt",
     "alarmdecoder",
     "almond",
