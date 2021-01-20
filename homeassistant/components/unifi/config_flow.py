@@ -76,14 +76,12 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
     def __init__(self):
         """Initialize the UniFi flow."""
-        self.config = None
+        self.config = {}
         self.desc = None
         self.sites = None
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered unifi device."""
-        _LOGGER.debug("SSDP discovery_info: %s", discovery_info)
-
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
         friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
         model_description = discovery_info[ssdp.ATTR_UPNP_MODEL_DESCRIPTION]
