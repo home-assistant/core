@@ -113,3 +113,81 @@ async def test_form_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_bad_account_currency(hass):
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "coinbase.wallet.client.Client.get_current_user",
+        return_value={"name": "Test User"},
+    ), patch(
+        "coinbase.wallet.client.Client.get_accounts",
+        return_value={
+            "data": [
+                {
+                    "currency": "BTC",
+                },
+                {
+                    "currency": "USD",
+                },
+            ]
+        },
+    ), patch(
+        "coinbase.wallet.client.Client.get_exchange_rates",
+        return_value={"currency": "USD", "rates": {"ATOM": "0.109", "BTC": "0.00002"}},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "123456",
+                CONF_API_TOKEN: "AbCDeF",
+                CONF_CURRENCIES: "NOT_A_CURRENCY",
+                CONF_EXCAHNGE_RATES: "ATOM, BTC",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "currency_unavaliable"}
+
+
+async def test_form_bad_exchange_rate(hass):
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "coinbase.wallet.client.Client.get_current_user",
+        return_value={"name": "Test User"},
+    ), patch(
+        "coinbase.wallet.client.Client.get_accounts",
+        return_value={
+            "data": [
+                {
+                    "currency": "BTC",
+                },
+                {
+                    "currency": "USD",
+                },
+            ]
+        },
+    ), patch(
+        "coinbase.wallet.client.Client.get_exchange_rates",
+        return_value={"currency": "USD", "rates": {"ATOM": "0.109", "BTC": "0.00002"}},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "123456",
+                CONF_API_TOKEN: "AbCDeF",
+                CONF_CURRENCIES: "BTC, USD",
+                CONF_EXCAHNGE_RATES: "NOT_A_RATE",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "exchange_rate_unavaliable"}
