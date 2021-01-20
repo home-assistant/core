@@ -108,7 +108,7 @@ class HEREWeatherData:
                 self.config_entry, options=options
             )
 
-    async def async_update(self) -> None:
+    async def async_update(self):
         """Handle data update with the DataUpdateCoordinator."""
         try:
             async with async_timeout.timeout(10):
