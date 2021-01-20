@@ -222,9 +222,9 @@ async def _async_register_button_devices(
         if "model" in device:
             device_entry["model"] = device["model"]
 
-        device_id = device_registry.async_get_or_create(**device_entry)
+        dr_device = device_registry.async_get_or_create(**device_entry)
 
-        button_devices_by_dr_id[device_id] = device
+        button_devices_by_dr_id[dr_device.device_id] = device
 
     return button_devices_by_dr_id
 
