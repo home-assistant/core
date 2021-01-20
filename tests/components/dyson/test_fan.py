@@ -93,10 +93,10 @@ async def test_state_purecoollink(
     attributes = state.attributes
     assert attributes[ATTR_NIGHT_MODE] is True
     assert attributes[ATTR_OSCILLATING] is True
-    assert attributes[ATTR_SPEED] == 1
-    assert attributes[ATTR_SPEED_LIST] == [FanSpeed.FAN_SPEED_AUTO.value] + list(
-        range(1, 11)
-    )
+    assert attributes[ATTR_SPEED] == SPEED_LOW
+    assert attributes[ATTR_SPEED_LIST] == [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+    assert attributes[ATTR_DYSON_SPEED] == 1
+    assert attributes[ATTR_DYSON_SPEED_LIST] == list(range(1, 11))
     assert attributes[ATTR_AUTO_MODE] is False
     assert attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_OSCILLATE | SUPPORT_SET_SPEED
 
@@ -115,7 +115,8 @@ async def test_state_purecoollink(
     attributes = state.attributes
     assert attributes[ATTR_NIGHT_MODE] is False
     assert attributes[ATTR_OSCILLATING] is False
-    assert attributes[ATTR_SPEED] == "AUTO"
+    assert attributes[ATTR_SPEED] == SPEED_MEDIUM
+    assert attributes[ATTR_DYSON_SPEED] == "AUTO"
     assert attributes[ATTR_AUTO_MODE] is True
 
 
@@ -173,11 +174,10 @@ async def test_state_purecool(hass: HomeAssistant, device: DysonPureCool) -> Non
     "service,service_data,configuration_args",
     [
         (SERVICE_TURN_ON, {}, {"fan_mode": FanMode.FAN}),
-        (SERVICE_TURN_ON, {ATTR_SPEED: "AUTO"}, {"fan_mode": FanMode.AUTO}),
         (
             SERVICE_TURN_ON,
-            {ATTR_SPEED: 5},
-            {"fan_mode": FanMode.FAN, "fan_speed": FanSpeed("0005")},
+            {ATTR_SPEED: SPEED_LOW},
+            {"fan_mode": FanMode.FAN, "fan_speed": FanSpeed.FAN_SPEED_4},
         ),
         (SERVICE_TURN_OFF, {}, {"fan_mode": FanMode.OFF}),
         (
@@ -190,11 +190,20 @@ async def test_state_purecool(hass: HomeAssistant, device: DysonPureCool) -> Non
             {ATTR_OSCILLATING: False},
             {"oscillation": Oscillation.OSCILLATION_OFF},
         ),
-        (SERVICE_SET_SPEED, {ATTR_SPEED: "AUTO"}, {"fan_mode": FanMode.AUTO}),
         (
             SERVICE_SET_SPEED,
-            {ATTR_SPEED: 5},
-            {"fan_mode": FanMode.FAN, "fan_speed": FanSpeed("0005")},
+            {ATTR_SPEED: SPEED_LOW},
+            {"fan_mode": FanMode.FAN, "fan_speed": FanSpeed.FAN_SPEED_4},
+        ),
+        (
+            SERVICE_SET_SPEED,
+            {ATTR_SPEED: SPEED_MEDIUM},
+            {"fan_mode": FanMode.FAN, "fan_speed": FanSpeed.FAN_SPEED_7},
+        ),
+        (
+            SERVICE_SET_SPEED,
+            {ATTR_SPEED: SPEED_HIGH},
+            {"fan_mode": FanMode.FAN, "fan_speed": FanSpeed.FAN_SPEED_10},
         ),
     ],
 )
@@ -289,6 +298,11 @@ async def test_commands_purecool(
         ),
         (SERVICE_SET_AUTO_MODE, {"auto_mode": True}, {"fan_mode": FanMode.AUTO}),
         (SERVICE_SET_AUTO_MODE, {"auto_mode": False}, {"fan_mode": FanMode.FAN}),
+        (
+            SERVICE_SET_DYSON_SPEED,
+            {ATTR_DYSON_SPEED: "4"},
+            {"fan_mode": FanMode.FAN, "fan_speed": FanSpeed.FAN_SPEED_4},
+        ),
     ],
 )
 @pytest.mark.parametrize("device", [DysonPureCoolLink], indirect=True)
@@ -368,3 +382,28 @@ async def test_custom_services_purecool(
         blocking=True,
     )
     getattr(device, command).assert_called_once_with(*command_args)
+
+
+@pytest.mark.parametrize(
+    "domain,service,data",
+    [
+        (PLATFORM_DOMAIN, SERVICE_TURN_ON, {ATTR_SPEED: "AUTO"}),
+        (PLATFORM_DOMAIN, SERVICE_SET_SPEED, {ATTR_SPEED: "AUTO"}),
+        (DOMAIN, SERVICE_SET_DYSON_SPEED, {ATTR_DYSON_SPEED: "11"}),
+    ],
+)
+@pytest.mark.parametrize("device", [DysonPureCool], indirect=True)
+async def test_custom_services_invalid_data(
+    hass: HomeAssistant, device: DysonPureCool, domain: str, service: str, data: dict
+) -> None:
+    """Test custom services calling with invalid data."""
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            domain,
+            service,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                **data,
+            },
+            blocking=True,
+        )
