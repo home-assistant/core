@@ -80,8 +80,8 @@ PICO_REMOTE_4_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
 )
 
 SHADE_REMOTE_BUTTON_TYPES = {
-    "open_all": 1,
-    "stop_all": 2,
+    "open_all": 2,
+    "stop_all": 3,
     "close_all": 4,
     "raise_all": 5,
     "lower_all": 6,
