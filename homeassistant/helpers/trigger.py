@@ -75,12 +75,19 @@ async def async_initialize_triggers(
         platform = await _async_get_trigger_platform(hass, conf)
         triggers.append(platform.async_attach_trigger(hass, conf, action, info))
 
-    removes = await asyncio.gather(*triggers)
+    attach_results = await asyncio.gather(*triggers, return_exceptions=True)
+    removes = []
 
-    if None in removes:
-        log_cb(logging.ERROR, "Error setting up trigger")
+    for result in attach_results:
+        if isinstance(result, Exception):
+            log_cb(logging.ERROR, "Error setting up trigger", exc_info=result)
+        elif result is None:
+            log_cb(
+                logging.ERROR, "Unknown error while setting up trigger (empty result)"
+            )
+        else:
+            removes.append(result)
 
-    removes = list(filter(None, removes))
     if not removes:
         return None
 
