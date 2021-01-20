@@ -210,7 +210,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         return self._convert_temperature(
             self.values.temperature.value,
             self._convert_units(self.values.temperature.units),
-            self.temperature_unit
+            self.temperature_unit,
         )
 
     @property
@@ -242,7 +242,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         return self._convert_temperature(
             self._current_mode_setpoint_values[0].value,
             self._convert_units(self._current_mode_setpoint_values[0].units),
-            self.temperature_unit
+            self.temperature_unit,
         )
 
     @property
@@ -251,7 +251,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         return self._convert_temperature(
             self._current_mode_setpoint_values[0].value,
             self._convert_units(self._current_mode_setpoint_values[0].units),
-            self.temperature_unit
+            self.temperature_unit,
         )
 
     @property
@@ -260,7 +260,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         return self._convert_temperature(
             self._current_mode_setpoint_values[1].value,
             self._convert_units(self._current_mode_setpoint_values[1].units),
-            self.temperature_unit
+            self.temperature_unit,
         )
 
     async def async_set_temperature(self, **kwargs):
@@ -278,7 +278,9 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             target_temp = kwargs.get(ATTR_TEMPERATURE)
             if setpoint is not None and target_temp is not None:
                 target_temp = self._convert_temperature(
-                    target_temp, self.temperature_unit, self._convert_units(setpoint.units)
+                    target_temp, 
+                    self.temperature_unit, 
+                    self._convert_units(setpoint.units),
                 )
                 setpoint.send_value(target_temp)
         elif len(self._current_mode_setpoint_values) == 2:
@@ -287,12 +289,16 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             if setpoint_low is not None and target_temp_low is not None:
                 target_temp_low = self._convert_temperature(
-                    target_temp_low, self.temperature_unit, self._convert_units(setpoint_low.units)
+                    target_temp_low, 
+                    self.temperature_unit, 
+                    self._convert_units(setpoint_low.units),
                 )
                 setpoint_low.send_value(target_temp_low)
             if setpoint_high is not None and target_temp_high is not None:
                 target_temp_high = self._convert_temperature(
-                    target_temp_high, self.temperature_unit, self._convert_units(setpoint_high.units)
+                    target_temp_high, 
+                    self.temperature_unit, 
+                    self._convert_units(setpoint_high.units),
                 )
                 setpoint_high.send_value(target_temp_high)
 
