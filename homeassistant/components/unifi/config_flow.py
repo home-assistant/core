@@ -77,7 +77,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     def __init__(self):
         """Initialize the UniFi flow."""
         self.config = {}
-        self.desc = None
         self.sites = None
         self.reauth_config_entry = {}
         self.reauth_config = {}
