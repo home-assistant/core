@@ -7,9 +7,9 @@
         "description": "Please enter the details of your API key as provided by Coinbase. Seperate multiple currencies with a comma (e.g. \"BTC, EUR\")",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "api_token": "[%key:common::config_flow::data::api_token%]",
-          "currencies": "Currencies to show balances for",
-          "exchange_rates": "Currencies to show exchange rates for"
+          "api_token": "API Secret",
+          "currencies": "Account Balance Currencies",
+          "exchange_rates": "Exchange Rates"
         }
       }
     },
