@@ -401,6 +401,16 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
         }
     )
 
+    # Simulate a false return of async_send_set_adjustment
+    client.async_send_set_adjustment = AsyncMock(return_value=False)
+    client.adjustment = [{const.KEY_ID: TEST_ID}]
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_BRIGHTNESS: brightness},
+        blocking=True,
+    )
+
     # Simulate a state callback from Hyperion.
     client.adjustment = [{const.KEY_BRIGHTNESS: 50}]
     _call_registered_callback(client, "adjustment-update")
