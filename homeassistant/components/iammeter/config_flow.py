@@ -29,7 +29,6 @@ def iammeter_entries(hass: HomeAssistant):
 
 class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Iammeter."""
-
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
