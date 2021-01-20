@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 from .const import (
+    API_ACCOUNT_ID,
     CONF_YAML_API_KEY,
     CONF_YAML_API_TOKEN,
     CONF_YAML_CURRENCIES,
@@ -105,6 +106,7 @@ class CoinbaseData:
         self.client = client
         self.accounts = self.client.get_accounts()
         self.exchange_rates = self.client.get_exchange_rates()
+        self.user_id = self.client.get_current_user()[API_ACCOUNT_ID]
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

@@ -6,6 +6,7 @@ from .const import (
     API_ACCOUNT_AMOUNT,
     API_ACCOUNT_BALANCE,
     API_ACCOUNT_CURRENCY,
+    API_ACCOUNT_ID,
     API_ACCOUNT_NAME,
     API_ACCOUNT_NATIVE_BALANCE,
     API_ACCOUNTS_DATA,
@@ -74,6 +75,7 @@ class AccountSensor(SensorEntity):
         for account in coinbase_data.accounts[API_ACCOUNTS_DATA]:
             if account.currency == currency:
                 self._name = f"Coinbase {account[API_ACCOUNT_NAME]}"
+                self._id = f"coinbase-{account[API_ACCOUNT_ID]}"
                 self._state = account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
                 self._unit_of_measurement = account[API_ACCOUNT_CURRENCY]
                 self._native_balance = account[API_ACCOUNT_NATIVE_BALANCE][
@@ -88,6 +90,11 @@ class AccountSensor(SensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the Unique ID of the sensor."""
+        return self._id
 
     @property
     def state(self):
@@ -135,6 +142,7 @@ class ExchangeRateSensor(SensorEntity):
         self._coinbase_data = coinbase_data
         self.currency = exchange_currency
         self._name = f"{exchange_currency} Exchange Rate"
+        self._id = f"{self.coinbase_data.user_id}-xe-{exchange_currency}"
         self._state = round(
             1 / float(self._coinbase_data.exchange_rates.rates[self.currency]), 2
         )
@@ -144,6 +152,11 @@ class ExchangeRateSensor(SensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the sensor."""
+        return self._id
 
     @property
     def state(self):
