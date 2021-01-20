@@ -394,7 +394,7 @@ async def test_custom_services_purecool(
 )
 @pytest.mark.parametrize("device", [DysonPureCool], indirect=True)
 async def test_custom_services_invalid_data(
-    hass: HomeAssistant, domain: str, service: str, data: dict
+    hass: HomeAssistant, device: DysonPureCool, domain: str, service: str, data: dict
 ) -> None:
     """Test custom services calling with invalid data."""
     with pytest.raises(ValueError):
