@@ -101,12 +101,12 @@ class UniFiController:
         self._heartbeat_dispatch = {}
         self._heartbeat_time = {}
 
-        self.cache_config_entry(config_entry)
+        self.load_config_entry_options(config_entry)
 
         self.entities = {}
 
-    def cache_config_entry(self, config_entry):
-        """Set properties in self.__dict__ to avoid slow lookups."""
+    def load_config_entry_options(self, config_entry):
+        """Store attributes to avoid property call overhead since they are called frequently."""
         # Device tracker options
         self.config_entry = config_entry
 
@@ -399,7 +399,7 @@ class UniFiController:
     async def async_config_entry_updated(hass, config_entry) -> None:
         """Handle signals of config entry being updated."""
         controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-        controller.cache_config_entry(config_entry)
+        controller.load_config_entry_options(config_entry)
         async_dispatcher_send(hass, controller.signal_options_update)
 
     @callback
