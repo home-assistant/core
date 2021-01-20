@@ -16,8 +16,7 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import DYSON_DEVICES, DysonEntity
 
@@ -44,48 +43,30 @@ SERVICE_SET_FLOW_DIRECTION_FRONT = "set_flow_direction_front"
 SERVICE_SET_TIMER = "set_timer"
 SERVICE_SET_DYSON_SPEED = "set_speed"
 
-DYSON_SET_NIGHT_MODE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_NIGHT_MODE): cv.boolean,
-    }
-)
+SET_NIGHT_MODE_SCHEMA = {
+    vol.Required(ATTR_NIGHT_MODE): cv.boolean,
+}
 
-SET_AUTO_MODE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_AUTO_MODE): cv.boolean,
-    }
-)
+SET_AUTO_MODE_SCHEMA = {
+    vol.Required(ATTR_AUTO_MODE): cv.boolean,
+}
 
-SET_ANGLE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_ANGLE_LOW): cv.positive_int,
-        vol.Required(ATTR_ANGLE_HIGH): cv.positive_int,
-    }
-)
+SET_ANGLE_SCHEMA = {
+    vol.Required(ATTR_ANGLE_LOW): cv.positive_int,
+    vol.Required(ATTR_ANGLE_HIGH): cv.positive_int,
+}
 
-SET_FLOW_DIRECTION_FRONT_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_FLOW_DIRECTION_FRONT): cv.boolean,
-    }
-)
+SET_FLOW_DIRECTION_FRONT_SCHEMA = {
+    vol.Required(ATTR_FLOW_DIRECTION_FRONT): cv.boolean,
+}
 
-SET_TIMER_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_TIMER): cv.positive_int,
-    }
-)
+SET_TIMER_SCHEMA = {
+    vol.Required(ATTR_TIMER): cv.positive_int,
+}
 
-SET_DYSON_SPEED_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_DYSON_SPEED): cv.positive_int,
-    }
-)
+SET_DYSON_SPEED_SCHEMA = {
+    vol.Required(ATTR_DYSON_SPEED): cv.positive_int,
+}
 
 
 SPEED_LIST_HA = [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
@@ -149,74 +130,28 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities(hass.data[DYSON_FAN_DEVICES])
 
-    await hass.async_add_executor_job(_register_services, hass, has_purecool_devices)
-
-
-def _register_services(hass, has_purecool_devices):
-    def service_handle(service):
-        """Handle the Dyson services."""
-        entity_id = service.data[ATTR_ENTITY_ID]
-        fan_device = next(
-            (fan for fan in hass.data[DYSON_FAN_DEVICES] if fan.entity_id == entity_id),
-            None,
-        )
-        if fan_device is None:
-            _LOGGER.warning("Unable to find Dyson fan device %s", str(entity_id))
-            return
-
-        if service.service == SERVICE_SET_NIGHT_MODE:
-            fan_device.set_night_mode(service.data[ATTR_NIGHT_MODE])
-
-        if service.service == SERVICE_SET_AUTO_MODE:
-            fan_device.set_auto_mode(service.data[ATTR_AUTO_MODE])
-
-        if service.service == SERVICE_SET_ANGLE:
-            fan_device.set_angle(
-                service.data[ATTR_ANGLE_LOW], service.data[ATTR_ANGLE_HIGH]
-            )
-
-        if service.service == SERVICE_SET_FLOW_DIRECTION_FRONT:
-            fan_device.set_flow_direction_front(service.data[ATTR_FLOW_DIRECTION_FRONT])
-
-        if service.service == SERVICE_SET_TIMER:
-            fan_device.set_timer(service.data[ATTR_TIMER])
-
-        if service.service == SERVICE_SET_DYSON_SPEED:
-            fan_device.set_dyson_speed(service.data[ATTR_DYSON_SPEED])
-
-    # Register dyson service(s)
-    hass.services.register(
-        DYSON_DOMAIN,
-        SERVICE_SET_NIGHT_MODE,
-        service_handle,
-        schema=DYSON_SET_NIGHT_MODE_SCHEMA,
+    # Register custom services
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_SET_NIGHT_MODE, SET_NIGHT_MODE_SCHEMA, "set_night_mode"
     )
-
-    hass.services.register(
-        DYSON_DOMAIN, SERVICE_SET_AUTO_MODE, service_handle, schema=SET_AUTO_MODE_SCHEMA
+    platform.async_register_entity_service(
+        SERVICE_SET_AUTO_MODE, SET_AUTO_MODE_SCHEMA, "set_auto_mode"
     )
-
-    hass.services.register(
-        DYSON_DOMAIN,
-        SERVICE_SET_DYSON_SPEED,
-        service_handle,
-        schema=SET_DYSON_SPEED_SCHEMA,
+    platform.async_register_entity_service(
+        SERVICE_SET_DYSON_SPEED, SET_DYSON_SPEED_SCHEMA, "set_dyson_speed"
     )
-
     if has_purecool_devices:
-        hass.services.register(
-            DYSON_DOMAIN, SERVICE_SET_ANGLE, service_handle, schema=SET_ANGLE_SCHEMA
+        platform.async_register_entity_service(
+            SERVICE_SET_ANGLE, SET_ANGLE_SCHEMA, "set_angle"
         )
-
-        hass.services.register(
-            DYSON_DOMAIN,
+        platform.async_register_entity_service(
             SERVICE_SET_FLOW_DIRECTION_FRONT,
-            service_handle,
-            schema=SET_FLOW_DIRECTION_FRONT_SCHEMA,
+            SET_FLOW_DIRECTION_FRONT_SCHEMA,
+            "set_flow_direction_front",
         )
-
-        hass.services.register(
-            DYSON_DOMAIN, SERVICE_SET_TIMER, service_handle, schema=SET_TIMER_SCHEMA
+        platform.async_register_entity_service(
+            SERVICE_SET_TIMER, SET_TIMER_SCHEMA, "set_timer"
         )
 
 
@@ -299,11 +234,11 @@ class DysonPureCoolLinkEntity(DysonFanEntity):
         _LOGGER.debug("Turn off fan %s", self.name)
         self._device.set_configuration(fan_mode=FanMode.OFF)
 
-    def set_dyson_speed(self, speed: str) -> None:
+    def set_dyson_speed(self, dyson_speed: str) -> None:
         """Set the exact speed of the purecool fan."""
         _LOGGER.debug("Set exact speed for fan %s", self.name)
 
-        fan_speed = FanSpeed(f"{int(speed):04d}")
+        fan_speed = FanSpeed(f"{int(dyson_speed):04d}")
         self._device.set_configuration(fan_mode=FanMode.FAN, fan_speed=fan_speed)
 
     def oscillate(self, oscillating: bool) -> None:
@@ -372,11 +307,11 @@ class DysonPureCoolEntity(DysonFanEntity):
         _LOGGER.debug("Turn off fan %s", self.name)
         self._device.turn_off()
 
-    def set_dyson_speed(self, speed: str) -> None:
+    def set_dyson_speed(self, dyson_speed: str) -> None:
         """Set the exact speed of the purecool fan."""
         _LOGGER.debug("Set exact speed for fan %s", self.name)
 
-        fan_speed = FanSpeed(f"{int(speed):04d}")
+        fan_speed = FanSpeed(f"{int(dyson_speed):04d}")
         self._device.set_fan_speed(fan_speed)
 
     def oscillate(self, oscillating: bool) -> None:
