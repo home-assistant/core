@@ -515,6 +515,8 @@ class HyperionLight(LightEntity):
                 self._icon = ICON_EXTERNAL_SOURCE
             else:
                 self._icon = ICON_EFFECT
+        if not self.is_on():
+            self._icon = ICON_LIGHTBULB
 
     def _update_components(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion components."""
