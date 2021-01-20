@@ -110,7 +110,7 @@ class KrakenSensor(CoordinatorEntity):
     @property
     def unique_id(self):
         """Set unique_id for sensor."""
-        return self._name
+        return self._name.lower()
 
     @property
     def state(self):
