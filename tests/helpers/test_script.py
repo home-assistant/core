@@ -955,7 +955,33 @@ async def test_wait_for_trigger_bad(hass, caplog):
         hass.async_create_task(script_obj.async_run())
         await hass.async_block_till_done()
 
+    assert "Unknown error while setting up trigger" in caplog.text
+
+
+async def test_wait_for_trigger_generated_exception(hass, caplog):
+    """Test bad wait_for_trigger."""
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA(
+            {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
+        ),
+        "Test Name",
+        "test_domain",
+    )
+
+    async def async_attach_trigger_mock(*args, **kwargs):
+        raise ValueError("something bad")
+
+    with mock.patch(
+        "homeassistant.components.homeassistant.triggers.state.async_attach_trigger",
+        wraps=async_attach_trigger_mock,
+    ):
+        hass.async_create_task(script_obj.async_run())
+        await hass.async_block_till_done()
+
     assert "Error setting up trigger" in caplog.text
+    assert "ValueError" in caplog.text
+    assert "something bad" in caplog.text
 
 
 async def test_condition_basic(hass):
