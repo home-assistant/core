@@ -1,14 +1,22 @@
 """Test the Coinbase config flow."""
 from unittest.mock import patch
 
+from coinbase.wallet.error import AuthenticationError
+from requests.models import Response
+
 from homeassistant import config_entries, setup
-from homeassistant.components.coinbase.config_flow import InvalidAuth
 from homeassistant.components.coinbase.const import (
     CONF_CURRENCIES,
     CONF_EXCAHNGE_RATES,
+    CONF_YAML_API_KEY,
+    CONF_YAML_API_TOKEN,
+    CONF_YAML_CURRENCIES,
+    CONF_YAML_EXCHANGE_RATES,
     DOMAIN,
 )
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
+
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass):
@@ -73,9 +81,17 @@ async def test_form_invalid_auth(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    response = Response()
+    response.status_code = 401
+    api_auth_error = AuthenticationError(
+        response,
+        "authentication_error",
+        "invalid signature",
+        [{"id": "authentication_error", "message": "invalid signature"}],
+    )
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
-        side_effect=InvalidAuth,
+        side_effect=api_auth_error,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -113,6 +129,30 @@ async def test_form_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_catch_all_exception(hass):
+    """Test we handle unknown exceptions."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "coinbase.wallet.client.Client.get_current_user",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "123456",
+                CONF_API_TOKEN: "AbCDeF",
+                CONF_CURRENCIES: "BTC, USD",
+                CONF_EXCAHNGE_RATES: "ATOM, BTC",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_form_bad_account_currency(hass):
@@ -191,3 +231,70 @@ async def test_form_bad_exchange_rate(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "exchange_rate_unavaliable"}
+
+
+async def test_yaml_import(hass):
+    """Test YAML import works."""
+    conf = {
+        CONF_YAML_API_KEY: "123456",
+        CONF_YAML_API_TOKEN: "AbCDeF",
+        CONF_YAML_CURRENCIES: ["BTC", "USD"],
+        CONF_YAML_EXCHANGE_RATES: ["ATOM", "BTC"],
+    }
+    with patch(
+        "coinbase.wallet.client.Client.get_current_user",
+        return_value={"name": "Test User"},
+    ), patch(
+        "coinbase.wallet.client.Client.get_accounts",
+        return_value={
+            "data": [
+                {
+                    "currency": "BTC",
+                },
+                {
+                    "currency": "USD",
+                },
+            ]
+        },
+    ), patch(
+        "coinbase.wallet.client.Client.get_exchange_rates",
+        return_value={"currency": "USD", "rates": {"ATOM": "0.109", "BTC": "0.00002"}},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
+        )
+    assert result["type"] == "create_entry"
+    assert result["title"] == "Test User"
+    assert result["data"] == {
+        CONF_API_KEY: "123456",
+        CONF_API_TOKEN: "AbCDeF",
+        CONF_CURRENCIES: ["BTC", "USD"],
+        CONF_EXCAHNGE_RATES: ["ATOM", "BTC"],
+    }
+
+
+async def test_yaml_existing(hass):
+    """Test YAML ignored when already processed."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "123456",
+            CONF_API_TOKEN: "AbCDeF",
+            CONF_CURRENCIES: ["BTC", "USD"],
+            CONF_EXCAHNGE_RATES: ["ATOM", "BTC"],
+        },
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_YAML_API_KEY: "123456",
+            CONF_YAML_API_TOKEN: "AbCDeF",
+            CONF_YAML_CURRENCIES: ["BTC", "USD"],
+            CONF_YAML_EXCHANGE_RATES: ["ATOM", "BTC"],
+        },
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
