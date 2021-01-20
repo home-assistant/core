@@ -1,6 +1,7 @@
 """Provide a way to connect entities belonging to one device."""
 from collections import OrderedDict
 import logging
+import time
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import attr
@@ -83,6 +84,7 @@ class DeletedDeviceEntry:
     connections: Set[Tuple[str, str]] = attr.ib()
     identifiers: Set[Tuple[str, str]] = attr.ib()
     id: str = attr.ib()
+    orphened_time: Optional[float] = attr.ib()
 
     def to_device_entry(
         self,
@@ -440,6 +442,7 @@ class DeviceRegistry:
                 connections=device.connections,
                 identifiers=device.identifiers,
                 id=device.id,
+                orphened_time=None,
             )
         )
         self.hass.bus.async_fire(
@@ -489,6 +492,8 @@ class DeviceRegistry:
                     connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
                     identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
                     id=device["id"],
+                    # Introduced in 2021.2
+                    orphened_time=device.get("orphened_time"),
                 )
 
         self.devices = devices
@@ -529,6 +534,7 @@ class DeviceRegistry:
                 "connections": list(entry.connections),
                 "identifiers": list(entry.identifiers),
                 "id": entry.id,
+                "orphened_time": entry.orphened_time,
             }
             for entry in self.deleted_devices.values()
         ]
@@ -538,6 +544,7 @@ class DeviceRegistry:
     @callback
     def async_clear_config_entry(self, config_entry_id: str) -> None:
         """Clear config entry from registry entries."""
+        now = time.time()
         for device in list(self.devices.values()):
             self._async_update_device(device.id, remove_config_entry_id=config_entry_id)
         for deleted_device in list(self.deleted_devices.values()):
@@ -545,8 +552,11 @@ class DeviceRegistry:
             if config_entry_id not in config_entries:
                 continue
             if config_entries == {config_entry_id}:
-                # Permanently remove the device from the device registry.
-                self._remove_device(deleted_device)
+                # Add a time stamp when the deleted device
+                # became orphened
+                self.deleted_devices[deleted_device.id] = attr.evolve(
+                    deleted_device, orphened_time=now
+                )
             else:
                 config_entries = config_entries - {config_entry_id}
                 # No need to reindex here since we currently
@@ -622,6 +632,8 @@ def async_cleanup(
                 dev_reg.async_update_device(
                     device.id, remove_config_entry_id=config_entry_id
                 )
+
+    # Todo: cleanup orphened deleted devices older than 90 days
 
 
 @callback
