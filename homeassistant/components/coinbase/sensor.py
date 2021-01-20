@@ -142,7 +142,7 @@ class ExchangeRateSensor(SensorEntity):
         self._coinbase_data = coinbase_data
         self.currency = exchange_currency
         self._name = f"{exchange_currency} Exchange Rate"
-        self._id = f"{self.coinbase_data.user_id}-xe-{exchange_currency}"
+        self._id = f"{coinbase_data.user_id}-xe-{exchange_currency}"
         self._state = round(
             1 / float(self._coinbase_data.exchange_rates.rates[self.currency]), 2
         )
