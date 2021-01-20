@@ -16,7 +16,9 @@ from .const import DOMAIN, NAME  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({CONF_URL: str})
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_URL, default="ws://localhost:3000/zjs"): str}
+)
 
 
 async def validate_input(hass: core.HomeAssistant, user_input: dict) -> VersionInfo:
