@@ -141,6 +141,8 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self.wakeup_interval = None
         self.location = None
         self.battery_level = None
+        self.Value9 = 0
+        self.Value10 = 0
         dispatcher.connect(
             self.network_node_value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED
         )
