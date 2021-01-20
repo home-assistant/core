@@ -204,6 +204,7 @@ async def async_attach_trigger(
     device = get_button_device_by_dr_id(hass, config[CONF_DEVICE_ID])
     device_model_tup = get_device_model_tuple(device)
     schema = MODEL_SCHEMA_MAP.get(device_model_tup)
+    valid_buttons = MODEL_SUBTYPE_MAP.get(device_model_tup)
     config = schema(config)
     event_config = event_trigger.TRIGGER_SCHEMA(
         {
@@ -211,7 +212,7 @@ async def async_attach_trigger(
             event_trigger.CONF_EVENT_TYPE: LUTRON_CASETA_BUTTON_EVENT,
             event_trigger.CONF_EVENT_DATA: {
                 ATTR_SERIAL: device["serial"],
-                ATTR_BUTTON_NUMBER: config[CONF_SUBTYPE],
+                ATTR_BUTTON_NUMBER: valid_buttons[config[CONF_SUBTYPE]],
                 ATTR_ACTION: config[CONF_TYPE],
             },
         }
