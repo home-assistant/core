@@ -11,8 +11,8 @@ from homeassistant.components.light import (
     LightEntity,
 )
 
-from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice
-from .const import BRIDGE_DEVICE, BRIDGE_LEAP
+from . import LutronCasetaDevice
+from .const import BRIDGE_DEVICE, BRIDGE_LEAP, DOMAIN as CASETA_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

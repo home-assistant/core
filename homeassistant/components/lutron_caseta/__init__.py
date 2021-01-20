@@ -35,13 +35,13 @@ from .const import (
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
+    DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
     MANUFACTURER,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "lutron_caseta"
 DATA_BRIDGE_CONFIG = "lutron_caseta_bridges"
 
 CONFIG_SCHEMA = vol.Schema(

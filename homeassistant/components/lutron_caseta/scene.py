@@ -3,8 +3,7 @@ from typing import Any
 
 from homeassistant.components.scene import Scene
 
-from . import DOMAIN as CASETA_DOMAIN
-from .const import BRIDGE_LEAP
+from .const import BRIDGE_LEAP, DOMAIN as CASETA_DOMAIN
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

@@ -1,5 +1,7 @@
 """Lutron Caseta constants."""
 
+DOMAIN = "lutron_caseta"
+
 CONF_KEYFILE = "keyfile"
 CONF_CERTFILE = "certfile"
 CONF_CA_CERTS = "ca_certs"
