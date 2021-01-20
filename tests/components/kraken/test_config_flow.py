@@ -20,7 +20,7 @@ async def test_config_flow(hass):
     assert result["type"] == "create_entry"
 
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.xbt_usd_last_trade_closed")
+    state = hass.states.get("sensor.xbt_usd_ask")
     assert state
 
 
@@ -52,7 +52,7 @@ async def test_options(hass):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert hass.states.get("sensor.xbt_usd_last_trade_closed")
+        assert hass.states.get("sensor.xbt_usd_ask")
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         result = await hass.config_entries.options.async_configure(
@@ -65,7 +65,7 @@ async def test_options(hass):
         assert result["type"] == "create_entry"
         await hass.async_block_till_done()
 
-        ada_eth_sensor = hass.states.get("sensor.ada_eth_last_trade_closed")
-        assert ada_eth_sensor.state == "0.0003478"
+        ada_eth_sensor = hass.states.get("sensor.ada_eth_ask")
+        assert ada_eth_sensor.state == "0.0003494"
 
-        assert hass.states.get("sensor.xbt_usd_last_trade_closed") is None
+        assert hass.states.get("sensor.xbt_usd_ask") is None

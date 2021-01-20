@@ -1,5 +1,6 @@
 """The kraken integration."""
 import logging
+from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -72,7 +73,7 @@ class KrakenSensor(CoordinatorEntity):
         self,
         kraken_data: KrakenData,
         tracked_asset_pair: str,
-        sensor_type: str,
+        sensor_type: Dict[str, bool],
     ) -> None:
         """Initialize."""
         super().__init__(kraken_data.coordinator)
@@ -81,19 +82,25 @@ class KrakenSensor(CoordinatorEntity):
         ]
         self._source_asset = tracked_asset_pair.split("/")[0]
         self._target_asset = tracked_asset_pair.split("/")[1]
-        self._sensor_type = sensor_type
+        self._sensor_type = sensor_type["name"]
+        self._enabled_by_default = sensor_type["enabled_by_default"]
         self._unit_of_measurement = self._target_asset
         self._device_name = f"{self._source_asset} {self._target_asset}"
         self._name = "_".join(
             [
                 tracked_asset_pair.split("/")[0],
                 tracked_asset_pair.split("/")[1],
-                sensor_type,
+                sensor_type["name"],
             ]
         )
         self._received_data_at_least_once = False
         self._available = True
         self._state = None
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._enabled_by_default
 
     @property
     def name(self):

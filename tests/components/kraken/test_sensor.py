@@ -52,28 +52,28 @@ async def test_sensor(hass):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
-        xbt_usd_sensor = hass.states.get("sensor.xbt_usd_last_trade_closed")
-        assert xbt_usd_sensor.state == "0.0003478"
+        xbt_usd_sensor = hass.states.get("sensor.xbt_usd_ask")
+        assert xbt_usd_sensor.state == "0.0003494"
         assert xbt_usd_sensor.attributes["icon"] == "mdi:currency-usd"
 
-        xbt_eur_sensor = hass.states.get("sensor.xbt_eur_last_trade_closed")
-        assert xbt_eur_sensor.state == "0.0003478"
+        xbt_eur_sensor = hass.states.get("sensor.xbt_eur_ask")
+        assert xbt_eur_sensor.state == "0.0003494"
         assert xbt_eur_sensor.attributes["icon"] == "mdi:currency-eur"
 
-        ada_xbt_sensor = hass.states.get("sensor.ada_xbt_last_trade_closed")
-        assert ada_xbt_sensor.state == "0.0003478"
+        ada_xbt_sensor = hass.states.get("sensor.ada_xbt_ask")
+        assert ada_xbt_sensor.state == "0.0003494"
         assert ada_xbt_sensor.attributes["icon"] == "mdi:currency-btc"
 
-        xbt_jpy_sensor = hass.states.get("sensor.xbt_jpy_last_trade_closed")
-        assert xbt_jpy_sensor.state == "0.0003478"
+        xbt_jpy_sensor = hass.states.get("sensor.xbt_jpy_ask")
+        assert xbt_jpy_sensor.state == "0.0003494"
         assert xbt_jpy_sensor.attributes["icon"] == "mdi:currency-jpy"
 
-        xbt_gbp_sensor = hass.states.get("sensor.xbt_gbp_last_trade_closed")
-        assert xbt_gbp_sensor.state == "0.0003478"
+        xbt_gbp_sensor = hass.states.get("sensor.xbt_gbp_ask")
+        assert xbt_gbp_sensor.state == "0.0003494"
         assert xbt_gbp_sensor.attributes["icon"] == "mdi:currency-gbp"
 
-        ada_eth_sensor = hass.states.get("sensor.ada_eth_last_trade_closed")
-        assert ada_eth_sensor.state == "0.0003478"
+        ada_eth_sensor = hass.states.get("sensor.ada_eth_ask")
+        assert ada_eth_sensor.state == "0.0003494"
         assert ada_eth_sensor.attributes["icon"] == "mdi:cash"
 
 
@@ -105,8 +105,8 @@ async def test_missing_pair_marks_sensor_unavailable(hass):
             hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
             await hass.async_block_till_done()
 
-            sensor = hass.states.get("sensor.xbt_usd_last_trade_closed")
-            assert sensor.state == "0.0003478"
+            sensor = hass.states.get("sensor.xbt_usd_ask")
+            assert sensor.state == "0.0003494"
 
         with patch(
             "pykrakenapi.KrakenAPI.get_ticker_information",
@@ -117,5 +117,5 @@ async def test_missing_pair_marks_sensor_unavailable(hass):
             )
             await hass.async_block_till_done()
 
-            sensor = hass.states.get("sensor.xbt_usd_last_trade_closed")
+            sensor = hass.states.get("sensor.xbt_usd_ask")
             assert sensor.state == "unavailable"
