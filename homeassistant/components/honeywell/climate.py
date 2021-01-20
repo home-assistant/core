@@ -53,7 +53,7 @@ CONF_LOC_ID = "location"
 DEFAULT_COOL_AWAY_TEMPERATURE = 88
 DEFAULT_HEAT_AWAY_TEMPERATURE = 61
 
-PERMANENT_HOLD = "permanent_hold"
+ATTR_PERMANENT_HOLD = "permanent_hold"
 
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_REGION),
@@ -201,7 +201,7 @@ class HoneywellUSThermostat(ClimateEntity):
         """Return the device specific state attributes."""
         data = {}
         data[ATTR_FAN_ACTION] = "running" if self._device.fan_running else "idle"
-        data[PERMANENT_HOLD] = self._is_permanent_hold()
+        data[ATTR_PERMANENT_HOLD] = self._is_permanent_hold()
         if self._device.raw_dr_data:
             data["dr_phase"] = self._device.raw_dr_data.get("Phase")
         return data
