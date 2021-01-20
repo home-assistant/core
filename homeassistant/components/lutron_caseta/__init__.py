@@ -120,12 +120,11 @@ async def async_setup_entry(hass, config_entry):
         BRIDGE_LIP: None,
     }
 
-    lip_devices = bridge.get_lip_devices()
-    if lip_devices:
+    if bridge.lip_devices:
         # If the bridge also supports LIP (Lutron Integration Protocol)
         # we can fire events when pico buttons are pressed to allow
         # pico remotes to control other devices.
-        await async_setup_lip(hass, config_entry, lip_devices)
+        await async_setup_lip(hass, config_entry, bridge.lip_devices)
 
     for component in LUTRON_CASETA_COMPONENTS:
         hass.async_create_task(
