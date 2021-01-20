@@ -295,7 +295,7 @@ class DysonPureCoolLinkEntity(DysonFanEntity):
         _LOGGER.debug("Turn off fan %s", self.name)
         self._device.set_configuration(fan_mode=FanMode.OFF)
 
-    def set_dyson_speed(self, speed: str = None) -> None:
+    def set_dyson_speed(self, speed: str) -> None:
         """Set the exact speed of the purecool fan."""
         _LOGGER.debug("Set exact speed for fan %s", self.name)
 
@@ -368,7 +368,7 @@ class DysonPureCoolEntity(DysonFanEntity):
         _LOGGER.debug("Turn off fan %s", self.name)
         self._device.turn_off()
 
-    def set_dyson_speed(self, speed: str = None) -> None:
+    def set_dyson_speed(self, speed: str) -> None:
         """Set the exact speed of the purecool fan."""
         _LOGGER.debug("Set exact speed for fan %s", self.name)
 
