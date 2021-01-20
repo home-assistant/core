@@ -280,11 +280,14 @@ async def test_setup_and_stop(hass):
     )
     await hass.async_block_till_done()
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.dhcp.AsyncSniffer.start") as start_call:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
+
+    start_call.assert_called_once()
 
 
 async def test_setup_fails_as_root(hass, caplog):
