@@ -66,8 +66,10 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     def __init__(self):
         """Initialize the UniFi flow."""
         self.config = None
-        self.desc = None
         self.sites = None
+        self.reauth_config_entry = {}
+        self.reauth_config = {}
+        self.reauth_schema = {}
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -87,7 +89,13 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
                 controller = await get_controller(self.hass, **self.config)
 
-                self.sites = await controller.sites()
+                sites = await controller.sites()
+                self.sites = {site["name"]: site["desc"] for site in sites.values()}
+
+                if self.reauth_config.get(CONF_SITE_ID) in self.sites:
+                    return await self.async_step_site(
+                        {CONF_SITE_ID: self.reauth_config[CONF_SITE_ID]}
+                    )
 
                 return await self.async_step_site()
 
@@ -108,17 +116,17 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         if await async_discover_unifi(self.hass):
             host = "unifi"
 
+        data = self.reauth_schema or {
+            vol.Required(CONF_HOST, default=host): str,
+            vol.Required(CONF_USERNAME): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+            vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+        }
+
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=host): str,
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-                    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
-                }
-            ),
+            data_schema=vol.Schema(data),
             errors=errors,
         )
 
@@ -128,12 +136,17 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
         if user_input is not None:
             try:
-                desc = user_input.get(CONF_SITE_ID, self.desc)
+                self.config[CONF_SITE_ID] = user_input[CONF_SITE_ID]
+                data = {CONF_CONTROLLER: self.config}
 
-                for site in self.sites.values():
-                    if desc == site["desc"]:
-                        self.config[CONF_SITE_ID] = site["name"]
-                        break
+                if self.reauth_config_entry:
+                    self.hass.config_entries.async_update_entry(
+                        self.reauth_config_entry, data=data
+                    )
+                    await self.hass.config_entries.async_reload(
+                        self.reauth_config_entry.entry_id
+                    )
+                    return self.async_abort(reason="reauth_successful")
 
                 for entry in self._async_current_entries():
                     controller = entry.data[CONF_CONTROLLER]
@@ -143,26 +156,43 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                     ):
                         raise AlreadyConfigured
 
-                data = {CONF_CONTROLLER: self.config}
-
-                return self.async_create_entry(title=desc, data=data)
+                site_nice_name = self.sites[self.config[CONF_SITE_ID]]
+                return self.async_create_entry(title=site_nice_name, data=data)
 
             except AlreadyConfigured:
                 return self.async_abort(reason="already_configured")
 
         if len(self.sites) == 1:
-            self.desc = next(iter(self.sites.values()))["desc"]
-            return await self.async_step_site(user_input={})
-
-        sites = []
-        for site in self.sites.values():
-            sites.append(site["desc"])
+            return await self.async_step_site({CONF_SITE_ID: next(iter(self.sites))})
 
         return self.async_show_form(
             step_id="site",
-            data_schema=vol.Schema({vol.Required(CONF_SITE_ID): vol.In(sites)}),
+            data_schema=vol.Schema({vol.Required(CONF_SITE_ID): vol.In(self.sites)}),
             errors=errors,
         )
+
+    async def async_step_reauth(self, config_entry: dict):
+        """Trigger a reauthentication flow."""
+        self.reauth_config_entry = config_entry
+        self.reauth_config = config_entry.data[CONF_CONTROLLER]
+
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {
+            CONF_HOST: self.reauth_config[CONF_HOST],
+            CONF_SITE_ID: config_entry.title,
+        }
+
+        self.reauth_schema = {
+            vol.Required(CONF_HOST, default=self.reauth_config[CONF_HOST]): str,
+            vol.Required(CONF_USERNAME, default=self.reauth_config[CONF_USERNAME]): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Required(CONF_PORT, default=self.reauth_config[CONF_PORT]): int,
+            vol.Required(
+                CONF_VERIFY_SSL, default=self.reauth_config[CONF_VERIFY_SSL]
+            ): bool,
+        }
+
+        return await self.async_step_user()
 
 
 class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
