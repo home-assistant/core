@@ -1,0 +1,19 @@
+{
+    "config": {
+        "flow_title": "IamMeter {sn}",
+        "step": {
+            "user": {
+                "title": "Define your IamMeter connection",
+                "data": {
+                    "host": "The IP of your device",
+                    "port": "Port"
+                }
+            }
+        },
+        "error": {
+            "already_configured": "This device had configured already.",
+            "cannot_connect": "Can't connect to this device"
+        },
+        "abort": {"already_configured": "This device had configured already."}
+    }
+}
