@@ -186,8 +186,8 @@ async def test_get_triggers_for_invalid_device_id(hass, device_reg):
         await async_get_device_automations(hass, "trigger", invalid_device.id)
 
 
-async def test_if_fires_on_click_event(hass, calls, device_reg):
-    """Test for click_event trigger firing."""
+async def test_if_fires_on_button_event(hass, calls, device_reg):
+    """Test for press trigger firing."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     config_entry_id = await _async_setup_lutron_with_picos(hass, device_reg)
     dr_button_devices = hass.data[DOMAIN][config_entry_id][BUTTON_DEVICES]
@@ -233,7 +233,7 @@ async def test_if_fires_on_click_event(hass, calls, device_reg):
 
 
 async def test_validate_trigger_config_no_device(hass, calls, device_reg):
-    """Test for click_event with no device."""
+    """Test for press with no device."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     assert await async_setup_component(
