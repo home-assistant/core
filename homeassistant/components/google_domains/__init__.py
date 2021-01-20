@@ -42,35 +42,47 @@ async def async_setup(hass, config):
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
 
-    result = await _update_google_domains(
-        hass, session, domain, user, password, timeout
+    address = await _update_google_domains(
+        hass, session, domain, user, password, timeout, None
     )
 
-    if not result:
+    if address is None:
         return False
 
     async def update_domain_interval(now):
-        """Update the Google Domains entry."""
-        await _update_google_domains(hass, session, domain, user, password, timeout)
+        nonlocal address
+        address = await _update_google_domains(
+            hass, session, domain, user, password, timeout, address
+        )
 
     hass.helpers.event.async_track_time_interval(update_domain_interval, INTERVAL)
 
     return True
 
 
-async def _update_google_domains(hass, session, domain, user, password, timeout):
-    """Update Google Domains."""
-    url = f"https://{user}:{password}@domains.google.com/nic/update"
-
-    params = {"hostname": domain}
-
+async def _update_google_domains(
+    hass, session, domain, user, password, timeout, address
+):
     try:
+        # Check IP address
+        with async_timeout.timeout(timeout):
+            resp = await session.get("https://api.ipify.org")
+            body = await resp.text()
+
+            if body == address:
+                return address
+            address = body
+
+        # Update Google Domains
+        url = f"https://{user}:{password}@domains.google.com/nic/update"
+        params = {"hostname": domain, "myip": address}
+
         with async_timeout.timeout(timeout):
             resp = await session.get(url, params=params)
             body = await resp.text()
 
             if body.startswith("good") or body.startswith("nochg"):
-                return True
+                return address
 
             _LOGGER.warning("Updating Google Domains failed: %s => %s", domain, body)
 
@@ -80,4 +92,4 @@ async def _update_google_domains(hass, session, domain, user, password, timeout)
     except asyncio.TimeoutError:
         _LOGGER.warning("Timeout from Google Domains API for domain: %s", domain)
 
-    return False
+    return None
