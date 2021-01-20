@@ -428,17 +428,18 @@ class HyperionLight(LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
             for item in self._client.adjustment:
-                if not await self._client.async_send_set_adjustment(
-                    **{
-                        const.KEY_ADJUSTMENT: {
-                            const.KEY_BRIGHTNESS: int(
-                                round((float(brightness) * 100) / 255)
-                            ),
-                            const.KEY_ID: item[const.KEY_ID],
+                if const.KEY_ID in item:
+                    if not await self._client.async_send_set_adjustment(
+                        **{
+                            const.KEY_ADJUSTMENT: {
+                                const.KEY_BRIGHTNESS: int(
+                                    round((float(brightness) * 100) / 255)
+                                ),
+                                const.KEY_ID: item[const.KEY_ID],
+                            }
                         }
-                    }
-                ):
-                    return
+                    ):
+                        return
 
         # == Set an external source
         if effect and effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
