@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "Ubiquiti UniFi {name}",
     "step": {
       "user": {
         "title": "Set up UniFi Controller",
