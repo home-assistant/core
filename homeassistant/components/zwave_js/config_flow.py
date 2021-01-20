@@ -16,7 +16,7 @@ from .const import DOMAIN, NAME  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_URL = "ws://localhost:3000/zjs"
+DEFAULT_URL = "ws://localhost:3000"
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_URL, default=DEFAULT_URL): str})
 
