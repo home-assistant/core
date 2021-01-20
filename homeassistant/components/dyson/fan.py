@@ -1,5 +1,6 @@
 """Support for Dyson Pure Cool link fan."""
 import logging
+from typing import Optional
 
 from libpurecool.const import FanMode, FanSpeed, NightMode, Oscillation
 from libpurecool.dyson_pure_cool import DysonPureCool
@@ -232,7 +233,7 @@ class DysonPureCoolLinkEntity(DysonFanEntity):
         """Initialize the fan."""
         super().__init__(device, DysonPureCoolState)
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
         """Turn on the fan."""
         _LOGGER.debug("Turn on fan %s with speed %s", self.name, speed)
         if speed is not None:
@@ -298,7 +299,7 @@ class DysonPureCoolEntity(DysonFanEntity):
         """Initialize the fan."""
         super().__init__(device, DysonPureCoolV2State)
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
         """Turn on the fan."""
         _LOGGER.debug("Turn on fan %s", self.name)
 
