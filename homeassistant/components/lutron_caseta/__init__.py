@@ -4,7 +4,7 @@ import logging
 
 from aiolip import LIP
 from aiolip.data import LIPMode
-from aiolip.protocol import BUTTON_PRESS, BUTTON_RELEASE
+from aiolip.protocol import LIP_BUTTON_PRESS, LIP_BUTTON_RELEASE
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
@@ -240,8 +240,8 @@ def _async_subscribe_pico_remote_events(hass, lip, button_devices_by_id):
                 "button_number": lip_message.action_number,
                 "device_name": device["Name"],
                 "area_name": device.get("Area", {}).get("Name"),
-                "press": lip_message.value == BUTTON_PRESS,
-                "release": lip_message.value == BUTTON_RELEASE,
+                "press": lip_message.value == LIP_BUTTON_PRESS,
+                "release": lip_message.value == LIP_BUTTON_RELEASE,
             },
         )
 
