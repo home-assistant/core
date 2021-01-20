@@ -16,7 +16,9 @@ from .const import DOMAIN, NAME  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({CONF_URL: str})
+DEFAULT_URL = "ws://localhost:3000"
+
+STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_URL, default=DEFAULT_URL): str})
 
 
 async def validate_input(hass: core.HomeAssistant, user_input: dict) -> VersionInfo:
