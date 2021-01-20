@@ -491,7 +491,8 @@ async def test_form_ssdp(hass):
         if flow["flow_id"] == result["flow_id"]
     )
     assert context["title_placeholders"] == {
-        'host': '192.168.208.1', 'site': 'default',
+        "host": "192.168.208.1",
+        "site": "default",
     }
 
 
@@ -568,5 +569,6 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass):
         if flow["flow_id"] == result["flow_id"]
     )
     assert context["title_placeholders"] == {
-        'host': '1.2.3.4', 'site': 'default',
+        "host": "1.2.3.4",
+        "site": "default",
     }
