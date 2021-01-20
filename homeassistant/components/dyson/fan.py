@@ -17,7 +17,7 @@ from homeassistant.components.fan import (
     FanEntity,
 )
 from homeassistant.const import ATTR_ENTITY_ID
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from . import DYSON_DEVICES, DysonEntity
 
@@ -124,7 +124,7 @@ SPEED_HA_TO_DYSON = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Dyson fan components."""
 
     if discovery_info is None:
@@ -147,8 +147,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 dyson_entity = DysonPureCoolLinkEntity(device)
                 hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
 
-    add_entities(hass.data[DYSON_FAN_DEVICES])
+    async_add_entities(hass.data[DYSON_FAN_DEVICES])
 
+    await hass.async_add_executor_job(_register_services, hass, has_purecool_devices)
+
+
+def _register_services(hass, has_purecool_devices):
     def service_handle(service):
         """Handle the Dyson services."""
         entity_id = service.data[ATTR_ENTITY_ID]
