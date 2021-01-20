@@ -1,4 +1,4 @@
-"""The tests for Shelly device triggers."""
+"""The tests for Lutron Caséta device triggers."""
 import pytest
 
 from homeassistant import setup
