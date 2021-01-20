@@ -1,4 +1,5 @@
 """Provide functionality to record stream."""
+import logging
 import os
 import threading
 from typing import List
@@ -8,6 +9,8 @@ import av
 from homeassistant.core import callback
 
 from .core import PROVIDERS, Segment, StreamOutput
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -109,6 +112,7 @@ class RecorderOutput(StreamOutput):
 
     def cleanup(self):
         """Write recording and clean up."""
+        _LOGGER.debug("Starting recorder worker thread")
         thread = threading.Thread(
             name="recorder_save_worker",
             target=recorder_save_worker,
