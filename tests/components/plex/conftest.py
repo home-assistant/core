@@ -254,6 +254,12 @@ def show_seasons_fixture():
     return load_fixture("plex/show_seasons.xml")
 
 
+@pytest.fixture(name="sonos_resources", scope="session")
+def sonos_resources_fixture():
+    """Load Sonos resources payload and return it."""
+    return load_fixture("plex/sonos_resources.xml")
+
+
 @pytest.fixture(name="entry")
 def mock_config_entry():
     """Return the default mocked config entry."""
