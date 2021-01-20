@@ -263,6 +263,9 @@ async def async_attach_trigger(
 
 def get_button_device_by_dr_id(hass: HomeAssistant, device_id: str):
     """Get a lutron device for the given device id."""
+    if DOMAIN not in hass.data:
+        return None
+
     for config_entry in hass.data[DOMAIN]:
         button_devices = hass.data[DOMAIN][config_entry][BUTTON_DEVICES]
         device = button_devices.get(device_id)
