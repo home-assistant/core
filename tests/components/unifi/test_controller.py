@@ -330,6 +330,14 @@ async def test_get_controller_controller_unavailable(hass):
         await get_controller(hass, **CONTROLLER_DATA)
 
 
+async def test_get_controller_login_required(hass):
+    """Check that get_controller can handle unknown errors."""
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
+        "aiounifi.Controller.login", side_effect=aiounifi.LoginRequired
+    ), pytest.raises(AuthenticationRequired):
+        await get_controller(hass, **CONTROLLER_DATA)
+
+
 async def test_get_controller_unknown_error(hass):
     """Check that get_controller can handle unknown errors."""
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
