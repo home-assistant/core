@@ -397,7 +397,6 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         return TEMP_CELSIUS
 
     def _convert_temperature(self, value, units, target_units):
-        _LOGGER.debug("Converting %d %s to %s", value, units, target_units)
         return convert_temperature(value, units, target_units)
 
 
