@@ -88,6 +88,21 @@ SET_DYSON_SPEED_SCHEMA = vol.Schema(
 )
 
 
+SPEED_LIST_HA = [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+
+SPEED_LIST_DYSON = [
+    int(FanSpeed.FAN_SPEED_1.value),
+    int(FanSpeed.FAN_SPEED_2.value),
+    int(FanSpeed.FAN_SPEED_3.value),
+    int(FanSpeed.FAN_SPEED_4.value),
+    int(FanSpeed.FAN_SPEED_5.value),
+    int(FanSpeed.FAN_SPEED_6.value),
+    int(FanSpeed.FAN_SPEED_7.value),
+    int(FanSpeed.FAN_SPEED_8.value),
+    int(FanSpeed.FAN_SPEED_9.value),
+    int(FanSpeed.FAN_SPEED_10.value),
+]
+
 SPEED_DYSON_TO_HA = {
     FanSpeed.FAN_SPEED_1.value: SPEED_LOW,
     FanSpeed.FAN_SPEED_2.value: SPEED_LOW,
@@ -212,7 +227,7 @@ class DysonFanEntity(DysonEntity, FanEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+        return SPEED_LIST_HA
 
     @property
     def dyson_speed(self):
@@ -225,18 +240,7 @@ class DysonFanEntity(DysonEntity, FanEntity):
     @property
     def dyson_speed_list(self) -> list:
         """Get the list of available dyson speeds."""
-        return [
-            int(FanSpeed.FAN_SPEED_1.value),
-            int(FanSpeed.FAN_SPEED_2.value),
-            int(FanSpeed.FAN_SPEED_3.value),
-            int(FanSpeed.FAN_SPEED_4.value),
-            int(FanSpeed.FAN_SPEED_5.value),
-            int(FanSpeed.FAN_SPEED_6.value),
-            int(FanSpeed.FAN_SPEED_7.value),
-            int(FanSpeed.FAN_SPEED_8.value),
-            int(FanSpeed.FAN_SPEED_9.value),
-            int(FanSpeed.FAN_SPEED_10.value),
-        ]
+        return SPEED_LIST_DYSON
 
     @property
     def night_mode(self):
