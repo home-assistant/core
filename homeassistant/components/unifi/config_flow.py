@@ -209,6 +209,11 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     def _host_already_configured(self, host):
         """See if we already have a unifi entry matching the host."""
         for entry in self._async_current_entries():
+            _LOGGER.debug(
+                "SSDP: Check entry host %s against host %s",
+                entry.data.get(CONF_HOST),
+                host,
+            )
             if entry.data.get(CONF_HOST) == host:
                 return True
         return False
