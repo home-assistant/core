@@ -28,6 +28,7 @@ import async_timeout
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -343,8 +344,15 @@ class UniFiController:
         except CannotConnect as err:
             raise ConfigEntryNotReady from err
 
-        except Exception as err:  # pylint: disable=broad-except
-            LOGGER.error("Unknown error connecting with UniFi controller: %s", err)
+        except AuthenticationRequired as err:
+            LOGGER.error("Authentication error with (%s): %s", self.host, err)
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    UNIFI_DOMAIN,
+                    context={"source": SOURCE_REAUTH},
+                    data=self.config_entry,
+                )
+            )
             return False
 
         # Restore clients that is not a part of active clients list.
@@ -419,7 +427,13 @@ class UniFiController:
 
     @staticmethod
     async def async_config_entry_updated(hass, config_entry) -> None:
-        """Handle signals of config entry being updated."""
+        """Handle signals of config entry being updated.
+
+        If config entry is updated due to reauth flow
+        the entry might already have been reset and thus is not available.
+        """
+        if config_entry.entry_id not in hass.data[UNIFI_DOMAIN]:
+            return
         controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
         async_dispatcher_send(hass, controller.signal_options_update)
 
@@ -510,7 +524,7 @@ async def get_controller(
         return controller
 
     except aiounifi.Unauthorized as err:
-        LOGGER.warning("Connected to UniFi at %s but not registered.", host)
+        LOGGER.warning("Connected to UniFi at %s but not registered: %s", host, err)
         raise AuthenticationRequired from err
 
     except (
@@ -519,9 +533,9 @@ async def get_controller(
         aiounifi.ServiceUnavailable,
         aiounifi.RequestError,
     ) as err:
-        LOGGER.error("Error connecting to the UniFi controller at %s", host)
+        LOGGER.error("Error connecting to the UniFi controller at %s: %s", host, err)
         raise CannotConnect from err
 
     except aiounifi.AiounifiException as err:
-        LOGGER.exception("Unknown UniFi communication error occurred")
+        LOGGER.exception("Unknown UniFi communication error occurred: %s", err)
         raise AuthenticationRequired from err
