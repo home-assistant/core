@@ -233,7 +233,7 @@ async def test_if_fires_on_button_event(hass, calls, device_reg):
 
 
 async def test_validate_trigger_config_no_device(hass, calls, device_reg):
-    """Test for press with no device."""
+    """Test for no press with no device."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     assert await async_setup_component(
@@ -246,6 +246,52 @@ async def test_validate_trigger_config_no_device(hass, calls, device_reg):
                         CONF_PLATFORM: "device",
                         CONF_DOMAIN: DOMAIN,
                         CONF_DEVICE_ID: "no_device",
+                        CONF_TYPE: "press",
+                        CONF_SUBTYPE: "on",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "test_trigger_button_press"},
+                    },
+                },
+            ]
+        },
+    )
+    message = {
+        ATTR_INTERGRATION_ID: 1,
+        ATTR_SERIAL: "123",
+        ATTR_TYPE: "any",
+        ATTR_MODEL: "any",
+        ATTR_BUTTON_NUMBER: 3,
+        ATTR_DEVICE_NAME: "any",
+        ATTR_AREA_NAME: "area",
+        ATTR_ACTION: "press",
+    }
+    hass.bus.async_fire(LUTRON_CASETA_BUTTON_EVENT, message)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
+
+
+async def test_validate_trigger_config_unknown_device(hass, calls, device_reg):
+    """Test for no press with an unknown device."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    config_entry_id = await _async_setup_lutron_with_picos(hass, device_reg)
+    dr_button_devices = hass.data[DOMAIN][config_entry_id][BUTTON_DEVICES]
+    device_id = list(dr_button_devices)[0]
+    device = dr_button_devices[device_id]
+    device["type"] = "unknown"
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_DEVICE_ID: device_id,
                         CONF_TYPE: "press",
                         CONF_SUBTYPE: "on",
                     },
@@ -289,12 +335,12 @@ async def test_validate_trigger_invalid_triggers(hass, device_reg):
                         CONF_PLATFORM: "device",
                         CONF_DOMAIN: DOMAIN,
                         CONF_DEVICE_ID: device_id,
-                        CONF_TYPE: "single",
-                        CONF_SUBTYPE: "button3",
+                        CONF_TYPE: "press",
+                        CONF_SUBTYPE: "on",
                     },
                     "action": {
                         "service": "test.automation",
-                        "data_template": {"some": "test_trigger_single_click"},
+                        "data_template": {"some": "test_trigger_button_press"},
                     },
                 },
             ]

@@ -199,7 +199,9 @@ async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType)
     schema = DEVICE_TYPE_SCHEMA_MAP.get(device["type"])
 
     if not schema:
-        return config
+        raise InvalidDeviceAutomationConfig(
+            f"Device type {device['type']} not supported: {config[CONF_DEVICE_ID]}"
+        )
 
     return schema(config)
 
@@ -212,11 +214,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
     if not device:
         raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
 
-    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP.get(device["type"])
-    if not valid_buttons:
-        raise InvalidDeviceAutomationConfig(
-            f"Device type {device['type']} not supported: {device_id}"
-        )
+    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP.get(device["type"], [])
 
     for trigger in SUPPORTED_INPUTS_EVENTS_TYPES:
         for subtype in valid_buttons:
