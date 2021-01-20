@@ -232,10 +232,9 @@ class DysonFanEntity(DysonEntity, FanEntity):
     @property
     def dyson_speed(self):
         """Return the current speed."""
-        if self._device.state:
-            if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
-                return self._device.state.speed
-            return int(self._device.state.speed)
+        if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
+            return self._device.state.speed
+        return int(self._device.state.speed)
 
     @property
     def dyson_speed_list(self) -> list:
