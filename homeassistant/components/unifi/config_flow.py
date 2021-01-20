@@ -1,9 +1,12 @@
 """Config flow for UniFi."""
+import logging
 import socket
+from urllib.parse import urlparse
 
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import ssdp
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -13,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
@@ -41,6 +45,13 @@ DEFAULT_PORT = 8443
 DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
 
+_LOGGER = logging.getLogger(__name__)
+
+MODEL_PORTS = {
+    "UniFi Dream Machine": 443,
+    "UniFi Dream Machine Pro": 443,
+}
+
 
 @callback
 def get_controller_id_from_config_entry(config_entry):
@@ -68,6 +79,34 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         self.config = None
         self.desc = None
         self.sites = None
+
+    async def async_step_ssdp(self, discovery_info):
+        """Handle a discovered unifi device."""
+        _LOGGER.debug("SSDP discovery_info: %s", discovery_info)
+
+        parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
+        friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        model_description = discovery_info[ssdp.ATTR_UPNP_MODEL_DESCRIPTION]
+        mac_address = format_mac(discovery_info[ssdp.ATTR_UPNP_SERIAL])
+
+        if self._host_already_configured(parsed_url.hostname):
+            return self.async_abort(reason="already_configured")
+
+        self.config = {
+            CONF_HOST: parsed_url.hostname,
+        }
+
+        await self.async_set_unique_id(mac_address)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self.config[CONF_HOST]})
+
+        # pylint: disable=no-member
+        self.context["title_placeholders"] = {"name": friendly_name}
+
+        port = MODEL_PORTS.get(model_description)
+        if port is not None:
+            self.config[CONF_PORT] = port
+
+        return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -104,8 +143,8 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                 )
                 return self.async_abort(reason="unknown")
 
-        host = ""
-        if await async_discover_unifi(self.hass):
+        host = self.config.get(CONF_HOST)
+        if not host and await async_discover_unifi(self.hass):
             host = "unifi"
 
         return self.async_show_form(
@@ -115,7 +154,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                     vol.Required(CONF_HOST, default=host): str,
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Optional(
+                        CONF_PORT, default=self.config.get(CONF_PORT, DEFAULT_PORT)
+                    ): int,
                     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
                 }
             ),
@@ -163,6 +204,13 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_SITE_ID): vol.In(sites)}),
             errors=errors,
         )
+
+    def _host_already_configured(self, host):
+        """See if we already have a unifi entry matching the host."""
+        for entry in self._async_current_entries():
+            if entry.data.get(CONF_HOST) == host:
+                return True
+        return False
 
 
 class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
