@@ -1,9 +1,20 @@
-"""The tests for Lutron Caséta device triggers."""
+"""The tests for Shelly device triggers."""
 import pytest
 
+from homeassistant import setup
 from homeassistant.components import automation
-from homeassistant.components.lutron_caseta import DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
+from homeassistant.components.lutron_caseta.const import (
+    ATTR_CHANNEL,
+    BUTTON_DEVICES,
+    CONF_SUBTYPE,
+    DOMAIN,
+    LUTRON_CASETA_BUTTON_EVENT,
+)
+from homeassistant.components.lutron_caseta.device_trigger import CONF_SUBTYPE
+from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 
@@ -12,61 +23,67 @@ from tests.common import (
     assert_lists_same,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
 
 
 @pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
+async def lutron_with_picos(hass):
+    """Setups a lutron bridge with picos."""
+    await async_setup_component(hass, DOMAIN, {})
 
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
-
-
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
-
-
-async def test_get_triggers(hass, device_reg, entity_reg):
-    """Test we get the expected triggers from a lutron_caseta."""
-    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+
+    hass.data[DOMAIN][config_entry.entry_id] = {BUTTON_DEVICES: {}}
+
+    yield hass.data[DOMAIN][config_entry.entry_id][BUTTON_DEVICES]
+
+
+async def test_get_triggers(hass, lutron_with_picos):
+    """Test we get the expected triggers from a shelly."""
+    assert lutron_with_picos
     expected_triggers = [
         {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "turned_off",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: coap_wrapper.device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: "single",
+            CONF_SUBTYPE: "button1",
         },
         {
-            "platform": "device",
-            "domain": DOMAIN,
-            "type": "turned_on",
-            "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: coap_wrapper.device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: "long",
+            CONF_SUBTYPE: "button1",
         },
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+
+    triggers = await async_get_device_automations(
+        hass, "trigger", coap_wrapper.device_id
+    )
+
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_if_fires_on_state_change(hass, calls):
-    """Test for turn_on and turn_off triggers firing."""
-    hass.states.async_set("lutron_caseta.entity", STATE_OFF)
+async def test_get_triggers_for_invalid_device_id(hass, device_reg, lutron_with_picos):
+    """Test error raised for invalid shelly device_id."""
+    assert lutron_with_picos
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    invalid_device = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await async_get_device_automations(hass, "trigger", invalid_device.id)
+
+
+async def test_if_fires_on_click_event(hass, calls, lutron_with_picos):
+    """Test for click_event trigger firing."""
+    assert lutron_with_picos
+    await setup.async_setup_component(hass, "persistent_notification", {})
 
     assert await async_setup_component(
         hass,
@@ -75,58 +92,96 @@ async def test_if_fires_on_state_change(hass, calls):
             automation.DOMAIN: [
                 {
                     "trigger": {
-                        "platform": "device",
-                        "domain": DOMAIN,
-                        "device_id": "",
-                        "entity_id": "lutron_caseta.entity",
-                        "type": "turned_on",
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_DEVICE_ID: coap_wrapper.device_id,
+                        CONF_TYPE: "single",
+                        CONF_SUBTYPE: "button1",
                     },
                     "action": {
                         "service": "test.automation",
-                        "data_template": {
-                            "some": (
-                                "turn_on - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
-                            )
-                        },
-                    },
-                },
-                {
-                    "trigger": {
-                        "platform": "device",
-                        "domain": DOMAIN,
-                        "device_id": "",
-                        "entity_id": "lutron_caseta.entity",
-                        "type": "turned_off",
-                    },
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": (
-                                "turn_off - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
-                            )
-                        },
+                        "data_template": {"some": "test_trigger_single_click"},
                     },
                 },
             ]
         },
     )
 
-    # Fake that the entity is turning on.
-    hass.states.async_set("lutron_caseta.entity", STATE_ON)
+    message = {
+        CONF_DEVICE_ID: coap_wrapper.device_id,
+        ATTR_CLICK_TYPE: "single",
+        ATTR_CHANNEL: 1,
+    }
+    hass.bus.async_fire(LUTRON_CASETA_BUTTON_EVENT, message)
     await hass.async_block_till_done()
+
     assert len(calls) == 1
-    assert calls[0].data["some"] == "turn_on - device - {} - off - on - None".format(
-        "lutron_caseta.entity"
+    assert calls[0].data["some"] == "test_trigger_single_click"
+
+
+async def test_validate_trigger_config_no_device(hass, calls, lutron_with_picos):
+    """Test for click_event with no device."""
+    assert lutron_with_picos
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_DEVICE_ID: "no_device",
+                        CONF_TYPE: "single",
+                        CONF_SUBTYPE: "button1",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "test_trigger_single_click"},
+                    },
+                },
+            ]
+        },
+    )
+    message = {CONF_DEVICE_ID: "no_device", ATTR_CLICK_TYPE: "single", ATTR_CHANNEL: 1}
+    hass.bus.async_fire(LUTRON_CASETA_BUTTON_EVENT, message)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "test_trigger_single_click"
+
+
+async def test_validate_trigger_invalid_triggers(hass, coap_wrapper):
+    """Test for click_event with invalid triggers."""
+    assert coap_wrapper
+    notification_calls = async_mock_service(hass, "persistent_notification", "create")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_DEVICE_ID: coap_wrapper.device_id,
+                        CONF_TYPE: "single",
+                        CONF_SUBTYPE: "button3",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "test_trigger_single_click"},
+                    },
+                },
+            ]
+        },
     )
 
-    # Fake that the entity is turning off.
-    hass.states.async_set("lutron_caseta.entity", STATE_OFF)
-    await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "turn_off - device - {} - on - off - None".format(
-        "lutron_caseta.entity"
+    assert len(notification_calls) == 1
+    assert (
+        "The following integrations and platforms could not be set up"
+        in notification_calls[0].data["message"]
     )
