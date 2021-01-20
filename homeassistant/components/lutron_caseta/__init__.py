@@ -4,7 +4,7 @@ import logging
 
 from aiolip import LIP
 from aiolip.data import LIPMode
-from aiolip.protocol import LIP_BUTTON_PRESS, LIP_BUTTON_RELEASE
+from aiolip.protocol import BUTTON_PRESS, BUTTON_RELEASE
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
@@ -17,13 +17,15 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from .const import (
+    BRIDGE_DEVICE,
+    BRIDGE_DEVICE_ID,
+    BRIDGE_LEAP,
+    BRIDGE_LIP,
+    BUTTON_DEVICES,
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
-    LUTRON_CASETA_BRIDGE_DEVICE,
     LUTRON_CASETA_BUTTON_EVENT,
-    LUTRON_CASETA_LEAP,
-    LUTRON_CASETA_LIP,
     MANUFACTURER,
 )
 
@@ -97,14 +99,15 @@ async def async_setup_entry(hass, config_entry):
     _LOGGER.debug("Connected to Lutron Caseta bridge via LEAP at %s", host)
 
     devices = bridge.get_devices()
-    bridge_device = devices["1"]
+    bridge_device = devices[BRIDGE_DEVICE_ID]
     await _async_register_bridge_device(hass, config_entry.entry_id, bridge_device)
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
     # components we're setting up.
-    data = hass.data[DOMAIN][config_entry.entry_id] = {
-        LUTRON_CASETA_LEAP: bridge,
-        LUTRON_CASETA_BRIDGE_DEVICE: bridge_device,
-        LUTRON_CASETA_LIP: None,
+    hass.data[DOMAIN][config_entry.entry_id] = {
+        BRIDGE_LEAP: bridge,
+        BRIDGE_DEVICE: bridge_device,
+        BUTTON_DEVICES: {},
+        BRIDGE_LIP: None,
     }
 
     lip_devices = bridge.get_lip_devices()
@@ -112,20 +115,7 @@ async def async_setup_entry(hass, config_entry):
         # If the bridge also supports LIP (Lutron Integration Protocol)
         # we can fire events when pico buttons are pressed to allow
         # pico remotes to control other devices.
-        lip = LIP()
-        try:
-            await lip.async_connect(host)
-        except asyncio.TimeoutError:
-            _LOGGER.error("Failed to connect to via LIP at %s:23", host)
-            pass
-        else:
-            _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s:23", host)
-            data[LUTRON_CASETA_LIP] = lip
-            button_devices_by_id = _async_merge_lip_leap_data(lip_devices, bridge)
-            await _async_register_button_devices(
-                hass, config_entry.entry_id, bridge_device, button_devices_by_id
-            )
-            _async_subscribe_pico_remote_events(hass, lip, button_devices_by_id)
+        await async_setup_lip(hass, config_entry, lip_devices)
 
     for component in LUTRON_CASETA_COMPONENTS:
         hass.async_create_task(
@@ -133,6 +123,30 @@ async def async_setup_entry(hass, config_entry):
         )
 
     return True
+
+
+async def async_setup_lip(hass, config_entry, lip_devices):
+    """Connect to the bridge via Lutron Integration Protocol to watch for pico remotes."""
+    host = config_entry.data[CONF_HOST]
+    config_entry_id = config_entry.entry_id
+    data = hass.data[DOMAIN][config_entry_id]
+    bridge_device = data[BRIDGE_DEVICE]
+    bridge = data[BRIDGE_LEAP]
+    lip = LIP()
+    try:
+        await lip.async_connect(host)
+    except asyncio.TimeoutError:
+        _LOGGER.error("Failed to connect to via LIP at %s:23", host)
+        return
+
+    _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s:23", host)
+    button_devices_by_id = _async_merge_lip_leap_data(lip_devices, bridge)
+    await _async_register_button_devices(
+        hass, config_entry_id, bridge_device, button_devices_by_id
+    )
+    _async_subscribe_pico_remote_events(hass, lip, button_devices_by_id)
+    data[BUTTON_DEVICES] = button_devices_by_id
+    data[BRIDGE_LIP] = lip
 
 
 @callback
@@ -226,8 +240,8 @@ def _async_subscribe_pico_remote_events(hass, lip, button_devices_by_id):
                 "button_number": lip_message.action_number,
                 "device_name": device["Name"],
                 "area_name": device.get("Area", {}).get("Name"),
-                "press": lip_message.value == LIP_BUTTON_PRESS,
-                "release": lip_message.value == LIP_BUTTON_RELEASE,
+                "press": lip_message.value == BUTTON_PRESS,
+                "release": lip_message.value == BUTTON_RELEASE,
             },
         )
 
@@ -240,9 +254,9 @@ async def async_unload_entry(hass, config_entry):
     """Unload the bridge bridge from a config entry."""
 
     data = hass.data[DOMAIN][config_entry.entry_id]
-    data[LUTRON_CASETA_LEAP].close()
-    if data[LUTRON_CASETA_LIP]:
-        await data[LUTRON_CASETA_LIP].async_stop()
+    data[BRIDGE_LEAP].close()
+    if data[BRIDGE_LIP]:
+        await data[BRIDGE_LIP].async_stop()
 
     unload_ok = all(
         await asyncio.gather(

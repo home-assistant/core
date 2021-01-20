@@ -9,10 +9,10 @@ ERROR_CANNOT_CONNECT = "cannot_connect"
 ABORT_REASON_CANNOT_CONNECT = "cannot_connect"
 ABORT_REASON_ALREADY_CONFIGURED = "already_configured"
 
-LUTRON_CASETA_LEAP = "lutron_caseta_leap"
-LUTRON_CASETA_LIP = "lutron_caseta_lip"
-LUTRON_CASETA_BRIDGE_DEVICE = "lutron_caseta_bridge_device"
-
+BRIDGE_LEAP = "leap"
+BRIDGE_LIP = "lip"
+BRIDGE_DEVICE = "bridge_device"
+BUTTON_DEVICES = "button_devices"
 LUTRON_CASETA_BUTTON_EVENT = "lutron_caseta_button_event"
 
 MANUFACTURER = "Lutron"

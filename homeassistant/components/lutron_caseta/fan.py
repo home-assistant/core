@@ -14,7 +14,7 @@ from homeassistant.components.fan import (
 )
 
 from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice
-from .const import LUTRON_CASETA_BRIDGE_DEVICE, LUTRON_CASETA_LEAP
+from .const import BRIDGE_DEVICE, BRIDGE_LEAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,8 +46,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
     data = hass.data[CASETA_DOMAIN][config_entry.entry_id]
-    bridge = data[LUTRON_CASETA_LEAP]
-    bridge_device = data[LUTRON_CASETA_BRIDGE_DEVICE]
+    bridge = data[BRIDGE_LEAP]
+    bridge_device = data[BRIDGE_DEVICE]
     fan_devices = bridge.get_devices_by_domain(DOMAIN)
 
     for fan_device in fan_devices:
