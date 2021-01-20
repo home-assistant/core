@@ -196,7 +196,7 @@ async def _async_register_bridge_device(hass, config_entry_id, bridge_device):
         manufacturer=MANUFACTURER,
         config_entry_id=config_entry_id,
         identifiers={(DOMAIN, bridge_device["serial"])},
-        model=bridge_device["model"],
+        model=f"{bridge_device['model']} ({bridge_device['type']})",
     )
 
 
