@@ -623,8 +623,8 @@ class _ScriptRun:
             }
             done.set()
 
-        def log_cb(level, msg):
-            self._log(msg, level=level)
+        def log_cb(level, msg, **kwargs):
+            self._log(msg, level=level, **kwargs)
 
         to_context = None
         remove_triggers = await async_initialize_triggers(

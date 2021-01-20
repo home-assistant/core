@@ -80,7 +80,7 @@ async def async_initialize_triggers(
 
     for result in attach_results:
         if isinstance(result, Exception):
-            log_cb(logging.ERROR, f"Error setting up trigger: {result}")
+            log_cb(logging.ERROR, "Error setting up trigger", exc_info=result)
         elif result is None:
             log_cb(
                 logging.ERROR, "Unknown error while setting up trigger (empty result)"

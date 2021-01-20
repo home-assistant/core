@@ -462,8 +462,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
     ) -> Optional[Callable[[], None]]:
         """Set up the triggers."""
 
-        def log_cb(level, msg):
-            self._logger.log(level, "%s %s", msg, self._name)
+        def log_cb(level, msg, **kwargs):
+            self._logger.log(level, "%s %s", msg, self._name, **kwargs)
 
         return await async_initialize_triggers(
             cast(HomeAssistant, self.hass),
