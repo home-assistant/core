@@ -185,7 +185,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         self.reauth_schema = {
             vol.Required(CONF_HOST, default=self.reauth_config[CONF_HOST]): str,
             vol.Required(CONF_USERNAME, default=self.reauth_config[CONF_USERNAME]): str,
-            vol.Required(CONF_PASSWORD, default=self.reauth_config[CONF_PASSWORD]): str,
+            vol.Required(CONF_PASSWORD): str,
             vol.Required(CONF_PORT, default=self.reauth_config[CONF_PORT]): int,
             vol.Required(
                 CONF_VERIFY_SSL, default=self.reauth_config[CONF_VERIFY_SSL]
