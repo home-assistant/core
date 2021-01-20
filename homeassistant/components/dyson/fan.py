@@ -139,7 +139,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         SERVICE_SET_AUTO_MODE, SET_AUTO_MODE_SCHEMA, "set_auto_mode"
     )
     platform.async_register_entity_service(
-        SERVICE_SET_DYSON_SPEED, SET_DYSON_SPEED_SCHEMA, "set_dyson_speed"
+        SERVICE_SET_DYSON_SPEED, SET_DYSON_SPEED_SCHEMA, "service_set_dyson_speed"
     )
     if has_purecool_devices:
         platform.async_register_entity_service(
@@ -205,6 +205,25 @@ class DysonFanEntity(DysonEntity, FanEntity):
             ATTR_DYSON_SPEED_LIST: self.dyson_speed_list,
         }
 
+    def set_speed(self, speed: str) -> None:
+        """Set the speed of the fan."""
+        if speed not in SPEED_LIST_HA:
+            raise ValueError(f'"{speed}" is not a valid speed')
+        _LOGGER.debug("Set fan speed to: %s", speed)
+        self.set_dyson_speed(SPEED_HA_TO_DYSON[speed])
+
+    def set_dyson_speed(self, speed: FanSpeed) -> None:
+        """Set the exact speed of the fan."""
+        raise NotImplementedError
+
+    def service_set_dyson_speed(self, dyson_speed: str) -> None:
+        """Handle the service to set dyson speed."""
+        if dyson_speed not in SPEED_LIST_DYSON:
+            raise ValueError(f'"{dyson_speed}" is not a valid Dyson speed')
+        _LOGGER.debug("Set exact speed to %s", dyson_speed)
+        speed = FanSpeed(f"{int(dyson_speed):04d}")
+        self.set_dyson_speed(speed)
+
 
 class DysonPureCoolLinkEntity(DysonFanEntity):
     """Representation of a Dyson fan."""
@@ -212,13 +231,6 @@ class DysonPureCoolLinkEntity(DysonFanEntity):
     def __init__(self, device):
         """Initialize the fan."""
         super().__init__(device, DysonPureCoolState)
-
-    def set_speed(self, speed: str) -> None:
-        """Set the speed of the fan. Never called ??."""
-        _LOGGER.debug("Set fan speed to: %s", speed)
-        self._device.set_configuration(
-            fan_mode=FanMode.FAN, fan_speed=SPEED_HA_TO_DYSON[speed]
-        )
 
     def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""
@@ -234,12 +246,9 @@ class DysonPureCoolLinkEntity(DysonFanEntity):
         _LOGGER.debug("Turn off fan %s", self.name)
         self._device.set_configuration(fan_mode=FanMode.OFF)
 
-    def set_dyson_speed(self, dyson_speed: str) -> None:
-        """Set the exact speed of the purecool fan."""
-        _LOGGER.debug("Set exact speed for fan %s", self.name)
-
-        fan_speed = FanSpeed(f"{int(dyson_speed):04d}")
-        self._device.set_configuration(fan_mode=FanMode.FAN, fan_speed=fan_speed)
+    def set_dyson_speed(self, speed: FanSpeed) -> None:
+        """Set the exact speed of the fan."""
+        self._device.set_configuration(fan_mode=FanMode.FAN, fan_speed=speed)
 
     def oscillate(self, oscillating: bool) -> None:
         """Turn on/off oscillating."""
@@ -298,21 +307,14 @@ class DysonPureCoolEntity(DysonFanEntity):
         else:
             self._device.turn_on()
 
-    def set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
-        self._device.set_fan_speed(SPEED_HA_TO_DYSON[speed])
-
     def turn_off(self, **kwargs):
         """Turn off the fan."""
         _LOGGER.debug("Turn off fan %s", self.name)
         self._device.turn_off()
 
-    def set_dyson_speed(self, dyson_speed: str) -> None:
+    def set_dyson_speed(self, speed: FanSpeed) -> None:
         """Set the exact speed of the purecool fan."""
-        _LOGGER.debug("Set exact speed for fan %s", self.name)
-
-        fan_speed = FanSpeed(f"{int(dyson_speed):04d}")
-        self._device.set_fan_speed(fan_speed)
+        self._device.set_fan_speed(speed)
 
     def oscillate(self, oscillating: bool) -> None:
         """Turn on/off oscillating."""

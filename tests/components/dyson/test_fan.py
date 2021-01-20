@@ -382,3 +382,32 @@ async def test_custom_services_purecool(
         blocking=True,
     )
     getattr(device, command).assert_called_once_with(*command_args)
+
+
+@pytest.mark.parametrize(
+    "domain,service,data",
+    [
+        (PLATFORM_DOMAIN, SERVICE_TURN_ON, {ATTR_SPEED: "AUTO"}),
+        (PLATFORM_DOMAIN, SERVICE_SET_SPEED, {ATTR_SPEED: "AUTO"}),
+        (DOMAIN, SERVICE_SET_DYSON_SPEED, {ATTR_DYSON_SPEED: "11"}),
+    ],
+)
+@pytest.mark.parametrize("device", [DysonPureCool], indirect=True)
+async def test_custom_services_invalid_data(
+    hass: HomeAssistant, domain: str, service: str, data: dict
+) -> None:
+    """Test custom services calling with invalid data."""
+    try:
+        await hass.services.async_call(
+            domain,
+            service,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                **data,
+            },
+            blocking=True,
+        )
+    except ValueError:
+        pass
+    else:
+        assert False
