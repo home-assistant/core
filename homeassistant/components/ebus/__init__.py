@@ -6,7 +6,7 @@ import itertools
 import logging
 from typing import Dict
 
-from pyebus import OK, CircuitMap, Ebus, FieldDef, get_icon
+from pyebus import AUTO, NA, OK, CircuitMap, CommandError, Ebus, FieldDef, get_icon
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
@@ -38,7 +38,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set Up A Config Entry."""
     undo_listener = config_entry.add_update_listener(update_listener)
-    api = EbusApi(hass)
+    api = Api(hass)
     api.configure(config_entry)
 
     hass.data.setdefault(DOMAIN, {})
@@ -47,14 +47,14 @@ async def async_setup_entry(hass, config_entry):
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    await api.async_start()
+    await api.monitor.async_start()
 
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, api.async_stop)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, api.monitor.async_stop)
 
     return True
 
@@ -71,7 +71,7 @@ async def async_unload_entry(hass, config_entry):
     )
 
     hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
-    await hass.data[DOMAIN][config_entry.entry_id][API].async_stop()
+    await hass.data[DOMAIN][config_entry.entry_id][API].monitor.async_stop()
 
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id, None)
@@ -84,28 +84,16 @@ async def update_listener(hass, config_entry):
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def _await_cancel(task):
-    task.cancel()
-    try:
-        await task
-    except asyncio.CancelledError:
-        pass
-
-
-class EbusApi:
-    """EBUS API."""
+class Api:
+    """API."""
 
     def __init__(self, hass: HomeAssistantType, checkinterval=CHECKINTERVAL):
         """EBUS API."""
         self._hass = hass
         self._checkinterval = checkinterval
-        self._data = {}
-        self._fieldlistener = collections.defaultdict(list)
         self._ebus = None
+        self._monitor = None
         self.circuitmap = None
-        self._tasks = []
-        self._state = None
-        self._info = {}
 
     def configure(self, entry: ConfigEntry):
         """Configure."""
@@ -113,10 +101,10 @@ class EbusApi:
         host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
         msgdefcodes = entry.data[CONF_MSGDEFCODES]
-        ebus = Ebus(host, port)
+        self._ebus = ebus = Ebus(host, port)
         ebus.msgdefcodes = msgdefcodes
         ebus.decode_msgdefcodes()
-        self._ebus = ebus
+        self._monitor = Monitor(copy.copy(ebus), self._checkinterval)
 
         # circuitmap
         circuitmap = entry.data.get(CONF_CIRCUITMAP, {})
@@ -126,7 +114,50 @@ class EbusApi:
     @property
     def ident(self):
         """Ident."""
-        return f"{self._ebus.host}:{self._ebus.port}"
+        return self._ebus.ident
+
+    @property
+    def ebus(self):
+        """EBUS."""
+        return self._ebus
+
+    @property
+    def monitor(self):
+        """Monitor."""
+        return self._monitor
+
+    async def async_set_field(self, fielddef, value):
+        """Set Field."""
+        msgdef = fielddef.msgdef.replace(children=[fielddef])
+        if self._ebus:
+            await self._ebus.async_write(msgdef, value)
+
+    @callback
+    def subscribe(self, entity, fielddef=None):
+        """Subscribe an entity from API fetches."""
+        self._monitor.attach(entity, fielddef=fielddef)
+
+        @callback
+        def unsubscribe() -> None:
+            """Unsubscribe an entity from API fetches (when disable)."""
+            self._monitor.detach(entity, fielddef=fielddef)
+
+        return unsubscribe
+
+
+class Monitor:
+    """EBUS Monitor."""
+
+    def __init__(self, ebus, checkinterval):
+        """EBUS Monitor."""
+        self._ebus = ebus
+        self._checkinterval = checkinterval
+        self._data = {}
+        self._msglistener = collections.defaultdict(list)
+        self._polledmsgs = set()
+        self._state = None
+        self._info = None
+        self._tasks = []
 
     @property
     def state(self):
@@ -138,124 +169,182 @@ class EbusApi:
         """Bus Info."""
         return self._info
 
-    @property
-    def msgdefs(self):
-        """Message Definitions."""
-        return self._ebus.msgdefs
-
     async def async_start(self):
         """Start."""
-        self._tasks.append(asyncio.create_task(self.async_observe()))
+        self._tasks.append(asyncio.create_task(self._async_main()))
 
     async def async_stop(self, *_):
         """Stop."""
         self._state = "stopping"
-        asyncio.gather(*[_await_cancel(task) for task in self._tasks])
+        asyncio.gather(*[self._await_cancel(task) for task in self._tasks])
         self._tasks.clear()
 
-    async def async_observe(self):
+    def attach(self, entity, fielddef=None):
+        """Attach an entity to updates."""
+        key = self._get_msglistener_key(fielddef and fielddef.msgdef)
+        listeners = self._msglistener[key]
+        listeners.append(entity)
+        _LOGGER.debug(f"attach: {key} {entity} listeners={len(listeners)}")
+
+    def detach(self, entity, fielddef=None):
+        """Attach an entity to updates."""
+        key = self._get_msglistener_key(fielddef and fielddef.msgdef)
+        listeners = self._msglistener[key]
+        listeners.remove(entity)
+        _LOGGER.debug(f"detach: {key} {entity} listeners={len(listeners)}")
+
+    @staticmethod
+    def _get_msglistener_key(msgdef):
+        return (msgdef.circuit, msgdef.name) if msgdef else None
+
+    async def _async_main(self):
         """Observe EBUS."""
-        ebus = copy.copy(self._ebus)
-        task = None
+        ebus = self._ebus
+        observerebus = copy.copy(ebus)
+        prioebus = copy.copy(ebus)
+        localtasks = []
         while True:
             state = await ebus.async_get_state()
-            _LOGGER.debug(f"Connection {self.ident}: {state}")
+            _LOGGER.debug(f"Connection {self._ebus.ident}: {state}")
+            # check state
             if self._state != state:
                 if state == OK:
                     # Reconnect
                     if self._state:
-                        _LOGGER.warning(f"Reconnecting {self.ident}")
-                    self._set_state("scanning")
+                        _LOGGER.warning(f"Reconnecting {ebus.ident}")
+                    self._set_state("SCAN")
                     try:
                         await ebus.async_wait_scancompleted()
-                    except Exception:
-                        self._set_state("no EBUSD connection")
+                    except (ConnectionError, CommandError):
+                        self._set_state("error")
                     else:
-                        # start observing
+                        # Start
                         self._set_state(state)
-                        task = asyncio.create_task(self._async_observe())
-                        self._tasks.append(task)
-                elif task:
-                    # stop observing
-                    _LOGGER.warning(f"Connection {self.ident}: {state}")
+                        localtasks = [
+                            asyncio.create_task(self._async_observe(observerebus)),
+                            asyncio.create_task(self._async_prioritize(prioebus)),
+                        ]
+                        self._tasks += localtasks
+                elif localtasks:
+                    # Stop
+                    localstate = state or "broken"
+                    _LOGGER.warning(f"Connection {ebus.ident}: {localstate}")
                     self._set_state(state)
-                    await _await_cancel(task)
-                    task = None
+                    for localtask in localtasks:
+                        await self._await_cancel(localtask)
+                        self._tasks.remove(localtask)
+                    localtasks.clear()
+                else:
+                    self._set_state(state)
             await asyncio.sleep(self._checkinterval)
 
-    async def _async_observe(self):
-        ebus = copy.copy(self._ebus)
+    async def _async_observe(self, ebus):
         self._set_info(await ebus.async_get_info())
         try:
             async for msg in ebus.async_observe(ttl=TTL):
-                _LOGGER.info(msg)
+                _LOGGER.debug(f"Observed {msg}")
                 self._set_msg(msg)
                 if self._state != OK:
                     break
+        except (ConnectionError, CommandError) as exc:
+            _LOGGER.info(f"Observer stopped: {exc}")
         finally:
-            self._state = "error"
+            self._set_state("error")
+
+    async def _async_prioritize(self, ebus):
+        try:
+            while True:
+                listened = {key for key, value in self._msglistener.items() if value}
+                missing = listened - self._polledmsgs
+                obsoletes = self._polledmsgs - listened
+                if missing or obsoletes:
+                    _LOGGER.info(
+                        f"Prioritize: monitored={len(listened)} add={len(missing)} remove={len(obsoletes)}"
+                    )
+                # add missing messages
+                for miss in missing:
+                    if self._state != OK:
+                        break
+                    if miss:
+                        circuit, name = miss
+                        msgdef = ebus.msgdefs.get(circuit, name)
+                        if msgdef.read:
+                            msg = await ebus.async_read(msgdef, ttl=TTL)
+                            _LOGGER.debug(f"Read {msg}")
+                            self._set_msg(msg)
+                            if msg.valid:
+                                await ebus.async_setprio(msgdef, AUTO)
+                                _LOGGER.info(f"Polling {msgdef.ident}")
+                            else:
+                                _LOGGER.warn(f"Not polling {msg}")
+                    self._polledmsgs.add(miss)
+                # remove obsolete messages
+                for obsolete in obsoletes:
+                    if self._state != OK:
+                        break
+                    if obsolete:
+                        circuit, name = obsolete
+                        msgdef = ebus.msgdefs.get(circuit, name)
+                        if msgdef.read:
+                            await ebus.async_setprio(msgdef, 9)  # lowest-prio
+                            _LOGGER.info(f"Disable Polling {msgdef.ident}")
+                    self._polledmsgs.discard(obsolete)
+                # wait
+                await asyncio.sleep(self._checkinterval)
+        except (ConnectionError, CommandError) as exc:
+            _LOGGER.info(f"Prioritizer stopped: {exc}")
+        finally:
+            self._set_state("error")
 
     def _set_state(self, state):
         """Notify about field update."""
         self._state = state
-        for entity in itertools.chain.from_iterable(self._fieldlistener.values()):
-            entity.async_write_ha_state()
+        if state != OK:
+            self._polledmsgs.clear()  # ebusd restart, requires reset of priorities.
+        self._notify(itertools.chain.from_iterable(self._msglistener.values()))
 
     def _set_info(self, info):
         self._info = info
-        for entity in self._fieldlistener[None]:
-            entity.async_write_ha_state()
+        self._notify(self._msglistener[None])
 
     def _set_msg(self, msg):
         data = self._data
         if msg.valid:
             for field in msg.fields:
                 data[field.fielddef.ident] = field.value
-                self._notify_field(field.fielddef)
         else:
             # remove outdated values
             for fielddef in msg.msgdef.fields:
                 data.pop(fielddef.ident, None)
-                self._notify_field(fielddef)
+        self._notify(self._msglistener[self._get_msglistener_key(msg.msgdef)])
 
-    def _notify_field(self, fielddef):
-        """Notify about field update."""
-        for entity in self._fieldlistener[fielddef.ident]:
+    @staticmethod
+    def _notify(entities):
+        for entity in entities:
             if entity.enabled:
                 entity.async_write_ha_state()
 
-    async def async_set_field(self, fielddef, value):
-        """Set Field."""
-        msgdef = fielddef.msgdef.replace(children=[fielddef])
-        if self._ebus:
-            await self._ebus.async_write(msgdef, value)
-
     def get_field_state(self, fielddef):
         """Get Field State."""
-        return self._data.get(fielddef.ident, None)
+        return self._data.get(fielddef.ident, NA)
 
     def is_field_available(self, fielddef):
         """Get Field Available."""
-        return self._state == OK and fielddef.ident in self._data
+        return self._state == OK and self._data.get(fielddef.ident, NA) != NA
 
-    @callback
-    def subscribe(self, entity, fielddef=None):
-        """Subscribe an entity from API fetches."""
-        ident = fielddef.ident if fielddef else None
-        self._fieldlistener[ident].append(entity)
-
-        @callback
-        def unsubscribe() -> None:
-            """Unsubscribe an entity from API fetches (when disable)."""
-            self._fieldlistener[ident].remove(entity)
-
-        return unsubscribe
+    @staticmethod
+    async def _await_cancel(task):
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
 
 
 class EbusEntity(Entity):
     """EBUS Entity."""
 
-    def __init__(self, api: EbusApi, ident: str):
+    def __init__(self, api: Api, ident: str):
         """EBUS Entity."""
         super().__init__()
         self._api = api
@@ -272,6 +361,7 @@ class EbusEntity(Entity):
         return {
             "identifiers": {(DOMAIN, self._api.ident)},
             "name": "EBUS",
+            "model": "daemon",
         }
 
     @property
@@ -283,7 +373,7 @@ class EbusEntity(Entity):
 class EbusFieldEntity(EbusEntity):
     """EBUS Entity."""
 
-    def __init__(self, api: EbusApi, fielddef: FieldDef):
+    def __init__(self, api: Api, fielddef: FieldDef):
         """EBUS Entity."""
         super().__init__(api, fielddef.ident)
         self._fielddef = fielddef

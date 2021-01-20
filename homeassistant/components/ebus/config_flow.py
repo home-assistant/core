@@ -4,7 +4,6 @@ import logging
 import re
 
 from pyebus import Ebus
-from pyebus.connection import ConnectionTimeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -49,6 +48,7 @@ class EbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 try:
                     is_online = await self.ebus.async_is_online()
                     await self.ebus.async_wait_scancompleted()
+                    await self.ebus.async_load_msgdefs()
                     if is_online:
                         await self.async_set_unique_id(
                             f"{self.ebus.host}:{self.ebus.port}"
@@ -56,9 +56,7 @@ class EbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         self._abort_if_unique_id_configured()
                     else:
                         errors[CONF_HOST] = "ebus_error"
-                except ConnectionTimeout:
-                    errors[CONF_HOST] = "connection_error"
-                except ConnectionRefusedError:
+                except (ConnectionError, ConnectionRefusedError):
                     errors[CONF_HOST] = "connection_error"
                 except Exception as exc:
                     _LOGGER.error(exc)
