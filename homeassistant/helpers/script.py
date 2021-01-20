@@ -230,9 +230,9 @@ class _ScriptRun:
     def _log(
         self, msg: str, *args: Any, level: int = logging.INFO, **kwargs: Any
     ) -> None:
-        self._script._log(
+        self._script._log(  # pylint: disable=protected-access
             msg, *args, level=level, **kwargs
-        )  # pylint: disable=protected-access
+        )
 
     async def async_run(self) -> None:
         """Run script."""
