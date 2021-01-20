@@ -126,7 +126,7 @@ DEVICE_TYPE_SCHEMA_MAP = {
 }
 
 DEVICE_TYPE_SUBTYPE_MAP = {
-    #    "Pico1Button": TODO,
+    #    "Pico1Button": HELP WANTED - DO NOT HAVE TO TEST - NEED DEVICE MAPPINGS,
     "Pico2Button": PICO_2_BUTTON_BUTTON_TYPES,
     #    "Pico2ButtonRaiseLower": HELP WANTED - DO NOT HAVE TO TEST - NEED DEVICE MAPPINGS,
     #    "Pico3Button": HELP WANTED - DO NOT HAVE TO TEST - NEED DEVICE MAPPINGS,
@@ -167,14 +167,10 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
     triggers = []
 
     device = get_button_device_by_dr_id(hass, device_id)
-    _LOGGER.debug("async_get_triggers: %s = %s", device_id, device)
-
     if not device:
         raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
 
     valid_buttons = DEVICE_TYPE_SUBTYPE_MAP.get(device["type"])
-    _LOGGER.debug("valid_buttons: %s = %s", device_id, valid_buttons)
-
     if not valid_buttons:
         raise InvalidDeviceAutomationConfig(
             f"Device type {device['type']} not supported: {device_id}"
@@ -218,7 +214,6 @@ async def async_attach_trigger(
         }
     )
     event_config = event_trigger.TRIGGER_SCHEMA(event_config)
-    _LOGGER.debug("async_attach_trigger: %s %s", config, event_config)
     return await event_trigger.async_attach_trigger(
         hass, event_config, action, automation_info, platform_type="device"
     )
