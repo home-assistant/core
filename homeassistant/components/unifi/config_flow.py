@@ -92,7 +92,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         self.config = {
             CONF_HOST: parsed_url.hostname,
         }
-        _LOGGER.debug("SSDP host: %s", self.config[CONF_HOST])
 
         if self._host_already_configured(self.config[CONF_HOST]):
             return self.async_abort(reason="already_configured")
@@ -209,12 +208,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     def _host_already_configured(self, host):
         """See if we already have a unifi entry matching the host."""
         for entry in self._async_current_entries():
-            _LOGGER.debug(
-                "SSDP: Check entry host %s against host %s",
-                entry.data.get(CONF_HOST),
-                host,
-            )
-            if entry.data.get(CONF_HOST) == host:
+            if CONF_CONTROLLER not in entry.data:
+                continue
+            if entry.data[CONF_CONTROLLER][CONF_HOST] == host:
                 return True
         return False
 
