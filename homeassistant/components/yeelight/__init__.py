@@ -255,7 +255,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if unload_ok:
         data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].pop(entry.entry_id)
-        data[DATA_REMOVE_INIT_DISPATCHER]()
+        remove_init_dispatcher = data.get(DATA_REMOVE_INIT_DISPATCHER)
+        if remove_init_dispatcher is not None:
+            remove_init_dispatcher()
         data[DATA_UNSUB_UPDATE_LISTENER]()
         data[DATA_DEVICE].async_unload()
         if entry.data[CONF_ID]:
