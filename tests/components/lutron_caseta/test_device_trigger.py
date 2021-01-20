@@ -204,7 +204,7 @@ async def test_if_fires_on_button_event(hass, calls, device_reg):
                         CONF_DOMAIN: DOMAIN,
                         CONF_DEVICE_ID: device_id,
                         CONF_TYPE: "press",
-                        CONF_SUBTYPE: "button1",
+                        CONF_SUBTYPE: "on",
                     },
                     "action": {
                         "service": "test.automation",
@@ -220,7 +220,7 @@ async def test_if_fires_on_button_event(hass, calls, device_reg):
         ATTR_SERIAL: device.get("serial"),
         ATTR_TYPE: device.get("type"),
         ATTR_MODEL: device.get("model"),
-        ATTR_BUTTON_NUMBER: 3,
+        ATTR_BUTTON_NUMBER: 2,
         ATTR_DEVICE_NAME: device["Name"],
         ATTR_AREA_NAME: device.get("Area", {}).get("Name"),
         ATTR_ACTION: "press",
@@ -246,8 +246,8 @@ async def test_validate_trigger_config_no_device(hass, calls, device_reg):
                         CONF_PLATFORM: "device",
                         CONF_DOMAIN: DOMAIN,
                         CONF_DEVICE_ID: "no_device",
-                        CONF_TYPE: "single",
-                        CONF_SUBTYPE: "button1",
+                        CONF_TYPE: "press",
+                        CONF_SUBTYPE: "on",
                     },
                     "action": {
                         "service": "test.automation",
@@ -270,8 +270,7 @@ async def test_validate_trigger_config_no_device(hass, calls, device_reg):
     hass.bus.async_fire(LUTRON_CASETA_BUTTON_EVENT, message)
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_button_press"
+    assert len(calls) == 0
 
 
 async def test_validate_trigger_invalid_triggers(hass, device_reg):
