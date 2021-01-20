@@ -20,6 +20,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -184,8 +185,8 @@ async def test_flow_works_multiple_sites(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "site"
-    assert result["data_schema"]({"site": "site name"})
-    assert result["data_schema"]({"site": "site2 name"})
+    assert result["data_schema"]({"site": "default"})
+    assert result["data_schema"]({"site": "site2"})
 
 
 async def test_flow_fails_site_already_configured(hass, aioclient_mock):
@@ -312,6 +313,54 @@ async def test_flow_fails_unknown_problem(hass, aioclient_mock):
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+
+async def test_reauth_flow_update_configuration(hass, aioclient_mock):
+    """Verify reauth flow can update controller configuration."""
+    controller = await setup_unifi_integration(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        UNIFI_DOMAIN,
+        context={"source": SOURCE_REAUTH},
+        data=controller.config_entry,
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == SOURCE_USER
+
+    aioclient_mock.get("https://1.2.3.4:1234", status=302)
+
+    aioclient_mock.post(
+        "https://1.2.3.4:1234/api/login",
+        json={"data": "login successful", "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+
+    aioclient_mock.get(
+        "https://1.2.3.4:1234/api/self/sites",
+        json={
+            "data": [{"desc": "Site name", "name": "site_id", "role": "admin"}],
+            "meta": {"rc": "ok"},
+        },
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "new_name",
+            CONF_PASSWORD: "new_pass",
+            CONF_PORT: 1234,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "reauth_successful"
+    assert controller.host == "1.2.3.4"
+    assert controller.config_entry.data[CONF_CONTROLLER][CONF_USERNAME] == "new_name"
+    assert controller.config_entry.data[CONF_CONTROLLER][CONF_PASSWORD] == "new_pass"
 
 
 async def test_advanced_option_flow(hass):
