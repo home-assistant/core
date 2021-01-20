@@ -44,42 +44,42 @@ LUTRON_BUTTON_TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-PICO_REMOTE_2_BUTTON_TYPES = {
+PICO_2_BUTTON_BUTTON_TYPES = {
     "on": 2,
     "off": 4,
 }
-PICO_REMOTE_2_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
+PICO_2_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_SUBTYPE): vol.In(PICO_REMOTE_2_BUTTON_TYPES),
+        vol.Required(CONF_SUBTYPE): vol.In(PICO_2_BUTTON_BUTTON_TYPES),
     }
 )
 
-PICO_REMOTE_3_BUTTON_TYPES = {
+PICO_3_BUTTON_RAISE_LOWER_BUTTON_TYPES = {
     "on": 2,
     "stop": 3,
     "off": 4,
     "raise": 5,
     "lower": 6,
 }
-PICO_REMOTE_3_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
+PICO_3_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_SUBTYPE): vol.In(PICO_REMOTE_3_BUTTON_TYPES),
+        vol.Required(CONF_SUBTYPE): vol.In(PICO_3_BUTTON_RAISE_LOWER_BUTTON_TYPES),
     }
 )
 
-PICO_REMOTE_4_BUTTON_TYPES = {
+PICO_4_BUTTON_2_GROUP_BUTTON_TYPES = {
     "button1": 8,
     "button2": 9,
     "button3": 10,
     "button4": 11,
 }
-PICO_REMOTE_4_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
+PICO_4_BUTTON_2_GROUP_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_SUBTYPE): vol.In(PICO_REMOTE_4_BUTTON_TYPES),
+        vol.Required(CONF_SUBTYPE): vol.In(PICO_4_BUTTON_2_GROUP_BUTTON_TYPES),
     }
 )
 
-SHADE_REMOTE_BUTTON_TYPES = {
+FOUR_GROUP_REMOTE_BUTTON_TYPES = {
     "open_all": 2,
     "stop_all": 3,
     "close_all": 4,
@@ -106,37 +106,43 @@ SHADE_REMOTE_BUTTON_TYPES = {
     "raise_4": 37,
     "lower_4": 38,
 }
-SHADE_REMOTE_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
+FOUR_GROUP_REMOTE_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_SUBTYPE): vol.In(SHADE_REMOTE_BUTTON_TYPES),
+        vol.Required(CONF_SUBTYPE): vol.In(FOUR_GROUP_REMOTE_BUTTON_TYPES),
     }
 )
 
-PICO_REMOTE_2_MODELS = ("P", "2")  # PJ2-2B-GXX-X01
-PICO_REMOTE_3_MODELS = ("P", "3")  # PJ2-3BRL-GXX-X01
-PICO_REMOTE_4_MODELS = ("P", "4")  # PJ2-4B-GXX-X21
-SHADE_REMOTE_MODELS = ("C", "Y")  # CS-YJ-4GC-WH
-
-MODEL_SCHEMA_MAP = {
-    PICO_REMOTE_2_MODELS: PICO_REMOTE_2_TRIGGER_SCHEMA,
-    PICO_REMOTE_3_MODELS: PICO_REMOTE_3_TRIGGER_SCHEMA,
-    PICO_REMOTE_4_MODELS: PICO_REMOTE_4_TRIGGER_SCHEMA,
-    SHADE_REMOTE_MODELS: SHADE_REMOTE_TRIGGER_SCHEMA,
+DEVICE_TYPE_SCHEMA_MAP = {
+    #    "Pico1Button": HELP WANTED - DO NOT HAVE TO TEST - NEED DEVICE MAPPINGS,
+    "Pico2Button": PICO_2_BUTTON_TRIGGER_SCHEMA,
+    #    "Pico2ButtonRaiseLower": HELP WANTED - DO NOT HAVE TO TEST - NEED DEVICE MAPPINGS,
+    #    "Pico3Button": HELP WANTED - DO NOT HAVE TO TEST - NEED DEVICE MAPPINGS,
+    "Pico3ButtonRaiseLower": PICO_3_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA,
+    #    "Pico4Button": HELP WANTED - DO NOT HAVE TO TEST - NEED DEVICE MAPPINGS,
+    #    "Pico4ButtonScene": HELP WANTED - DO NOT HAVE TO TEST - NEED DEVICE MAPPINGS,
+    #    "Pico4ButtonZone": HELP WANTED - DO NOT HAVE TO TEST - NEED DEVICE MAPPINGS,
+    "Pico4Button2Group": PICO_4_BUTTON_2_GROUP_TRIGGER_SCHEMA,
+    "FourGroupRemote": FOUR_GROUP_REMOTE_TRIGGER_SCHEMA,
 }
 
-
-MODEL_SUBTYPE_MAP = {
-    PICO_REMOTE_2_MODELS: PICO_REMOTE_2_BUTTON_TYPES,
-    PICO_REMOTE_3_MODELS: PICO_REMOTE_3_BUTTON_TYPES,
-    PICO_REMOTE_4_MODELS: PICO_REMOTE_4_BUTTON_TYPES,
-    SHADE_REMOTE_MODELS: SHADE_REMOTE_BUTTON_TYPES,
+DEVICE_TYPE_SUBTYPE_MAP = {
+    #    "Pico1Button": TODO,
+    "Pico2Button": PICO_2_BUTTON_BUTTON_TYPES,
+    #    "Pico2ButtonRaiseLower": HELP WANTED - DO NOT HAVE TO TEST - NEED DEVICE MAPPINGS,
+    #    "Pico3Button": HELP WANTED - DO NOT HAVE TO TEST - NEED DEVICE MAPPINGS,
+    "Pico3ButtonRaiseLower": PICO_3_BUTTON_RAISE_LOWER_BUTTON_TYPES,
+    #    "Pico4Button": HELP WANTED - DO NOT HAVE TO TEST - NEED DEVICE MAPPINGS,
+    #    "Pico4ButtonScene": HELP WANTED - DO NOT HAVE TO TEST - NEED DEVICE MAPPINGS,
+    #    "Pico4ButtonZone": HELP WANTED - DO NOT HAVE TO TEST - NEED DEVICE MAPPINGS,
+    "Pico4Button2Group": PICO_4_BUTTON_2_GROUP_BUTTON_TYPES,
+    "FourGroupRemote": FOUR_GROUP_REMOTE_BUTTON_TYPES,
 }
 
 TRIGGER_SCHEMA = vol.Any(
-    PICO_REMOTE_2_TRIGGER_SCHEMA,
-    PICO_REMOTE_3_TRIGGER_SCHEMA,
-    PICO_REMOTE_4_TRIGGER_SCHEMA,
-    SHADE_REMOTE_TRIGGER_SCHEMA,
+    PICO_2_BUTTON_TRIGGER_SCHEMA,
+    PICO_3_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA,
+    PICO_4_BUTTON_2_GROUP_TRIGGER_SCHEMA,
+    FOUR_GROUP_REMOTE_TRIGGER_SCHEMA,
 )
 
 
@@ -148,8 +154,7 @@ async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType)
     if not device:
         return config
 
-    device_model_tup = get_device_model_tuple(device)
-    schema = MODEL_SCHEMA_MAP.get(device_model_tup)
+    schema = DEVICE_TYPE_SCHEMA_MAP.get(device["type"])
 
     if not schema:
         return config
@@ -167,16 +172,12 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
     if not device:
         raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
 
-    device_model_tup = get_device_model_tuple(device)
-
-    _LOGGER.debug("device_model_tup: %s = %s", device_id, device_model_tup)
-
-    valid_buttons = MODEL_SUBTYPE_MAP.get(device_model_tup)
+    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP.get(device["type"])
     _LOGGER.debug("valid_buttons: %s = %s", device_id, valid_buttons)
 
     if not valid_buttons:
         raise InvalidDeviceAutomationConfig(
-            f"Device model {device['model']} not supported: {device_id}"
+            f"Device type {device['type']} not supported: {device_id}"
         )
 
     for trigger in SUPPORTED_INPUTS_EVENTS_TYPES:
@@ -202,9 +203,8 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     device = get_button_device_by_dr_id(hass, config[CONF_DEVICE_ID])
-    device_model_tup = get_device_model_tuple(device)
-    schema = MODEL_SCHEMA_MAP.get(device_model_tup)
-    valid_buttons = MODEL_SUBTYPE_MAP.get(device_model_tup)
+    schema = DEVICE_TYPE_SCHEMA_MAP.get(device["type"])
+    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP.get(device["type"])
     config = schema(config)
     event_config = event_trigger.TRIGGER_SCHEMA(
         {
@@ -233,13 +233,3 @@ def get_button_device_by_dr_id(hass: HomeAssistant, device_id: str):
             return device
 
     return None
-
-
-def get_device_model_tuple(device):
-    """Return a lookup tuple for finding the schema for a device."""
-    model_split = device["model"].split("-")
-
-    base_model = model_split[0][:1]
-    model_type = model_split[1][:1]
-
-    return (base_model, model_type)
