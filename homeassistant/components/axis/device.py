@@ -214,8 +214,7 @@ class AxisNetworkDevice:
         except CannotConnect as err:
             raise ConfigEntryNotReady from err
 
-        except AuthenticationRequired as err:
-            LOGGER.error("Authentication error with (%s): %s", self.host, err)
+        except AuthenticationRequired:
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_init(
                     AXIS_DOMAIN,
