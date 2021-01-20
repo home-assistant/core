@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{site} ({host})",
     "step": {
       "user": {
         "title": "Set up UniFi Controller",
@@ -19,7 +20,8 @@
       "unknown_client_mac": "No client available on that MAC address"
     },
     "abort": {
-      "already_configured": "Controller site is already configured"
+      "already_configured": "Controller site is already configured",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {

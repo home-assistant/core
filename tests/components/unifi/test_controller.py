@@ -222,6 +222,17 @@ async def test_controller_not_accessible(hass):
     assert hass.data[UNIFI_DOMAIN] == {}
 
 
+async def test_controller_trigger_reauth_flow(hass):
+    """Failed authentication trigger a reauthentication flow."""
+    with patch(
+        "homeassistant.components.unifi.controller.get_controller",
+        side_effect=AuthenticationRequired,
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+        await setup_unifi_integration(hass)
+        mock_flow_init.assert_called_once()
+    assert hass.data[UNIFI_DOMAIN] == {}
+
+
 async def test_controller_unknown_error(hass):
     """Unknown errors are handled."""
     with patch(
@@ -316,6 +327,14 @@ async def test_get_controller_controller_unavailable(hass):
     with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
         "aiounifi.Controller.login", side_effect=aiounifi.RequestError
     ), pytest.raises(CannotConnect):
+        await get_controller(hass, **CONTROLLER_DATA)
+
+
+async def test_get_controller_login_required(hass):
+    """Check that get_controller can handle unknown errors."""
+    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
+        "aiounifi.Controller.login", side_effect=aiounifi.LoginRequired
+    ), pytest.raises(AuthenticationRequired):
         await get_controller(hass, **CONTROLLER_DATA)
 
 
