@@ -554,8 +554,7 @@ class DeviceRegistry:
             if config_entry_id not in config_entries:
                 continue
             if config_entries == {config_entry_id}:
-                # Add a time stamp when the deleted device
-                # became orphaned
+                # Add a time stamp when the deleted device became orphaned
                 self.deleted_devices[deleted_device.id] = attr.evolve(
                     deleted_device, orphaned_timestamp=now_time, config_entries=set()
                 )
