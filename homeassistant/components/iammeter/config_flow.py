@@ -2,6 +2,7 @@
 import asyncio
 import logging
 from urllib.parse import ParseResult, urlparse
+
 import async_timeout
 import iammeter
 from iammeter.power_meter import IamMeterError
