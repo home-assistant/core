@@ -8,7 +8,6 @@ import os
 import threading
 
 from scapy.config import conf
-from scapy.data import ETH_P_ALL
 from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
 from scapy.layers.l2 import Ether
@@ -208,14 +207,7 @@ class DHCPWatcher(WatcherBase):
     async def async_start(self):
         """Start watching for dhcp packets."""
         try:
-            sniff_socket = conf.L2socket(type=ETH_P_ALL)
-            self._sniffer = AsyncSniffer(
-                filter=FILTER,
-                opened_socket=[sniff_socket],
-                started_callback=self._started.set,
-                prn=self.handle_dhcp_packet,
-            )
-            self._sniffer.start()
+            _verify_l2socket_creation_permission()
         except (Scapy_Exception, OSError) as ex:
             if os.geteuid() == 0:
                 _LOGGER.error("Cannot watch for dhcp packets: %s", ex)
@@ -224,6 +216,14 @@ class DHCPWatcher(WatcherBase):
                     "Cannot watch for dhcp packets without root or CAP_NET_RAW: %s", ex
                 )
             return
+
+        self._sniffer = AsyncSniffer(
+            filter=FILTER,
+            started_callback=self._started.set,
+            prn=self.handle_dhcp_packet,
+            store=0,
+        )
+        self._sniffer.start()
 
     def handle_dhcp_packet(self, packet):
         """Process a dhcp packet."""
@@ -271,3 +271,15 @@ def _decode_dhcp_option(dhcp_options, key):
 def _format_mac(mac_address):
     """Format a mac address for matching."""
     return format_mac(mac_address).replace(":", "")
+
+
+def _verify_l2socket_creation_permission():
+    """Create a socket using the scapy configured l2socket.
+
+    Try to create the socket
+    to see if we have permissions
+    since AsyncSniffer will do it another
+    thread so we will not be able to capture
+    any permission or bind errors.
+    """
+    conf.L2socket()
