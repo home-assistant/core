@@ -121,17 +121,17 @@ class AisPlayerDevice(MediaPlayerEntity):
             _LOGGER.warning("Problem to fetch status from AI Speaker %s", ais_info)
             return
         self._ais_id = ais_info["ais_id"]
-        self._ais_product = ais_info["Product"]
+        self._ais_product = ais_info.get("Product", "Player")
         self._ais_manufacturer = ais_info["Manufacturer"]
         self._ais_model = ais_info["Model"]
 
         audio_status = await self._ais_gate.get_audio_status()
         if audio_status is not None:
             self._volume_level = audio_status.get("currentVolume", 100) / 100
-            self._status = audio_status.get("currentStatus", 0)
+            self._status = audio_status.get("currentStatus", None)
             self._playing = audio_status.get("playing", False)
-            self._media_position = audio_status.get("currentPosition", 0)
-            self._duration = audio_status.get("duration", 0)
+            self._media_position = audio_status.get("currentPosition", None)
+            self._duration = audio_status.get("duration", None)
             self._stream_image = audio_status.get("media_stream_image", None)
             self._media_title = audio_status.get("currentMedia", "AI-Speaker")
             self._media_source = audio_status.get("media_source", self._media_source)
@@ -187,6 +187,9 @@ class AisPlayerDevice(MediaPlayerEntity):
     @property
     def media_image_url(self):
         """Return the image url of current playing media."""
+        if self._stream_image == "null":
+            return None
+
         return self._stream_image
 
     @property
@@ -213,7 +216,8 @@ class AisPlayerDevice(MediaPlayerEntity):
     @property
     def media_album_name(self):
         """Return album of current playing media."""
-        return self._album_name
+        # return self._album_name
+        return ""
 
     @property
     def app_name(self):

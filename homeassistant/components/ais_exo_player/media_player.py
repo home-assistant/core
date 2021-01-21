@@ -7,6 +7,8 @@ import json
 import logging
 from typing import Optional
 
+from aisapi.ws import AisWebService
+
 import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK,
@@ -35,6 +37,7 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.helpers import aiohttp_client
 import homeassistant.util.dt as dt_util
 
 from .media_browser import browse_media
@@ -79,7 +82,7 @@ def _publish_command_to_frame(hass, device_ip, key, val):
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the ExoPlayer platform."""
 
-    def redirect_media(service):
+    async def async_redirect_media(service):
         if "entity_id" not in service.data:
             return
 
@@ -89,15 +92,24 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         media_content_id = attr.get("media_content_id")
         if media_content_id is None:
             return
+        # 0. push media info to ais to share with client
+        j_media_info = {
+            "media_title": device.media_title,
+            "media_source": device.source,
+            "media_stream_image": device.media_stream_image,
+            "media_album_name": device.media_album_name,
+            "media_content_id": device.media_content_id,
+        }
+        await ais_gate.share_media_full_info(j_media_info)
 
         # 1. pause internal player
-        hass.services.call(
+        await hass.services.async_call(
             "media_player",
             "media_pause",
             {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID},
         )
         # 2. redirect media to player
-        hass.services.call(
+        await hass.services.async_call(
             "media_player",
             "play_media",
             {
@@ -124,13 +136,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             # nothing special here - just say (grouping is done in say_it service)
             hass.services.call("ais_ai_service", "say_it", {"text": text})
 
-    hass.services.async_register("ais_exo_player", "redirect_media", redirect_media)
+    hass.services.async_register(
+        "ais_exo_player", "redirect_media", async_redirect_media
+    )
     hass.services.async_register("ais_exo_player", "play_text_or_url", play_text_or_url)
 
     name = config.get(CONF_NAME)
     _ip = config.get(CONF_IP_ADDRESS)
     _unique_id = config.get("unique_id")
-    device = ExoPlayerDevice(_ip, _unique_id, name)
+
+    web_session = aiohttp_client.async_get_clientsession(hass)
+    ais_gate = AisWebService(hass.loop, web_session, _ip)
+
+    device = ExoPlayerDevice(_ip, _unique_id, name, ais_gate)
     _LOGGER.info("device: " + str(device))
     async_add_devices([device], True)
 
@@ -139,8 +157,10 @@ class ExoPlayerDevice(MediaPlayerEntity):
     """Representation of a ExoPlayer ."""
 
     # pylint: disable=no-member
-    def __init__(self, device_ip, unique_id, name):
+    def __init__(self, device_ip, unique_id, name, ais_gate_instance):
         """Initialize the ExoPlayer device."""
+
+        self._ais_gate = ais_gate_instance
         self._device_ip = device_ip
         self._unique_id = unique_id
         self._name = name
@@ -462,7 +482,7 @@ class ExoPlayerDevice(MediaPlayerEntity):
             if "ALBUM_NAME" in j_info:
                 self._album_name = j_info["ALBUM_NAME"]
             else:
-                self._album_name = 0
+                self._album_name = ""
             if "DURATION" in j_info:
                 self._duration = j_info["DURATION"]
 
