@@ -106,14 +106,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             entity_id = user_input[CONF_ENTITY_ID]
             self.homekit_data[CONF_FILTER][CONF_INCLUDE_ENTITIES] = [entity_id]
             if entity_id.startswith(CAMERA_ENTITY_PREFIX):
-                self.homekit_options[CONF_ENTITY_CONFIG] = {
+                self.homekit_data[CONF_ENTITY_CONFIG] = {
                     entity_id: {CONF_VIDEO_CODEC: VIDEO_CODEC_COPY}
                 }
             return await self.async_step_pairing()
 
         all_supported_entities = _async_get_entities_matching_domains(
             self.hass,
-            self.homekit_options[CONF_DOMAINS],
+            self.homekit_data[CONF_DOMAINS],
         )
         return self.async_show_form(
             step_id="accessory_mode",
@@ -140,20 +140,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             port = await self._async_available_port()
             name = self._async_available_name()
             title = f"{name}:{port}"
-            self.homekit_data = user_input.copy()
-            self.homekit_data[CONF_NAME] = name
-            self.homekit_data[CONF_PORT] = port
-            self.homekit_data[CONF_HOMEKIT_MODE] = user_input[CONF_HOMEKIT_MODE]
-            self.homekit_data[CONF_FILTER] = {
-                CONF_INCLUDE_DOMAINS: user_input[CONF_INCLUDE_DOMAINS],
-                CONF_INCLUDE_ENTITIES: [],
-                CONF_EXCLUDE_DOMAINS: [],
-                CONF_EXCLUDE_ENTITIES: [],
-            }
-            del self.homekit_data[CONF_INCLUDE_DOMAINS]
+            homekit_data = self.homekit_data
+            homekit_data = user_input.copy()
+            homekit_data.update(
+                {
+                    CONF_NAME: name,
+                    CONF_PORT: port,
+                    CONF_HOMEKIT_MODE: user_input[CONF_HOMEKIT_MODE],
+                    CONF_FILTER: {
+                        CONF_INCLUDE_DOMAINS: user_input[CONF_INCLUDE_DOMAINS],
+                        CONF_INCLUDE_ENTITIES: [],
+                        CONF_EXCLUDE_DOMAINS: [],
+                        CONF_EXCLUDE_ENTITIES: [],
+                    },
+                }
+            )
+            del homekit_data[CONF_INCLUDE_DOMAINS]
             self.entry_title = title
             if user_input[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
-                self.homekit_data[CONF_FILTER][CONF_INCLUDE_DOMAINS] = []
+                homekit_data[CONF_FILTER][CONF_INCLUDE_DOMAINS] = []
                 return await self.async_step_accessory_mode()
             return await self.async_step_pairing()
 
