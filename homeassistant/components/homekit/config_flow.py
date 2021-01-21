@@ -153,6 +153,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            # TODO: do this last
             port = await self._async_available_port()
             name = self._async_available_name()
             self.entry_title = f"{name}:{port}"
