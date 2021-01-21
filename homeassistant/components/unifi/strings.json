@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{site} ({host})",
+    "flow_title": "UniFi Network {site} ({host})",
     "step": {
       "user": {
         "title": "Set up UniFi Controller",
