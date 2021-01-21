@@ -125,12 +125,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             del self.homekit_data[CONF_INCLUDE_DOMAINS]
             return await self.async_step_pairing()
 
-        _LOGGER.debug("data: %s", self.homekit_data)
         all_supported_entities = _async_get_entities_matching_domains(
             self.hass,
             self.homekit_data[CONF_FILTER][CONF_INCLUDE_DOMAINS],
         )
-        _LOGGER.debug("all_supported_entities: %s", all_supported_entities)
 
         return self.async_show_form(
             step_id="accessory_mode",
@@ -179,6 +177,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_pairing()
 
         homekit_mode = self.homekit_data.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
+        # TODO: limit this to domains that actually have entities
         default_domains = [] if self._async_current_names() else DEFAULT_DOMAINS
         setup_schema = vol.Schema(
             {
