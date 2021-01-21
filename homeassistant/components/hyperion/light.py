@@ -314,7 +314,6 @@ class HyperionLight(LightEntity):
         self._brightness: int = 255
         self._rgb_color: Sequence[int] = DEFAULT_COLOR
         self._effect: str = KEY_EFFECT_SOLID
-        self._icon: str = ICON_LIGHTBULB
 
         self._effect_list: List[str] = []
 
@@ -346,7 +345,15 @@ class HyperionLight(LightEntity):
     @property
     def icon(self) -> str:
         """Return state specific icon."""
-        return self._icon
+        if self.is_on:
+            if self.effect == KEY_EFFECT_SOLID:
+                return ICON_LIGHTBULB
+            elif self.effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+                return ICON_EXTERNAL_SOURCE
+            else:
+                return ICON_EFFECT
+
+        return ICON_LIGHTBULB
 
     @property
     def effect(self) -> str:
@@ -509,18 +516,9 @@ class HyperionLight(LightEntity):
             self._rgb_color = rgb_color
         if effect is not None:
             self._effect = effect
-            if effect == KEY_EFFECT_SOLID:
-                self._icon = ICON_LIGHTBULB
-            elif effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
-                self._icon = ICON_EXTERNAL_SOURCE
-            else:
-                self._icon = ICON_EFFECT
-        if not self.is_on:
-            self._icon = ICON_LIGHTBULB
 
     def _update_components(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion components."""
-        self._set_internal_state()
         self.async_write_ha_state()
 
     def _update_adjustment(self, _: Optional[Dict[str, Any]] = None) -> None:
