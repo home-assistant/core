@@ -11,13 +11,6 @@
             "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Passord",
-                    "username": "Brukernavn"
-                },
-                "title": "Konfigurere godkjenning"
-            },
             "configure_profile": {
                 "data": {
                     "include": "Lag kameraentitet"
@@ -31,11 +24,13 @@
                 },
                 "title": "Velg ONVIF-enhet"
             },
-            "manual_input": {
+            "configure": {
                 "data": {
                     "host": "Vert",
                     "name": "Navn",
-                    "port": "Port"
+                    "port": "Port",
+                    "password": "Passord",
+                    "username": "Brukernavn"
                 },
                 "title": "Konfigurere ONVIF-enhet"
             },

@@ -11,13 +11,6 @@
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Heslo",
-                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
-                },
-                "title": "Konfigurace ov\u011b\u0159ov\u00e1n\u00ed"
-            },
             "configure_profile": {
                 "data": {
                     "include": "Vytvo\u0159it entitu kamery"
@@ -31,11 +24,13 @@
                 },
                 "title": "Vyberte za\u0159\u00edzen\u00ed ONVIF"
             },
-            "manual_input": {
+            "configure": {
                 "data": {
                     "host": "Hostitel",
                     "name": "Jm\u00e9no",
-                    "port": "Port"
+                    "port": "Port",
+                    "password": "Heslo",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
                 },
                 "title": "Konfigurovat za\u0159\u00edzen\u00ed ONVIF"
             },

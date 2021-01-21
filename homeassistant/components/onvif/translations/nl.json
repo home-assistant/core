@@ -11,13 +11,6 @@
             "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Wachtwoord",
-                    "username": "Gebruikersnaam"
-                },
-                "title": "Configureer authenticatie"
-            },
             "configure_profile": {
                 "data": {
                     "include": "Cameraentiteit maken"
@@ -31,11 +24,13 @@
                 },
                 "title": "Selecteer ONVIF-apparaat"
             },
-            "manual_input": {
+            "configure": {
                 "data": {
                     "host": "Host",
                     "name": "Naam",
-                    "port": "Poort"
+                    "port": "Poort",
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
                 },
                 "title": "Configureer ONVIF-apparaat"
             },

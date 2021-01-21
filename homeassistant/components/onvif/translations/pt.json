@@ -11,13 +11,6 @@
             "cannot_connect": "Falha na liga\u00e7\u00e3o"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Palavra-passe",
-                    "username": "Utilizador"
-                },
-                "title": "Configurar autentica\u00e7\u00e3o"
-            },
             "configure_profile": {
                 "data": {
                     "include": "Criar entidade da c\u00e2mara"
@@ -31,11 +24,13 @@
                 },
                 "title": "Selecione o dispositivo ONVIF"
             },
-            "manual_input": {
+            "configure": {
                 "data": {
                     "host": "Servidor",
                     "name": "Nome",
-                    "port": "Porta"
+                    "port": "Porta",
+                    "password": "Palavra-passe",
+                    "username": "Utilizador"
                 },
                 "title": "Configurar dispositivo ONVIF"
             },

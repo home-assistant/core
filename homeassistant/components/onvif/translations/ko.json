@@ -11,13 +11,6 @@
             "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "\ube44\ubc00\ubc88\ud638",
-                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
-                },
-                "title": "\uc778\uc99d \uad6c\uc131\ud558\uae30"
-            },
             "configure_profile": {
                 "data": {
                     "include": "\uce74\uba54\ub77c \uad6c\uc131\uc694\uc18c \ub9cc\ub4e4\uae30"
@@ -31,11 +24,13 @@
                 },
                 "title": "ONVIF \uae30\uae30 \uc120\ud0dd\ud558\uae30"
             },
-            "manual_input": {
+            "configure": {
                 "data": {
                     "host": "\ud638\uc2a4\ud2b8",
                     "name": "\uc774\ub984",
-                    "port": "\ud3ec\ud2b8"
+                    "port": "\ud3ec\ud2b8",
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
                 },
                 "title": "ONVIF \uae30\uae30 \uad6c\uc131\ud558\uae30"
             },

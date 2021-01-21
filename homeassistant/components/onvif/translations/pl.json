@@ -11,13 +11,6 @@
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Has\u0142o",
-                    "username": "Nazwa u\u017cytkownika"
-                },
-                "title": "Konfiguracja uwierzytelniania"
-            },
             "configure_profile": {
                 "data": {
                     "include": "Utw\u00f3rz encj\u0119 kamery"
@@ -31,11 +24,13 @@
                 },
                 "title": "Wybierz urz\u0105dzenie ONVIF"
             },
-            "manual_input": {
+            "configure": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
                     "name": "Nazwa",
-                    "port": "Port"
+                    "port": "Port",
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "title": "Konfiguracja urz\u0105dzenia ONVIF"
             },

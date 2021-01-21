@@ -8,13 +8,6 @@
             "onvif_error": "Napaka pri nastavitvi naprave ONVIF. Za ve\u010d informacij preverite dnevnike."
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Geslo",
-                    "username": "Uporabni\u0161ko ime"
-                },
-                "title": "Nastavite preverjanje pristnosti"
-            },
             "configure_profile": {
                 "data": {
                     "include": "Ustvari entiteto kamere"
@@ -28,10 +21,12 @@
                 },
                 "title": "Izberite ONVIF napravo"
             },
-            "manual_input": {
+            "configure": {
                 "data": {
                     "host": "Gostitelj",
-                    "port": "Vrata"
+                    "port": "Vrata",
+                    "password": "Geslo",
+                    "username": "Uporabni\u0161ko ime"
                 },
                 "title": "Konfigurirajte ONVIF napravo"
             },
