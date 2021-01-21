@@ -110,21 +110,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_accessory_mode(self, user_input=None):
         """Choose specific entity in accessory mode."""
-        homekit_data = self.homekit_data
-
         if user_input is not None:
             entity_id = user_input[CONF_ENTITY_ID]
-            homekit_data[CONF_FILTER][CONF_INCLUDE_ENTITIES] = [entity_id]
+            self.homekit_data[CONF_FILTER][CONF_INCLUDE_ENTITIES] = [entity_id]
             if entity_id.startswith(CAMERA_ENTITY_PREFIX):
-                homekit_data[CONF_ENTITY_CONFIG] = {
+                self.homekit_data[CONF_ENTITY_CONFIG] = {
                     entity_id: {CONF_VIDEO_CODEC: VIDEO_CODEC_COPY}
                 }
-            del homekit_data[CONF_INCLUDE_DOMAINS]
+            del self.homekit_data[CONF_INCLUDE_DOMAINS]
             return await self.async_step_pairing()
 
         all_supported_entities = _async_get_entities_matching_domains(
             self.hass,
-            homekit_data[CONF_INCLUDE_DOMAINS],
+            self.homekit_data[CONF_INCLUDE_DOMAINS],
         )
         return self.async_show_form(
             step_id="accessory_mode",
@@ -135,28 +133,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pairing(self, user_input=None):
         """Pairing instructions."""
-        homekit_data = self.homekit_data
-
         if user_input is not None:
-            return self.async_create_entry(title=self.entry_title, data=homekit_data)
+            return self.async_create_entry(
+                title=self.entry_title, data=self.homekit_data
+            )
         return self.async_show_form(
             step_id="pairing",
-            description_placeholders={CONF_NAME: homekit_data[CONF_NAME]},
+            description_placeholders={CONF_NAME: self.homekit_data[CONF_NAME]},
         )
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
-        homekit_data = self.homekit_data
 
         if user_input is not None:
             port = await self._async_available_port()
             name = self._async_available_name()
             self.entry_title = f"{name}:{port}"
 
-            homekit_data = user_input.copy()
+            self.homekit_data = user_input.copy()
             entity_filter = _EMPTY_ENTITY_FILTER.copy()
-            homekit_data.update(
+            self.homekit_data.update(
                 {
                     CONF_NAME: name,
                     CONF_PORT: port,
@@ -166,13 +163,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             if user_input[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
-                homekit_data[CONF_FILTER][CONF_INCLUDE_DOMAINS] = []
+                self.homekit_data[CONF_FILTER][CONF_INCLUDE_DOMAINS] = []
                 return await self.async_step_accessory_mode()
 
-            entity_filter[CONF_INCLUDE_DOMAINS] = homekit_data.pop(CONF_INCLUDE_DOMAINS)
+            entity_filter[CONF_INCLUDE_DOMAINS] = self.homekit_data.pop(
+                CONF_INCLUDE_DOMAINS
+            )
             return await self.async_step_pairing()
 
-        homekit_mode = homekit_data.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
+        homekit_mode = self.homekit_data.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
         default_domains = [] if self._async_current_names() else DEFAULT_DOMAINS
         setup_schema = vol.Schema(
             {
@@ -268,21 +267,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_advanced(self, user_input=None):
         """Choose advanced options."""
-        homekit_options = self.homekit_options
-
         if not self.show_advanced_options or user_input is not None:
             if user_input:
-                homekit_options.update(user_input)
+                self.homekit_options.update(user_input)
 
-            homekit_options[CONF_AUTO_START] = homekit_options.get(
+            self.homekit_options[CONF_AUTO_START] = self.homekit_options.get(
                 CONF_AUTO_START, DEFAULT_AUTO_START
             )
 
             for key in (CONF_DOMAINS, CONF_ENTITIES):
-                if key in homekit_options:
-                    del homekit_options[key]
+                if key in self.homekit_options:
+                    del self.homekit_options[key]
 
-            return self.async_create_entry(title="", data=homekit_options)
+            return self.async_create_entry(title="", data=self.homekit_options)
 
         return self.async_show_form(
             step_id="advanced",
@@ -290,7 +287,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_AUTO_START,
-                        default=homekit_options.get(
+                        default=self.homekit_options.get(
                             CONF_AUTO_START, DEFAULT_AUTO_START
                         ),
                     ): bool
@@ -300,10 +297,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_cameras(self, user_input=None):
         """Choose camera config."""
-        homekit_options = self.homekit_options
-
         if user_input is not None:
-            entity_config = homekit_options[CONF_ENTITY_CONFIG]
+            entity_config = self.homekit_options[CONF_ENTITY_CONFIG]
             for entity_id in self.included_cameras:
                 if entity_id in user_input[CONF_CAMERA_COPY]:
                     entity_config.setdefault(entity_id, {})[
@@ -317,7 +312,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return await self.async_step_advanced()
 
         cameras_with_copy = []
-        entity_config = homekit_options.setdefault(CONF_ENTITY_CONFIG, {})
+        entity_config = self.homekit_options.setdefault(CONF_ENTITY_CONFIG, {})
         for entity in self.included_cameras:
             hk_entity_config = entity_config.get(entity, {})
             if hk_entity_config.get(CONF_VIDEO_CODEC) == VIDEO_CODEC_COPY:
@@ -335,8 +330,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_include_exclude(self, user_input=None):
         """Choose entities to include or exclude from the domain."""
-        homekit_options = self.homekit_options
-
         if user_input is not None:
             entity_filter = _EMPTY_ENTITY_FILTER.copy()
             if isinstance(user_input[CONF_ENTITIES], list):
@@ -345,7 +338,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 entities = [user_input[CONF_ENTITIES]]
 
             if (
-                homekit_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY
+                self.homekit_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY
                 or user_input[CONF_INCLUDE_EXCLUDE_MODE] == MODE_INCLUDE
             ):
                 entity_filter[CONF_INCLUDE_ENTITIES] = entities
@@ -354,7 +347,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 domains_with_entities_selected = _domains_set_from_entities(entities)
                 entity_filter[CONF_INCLUDE_DOMAINS] = [
                     domain
-                    for domain in homekit_options[CONF_DOMAINS]
+                    for domain in self.homekit_options[CONF_DOMAINS]
                     if domain not in domains_with_entities_selected
                 ]
 
@@ -362,23 +355,23 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     if entity_id not in entities:
                         self.included_cameras.remove(entity_id)
             else:
-                entity_filter[CONF_INCLUDE_DOMAINS] = homekit_options[CONF_DOMAINS]
+                entity_filter[CONF_INCLUDE_DOMAINS] = self.homekit_options[CONF_DOMAINS]
                 entity_filter[CONF_EXCLUDE_ENTITIES] = entities
                 for entity_id in entities:
                     if entity_id in self.included_cameras:
                         self.included_cameras.remove(entity_id)
 
-            homekit_options[CONF_FILTER] = entity_filter
+            self.homekit_options[CONF_FILTER] = entity_filter
 
             if self.included_cameras:
                 return await self.async_step_cameras()
 
             return await self.async_step_advanced()
 
-        entity_filter = homekit_options.get(CONF_FILTER, {})
+        entity_filter = self.homekit_options.get(CONF_FILTER, {})
         all_supported_entities = _async_get_entities_matching_domains(
             self.hass,
-            homekit_options[CONF_DOMAINS],
+            self.homekit_options[CONF_DOMAINS],
         )
         self.included_cameras = {
             entity_id
@@ -388,7 +381,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         data_schema = {}
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
-        if homekit_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
+        if self.homekit_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
             entity_schema = vol.In
         else:
             if entities:
@@ -411,13 +404,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
-        homekit_options = self.homekit_options
-
         if self.config_entry.source == SOURCE_IMPORT:
             return await self.async_step_yaml(user_input)
 
         if user_input is not None:
-            homekit_options.update(user_input)
+            self.homekit_options.update(user_input)
             return await self.async_step_include_exclude()
 
         homekit_options = dict(self.config_entry.options)
