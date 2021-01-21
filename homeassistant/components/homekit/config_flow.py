@@ -206,11 +206,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _async_current_names(self):
         """Return a set of bridge names."""
-        current_entries = self._async_current_entries()
-
         return {
             entry.data[CONF_NAME]
-            for entry in current_entries
+            for entry in self._async_current_entries()
             if CONF_NAME in entry.data
         }
 
