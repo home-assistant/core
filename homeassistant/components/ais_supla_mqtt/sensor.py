@@ -3,10 +3,10 @@ from datetime import timedelta
 import logging
 import queue
 
-import paho.mqtt.client as mqtt
+import paho.mqtt.client as supla_mqtt
 
 from homeassistant.components.ais_dom import ais_global
-from homeassistant.components.mqtt import subscription
+import homeassistant.components.mqtt as hass_mqtt
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
@@ -68,7 +68,7 @@ class SuplaMqttSoftBridge(Entity):
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = await hass_mqtt.subscription.async_subscribe_topics(
             self.hass,
             self._sub_state,
             {
@@ -87,7 +87,7 @@ class SuplaMqttSoftBridge(Entity):
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
+        self._sub_state = await hass_mqtt.subscription.async_unsubscribe_topics(
             self.hass, self._sub_state
         )
 
@@ -169,9 +169,7 @@ class SuplaMqttSoftBridge(Entity):
     def on_supla_message(self, client, userdata, msg):
         _LOGGER.debug(f"on_message {msg.topic} / {msg.payload}")
         payload = msg.payload.decode("utf-8")
-        self.hass.services.call(
-            "mqtt", "publish", {"topic": msg.topic, "payload": payload}
-        )
+        hass_mqtt.async_publish(self.hass, msg.topic, payload)
         self._supla_received = self._supla_received + 1
 
     # The callback for when a message is published to SUPLA broker.
@@ -183,7 +181,7 @@ class SuplaMqttSoftBridge(Entity):
         """Update the sensor."""
         if self._supla_mqtt_client is None:
             client_id = ais_global.get_sercure_android_id_dom()
-            self._supla_mqtt_client = mqtt.Client(client_id)
+            self._supla_mqtt_client = supla_mqtt.Client(client_id)
             self._supla_mqtt_client.username_pw_set(
                 self._username, password=self._password
             )
