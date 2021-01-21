@@ -575,7 +575,9 @@ class HomeKit:
 
         bridged_states = []
         for state in self.hass.states.async_all():
+
             if not self._filter(state.entity_id):
+                _LOGGER.debug("Filter matches %s for %s", state.entity_id, self._name)
                 continue
 
             ent_reg_ent = ent_reg.async_get(state.entity_id)
