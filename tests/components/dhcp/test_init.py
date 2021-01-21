@@ -303,7 +303,8 @@ async def test_setup_fails_as_root(hass, caplog):
     wait_event = threading.Event()
 
     with patch("os.geteuid", return_value=0), patch(
-        "homeassistant.components.dhcp.AsyncSniffer.start", side_effect=Scapy_Exception
+        "homeassistant.components.dhcp._verify_l2socket_creation_permission",
+        side_effect=Scapy_Exception,
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
@@ -327,7 +328,8 @@ async def test_setup_fails_non_root(hass, caplog):
     wait_event = threading.Event()
 
     with patch("os.geteuid", return_value=10), patch(
-        "homeassistant.components.dhcp.AsyncSniffer.start", side_effect=Scapy_Exception
+        "homeassistant.components.dhcp._verify_l2socket_creation_permission",
+        side_effect=Scapy_Exception,
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
