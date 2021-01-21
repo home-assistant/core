@@ -7,6 +7,8 @@ from unittest.mock import MagicMock
 from libpurecool.dyson_device import DysonDevice
 from libpurecool.dyson_pure_cool import FanSpeed
 
+from homeassistant.components.dyson import CONF_LANGUAGE, DOMAIN
+from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 SERIAL = "XX-XXXXX-XX"
@@ -14,6 +16,20 @@ NAME = "Temp Name"
 ENTITY_NAME = "temp_name"
 
 BASE_PATH = "homeassistant.components.dyson"
+
+CONFIG = {
+    DOMAIN: {
+        CONF_USERNAME: "user@example.com",
+        CONF_PASSWORD: "password",
+        CONF_LANGUAGE: "US",
+        CONF_DEVICES: [
+            {
+                "device_id": SERIAL,
+                "device_ip": "0.0.0.0",
+            }
+        ],
+    }
+}
 
 
 def load_mock_device(device: DysonDevice) -> None:
@@ -49,7 +65,13 @@ async def async_update_device(
     hass: HomeAssistant, device: DysonDevice, state_type: Optional[Type] = None
 ) -> None:
     """Update the device using callback function."""
-    callback = device.add_message_listener.call_args[0][0]
+    callbacks = [args[0][0] for args in device.add_message_listener.call_args_list]
     message = MagicMock(spec=state_type)
-    await hass.async_add_executor_job(callback, message)
+
+    # Combining sync calls to avoid multiple executors
+    def _run_callbacks():
+        for callback in callbacks:
+            callback(message)
+
+    await hass.async_add_executor_job(_run_callbacks)
     await hass.async_block_till_done()
