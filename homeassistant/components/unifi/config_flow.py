@@ -1,5 +1,4 @@
 """Config flow for UniFi."""
-import logging
 import socket
 from urllib.parse import urlparse
 
