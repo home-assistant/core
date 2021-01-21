@@ -112,7 +112,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Choose specific entity in accessory mode."""
         if user_input is not None:
             entity_id = user_input[CONF_ENTITY_ID]
-            self.homekit_data[CONF_FILTER][CONF_INCLUDE_ENTITIES] = [entity_id]
+            self.homekit_data[CONF_FILTER].update(
+                {CONF_INCLUDE_DOMAINS: [], CONF_INCLUDE_ENTITIES: [entity_id]}
+            )
             if entity_id.startswith(CAMERA_ENTITY_PREFIX):
                 self.homekit_data[CONF_ENTITY_CONFIG] = {
                     entity_id: {CONF_VIDEO_CODEC: VIDEO_CODEC_COPY}
@@ -163,7 +165,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             if user_input[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
-                self.homekit_data[CONF_FILTER][CONF_INCLUDE_DOMAINS] = []
                 return await self.async_step_accessory_mode()
 
             entity_filter[CONF_INCLUDE_DOMAINS] = self.homekit_data.pop(
