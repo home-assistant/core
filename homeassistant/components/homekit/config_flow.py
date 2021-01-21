@@ -35,6 +35,7 @@ from .const import (
     DEFAULT_HOMEKIT_MODE,
     HOMEKIT_MODE_ACCESSORY,
     HOMEKIT_MODES,
+    SHORT_ACCESSORY_NAME,
     SHORT_BRIDGE_NAME,
     VIDEO_CODEC_COPY,
 )
@@ -159,7 +160,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_pairing(self, user_input=None):
         """Pairing instructions."""
         port = await self._async_available_port()
-        name = self._async_available_name()
+        name = self._async_available_name(self.homekit_data[CONF_HOMEKIT_MODE])
         self.entry_title = f"{name}:{port}"
         self.homekit_data.update(
             {
@@ -226,8 +227,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
     @callback
-    def _async_available_name(self):
+    def _async_available_name(self, homekit_mode):
         """Return an available for the bridge."""
+
+        base_name = SHORT_BRIDGE_NAME
+        if homekit_mode == HOMEKIT_MODE_ACCESSORY:
+            base_name = SHORT_ACCESSORY_NAME
 
         # We always pick a RANDOM name to avoid Zeroconf
         # name collisions.  If the name has been seen before
@@ -236,7 +241,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         suggested_name = None
         while not suggested_name or suggested_name in self._async_current_names():
             trailer = "".join(random.choices(acceptable_chars, k=4))
-            suggested_name = f"{SHORT_BRIDGE_NAME} {trailer}"
+            suggested_name = f"{base_name} {trailer}"
 
         return suggested_name
 
