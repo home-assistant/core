@@ -17,9 +17,9 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import aiohttp_client
 
-from . import get_coap_context
 from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC
 from .const import DOMAIN  # pylint:disable=unused-import
+from .utils import get_coap_context, get_device_sleep_period
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,17 +49,21 @@ async def validate_input(hass: core.HomeAssistant, host, data):
 
     device.shutdown()
 
+    sleep_period = get_device_sleep_period(device.settings)
+
     # Return info that you want to store in the config entry.
     return {
         "title": device.settings["name"],
         "hostname": device.settings["device"]["hostname"],
+        "sleep_period": sleep_period,
+        "model": device.settings["device"]["type"],
     }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Shelly."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
     host = None
     info = None
@@ -95,7 +99,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     return self.async_create_entry(
                         title=device_info["title"] or device_info["hostname"],
-                        data=user_input,
+                        data={
+                            **user_input,
+                            "sleep_period": device_info["sleep_period"],
+                            "model": device_info["model"],
+                        },
                     )
 
         return self.async_show_form(
@@ -121,7 +129,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(
                     title=device_info["title"] or device_info["hostname"],
-                    data={**user_input, CONF_HOST: self.host},
+                    data={
+                        **user_input,
+                        CONF_HOST: self.host,
+                        "sleep_period": device_info["sleep_period"],
+                        "model": device_info["model"],
+                    },
                 )
         else:
             user_input = {}
@@ -172,7 +185,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(
                     title=device_info["title"] or device_info["hostname"],
-                    data={"host": self.host},
+                    data={
+                        "host": self.host,
+                        "sleep_period": device_info["sleep_period"],
+                        "model": device_info["model"],
+                    },
                 )
 
         return self.async_show_form(
