@@ -29,10 +29,9 @@ def entities_from_discovered_wilight(hass, api_device):
             continue
         index = item["index"]
         item_name = item["name"]
-        if item["sub_type"] == FAN_V1:
-            entity = WiLightFan(api_device, index, item_name)
-        else:
+        if item["sub_type"] != FAN_V1:
             continue
+        entity = WiLightFan(api_device, index, item_name)
         entities.append(entity)
 
     return entities
