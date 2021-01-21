@@ -2,14 +2,14 @@
     "config": {
         "abort": {
             "already_configured": "Controller site is already configured",
-            "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "faulty_credentials": "Invalid authentication",
             "service_unavailable": "Failed to connect",
             "unknown_client_mac": "No client available on that MAC address"
         },
-        "flow_title": "{site} ({host})",
+        "flow_title": "UniFi Network {site} ({host})",
         "step": {
             "user": {
                 "data": {
