@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_CLOUDHOOK_URL, CONF_MANUAL_RUN_MINS, CONF_WEBHOOK_ID, DOMAIN
 from .device import RachioPerson
@@ -21,6 +22,8 @@ from .webhooks import (
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_DOMAINS = ["switch", "binary_sensor"]
+
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
