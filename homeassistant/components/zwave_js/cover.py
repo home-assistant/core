@@ -9,7 +9,6 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
-    CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -60,7 +59,7 @@ def percent_to_zwave_position(value: int) -> int:
     return 0
 
 
-class ZWaveCover(ZWaveBaseEntity, CoverEntity):
+class ZWaveCover(ZWaveBaseEntity):
     """Representation of a Z-Wave Cover device."""
 
     @property
