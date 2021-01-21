@@ -279,6 +279,6 @@ def _verify_l2socket_creation_permission():
     to see if we have permissions
     since AsyncSniffer will do it another
     thread so we will not be able to capture
-     any permission or bind errors.
+    any permission or bind errors.
     """
     conf.L2socket()
