@@ -19,7 +19,7 @@ from pyclimacell.pyclimacell import (
     UnknownException,
 )
 
-from homeassistant.components.weather import DOMAIN as W_DOMAIN
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -33,9 +33,11 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     ATTRIBUTION,
+    CONF_FORECAST_TYPES,
     CONF_TIMESTEP,
     CURRENT,
     DAILY,
+    DEFAULT_FORECAST_TYPE,
     DEFAULT_TIMESTEP,
     DOMAIN,
     FORECASTS,
@@ -46,7 +48,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [W_DOMAIN]
+PLATFORMS = [WEATHER_DOMAIN]
 
 
 def _set_update_interval(
@@ -95,6 +97,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
             config_entry,
             options={
                 CONF_TIMESTEP: DEFAULT_TIMESTEP,
+                CONF_FORECAST_TYPES: [DEFAULT_FORECAST_TYPE],
             },
         )
 
@@ -171,12 +174,11 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> Dict[str, Any]:
         """Update data via library."""
-        data = {}
+        data = {FORECASTS: {}}
         try:
             data[CURRENT] = await self._api.realtime(
                 self._api.available_fields(REALTIME)
             )
-            data.setdefault(FORECASTS, {})
             data[FORECASTS][HOURLY] = await self._api.forecast_hourly(
                 self._api.available_fields(FORECAST_HOURLY),
                 None,
@@ -195,8 +197,6 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
                 ),
                 self._config_entry.options[CONF_TIMESTEP],
             )
-
-            return data
         except (
             CantConnectException,
             InvalidAPIKeyException,
@@ -204,6 +204,8 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
             UnknownException,
         ) as error:
             raise UpdateFailed from error
+
+        return data
 
 
 class ClimaCellEntity(CoordinatorEntity):

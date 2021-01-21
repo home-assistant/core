@@ -1,5 +1,6 @@
 """Test the ClimaCell config flow."""
 import logging
+from unittest.mock import patch
 
 from pyclimacell.exceptions import (
     CantConnectException,
@@ -27,7 +28,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import API_KEY, MIN_CONFIG
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -150,6 +150,8 @@ async def test_options_flow(hass: HomeAssistantType) -> None:
         unique_id=_get_unique_id(hass, user_config),
     )
     entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
 
     assert not entry.options
     assert CONF_TIMESTEP not in entry.data

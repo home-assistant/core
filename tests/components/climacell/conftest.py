@@ -1,7 +1,7 @@
 """Configure py.test."""
-import pytest
+from unittest.mock import patch
 
-from tests.async_mock import patch
+import pytest
 
 
 @pytest.fixture(name="skip_notifications", autouse=True)

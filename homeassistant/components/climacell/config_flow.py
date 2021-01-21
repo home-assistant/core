@@ -61,12 +61,6 @@ def _get_config_schema(
                 "location",
                 default=input_dict.get(CONF_LONGITUDE, hass.config.longitude),
             ): cv.longitude,
-            vol.Optional(
-                CONF_FORECAST_TYPES,
-                default=input_dict.get(CONF_FORECAST_TYPES, [DEFAULT_FORECAST_TYPE]),
-            ): cv.multi_select(
-                {DAILY: DAILY.title(), HOURLY: HOURLY.title(), NOWCAST: NOWCAST.title()}
-            ),
         },
         extra=vol.REMOVE_EXTRA,
     )
@@ -96,10 +90,16 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         options_schema = {
+            vol.Optional(
+                CONF_FORECAST_TYPES,
+                default=user_input.get(CONF_FORECAST_TYPES, [DEFAULT_FORECAST_TYPE]),
+            ): cv.multi_select(
+                {DAILY: DAILY.title(), HOURLY: HOURLY.title(), NOWCAST: NOWCAST.title()}
+            ),
             vol.Required(
                 CONF_TIMESTEP,
                 default=self._config_entry.options.get(CONF_TIMESTEP, DEFAULT_TIMESTEP),
-            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=60))
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=60)),
         }
 
         return self.async_show_form(
@@ -112,7 +112,6 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-    DOMAIN = DOMAIN
 
     @staticmethod
     @callback
