@@ -88,6 +88,8 @@ DEFAULT_DOMAINS = [
     "water_heater",
 ]
 
+DOMAINS_PREFER_ACCESSORY_MODE = ["camera", "media_player"]
+
 CAMERA_ENTITY_PREFIX = "camera."
 
 _EMPTY_ENTITY_FILTER = {
@@ -124,7 +126,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             return await self.async_step_pairing()
 
-        all_supported_entities = _async_get_matching_entities(self.hass)
+        all_supported_entities = _async_get_matching_entities(
+            self.hass, domains=DOMAINS_PREFER_ACCESSORY_MODE
+        )
         return self.async_show_form(
             step_id="accessory_mode",
             data_schema=vol.Schema(
