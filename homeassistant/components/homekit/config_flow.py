@@ -164,14 +164,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title=self.entry_title, data=self.homekit_data
             )
 
-        port = await self._async_available_port()
-        name = self._async_available_name(self.homekit_data[CONF_HOMEKIT_MODE])
-        self.entry_title = f"{name}:{port}"
-        self.homekit_data.update(
-            {
-                CONF_NAME: name,
-                CONF_PORT: port,
-            }
+        self.homekit_data[CONF_PORT] = await self._async_available_port()
+        self.homekit_data[CONF_NAME] = self._async_available_name(
+            self.homekit_data[CONF_HOMEKIT_MODE]
+        )
+        self.entry_title = (
+            f"{self.homekit_data[CONF_NAME]}:{self.homekit_data[CONF_PORT]}"
         )
         return self.async_show_form(
             step_id="pairing",
