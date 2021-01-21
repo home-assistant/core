@@ -7,6 +7,7 @@ from homeassistant.components.netatmo.const import (
     CLIMATE_TRIGGERS,
     INDOOR_CAMERA_TRIGGERS,
     MODEL_NACAMERA,
+    MODEL_NAPLUG,
     MODEL_NATHERM1,
     MODEL_NOC,
     MODEL_NRV,
@@ -259,3 +260,52 @@ async def test_if_fires_on_event_with_subtype(
     assert len(events) == 1
     assert len(calls) == 1
     assert calls[0].data["some"] == f"{event_type} - {sub_type} - device - {device.id}"
+
+
+@pytest.mark.parametrize(
+    "platform,device_type,event_type",
+    [("climate", MODEL_NAPLUG, trigger) for trigger in CLIMATE_TRIGGERS],
+)
+async def test_if_invalid_device(
+    hass, device_reg, entity_reg, platform, device_type, event_type
+):
+    """Test for event triggers firing."""
+    mac_address = "12:34:56:AB:CD:EF"
+    connection = (device_registry.CONNECTION_NETWORK_MAC, mac_address)
+    config_entry = MockConfigEntry(domain=NETATMO_DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={connection},
+        identifiers={(NETATMO_DOMAIN, mac_address)},
+        model=device_type,
+    )
+    entity_reg.async_get_or_create(
+        platform, NETATMO_DOMAIN, "5678", device_id=device_entry.id
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": NETATMO_DOMAIN,
+                        "device_id": device_entry.id,
+                        "entity_id": f"{platform}.{NETATMO_DOMAIN}_5678",
+                        "type": event_type,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "{{trigger.event.data.type}} - {{trigger.platform}} - {{trigger.event.data.device_id}}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
