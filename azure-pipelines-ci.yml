@@ -62,7 +62,7 @@ stages:
             displayName: "Run bandit"
           - script: |
               . venv/bin/activate
-              pre-commit run isort --all-files --show-diff-on-failure
+              pre-commit run isort --all-files --show-diff-on-failure --profile black
             displayName: "Run isort"
           - script: |
               . venv/bin/activate
