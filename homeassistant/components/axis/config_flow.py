@@ -75,6 +75,8 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
                     updates={
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_PORT: user_input[CONF_PORT],
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
                     }
                 )
 
@@ -130,6 +132,23 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
         title = f"{model} - {self.serial}"
         return self.async_create_entry(title=title, data=self.device_config)
+
+    async def async_step_reauth(self, device_config: dict):
+        """Trigger a reauthentication flow."""
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {
+            CONF_NAME: device_config[CONF_NAME],
+            CONF_HOST: device_config[CONF_HOST],
+        }
+
+        self.discovery_schema = {
+            vol.Required(CONF_HOST, default=device_config[CONF_HOST]): str,
+            vol.Required(CONF_USERNAME, default=device_config[CONF_USERNAME]): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Required(CONF_PORT, default=device_config[CONF_PORT]): int,
+        }
+
+        return await self.async_step_user()
 
     async def async_step_dhcp(self, discovery_info: dict):
         """Prepare configuration for a DHCP discovered Axis device."""

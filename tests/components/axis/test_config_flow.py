@@ -16,6 +16,7 @@ from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.config_entries import (
     SOURCE_DHCP,
     SOURCE_IGNORE,
+    SOURCE_REAUTH,
     SOURCE_USER,
     SOURCE_ZEROCONF,
 )
@@ -110,33 +111,6 @@ async def test_manual_configuration_update_configuration(hass):
     assert result["reason"] == "already_configured"
     assert device.host == "2.3.4.5"
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_flow_fails_already_configured(hass):
-    """Test that config flow fails on already configured device."""
-    await setup_axis_integration(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        AXIS_DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == SOURCE_USER
-
-    with respx.mock:
-        mock_default_vapix_requests(respx)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_HOST: "1.2.3.4",
-                CONF_USERNAME: "user",
-                CONF_PASSWORD: "pass",
-                CONF_PORT: 80,
-            },
-        )
-
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
 
 
 async def test_flow_fails_faulty_credentials(hass):
@@ -235,6 +209,40 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(hass):
     }
 
     assert result["data"][CONF_NAME] == "M1065-LW 2"
+
+
+async def test_reauth_flow_update_configuration(hass):
+    """Test that config flow fails on already configured device."""
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+
+    result = await hass.config_entries.flow.async_init(
+        AXIS_DOMAIN,
+        context={"source": SOURCE_REAUTH},
+        data=config_entry.data,
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == SOURCE_USER
+
+    with respx.mock:
+        mock_default_vapix_requests(respx, "2.3.4.5")
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "2.3.4.5",
+                CONF_USERNAME: "user2",
+                CONF_PASSWORD: "pass2",
+                CONF_PORT: 80,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert device.host == "2.3.4.5"
+    assert device.username == "user2"
+    assert device.password == "pass2"
 
 
 async def test_dhcp_flow(hass):
