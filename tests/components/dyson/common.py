@@ -1,6 +1,5 @@
 """Common utils for Dyson tests."""
 
-import asyncio
 from typing import Optional, Type
 from unittest import mock
 from unittest.mock import MagicMock
@@ -68,7 +67,6 @@ async def async_update_device(
     """Update the device using callback function."""
     callbacks = [args[0][0] for args in device.add_message_listener.call_args_list]
     message = MagicMock(spec=state_type)
-    await asyncio.gather(
-        *[hass.async_add_executor_job(callback, message) for callback in callbacks]
-    )
+    for callback in callbacks:
+        await hass.async_add_executor_job(callback, message)
     await hass.async_block_till_done()
