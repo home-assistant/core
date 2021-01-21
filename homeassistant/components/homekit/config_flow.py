@@ -177,7 +177,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_pairing()
 
         homekit_mode = self.homekit_data.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
-        # TODO: limit this to domains that actually have entities
+        # TODO: limit this to domains that actually have entities in accessory mode
         default_domains = [] if self._async_current_names() else DEFAULT_DOMAINS
         setup_schema = vol.Schema(
             {
