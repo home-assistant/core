@@ -1,5 +1,7 @@
 """Tests the Home Assistant workday binary sensor."""
-from homeassistant.components.workday.const import (  # CONF_ADVANCED,; DOMAIN,; ERR_NO_COUNTRY,; ERR_NO_SUBCOUNTRY,; DEFAULT_NAME,
+from typing import List
+
+from homeassistant.components.workday.const import (
     CONF_ADD_HOLIDAYS,
     CONF_ADVANCED,
     CONF_COUNTRY,
@@ -24,8 +26,8 @@ def create_workday_test_data(
     state: str = None,
     # name=DEFAULT_NAME,
     advanced_config: bool = False,
-    workdays: dict[str] = DEFAULT_WORKDAYS,
-    excludes: dict[str] = DEFAULT_EXCLUDES,
+    workdays: List[str] = DEFAULT_WORKDAYS,
+    excludes: List[str] = DEFAULT_EXCLUDES,
     days_offset: int = DEFAULT_OFFSET,
 ):
     """Generate Workday configuration dict."""
@@ -84,8 +86,8 @@ def create_flow_basic_data(
 
 
 def create_flow_advanced_data(
-    workdays: dict[str] = DEFAULT_WORKDAYS,
-    excludes: dict[str] = DEFAULT_EXCLUDES,
+    workdays: List[str] = DEFAULT_WORKDAYS,
+    excludes: List[str] = DEFAULT_EXCLUDES,
     days_offset: int = DEFAULT_OFFSET,
 ):
     """Generate Workday configuration dict."""

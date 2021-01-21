@@ -27,10 +27,10 @@ from .const import (
     DEFAULT_EXCLUDES,
     DEFAULT_OFFSET,
     DEFAULT_WORKDAYS,
-    DOMAIN,
     ERR_NO_COUNTRY,
     ERR_NO_SUBCOUNTRY,
 )
+from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
