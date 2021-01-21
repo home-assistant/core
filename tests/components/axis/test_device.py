@@ -412,6 +412,16 @@ async def test_device_not_accessible(hass):
     assert hass.data[AXIS_DOMAIN] == {}
 
 
+async def test_device_trigger_reauth_flow(hass):
+    """Failed authentication trigger a reauthentication flow."""
+    with patch.object(
+        axis.device, "get_device", side_effect=axis.errors.AuthenticationRequired
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+        await setup_axis_integration(hass)
+        mock_flow_init.assert_called_once()
+    assert hass.data[AXIS_DOMAIN] == {}
+
+
 async def test_device_unknown_error(hass):
     """Unknown errors are handled."""
     with patch.object(axis.device, "get_device", side_effect=Exception):

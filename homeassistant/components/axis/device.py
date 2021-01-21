@@ -13,6 +13,7 @@ from axis.streammanager import SIGNAL_PLAYING, STATE_STOPPED
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.components.mqtt.models import Message
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -213,9 +214,13 @@ class AxisNetworkDevice:
         except CannotConnect as err:
             raise ConfigEntryNotReady from err
 
-        except Exception as err:  # pylint: disable=broad-except
-            LOGGER.error(
-                "Unknown error connecting with Axis device (%s): %s", self.host, err
+        except AuthenticationRequired:
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    AXIS_DOMAIN,
+                    context={"source": SOURCE_REAUTH},
+                    data=self.config_entry.data,
+                )
             )
             return False
 
