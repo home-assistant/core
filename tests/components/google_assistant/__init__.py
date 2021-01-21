@@ -144,6 +144,15 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
+        "id": "cover.pergola_roof",
+        "name": {"name": "Pergola Roof"},
+        "traits": [
+            "action.devices.traits.OpenClose",
+        ],
+        "type": "action.devices.types.BLINDS",
+        "willReportState": False,
+    },
+    {
         "id": "cover.hall_window",
         "name": {"name": "Hall Window"},
         "traits": [
