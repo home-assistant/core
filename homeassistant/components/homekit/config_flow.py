@@ -126,7 +126,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         all_supported_entities = _async_get_entities_matching_domains(
             self.hass,
-            self.homekit_data[CONF_FILTER][CONF_INCLUDE_DOMAINS],
+            None,
         )
         return self.async_show_form(
             step_id="accessory_mode",
