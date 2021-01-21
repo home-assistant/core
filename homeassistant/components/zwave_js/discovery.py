@@ -157,8 +157,14 @@ DISCOVERY_SCHEMAS = [
     # cover
     ZWaveDiscoverySchema(
         platform="cover",
-        device_class_generic={"Window Covering"},
-        device_class_specific={"Simple Window Covering Control"},
+        hint="cover",
+        device_class_generic={"Multilevel Switch"},
+        device_class_specific={
+            "Motor Control Class A",
+            "Motor Control Class B",
+            "Motor Control Class C",
+            "Multiposition Motor",
+        },
         command_class={CommandClass.SWITCH_MULTILEVEL},
         property={"currentValue"},
         type={"number"},
