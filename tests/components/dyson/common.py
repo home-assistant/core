@@ -67,6 +67,11 @@ async def async_update_device(
     """Update the device using callback function."""
     callbacks = [args[0][0] for args in device.add_message_listener.call_args_list]
     message = MagicMock(spec=state_type)
-    for callback in callbacks:
-        await hass.async_add_executor_job(callback, message)
+
+    # Combining sync calls to avoid multiple executors
+    def _run_callbacks():
+        for callback in callbacks:
+            callback(message)
+
+    await hass.async_add_executor_job(_run_callbacks)
     await hass.async_block_till_done()
