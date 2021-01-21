@@ -84,7 +84,7 @@ class ZWaveCover(ZWaveBaseEntity):
 
     async def async_open_cover(self, **kwargs: int) -> None:
         """Open the cover."""
-        await self.info.node.async_set_value(100)
+        await self.info.node.async_set_value(99)
 
     async def async_close_cover(self, **kwargs: int) -> None:
         """Close cover."""

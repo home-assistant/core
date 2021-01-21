@@ -190,3 +190,11 @@ async def integration_fixture(hass, client):
     await hass.async_block_till_done()
 
     return entry
+
+
+@pytest.fixture(name="window_cover")
+def window_cover_fixture(client, window_cover_state):
+    """Mock a bulb 6 multi-color node."""
+    node = Node(client, window_cover_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
