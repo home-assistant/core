@@ -208,10 +208,10 @@ class DHCPWatcher(WatcherBase):
     async def async_start(self):
         """Start watching for dhcp packets."""
         try:
-            sniff_socket = conf.L2socket(type=ETH_P_ALL)
+            #            sniff_socket = conf.L2socket(type=ETH_P_ALL)
             self._sniffer = AsyncSniffer(
                 filter=FILTER,
-                opened_socket=[sniff_socket],
+                #                opened_socket=[sniff_socket],
                 started_callback=self._started.set,
                 prn=self.handle_dhcp_packet,
             )
