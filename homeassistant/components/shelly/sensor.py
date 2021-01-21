@@ -211,13 +211,18 @@ class ShellySensor(ShellyBlockAttributeEntity):
 class ShellySleepingSensor(ShellyBlockAttributeEntity, RestoreEntity):
     """Represent a shelly sleeping sensor."""
 
+    def __init__(self, *args, **kwargs):
+        """Initialize the sleeping sensor."""
+        self.restored_state = None
+        super().__init__(*args, **kwargs)
+
     @property
     def state(self):
         """Return the state of the device."""
         if self.block is not None:
             return self.attribute_value
 
-        if getattr(self, "restored_state", None) is not None:
+        if self.restored_state is not None:
             return self.restored_state.state
 
         return None
