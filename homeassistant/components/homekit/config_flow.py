@@ -126,8 +126,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(
             step_id="accessory_mode",
-            data_schmea=vol.Schema(
-                {vol.Optional(CONF_ENTITY_ID): vol.In(all_supported_entities)}
+            data_schema=vol.Schema(
+                {vol.Required(CONF_ENTITY_ID): vol.In(all_supported_entities)}
             ),
         )
 
