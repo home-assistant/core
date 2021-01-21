@@ -82,6 +82,12 @@ def nortek_thermostat_state_fixture():
     return json.loads(load_fixture("zwave_js/nortek_thermostat_state.json"))
 
 
+@pytest.fixture(name="window_cover_state", scope="session")
+def window_cover_state_fixture():
+    """Load the window cover node state fixture data."""
+    return json.loads(load_fixture("zwave_js/window_cover_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state):
     """Mock a client."""
