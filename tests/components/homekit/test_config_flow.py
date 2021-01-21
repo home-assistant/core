@@ -542,3 +542,55 @@ async def test_options_flow_include_mode_basic_accessory(hass):
             "include_entities": ["media_player.tv"],
         },
     }
+
+
+async def test_options_flow_include_mode_camera_accessory(hass):
+    """Test config flow options in include mode with a single camera accessory."""
+
+    config_entry = _mock_config_entry_with_options_populated()
+    config_entry.add_to_hass(hass)
+
+    hass.states.async_set("camera.tv", "off")
+    hass.states.async_set("camera.sonos", "off")
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"domains": ["camera"], "mode": "accessory"},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "include_exclude"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"entities": "camera.tv"},
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "cameras"
+
+    result3 = await hass.config_entries.options.async_configure(
+        result2["flow_id"],
+        user_input={"camera_copy": ["camera.tv"]},
+    )
+
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        "auto_start": True,
+        "entity_config": {"camera.tv": {"video_codec": "copy"}},
+        "mode": "accessory",
+        "filter": {
+            "exclude_domains": [],
+            "exclude_entities": [],
+            "include_domains": [],
+            "include_entities": ["camera.tv"],
+        },
+    }
