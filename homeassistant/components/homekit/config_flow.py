@@ -159,6 +159,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pairing(self, user_input=None):
         """Pairing instructions."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.entry_title, data=self.homekit_data
+            )
+
         port = await self._async_available_port()
         name = self._async_available_name(self.homekit_data[CONF_HOMEKIT_MODE])
         self.entry_title = f"{name}:{port}"
@@ -168,11 +173,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PORT: port,
             }
         )
-
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self.entry_title, data=self.homekit_data
-            )
         return self.async_show_form(
             step_id="pairing",
             description_placeholders={CONF_NAME: self.homekit_data[CONF_NAME]},
