@@ -1,0 +1,9 @@
+set_value:
+  description: Set Value
+  fields:
+    entity_id:
+      description: EBUS Entity
+      example: "sensor.mixer_operatingmode_mcmode"
+    value:
+      description: Value to apply
+      example: "auto"

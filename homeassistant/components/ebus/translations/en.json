@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Cannot connect. Ensure EBUSD is running on given Host and Port.",
+            "ebus_error": "No EBUS signal. Ensure EBUS is connected.",
+            "invalid_host": "Invalid hostname or IP address"
+        },
+        "step": {
+            "scan": {
+                "data": {
+                    "scan": "Scan EBUS for valid messages. This avoids invalid/broken sensors but takes time. Please be patient. Very patient."
+                },
+                "description": "Congratulations. EBUS connection is working.",
+                "title": "EBUS - Scan"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "messages": "Messages",
+                    "port": "Port"
+                },
+                "description": "Set up EBUS integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/ebus.\n\nThe connection test takes a moment.",
+                "title": "EBUS - Connect"
+            }
+        }
+    }
+}
