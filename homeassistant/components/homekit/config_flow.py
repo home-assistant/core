@@ -436,12 +436,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
 def _async_get_entities_matching_domains(hass, domains):
     """List entities in the given domains."""
-    entity_ids = {
+    return {
         state.entity_id: f"{state.attributes.get(ATTR_FRIENDLY_NAME, state.entity_id)} ({state.entity_id})"
-        for state in hass.states.async_all(set(domains))
+        for state in sorted(
+            hass.states.async_all(set(domains)), key=lambda item: item.entity_id
+        )
     }
-    entity_ids.sort()
-    return entity_ids
 
 
 def _domains_set_from_entities(entity_ids):
