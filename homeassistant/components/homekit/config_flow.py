@@ -124,7 +124,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         all_supported_entities = _async_get_entities_matching_domains(
             self.hass,
-            self.homekit_data[CONF_INCLUDE_DOMAINS],
+            self.homekit_data[CONF_FILTER][CONF_INCLUDE_DOMAINS],
         )
         return self.async_show_form(
             step_id="accessory_mode",
@@ -155,6 +155,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self.homekit_data = user_input.copy()
             entity_filter = _EMPTY_ENTITY_FILTER.copy()
+            entity_filter[CONF_INCLUDE_DOMAINS] = self.homekit_data.pop(
+                CONF_INCLUDE_DOMAINS
+            )
             self.homekit_data.update(
                 {
                     CONF_NAME: name,
@@ -167,9 +170,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if user_input[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
                 return await self.async_step_accessory_mode()
 
-            entity_filter[CONF_INCLUDE_DOMAINS] = self.homekit_data.pop(
-                CONF_INCLUDE_DOMAINS
-            )
             return await self.async_step_pairing()
 
         homekit_mode = self.homekit_data.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
