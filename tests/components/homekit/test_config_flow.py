@@ -544,11 +544,55 @@ async def test_options_flow_include_mode_basic_accessory(hass):
     }
 
 
-async def test_options_flow_include_mode_camera_accessory(hass):
-    """Test config flow options in include mode with a single camera accessory."""
+async def test_converting_bridge_to_accessory_mode(hass):
+    """Test we can convert a bridge to accessory mode."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
 
-    config_entry = _mock_config_entry_with_options_populated()
-    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.homekit.config_flow.find_next_available_port",
+        return_value=12345,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"include_domains": ["camera"]},
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "pairing"
+
+    with patch(
+        "homeassistant.components.homekit.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.homekit.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3["title"][:11] == "HASS Bridge"
+    bridge_name = (result3["title"].split(":"))[0]
+    assert result3["data"] == {
+        "filter": {
+            "exclude_domains": [],
+            "exclude_entities": [],
+            "include_domains": ["camera"],
+            "include_entities": [],
+        },
+        "name": bridge_name,
+        "port": 12345,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+    config_entry = result3["result"]
 
     hass.states.async_set("camera.tv", "off")
     hass.states.async_set("camera.sonos", "off")

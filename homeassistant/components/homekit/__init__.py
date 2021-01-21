@@ -579,8 +579,6 @@ class HomeKit:
             if not self._filter(state.entity_id):
                 continue
 
-            _LOGGER.debug("Filter matches %s for %s", state.entity_id, self._name)
-
             ent_reg_ent = ent_reg.async_get(state.entity_id)
             if ent_reg_ent:
                 await self._async_set_device_info_attributes(

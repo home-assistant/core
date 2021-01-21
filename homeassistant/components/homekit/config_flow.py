@@ -6,7 +6,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_NAME, CONF_PORT
+from homeassistant.const import (
+    CONF_DOMAINS,
+    CONF_ENTITIES,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_PORT,
+)
 from homeassistant.core import callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
@@ -92,6 +98,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.homekit_data = {}
         self.entry_title = None
 
+    async def async_step_accessory_mode(self, user_input=None):
+        """Choose specific entity in accessory mode."""
+        if user_input is not None:
+            self.homekit_data[CONF_FILTER][CONF_INCLUDE_ENTITIES] = [
+                user_input[CONF_ENTITY_ID]
+            ]
+            return await self.async_step_pairing()
+
+        all_supported_entities = _async_get_entities_matching_domains(
+            self.hass,
+            self.homekit_options[CONF_DOMAINS],
+        )
+        return self.async_show_form(
+            step_id="accessory_mode",
+            data_schmea=vol.Schema(
+                {vol.Optional(CONF_ENTITY_ID): vol.In(all_supported_entities)}
+            ),
+        )
+
     async def async_step_pairing(self, user_input=None):
         """Pairing instructions."""
         if user_input is not None:
@@ -113,6 +138,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.homekit_data = user_input.copy()
             self.homekit_data[CONF_NAME] = name
             self.homekit_data[CONF_PORT] = port
+            self.homekit_data[CONF_HOMEKIT_MODE] = user_input[CONF_HOMEKIT_MODE]
             self.homekit_data[CONF_FILTER] = {
                 CONF_INCLUDE_DOMAINS: user_input[CONF_INCLUDE_DOMAINS],
                 CONF_INCLUDE_ENTITIES: [],
@@ -121,11 +147,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
             del self.homekit_data[CONF_INCLUDE_DOMAINS]
             self.entry_title = title
+            if user_input[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
+                self.homekit_data[CONF_FILTER][CONF_INCLUDE_DOMAINS] = []
+                return await self.async_step_accessory_mode()
             return await self.async_step_pairing()
 
+        homekit_mode = self.homekit_options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
         default_domains = [] if self._async_current_names() else DEFAULT_DOMAINS
         setup_schema = vol.Schema(
             {
+                vol.Required(CONF_HOMEKIT_MODE, default=homekit_mode): vol.In(
+                    HOMEKIT_MODES
+                ),
                 vol.Required(
                     CONF_INCLUDE_DOMAINS, default=default_domains
                 ): cv.multi_select(SUPPORTED_DOMAINS),
@@ -322,8 +355,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return await self.async_step_advanced()
 
         entity_filter = self.homekit_options.get(CONF_FILTER, {})
-        all_supported_entities = await self.hass.async_add_executor_job(
-            _get_entities_matching_domains,
+        all_supported_entities = _async_get_entities_matching_domains(
             self.hass,
             self.homekit_options[CONF_DOMAINS],
         )
@@ -376,7 +408,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         data_schema = vol.Schema(
             {
-                vol.Optional(CONF_HOMEKIT_MODE, default=homekit_mode): vol.In(
+                vol.Required(CONF_HOMEKIT_MODE, default=homekit_mode): vol.In(
                     HOMEKIT_MODES
                 ),
                 vol.Optional(
@@ -388,12 +420,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
-def _get_entities_matching_domains(hass, domains):
+def _async_get_entities_matching_domains(hass, domains):
     """List entities in the given domains."""
     included_domains = set(domains)
     entity_ids = [
         state.entity_id
-        for state in hass.states.all()
+        for state in hass.states.async_all()
         if (split_entity_id(state.entity_id))[0] in included_domains
     ]
     entity_ids.sort()
