@@ -1,7 +1,10 @@
 """Test init of AccuWeather integration."""
+from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.accuweather.const import DOMAIN
+from accuweather import ApiError
+
+from homeassistant.components.accuweather.const import COORDINATOR, DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
@@ -39,7 +42,7 @@ async def test_config_not_ready(hass):
 
     with patch(
         "homeassistant.components.accuweather.AccuWeather._async_get_data",
-        side_effect=ConnectionError(),
+        side_effect=ApiError("API Error"),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -58,3 +61,23 @@ async def test_unload_entry(hass):
 
     assert entry.state == ENTRY_STATE_NOT_LOADED
     assert not hass.data.get(DOMAIN)
+
+
+async def test_update_interval(hass):
+    """Test correct update interval."""
+    entry = await init_integration(hass)
+
+    assert entry.state == ENTRY_STATE_LOADED
+    assert hass.data[DOMAIN][entry.entry_id][COORDINATOR].update_interval == timedelta(
+        minutes=40
+    )
+
+
+async def test_update_interval_forecast(hass):
+    """Test correct update interval when forecast is True."""
+    entry = await init_integration(hass, forecast=True)
+
+    assert entry.state == ENTRY_STATE_LOADED
+    assert hass.data[DOMAIN][entry.entry_id][COORDINATOR].update_interval == timedelta(
+        minutes=80
+    )

@@ -289,12 +289,8 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         """Set up tracked device."""
         super().__init__(device, controller)
 
+        self.device = self._item
         self._is_connected = device.state == 1
-
-    @property
-    def device(self):
-        """Wrap item."""
-        return self._item
 
     async def async_added_to_hass(self) -> None:
         """Watch object when added."""

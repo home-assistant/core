@@ -94,13 +94,15 @@ async def async_setup_entry(
     def async_add_climate(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Climate."""
         entities: List[ZWaveBaseEntity] = []
-        entities.append(ZWaveClimate(client, info))
+        entities.append(ZWaveClimate(config_entry, client, info))
 
         async_add_entities(entities)
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
         async_dispatcher_connect(
-            hass, f"{DOMAIN}_add_{CLIMATE_DOMAIN}", async_add_climate
+            hass,
+            f"{DOMAIN}_{config_entry.entry_id}_add_{CLIMATE_DOMAIN}",
+            async_add_climate,
         )
     )
 
@@ -108,9 +110,11 @@ async def async_setup_entry(
 class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     """Representation of a Z-Wave climate."""
 
-    def __init__(self, client: ZwaveClient, info: ZwaveDiscoveryInfo) -> None:
+    def __init__(
+        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+    ) -> None:
         """Initialize lock."""
-        super().__init__(client, info)
+        super().__init__(config_entry, client, info)
         self._hvac_modes: Dict[str, Optional[int]] = {}
         self._hvac_presets: Dict[str, Optional[int]] = {}
 
