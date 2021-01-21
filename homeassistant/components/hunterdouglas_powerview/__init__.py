@@ -17,6 +17,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -56,6 +57,7 @@ from .const import (
 
 PARALLEL_UPDATES = 1
 
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = ["cover", "scene", "sensor"]
 _LOGGER = logging.getLogger(__name__)
