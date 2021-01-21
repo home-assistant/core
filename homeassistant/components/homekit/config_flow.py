@@ -433,7 +433,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         domains = entity_filter.get(CONF_INCLUDE_DOMAINS, [])
         include_entities = entity_filter.get(CONF_INCLUDE_ENTITIES)
         if include_entities:
-            domains.extend(_domains_set_from_entities(include_entities))
+            domains.extend(list(_domains_set_from_entities(include_entities)))
 
         data_schema = vol.Schema(
             {
