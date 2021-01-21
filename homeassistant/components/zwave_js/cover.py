@@ -1,11 +1,11 @@
 """Support for Z-Wave cover devices."""
 import logging
-from typing import Any, Callable, List
+from typing import Callable, List
 
 from zwave_js_server.client import Client as ZwaveClient
 
 from homeassistant.components.cover import (
-    DEVICE_CLASS_GARAGE,
+    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
@@ -34,9 +34,7 @@ async def async_setup_entry(
         """Add Z-Wave cover."""
         entities: List[ZWaveBaseEntity] = []
 
-        if info.platform_hint == "garage_cover":
-            entities.append(ZWaveGarageDoorBarrier(client, info))
-        elif info.platform_hint == "cover":
+        if info.platform_hint == "cover":
             entities.append(ZWaveCover(client, info))
         else:
             LOGGER.warning(
@@ -77,62 +75,16 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         """Return the current position of cover where 0 means closed and 100 is fully open."""
         return round((self.info.primary_value.value / 99) * 100)
 
-    # TODO: update these functions once upstream PR for barriers is completed
-    # async def async_set_cover_position(self, **kwargs):
-    #     """Move the cover to a specific position."""
-    #     await self.info.node.async_set_value(percent_to_zwave_position(kwargs[ATTR_POSITION]))
+    async def async_set_cover_position(self, **kwargs: int) -> None:
+        """Move the cover to a specific position."""
+        await self.info.node.async_set_value(
+            percent_to_zwave_position(kwargs[ATTR_POSITION])
+        )
 
-    # async def async_open_cover(self, **kwargs):
-    #     """Open the cover."""
-    #     self.values.open.send_value(PRESS_BUTTON)
+    async def async_open_cover(self, **kwargs: int) -> None:
+        """Open the cover."""
+        await self.info.node.async_set_value(100)
 
-    # async def async_close_cover(self, **kwargs):
-    #     """Close cover."""
-    #     self.values.close.send_value(PRESS_BUTTON)
-
-    # async def async_stop_cover(self, **kwargs):
-    #     """Stop cover."""
-    #     # Need to issue both buttons release since qt-openzwave implements idempotency
-    #     # keeping internal state of model to trigger actual updates. We could also keep
-    #     # another state in Home Assistant to know which button to release,
-    #     # but this implementation is simpler.
-    #     self.values.open.send_value(RELEASE_BUTTON)
-    #     self.values.close.send_value(RELEASE_BUTTON)
-
-
-class ZWaveGarageDoorBarrier(ZWaveBaseEntity, CoverEntity):
-    """Representation of a barrier operator Zwave garage door device."""
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_GARAGE
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_GARAGE
-
-    @property
-    def is_opening(self) -> Any:
-        """Return true if cover is in an opening state."""
-        return self.info.primary_value.value == 3
-
-    @property
-    def is_closing(self) -> Any:
-        """Return true if cover is in a closing state."""
-        return self.info.primary_value.value == 1
-
-    @property
-    def is_closed(self) -> Any:
-        """Return the current position of Zwave garage door."""
-        return self.info.primary_value.value == 0
-
-    # TODO: update these functions once upstream PR for barriers is completed
-    # async def async_close_cover(self, **kwargs: int) -> None:
-    #     """Close the garage door."""
-    #     await self.info.node.async_set_value(0)
-
-    # async def async_open_cover(self, **kwargs: int) -> None:
-    #     """Open the garage door."""
-    #     await self.info.node.async_set_value(4)
+    async def async_close_cover(self, **kwargs: int) -> None:
+        """Close cover."""
+        await self.info.node.async_set_value(0)
