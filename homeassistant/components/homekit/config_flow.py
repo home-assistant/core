@@ -261,19 +261,21 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_advanced(self, user_input=None):
         """Choose advanced options."""
+        homekit_options = self.homekit_options
+
         if not self.show_advanced_options or user_input is not None:
             if user_input:
-                self.homekit_options.update(user_input)
+                homekit_options.update(user_input)
 
-            self.homekit_options[CONF_AUTO_START] = self.homekit_options.get(
+            homekit_options[CONF_AUTO_START] = homekit_options.get(
                 CONF_AUTO_START, DEFAULT_AUTO_START
             )
 
             for key in (CONF_DOMAINS, CONF_ENTITIES):
-                if key in self.homekit_options:
-                    del self.homekit_options[key]
+                if key in homekit_options:
+                    del homekit_options[key]
 
-            return self.async_create_entry(title="", data=self.homekit_options)
+            return self.async_create_entry(title="", data=homekit_options)
 
         return self.async_show_form(
             step_id="advanced",
@@ -281,7 +283,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_AUTO_START,
-                        default=self.homekit_options.get(
+                        default=homekit_options.get(
                             CONF_AUTO_START, DEFAULT_AUTO_START
                         ),
                     ): bool
@@ -291,8 +293,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_cameras(self, user_input=None):
         """Choose camera config."""
+        homekit_options = self.homekit_options
+
         if user_input is not None:
-            entity_config = self.homekit_options[CONF_ENTITY_CONFIG]
+            entity_config = homekit_options[CONF_ENTITY_CONFIG]
             for entity_id in self.included_cameras:
                 if entity_id in user_input[CONF_CAMERA_COPY]:
                     entity_config.setdefault(entity_id, {})[
@@ -306,7 +310,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return await self.async_step_advanced()
 
         cameras_with_copy = []
-        entity_config = self.homekit_options.setdefault(CONF_ENTITY_CONFIG, {})
+        entity_config = homekit_options.setdefault(CONF_ENTITY_CONFIG, {})
         for entity in self.included_cameras:
             hk_entity_config = entity_config.get(entity, {})
             if hk_entity_config.get(CONF_VIDEO_CODEC) == VIDEO_CODEC_COPY:
@@ -324,6 +328,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_include_exclude(self, user_input=None):
         """Choose entities to include or exclude from the domain."""
+        homekit_options = self.homekit_options
+
         if user_input is not None:
             entity_filter = {
                 CONF_INCLUDE_DOMAINS: [],
@@ -337,7 +343,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 entities = [user_input[CONF_ENTITIES]]
 
             if (
-                self.homekit_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY
+                homekit_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY
                 or user_input[CONF_INCLUDE_EXCLUDE_MODE] == MODE_INCLUDE
             ):
                 entity_filter[CONF_INCLUDE_ENTITIES] = entities
@@ -346,7 +352,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 domains_with_entities_selected = _domains_set_from_entities(entities)
                 entity_filter[CONF_INCLUDE_DOMAINS] = [
                     domain
-                    for domain in self.homekit_options[CONF_DOMAINS]
+                    for domain in homekit_options[CONF_DOMAINS]
                     if domain not in domains_with_entities_selected
                 ]
 
@@ -354,23 +360,23 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     if entity_id not in entities:
                         self.included_cameras.remove(entity_id)
             else:
-                entity_filter[CONF_INCLUDE_DOMAINS] = self.homekit_options[CONF_DOMAINS]
+                entity_filter[CONF_INCLUDE_DOMAINS] = homekit_options[CONF_DOMAINS]
                 entity_filter[CONF_EXCLUDE_ENTITIES] = entities
                 for entity_id in entities:
                     if entity_id in self.included_cameras:
                         self.included_cameras.remove(entity_id)
 
-            self.homekit_options[CONF_FILTER] = entity_filter
+            homekit_options[CONF_FILTER] = entity_filter
 
             if self.included_cameras:
                 return await self.async_step_cameras()
 
             return await self.async_step_advanced()
 
-        entity_filter = self.homekit_options.get(CONF_FILTER, {})
+        entity_filter = homekit_options.get(CONF_FILTER, {})
         all_supported_entities = _async_get_entities_matching_domains(
             self.hass,
-            self.homekit_options[CONF_DOMAINS],
+            homekit_options[CONF_DOMAINS],
         )
         self.included_cameras = {
             entity_id
@@ -380,7 +386,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         data_schema = {}
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
-        if self.homekit_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
+        if homekit_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
             entity_schema = vol.In
         else:
             if entities:
@@ -403,17 +409,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
+        homekit_options = self.homekit_options
+
         if self.config_entry.source == SOURCE_IMPORT:
             return await self.async_step_yaml(user_input)
 
         if user_input is not None:
-            self.homekit_options.update(user_input)
+            homekit_options.update(user_input)
             return await self.async_step_include_exclude()
 
-        self.homekit_options = dict(self.config_entry.options)
-        entity_filter = self.homekit_options.get(CONF_FILTER, {})
+        homekit_options = dict(self.config_entry.options)
+        entity_filter = homekit_options.get(CONF_FILTER, {})
 
-        homekit_mode = self.homekit_options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
+        homekit_mode = homekit_options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
         domains = entity_filter.get(CONF_INCLUDE_DOMAINS, [])
         include_entities = entity_filter.get(CONF_INCLUDE_ENTITIES)
         if include_entities:
