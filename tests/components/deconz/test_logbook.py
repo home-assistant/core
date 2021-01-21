@@ -55,4 +55,4 @@ async def test_humanifying_deconz_event(hass):
 
     assert event1["name"] == "Switch 1"
     assert event1["domain"] == "deconz"
-    assert event1["message"] == "'2000' was fired."
+    assert event1["message"] == "fired event '2000'."

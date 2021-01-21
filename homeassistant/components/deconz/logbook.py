@@ -21,7 +21,7 @@ def async_describe_events(hass, async_describe_event):
 
         return {
             "name": f"{deconz_event.device.name}",
-            "message": f"'{event.data[CONF_EVENT]}' was fired.",
+            "message": f"fired event '{event.data[CONF_EVENT]}'.",
         }
 
     async_describe_event(DECONZ_DOMAIN, CONF_DECONZ_EVENT, async_describe_deconz_event)
