@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
@@ -32,6 +33,8 @@ TADO_COMPONENTS = ["binary_sensor", "sensor", "climate", "water_heater"]
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 SCAN_INTERVAL = timedelta(seconds=15)
+
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
