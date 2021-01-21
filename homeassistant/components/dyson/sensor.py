@@ -150,9 +150,7 @@ class DysonFilterLifeSensor(DysonSensor):
     @property
     def state(self):
         """Return filter life in hours."""
-        if self._device.state:
-            return int(self._device.state.filter_life)
-        return None
+        return int(self._device.state.filter_life)
 
 
 class DysonCarbonFilterLifeSensor(DysonSensor):
@@ -165,9 +163,7 @@ class DysonCarbonFilterLifeSensor(DysonSensor):
     @property
     def state(self):
         """Return filter life remaining in percent."""
-        if self._device.state:
-            return int(self._device.state.carbon_filter_state)
-        return None
+        return int(self._device.state.carbon_filter_state)
 
 
 class DysonHepaFilterLifeSensor(DysonSensor):
@@ -180,9 +176,7 @@ class DysonHepaFilterLifeSensor(DysonSensor):
     @property
     def state(self):
         """Return filter life remaining in percent."""
-        if self._device.state:
-            return int(self._device.state.hepa_filter_state)
-        return None
+        return int(self._device.state.hepa_filter_state)
 
 
 class DysonDustSensor(DysonSensor):
@@ -195,9 +189,7 @@ class DysonDustSensor(DysonSensor):
     @property
     def state(self):
         """Return Dust value."""
-        if self._device.environmental_state:
-            return self._device.environmental_state.dust
-        return None
+        return self._device.environmental_state.dust
 
 
 class DysonHumiditySensor(DysonSensor):
@@ -210,11 +202,9 @@ class DysonHumiditySensor(DysonSensor):
     @property
     def state(self):
         """Return Humidity value."""
-        if self._device.environmental_state:
-            if self._device.environmental_state.humidity == 0:
-                return STATE_OFF
-            return self._device.environmental_state.humidity
-        return None
+        if self._device.environmental_state.humidity == 0:
+            return STATE_OFF
+        return self._device.environmental_state.humidity
 
 
 class DysonTemperatureSensor(DysonSensor):
@@ -228,14 +218,12 @@ class DysonTemperatureSensor(DysonSensor):
     @property
     def state(self):
         """Return Temperature value."""
-        if self._device.environmental_state:
-            temperature_kelvin = self._device.environmental_state.temperature
-            if temperature_kelvin == 0:
-                return STATE_OFF
-            if self._unit == TEMP_CELSIUS:
-                return float(f"{(temperature_kelvin - 273.15):.1f}")
-            return float(f"{(temperature_kelvin * 9 / 5 - 459.67):.1f}")
-        return None
+        temperature_kelvin = self._device.environmental_state.temperature
+        if temperature_kelvin == 0:
+            return STATE_OFF
+        if self._unit == TEMP_CELSIUS:
+            return float(f"{(temperature_kelvin - 273.15):.1f}")
+        return float(f"{(temperature_kelvin * 9 / 5 - 459.67):.1f}")
 
     @property
     def unit_of_measurement(self):
@@ -253,6 +241,4 @@ class DysonAirQualitySensor(DysonSensor):
     @property
     def state(self):
         """Return Air Quality value."""
-        if self._device.environmental_state:
-            return int(self._device.environmental_state.volatil_organic_compounds)
-        return None
+        return int(self._device.environmental_state.volatil_organic_compounds)
