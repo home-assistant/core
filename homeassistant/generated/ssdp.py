@@ -166,6 +166,18 @@ SSDP = {
             "manufacturer": "Synology"
         }
     ],
+    "unifi": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine Pro"
+        }
+    ],
     "upnp": [
         {
             "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
