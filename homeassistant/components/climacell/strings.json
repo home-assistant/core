@@ -8,8 +8,7 @@
           "name": "Name",
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "latitude": "Latitude",
-          "longitude": "Longitude",
-          "forecast_types": "Forecast Type(s)"
+          "longitude": "Longitude"
         }
       }
     },
@@ -26,7 +25,8 @@
         "title": "Update [%key:component::climacell::title%] Options",
         "description": "If you choose the `nowcast` forecast type, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts.",
         "data": {
-          "timestep": "Min. Between NowCast Forecasts"
+          "timestep": "Min. Between NowCast Forecasts",
+          "forecast_types": "Forecast Type(s)"
         }
       }
     }

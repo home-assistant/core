@@ -25,10 +25,10 @@ from .const import (
     DEFAULT_FORECAST_TYPE,
     DEFAULT_NAME,
     DEFAULT_TIMESTEP,
-    DOMAIN,
     HOURLY,
     NOWCAST,
 )
+from .const import DOMAIN  # type: ignore[unused-import]
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -58,7 +58,25 @@ async def test_update_interval(
         await hass.async_block_till_done()
 
     with patch("homeassistant.components.climacell.ClimaCell.realtime") as mock_api:
+        # First entry refresh will happen in 7 minutes due to original update interval.
+        # Next refresh for this entry will happen at 20 minutes due to the update interval
+        # change.
         mock_api.return_value = {}
-        async_fire_time_changed(hass, now + timedelta(minutes=6))
+        async_fire_time_changed(hass, now + timedelta(minutes=7))
         await hass.async_block_till_done()
-        assert not mock_api.called
+        assert mock_api.call_count == 1
+
+        # Second entry refresh will happen in 13 minutes due to the update interval set
+        # when it was set up. Next refresh for this entry will happen at 26 minutes due to the
+        # update interval change.
+        mock_api.reset_mock()
+        async_fire_time_changed(hass, now + timedelta(minutes=13))
+        await hass.async_block_till_done()
+        assert not mock_api.call_count == 1
+
+        # 19 minutes should be after the first update for each config entry and before the
+        # second update for the first config entry
+        mock_api.reset_mock()
+        async_fire_time_changed(hass, now + timedelta(minutes=19))
+        await hass.async_block_till_done()
+        assert not mock_api.call_count == 0
