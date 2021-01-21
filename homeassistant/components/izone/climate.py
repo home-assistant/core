@@ -1,4 +1,6 @@
 """Support for the iZone HVAC."""
+
+import voluptuous as vol
 import logging
 from typing import List, Optional
 
@@ -28,8 +30,10 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     TEMP_CELSIUS,
+    CONF_ENTITY_ID,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -54,6 +58,15 @@ _IZONE_FAN_TO_HA = {
     Controller.Fan.AUTO: FAN_AUTO,
 }
 
+ATTR_AIRFLOW = 'airflow'
+
+IZONE_SERVICE_AIRFLOW_MIN = "airflow_min"
+IZONE_SERVICE_AIRFLOW_MAX = "airflow_max"
+
+IZONE_SERVICE_AIRFLOW_SCHEMA = vol.Schema({
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Required(ATTR_AIRFLOW): cv.positive_int
+})
 
 async def async_setup_entry(
     hass: HomeAssistantType, config: ConfigType, async_add_entities
@@ -83,8 +96,19 @@ async def async_setup_entry(
     # connect to register any further components
     async_dispatcher_connect(hass, DISPATCH_CONTROLLER_DISCOVERED, init_controller)
 
-    return True
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        IZONE_SERVICE_AIRFLOW_MIN,
+        IZONE_SERVICE_AIRFLOW_SCHEMA,
+        "async_set_airflow_min",
+    )
+    platform.async_register_entity_service(
+        IZONE_SERVICE_AIRFLOW_MAX,
+        IZONE_SERVICE_AIRFLOW_SCHEMA,
+        "async_set_airflow_max",
+    )
 
+    return True
 
 def _return_on_connection_error(ret=None):
     def wrap(func):
@@ -537,6 +561,32 @@ class ZoneDevice(ClimateEntity):
     def max_temp(self):
         """Return the maximum temperature."""
         return self._controller.max_temp
+
+    @property
+    def airflow_min(self):
+        """Return the minimum air flow."""
+        return self._zone.airflow_min
+
+    @property
+    def airflow_max(self):
+        """Return the maximum air flow."""
+        return self._zone.airflow_max
+
+    @property
+    def device_state_attributes(self):
+        """Return the optional state attributes."""
+        return {
+            "airflow_min": self._zone.airflow_min,
+            "airflow_max": self._zone.airflow_max,
+        }
+
+    async def async_set_airflow_min(self, **kwargs):
+        await self._controller.wrap_and_catch(self._zone.set_airflow_min(int(kwargs[ATTR_AIRFLOW])))
+        self.async_write_ha_state()
+
+    async def async_set_airflow_max(self, **kwargs):
+        await self._controller.wrap_and_catch(self._zone.set_airflow_max(int(kwargs[ATTR_AIRFLOW])))
+        self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
