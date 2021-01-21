@@ -124,10 +124,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             return await self.async_step_pairing()
 
-        all_supported_entities = _async_get_entities_matching_domains(
-            self.hass,
-            None,
-        )
+        all_supported_entities = _async_get_matching_entities(self.hass)
         return self.async_show_form(
             step_id="accessory_mode",
             data_schema=vol.Schema(
@@ -378,9 +375,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return await self.async_step_advanced()
 
         entity_filter = self.homekit_options.get(CONF_FILTER, {})
-        all_supported_entities = _async_get_entities_matching_domains(
+        all_supported_entities = _async_get_matching_entities(
             self.hass,
-            self.homekit_options[CONF_DOMAINS],
+            domains=self.homekit_options[CONF_DOMAINS],
         )
         self.included_cameras = {
             entity_id
@@ -443,13 +440,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
-def _async_get_entities_matching_domains(hass, domains):
-    """List entities in the given domains."""
+def _async_get_matching_entities(hass, domains=None):
+    """Fetch all entities or entities in the given domains."""
+
+    if domains:
+        states = hass.states.async_all(set(domains))
+    else:
+        states = hass.states.async_all()
+
     return {
         state.entity_id: f"{state.entity_id} ({state.attributes.get(ATTR_FRIENDLY_NAME, state.entity_id)})"
-        for state in sorted(
-            hass.states.async_all(set(domains)), key=lambda item: item.entity_id
-        )
+        for state in sorted(states, key=lambda item: item.entity_id)
     }
 
 
