@@ -1,5 +1,6 @@
 """Support for ONVIF Cameras with FFmpeg as decoder."""
 import asyncio
+import urllib
 
 from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
@@ -176,7 +177,9 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         """Run when entity about to be added to hass."""
         uri_no_auth = await self.device.async_get_stream_uri(self.profile)
         self._stream_uri = uri_no_auth.replace(
-            "rtsp://", f"rtsp://{self.device.username}:{self.device.password}@", 1
+            "rtsp://",
+            f"rtsp://{urllib.parse.quote(self.device.username)}:{urllib.parse.quote(self.device.password)}@",
+            1,
         )
 
     async def async_perform_ptz(
