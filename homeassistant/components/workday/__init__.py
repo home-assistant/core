@@ -36,9 +36,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
             )
         )
 
-    # # Update the entry based on the YAML configuration, in case it changed.
-    # hass.config_entries.async_update_entry(config_entry, data=dict(isy_config))
-
     return True
 
 
@@ -68,8 +65,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
-    # if unload_ok:
-    #     hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 

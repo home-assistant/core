@@ -25,7 +25,6 @@ from .const import (
     CONF_SUBCOUNTRY,
     CONF_WORKDAYS,
     DEFAULT_EXCLUDES,
-    DEFAULT_NAME,
     DEFAULT_OFFSET,
     DEFAULT_WORKDAYS,
     DOMAIN,
@@ -37,13 +36,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 SCHEMA_ADVANCED = {
-    vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): vol.Coerce(int),
     vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): cv.multi_select(
         ALLOWED_DAYS
     ),
     vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES): cv.multi_select(
         ALLOWED_DAYS
     ),
+    vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): vol.Coerce(int),
 }
 
 OPTIONS_ACTION = "options_action"
@@ -62,12 +61,13 @@ async def validate_input(data, errors):
     subcountry = data.get(CONF_SUBCOUNTRY)
 
     all_supported_countries = holidays.list_supported_countries()
-    year = datetime.datetime.now().year
-    obj_holidays = getattr(holidays, country)(years=year)
 
     if country not in all_supported_countries:
         errors[CONF_COUNTRY] = ERR_NO_COUNTRY
         return
+
+    year = datetime.datetime.now().year
+    obj_holidays = getattr(holidays, country)(years=year)
 
     if subcountry:
         # 'state' and 'prov' are not interchangeable, so need to make
@@ -95,8 +95,7 @@ class WorkdayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for workday."""
 
     VERSION = 1
-    # TODO pick one of the available connection classes in homeassistant/config_entries.py
-    CONNECTION_CLASS = config_entries.CONN_CLASS_UNKNOWN
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     _countries = None
 
@@ -122,7 +121,6 @@ class WorkdayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 if len(case) > 3:
                     self._countries[case] = case
-            # self._countries = holidays.list_supported_countries()
 
         if user_input is not None:
             info = await validate_input(user_input, errors)
@@ -146,7 +144,6 @@ class WorkdayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=self._title, data=user_input)
 
         previous_input = user_input or {}
-        _LOGGER.info("previous_input %s", previous_input)
 
         return self.async_show_form(
             step_id="user",
@@ -192,16 +189,21 @@ class WorkdayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by `async_setup` for configured panels.
         """
-        _LOGGER.debug("async_step_import: %s", device_config)
         data = {}
         errors = {}
 
-        data[CONF_COUNTRY] = device_config.get(CONF_COUNTRY)
-        data[CONF_SUBCOUNTRY] = device_config.get(CONF_PROVINCE)
+        country = device_config.get(CONF_COUNTRY)
+        subcountry = device_config.get(CONF_PROVINCE)
+        default_name = (
+            f"Workday {country}{f' ({subcountry})' if subcountry is not None else ''}"
+        )
+
+        data[CONF_COUNTRY] = country
+        data[CONF_SUBCOUNTRY] = subcountry
         data[CONF_WORKDAYS] = device_config.get(CONF_WORKDAYS, DEFAULT_WORKDAYS)
         data[CONF_EXCLUDES] = device_config.get(CONF_EXCLUDES, DEFAULT_EXCLUDES)
         data[CONF_OFFSET] = device_config.get(CONF_OFFSET, DEFAULT_OFFSET)
-        data[CONF_NAME] = device_config.get(CONF_NAME, DEFAULT_NAME)
+        data[CONF_NAME] = device_config.get(CONF_NAME, default_name)
         conf_add = device_config.get(CONF_ADD_HOLIDAYS)
         if conf_add:
             data[CONF_ADD_HOLIDAYS] = conf_add
@@ -213,7 +215,6 @@ class WorkdayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if info is not None:
             unique_id = slugify(info["title"])
-            _LOGGER.debug("unique_id: %s", unique_id)
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
             data[CONF_PROVINCE] = info["province"]
@@ -253,7 +254,6 @@ class WorkdayOptionsFlow(config_entries.OptionsFlow):
 
         if user_input is not None:
             action = user_input[OPTIONS_ACTION]
-            _LOGGER.debug("action: %s", action)
             if action == ACTION_ADD_HOLIDAYS:
                 return await self.async_step_add_holidays()
             if action == ACTION_REMOVE_HOLIDAYS:
@@ -279,29 +279,24 @@ class WorkdayOptionsFlow(config_entries.OptionsFlow):
         """Manage extra holidays."""
         errors = {}
         data_schema = vol.Schema({})
-        _LOGGER.debug("async_step_add_holidays: init...")
 
         if user_input is None:
             holidays_to_add = self._config_entry.options.get(CONF_ADD_HOLIDAYS, [])
-            _LOGGER.debug("holidays_to_add: %s", holidays_to_add)
         else:
             new_holiday = user_input.get(CONF_NEW_HOLIDAY)
             holidays_to_add = user_input.get(CONF_ADD_HOLIDAYS, [])
-            _LOGGER.debug("new_holiday: %s", new_holiday)
-            _LOGGER.debug("holidays_to_add: %s", holidays_to_add)
             if new_holiday:
                 try:
                     cv.date(new_holiday)  # just validate format
                     holidays_to_add.append(new_holiday)
                 except vol.Invalid:
-                    _LOGGER.error("bad format: %s", new_holiday)
+                    _LOGGER.error("bad date format: %s", new_holiday)
                     errors[CONF_NEW_HOLIDAY] = "bad_date_format"
             else:
                 holidays_to_add.sort(reverse=True)
                 return self._save_config(user_input)
 
         if holidays_to_add:
-            _LOGGER.debug("holidays_to_add")
             data_schema = data_schema.extend(
                 {
                     vol.Optional(
@@ -313,15 +308,6 @@ class WorkdayOptionsFlow(config_entries.OptionsFlow):
         # holiday_format = '%Y-%m-%d'
         data_schema = data_schema.extend(
             {
-                # vol.Required(CONF_NEW_HOLIDAY, default="123456"): cv.matches_regex("[0-9a-f]{12}"),
-                # vol.Optional(CONF_NEW_HOLIDAY): cv.matches_regex("([12]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01]))"),
-                # vol.Optional(CONF_NEW_HOLIDAY): vol.Any("", cv.matches_regex("([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))")),
-                # vol.Optional(CONF_NEW_HOLIDAY): vol.All(str, cv.matches_regex("([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))")),
-                # vol.Optional(CONF_NEW_HOLIDAY): cv.date,
-                # vol.Optional(CONF_NEW_HOLIDAY): lambda v: datetime.datetime.strptime(v, holiday_format),
-                # vol.Optional(CONF_NEW_HOLIDAY): vol.All(str, lambda v: datetime.datetime.strptime(v, holiday_format)),
-                # vol.Optional(CONF_NEW_HOLIDAY): vol.Date(format=holiday_format),
-                # vol.Optional(CONF_NEW_HOLIDAY): vol.All(str, vol.Date(format=holiday_format)),
                 vol.Optional(CONF_NEW_HOLIDAY): str,
             }
         )
@@ -342,21 +328,18 @@ class WorkdayOptionsFlow(config_entries.OptionsFlow):
         else:
             remove_holiday = user_input.get(CONF_HOLIDAY_TO_REMOVE)
             holidays_to_remove = user_input.get(CONF_REMOVE_HOLIDAYS, [])
-            _LOGGER.debug("remove_holiday: %s", remove_holiday)
-            _LOGGER.debug("holidays_to_remove: %s", holidays_to_remove)
             if remove_holiday:
                 try:
                     cv.date(remove_holiday)  # just validate format
                     holidays_to_remove.append(remove_holiday)
                 except vol.Invalid:
-                    _LOGGER.error("bad format: %s", remove_holiday)
+                    _LOGGER.error("bad date format: %s", remove_holiday)
                     errors[CONF_HOLIDAY_TO_REMOVE] = "bad_date_format"
             else:
                 holidays_to_remove.sort(reverse=True)
                 return self._save_config(user_input)
 
         if holidays_to_remove:
-            _LOGGER.debug("holidays_to_remove")
             data_schema = data_schema.extend(
                 {
                     vol.Optional(
@@ -367,7 +350,6 @@ class WorkdayOptionsFlow(config_entries.OptionsFlow):
 
         data_schema = data_schema.extend(
             {
-                # vol.Optional(CONF_HOLIDAY_TO_REMOVE): vol.Any("", cv.matches_regex("([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))")),
                 vol.Optional(CONF_HOLIDAY_TO_REMOVE): str,
             }
         )

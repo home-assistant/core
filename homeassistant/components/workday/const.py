@@ -22,7 +22,7 @@ CONF_REMOVE_HOLIDAYS = "remove_holidays"
 DEFAULT_WORKDAYS = ["mon", "tue", "wed", "thu", "fri"]
 # By default, public holidays, Saturdays and Sundays are excluded from workdays
 DEFAULT_EXCLUDES = ["sat", "sun", "holiday"]
-DEFAULT_NAME = "Workday Sensor"
+# DEFAULT_NAME = "Workday Sensor"
 DEFAULT_OFFSET = 0
 
 ERR_NO_COUNTRY = "no_country_err"

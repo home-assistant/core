@@ -9,7 +9,7 @@
           "country": "Country",
           "subcountry": "Province/State code according to holidays notation",
           "days_offset": "Set days offset",
-          "advanced_conf": "Configure advanced options (workdays, excludes, ...)"
+          "advanced_conf": "Configure advanced options (workdays, excludes, offset...)"
         }
       },
       "advanced_conf": {
