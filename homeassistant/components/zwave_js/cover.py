@@ -34,7 +34,7 @@ async def async_setup_entry(
         entities: List[ZWaveBaseEntity] = []
 
         if info.platform_hint == "cover":
-            entities.append(ZWaveCover(client, info))
+            entities.append(ZWaveCover(config_entry, client, info))
         else:
             LOGGER.warning(
                 "Sensor not implemented for %s/%s",
@@ -45,7 +45,9 @@ async def async_setup_entry(
         async_add_entities(entities)
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
-        async_dispatcher_connect(hass, f"{DOMAIN}_add_{COVER_DOMAIN}", async_add_cover)
+        async_dispatcher_connect(
+            hass, f"{config_entry.entry_id}_add_{COVER_DOMAIN}", async_add_cover
+        )
     )
 
 
