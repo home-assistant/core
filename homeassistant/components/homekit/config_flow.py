@@ -118,11 +118,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 homekit_data[CONF_ENTITY_CONFIG] = {
                     entity_id: {CONF_VIDEO_CODEC: VIDEO_CODEC_COPY}
                 }
+            del homekit_data[CONF_INCLUDE_DOMAINS]
             return await self.async_step_pairing()
 
         all_supported_entities = _async_get_entities_matching_domains(
             self.hass,
-            homekit_data[CONF_DOMAINS],
+            homekit_data[CONF_INCLUDE_DOMAINS],
         )
         return self.async_show_form(
             step_id="accessory_mode",
@@ -164,7 +165,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             if user_input[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
-                del homekit_data[CONF_INCLUDE_DOMAINS]
                 homekit_data[CONF_FILTER][CONF_INCLUDE_DOMAINS] = []
                 return await self.async_step_accessory_mode()
 
