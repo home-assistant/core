@@ -210,4 +210,4 @@ class SnmpData:
             self.value = self._default_value
         else:
             for resrow in restable:
-                self.value = str(resrow[-1])
+                self.value = resrow[-1].prettyPrint()
