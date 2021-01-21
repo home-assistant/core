@@ -136,11 +136,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
+        homekit_data = self.homekit_data
+
         if user_input is not None:
             port = await self._async_available_port()
             name = self._async_available_name()
             title = f"{name}:{port}"
-            homekit_data = self.homekit_data
             homekit_data = user_input.copy()
             homekit_data.update(
                 {
@@ -162,7 +163,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_accessory_mode()
             return await self.async_step_pairing()
 
-        homekit_mode = self.homekit_options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
+        homekit_mode = homekit_data.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
         default_domains = [] if self._async_current_names() else DEFAULT_DOMAINS
         setup_schema = vol.Schema(
             {
