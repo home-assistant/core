@@ -207,12 +207,7 @@ class DHCPWatcher(WatcherBase):
     async def async_start(self):
         """Start watching for dhcp packets."""
         try:
-            # Try to create the socket
-            # to see if we have permissions
-            # since AsyncSniffer will do it another
-            # thread so we will not be able to capture
-            # any permission or bind errors.
-            conf.L2socket()
+            _verify_l2socket_creation_permission()
         except (Scapy_Exception, OSError) as ex:
             if os.geteuid() == 0:
                 _LOGGER.error("Cannot watch for dhcp packets: %s", ex)
@@ -275,3 +270,15 @@ def _decode_dhcp_option(dhcp_options, key):
 def _format_mac(mac_address):
     """Format a mac address for matching."""
     return format_mac(mac_address).replace(":", "")
+
+
+def _verify_l2socket_creation_permission():
+    """Create a socket using the scapy configured l2socket.
+
+    Try to create the socket
+    to see if we have permissions
+    since AsyncSniffer will do it another
+    thread so we will not be able to capture
+     any permission or bind errors.
+    """
+    conf.L2socket()
