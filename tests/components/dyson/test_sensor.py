@@ -7,11 +7,7 @@ from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 import pytest
 
 from homeassistant.components.dyson import DOMAIN
-from homeassistant.components.dyson.sensor import (
-    ATTRIBUTE_DICTS,
-    SENSOR_ATTRIBUTES,
-    SENSOR_NAMES,
-)
+from homeassistant.components.dyson.sensor import SENSOR_ATTRIBUTES, SENSOR_NAMES
 from homeassistant.components.sensor import DOMAIN as PLATFORM_DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -138,8 +134,8 @@ async def test_sensors(
 
         # Test attributes
         attributes = state.attributes
-        for attr in SENSOR_ATTRIBUTES[sensor]:
-            assert attributes[attr] == ATTRIBUTE_DICTS[attr][sensor]
+        for attr, value in SENSOR_ATTRIBUTES[sensor].items():
+            assert attributes[attr] == value
 
     # Test data update
     _async_assign_values(device, MOCKED_UPDATED_VALUES)

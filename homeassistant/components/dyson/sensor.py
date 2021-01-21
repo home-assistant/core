@@ -21,53 +21,40 @@ from homeassistant.helpers.entity import Entity
 from . import DYSON_DEVICES, DysonEntity
 
 SENSOR_ATTRIBUTES = {
-    "air_quality": [ATTR_ICON],
-    "dust": [ATTR_ICON],
-    "filter_life": [ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT],
-    "hepa_filter_state": [ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT],
-    "combi_filter_state": [ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT],
-    "carbon_filter_state": [ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT],
-    "humidity": [ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT],
-    "temperature": [ATTR_DEVICE_CLASS],
-}
-
-SENSOR_UNITS = {
-    "filter_life": TIME_HOURS,
-    "carbon_filter_state": PERCENTAGE,
-    "hepa_filter_state": PERCENTAGE,
-    "combi_filter_state": PERCENTAGE,
-    "humidity": PERCENTAGE,
-}
-
-SENSOR_ICONS = {
-    "air_quality": "mdi:fan",
-    "dust": "mdi:cloud",
-    "filter_life": "mdi:filter-outline",
-    "carbon_filter_state": "mdi:filter-outline",
-    "hepa_filter_state": "mdi:filter-outline",
-    "combi_filter_state": "mdi:filter-outline",
+    "air_quality": {ATTR_ICON: "mdi:fan"},
+    "dust": {ATTR_ICON: "mdi:cloud"},
+    "humidity": {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
+        ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+    },
+    "temperature": {ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE},
+    "filter_life": {
+        ATTR_ICON: "mdi:filter-outline",
+        ATTR_UNIT_OF_MEASUREMENT: TIME_HOURS,
+    },
+    "carbon_filter_state": {
+        ATTR_ICON: "mdi:filter-outline",
+        ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+    },
+    "combi_filter_state": {
+        ATTR_ICON: "mdi:filter-outline",
+        ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+    },
+    "hepa_filter_state": {
+        ATTR_ICON: "mdi:filter-outline",
+        ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+    },
 }
 
 SENSOR_NAMES = {
     "air_quality": "AQI",
     "dust": "Dust",
-    "filter_life": "Filter Life",
     "humidity": "Humidity",
-    "carbon_filter_state": "Carbon Filter Remaining Life",
-    "hepa_filter_state": "HEPA Filter Remaining Life",
-    "combi_filter_state": "Combi Filter Remaining Life",
     "temperature": "Temperature",
-}
-
-SENSOR_DEVICE_CLASSES = {
-    "humidity": DEVICE_CLASS_HUMIDITY,
-    "temperature": DEVICE_CLASS_TEMPERATURE,
-}
-
-ATTRIBUTE_DICTS = {
-    ATTR_DEVICE_CLASS: SENSOR_DEVICE_CLASSES,
-    ATTR_ICON: SENSOR_ICONS,
-    ATTR_UNIT_OF_MEASUREMENT: SENSOR_UNITS,
+    "filter_life": "Filter Life",
+    "carbon_filter_state": "Carbon Filter Remaining Life",
+    "combi_filter_state": "Combi Filter Remaining Life",
+    "hepa_filter_state": "HEPA Filter Remaining Life",
 }
 
 DYSON_SENSOR_DEVICES = "dyson_sensor_devices"
@@ -149,8 +136,7 @@ class DysonSensor(DysonEntity, Entity):
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return device specific state attributes."""
         return {
-            attr: ATTRIBUTE_DICTS[attr][self._sensor_type]
-            for attr in SENSOR_ATTRIBUTES[self._sensor_type]
+            attr: value for attr, value in SENSOR_ATTRIBUTES[self._sensor_type].items()
         }
 
 
