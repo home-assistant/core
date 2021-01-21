@@ -160,7 +160,6 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self.device_id = None
         self.restored_device = False
         self.restored_entities = []
-        self.sensors = None
         sleep_period = entry.data["sleep_period"]
 
         if sleep_period:
