@@ -6,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ais_cloud
-from homeassistant.components.ais_dom import ais_global
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 
@@ -31,9 +30,6 @@ class AisMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize ais mqtt configuration flow."""
-        self.client_id = None
-        self.bridge_config = {}
-        self.bridge_config_answer_status = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -54,19 +50,19 @@ class AisMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_authentication(self, user_input=None):
         """authentication"""
         if user_input is not None:
-            # logowanie do serwisu
-            _LOGGER.info("User input: " + str(user_input))
-            # Zakończenie i zapis konfiguracji
-            return self.async_external_step_done(next_step_id="use_bridge_settings")
-        return self.async_show_form(step_id="authentication")
-
-    async def async_step_use_bridge_settings(self, user_input=None):
-        """Continue broker configuration with external token."""
-        if "host" not in self.bridge_config:
-            return self.async_abort(
-                reason="abort_by_error",
-                description_placeholders={
-                    "error_info": f"Error code: {self.bridge_config_answer_status}. Response: {self.bridge_config}"
-                },
+            ais_cloud_ws = ais_cloud.AisCloudWS(self.hass)
+            broker_config = await ais_cloud_ws.async_get_mqtt_settings(
+                user_input["username"], user_input["password"]
             )
-        return self.async_create_entry(title="AIS MQTT BRIDGE", data=self.bridge_config)
+            _LOGGER.error(str(broker_config))
+            if "server" not in broker_config:
+                error = "error"
+                if "error" in broker_config:
+                    error = broker_config["error"]
+                return self.async_abort(
+                    reason="abort_by_error",
+                    description_placeholders={"error_info": f"Exception: {error}."},
+                )
+            """Continue bridge configuration with broker settings."""
+            return self.async_create_entry(title="AIS MQTT Bridge", data=broker_config)
+        return self.async_show_form(step_id="authentication")

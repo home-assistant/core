@@ -5,7 +5,6 @@ import queue
 
 import paho.mqtt.client as mqtt
 
-from homeassistant.components.ais_dom import ais_global
 from homeassistant.components.mqtt import subscription
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
@@ -13,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -29,29 +28,36 @@ class AisMqttSoftBridge(Entity):
 
     def __init__(self, hass, mqtt_settings):
         """Sensor initialization."""
-        self._username = mqtt_settings["username"]
-        self._password = mqtt_settings["password"]
-        self._hostname = mqtt_settings["host"]
+        self._username = mqtt_settings["user"]
+        self._password = mqtt_settings["token"]
+        self._hostname = mqtt_settings["server"]
+        self._client_id = mqtt_settings["client"]
         self._port = mqtt_settings["port"]
-        self._tls = mqtt_settings["tls"]
-        self._protocol = mqtt_settings["protocol"]
         self._keepalive = 600
         self._qos = 0
         self._manufacturer = "AI-Speaker.com"
         self._model = "MQTT Bridge"
         self._os_version = "v1"
+        self._ais_cloud_published = 0
+        self._ais_cloud_received = 0
         self._ais_mqtt_connection_code = None
         self._ais_mqtt_client = None
         self._sub_state = None
 
-    @callback
-    def hass_message_received(self, msg):
-        """Handle new MQTT messages."""
-        _LOGGER.degug(f"message_received {msg.payload} {msg.topic}")
+    async def async_publish_to_ais(self, topic, payload):
         if self._ais_mqtt_client is not None:
             self._ais_mqtt_client.publish(
-                msg.topic, payload=msg.payload, qos=self._qos, retain=False
+                topic=topic, payload=payload, qos=self._qos, retain=False
             )
+
+    @callback
+    async def hass_message_received(self, msg):
+        """Handle new MQTT messages."""
+        payload = msg.payload
+        if type(payload) is bytes:
+            payload = msg.payload.decode("utf-8")
+        self._ais_cloud_published = self._ais_cloud_published + 1
+        await self.async_publish_to_ais(msg.topic, payload)
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -64,16 +70,11 @@ class AisMqttSoftBridge(Entity):
             self.hass,
             self._sub_state,
             {
-                "execute": {
-                    "topic": "ais/+/devices/+/channels/+/execute_action",
+                "ais": {
+                    "topic": "ais/#",
                     "msg_callback": self.hass_message_received,
                     "qos": self._qos,
-                },
-                "set": {
-                    "topic": "ais/+/devices/+/channels/+/set/+",
-                    "msg_callback": self.hass_message_received,
-                    "qos": self._qos,
-                },
+                }
             },
         )
 
@@ -103,11 +104,22 @@ class AisMqttSoftBridge(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"Connection status"
+        return f"AIS connection status"
 
     @property
     def state(self):
         """Return the status of the sensor."""
+        # connection result codes
+        if self._ais_mqtt_connection_code == 0:
+            return "success"
+        elif self._ais_mqtt_connection_code == 1:
+            return "bad protocol"
+        elif self._ais_mqtt_connection_code == 2:
+            return "client-id error"
+        elif self._ais_mqtt_connection_code == 3:
+            return "service unavailable"
+        elif self._ais_mqtt_connection_code == 4:
+            return "bad username or password"
         return self._ais_mqtt_connection_code
 
     @property
@@ -119,12 +131,10 @@ class AisMqttSoftBridge(Entity):
     def device_state_attributes(self):
         """Return the attributes of the device."""
         return {
-            "username": self._username,
-            "password": self._password,
-            "tls": self._tls,
-            "host": self._hostname,
-            "port": self._port,
-            "protocol": self._protocol,
+            "MQTT packets sent": self._ais_cloud_published,
+            "MQTT packets received": self._ais_cloud_received,
+            "Host": self._hostname,
+            "Port": self._port,
         }
 
     @property
@@ -134,51 +144,42 @@ class AisMqttSoftBridge(Entity):
 
     def on_ais_connect(self, client_, userdata, flags, result_code):
         """Handle connection result."""
-        _LOGGER.debug(f"on_ais_connect {result_code}")
         self._ais_mqtt_connection_code = result_code
         # Subscribing in on_connect() means that if we lose the connection and
         # reconnect then subscriptions will be renewed.
-        client_.subscribe("ais/#")
-        client_.subscribe("homeassistant/#")
+        client_.subscribe("dom/#")
 
     def on_ais_disconnect(self, client_, userdata, result_code):
         """Handle connection result."""
-        _LOGGER.debug(f"on_ais_disconnect {result_code}")
         self._ais_mqtt_connection_code = result_code
         self._ais_mqtt_client = None
 
-    # The callback for when a PUBLISH message is received from ais broker.
+    # The callback for when a PUBLISH message is received from ais cloud broker.
     def on_ais_message(self, client, userdata, msg):
-        _LOGGER.debug(f"on_message {msg.topic} / {msg.payload}")
+        payload = msg.payload.decode("utf-8")
+        self._ais_cloud_received = self._ais_cloud_received + 1
         self.hass.services.call(
-            "mqtt", "publish", {"topic": msg.topic, "payload": msg.payload}
+            "mqtt", "publish", {"topic": msg.topic, "payload": payload}
         )
+
+    # The callback for when a message is published to ais cloud broker.
+    def on_ais_publish(self, client, userdata, mid):
+        _LOGGER.debug(f"on_ais_publish {mid}")
+        self._ais_cloud_published = self._ais_cloud_published + 1
 
     async def async_update(self):
         """Update the sensor."""
         if self._ais_mqtt_client is None:
-            client_id = ais_global.get_sercure_android_id_dom()
-            self._ais_mqtt_client = mqtt.Client(client_id)
+            self._ais_mqtt_client = mqtt.Client(self._client_id)
             self._ais_mqtt_client.username_pw_set(
                 self._username, password=self._password
             )
-            self._ais_mqtt_client.tls_set()
-            self._ais_mqtt_client.tls_insecure_set(True)
-            # connection result codes
-            # 0 - success, connection accepted
-            # 1 - connection refused, bad protocol
-            # 2 - refused, client-id error
-            # 3 - refused, service unavailable
-            # 4 - refused, bad username or password
             result = queue.Queue(maxsize=1)
-
-            def on_ais_publish(client, userdata, mid):
-                _LOGGER.debug(f"on_ais_publish {mid}")
 
             self._ais_mqtt_client.on_connect = self.on_ais_connect
             self._ais_mqtt_client.on_disconnect = self.on_ais_disconnect
             self._ais_mqtt_client.on_message = self.on_ais_message
-            self._ais_mqtt_client.on_publish = on_ais_publish
+            self._ais_mqtt_client.on_publish = self.on_ais_publish
 
             self._ais_mqtt_client.connect_async(
                 self._hostname, port=self._port, keepalive=self._keepalive

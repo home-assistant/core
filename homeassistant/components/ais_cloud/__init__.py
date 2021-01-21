@@ -3,6 +3,7 @@ import json
 import logging
 import os
 
+import aiohttp
 import async_timeout
 import requests
 import voluptuous as vol
@@ -10,16 +11,8 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.ais_dom import ais_global
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    CONF_NAME,
-    EVENT_PLATFORM_DISCOVERED,
-    EVENT_STATE_CHANGED,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import EVENT_PLATFORM_DISCOVERED, EVENT_STATE_CHANGED
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.util import slugify
 
 DOMAIN = "ais_cloud"
 _LOGGER = logging.getLogger(__name__)
@@ -623,6 +616,17 @@ class AisCloudWS:
         rest_url = self.url + "new_key?service=" + service + "&old_key=" + old_key
         with async_timeout.timeout(10):
             ws_resp = await web_session.get(rest_url, headers=self.cloud_ws_header)
+            return await ws_resp.json()
+
+    async def async_get_mqtt_settings(self, user, password):
+        web_session = aiohttp_client.async_get_clientsession(self.hass)
+        auth = aiohttp.BasicAuth(user, password)
+        rest_url = self.url + "get_mqtt_settings_for_gate"
+        with async_timeout.timeout(10):
+            headers = {
+                "device": ais_global.get_sercure_android_id_dom(),
+            }
+            ws_resp = await web_session.post(rest_url, headers=headers, auth=auth)
             return await ws_resp.json()
 
     async def async_delete_oauth(self, service):

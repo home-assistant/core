@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -40,18 +40,26 @@ class SuplaMqttSoftBridge(Entity):
         self._manufacturer = "SUPLA.ORG"
         self._model = "MQTT Bridge"
         self._os_version = "v1"
+        self._supla_published = 0
+        self._supla_received = 0
         self._supla_mqtt_connection_code = None
         self._supla_mqtt_client = None
         self._sub_state = None
 
-    @callback
-    def hass_message_received(self, msg):
-        """Handle new MQTT messages."""
-        _LOGGER.degug(f"message_received {msg.payload} {msg.topic}")
+    async def async_publish_to_supla(self, topic, payload):
         if self._supla_mqtt_client is not None:
             self._supla_mqtt_client.publish(
-                msg.topic, payload=msg.payload, qos=self._qos, retain=False
+                topic, payload=payload, qos=self._qos, retain=False
             )
+
+    @callback
+    async def hass_message_received(self, msg):
+        """Handle new MQTT messages."""
+        _LOGGER.debug(f"message_received {msg.payload} {msg.topic}")
+        payload = msg.payload
+        if type(payload) is bytes:
+            payload = msg.payload.decode("utf-8")
+        await self.async_publish_to_supla(msg.topic, payload)
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -103,11 +111,22 @@ class SuplaMqttSoftBridge(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"Connection status"
+        return f"SUPLA connection status"
 
     @property
     def state(self):
         """Return the status of the sensor."""
+        # connection result codes
+        if self._supla_mqtt_connection_code == 0:
+            return "success"
+        elif self._supla_mqtt_connection_code == 1:
+            return "bad protocol"
+        elif self._supla_mqtt_connection_code == 2:
+            return "client-id error"
+        elif self._supla_mqtt_connection_code == 3:
+            return "service unavailable"
+        elif self._supla_mqtt_connection_code == 4:
+            return "bad username or password"
         return self._supla_mqtt_connection_code
 
     @property
@@ -119,12 +138,11 @@ class SuplaMqttSoftBridge(Entity):
     def device_state_attributes(self):
         """Return the attributes of the device."""
         return {
-            "username": self._username,
-            "password": self._password,
-            "tls": self._tls,
-            "host": self._hostname,
-            "port": self._port,
-            "protocol": self._protocol,
+            "MQTT packets sent": self._supla_published,
+            "MQTT packets received": self._supla_received,
+            "Host": self._hostname,
+            "Port": self._port,
+            "Username": self._username,
         }
 
     @property
@@ -147,12 +165,19 @@ class SuplaMqttSoftBridge(Entity):
         self._supla_mqtt_connection_code = result_code
         self._supla_mqtt_client = None
 
-    # The callback for when a PUBLISH message is received from SUPLA broker.
+    # The callback for when a message is received from SUPLA broker.
     def on_supla_message(self, client, userdata, msg):
         _LOGGER.debug(f"on_message {msg.topic} / {msg.payload}")
+        payload = msg.payload.decode("utf-8")
         self.hass.services.call(
-            "mqtt", "publish", {"topic": msg.topic, "payload": msg.payload}
+            "mqtt", "publish", {"topic": msg.topic, "payload": payload}
         )
+        self._supla_received = self._supla_received + 1
+
+    # The callback for when a message is published to SUPLA broker.
+    def on_supla_publish(self, client, userdata, mid):
+        _LOGGER.debug(f"on_supla_publish {mid}")
+        self._supla_published = self._supla_published + 1
 
     async def async_update(self):
         """Update the sensor."""
@@ -164,21 +189,12 @@ class SuplaMqttSoftBridge(Entity):
             )
             self._supla_mqtt_client.tls_set()
             self._supla_mqtt_client.tls_insecure_set(True)
-            # connection result codes
-            # 0 - success, connection accepted
-            # 1 - connection refused, bad protocol
-            # 2 - refused, client-id error
-            # 3 - refused, service unavailable
-            # 4 - refused, bad username or password
             result = queue.Queue(maxsize=1)
-
-            def on_supla_publish(client, userdata, mid):
-                _LOGGER.debug(f"on_supla_publish {mid}")
 
             self._supla_mqtt_client.on_connect = self.on_supla_connect
             self._supla_mqtt_client.on_disconnect = self.on_supla_disconnect
             self._supla_mqtt_client.on_message = self.on_supla_message
-            self._supla_mqtt_client.on_publish = on_supla_publish
+            self._supla_mqtt_client.on_publish = self.on_supla_publish
 
             self._supla_mqtt_client.connect_async(
                 self._hostname, port=self._port, keepalive=self._keepalive
