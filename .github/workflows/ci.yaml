@@ -361,7 +361,7 @@ jobs:
       - name: Run isort
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual isort --all-files --show-diff-on-failure
+          pre-commit run --hook-stage manual isort --all-files --show-diff-on-failure --profile black
 
   lint-json:
     name: Check JSON
