@@ -442,15 +442,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
 def _async_get_matching_entities(hass, domains=None):
     """Fetch all entities or entities in the given domains."""
-
-    if domains:
-        states = hass.states.async_all(set(domains))
-    else:
-        states = hass.states.async_all()
-
     return {
         state.entity_id: f"{state.entity_id} ({state.attributes.get(ATTR_FRIENDLY_NAME, state.entity_id)})"
-        for state in sorted(states, key=lambda item: item.entity_id)
+        for state in sorted(
+            hass.states.async_all(domains and set(domains)),
+            key=lambda item: item.entity_id,
+        )
     }
 
 
