@@ -257,7 +257,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for tado."""
+    """Handle a option flow for homekit."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry):
         """Initialize options flow."""
