@@ -9,7 +9,8 @@ import urllib.error
 import aiohttp
 import requests
 
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.helpers import entity, event
 from homeassistant.util.dt import utcnow
 
@@ -65,6 +66,10 @@ class DataUpdateCoordinator(Generic[T]):
             request_refresh_debouncer.function = self.async_refresh
 
         self._debounced_refresh = request_refresh_debouncer
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_stop_refresh
+        )
 
     @callback
     def async_add_listener(self, update_callback: CALLBACK_TYPE) -> Callable[[], None]:
@@ -213,6 +218,14 @@ class DataUpdateCoordinator(Generic[T]):
 
         for update_callback in self._listeners:
             update_callback()
+
+    @callback
+    def _async_stop_refresh(self, _: Event) -> None:
+        """Stop refreshing when Home Assistant is stopping."""
+        self.update_interval = None
+        if self._unsub_refresh:
+            self._unsub_refresh()
+            self._unsub_refresh = None
 
 
 class CoordinatorEntity(entity.Entity):
