@@ -19,8 +19,8 @@ from homeassistant.components.climacell.const import (
     CONF_TIMESTEP,
     DAILY,
     DEFAULT_NAME,
+    DEFAULT_TIMESTEP,
     DOMAIN,
-    NOWCAST,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
@@ -50,7 +50,6 @@ async def test_user_flow_minimum_fields(hass: HomeAssistantType) -> None:
     assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_NAME] == DEFAULT_NAME
     assert result["data"][CONF_API_KEY] == API_KEY
-    assert result["data"][CONF_FORECAST_TYPES] == [DAILY]
     assert result["data"][CONF_LATITUDE] == hass.config.latitude
     assert result["data"][CONF_LONGITUDE] == hass.config.longitude
 
@@ -142,7 +141,6 @@ async def test_user_flow_unknown_exception(hass: HomeAssistantType) -> None:
 async def test_options_flow(hass: HomeAssistantType) -> None:
     """Test options config flow for climacell."""
     user_config = _get_config_schema(hass)(MIN_CONFIG)
-    user_config[CONF_FORECAST_TYPES] = [NOWCAST]
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=user_config,
@@ -153,7 +151,8 @@ async def test_options_flow(hass: HomeAssistantType) -> None:
 
     await hass.config_entries.async_setup(entry.entry_id)
 
-    assert not entry.options
+    assert entry.options[CONF_TIMESTEP] == DEFAULT_TIMESTEP
+    assert entry.options[CONF_FORECAST_TYPES] == [DAILY]
     assert CONF_TIMESTEP not in entry.data
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)

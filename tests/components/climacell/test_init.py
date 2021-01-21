@@ -1,6 +1,7 @@
 """Tests for Climacell init."""
 from datetime import timedelta
 import logging
+from unittest.mock import patch
 
 import pytest
 
@@ -11,10 +12,11 @@ from homeassistant.components.climacell.config_flow import (
 from homeassistant.components.climacell.const import DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import dt as dt_util
 
 from .const import MIN_CONFIG
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +46,8 @@ async def test_update_interval(
     climacell_config_entry_update: pytest.fixture,
 ) -> None:
     """Test that update_interval changes based on number of entries."""
+    now = dt_util.utcnow()
+    async_fire_time_changed(hass, now)
     config = _get_config_schema(hass)(MIN_CONFIG)
     for i in range(1, 3):
         config_entry = MockConfigEntry(
@@ -52,6 +56,9 @@ async def test_update_interval(
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert hass.data[DOMAIN][config_entry.entry_id].update_interval == timedelta(
-            minutes=1 + (i * 6)
-        )
+
+    with patch("homeassistant.components.climacell.ClimaCell.realtime") as mock_api:
+        mock_api.return_value = {}
+        async_fire_time_changed(hass, now + timedelta(minutes=6))
+        await hass.async_block_till_done()
+        assert not mock_api.called

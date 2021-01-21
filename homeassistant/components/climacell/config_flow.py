@@ -92,7 +92,9 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
         options_schema = {
             vol.Optional(
                 CONF_FORECAST_TYPES,
-                default=user_input.get(CONF_FORECAST_TYPES, [DEFAULT_FORECAST_TYPE]),
+                default=self._config_entry.options.get(
+                    CONF_FORECAST_TYPES, [DEFAULT_FORECAST_TYPE]
+                ),
             ): cv.multi_select(
                 {DAILY: DAILY.title(), HOURLY: HOURLY.title(), NOWCAST: NOWCAST.title()}
             ),
