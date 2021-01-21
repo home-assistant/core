@@ -787,7 +787,7 @@ huawei-lte-api==1.4.17
 hydrawiser==0.2
 
 # homeassistant.components.hyperion
-hyperion-py==0.6.1
+hyperion-py==0.7.0
 
 # homeassistant.components.bh1750
 # homeassistant.components.bme280
