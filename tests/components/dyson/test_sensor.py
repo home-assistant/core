@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 from .common import (
     BASE_PATH,
@@ -62,6 +62,23 @@ MOCKED_UPDATED_VALUES = {
     "hepa_filter_state": 30,
     "combi_filter_state": 30,
     "carbon_filter_state": 20,
+}
+
+SENSOR_ATTRIBUTES = {
+    "air_quality": [ATTR_ICON],
+    "dust": [ATTR_ICON],
+    "filter_life": [ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT],
+    "hepa_filter_state": [ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT],
+    "combi_filter_state": [ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT],
+    "carbon_filter_state": [ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT],
+    "humidity": [ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT],
+    "temperature": [ATTR_DEVICE_CLASS],
+}
+
+ATTRIBUTE_DICTS = {
+    ATTR_DEVICE_CLASS: SENSOR_DEVICE_CLASSES,
+    ATTR_ICON: SENSOR_ICONS,
+    ATTR_UNIT_OF_MEASUREMENT: SENSOR_UNITS,
 }
 
 
@@ -141,16 +158,8 @@ async def test_sensors(
 
         # Test attributes
         attributes = state.attributes
-        for attr, map in {
-            ATTR_UNIT_OF_MEASUREMENT: {"temperature": TEMP_CELSIUS, **SENSOR_UNITS},
-            ATTR_ICON: SENSOR_ICONS,
-            ATTR_DEVICE_CLASS: SENSOR_DEVICE_CLASSES,
-        }.items():
-            expected = map.get(sensor)
-            if expected is None:
-                assert attr not in attributes
-            else:
-                assert attributes[attr] == expected
+        for attr in SENSOR_ATTRIBUTES[sensor]:
+            assert attributes[attr] == ATTRIBUTE_DICTS[attr][sensor]
 
     # Test data update
     _async_assign_values(device, MOCKED_UPDATED_VALUES)
@@ -170,9 +179,15 @@ async def test_sensors_off(hass: HomeAssistant, device: DysonPureCoolLink) -> No
     assert hass.states.get(f"{ENTITY_ID_PREFIX}_humidity").state == STATE_OFF
 
 
-async def test_temperature_imperial(hass: HomeAssistant) -> None:
-    """Test the temperature sensor in imperial system (Fahrenheit)."""
-    hass.config.units = IMPERIAL_SYSTEM
+@pytest.mark.parametrize(
+    "unit_system,temp_unit,temperature",
+    [(METRIC_SYSTEM, TEMP_CELSIUS, 21.9), (IMPERIAL_SYSTEM, TEMP_FAHRENHEIT, 71.3)],
+)
+async def test_temperature(
+    hass: HomeAssistant, unit_system: UnitSystem, temp_unit: str, temperature: float
+) -> None:
+    """Test the temperature sensor in different units."""
+    hass.config.units = unit_system
 
     device = get_device(DysonPureCoolLink)
     with patch(f"{BASE_PATH}.DysonAccount.login", return_value=True), patch(
@@ -187,5 +202,5 @@ async def test_temperature_imperial(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     state = hass.states.get(f"{ENTITY_ID_PREFIX}_temperature")
-    assert state.state == "71.3"
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_FAHRENHEIT
+    assert state.state == str(temperature)
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == temp_unit
