@@ -49,13 +49,11 @@ async def validate_input(hass: core.HomeAssistant, host, data):
 
     device.shutdown()
 
-    sleep_period = get_device_sleep_period(device.settings)
-
     # Return info that you want to store in the config entry.
     return {
         "title": device.settings["name"],
         "hostname": device.settings["device"]["hostname"],
-        "sleep_period": sleep_period,
+        "sleep_period": get_device_sleep_period(device.settings),
         "model": device.settings["device"]["type"],
     }
 

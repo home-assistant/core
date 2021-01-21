@@ -79,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 True,
             )
     except (asyncio.TimeoutError, OSError) as err:
-        # Not a sleepign device, raise error
+        # Not a sleeping device, raise error
         if not entry.data["sleep_period"]:
             raise ConfigEntryNotReady from err
 

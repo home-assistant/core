@@ -28,6 +28,8 @@ async def async_setup_entry_attribute_entities(
     blocks = []
 
     if wrapper.restored_device:
+        restored_entities = []
+
         ent_reg = await entity_registry.async_get_registry(hass)
         entries = entity_registry.async_entries_for_config_entry(
             ent_reg, config_entry.entry_id
@@ -38,14 +40,13 @@ async def async_setup_entry_attribute_entities(
 
         for entry in entries:
             if entry.domain == domain:
-                wrapper.restored_entities.append(
-                    sensor_class(wrapper, None, None, None, entry)
-                )
+                restored_entities.append(sensor_class(wrapper, None, None, None, entry))
 
-        if not wrapper.restored_entities:
+        if not restored_entities:
             return
 
-        async_add_entities(wrapper.restored_entities)
+        async_add_entities(restored_entities)
+        wrapper.restored_entities += restored_entities
 
         return
 

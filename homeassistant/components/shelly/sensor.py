@@ -11,8 +11,6 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     VOLT,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import SHAIR_MAX_WORK_HOURS
@@ -219,7 +217,7 @@ class ShellySleepingSensor(ShellyBlockAttributeEntity, RestoreEntity):
         if self.block is not None:
             return self.attribute_value
 
-        if self.restored_state is not None:
+        if getattr(self, "restored_state", None) is not None:
             return self.restored_state.state
 
         return None
@@ -228,19 +226,7 @@ class ShellySleepingSensor(ShellyBlockAttributeEntity, RestoreEntity):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
 
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_sensor_data_updated",
-                self._schedule_immediate_update,
-            )
-        )
-
         self.restored_state = await self.async_get_last_state()
-
-    @callback
-    def _schedule_immediate_update(self):
-        self.async_schedule_update_ha_state(True)
 
 
 class ShellyRestSensor(ShellyRestAttributeEntity):
