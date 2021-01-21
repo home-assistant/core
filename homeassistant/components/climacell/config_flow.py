@@ -28,7 +28,7 @@ from .const import (
     HOURLY,
     NOWCAST,
 )
-from .const import DOMAIN  # type: ignore
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
