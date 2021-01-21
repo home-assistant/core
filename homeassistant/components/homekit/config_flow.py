@@ -119,7 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             entity_id = user_input[CONF_ENTITY_ID]
             entity_filter = _EMPTY_ENTITY_FILTER.copy()
-            entity_filter[CONF_INCLUDE_ENTITIES] = entity_id
+            entity_filter[CONF_INCLUDE_ENTITIES] = [entity_id]
             self.homekit_data[CONF_FILTER] = entity_filter
             if entity_id.startswith(CAMERA_ENTITY_PREFIX):
                 self.homekit_data[CONF_ENTITY_CONFIG] = {
@@ -433,7 +433,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         domains = entity_filter.get(CONF_INCLUDE_DOMAINS, [])
         include_entities = entity_filter.get(CONF_INCLUDE_ENTITIES)
         if include_entities:
-            domains.extend(list(_domains_set_from_entities(include_entities)))
+            domains.extend(_domains_set_from_entities(include_entities))
 
         data_schema = vol.Schema(
             {
