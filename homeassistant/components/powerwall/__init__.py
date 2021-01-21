@@ -11,6 +11,7 @@ from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -29,6 +30,8 @@ from .const import (
     POWERWALL_OBJECT,
     UPDATE_INTERVAL,
 )
+
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = ["binary_sensor", "sensor"]
 
