@@ -185,7 +185,7 @@ async def test_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
     hass.states.async_set("sensor.temp", "5")
 
     with patch(
-        "homeassistant.components.camera.Stream.stream_url",
+        "homeassistant.components.camera.Stream.stream_view_url",
         return_value="http://home.assistant/playlist.m3u8",
     ) as mock_stream_url:
         # Request playlist through WebSocket
@@ -224,7 +224,7 @@ async def test_stream_source_error(aioclient_mock, hass, hass_client, hass_ws_cl
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.camera.Stream.stream_url",
+        "homeassistant.components.camera.Stream.stream_view_url",
         return_value="http://home.assistant/playlist.m3u8",
     ) as mock_stream_url:
         # Request playlist through WebSocket
@@ -263,7 +263,7 @@ async def test_no_stream_source(aioclient_mock, hass, hass_client, hass_ws_clien
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.camera.Stream.stream_url",
+        "homeassistant.components.camera.Stream.stream_view_url",
         return_value="http://home.assistant/playlist.m3u8",
     ) as mock_request_stream:
         # Request playlist through WebSocket

@@ -135,7 +135,7 @@ async def async_request_stream(hass, entity_id, fmt):
         raise HomeAssistantError(
             f"{camera.entity_id} does not support play stream service"
         )
-    return stream.stream_url(fmt)
+    return stream.stream_view_url(fmt)
 
 
 @bind_hass
@@ -259,7 +259,7 @@ async def async_setup(hass, config):
             stream = await camera.create_stream()
             if not stream:
                 continue
-            stream.stream_url("hls")
+            stream.stream_view_url("hls")
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, preload_stream)
 
@@ -315,8 +315,8 @@ class Camera(Entity):
     def __init__(self):
         """Initialize a camera."""
         self.is_streaming = False
-        self.stream_options = {}
         self.stream = None
+        self.stream_options = {}
         self.content_type = DEFAULT_CONTENT_TYPE
         self.access_tokens: collections.deque = collections.deque([], 2)
         self.async_update_token()
@@ -363,17 +363,15 @@ class Camera(Entity):
 
     async def create_stream(self) -> Stream:
         """Create a Stream for stream_source."""
+        # There is at most one stream (a decode worker) per camera
         if not self.stream:
             async with async_timeout.timeout(10):
                 source = await self.stream_source()
-
             if not source:
                 return None
-
-            _LOGGER.debug("Creating stream for source")
             self.stream = create_stream(self.hass, source, options=self.stream_options)
 
-        # Update keepalive setting
+        # Update keepalive setting which manages idle shutdown
         camera_prefs = self.hass.data[DATA_CAMERA_PREFS].get(self.entity_id)
         self.stream.keepalive = camera_prefs.preload_stream
         return self.stream
@@ -669,7 +667,7 @@ async def async_handle_play_stream_service(camera, service_call):
         )
 
     fmt = service_call.data[ATTR_FORMAT]
-    url = stream.stream_url(fmt)
+    url = stream.stream_view_url(fmt)
 
     hass = camera.hass
     data = {

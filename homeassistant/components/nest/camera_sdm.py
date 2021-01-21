@@ -146,9 +146,10 @@ class NestCamera(Camera):
             # Next attempt to catch a url will get a new one
             self._stream = None
             return
-        # Stop any existing stream worker since the url is invalid.  In the
-        # future this will work better to preserve keepalive, access tokens, and
-        # sequence numbers across url changes.
+        # Stop any existing stream worker since the url is invalid. The next
+        # request for this stream will restart it with the right url.
+        # Issue #42793 tracks improvements (e.g. preserve keepalive, smoother
+        # transitions across streams)
         if self.stream:
             self.stream.stop()
             self.stream = None

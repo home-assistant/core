@@ -176,9 +176,9 @@ async def test_websocket_camera_stream(hass, hass_ws_client, mock_camera, mock_s
     await async_setup_component(hass, "camera", {})
 
     with patch(
-        "homeassistant.components.camera.Stream.stream_url",
+        "homeassistant.components.camera.Stream.stream_view_url",
         return_value="http://home.assistant/playlist.m3u8",
-    ) as mock_stream_url, patch(
+    ) as mock_stream_view_url, patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value="http://example.com",
     ):
@@ -190,7 +190,7 @@ async def test_websocket_camera_stream(hass, hass_ws_client, mock_camera, mock_s
         msg = await client.receive_json()
 
         # Assert WebSocket response
-        assert mock_stream_url.called
+        assert mock_stream_view_url.called
         assert msg["id"] == 6
         assert msg["type"] == TYPE_RESULT
         assert msg["success"]
@@ -258,7 +258,7 @@ async def test_handle_play_stream_service(hass, mock_camera, mock_stream):
     )
     await async_setup_component(hass, "media_player", {})
     with patch(
-        "homeassistant.components.camera.Stream.stream_url",
+        "homeassistant.components.camera.Stream.stream_view_url",
     ) as mock_request_stream, patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value="http://example.com",
@@ -282,7 +282,7 @@ async def test_no_preload_stream(hass, mock_stream):
     """Test camera preload preference."""
     demo_prefs = CameraEntityPreferences({PREF_PRELOAD_STREAM: False})
     with patch(
-        "homeassistant.components.camera.Stream.stream_url",
+        "homeassistant.components.camera.Stream.stream_view_url",
     ) as mock_request_stream, patch(
         "homeassistant.components.camera.prefs.CameraPreferences.get",
         return_value=demo_prefs,

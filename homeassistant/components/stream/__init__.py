@@ -1,4 +1,19 @@
-"""Provide functionality to stream video source."""
+"""Provide functionality to stream video source.
+
+Components use create_stream with a stream source (e.g. an rtsp url) to create
+a new Stream object. Stream manages:
+  - Background work to fetch an decode a stream
+  - Desired output formats
+  - Home Assistant URLs for viewing a stream
+  - Access tokens for URLs for viewing a stream
+
+A Stream consists of a background worker, and one or more output formats each
+with their own idle timeout managed by the stream component. When an output
+format is no longer in use, the stream component will expire it. When there
+are no active output formats, the background worker is shut down and access
+tokens are expired. Alternatively, a Stream can be configured with keepalive
+to always keep workers active.
+"""
 import logging
 import secrets
 import threading
@@ -83,6 +98,31 @@ async def async_setup(hass, config):
     return True
 
 
+def create_stream(hass, stream_source, options=None):
+    """Create a stream based on the source url.
+
+    The stream_source is typically an rtsp url and options are passed into
+    pyav / ffpmpeg as options.
+    """
+    if DOMAIN not in hass.config.components:
+        raise HomeAssistantError("Stream integration is not set up.")
+
+    if options is None:
+        options = {}
+
+    # For RTSP streams, prefer TCP
+    if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
+        options = {
+            "rtsp_flags": "prefer_tcp",
+            "stimeout": "5000000",
+            **options,
+        }
+
+    stream = Stream(hass, stream_source, options=options)
+    hass.data[DOMAIN][ATTR_STREAMS].append(stream)
+    return stream
+
+
 class Stream:
     """Represents a single stream."""
 
@@ -100,22 +140,12 @@ class Stream:
         if self.options is None:
             self.options = {}
 
-        # For RTSP streams, prefer TCP
-        if isinstance(source, str) and source[:7] == "rtsp://":
-            self.options = {
-                "rtsp_flags": "prefer_tcp",
-                "stimeout": "5000000",
-                **self.options,
-            }
-
-    def stream_url(self, fmt):
-        """Return a stream url for the specified format."""
+    def stream_view_url(self, fmt):
+        """Start the stream and returns a url for the output format."""
         self.add_provider(fmt)
-        if fmt not in self._outputs:
-            raise ValueError(f"{fmt} not registered for stream")
         if not self.access_token:
             self.access_token = secrets.token_hex()
-        self.start()
+            self.start()
         return self.hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(self.access_token)
 
     @property
@@ -222,16 +252,6 @@ class Stream:
             self._thread.join()
             self._thread = None
             _LOGGER.info("Stopped stream: %s", self.source)
-
-
-def create_stream(hass, stream_source, options=None):
-    """Create a stream."""
-    if DOMAIN not in hass.config.components:
-        raise HomeAssistantError("Stream integration is not set up.")
-
-    stream = Stream(hass, stream_source, options=options)
-    hass.data[DOMAIN][ATTR_STREAMS].append(stream)
-    return stream
 
 
 def _get_stream_by_source(hass, stream_source):
