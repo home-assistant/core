@@ -59,7 +59,7 @@
                 },
                 "description": "Choose the domains to be included. All supported entities in the domain will be included.",
                 "title": "Select domains to be included"
-            },            
+            },
             "pairing": {
                 "title": "Pair HomeKit",
                 "description": "As soon as the {name} is ready, pairing will be available in \u201cNotifications\u201d as \u201cHomeKit Bridge Setup\u201d."
