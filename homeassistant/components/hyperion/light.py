@@ -348,10 +348,9 @@ class HyperionLight(LightEntity):
         if self.is_on:
             if self.effect == KEY_EFFECT_SOLID:
                 return ICON_LIGHTBULB
-            elif self.effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+            if self.effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
                 return ICON_EXTERNAL_SOURCE
-            else:
-                return ICON_EFFECT
+            return ICON_EFFECT
 
         return ICON_LIGHTBULB
 
