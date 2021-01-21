@@ -115,21 +115,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Choose specific entity in accessory mode."""
         if user_input is not None:
             entity_id = user_input[CONF_ENTITY_ID]
-            self.homekit_data[CONF_FILTER].update(
-                {CONF_INCLUDE_DOMAINS: [], CONF_INCLUDE_ENTITIES: [entity_id]}
-            )
+            entity_filter = _EMPTY_ENTITY_FILTER.copy()
+            entity_filter[CONF_INCLUDE_ENTITIES] = entity_id
+            self.homekit_data[CONF_FILTER] = entity_filter
             if entity_id.startswith(CAMERA_ENTITY_PREFIX):
                 self.homekit_data[CONF_ENTITY_CONFIG] = {
                     entity_id: {CONF_VIDEO_CODEC: VIDEO_CODEC_COPY}
                 }
-            del self.homekit_data[CONF_INCLUDE_DOMAINS]
             return await self.async_step_pairing()
 
         all_supported_entities = _async_get_entities_matching_domains(
             self.hass,
             self.homekit_data[CONF_FILTER][CONF_INCLUDE_DOMAINS],
         )
-
         return self.async_show_form(
             step_id="accessory_mode",
             data_schema=vol.Schema(
@@ -137,8 +135,38 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
+    async def async_step_bridge_mode(self, user_input=None):
+        """Choose specific domains in bridge mode."""
+        if user_input is not None:
+            entity_filter = _EMPTY_ENTITY_FILTER.copy()
+            entity_filter[CONF_INCLUDE_DOMAINS] = user_input[CONF_INCLUDE_DOMAINS]
+            self.homekit_data[CONF_FILTER] = entity_filter
+            return await self.async_step_pairing()
+
+        default_domains = [] if self._async_current_names() else DEFAULT_DOMAINS
+        return self.async_show_form(
+            step_id="bridge_mode",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_INCLUDE_DOMAINS, default=default_domains
+                    ): cv.multi_select(SUPPORTED_DOMAINS),
+                }
+            ),
+        )
+
     async def async_step_pairing(self, user_input=None):
         """Pairing instructions."""
+        port = await self._async_available_port()
+        name = self._async_available_name()
+        self.entry_title = f"{name}:{port}"
+        self.homekit_data.update(
+            {
+                CONF_NAME: name,
+                CONF_PORT: port,
+            }
+        )
+
         if user_input is not None:
             return self.async_create_entry(
                 title=self.entry_title, data=self.homekit_data
@@ -153,46 +181,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            # TODO: do this last
-            port = await self._async_available_port()
-            name = self._async_available_name()
-            self.entry_title = f"{name}:{port}"
-
-            self.homekit_data = user_input.copy()
-            entity_filter = _EMPTY_ENTITY_FILTER.copy()
-            entity_filter[CONF_INCLUDE_DOMAINS] = self.homekit_data.pop(
-                CONF_INCLUDE_DOMAINS
-            )
-            self.homekit_data.update(
-                {
-                    CONF_NAME: name,
-                    CONF_PORT: port,
-                    CONF_HOMEKIT_MODE: user_input[CONF_HOMEKIT_MODE],
-                    CONF_FILTER: entity_filter,
-                }
-            )
-
+            self.homekit_data = {
+                CONF_HOMEKIT_MODE: user_input[CONF_HOMEKIT_MODE],
+            }
             if user_input[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
                 return await self.async_step_accessory_mode()
-
-            return await self.async_step_pairing()
+            return await self.async_step_bridge_mode()
 
         homekit_mode = self.homekit_data.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
-        # TODO: limit this to domains that actually have entities in accessory mode
-        default_domains = [] if self._async_current_names() else DEFAULT_DOMAINS
-        setup_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOMEKIT_MODE, default=homekit_mode): vol.In(
-                    HOMEKIT_MODES
-                ),
-                vol.Required(
-                    CONF_INCLUDE_DOMAINS, default=default_domains
-                ): cv.multi_select(SUPPORTED_DOMAINS),
-            }
-        )
-
         return self.async_show_form(
-            step_id="user", data_schema=setup_schema, errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOMEKIT_MODE, default=homekit_mode): vol.In(
+                        HOMEKIT_MODES
+                    )
+                }
+            ),
+            errors=errors,
         )
 
     async def async_step_import(self, user_input=None):
