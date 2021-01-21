@@ -8,7 +8,7 @@
                 "data": {
                     "entity_id": "Entity"
                 },
-                "description": "Choose the entity to be include. In accessory mode, only a single entity is included.",
+                "description": "Choose the entity to be included. In accessory mode, only a single entity is included.",
                 "title": "Select entity to be included"
             },
             "bridge_mode": {

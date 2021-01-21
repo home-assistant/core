@@ -614,16 +614,16 @@ class HomeKit:
         connection = (device_registry.CONNECTION_NETWORK_MAC, formatted_mac)
         identifier = (DOMAIN, self._entry_id, BRIDGE_SERIAL_NUMBER)
         self._async_purge_old_bridges(dev_reg, identifier, connection)
-        model = "Home Assistant HomeKit Bridge"
-        if self._homekit_mode == HOMEKIT_MODE_ACCESSORY:
-            model = "Home Assistant HomeKit Accessory"
+        htype = (
+            "Accessory" if self._homekit_mode == HOMEKIT_MODE_ACCESSORY else "Bridge"
+        )
         dev_reg.async_get_or_create(
             config_entry_id=self._entry_id,
             identifiers={identifier},
             connections={connection},
             manufacturer=MANUFACTURER,
             name=self._name,
-            model=model,
+            model=f"Home Assistant HomeKit {htype}",
         )
 
     @callback
