@@ -64,7 +64,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.4.0
 
 # homeassistant.components.vicare
-PyViCare==0.2.0
+PyViCare==0.2.5
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
@@ -790,7 +790,7 @@ huawei-lte-api==1.4.17
 hydrawiser==0.2
 
 # homeassistant.components.hyperion
-hyperion-py==0.6.1
+hyperion-py==0.7.0
 
 # homeassistant.components.bh1750
 # homeassistant.components.bme280
@@ -1277,7 +1277,7 @@ pyarlo==0.2.4
 pyatag==0.3.4.4
 
 # homeassistant.components.netatmo
-pyatmo==4.2.1
+pyatmo==4.2.2
 
 # homeassistant.components.atome
 pyatome==0.1.1
