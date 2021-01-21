@@ -29,11 +29,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import (
-    add_instances_from_root_client,
-    get_hyperion_unique_id,
-    listen_for_instance_updates,
-)
+from . import get_hyperion_unique_id, listen_for_instance_updates
 from .const import (
     CONF_INSTANCE_CLIENTS,
     DOMAIN,
@@ -94,7 +90,6 @@ async def async_setup_entry(
                 ),
             )
 
-    add_instances_from_root_client(hass, config_entry, instance_add)
     listen_for_instance_updates(hass, config_entry, instance_add, instance_remove)
     return True
 
@@ -146,6 +141,11 @@ class HyperionComponentSwitch(SwitchEntity):
             if component[KEY_NAME] == self._component_name:
                 return bool(component.setdefault(KEY_ENABLED, False))
         return False
+
+    @property
+    def available(self) -> bool:
+        """Return server availability."""
+        return bool(self._client.has_loaded_state)
 
     async def _async_send_set_component(self, value: bool) -> None:
         await self._client.async_send_set_component(

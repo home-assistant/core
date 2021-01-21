@@ -294,7 +294,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             f"{hyperion_const.KEY_INSTANCE}-{hyperion_const.KEY_UPDATE}": async_instances_to_clients,
         }
     )
-    await async_instances_to_clients_raw(hyperion_client.instances)
 
     # Must only listen for option updates after the setup is complete, as otherwise
     # the YAML->ConfigEntry migration code triggers an options update, which causes a
@@ -307,6 +306,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 for component in PLATFORMS
             ]
         )
+        assert hyperion_client
+        await async_instances_to_clients_raw(hyperion_client.instances)
         hass.data[DOMAIN][config_entry.entry_id][CONF_ON_UNLOAD].append(
             config_entry.add_update_listener(_async_entry_updated)
         )
