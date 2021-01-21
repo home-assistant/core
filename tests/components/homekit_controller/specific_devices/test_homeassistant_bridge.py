@@ -4,7 +4,6 @@ from homeassistant.components.fan import (
     SUPPORT_DIRECTION,
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
-    SUPPORT_SET_SPEED_PERCENTAGE,
 )
 
 from tests.components.homekit_controller.common import (
@@ -40,10 +39,7 @@ async def test_homeassistant_bridge_fan_setup(hass):
     assert fan_state.attributes["friendly_name"] == "Living Room Fan"
     assert fan_state.state == "off"
     assert fan_state.attributes["supported_features"] == (
-        SUPPORT_DIRECTION
-        | SUPPORT_SET_SPEED
-        | SUPPORT_OSCILLATE
-        | SUPPORT_SET_SPEED_PERCENTAGE
+        SUPPORT_DIRECTION | SUPPORT_SET_SPEED | SUPPORT_OSCILLATE
     )
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
