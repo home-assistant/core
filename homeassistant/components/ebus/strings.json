@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "EBUS - Connect",
+        "description": "Set up EBUS integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/ebus.\n\nThe connection test takes a moment. Please be patient.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "connection_error": "Cannot connect. Ensure EBUSD is running on given Host and Port.",
+      "ebus_error": "No EBUS signal. Ensure EBUS is connected."
+    }
+  }
+}
