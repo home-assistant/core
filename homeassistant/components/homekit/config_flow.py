@@ -440,7 +440,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Required(CONF_HOMEKIT_MODE, default=homekit_mode): vol.In(
                     HOMEKIT_MODES
                 ),
-                vol.Optional(
+                vol.Required(
                     CONF_DOMAINS,
                     default=domains,
                 ): cv.multi_select(SUPPORTED_DOMAINS),
