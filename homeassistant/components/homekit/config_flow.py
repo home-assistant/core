@@ -88,6 +88,13 @@ DEFAULT_DOMAINS = [
 
 CAMERA_ENTITY_PREFIX = "camera."
 
+_EMPTY_ENTITY_FILTER = {
+    CONF_INCLUDE_DOMAINS: [],
+    CONF_EXCLUDE_DOMAINS: [],
+    CONF_INCLUDE_ENTITIES: [],
+    CONF_EXCLUDE_ENTITIES: [],
+}
+
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HomeKit."""
@@ -145,17 +152,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             name = self._async_available_name()
             title = f"{name}:{port}"
             homekit_data = user_input.copy()
+            entity_filter = _EMPTY_ENTITY_FILTER.copy()
+            entity_filter[CONF_INCLUDE_DOMAINS] = user_input[CONF_INCLUDE_DOMAINS]
             homekit_data.update(
                 {
                     CONF_NAME: name,
                     CONF_PORT: port,
                     CONF_HOMEKIT_MODE: user_input[CONF_HOMEKIT_MODE],
-                    CONF_FILTER: {
-                        CONF_INCLUDE_DOMAINS: user_input[CONF_INCLUDE_DOMAINS],
-                        CONF_INCLUDE_ENTITIES: [],
-                        CONF_EXCLUDE_DOMAINS: [],
-                        CONF_EXCLUDE_ENTITIES: [],
-                    },
+                    CONF_FILTER: entity_filter,
                 }
             )
             del homekit_data[CONF_INCLUDE_DOMAINS]
@@ -331,12 +335,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         homekit_options = self.homekit_options
 
         if user_input is not None:
-            entity_filter = {
-                CONF_INCLUDE_DOMAINS: [],
-                CONF_EXCLUDE_DOMAINS: [],
-                CONF_INCLUDE_ENTITIES: [],
-                CONF_EXCLUDE_ENTITIES: [],
-            }
+            entity_filter = _EMPTY_ENTITY_FILTER.copy()
             if isinstance(user_input[CONF_ENTITIES], list):
                 entities = user_input[CONF_ENTITIES]
             else:
