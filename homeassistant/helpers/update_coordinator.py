@@ -3,14 +3,14 @@ import asyncio
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
-from typing import Any, Awaitable, Callable, Generic, List, Optional, TypeVar
+from typing import Awaitable, Callable, Generic, List, Optional, TypeVar
 import urllib.error
 
 import aiohttp
 import requests
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.helpers import entity, event
 from homeassistant.util.dt import utcnow
 
@@ -220,7 +220,7 @@ class DataUpdateCoordinator(Generic[T]):
             update_callback()
 
     @callback
-    def _async_stop_refresh(self, *args: Any) -> None:
+    def _async_stop_refresh(self, _: Event) -> None:
         """Stop refreshing when Home Assistant is stopping."""
         self.update_interval = None
         if self._unsub_refresh:
