@@ -86,6 +86,8 @@ DEFAULT_DOMAINS = [
     "water_heater",
 ]
 
+CAMERA_ENTITY_PREFIX = "camera."
+
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HomeKit."""
@@ -101,9 +103,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_accessory_mode(self, user_input=None):
         """Choose specific entity in accessory mode."""
         if user_input is not None:
-            self.homekit_data[CONF_FILTER][CONF_INCLUDE_ENTITIES] = [
-                user_input[CONF_ENTITY_ID]
-            ]
+            entity_id = user_input[CONF_ENTITY_ID]
+            self.homekit_data[CONF_FILTER][CONF_INCLUDE_ENTITIES] = [entity_id]
+            if entity_id.startswith(CAMERA_ENTITY_PREFIX):
+                self.homekit_options[CONF_ENTITY_CONFIG] = {
+                    entity_id: {CONF_VIDEO_CODEC: VIDEO_CODEC_COPY}
+                }
             return await self.async_step_pairing()
 
         all_supported_entities = _async_get_entities_matching_domains(
@@ -362,7 +367,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self.included_cameras = {
             entity_id
             for entity_id in all_supported_entities
-            if entity_id.startswith("camera.")
+            if entity_id.startswith(CAMERA_ENTITY_PREFIX)
         }
 
         data_schema = {}
