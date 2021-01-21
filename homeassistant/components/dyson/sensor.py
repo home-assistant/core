@@ -1,6 +1,5 @@
 """Support for Dyson Pure Cool Link Sensors."""
 import logging
-from typing import Any, Dict, Optional
 
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
@@ -114,6 +113,7 @@ class DysonSensor(DysonEntity, Entity):
         super().__init__(device, None)
         self._old_value = None
         self._sensor_type = sensor_type
+        self._attributes = SENSOR_ATTRIBUTES[sensor_type]
 
     def on_message(self, message):
         """Handle new messages which are received from the fan."""
@@ -133,11 +133,19 @@ class DysonSensor(DysonEntity, Entity):
         return f"{self._device.serial}-{self._sensor_type}"
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
-        """Return device specific state attributes."""
-        return {
-            attr: value for attr, value in SENSOR_ATTRIBUTES[self._sensor_type].items()
-        }
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+    @property
+    def icon(self):
+        """Return the icon for this sensor."""
+        return self._attributes.get(ATTR_ICON)
+
+    @property
+    def device_class(self):
+        """Return the device class of this sensor."""
+        return self._attributes.get(ATTR_DEVICE_CLASS)
 
 
 class DysonFilterLifeSensor(DysonSensor):
