@@ -28,7 +28,7 @@ from .const import (
     HOURLY,
     NOWCAST,
 )
-from .const import DOMAIN  # type: ignore[unused-import]
+from .const import DOMAIN  # type: ignore
 
 _LOGGER = logging.getLogger(__name__)
 
