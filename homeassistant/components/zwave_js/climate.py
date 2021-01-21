@@ -128,6 +128,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
                 value_property_key_name=enum.value,
                 add_to_watched_value_ids=True,
             )
+            # Use the first found setpoint value to always determine the temperature unit
             if self._setpoint_values[enum] and not self._unit_value:
                 self._unit_value = self._setpoint_values[enum]
         self._operating_state = self.get_zwave_value(
