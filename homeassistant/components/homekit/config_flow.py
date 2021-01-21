@@ -429,18 +429,20 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if include_entities:
             domains.extend(_domains_set_from_entities(include_entities))
 
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOMEKIT_MODE, default=homekit_mode): vol.In(
-                    HOMEKIT_MODES
-                ),
-                vol.Required(
-                    CONF_DOMAINS,
-                    default=domains,
-                ): cv.multi_select(SUPPORTED_DOMAINS),
-            }
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOMEKIT_MODE, default=homekit_mode): vol.In(
+                        HOMEKIT_MODES
+                    ),
+                    vol.Required(
+                        CONF_DOMAINS,
+                        default=domains,
+                    ): cv.multi_select(SUPPORTED_DOMAINS),
+                }
+            ),
         )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
 def _async_get_matching_entities(hass, domains=None):
