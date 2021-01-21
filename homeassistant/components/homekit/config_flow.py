@@ -150,9 +150,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             port = await self._async_available_port()
             name = self._async_available_name()
+            self.entry_title = f"{name}:{port}"
+
             homekit_data = user_input.copy()
             entity_filter = _EMPTY_ENTITY_FILTER.copy()
-            entity_filter[CONF_INCLUDE_DOMAINS] = user_input[CONF_INCLUDE_DOMAINS]
             homekit_data.update(
                 {
                     CONF_NAME: name,
@@ -161,11 +162,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_FILTER: entity_filter,
                 }
             )
-            del homekit_data[CONF_INCLUDE_DOMAINS]
-            self.entry_title = f"{name}:{port}"
+
             if user_input[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
+                del homekit_data[CONF_INCLUDE_DOMAINS]
                 homekit_data[CONF_FILTER][CONF_INCLUDE_DOMAINS] = []
                 return await self.async_step_accessory_mode()
+
+            entity_filter[CONF_INCLUDE_DOMAINS] = homekit_data.pop(CONF_INCLUDE_DOMAINS)
             return await self.async_step_pairing()
 
         homekit_mode = homekit_data.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
