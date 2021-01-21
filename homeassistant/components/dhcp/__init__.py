@@ -221,6 +221,7 @@ class DHCPWatcher(WatcherBase):
             filter=FILTER,
             started_callback=self._started.set,
             prn=self.handle_dhcp_packet,
+            store=0,
         )
         self._sniffer.start()
 
