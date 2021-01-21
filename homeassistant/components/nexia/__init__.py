@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, NEXIA_DEVICE, PLATFORMS, UPDATE_COORDINATOR
@@ -18,6 +19,7 @@ from .util import is_invalid_auth_code
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 DEFAULT_UPDATE_RATE = 120
 
