@@ -11,9 +11,8 @@ from aiopvapi.scenes import Scenes
 from aiopvapi.shades import Shades
 from aiopvapi.userdata import UserData
 import async_timeout
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -58,25 +57,7 @@ from .const import (
 
 PARALLEL_UPDATES = 1
 
-
-DEVICE_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_HOST): cv.string})}, extra=vol.ALLOW_EXTRA
-)
-
-
-def _has_all_unique_hosts(value):
-    """Validate that each hub configured has a unique host."""
-    hosts = [device[CONF_HOST] for device in value]
-    schema = vol.Schema(vol.Unique())
-    schema(hosts)
-    return value
-
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [DEVICE_SCHEMA], _has_all_unique_hosts)},
-    extra=vol.ALLOW_EXTRA,
-)
-
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = ["cover", "scene", "sensor"]
 _LOGGER = logging.getLogger(__name__)
@@ -85,17 +66,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistant, hass_config: dict):
     """Set up the Hunter Douglas PowerView component."""
     hass.data.setdefault(DOMAIN, {})
-
-    if DOMAIN not in hass_config:
-        return True
-
-    for conf in hass_config[DOMAIN]:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-            )
-        )
-
     return True
 
 
