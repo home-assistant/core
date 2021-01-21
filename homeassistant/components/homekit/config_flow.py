@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
     CONF_DOMAINS,
     CONF_ENTITIES,
     CONF_ENTITY_ID,
@@ -444,7 +445,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
 def _async_get_entities_matching_domains(hass, domains):
     """List entities in the given domains."""
-    entity_ids = hass.states.async_all(set(domains))
+    entity_ids = {
+        state.entity_id: f"{state.attributes.get(ATTR_FRIENDLY_NAME, state.entity_id)} ({state.entity_id})"
+        for state in hass.states.async_all(set(domains))
+    }
     entity_ids.sort()
     return entity_ids
 
