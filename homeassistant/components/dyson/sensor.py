@@ -1,10 +1,14 @@
 """Support for Dyson Pure Cool Link Sensors."""
 import logging
+from typing import Any, Dict, Optional
 
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
@@ -15,6 +19,17 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 
 from . import DYSON_DEVICES, DysonEntity
+
+SENSOR_ATTRIBUTES = {
+    "air_quality": [ATTR_ICON],
+    "dust": [ATTR_ICON],
+    "filter_life": [ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT],
+    "hepa_filter_state": [ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT],
+    "combi_filter_state": [ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT],
+    "carbon_filter_state": [ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT],
+    "humidity": [ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT],
+    "temperature": [ATTR_DEVICE_CLASS],
+}
 
 SENSOR_UNITS = {
     "filter_life": TIME_HOURS,
@@ -47,6 +62,12 @@ SENSOR_NAMES = {
 SENSOR_DEVICE_CLASSES = {
     "humidity": DEVICE_CLASS_HUMIDITY,
     "temperature": DEVICE_CLASS_TEMPERATURE,
+}
+
+ATTRIBUTE_DICTS = {
+    ATTR_DEVICE_CLASS: SENSOR_DEVICE_CLASSES,
+    ATTR_ICON: SENSOR_ICONS,
+    ATTR_UNIT_OF_MEASUREMENT: SENSOR_UNITS,
 }
 
 DYSON_SENSOR_DEVICES = "dyson_sensor_devices"
@@ -125,19 +146,12 @@ class DysonSensor(DysonEntity, Entity):
         return f"{self._device.serial}-{self._sensor_type}"
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return SENSOR_UNITS.get(self._sensor_type)
-
-    @property
-    def icon(self):
-        """Return the icon for this sensor."""
-        return SENSOR_ICONS.get(self._sensor_type)
-
-    @property
-    def device_class(self):
-        """Return the device class of this sensor."""
-        return SENSOR_DEVICE_CLASSES.get(self._sensor_type)
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return device specific state attributes."""
+        return {
+            attr: ATTRIBUTE_DICTS[attr][self._sensor_type]
+            for attr in SENSOR_ATTRIBUTES[self._sensor_type]
+        }
 
 
 class DysonFilterLifeSensor(DysonSensor):

@@ -8,15 +8,12 @@ import pytest
 
 from homeassistant.components.dyson import DOMAIN
 from homeassistant.components.dyson.sensor import (
-    SENSOR_DEVICE_CLASSES,
-    SENSOR_ICONS,
+    ATTRIBUTE_DICTS,
+    SENSOR_ATTRIBUTES,
     SENSOR_NAMES,
-    SENSOR_UNITS,
 )
 from homeassistant.components.sensor import DOMAIN as PLATFORM_DOMAIN
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_OFF,
     TEMP_CELSIUS,
@@ -62,23 +59,6 @@ MOCKED_UPDATED_VALUES = {
     "hepa_filter_state": 30,
     "combi_filter_state": 30,
     "carbon_filter_state": 20,
-}
-
-SENSOR_ATTRIBUTES = {
-    "air_quality": [ATTR_ICON],
-    "dust": [ATTR_ICON],
-    "filter_life": [ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT],
-    "hepa_filter_state": [ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT],
-    "combi_filter_state": [ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT],
-    "carbon_filter_state": [ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT],
-    "humidity": [ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT],
-    "temperature": [ATTR_DEVICE_CLASS],
-}
-
-ATTRIBUTE_DICTS = {
-    ATTR_DEVICE_CLASS: SENSOR_DEVICE_CLASSES,
-    ATTR_ICON: SENSOR_ICONS,
-    ATTR_UNIT_OF_MEASUREMENT: SENSOR_UNITS,
 }
 
 
