@@ -59,6 +59,12 @@ _FAN_NATIVE = "_fan_native"
 
 OFF_SPEED_VALUES = [SPEED_OFF, None]
 
+NO_VALID_SPEEDS_EXCEPTION_MESSAGE = "The speed_list contains no valid speeds"
+
+
+class NoValidSpeedsError(ValueError):
+    """Exception class when there are no valid speeds."""
+
 
 @bind_hass
 def is_on(hass, entity_id: str) -> bool:
@@ -265,7 +271,7 @@ class FanEntity(ToggleEntity):
             return {ATTR_SPEED_LIST: self.speed_list}
         return {}
 
-    def speed_to_percentage(self, speed: str) -> Optional[int]:
+    def speed_to_percentage(self, speed: str) -> int:
         """
         Map a speed to a percentage.
 
@@ -285,11 +291,11 @@ class FanEntity(ToggleEntity):
             return 0
 
         normalized_speed_list = self._normalized_speed_list
-
-        if speed not in normalized_speed_list:
-            return None
-
         speeds_len = len(normalized_speed_list)
+
+        if not speeds_len:
+            raise NoValidSpeedsError(NO_VALID_SPEEDS_EXCEPTION_MESSAGE)
+
         speed_offset = normalized_speed_list.index(speed)
 
         return ((speed_offset) * 100) // (speeds_len - 1)
@@ -305,7 +311,7 @@ class FanEntity(ToggleEntity):
 
         return normalized_speed_list
 
-    def percentage_to_speed(self, value: int) -> Optional[str]:
+    def percentage_to_speed(self, value: int) -> str:
         """
         Map a percentage onto self.speed_list.
 
@@ -331,7 +337,7 @@ class FanEntity(ToggleEntity):
         speeds_len = len(normalized_speed_list)
 
         if not speeds_len:
-            return None
+            raise NoValidSpeedsError(NO_VALID_SPEEDS_EXCEPTION_MESSAGE)
 
         for offset, speed in enumerate(normalized_speed_list[1:], start=1):
             upper_bound = (offset * 100) // (speeds_len - 1)
