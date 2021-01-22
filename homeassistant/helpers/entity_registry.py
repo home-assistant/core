@@ -388,7 +388,7 @@ class EntityRegistry:
 
         if new_entity_id is not UNDEFINED and new_entity_id != old.entity_id:
             if self.async_is_registered(new_entity_id):
-                raise ValueError("Entity is already registered")
+                raise ValueError("Entity with this ID is already registered")
 
             if not valid_entity_id(new_entity_id):
                 raise ValueError("Invalid entity ID")
