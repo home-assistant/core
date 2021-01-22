@@ -139,11 +139,6 @@ class DemoPercentageFan(DemoFan):
         """Return the current speed."""
         return self._percentage
 
-    @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return None
-
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         self._percentage = percentage
