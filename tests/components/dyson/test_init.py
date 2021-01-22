@@ -1,6 +1,5 @@
 """Test the parent Dyson component."""
 import copy
-import logging
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.dyson import DOMAIN
@@ -20,7 +19,7 @@ from .common import (
 from tests.common import async_setup_component
 
 
-async def test_setup_manual(hass: HomeAssistant, caplog):
+async def test_setup_manual(hass: HomeAssistant):
     """Test set up the component with manually configured device IPs."""
     SERIAL_TEMPLATE = "XX-XXXXX-X{}"
 
@@ -36,7 +35,7 @@ async def test_setup_manual(hass: HomeAssistant, caplog):
     # device3 throws exception during connection
     device3 = async_get_360eye_device()
     device3.serial = SERIAL_TEMPLATE.format(3)
-    device3.connect = MagicMock(side_effect=OSError("error msg"))
+    device3.connect = MagicMock(side_effect=OSError)
 
     # device4 not configured in configuration
     device4 = async_get_360eye_device()
@@ -68,24 +67,9 @@ async def test_setup_manual(hass: HomeAssistant, caplog):
     device2.connect.assert_called_once_with(IP_ADDRESS)
     device3.connect.assert_called_once_with(IP_ADDRESS)
     device4.connect.assert_not_called()
-    assert (
-        BASE_PATH,
-        logging.WARNING,
-        f"Unable to connect to device {device2}",
-    ) in caplog.record_tuples
-    assert (
-        BASE_PATH,
-        logging.ERROR,
-        f"Unable to connect to device {device3.network_device}: error msg",
-    ) in caplog.record_tuples
-    (
-        BASE_PATH,
-        logging.WARNING,
-        f"Unable to find device {SERIAL_TEMPLATE.format(5)} in Dyson account",
-    ) in caplog.record_tuples
 
 
-async def test_setup_autoconnect(hass: HomeAssistant, caplog):
+async def test_setup_autoconnect(hass: HomeAssistant):
     """Test set up the component with auto connect."""
     # device1 works
     device1 = async_get_purecoollink_device()
@@ -107,20 +91,10 @@ async def test_setup_autoconnect(hass: HomeAssistant, caplog):
         await hass.async_block_till_done()
 
     assert hass.states.async_entity_ids_count() == 1
-    assert (
-        BASE_PATH,
-        logging.WARNING,
-        f"Unable to connect to device {device2}",
-    ) in caplog.record_tuples
 
 
-async def test_login_failed(hass: HomeAssistant, caplog):
+async def test_login_failed(hass: HomeAssistant):
     """Test login failure during setup."""
     with patch(f"{BASE_PATH}.DysonAccount.login", return_value=False):
         assert await async_setup_component(hass, DOMAIN, CONFIG) is False
         await hass.async_block_till_done()
-    assert (
-        BASE_PATH,
-        logging.ERROR,
-        "Not connected to Dyson account. Unable to add devices",
-    ) in caplog.record_tuples
