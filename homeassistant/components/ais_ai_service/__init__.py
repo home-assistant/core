@@ -2214,37 +2214,10 @@ async def async_process_json_from_frame(hass, json_req):
     else:
         hot_word_on = False
     if topic == "ais/player_auto_discovery":
-        # parse the json storing the result on the response object
+        # AppDiscoveryMode on mobile is ON
+        # TODO discovery AI Speaker
         pass
-    elif topic == "ais/player_status":
-        # try to get current volume
-        try:
-            ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL = (
-                payload.get("currentVolume", 0) / 100
-            )
-        except Exception:
-            _LOGGER.info(
-                "ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL: "
-                + str(ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL)
-            )
-        # find the correct player
-        for entity in hass.states.async_all():
-            if entity.entity_id.startswith("media_player."):
-                if "unique_id" in entity.attributes:
-                    if ais_gate_client_id == entity.attributes["unique_id"]:
-                        json_string = json.dumps(payload)
-                        hass.async_run_job(
-                            hass.services.async_call(
-                                "media_player",
-                                "play_media",
-                                {
-                                    "entity_id": entity.entity_id,
-                                    "media_content_type": "exo_info",
-                                    "media_content_id": json_string,
-                                },
-                            )
-                        )
-    elif topic == "ais/speech_command":
+    if topic == "ais/speech_command":
         try:
             # TODO add info if the intent is media player type - to publish
             intent_resp = await _async_process(
@@ -2290,7 +2263,7 @@ async def async_process_json_from_frame(hass, json_req):
         # tag_scanned event
         hass.bus.async_fire(payload["event_type"], payload["event_data"])
 
-    # add player satus for some topics
+    # add player staus for some topics
     if topic in ("ais/player_status", "ais/player_auto_discovery", "ais/media_player"):
         attributes = hass.states.get("media_player.wbudowany_glosnik").attributes
         j_media_info = {
@@ -2300,6 +2273,7 @@ async def async_process_json_from_frame(hass, json_req):
             "media_album_name": attributes.get("media_album_name", ""),
         }
         res["player_status"] = j_media_info
+    res["gate_id"] = ais_global.get_sercure_android_id_dom()
     return json_response(res)
 
 
