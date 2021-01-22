@@ -264,20 +264,20 @@ class AsyncDemoPercentageFan(FanEntity):
 
         await self.async_set_percentage(percentage)
 
-    def turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn off the entity."""
-        self.oscillate(False)
-        self.set_percentage(0)
+        await self.async_oscillate(False)
+        await self.async_set_percentage(0)
 
-    def set_direction(self, direction: str) -> None:
+    async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         self._direction = direction
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def oscillate(self, oscillating: bool) -> None:
+    async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
         self._oscillating = oscillating
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def current_direction(self) -> str:
