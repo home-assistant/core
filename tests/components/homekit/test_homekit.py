@@ -1027,7 +1027,7 @@ async def test_yaml_updates_update_config_entry_for_name(hass, mock_zeroconf):
 
 
 async def test_raise_config_entry_not_ready(hass, mock_zeroconf):
-    """Test async_setup_entry when the port is not available."""
+    """Test async_setup when the port is not available."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},
@@ -1038,30 +1038,8 @@ async def test_raise_config_entry_not_ready(hass, mock_zeroconf):
     with patch(
         "homeassistant.components.homekit.port_is_available",
         return_value=False,
-    ), patch(
-        "homeassistant.components.homekit.async_find_next_available_port",
-        side_effect=OSError,
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-
-async def test_finds_next_port(hass, mock_zeroconf):
-    """Test async_setup_entry when the port is not available but another one is."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},
-        options={},
-    )
-    entry.add_to_hass(hass)
-
-    with patch("pyhap.accessory_driver.AccessoryDriver.start_service"), patch(
-        f"{PATH_HOMEKIT}.HomeKit.async_stop"
-    ), patch(
-        "homeassistant.components.homekit.port_is_available",
-        return_value=False,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
 
