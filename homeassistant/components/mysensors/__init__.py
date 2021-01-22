@@ -106,6 +106,8 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             vol.All(
                 deprecated(CONF_DEBUG),
+                deprecated(CONF_OPTIMISTIC),
+                deprecated(CONF_PERSISTENCE),
                 {
                     vol.Required(CONF_GATEWAYS): vol.All(
                         cv.ensure_list, has_all_unique_files, [GATEWAY_SCHEMA]
@@ -124,10 +126,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config: ConfigType) -> bool:
     """Set up the MySensors component."""
-    if config is None or DOMAIN not in config:
-        # when configured via ConfigEntry, hass calls async_setup(hass,None) and then calls async_setup_entry(...).
-        # so in async_setup we have to check if there are any ConfigEntries and then return True. This lets async_setup_entry run.
-        return bool(hass.config_entries.async_entries(DOMAIN))
+    if DOMAIN not in config or bool(hass.config_entries.async_entries(DOMAIN)):
+        return True
 
     config = config[DOMAIN]
     user_inputs = [

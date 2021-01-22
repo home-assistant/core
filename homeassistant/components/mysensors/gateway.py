@@ -234,10 +234,10 @@ async def _gw_start(hass: HomeAssistantType, gateway: BaseAsyncGateway):
         gateway.start()
     )  # store the connect task so it can be cancelled in gw_stop
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP,
-        lambda event: asyncio.create_task(gw_stop(hass, gateway)),
-    )
+    async def stop_this_gw():
+        await gw_stop(hass, gateway)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_this_gw)
     if gateway.device == "mqtt":
         # Gatways connected via mqtt doesn't send gateway ready message.
         return
