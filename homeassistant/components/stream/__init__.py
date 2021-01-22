@@ -174,7 +174,9 @@ class Stream:
                 target=self._run_worker,
             )
             self._thread.start()
-            _LOGGER.info("Started stream: %s", re.sub("//.*:.*@", "//", self.source))
+            _LOGGER.info(
+                "Started stream: %s", re.sub("//.*:.*@", "//", str(self.source))
+            )
 
     def update_source(self, new_source):
         """Restart the stream with a new stream source."""
@@ -240,7 +242,9 @@ class Stream:
             self._thread_quit.set()
             self._thread.join()
             self._thread = None
-            _LOGGER.info("Stopped stream: %s", re.sub("//.*:.*@", "//", self.source))
+            _LOGGER.info(
+                "Stopped stream: %s", re.sub("//.*:.*@", "//", str(self.source))
+            )
 
     async def async_record(self, video_path, duration=30, lookback=5):
         """Make a .mp4 recording from a provided stream."""
