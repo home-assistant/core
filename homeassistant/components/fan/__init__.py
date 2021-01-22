@@ -384,7 +384,7 @@ def percentage_compat(func: Callable) -> Callable:
             if percentage is not None and speed is None:
                 speed = self.percentage_to_speed(percentage)
 
-            return await check_func(speed=speed, percentage=percentage, **kwargs)
+            return await check_func(self, speed=speed, percentage=percentage, **kwargs)
 
         return wrap_async_turn_on
 
@@ -396,7 +396,7 @@ def percentage_compat(func: Callable) -> Callable:
         if percentage is not None and speed is None:
             speed = self.percentage_to_speed(percentage)
 
-        return check_func(speed=speed, percentage=percentage, **kwargs)
+        return check_func(self, speed=speed, percentage=percentage, **kwargs)
 
     return wrap_turn_on
 
@@ -420,7 +420,7 @@ def speed_compat(func: Callable) -> Callable:
             if speed is not None and percentage is None:
                 percentage = self.self.speed_to_percentage(speed)
 
-            return await check_func(speed=speed, percentage=percentage, **kwargs)
+            return await check_func(self, speed=speed, percentage=percentage, **kwargs)
 
         return wrap_async_turn_on
 
@@ -432,6 +432,6 @@ def speed_compat(func: Callable) -> Callable:
         if speed is not None and percentage is None:
             percentage = self.self.speed_to_percentage(speed)
 
-        return check_func(speed=speed, percentage=percentage, **kwargs)
+        return check_func(self, speed=speed, percentage=percentage, **kwargs)
 
     return wrap_turn_on
