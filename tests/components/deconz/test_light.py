@@ -521,3 +521,62 @@ async def test_non_color_light_reports_color(hass):
     with pytest.raises(KeyError):
         assert hass.states.get("light.all").attributes[ATTR_COLOR_TEMP]
         assert hass.states.get("light.all").attributes[ATTR_HS_COLOR]
+
+
+async def test_verify_group_supported_features(hass):
+    """Test that group supported features reflect what included lights support."""
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    data["groups"] = deepcopy(
+        {
+            "1": {
+                "id": "Group1",
+                "name": "group",
+                "type": "LightGroup",
+                "state": {"all_on": False, "any_on": True},
+                "action": {},
+                "scenes": [],
+                "lights": ["1", "2", "3"],
+            },
+        }
+    )
+    data["lights"] = deepcopy(
+        {
+            "1": {
+                "id": "light1",
+                "name": "Dimmable light",
+                "state": {"on": True, "bri": 255, "reachable": True},
+                "type": "Light",
+                "uniqueid": "00:00:00:00:00:00:00:01-00",
+            },
+            "2": {
+                "id": "light2",
+                "name": "Color light",
+                "state": {
+                    "on": True,
+                    "bri": 100,
+                    "colormode": "xy",
+                    "effect": "colorloop",
+                    "xy": (500, 500),
+                    "reachable": True,
+                },
+                "type": "Extended color light",
+                "uniqueid": "00:00:00:00:00:00:00:02-00",
+            },
+            "3": {
+                "ctmax": 454,
+                "ctmin": 155,
+                "id": "light3",
+                "name": "Tunable light",
+                "state": {"on": True, "colormode": "ct", "ct": 2500, "reachable": True},
+                "type": "Tunable white light",
+                "uniqueid": "00:00:00:00:00:00:00:03-00",
+            },
+        }
+    )
+    await setup_deconz_integration(hass, get_state_response=data)
+
+    assert len(hass.states.async_all()) == 4
+
+    group = hass.states.get("light.group")
+    assert group.state == STATE_ON
+    assert group.attributes[ATTR_SUPPORTED_FEATURES] == 63
