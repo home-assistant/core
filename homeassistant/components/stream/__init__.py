@@ -56,6 +56,31 @@ SERVICE_RECORD_SCHEMA = STREAM_SERVICE_SCHEMA.extend(
 )
 
 
+def create_stream(hass, stream_source, options=None):
+    """Create a stream based on the source url.
+
+    The stream_source is typically an rtsp url and options are passed into
+    pyav / ffpmpeg as options.
+    """
+    if DOMAIN not in hass.config.components:
+        raise HomeAssistantError("Stream integration is not set up.")
+
+    if options is None:
+        options = {}
+
+    # For RTSP streams, prefer TCP
+    if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
+        options = {
+            "rtsp_flags": "prefer_tcp",
+            "stimeout": "5000000",
+            **options,
+        }
+
+    stream = Stream(hass, stream_source, options=options)
+    hass.data[DOMAIN][ATTR_STREAMS].append(stream)
+    return stream
+
+
 async def async_setup(hass, config):
     """Set up stream."""
     # Set log level to error for libav
@@ -96,31 +121,6 @@ async def async_setup(hass, config):
     )
 
     return True
-
-
-def create_stream(hass, stream_source, options=None):
-    """Create a stream based on the source url.
-
-    The stream_source is typically an rtsp url and options are passed into
-    pyav / ffpmpeg as options.
-    """
-    if DOMAIN not in hass.config.components:
-        raise HomeAssistantError("Stream integration is not set up.")
-
-    if options is None:
-        options = {}
-
-    # For RTSP streams, prefer TCP
-    if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
-        options = {
-            "rtsp_flags": "prefer_tcp",
-            "stimeout": "5000000",
-            **options,
-        }
-
-    stream = Stream(hass, stream_source, options=options)
-    hass.data[DOMAIN][ATTR_STREAMS].append(stream)
-    return stream
 
 
 class Stream:
