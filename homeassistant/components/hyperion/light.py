@@ -346,12 +346,10 @@ class HyperionLight(LightEntity):
     def icon(self) -> str:
         """Return state specific icon."""
         if self.is_on:
-            if self.effect == KEY_EFFECT_SOLID:
-                return ICON_LIGHTBULB
             if self.effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
                 return ICON_EXTERNAL_SOURCE
-            return ICON_EFFECT
-
+            if self.effect != KEY_EFFECT_SOLID:
+                return ICON_EFFECT
         return ICON_LIGHTBULB
 
     @property
