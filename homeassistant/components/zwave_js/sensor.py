@@ -1,7 +1,7 @@
 """Representation of Z-Wave sensors."""
 
 import logging
-from typing import Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
@@ -133,17 +133,18 @@ class ZWaveNumericSensor(ZwaveSensorBase):
         return str(self.info.primary_value.metadata.unit)
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, str]]:
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the device specific state attributes."""
+        data = super().device_state_attributes
         if (
-            self.info.primary_value.value is None
-            or not self.info.primary_value.metadata.states
+            self.info.primary_value.value is not None
+            and self.info.primary_value.metadata.states
         ):
-            return None
-        # add the value's label as property for multi-value (list) items
-        label = self.info.primary_value.metadata.states.get(
-            self.info.primary_value.value
-        ) or self.info.primary_value.metadata.states.get(
-            str(self.info.primary_value.value)
-        )
-        return {"label": label}
+            # add the value's label as property for multi-value (list) items
+            data["label"] = self.info.primary_value.metadata.states.get(
+                self.info.primary_value.value
+            ) or self.info.primary_value.metadata.states.get(
+                str(self.info.primary_value.value)
+            )
+
+        return data
