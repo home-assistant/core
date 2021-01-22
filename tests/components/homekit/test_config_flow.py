@@ -42,7 +42,7 @@ async def test_user_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.homekit.config_flow.find_next_available_port",
+        "homeassistant.components.homekit.config_flow.async_find_next_available_port",
         return_value=12345,
     ):
         result2 = await hass.config_entries.flow.async_configure(

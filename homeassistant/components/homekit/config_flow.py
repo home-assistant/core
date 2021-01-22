@@ -31,7 +31,7 @@ from .const import (
     VIDEO_CODEC_COPY,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
-from .util import find_next_available_port
+from .util import async_find_next_available_port
 
 CONF_CAMERA_COPY = "camera_copy"
 CONF_INCLUDE_EXCLUDE_MODE = "include_exclude_mode"
@@ -107,7 +107,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            port = await self._async_available_port()
+            port = await async_find_next_available_port(
+                self.hass, DEFAULT_CONFIG_FLOW_PORT
+            )
             name = self._async_available_name()
             title = f"{name}:{port}"
             self.homekit_data = user_input.copy()
@@ -142,12 +144,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="port_name_in_use")
         return self.async_create_entry(
             title=f"{user_input[CONF_NAME]}:{user_input[CONF_PORT]}", data=user_input
-        )
-
-    async def _async_available_port(self):
-        """Return an available port the bridge."""
-        return await self.hass.async_add_executor_job(
-            find_next_available_port, DEFAULT_CONFIG_FLOW_PORT
         )
 
     @callback
