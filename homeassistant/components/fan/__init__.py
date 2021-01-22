@@ -56,13 +56,15 @@ INVALID_SPEEDS_FILTER = {"on", "auto", "smart"}
 
 _FAN_NATIVE = "_fan_native"
 
+OFF_SPEED_VALUES = [SPEED_OFF, None]
+
 
 @bind_hass
 def is_on(hass, entity_id: str) -> bool:
     """Return if the fans are on based on the statemachine."""
     state = hass.states.get(entity_id)
     if ATTR_SPEED in state.attributes:
-        return state.attributes[ATTR_SPEED] not in [SPEED_OFF, None]
+        return state.attributes[ATTR_SPEED] not in OFF_SPEED_VALUES
     return state.state == STATE_ON
 
 
@@ -252,7 +254,7 @@ class FanEntity(ToggleEntity):
         Unfortunately lots of fans make up their own speeds. So the default
         mapping is more dynamic.
         """
-        if speed == SPEED_OFF:
+        if speed in OFF_SPEED_VALUES:
             return 0
 
         normalized_speed_list = self._normalized_speed_list
