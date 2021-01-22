@@ -294,7 +294,7 @@ class FanEntity(ToggleEntity):
         return ((speed_offset) * 100) // (speeds_len - 1)
 
     @property
-    def _normalized_speed_list(self):
+    def _normalized_speed_list(self) -> List[str]:
         """Filter out invalid speeds that have crept into fans over time."""
         normalized_speed_list = [
             speed for speed in self.speed_list if speed not in INVALID_SPEEDS_FILTER
