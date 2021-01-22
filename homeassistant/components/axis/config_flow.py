@@ -22,7 +22,9 @@ from homeassistant.util.network import is_link_local
 from .const import (
     CONF_MODEL,
     CONF_STREAM_PROFILE,
+    CONF_VIDEO_SOURCE,
     DEFAULT_STREAM_PROFILE,
+    DEFAULT_VIDEO_SOURCE,
     DOMAIN as AXIS_DOMAIN,
 )
 from .device import get_device
@@ -220,22 +222,44 @@ class AxisOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_configure_stream()
 
     async def async_step_configure_stream(self, user_input=None):
-        """Manage the Axis device options."""
+        """Manage the Axis device stream options."""
         if user_input is not None:
             self.options.update(user_input)
             return self.async_create_entry(title="", data=self.options)
 
-        profiles = [DEFAULT_STREAM_PROFILE]
-        for profile in self.device.api.vapix.streaming_profiles:
-            profiles.append(profile.name)
+        schema = {}
+
+        vapix = self.device.api.vapix
+
+        # Stream profiles
+
+        if vapix.params.stream_profiles_max_groups > 0:
+
+            stream_profiles = [DEFAULT_STREAM_PROFILE]
+            for profile in vapix.streaming_profiles:
+                stream_profiles.append(profile.name)
+
+            schema[
+                vol.Optional(
+                    CONF_STREAM_PROFILE, default=self.device.option_stream_profile
+                )
+            ] = vol.In(stream_profiles)
+
+        # Video sources
+
+        if vapix.params.image_nbrofviews > 0:
+            await vapix.params.update_image()
+
+            video_sources = {DEFAULT_VIDEO_SOURCE: DEFAULT_VIDEO_SOURCE}
+            for idx, video_source in vapix.params.image_sources.items():
+                if not video_source["Enabled"]:
+                    continue
+                video_sources[idx + 1] = video_source["Name"]
+
+            schema[
+                vol.Optional(CONF_VIDEO_SOURCE, default=self.device.option_video_source)
+            ] = vol.In(video_sources)
 
         return self.async_show_form(
-            step_id="configure_stream",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_STREAM_PROFILE, default=self.device.option_stream_profile
-                    ): vol.In(profiles)
-                }
-            ),
+            step_id="configure_stream", data_schema=vol.Schema(schema)
         )
