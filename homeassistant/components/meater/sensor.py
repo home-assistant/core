@@ -5,7 +5,7 @@ import logging
 
 import async_timeout
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import Entity
@@ -128,7 +128,7 @@ class MeaterProbeTemperature(Entity):
     @property
     def device_class(self):
         """Return the device class."""
-        return "temperature"
+        return DEVICE_CLASS_TEMPERATURE
 
     @property
     def device_info(self):
@@ -138,7 +138,7 @@ class MeaterProbeTemperature(Entity):
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.device_id)
             },
-            "name": self.name,
+            "name": "Meater Probe",
             "manufacturer": "Apption Labs",
         }
 
