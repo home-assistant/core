@@ -752,7 +752,7 @@ pykodi==0.2.1
 pykulersky==0.4.0
 
 # homeassistant.components.lastfm
-pylast==4.0.0
+pylast==4.1.0
 
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.0
