@@ -1,4 +1,7 @@
 """Support for deCONZ lights."""
+
+from pydeconz.light import Light
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -105,21 +108,22 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         super().__init__(device, gateway)
 
         self._features = 0
+        self.update_features(self._device)
 
-        if self._device.brightness is not None:
+    def update_features(self, device):
+        """Calculate supported features of device."""
+        if device.brightness is not None:
             self._features |= SUPPORT_BRIGHTNESS
             self._features |= SUPPORT_FLASH
             self._features |= SUPPORT_TRANSITION
 
-        if self._device.ct is not None:
+        if device.ct is not None:
             self._features |= SUPPORT_COLOR_TEMP
 
-        if self._device.xy is not None or (
-            self._device.hue is not None and self._device.sat is not None
-        ):
+        if device.xy is not None or (device.hue is not None and device.sat is not None):
             self._features |= SUPPORT_COLOR
 
-        if self._device.effect is not None:
+        if device.effect is not None:
             self._features |= SUPPORT_EFFECT
 
     @property
@@ -250,6 +254,11 @@ class DeconzGroup(DeconzBaseLight):
         self._unique_id = f"{group_id_base}-{device.deconz_id}"
 
         super().__init__(device, gateway)
+
+        for light_id in device.lights:
+            light = gateway.api.lights[light_id]
+            if light.ZHATYPE == Light.ZHATYPE:
+                self.update_features(light)
 
     @property
     def unique_id(self):
