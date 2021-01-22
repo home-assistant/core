@@ -15,8 +15,6 @@ class BaseFan(FanEntity):
 def test_fanentity():
     """Test fan entity methods."""
     fan = BaseFan()
-    print(dir(fan))
-    print(dir(fan.speed))
     assert fan.state == "off"
     assert len(fan.speed_list) == 0
     assert fan.supported_features == 0
