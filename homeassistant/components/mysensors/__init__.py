@@ -173,9 +173,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         _LOGGER.error("gateway setup failed")
         return False
 
-    if MYSENSORS_GATEWAYS not in hass.data:
-        hass.data[MYSENSORS_GATEWAYS] = {}
-    hass.data[MYSENSORS_GATEWAYS][entry.entry_id] = gateway
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
+    if MYSENSORS_GATEWAYS not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][MYSENSORS_GATEWAYS] = {}
+    hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id] = gateway
 
     async def finish():
         for platform in SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT:
@@ -200,11 +203,11 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
         await hass.config_entries.async_forward_entry_unload(entry, platform)
 
     key = MYSENSORS_ON_UNLOAD.format(entry.entry_id)
-    if key in hass.data:
-        for fnct in hass.data[key]:
+    if key in hass.data[DOMAIN]:
+        for fnct in hass.data[DOMAIN][key]:
             fnct()
 
-    del hass.data[MYSENSORS_GATEWAYS][entry.entry_id]
+    del hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
 
     hass.async_create_task(gw_stop(hass, gateway))
     return True
@@ -222,9 +225,9 @@ async def on_unload(
     else:
         uniqueid = entry.entry_id
     key = MYSENSORS_ON_UNLOAD.format(uniqueid)
-    if key not in hass.data:
-        hass.data[key] = []
-    hass.data[key].append(fnct)
+    if key not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][key] = []
+    hass.data[DOMAIN][key].append(fnct)
 
 
 @callback

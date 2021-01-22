@@ -25,6 +25,7 @@ from .const import (
     CONF_TOPIC_IN_PREFIX,
     CONF_TOPIC_OUT_PREFIX,
     CONF_VERSION,
+    DOMAIN,
     MYSENSORS_GATEWAY_READY,
     MYSENSORS_GATEWAY_START_TASK,
     MYSENSORS_GATEWAYS,
@@ -62,9 +63,9 @@ def get_mysensors_gateway(
     hass: HomeAssistantType, gateway_id: GatewayId
 ) -> Optional[BaseAsyncGateway]:
     """Return the Gateway for a given GatewayId."""
-    if MYSENSORS_GATEWAYS not in hass.data:
-        hass.data[MYSENSORS_GATEWAYS] = {}
-    gateways = hass.data.get(MYSENSORS_GATEWAYS)
+    if MYSENSORS_GATEWAYS not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][MYSENSORS_GATEWAYS] = {}
+    gateways = hass.data[DOMAIN].get(MYSENSORS_GATEWAYS)
     return gateways.get(gateway_id)
 
 
@@ -217,7 +218,7 @@ async def _discover_persistent_devices(
 async def gw_stop(hass, gateway: BaseAsyncGateway):
     """Stop the gateway."""
     _LOGGER.info("stopping gateway %s", gateway.entry_id)
-    connect_task = hass.data.get(
+    connect_task = hass.data[DOMAIN].get(
         MYSENSORS_GATEWAY_START_TASK.format(gateway.entry_id), None
     )
     if connect_task is not None and not connect_task.done():
@@ -228,7 +229,7 @@ async def gw_stop(hass, gateway: BaseAsyncGateway):
 async def _gw_start(hass: HomeAssistantType, gateway: BaseAsyncGateway):
     """Start the gateway."""
     # Don't use hass.async_create_task to avoid holding up setup indefinitely.
-    hass.data[
+    hass.data[DOMAIN][
         MYSENSORS_GATEWAY_START_TASK.format(gateway.entry_id)
     ] = asyncio.create_task(
         gateway.start()
@@ -243,7 +244,7 @@ async def _gw_start(hass: HomeAssistantType, gateway: BaseAsyncGateway):
         return
     gateway_ready = asyncio.Future()
     gateway_ready_key = MYSENSORS_GATEWAY_READY.format(gateway.entry_id)
-    hass.data[gateway_ready_key] = gateway_ready
+    hass.data[DOMAIN][gateway_ready_key] = gateway_ready
 
     try:
         with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
@@ -255,7 +256,7 @@ async def _gw_start(hass: HomeAssistantType, gateway: BaseAsyncGateway):
             GATEWAY_READY_TIMEOUT,
         )
     finally:
-        hass.data.pop(gateway_ready_key, None)
+        hass.data[DOMAIN].pop(gateway_ready_key, None)
 
 
 def _gw_callback_factory(

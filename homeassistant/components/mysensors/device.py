@@ -60,8 +60,8 @@ class MySensorsDevice:
         """Remove this entity from home assistant."""
         for platform in PLATFORM_TYPES:
             platform_str = MYSENSORS_PLATFORM_DEVICES.format(platform)
-            if platform_str in self.hass.data:
-                platform_dict = self.hass.data[platform_str]
+            if platform_str in self.hass.data[DOMAIN]:
+                platform_dict = self.hass.data[DOMAIN][platform_str]
                 if self.dev_id in platform_dict:
                     if platform_dict[self.dev_id] is not self:
                         self._logger.warning(
@@ -192,9 +192,9 @@ class MySensorsDevice:
 
 def get_mysensors_devices(hass, domain: str) -> Dict[DevId, MySensorsDevice]:
     """Return MySensors devices for a hass platform name."""
-    if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data:
-        hass.data[MYSENSORS_PLATFORM_DEVICES.format(domain)] = {}
-    return hass.data[MYSENSORS_PLATFORM_DEVICES.format(domain)]
+    if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][MYSENSORS_PLATFORM_DEVICES.format(domain)] = {}
+    return hass.data[DOMAIN][MYSENSORS_PLATFORM_DEVICES.format(domain)]
 
 
 class MySensorsEntity(MySensorsDevice, Entity):
