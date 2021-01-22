@@ -54,7 +54,6 @@ class AisMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             broker_config = await ais_cloud_ws.async_get_mqtt_settings(
                 user_input["username"], user_input["password"]
             )
-            _LOGGER.error(str(broker_config))
             if "server" not in broker_config:
                 error = "error"
                 if "error" in broker_config:
