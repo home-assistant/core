@@ -87,7 +87,7 @@ async def _get_gateway(
 
     if isinstance(entry, ConfigEntry):
         data: Dict[str, Any] = entry.data
-        unique_id = entry.unique_id
+        unique_id = entry.entry_id
     else:
         data: Dict[str, Any] = entry
 
@@ -96,7 +96,7 @@ async def _get_gateway(
             "no unique id! either give configEntry for auto-extraction or explicitly give one"
         )
     persistence_file = data.get(
-        CONF_PERSISTENCE_FILE, hass.config.path(f"mysensors{unique_id}.pickle")
+        CONF_PERSISTENCE_FILE, hass.config.path(f"mysensors_{unique_id}.pickle")
     )
     version = data.get(CONF_VERSION)
     device = data.get(CONF_DEVICE)
@@ -170,7 +170,7 @@ async def _get_gateway(
     gateway.metric = hass.config.units.is_metric
     gateway.optimistic = False  # old optimistic option has been deprecated, we use echos to hopefully not need it
     gateway.device = device
-    gateway.unique_id = unique_id
+    gateway.entry_id = unique_id
     gateway.event_callback = _gw_callback_factory(hass, entry)
     if persistence:
         await gateway.start_persistence()
@@ -216,9 +216,9 @@ async def _discover_persistent_devices(
 
 async def gw_stop(hass, gateway: BaseAsyncGateway):
     """Stop the gateway."""
-    _LOGGER.info("stopping gateway %s", gateway.unique_id)
+    _LOGGER.info("stopping gateway %s", gateway.entry_id)
     connect_task = hass.data.get(
-        MYSENSORS_GATEWAY_START_TASK.format(gateway.unique_id), None
+        MYSENSORS_GATEWAY_START_TASK.format(gateway.entry_id), None
     )
     if connect_task is not None and not connect_task.done():
         connect_task.cancel()
@@ -229,7 +229,7 @@ async def _gw_start(hass: HomeAssistantType, gateway: BaseAsyncGateway):
     """Start the gateway."""
     # Don't use hass.async_create_task to avoid holding up setup indefinitely.
     hass.data[
-        MYSENSORS_GATEWAY_START_TASK.format(gateway.unique_id)
+        MYSENSORS_GATEWAY_START_TASK.format(gateway.entry_id)
     ] = asyncio.create_task(
         gateway.start()
     )  # store the connect task so it can be cancelled in gw_stop
@@ -242,7 +242,7 @@ async def _gw_start(hass: HomeAssistantType, gateway: BaseAsyncGateway):
         # Gatways connected via mqtt doesn't send gateway ready message.
         return
     gateway_ready = asyncio.Future()
-    gateway_ready_key = MYSENSORS_GATEWAY_READY.format(gateway.unique_id)
+    gateway_ready_key = MYSENSORS_GATEWAY_READY.format(gateway.entry_id)
     hass.data[gateway_ready_key] = gateway_ready
 
     try:

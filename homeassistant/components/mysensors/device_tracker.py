@@ -23,7 +23,7 @@ async def async_setup_scanner(
         return False
 
     for device in new_devices:
-        gateway_id: GatewayId = device.gateway.unique_id
+        gateway_id: GatewayId = device.gateway.entry_id
         dev_id: DevId = (gateway_id, device.node_id, device.child_id, device.value_type)
         await on_unload(
             hass,

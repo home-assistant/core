@@ -11,6 +11,7 @@ import homeassistant.helpers.config_validation as cv
 
 from ... import config_entries
 from ...config_entries import ConfigEntry
+from ...const import CONF_OPTIMISTIC
 from ...helpers.typing import ConfigType, HomeAssistantType
 from .const import (
     ATTR_DEVICES,
@@ -18,6 +19,7 @@ from .const import (
     CONF_DEVICE,
     CONF_GATEWAYS,
     CONF_NODES,
+    CONF_PERSISTENCE,
     CONF_PERSISTENCE_FILE,
     CONF_RETAIN,
     CONF_TCP_PORT,
@@ -110,6 +112,8 @@ CONFIG_SCHEMA = vol.Schema(
                     ),
                     vol.Optional(CONF_RETAIN, default=True): cv.boolean,
                     vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.string,
+                    vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
+                    vol.Optional(CONF_PERSISTENCE, default=True): cv.boolean,
                 },
             )
         )
@@ -162,7 +166,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     Every instance has a connection to exactly one Gateway.
     """
-    _LOGGER.debug("async_setup_entry: %s (id: %s)", entry.title, entry.unique_id)
+    _LOGGER.debug("async_setup_entry: %s (id: %s)", entry.title, entry.entry_id)
     gateway = await setup_gateway(hass, entry)
 
     if not gateway:
@@ -171,7 +175,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     if MYSENSORS_GATEWAYS not in hass.data:
         hass.data[MYSENSORS_GATEWAYS] = {}
-    hass.data[MYSENSORS_GATEWAYS][entry.unique_id] = gateway
+    hass.data[MYSENSORS_GATEWAYS][entry.entry_id] = gateway
 
     async def finish():
         for platform in SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT:
@@ -185,23 +189,22 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Remove an instance of the MySensors integration."""
-    _LOGGER.debug("unload entry: %s (id: %s)", entry.title, entry.unique_id)
+    _LOGGER.debug("Unload entry: %s (id: %s)", entry.title, entry.entry_id)
 
-    gateway = get_mysensors_gateway(hass, entry.unique_id)
+    gateway = get_mysensors_gateway(hass, entry.entry_id)
     if not gateway:
-        _LOGGER.error("can't unload configentry %s, no gateway found", entry.unique_id)
+        _LOGGER.error("Can't unload configentry %s, no gateway found", entry.entry_id)
         return False
 
     for platform in SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT:
-        _LOGGER.debug("forwarding unload to %s", platform)
         await hass.config_entries.async_forward_entry_unload(entry, platform)
 
-    key = MYSENSORS_ON_UNLOAD.format(entry.unique_id)
+    key = MYSENSORS_ON_UNLOAD.format(entry.entry_id)
     if key in hass.data:
         for fnct in hass.data[key]:
             fnct()
 
-    del hass.data[MYSENSORS_GATEWAYS][entry.unique_id]
+    del hass.data[MYSENSORS_GATEWAYS][entry.entry_id]
 
     hass.async_create_task(gw_stop(hass, gateway))
     return True
@@ -217,7 +220,7 @@ async def on_unload(
     if isinstance(entry, GatewayId):
         uniqueid = entry
     else:
-        uniqueid = entry.unique_id
+        uniqueid = entry.entry_id
     key = MYSENSORS_ON_UNLOAD.format(uniqueid)
     if key not in hass.data:
         hass.data[key] = []
@@ -238,14 +241,14 @@ def setup_mysensors_platform(
     """Set up a MySensors platform.
 
     Sets up a bunch of instances of a single platform that is supported by this integration.
-    The function is given a list of DevId, each one describing an instance to set up.
+    The function is given a list of device ids, each one describing an instance to set up.
     The function is also given a class.
-    A new instance of the class is created for every DevId, and the DevId is given to the constructor of the class
+    A new instance of the class is created for every device id, and the device id is given to the constructor of the class
     """
     # Only act if called via MySensors by discovery event.
     # Otherwise gateway is not set up.
     if not discovery_info:
-        _LOGGER.debug("skipping setup due to no discovery info")
+        _LOGGER.debug("Skipping setup due to no discovery info")
         return None
     if device_args is None:
         device_args = ()
@@ -255,7 +258,7 @@ def setup_mysensors_platform(
         devices: Dict[DevId, MySensorsDevice] = get_mysensors_devices(hass, domain)
         if dev_id in devices:
             _LOGGER.debug(
-                "skipping setup of %s for platform %s as it already exists",
+                "Skipping setup of %s for platform %s as it already exists",
                 dev_id,
                 domain,
             )

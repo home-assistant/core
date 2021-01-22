@@ -62,7 +62,7 @@ async def handle_gateway_ready(hass, hass_config: ConfigEntry, msg: Message) -> 
 
     Set asyncio future result if gateway is ready.
     """
-    gateway_ready = hass.data.get(MYSENSORS_GATEWAY_READY.format(msg.gateway.unique_id))
+    gateway_ready = hass.data.get(MYSENSORS_GATEWAY_READY.format(msg.gateway.entry_id))
     if gateway_ready is None or gateway_ready.cancelled():
         return
     gateway_ready.set_result(True)
@@ -96,5 +96,5 @@ def _handle_child_update(
 @callback
 def _handle_node_update(hass, msg):
     """Handle a node update."""
-    signal = NODE_CALLBACK.format(msg.gateway.unique_id, msg.node_id)
+    signal = NODE_CALLBACK.format(msg.gateway.entry_id, msg.node_id)
     async_dispatcher_send(hass, signal)

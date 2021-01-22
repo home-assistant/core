@@ -53,7 +53,7 @@ async def async_setup_entry(
         config_entry,
         async_dispatcher_connect(
             hass,
-            MYSENSORS_DISCOVERY.format(config_entry.unique_id, DOMAIN),
+            MYSENSORS_DISCOVERY.format(config_entry.entry_id, DOMAIN),
             async_discover,
         ),
     )

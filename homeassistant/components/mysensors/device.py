@@ -75,7 +75,7 @@ class MySensorsDevice:
     @property
     def gateway_id(self) -> str:
         """Return the id of the gateway that this device belongs to."""
-        return self.gateway.unique_id
+        return self.gateway.entry_id
 
     @property
     def _mysensors_sensor(self) -> Sensor:

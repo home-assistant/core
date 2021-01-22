@@ -38,7 +38,7 @@ def discover_mysensors_platform(
     _LOGGER.debug("discovering platform %s with devIds: %s", platform, new_devices)
     async_dispatcher_send(
         hass,
-        MYSENSORS_DISCOVERY.format(hass_config.unique_id, platform),
+        MYSENSORS_DISCOVERY.format(hass_config.entry_id, platform),
         {ATTR_DEVICES: new_devices, CONF_NAME: DOMAIN},
     )
 
@@ -188,12 +188,7 @@ def validate_child(
                     exc,
                 )
                 continue
-            dev_id: DevId = (
-                gateway.unique_id,
-                node_id,
-                child.id,
-                set_req[v_name].value,
-            )
+            dev_id: DevId = (gateway.entry_id, node_id, child.id, set_req[v_name].value)
             validated[platform].append(dev_id)
 
     return validated
