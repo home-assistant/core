@@ -61,7 +61,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         # passing a `percentage`. When the entity is converted
         # to natively set speeds in percentage, it should be removed.
         #
-        if speed is not None and percentage is None:
+        if percentage is not None and speed is None:
             speed = self.percentage_to_speed(percentage)
         #
         #
