@@ -25,6 +25,8 @@ def test_fanentity():
     with pytest.raises(NotImplementedError):
         fan.set_speed("slow")
     with pytest.raises(NotImplementedError):
+        fan.set_percentage(0)
+    with pytest.raises(NotImplementedError):
         fan.turn_on()
     with pytest.raises(NotImplementedError):
         fan.turn_off()
