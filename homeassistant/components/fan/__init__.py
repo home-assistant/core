@@ -162,7 +162,7 @@ class FanEntity(ToggleEntity):
         """Set the direction of the fan."""
         raise NotImplementedError()
 
-    async def async_set_direction(self, direction: str) -> None:
+    async def async_set_direction(self, direction: str):
         """Set the direction of the fan."""
         await self.hass.async_add_executor_job(self.set_direction, direction)
 
