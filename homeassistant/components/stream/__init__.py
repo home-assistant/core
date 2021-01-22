@@ -39,6 +39,8 @@ from .hls import async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
 
+STREAM_SOURCE_RE = re.compile("//(.*):(.*)@")
+
 
 def create_stream(hass, stream_source, options=None):
     """Create a stream with the specified identfier based on the source url.
@@ -175,7 +177,7 @@ class Stream:
             )
             self._thread.start()
             _LOGGER.info(
-                "Started stream: %s", re.sub("//.*:.*@", "//", str(self.source))
+                "Started stream: %s", STREAM_SOURCE_RE.sub("//", str(self.source))
             )
 
     def update_source(self, new_source):
@@ -243,7 +245,7 @@ class Stream:
             self._thread.join()
             self._thread = None
             _LOGGER.info(
-                "Stopped stream: %s", re.sub("//.*:.*@", "//", str(self.source))
+                "Stopped stream: %s", STREAM_SOURCE_RE.sub("//", str(self.source))
             )
 
     async def async_record(self, video_path, duration=30, lookback=5):
