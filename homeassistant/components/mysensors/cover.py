@@ -14,13 +14,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-    hass: HomeAssistantType, config, async_add_entities, discovery_info=None
-):
-    """Set up the mysensors platform for covers."""
-    pass
-
-
 async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
 ):

@@ -6,7 +6,6 @@ from mysensors import BaseAsyncGateway
 import voluptuous as vol
 
 from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
-from homeassistant.const import CONF_OPTIMISTIC
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -19,7 +18,6 @@ from .const import (
     CONF_DEVICE,
     CONF_GATEWAYS,
     CONF_NODES,
-    CONF_PERSISTENCE,
     CONF_PERSISTENCE_FILE,
     CONF_RETAIN,
     CONF_TCP_PORT,
@@ -44,7 +42,7 @@ CONF_NODE_NAME = "name"
 
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003
-DEFAULT_VERSION = "2.3"
+DEFAULT_VERSION = "1.4"
 
 
 def has_all_unique_files(value):
@@ -110,8 +108,6 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Required(CONF_GATEWAYS): vol.All(
                         cv.ensure_list, has_all_unique_files, [GATEWAY_SCHEMA]
                     ),
-                    vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
-                    vol.Optional(CONF_PERSISTENCE, default=True): cv.boolean,
                     vol.Optional(CONF_RETAIN, default=True): cv.boolean,
                     vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.string,
                 },
@@ -133,14 +129,12 @@ async def async_setup(hass, config: ConfigType) -> bool:
     user_inputs = [
         {
             CONF_DEVICE: gw[CONF_DEVICE],
-            CONF_PERSISTENCE: gw.get(CONF_PERSISTENCE_FILE, None),
-            CONF_BAUD_RATE: gw.get(CONF_BAUD_RATE, None),
-            CONF_TCP_PORT: gw.get(CONF_TCP_PORT, None),
-            CONF_TOPIC_OUT_PREFIX: gw.get(CONF_TOPIC_OUT_PREFIX, None),
-            CONF_TOPIC_IN_PREFIX: gw.get(CONF_TOPIC_IN_PREFIX, None),
-            CONF_OPTIMISTIC: config.get(CONF_OPTIMISTIC, None),
-            CONF_RETAIN: config.get(CONF_RETAIN, None),
-            CONF_VERSION: config.get(CONF_VERSION, None),
+            CONF_BAUD_RATE: gw[CONF_BAUD_RATE],
+            CONF_TCP_PORT: gw[CONF_TCP_PORT],
+            CONF_TOPIC_OUT_PREFIX: gw.get(CONF_TOPIC_OUT_PREFIX),
+            CONF_TOPIC_IN_PREFIX: gw.get(CONF_TOPIC_IN_PREFIX),
+            CONF_RETAIN: config[CONF_RETAIN],
+            CONF_VERSION: config[CONF_VERSION],
             # nodes config ignored at this time. renaming nodes can now be done from the frontend.
         }
         for gw in config[CONF_GATEWAYS]

@@ -8,7 +8,6 @@ CONF_BAUD_RATE: str = "baud_rate"
 CONF_DEVICE: str = "device"
 CONF_GATEWAYS: str = "gateways"
 CONF_NODES: str = "nodes"
-CONF_PERSISTENCE: str = "persistence"
 CONF_PERSISTENCE_FILE: str = "persistence_file"
 CONF_RETAIN: str = "retain"
 CONF_TCP_PORT: str = "tcp_port"
@@ -18,13 +17,14 @@ CONF_VERSION: str = "version"
 
 DOMAIN: str = "mysensors"
 MYSENSORS_GATEWAY_READY: str = "mysensors_gateway_ready_{}"
+MYSENSORS_GATEWAY_START_TASK: str = "mysensors_gateway_start_task_{}"
 MYSENSORS_GATEWAYS: str = "mysensors_gateways"
 PLATFORM: str = "platform"
 SCHEMA: str = "schema"
 CHILD_CALLBACK: str = "mysensors_child_callback_{}_{}_{}_{}"
 NODE_CALLBACK: str = "mysensors_node_callback_{}_{}"
 MYSENSORS_DISCOVERY = "mysensors_discovery_{}_{}"
-MYSENSORS_ON_UNLOAD = "MYSENSORS_ON_UNLOAD_{}"
+MYSENSORS_ON_UNLOAD = "mysensors_on_unload_{}"
 TYPE: str = "type"
 UPDATE_DELAY: float = 0.1
 
@@ -149,4 +149,7 @@ for platform, platform_types in PLATFORM_TYPES.items():
     for s_type_name in platform_types:
         TYPE_TO_PLATFORMS[s_type_name].append(platform)
 
-SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT = set(PLATFORM_TYPES.keys()) - {"notify"}
+SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT = set(PLATFORM_TYPES.keys()) - {
+    "notify",
+    "device_tracker",
+}

@@ -16,6 +16,7 @@ from homeassistant.components.mysensors import on_unload
 from homeassistant.components.mysensors.const import MYSENSORS_DISCOVERY
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -31,19 +32,13 @@ SENSORS = {
 }
 
 
-async def async_setup_platform(
-    hass: HomeAssistantType, config, async_add_entities, discovery_info=None
-):
-    """Set up the mysensors platform for binary sensors."""
-    pass
-
-
 async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
 ):
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
 
-    async def async_discover(discovery_info):
+    @callback
+    def async_discover(discovery_info):
         """Discover and add a MySensors binary_sensor."""
         mysensors.setup_mysensors_platform(
             hass,

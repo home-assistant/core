@@ -10,7 +10,7 @@ import async_timeout
 from mysensors import BaseAsyncGateway, Message, Sensor, mysensors
 import voluptuous as vol
 
-from homeassistant.const import CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -19,7 +19,6 @@ from ...helpers.typing import HomeAssistantType
 from .const import (
     CONF_BAUD_RATE,
     CONF_DEVICE,
-    CONF_PERSISTENCE,
     CONF_PERSISTENCE_FILE,
     CONF_RETAIN,
     CONF_TCP_PORT,
@@ -27,6 +26,7 @@ from .const import (
     CONF_TOPIC_OUT_PREFIX,
     CONF_VERSION,
     MYSENSORS_GATEWAY_READY,
+    MYSENSORS_GATEWAY_START_TASK,
     MYSENSORS_GATEWAYS,
     GatewayId,
 )
@@ -81,6 +81,7 @@ async def _get_gateway(
     hass: HomeAssistantType,
     entry: Union[ConfigEntry, Dict[str, Any]],
     unique_id: Optional[str] = None,
+    persistence: bool = True,  # old persistence option has been deprecated. kwarg is here so we can run try_connect() without persistence
 ) -> Optional[BaseAsyncGateway]:
     """Return gateway after setup of the gateway."""
 
@@ -97,7 +98,6 @@ async def _get_gateway(
     persistence_file = data.get(
         CONF_PERSISTENCE_FILE, hass.config.path(f"mysensors{unique_id}.pickle")
     )
-    persistence = data.get(CONF_PERSISTENCE)
     version = data.get(CONF_VERSION)
     device = data.get(CONF_DEVICE)
     baud_rate = data.get(CONF_BAUD_RATE)
@@ -168,7 +168,7 @@ async def _get_gateway(
                 return None
     # this adds extra properties to the pymysensors objects
     gateway.metric = hass.config.units.is_metric
-    gateway.optimistic = data.get(CONF_OPTIMISTIC)
+    gateway.optimistic = False  # old optimistic option has been deprecated, we use echos to hopefully not need it
     gateway.device = device
     gateway.unique_id = unique_id
     gateway.event_callback = _gw_callback_factory(hass, entry)
@@ -217,22 +217,26 @@ async def _discover_persistent_devices(
 async def gw_stop(hass, gateway: BaseAsyncGateway):
     """Stop the gateway."""
     _LOGGER.info("stopping gateway %s", gateway.unique_id)
-    if (
-        hasattr(gateway, "connect_task")
-        and gateway.connect_task is not None
-        and not gateway.connect_task.done()
-    ):
-        gateway.connect_task.cancel()
+    connect_task = hass.data.get(
+        MYSENSORS_GATEWAY_START_TASK.format(gateway.unique_id), None
+    )
+    if connect_task is not None and not connect_task.done():
+        connect_task.cancel()
     await gateway.stop()
 
 
 async def _gw_start(hass: HomeAssistantType, gateway: BaseAsyncGateway):
     """Start the gateway."""
     # Don't use hass.async_create_task to avoid holding up setup indefinitely.
-    gateway.connect_task = hass.loop.create_task(gateway.start())
+    hass.data[
+        MYSENSORS_GATEWAY_START_TASK.format(gateway.unique_id)
+    ] = asyncio.create_task(
+        gateway.start()
+    )  # store the connect task so it can be cancelled in gw_stop
 
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, lambda event: gw_stop(hass, gateway)
+        EVENT_HOMEASSISTANT_STOP,
+        lambda event: asyncio.create_task(gw_stop(hass, gateway)),
     )
     if gateway.device == "mqtt":
         # Gatways connected via mqtt doesn't send gateway ready message.

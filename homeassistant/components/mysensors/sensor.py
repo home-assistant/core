@@ -61,13 +61,6 @@ SENSORS = {
 }
 
 
-async def async_setup_platform(
-    hass: HomeAssistantType, config, async_add_entities, discovery_info=None
-):
-    """Set up the MySensors platform for sensors."""
-    pass
-
-
 async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
 ):

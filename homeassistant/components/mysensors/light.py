@@ -25,13 +25,6 @@ from homeassistant.util.color import rgb_hex_to_rgb_list
 SUPPORT_MYSENSORS_RGBW = SUPPORT_COLOR | SUPPORT_WHITE_VALUE
 
 
-async def async_setup_platform(
-    hass: HomeAssistantType, config, async_add_entities, discovery_info=None
-):
-    """Set up the mysensors platform for lights."""
-    pass
-
-
 async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
 ):
