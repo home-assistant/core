@@ -56,7 +56,7 @@ async def test_setup_manual(hass: HomeAssistant):
     ) as devices_method, patch(
         f"{BASE_PATH}.DYSON_PLATFORMS", ["fan", "vacuum"]
     ):  # Patch platforms to get rid of sensors
-        assert await async_setup_component(hass, DOMAIN, config) is True
+        assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
     login.assert_called_once_with()
     devices_method.assert_called_once_with()
@@ -87,7 +87,7 @@ async def test_setup_autoconnect(hass: HomeAssistant):
     ), patch(
         f"{BASE_PATH}.DYSON_PLATFORMS", ["fan"]
     ):  # Patch platforms to get rid of sensors
-        assert await async_setup_component(hass, DOMAIN, config) is True
+        assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
     assert hass.states.async_entity_ids_count() == 1
@@ -96,5 +96,5 @@ async def test_setup_autoconnect(hass: HomeAssistant):
 async def test_login_failed(hass: HomeAssistant):
     """Test login failure during setup."""
     with patch(f"{BASE_PATH}.DysonAccount.login", return_value=False):
-        assert await async_setup_component(hass, DOMAIN, CONFIG) is False
+        assert not await async_setup_component(hass, DOMAIN, CONFIG)
         await hass.async_block_till_done()
