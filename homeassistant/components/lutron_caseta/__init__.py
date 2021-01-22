@@ -1,4 +1,5 @@
 """Component for interacting with a Lutron Caseta system."""
+import asyncio
 import logging
 
 from pylutron_caseta.smartbridge import Smartbridge
@@ -39,23 +40,24 @@ LUTRON_CASETA_COMPONENTS = ["light", "switch", "cover", "scene", "fan", "binary_
 async def async_setup(hass, base_config):
     """Set up the Lutron component."""
 
-    bridge_configs = base_config[DOMAIN]
     hass.data.setdefault(DOMAIN, {})
 
-    for config in bridge_configs:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                # extract the config keys one-by-one just to be explicit
-                data={
-                    CONF_HOST: config[CONF_HOST],
-                    CONF_KEYFILE: config[CONF_KEYFILE],
-                    CONF_CERTFILE: config[CONF_CERTFILE],
-                    CONF_CA_CERTS: config[CONF_CA_CERTS],
-                },
+    if DOMAIN in base_config:
+        bridge_configs = base_config[DOMAIN]
+        for config in bridge_configs:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
+                    # extract the config keys one-by-one just to be explicit
+                    data={
+                        CONF_HOST: config[CONF_HOST],
+                        CONF_KEYFILE: config[CONF_KEYFILE],
+                        CONF_CERTFILE: config[CONF_CERTFILE],
+                        CONF_CA_CERTS: config[CONF_CA_CERTS],
+                    },
+                )
             )
-        )
 
     return True
 
@@ -89,6 +91,26 @@ async def async_setup_entry(hass, config_entry):
         )
 
     return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload the bridge bridge from a config entry."""
+
+    hass.data[DOMAIN][config_entry.entry_id].close()
+
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(config_entry, component)
+                for component in LUTRON_CASETA_COMPONENTS
+            ]
+        )
+    )
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(config_entry.entry_id)
+
+    return unload_ok
 
 
 class LutronCasetaDevice(Entity):

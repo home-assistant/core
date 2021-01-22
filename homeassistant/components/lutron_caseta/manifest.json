@@ -3,9 +3,12 @@
   "name": "Lutron Caséta",
   "documentation": "https://www.home-assistant.io/integrations/lutron_caseta",
   "requirements": [
-    "pylutron-caseta==0.7.2"
+    "pylutron-caseta==0.8.0"
   ],
-  "codeowners": [
-    "@swails"
-  ]
+  "config_flow": true,
+  "zeroconf": ["_leap._tcp.local."],
+  "homekit": {
+    "models": ["Smart Bridge"]
+  },
+  "codeowners": ["@swails", "@bdraco"]
 }

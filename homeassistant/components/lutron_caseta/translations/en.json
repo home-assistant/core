@@ -2,15 +2,28 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "cannot_connect": "Failed to connect"
+            "cannot_connect": "Failed to connect",
+            "not_lutron_device": "Discovered device is not a Lutron device"
         },
         "error": {
             "cannot_connect": "Failed to connect"
         },
+        "flow_title": "Lutron Cas\u00e9ta {name} ({host})",
         "step": {
             "import_failed": {
                 "description": "Couldn\u2019t setup bridge (host: {host}) imported from configuration.yaml.",
                 "title": "Failed to import Cas\u00e9ta bridge configuration."
+            },
+            "link": {
+                "description": "To pair with {name} ({host}), after submitting this form, press the black button on the back of the bridge.",
+                "title": "Pair with the bridge"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Enter the ip address of the device.",
+                "title": "Automaticlly connect to the bridge"
             }
         }
     }
