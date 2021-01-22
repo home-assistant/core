@@ -137,8 +137,22 @@ class ValloxFan(FanEntity):
             self._available = False
             _LOGGER.error("Error updating fan: %s", err)
 
-    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    async def async_turn_on(
+        self, speed: str = None, percentage: int = None, **kwargs
+    ) -> None:
         """Turn the device on."""
+        #
+        # The fan entity model has changed to use percentages
+        # for fan speeds. The below block is for backwards
+        # compatibility with the `turn_on` service to allow
+        # passing a `percentage`. When the entity is converted
+        # to natively set speeds in percentage, it should be removed.
+        #
+        if speed is not None and percentage is None:
+            speed = self.percentage_to_speed(percentage)
+        #
+        #
+
         _LOGGER.debug("Turn on: %s", speed)
 
         # Only the case speed == None equals the GUI toggle switch being

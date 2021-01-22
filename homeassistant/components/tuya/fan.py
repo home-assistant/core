@@ -75,8 +75,20 @@ class TuyaFanDevice(TuyaDevice, FanEntity):
         else:
             self._tuya.set_speed(speed)
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    def turn_on(self, speed: str = None, percentage: int = None, **kwargs) -> None:
         """Turn on the fan."""
+        #
+        # The fan entity model has changed to use percentages
+        # for fan speeds. The below block is for backwards
+        # compatibility with the `turn_on` service to allow
+        # passing a `percentage`. When the entity is converted
+        # to natively set speeds in percentage, it should be removed.
+        #
+        if speed is not None and percentage is None:
+            speed = self.percentage_to_speed(percentage)
+        #
+        #
+
         if speed is not None:
             self.set_speed(speed)
         else:
