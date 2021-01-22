@@ -165,15 +165,15 @@ class SuplaMqttSoftBridge(Entity):
         self._supla_mqtt_connection_code = result_code
         self._supla_mqtt_client = None
 
-    # The callback for when a message is received from SUPLA broker.
     def on_supla_message(self, client, userdata, msg):
+        """The callback for when a message is received from SUPLA broker."""
         _LOGGER.debug(f"on_message {msg.topic} / {msg.payload}")
         payload = msg.payload.decode("utf-8")
         hass_mqtt.async_publish(self.hass, msg.topic, payload)
         self._supla_received = self._supla_received + 1
 
-    # The callback for when a message is published to SUPLA broker.
     def on_supla_publish(self, client, userdata, mid):
+        """The callback for when a message is published to SUPLA broker."""
         _LOGGER.debug(f"on_supla_publish {mid}")
         self._supla_published = self._supla_published + 1
 

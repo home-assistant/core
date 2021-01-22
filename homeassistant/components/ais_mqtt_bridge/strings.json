@@ -7,7 +7,7 @@
             },
             "authentication": {
                 "title": "Authentication in AI-Speaker",
-                "description": "To get data from xxx you need to login,  [Details in the documentation ](https://www.ai-speaker.com)\n\n Fill in the form below and click **SUBMIT** button.",
+                "description": "To get data from xxx you need to login,  [Details in the documentation ](https://www.ai-speaker.com/docs/ais_dom_cloud_index)\n\n Fill in the form below and click **SUBMIT** button.",
                 "data": {
                     "username": "Username",
                     "password": "Password"

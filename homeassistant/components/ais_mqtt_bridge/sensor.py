@@ -3,9 +3,9 @@ from datetime import timedelta
 import logging
 import queue
 
-import paho.mqtt.client as mqtt
+import paho.mqtt.client as ais_mqtt
 
-from homeassistant.components.mqtt import subscription
+import homeassistant.components.mqtt as hass_mqtt
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
@@ -66,7 +66,7 @@ class AisMqttSoftBridge(Entity):
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
-        self._sub_state = await subscription.async_subscribe_topics(
+        self._sub_state = await hass_mqtt.subscription.async_subscribe_topics(
             self.hass,
             self._sub_state,
             {
@@ -80,7 +80,7 @@ class AisMqttSoftBridge(Entity):
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
+        self._sub_state = await hass_mqtt.subscription.async_unsubscribe_topics(
             self.hass, self._sub_state
         )
 
@@ -143,10 +143,10 @@ class AisMqttSoftBridge(Entity):
         return "mdi:bridge"
 
     def on_ais_connect(self, client_, userdata, flags, result_code):
-        """Handle connection result."""
+        """Handle connection result.
+        Subscribing in on_connect() means that if we lose the connection and
+        reconnect then subscriptions will be renewed."""
         self._ais_mqtt_connection_code = result_code
-        # Subscribing in on_connect() means that if we lose the connection and
-        # reconnect then subscriptions will be renewed.
         client_.subscribe("dom/#")
 
     def on_ais_disconnect(self, client_, userdata, result_code):
@@ -154,23 +154,21 @@ class AisMqttSoftBridge(Entity):
         self._ais_mqtt_connection_code = result_code
         self._ais_mqtt_client = None
 
-    # The callback for when a PUBLISH message is received from ais cloud broker.
     def on_ais_message(self, client, userdata, msg):
+        """The callback for when a PUBLISH message is received from ais cloud broker."""
         payload = msg.payload.decode("utf-8")
         self._ais_cloud_received = self._ais_cloud_received + 1
-        self.hass.services.call(
-            "mqtt", "publish", {"topic": msg.topic, "payload": payload}
-        )
+        hass_mqtt.async_publish(self.hass, msg.topic, payload)
 
-    # The callback for when a message is published to ais cloud broker.
     def on_ais_publish(self, client, userdata, mid):
+        """The callback for when a message is published to ais cloud broker."""
         _LOGGER.debug(f"on_ais_publish {mid}")
         self._ais_cloud_published = self._ais_cloud_published + 1
 
     async def async_update(self):
         """Update the sensor."""
         if self._ais_mqtt_client is None:
-            self._ais_mqtt_client = mqtt.Client(self._client_id)
+            self._ais_mqtt_client = ais_mqtt.Client(self._client_id)
             self._ais_mqtt_client.username_pw_set(
                 self._username, password=self._password
             )
