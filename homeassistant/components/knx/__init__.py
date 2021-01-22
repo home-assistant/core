@@ -67,6 +67,7 @@ SERVICE_KNX_ATTR_PAYLOAD = "payload"
 SERVICE_KNX_ATTR_TYPE = "type"
 SERVICE_KNX_ATTR_REMOVE = "remove"
 SERVICE_KNX_EVENT_REGISTER = "event_register"
+SERVICE_KNX_EXPOSURE_REGISTER = "exposure_register"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -162,6 +163,22 @@ SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
     }
 )
 
+SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
+    ExposeSchema.SCHEMA.extend(
+        {
+            vol.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
+        }
+    ),
+    vol.Schema(
+        # for removing only `address` is required
+        {
+            vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+            vol.Required(SERVICE_KNX_ATTR_REMOVE): vol.All(cv.boolean, True),
+        },
+        extra=vol.ALLOW_EXTRA,
+    ),
+)
+
 
 async def async_setup(hass, config):
     """Set up the KNX component."""
@@ -212,6 +229,14 @@ async def async_setup(hass, config):
         schema=SERVICE_KNX_EVENT_REGISTER_SCHEMA,
     )
 
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_KNX_EXPOSURE_REGISTER,
+        hass.data[DOMAIN].service_exposure_register_modify,
+        schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
+    )
+
     async def reload_service_handler(service_call: ServiceCallType) -> None:
         """Remove all KNX components and load new ones from config."""
 
@@ -246,6 +271,7 @@ class KNXModule:
         self.config = config
         self.connected = False
         self.exposures = []
+        self.service_exposures = {}
 
         self.init_xknx()
         self._knx_event_callback: TelegramQueue.Callback = self.register_callback()
@@ -361,6 +387,38 @@ class KNXModule:
                 "Service event_register registered event for '%s'",
                 group_address,
             )
+
+    async def service_exposure_register_modify(self, call):
+        """Service for adding or removing an exposure to KNX bus."""
+        group_address = call.data.get(SERVICE_KNX_ATTR_ADDRESS)
+
+        if call.data.get(SERVICE_KNX_ATTR_REMOVE):
+            try:
+                removed_exposure = self.service_exposures.pop(group_address)
+            except KeyError:
+                _LOGGER.warning(
+                    "Service exposure_register could not remove exposure for '%s'",
+                    group_address,
+                )
+            else:
+                removed_exposure.shutdown()
+            return
+
+        if group_address in self.service_exposures:
+            replaced_exposure = self.service_exposures.pop(group_address)
+            _LOGGER.warning(
+                "Service exposure_register replacing already registered exposure for '%s' - %s",
+                group_address,
+                replaced_exposure.device.name,
+            )
+            replaced_exposure.shutdown()
+        exposure = create_knx_exposure(self.hass, self.xknx, call.data)
+        self.service_exposures[group_address] = exposure
+        _LOGGER.debug(
+            "Service exposure_register registered exposure for '%s' - %s",
+            group_address,
+            exposure.device.name,
+        )
 
     async def service_send_to_knx_bus(self, call):
         """Service for sending an arbitrary KNX message to the KNX bus."""
