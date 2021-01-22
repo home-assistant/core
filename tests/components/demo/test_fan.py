@@ -12,7 +12,11 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-FAN_ENTITY_IDS = ["fan.living_room_fan", "fan.percentage_full_fan"]
+FULL_FAN_ENTITY_IDS = ["fan.living_room_fan", "fan.percentage_full_fan"]
+LIMITED_AND_FULL_FAN_ENTITY_IDS = FULL_FAN_ENTITY_IDS.copy()
+LIMITED_AND_FULL_FAN_ENTITY_IDS.extend(
+    ["fan.ceiling_fan", "fan.percentage_limited_fan"]
+)
 
 
 @pytest.fixture(autouse=True)
@@ -22,7 +26,7 @@ async def setup_comp(hass):
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize("fan_entity_id", FAN_ENTITY_IDS)
+@pytest.mark.parametrize("fan_entity_id", LIMITED_AND_FULL_FAN_ENTITY_IDS)
 async def test_turn_on(hass, fan_entity_id):
     """Test turning on the device."""
     state = hass.states.get(fan_entity_id)
@@ -34,6 +38,12 @@ async def test_turn_on(hass, fan_entity_id):
     state = hass.states.get(fan_entity_id)
     assert state.state == STATE_ON
 
+
+@pytest.mark.parametrize("fan_entity_id", FULL_FAN_ENTITY_IDS)
+async def test_turn_on_with_speed_and_percentage(hass, fan_entity_id):
+    """Test turning on the device."""
+    state = hass.states.get(fan_entity_id)
+    assert state.state == STATE_OFF
     await hass.services.async_call(
         fan.DOMAIN,
         SERVICE_TURN_ON,
@@ -57,7 +67,7 @@ async def test_turn_on(hass, fan_entity_id):
     assert state.attributes[fan.ATTR_PERCENTAGE] == 100
 
 
-@pytest.mark.parametrize("fan_entity_id", FAN_ENTITY_IDS)
+@pytest.mark.parametrize("fan_entity_id", LIMITED_AND_FULL_FAN_ENTITY_IDS)
 async def test_turn_off(hass, fan_entity_id):
     """Test turning off the device."""
     state = hass.states.get(fan_entity_id)
@@ -76,7 +86,7 @@ async def test_turn_off(hass, fan_entity_id):
     assert state.state == STATE_OFF
 
 
-@pytest.mark.parametrize("fan_entity_id", FAN_ENTITY_IDS)
+@pytest.mark.parametrize("fan_entity_id", LIMITED_AND_FULL_FAN_ENTITY_IDS)
 async def test_turn_off_without_entity_id(hass, fan_entity_id):
     """Test turning off all fans."""
     state = hass.states.get(fan_entity_id)
@@ -95,7 +105,7 @@ async def test_turn_off_without_entity_id(hass, fan_entity_id):
     assert state.state == STATE_OFF
 
 
-@pytest.mark.parametrize("fan_entity_id", FAN_ENTITY_IDS)
+@pytest.mark.parametrize("fan_entity_id", FULL_FAN_ENTITY_IDS)
 async def test_set_direction(hass, fan_entity_id):
     """Test setting the direction of the device."""
     state = hass.states.get(fan_entity_id)
@@ -111,7 +121,7 @@ async def test_set_direction(hass, fan_entity_id):
     assert state.attributes[fan.ATTR_DIRECTION] == fan.DIRECTION_REVERSE
 
 
-@pytest.mark.parametrize("fan_entity_id", FAN_ENTITY_IDS)
+@pytest.mark.parametrize("fan_entity_id", FULL_FAN_ENTITY_IDS)
 async def test_set_speed(hass, fan_entity_id):
     """Test setting the speed of the device."""
     state = hass.states.get(fan_entity_id)
@@ -127,7 +137,7 @@ async def test_set_speed(hass, fan_entity_id):
     assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_LOW
 
 
-@pytest.mark.parametrize("fan_entity_id", FAN_ENTITY_IDS)
+@pytest.mark.parametrize("fan_entity_id", FULL_FAN_ENTITY_IDS)
 async def test_set_percentage(hass, fan_entity_id):
     """Test setting the percentage speed of the device."""
     state = hass.states.get(fan_entity_id)
@@ -144,7 +154,7 @@ async def test_set_percentage(hass, fan_entity_id):
     assert state.attributes[fan.ATTR_PERCENTAGE] == 33
 
 
-@pytest.mark.parametrize("fan_entity_id", FAN_ENTITY_IDS)
+@pytest.mark.parametrize("fan_entity_id", FULL_FAN_ENTITY_IDS)
 async def test_oscillate(hass, fan_entity_id):
     """Test oscillating the fan."""
     state = hass.states.get(fan_entity_id)
@@ -170,7 +180,7 @@ async def test_oscillate(hass, fan_entity_id):
     assert state.attributes[fan.ATTR_OSCILLATING] is False
 
 
-@pytest.mark.parametrize("fan_entity_id", FAN_ENTITY_IDS)
+@pytest.mark.parametrize("fan_entity_id", LIMITED_AND_FULL_FAN_ENTITY_IDS)
 async def test_is_on(hass, fan_entity_id):
     """Test is on service call."""
     assert not fan.is_on(hass, fan_entity_id)
