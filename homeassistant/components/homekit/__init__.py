@@ -83,6 +83,7 @@ from .const import (
     UNDO_UPDATE_LISTENER,
 )
 from .util import (
+    async_find_next_available_port,
     dismiss_setup_message,
     get_persist_fullpath_for_entry_id,
     migrate_filesystem_state_data_for_primary_imported_entry_id,
@@ -221,14 +222,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     options = entry.options
 
     name = conf[CONF_NAME]
-    port = conf[CONF_PORT]
+    requested_port = conf[CONF_PORT]
     _LOGGER.debug("Begin setup HomeKit for %s", name)
 
     # If the previous instance hasn't cleaned up yet
     # we need to wait a bit
-    if not await hass.async_add_executor_job(port_is_available, port):
-        _LOGGER.warning("The local port %s is in use", port)
-        raise ConfigEntryNotReady
+    if await hass.async_add_executor_job(port_is_available, requested_port):
+        port = requested_port
+    else:
+        try:
+            port = await async_find_next_available_port(hass, requested_port)
+            _LOGGER.info(
+                "The local port %s is in use and the next available local port %s was used instead",
+                requested_port,
+                port,
+            )
+        except OSError as ex:
+            _LOGGER.error("The local port %s is in use", requested_port)
+            raise ConfigEntryNotReady from ex
 
     if CONF_ENTRY_INDEX in conf and conf[CONF_ENTRY_INDEX] == 0:
         _LOGGER.debug("Migrating legacy HomeKit data for %s", name)
