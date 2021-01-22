@@ -308,12 +308,12 @@ class DysonPureCoolEntity(DysonFanEntity):
         """Initialize the fan."""
         super().__init__(device, DysonPureCoolV2State)
 
-    @percentage_compat
     # The fan entity model has changed. The @percentage_compat decorator will ensure
     # the speed argument is set when a percentage is passed in.  When this entity is
     # updated to use the new model and `speed` and # `set_speed` have been removed
     # switch the decorator to @speed_compat to ensure the percentage argument will be
     # filled for places that still pass in speed instead of percentage.
+    @percentage_compat
     def turn_on(
         self, speed: Optional[str] = None, percentage: int = None, **kwargs
     ) -> None:
