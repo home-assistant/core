@@ -317,7 +317,7 @@ class FanEntity(ToggleEntity):
         if normalized_speed_list and normalized_speed_list[0] != SPEED_OFF:
             normalized_speed_list.insert(0, SPEED_OFF)
         if _INVALID_SPEED_ON in speed_list:
-            normalized_speed_list.insert(_INVALID_SPEED_ON)
+            normalized_speed_list.append(_INVALID_SPEED_ON)
 
         return normalized_speed_list
 
