@@ -1,0 +1,25 @@
+{
+  "config": {
+      "abort": {
+         
+      },
+      "error": {
+        "cannot_connect": "Failed to connect to Bluetooth adapter",
+        "device_not_found": "Failed to connect to thermostat",
+        "not_a_mac": "Wrong MAC address format (11:22:33:44:55:66)"        
+      },
+      "step": {
+          "user": {
+              "data": {
+                  "devices": "Comma-separated list of BRC1H Bluetooth addresses",
+                  "device" : "Bluetooth local adapter name. Run 'hcitool' in a terminal to find out",
+                  "scan_interval": "Bluetooth device discovery timeout",
+                  "force_update": "Force disconnect from BRC1H device before start (recommended)",
+                  "discovery": "Attempt to discover the devices. They must not be connected to a mobile app"
+              },
+              "description": "Enter the Bluetooth MAC addresses of your BRC1H thermostats. Please make sure you have previously paired them with this instance as it requires human intervention:\n\n1. Forget bluetooth connection on BRC1H\n2. bluetoothctl scan on\n3. bluetoochctl scan off\n4. bluetoothctl pair [BRC1H MAC]\n5. Confirm when prompted\n6. Confirm connection on BRC1H",
+              "title": "Configure Daikin Madoka"
+          }
+      }
+  }
+}

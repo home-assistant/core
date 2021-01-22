@@ -1,0 +1,8 @@
+{
+  "domain": "daikin_madoka",
+  "name": "Daikin Madoka",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/daikin",
+  "requirements": ["pymadoka==0.2.3"],
+  "codeowners": ["@mduran80"]
+}
