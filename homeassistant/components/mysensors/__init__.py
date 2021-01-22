@@ -209,7 +209,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 
     del hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
 
-    hass.async_create_task(gw_stop(hass, gateway))
+    await gw_stop(hass, gateway)
     return True
 
 
