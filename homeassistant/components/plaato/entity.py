@@ -18,16 +18,14 @@ class PlaatoEntity(entity.Entity):
         self._device_id = data[DEVICE][DEVICE_ID]
         self._device_type = data[DEVICE][DEVICE_TYPE]
         self._device_name = data[DEVICE][DEVICE_NAME]
-        self._name = (
-            f"{self._device_name} {self._sensor_data.get_sensor_name(sensor_type)}"
-        )
+        self._name = self._sensor_data.get_sensor_name(sensor_type)
         self._attributes = PlaatoEntity._to_snake_case(self._sensor_data.attributes)
         self._state = 0
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{DOMAIN} {self._device_type} {self._name}".title()
+        return f"{self._name}".title()
 
     @property
     def unique_id(self):

@@ -27,6 +27,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_WEBHOOK_ID,
     HTTP_OK,
@@ -47,6 +48,7 @@ from .const import (
     CONF_DEVICE_TYPE,
     CONF_USE_WEBHOOK,
     COORDINATOR,
+    DEFAULT_SCAN_INTERVAL,
     DEVICE,
     DEVICE_ID,
     DEVICE_NAME,
@@ -81,8 +83,6 @@ WEBHOOK_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-SCAN_INTERVAL = timedelta(minutes=10)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -130,7 +130,12 @@ async def async_setup_coordinator(hass: HomeAssistant, entry: ConfigEntry):
     auth_token = entry.data[CONF_TOKEN]
     device_type = entry.data[CONF_DEVICE_TYPE]
 
-    coordinator = PlaatoCoordinator(hass, auth_token, device_type)
+    if entry.options.get(CONF_SCAN_INTERVAL):
+        update_interval = timedelta(minutes=entry.options[CONF_SCAN_INTERVAL])
+    else:
+        update_interval = DEFAULT_SCAN_INTERVAL
+
+    coordinator = PlaatoCoordinator(hass, auth_token, device_type, update_interval)
     await coordinator.async_refresh()
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
@@ -234,7 +239,13 @@ def _device_id(data):
 class PlaatoCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
 
-    def __init__(self, hass, auth_token, device_type: PlaatoDeviceType):
+    def __init__(
+        self,
+        hass,
+        auth_token,
+        device_type: PlaatoDeviceType,
+        update_interval: timedelta,
+    ):
         """Initialize."""
         self.api = Plaato(auth_token=auth_token)
         self.hass = hass
@@ -245,7 +256,7 @@ class PlaatoCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            update_interval=update_interval,
         )
 
     async def _async_update_data(self):

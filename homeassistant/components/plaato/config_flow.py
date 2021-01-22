@@ -15,6 +15,7 @@ from .const import (
     CONF_DEVICE_NAME,
     CONF_DEVICE_TYPE,
     CONF_USE_WEBHOOK,
+    DEFAULT_SCAN_INTERVAL,
     DOCS_URL,
     PLACEHOLDER_DEVICE_NAME,
     PLACEHOLDER_DEVICE_TYPE,
@@ -200,7 +201,9 @@ class PlaatoOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_SCAN_INTERVAL,
-                        default=self._config_entry.options.get(CONF_SCAN_INTERVAL, 5),
+                        default=self._config_entry.options.get(
+                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                        ),
                     ): cv.positive_int
                 }
             ),

@@ -45,7 +45,7 @@
       },
       "user": {
         "title": "Options for Plaato",
-        "description": "Set the update interval",
+        "description": "Set the update interval (minutes)",
         "data": {
           "update_interval": "Update interval (minutes)"
         }
