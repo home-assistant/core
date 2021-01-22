@@ -130,8 +130,20 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             {CharacteristicsTypes.SWING_MODE: 1 if oscillating else 0}
         )
 
-    async def async_turn_on(self, speed=None, **kwargs):
+    async def async_turn_on(self, speed=None, percentage=None, **kwargs):
         """Turn the specified fan on."""
+
+        #
+        # The fan entity model has changed to use percentages
+        # for fan speeds. The below block is for backwards
+        # compatibility with the `turn_on` service to allow
+        # passing a `percentage`. When the entity is converted
+        # to natively set speeds in percentage, it should be removed.
+        #
+        if speed is not None and percentage is None:
+            speed = self.percentage_to_speed(percentage)
+        #
+        #
 
         characteristics = {}
 
