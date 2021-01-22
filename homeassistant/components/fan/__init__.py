@@ -417,7 +417,7 @@ def speed_compat(func: Callable) -> Callable:
         ) -> None:
             """Wrap async_turn_on to add percentage compatibility."""
             if speed is not None and percentage is None:
-                percentage = self.self.speed_to_percentage(speed)
+                percentage = self.speed_to_percentage(speed)
 
             return await check_func(self, speed=speed, percentage=percentage, **kwargs)
 
@@ -429,7 +429,7 @@ def speed_compat(func: Callable) -> Callable:
     ) -> None:
         """Wrap turn_on to add percentage compatibility."""
         if speed is not None and percentage is None:
-            percentage = self.self.speed_to_percentage(speed)
+            percentage = self.speed_to_percentage(speed)
 
         return check_func(self, speed=speed, percentage=percentage, **kwargs)
 
