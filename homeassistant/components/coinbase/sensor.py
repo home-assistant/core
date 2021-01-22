@@ -29,8 +29,6 @@ DEFAULT_COIN_ICON = "mdi:currency-usd-circle"
 
 ATTRIBUTION = "Data provided by coinbase.com"
 
-DATA_COINBASE = "coinbase_cache"
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Coinbase sensor platform."""
