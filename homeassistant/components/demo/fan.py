@@ -20,6 +20,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         [
             DemoFan(hass, "fan1", "Living Room Fan", FULL_SUPPORT),
             DemoFan(hass, "fan2", "Ceiling Fan", LIMITED_SUPPORT),
+            DemoPercentageFan(hass, "fan3", "Percentage Full Fan", FULL_SUPPORT),
+            DemoPercentageFan(hass, "fan4", "Percentage Limited Fan", LIMITED_SUPPORT),
         ]
     )
 
@@ -30,7 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class DemoFan(FanEntity):
-    """A demonstration fan component."""
+    """A demonstration fan component that uses legacy fan speeds."""
 
     def __init__(
         self, hass, unique_id: str, name: str, supported_features: int
@@ -114,3 +116,50 @@ class DemoFan(FanEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return self._supported_features
+
+
+class DemoPercentageFan(DemoFan):
+    """A demonstration fan component that uses percentages."""
+
+    def __init__(
+        self, hass, unique_id: str, name: str, supported_features: int
+    ) -> None:
+        """Initialize the entity."""
+        super.__init__(hass, unique_id, name, supported_features)
+        self._percentage = 0
+        self._speed = None
+
+    @property
+    def should_poll(self):
+        """No polling needed for a demo fan."""
+        return False
+
+    @property
+    def percentage(self) -> str:
+        """Return the current speed."""
+        return self._percentage
+
+    @property
+    def speed_list(self) -> list:
+        """Get the list of available speeds."""
+        return None
+
+    def set_percentage(self, percentage: int) -> None:
+        """Set the speed of the fan, as a percentage."""
+        self._percentage = percentage
+        self.schedule_update_ha_state()
+
+    def turn_on(self, speed: str = None, percentage: int = None, **kwargs) -> None:
+        """Turn on the entity."""
+        if percentage is None:
+            percentage = 50
+        self.set_percentage(percentage)
+
+    def turn_off(self, **kwargs) -> None:
+        """Turn off the entity."""
+        self.oscillate(False)
+        self.set_percentage(0)
+
+    def set_speed(self, speed: str) -> None:
+        """Set the speed of the fan."""
+        raise NotImplementedError
