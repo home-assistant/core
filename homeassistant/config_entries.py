@@ -898,6 +898,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         if self.unique_id is None:
             return
 
+        abort_key = "already_configured"
+
         for entry in self._async_current_entries():
             if entry.unique_id == self.unique_id:
                 if updates is not None:
@@ -912,10 +914,11 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                         self.hass.async_create_task(
                             self.hass.config_entries.async_reload(entry.entry_id)
                         )
+                        abort_key = "configuration_updated"
                 # Allow ignored entries to be configured on manual user step
                 if entry.source == SOURCE_IGNORE and self.source == SOURCE_USER:
                     continue
-                raise data_entry_flow.AbortFlow("already_configured")
+                raise data_entry_flow.AbortFlow(abort_key)
 
     async def async_set_unique_id(
         self, unique_id: Optional[str] = None, *, raise_on_progress: bool = True
