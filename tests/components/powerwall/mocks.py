@@ -14,9 +14,6 @@ from tesla_powerwall import (
     SiteMaster,
 )
 
-from homeassistant.components.powerwall.const import DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS
-
 from tests.common import load_fixture
 
 
@@ -85,8 +82,3 @@ async def _async_load_json_fixture(hass, path):
         load_fixture, os.path.join("powerwall", path)
     )
     return json.loads(fixture)
-
-
-def _mock_get_config():
-    """Return a default powerwall config."""
-    return {DOMAIN: {CONF_IP_ADDRESS: "1.2.3.4"}}
