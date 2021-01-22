@@ -135,7 +135,7 @@ async def test_set_percentage(hass, fan_entity_id):
 
     await hass.services.async_call(
         fan.DOMAIN,
-        fan.SERVICE_SET_SPEED,
+        fan.SERVICE_SET_PERCENTAGE,
         {ATTR_ENTITY_ID: fan_entity_id, fan.ATTR_PERCENTAGE: 33},
         blocking=True,
     )
