@@ -1,4 +1,4 @@
-"""The Screenlogic integration."""
+"""The ScreenLogic integration."""
 import asyncio
 import socket
 from collections import defaultdict
@@ -40,6 +40,7 @@ from .const import (
     DOMAIN,
     DEFAULT_SCAN_INTERVAL,
     MIN_SCAN_INTERVAL,
+    PUMP_BREAKOUT_SENSORS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,10 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 entities["sensor"].append(sensor)
 
     for pump in coordinator.data["pumps"]:
-        if (
-            coordinator.data["pumps"][pump]["data"] != 0
-            and "currentWatts" in coordinator.data["pumps"][pump]
-        ):
+        if coordinator.data["pumps"][pump]["data"] != 0:
             entities["pump"].append(pump)
 
     for body in coordinator.data["bodies"]:

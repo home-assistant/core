@@ -20,7 +20,7 @@
       }
     },
     "abort": {
-      "single_instance_allowed": "Already configured. Only a single configuration possible.",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "No devices found on the network"
     }
   }
