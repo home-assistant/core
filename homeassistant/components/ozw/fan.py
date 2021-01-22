@@ -57,8 +57,20 @@ class ZwaveFan(ZWaveDeviceEntity, FanEntity):
         self._previous_speed = speed
         self.values.primary.send_value(SPEED_TO_VALUE[speed])
 
-    async def async_turn_on(self, speed=None, **kwargs):
+    async def async_turn_on(self, speed=None, percentage=None, **kwargs):
         """Turn the device on."""
+        #
+        # The fan entity model has changed to use percentages
+        # for fan speeds. The below block is for backwards
+        # compatibility with the `turn_on` service to allow
+        # passing a `percentage`. When the entity is converted
+        # to natively set speeds in percentage, it should be removed.
+        #
+        if speed is not None and percentage is None:
+            speed = self.percentage_to_speed(percentage)
+        #
+        #
+
         if speed is None:
             # Value 255 tells device to return to previous value
             self.values.primary.send_value(255)
