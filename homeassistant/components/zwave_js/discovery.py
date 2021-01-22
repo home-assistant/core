@@ -169,6 +169,16 @@ DISCOVERY_SCHEMAS = [
         property={"currentValue"},
         type={"number"},
     ),
+    # fan
+    ZWaveDiscoverySchema(
+        platform="fan",
+        hint="fan",
+        device_class_generic={"Multilevel Switch"},
+        device_class_specific={"Fan Switch"},
+        command_class={CommandClass.SWITCH_MULTILEVEL},
+        property={"currentValue"},
+        type={"number"},
+    ),
 ]
 
 
