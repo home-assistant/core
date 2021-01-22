@@ -388,9 +388,7 @@ def percentage_compat(func: Callable) -> Callable:
         return wrap_async_turn_on
 
     @ft.wraps(func)
-    async def wrap_turn_on(
-        self, speed: str = None, percentage: int = None, **kwargs
-    ) -> None:
+    def wrap_turn_on(self, speed: str = None, percentage: int = None, **kwargs) -> None:
         """Wrap turn_on to add percentage compatibility."""
         if percentage is not None and speed is None:
             speed = self.percentage_to_speed(percentage)
@@ -424,9 +422,7 @@ def speed_compat(func: Callable) -> Callable:
         return wrap_async_turn_on
 
     @ft.wraps(func)
-    async def wrap_turn_on(
-        self, speed: str = None, percentage: int = None, **kwargs
-    ) -> None:
+    def wrap_turn_on(self, speed: str = None, percentage: int = None, **kwargs) -> None:
         """Wrap turn_on to add percentage compatibility."""
         if speed is not None and percentage is None:
             percentage = self.speed_to_percentage(speed)
