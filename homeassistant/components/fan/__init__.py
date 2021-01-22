@@ -119,7 +119,7 @@ async def async_unload_entry(hass, entry):
 
 def _fan_native(method):
     """Native fan method not overridden."""
-    setattr(method, _FAN_NATIVE)
+    setattr(method, _FAN_NATIVE, True)
     return method
 
 
