@@ -11,15 +11,15 @@ from homeassistant.const import CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
 async def test_form(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    with patch("homeassistant.components.epson.Projector.get_power", return_value="01"):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
     assert result["type"] == "form"
     assert result["errors"] == {}
     assert result["step_id"] == config_entries.SOURCE_USER
-
     with patch(
-        "homeassistant.components.epson.Projector.get_property",
+        "homeassistant.components.epson.Projector.get_power",
         return_value="01",
     ), patch(
         "homeassistant.components.epson.async_setup_entry",
@@ -29,6 +29,7 @@ async def test_form(hass):
             result["flow_id"],
             {CONF_HOST: "1.1.1.1", CONF_NAME: "test-epson"},
         )
+
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-epson"
     assert result2["data"] == {CONF_HOST: "1.1.1.1"}
@@ -43,7 +44,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.epson.Projector.get_property",
+        "homeassistant.components.epson.Projector.get_power",
         return_value=STATE_UNAVAILABLE,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -62,7 +63,7 @@ async def test_form_powered_off(hass):
     )
 
     with patch(
-        "homeassistant.components.epson.Projector.get_property",
+        "homeassistant.components.epson.Projector.get_power",
         return_value=PWR_OFF_STATE,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -88,7 +89,6 @@ async def test_import(hass):
             context={"source": config_entries.SOURCE_IMPORT},
             data={CONF_HOST: "1.1.1.1", CONF_NAME: "test-epson"},
         )
-        print("res", result)
         assert result["type"] == "create_entry"
         assert result["title"] == "test-epson"
         assert result["data"] == {CONF_HOST: "1.1.1.1"}
@@ -101,7 +101,7 @@ async def test_import_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.epson.Projector.get_property",
+        "homeassistant.components.epson.Projector.get_power",
         return_value=STATE_UNAVAILABLE,
     ):
         result2 = await hass.config_entries.flow.async_configure(
