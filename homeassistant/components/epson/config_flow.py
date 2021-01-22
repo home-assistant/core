@@ -1,20 +1,20 @@
 """Config flow for epson integration."""
+import logging
+
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME
 
 from . import validate_projector
 from .const import DOMAIN
-from .exceptions import CannotConnect
+from .exceptions import CannotConnect, PoweredOff
 
 DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_NAME, default=DOMAIN): str,
-        vol.Required(CONF_PORT, default=80): int,
-    }
+    {vol.Required(CONF_HOST): str, vol.Required(CONF_NAME, default=DOMAIN): str}
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -32,11 +32,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                await validate_projector(
-                    self.hass, user_input[CONF_HOST], user_input[CONF_PORT]
-                )
+                projector = await validate_projector(self.hass, user_input[CONF_HOST])
+                serial_no = await projector.get_serial_number()
+                await self.async_set_unique_id(serial_no)
+                self._abort_if_unique_id_configured()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except PoweredOff:
+                _LOGGER.warning(
+                    "You need to turn ON projector for initial configuration."
+                )
+                errors["base"] = "powered_off"
             else:
                 return self.async_create_entry(
                     title=user_input.pop(CONF_NAME), data=user_input
