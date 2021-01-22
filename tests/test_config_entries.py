@@ -803,7 +803,7 @@ async def test_setup_raise_not_ready(hass, caplog):
 
     assert len(mock_call.mock_calls) == 1
     assert (
-        "Config entry 'test_title' from test integration not ready yet" in caplog.text
+        "Config entry 'test_title' for test integration not ready yet" in caplog.text
     )
     p_hass, p_wait_time, p_setup = mock_call.mock_calls[0][1]
 
