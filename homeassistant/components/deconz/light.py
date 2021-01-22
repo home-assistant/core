@@ -146,7 +146,8 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         if self._device.colormode in ("xy", "hs"):
             if self._device.xy:
                 return color_util.color_xy_to_hs(*self._device.xy)
-            return (self._device.hue / 65535 * 360, self._device.sat / 255 * 100)
+            if self._device.hue and self._device.sat:
+                return (self._device.hue / 65535 * 360, self._device.sat / 255 * 100)
         return None
 
     @property
