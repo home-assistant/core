@@ -214,9 +214,12 @@ class FanEntity(ToggleEntity):
     @property
     def speed(self) -> Optional[str]:
         """Return the current speed."""
+        if not hasattr(self.percentage, _FAN_NATIVE):
+            return self.percentage_to_speed(self.percentage)
         return None
 
     @property
+    @_fan_native
     def percentage(self) -> Optional[int]:
         """Return the current speed as a percentage."""
         return self.speed_to_percentage(self.speed)
@@ -224,6 +227,8 @@ class FanEntity(ToggleEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
+        if not hasattr(self.percentage, _FAN_NATIVE):
+            return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
         return []
 
     @property

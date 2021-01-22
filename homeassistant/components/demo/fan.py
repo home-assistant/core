@@ -3,12 +3,12 @@ from homeassistant.components.fan import (
     SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
+    SPEED_OFF,
     SUPPORT_DIRECTION,
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
     FanEntity,
 )
-from homeassistant.const import STATE_OFF
 
 FULL_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
 LIMITED_SUPPORT = SUPPORT_SET_SPEED
@@ -41,7 +41,7 @@ class DemoFan(FanEntity):
         self.hass = hass
         self._unique_id = unique_id
         self._supported_features = supported_features
-        self._speed = STATE_OFF
+        self._speed = SPEED_OFF
         self._oscillating = None
         self._direction = None
         self._name = name
@@ -74,7 +74,7 @@ class DemoFan(FanEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return [STATE_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+        return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
     def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the entity."""
@@ -85,7 +85,7 @@ class DemoFan(FanEntity):
     def turn_off(self, **kwargs) -> None:
         """Turn off the entity."""
         self.oscillate(False)
-        self.set_speed(STATE_OFF)
+        self.set_speed(SPEED_OFF)
 
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
@@ -139,11 +139,6 @@ class DemoPercentageFan(DemoFan):
         """Return the current speed."""
         return self._percentage
 
-    @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return None
-
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         self._percentage = percentage
@@ -152,7 +147,7 @@ class DemoPercentageFan(DemoFan):
     def turn_on(self, speed: str = None, percentage: int = None, **kwargs) -> None:
         """Turn on the entity."""
         if percentage is None:
-            percentage = 50
+            percentage = 67
         self.set_percentage(percentage)
 
     def turn_off(self, **kwargs) -> None:
