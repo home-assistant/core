@@ -1,7 +1,7 @@
 """Generic Z-Wave Entity Class."""
 
 import logging
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
@@ -11,7 +11,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import ATTR_NODE_ID, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 
 LOGGER = logging.getLogger(__name__)
@@ -67,6 +67,11 @@ class ZWaveBaseEntity(Entity):
                 )
             },
         }
+
+    @property
+    def device_state_attributes(self) -> Dict[str, int]:
+        """Return device specific state attributes."""
+        return {ATTR_NODE_ID: self.info.node.node_id}
 
     @property
     def name(self) -> str:
