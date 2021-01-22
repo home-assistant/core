@@ -32,12 +32,12 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SUPPORT_SET_SPEED = 1
 SUPPORT_OSCILLATE = 2
 SUPPORT_DIRECTION = 4
-SUPPORT_SET_SPEED_PERCENTAGE = 8
+SUPPORT_SET_PERCENTAGE = 8
 
 SERVICE_SET_SPEED = "set_speed"
 SERVICE_OSCILLATE = "oscillate"
 SERVICE_SET_DIRECTION = "set_direction"
-SERVICE_SET_SPEED_PERCENTAGE = "set_speed_percentage"
+SERVICE_SET_SPEED_PERCENTAGE = "set_percentage"
 
 SPEED_OFF = "off"
 SPEED_LOW = "low"
@@ -48,10 +48,14 @@ DIRECTION_FORWARD = "forward"
 DIRECTION_REVERSE = "reverse"
 
 ATTR_SPEED = "speed"
-ATTR_SPEED_PERCENTAGE = "speed_percentage"
+ATTR_PERCENTAGE = "percentage"
 ATTR_SPEED_LIST = "speed_list"
 ATTR_OSCILLATING = "oscillating"
 ATTR_DIRECTION = "direction"
+
+INVALID_SPEEDS_FILTER = {"on", "auto", "smart"}
+
+_FAN_NATIVE = "_fan_native"
 
 
 @bind_hass
@@ -97,7 +101,7 @@ async def async_setup(hass, config: dict):
     component.async_register_entity_service(
         SERVICE_SET_SPEED_PERCENTAGE,
         {vol.Required(ATTR_SPEED): vol.Number()},
-        "async_set_speed_percentage",
+        "async_set_percentage",
         [SUPPORT_SET_SPEED],
     )
 
@@ -114,6 +118,12 @@ async def async_unload_entry(hass, entry):
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
+def _fan_native(method):
+    """Native fan method not overridden."""
+    setattr(method, _FAN_NATIVE)
+    return method
+
+
 class FanEntity(ToggleEntity):
     """Representation of a fan."""
 
@@ -121,56 +131,66 @@ class FanEntity(ToggleEntity):
         """Set the speed of the fan."""
         raise NotImplementedError()
 
-    async def async_set_speed(self, speed: str):
+    async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         if speed == SPEED_OFF:
             await self.async_turn_off()
-        elif self.supported_features & SUPPORT_SET_SPEED_PERCENTAGE:
-            await self.async_set_speed_percentage(self.speed_to_percentage(speed))
+        elif not hasattr(self.async_set_percentage, _FAN_NATIVE):
+            await self.async_set_percentage(self.speed_to_percentage(speed))
+        elif not hasattr(self.set_percentage, _FAN_NATIVE):
+            await self.hass.async_add_executor_job(
+                self.set_percentage, self.speed_to_percentage(speed)
+            )
         else:
             await self.hass.async_add_job(self.set_speed, speed)
 
-    def set_speed_percentage(self, speed: str) -> None:
+    @_fan_native
+    def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         raise NotImplementedError()
 
-    async def async_set_speed_percentage(self, speed: int):
+    @_fan_native
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        if speed == SPEED_OFF:
+        if percentage == 0:
             await self.async_turn_off()
-        elif not self.supported_features & SUPPORT_SET_SPEED_PERCENTAGE:
-            await self.async_set_speed(self.percentage_to_speed(speed))
+        elif not hasattr(self.set_percentage, _FAN_NATIVE):
+            await self.hass.async_add_executor_job(self.set_percentage, percentage)
         else:
-            await self.hass.async_add_executor_job(self.set_speed, speed)
+            await self.async_set_speed(self.percentage_to_speed(percentage))
 
     def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         raise NotImplementedError()
 
-    async def async_set_direction(self, direction: str):
+    async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         await self.hass.async_add_executor_job(self.set_direction, direction)
 
     # pylint: disable=arguments-differ
-    def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
+    def turn_on(
+        self, speed: Optional[str] = None, percentage: Optional[int] = None, **kwargs
+    ) -> None:
         """Turn on the fan."""
         raise NotImplementedError()
 
     # pylint: disable=arguments-differ
-    async def async_turn_on(self, speed: Optional[str] = None, **kwargs):
+    async def async_turn_on(
+        self, speed: Optional[str] = None, percentage: Optional[int] = None, **kwargs
+    ) -> None:
         """Turn on the fan."""
         if speed == SPEED_OFF:
             await self.async_turn_off()
         else:
             await self.hass.async_add_executor_job(
-                ft.partial(self.turn_on, speed, **kwargs)
+                ft.partial(self.turn_on, speed=speed, percentage=percentage, **kwargs)
             )
 
     def oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         raise NotImplementedError()
 
-    async def async_oscillate(self, oscillating: bool):
+    async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         await self.hass.async_add_executor_job(self.oscillate, oscillating)
 
@@ -182,21 +202,21 @@ class FanEntity(ToggleEntity):
     @property
     def speed(self) -> Optional[str]:
         """Return the current speed."""
-        if self.supported_features & SUPPORT_SET_SPEED_PERCENTAGE:
-            return self.percentage_to_speed(self.percentage_speed)
+        if self.supported_features & SUPPORT_SET_PERCENTAGE:
+            return self.percentage_to_speed(self.percentage)
         return None
 
     @property
-    def percentage_speed(self):
+    def percentage(self):
         """Return the current speed as a percentage."""
-        if not self.supported_features & SUPPORT_SET_SPEED_PERCENTAGE:
+        if not self.supported_features & SUPPORT_SET_PERCENTAGE:
             return self.speed_to_percentage(self.speed)
         return None
 
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        if self.supported_features & SUPPORT_SET_SPEED_PERCENTAGE:
+        if self.supported_features & SUPPORT_SET_PERCENTAGE:
             return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
         return []
 
@@ -236,14 +256,26 @@ class FanEntity(ToggleEntity):
         if speed == SPEED_OFF:
             return 0
 
-        speeds_len = len(self.speed_list)
-        speed_offset = self.speed_list.index(speed)
+        normalized_speed_list = self._normalized_speed_list
+        speeds_len = len(normalized_speed_list)
+        speed_offset = normalized_speed_list.index(speed)
 
-        return ((speed_offset) * 100) // ((speeds_len - 1))
+        return ((speed_offset) * 100) // (speeds_len - 1)
+
+    @property
+    def _normalized_speed_list(self):
+        """Filter out invalid speeds that have crept into fans over time."""
+        normalized_speed_list = [
+            speed for speed in self.speed_list if speed not in INVALID_SPEEDS_FILTER
+        ]
+        if normalized_speed_list and normalized_speed_list[0] != SPEED_OFF:
+            normalized_speed_list.insert(0, SPEED_OFF)
+
+        return normalized_speed_list
 
     def percentage_to_speed(self, value: int):
         """
-        Map a percentage onto self.speed_list
+        Map a percentage onto self.speed_list.
 
         Officially, this should only have to deal with 4 pre-defined speeds.
 
@@ -263,14 +295,15 @@ class FanEntity(ToggleEntity):
         if value == 0:
             return SPEED_OFF
 
-        speeds_len = len(self.speed_list)
+        normalized_speed_list = self._normalized_speed_list
+        speeds_len = len(normalized_speed_list)
 
-        for offset, speed in enumerate(self.speed_list[1:], start=1):
-            upper_bound = (offset * 100) // ((speeds_len - 1))
+        for offset, speed in enumerate(normalized_speed_list[1:], start=1):
+            upper_bound = (offset * 100) // (speeds_len - 1)
             if value <= upper_bound:
                 return speed
 
-        return self.speed_list[-1]
+        return normalized_speed_list[-1]
 
     @property
     def state_attributes(self) -> dict:
@@ -284,9 +317,9 @@ class FanEntity(ToggleEntity):
         if supported_features & SUPPORT_OSCILLATE:
             data[ATTR_OSCILLATING] = self.oscillating
 
-        if supported_features & SUPPORT_SET_SPEED or supported_features & SUPPORT_SET_SPEED_PERCENTAGE:
+        if supported_features & SUPPORT_SET_SPEED:
             data[ATTR_SPEED] = self.speed
-            data[ATTR_SPEED_PERCENTAGE] = self.percentage_speed
+            data[ATTR_PERCENTAGE] = self.percentage
 
         return data
 
