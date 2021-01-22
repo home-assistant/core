@@ -264,7 +264,7 @@ class FanEntity(ToggleEntity):
             return {ATTR_SPEED_LIST: self.speed_list}
         return {}
 
-    def speed_to_percentage(self, speed: str) -> int:
+    def speed_to_percentage(self, speed: str) -> Optional[int]:
         """
         Map a speed to a percentage.
 
