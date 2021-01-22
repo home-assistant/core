@@ -32,12 +32,11 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SUPPORT_SET_SPEED = 1
 SUPPORT_OSCILLATE = 2
 SUPPORT_DIRECTION = 4
-SUPPORT_SET_PERCENTAGE = 8
 
 SERVICE_SET_SPEED = "set_speed"
 SERVICE_OSCILLATE = "oscillate"
 SERVICE_SET_DIRECTION = "set_direction"
-SERVICE_SET_SPEED_PERCENTAGE = "set_percentage"
+SERVICE_SET_PERCENTAGE = "set_percentage"
 
 SPEED_OFF = "off"
 SPEED_LOW = "low"
@@ -99,7 +98,7 @@ async def async_setup(hass, config: dict):
         [SUPPORT_DIRECTION],
     )
     component.async_register_entity_service(
-        SERVICE_SET_SPEED_PERCENTAGE,
+        SERVICE_SET_PERCENTAGE,
         {vol.Required(ATTR_SPEED): vol.Number()},
         "async_set_percentage",
         [SUPPORT_SET_SPEED],
@@ -190,7 +189,7 @@ class FanEntity(ToggleEntity):
         """Oscillate the fan."""
         raise NotImplementedError()
 
-    async def async_oscillate(self, oscillating: bool) -> None:
+    async def async_oscillate(self, oscillating: bool):
         """Oscillate the fan."""
         await self.hass.async_add_executor_job(self.oscillate, oscillating)
 
@@ -202,22 +201,16 @@ class FanEntity(ToggleEntity):
     @property
     def speed(self) -> Optional[str]:
         """Return the current speed."""
-        if self.supported_features & SUPPORT_SET_PERCENTAGE:
-            return self.percentage_to_speed(self.percentage)
         return None
 
     @property
-    def percentage(self):
+    def percentage(self) -> Optional[int]:
         """Return the current speed as a percentage."""
-        if not self.supported_features & SUPPORT_SET_PERCENTAGE:
-            return self.speed_to_percentage(self.speed)
-        return None
+        return 0
 
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        if self.supported_features & SUPPORT_SET_PERCENTAGE:
-            return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
         return []
 
     @property
@@ -237,7 +230,7 @@ class FanEntity(ToggleEntity):
             return {ATTR_SPEED_LIST: self.speed_list}
         return {}
 
-    def speed_to_percentage(self, speed: str):
+    def speed_to_percentage(self, speed: str) -> int:
         """
         Map a speed to a percentage.
 
@@ -273,7 +266,7 @@ class FanEntity(ToggleEntity):
 
         return normalized_speed_list
 
-    def percentage_to_speed(self, value: int):
+    def percentage_to_speed(self, value: int) -> str:
         """
         Map a percentage onto self.speed_list.
 
