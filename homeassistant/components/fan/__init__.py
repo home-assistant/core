@@ -130,7 +130,7 @@ class FanEntity(ToggleEntity):
         """Set the speed of the fan."""
         raise NotImplementedError()
 
-    async def async_set_speed(self, speed: str) -> None:
+    async def async_set_speed(self, speed: str):
         """Set the speed of the fan."""
         if speed == SPEED_OFF:
             await self.async_turn_off()
