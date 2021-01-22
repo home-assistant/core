@@ -6,9 +6,9 @@ from homeassistant.components.cover import ATTR_CURRENT_POSITION
 WINDOW_COVER_ENTITY = "cover.zws_12_current_value"
 
 
-async def test_cover(hass, client, window_cover, integration):
+async def test_cover(hass, client, chain_actuator_zws12, integration):
     """Test the light entity."""
-    node = window_cover
+    node = chain_actuator_zws12
     state = hass.states.get(WINDOW_COVER_ENTITY)
 
     assert state
