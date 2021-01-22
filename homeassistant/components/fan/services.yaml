@@ -9,6 +9,16 @@ set_speed:
       description: Speed setting
       example: "low"
 
+set_percentage:
+  description: Sets fan speed percentage.
+  fields:
+    entity_id:
+      description: Name(s) of the entities to set
+      example: "fan.living_room"
+    percentage:
+      description: Percentage speed setting
+      example: 25
+
 turn_on:
   description: Turns fan on.
   fields:
@@ -18,6 +28,9 @@ turn_on:
     speed:
       description: Speed setting
       example: "high"
+    percentage:
+      description: Percentage speed setting
+      example: 75
 
 turn_off:
   description: Turns fan off.
