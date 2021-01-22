@@ -260,7 +260,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # we need to wait a bit
     try:
         await hass.async_add_executor_job(homekit.setup, zeroconf_instance)
-    except OSError as ex:
+    except (OSError, AttributeError) as ex:
         _LOGGER.warning("The local port %s is in use", port)
         raise ConfigEntryNotReady from ex
 
