@@ -1,7 +1,6 @@
 """Provides functionality to interact with fans."""
 import asyncio
 from datetime import timedelta
-import functools
 import functools as ft
 import logging
 from typing import Callable, List, Optional
@@ -371,12 +370,12 @@ def percentage_compat(func: Callable) -> Callable:
 
     # Check for partials to properly determine if coroutine function
     check_func = func
-    while isinstance(check_func, functools.partial):
+    while isinstance(check_func, ft.partial):
         check_func = check_func.func
 
     if asyncio.iscoroutinefunction(check_func):
 
-        @functools.wraps(func)
+        @ft.wraps(func)
         async def wrap_async_turn_on(
             self, speed: str = None, percentage: int = None, **kwargs
         ) -> None:
@@ -388,7 +387,7 @@ def percentage_compat(func: Callable) -> Callable:
 
         return wrap_async_turn_on
 
-    @functools.wraps(func)
+    @ft.wraps(func)
     async def wrap_turn_on(
         self, speed: str = None, percentage: int = None, **kwargs
     ) -> None:
@@ -407,12 +406,12 @@ def speed_compat(func: Callable) -> Callable:
 
     # Check for partials to properly determine if coroutine function
     check_func = func
-    while isinstance(check_func, functools.partial):
+    while isinstance(check_func, ft.partial):
         check_func = check_func.func
 
     if asyncio.iscoroutinefunction(check_func):
 
-        @functools.wraps(func)
+        @ft.wraps(func)
         async def wrap_async_turn_on(
             self, speed: str = None, percentage: int = None, **kwargs
         ) -> None:
@@ -424,7 +423,7 @@ def speed_compat(func: Callable) -> Callable:
 
         return wrap_async_turn_on
 
-    @functools.wraps(func)
+    @ft.wraps(func)
     async def wrap_turn_on(
         self, speed: str = None, percentage: int = None, **kwargs
     ) -> None:
