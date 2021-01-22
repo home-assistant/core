@@ -133,10 +133,12 @@ def _fan_native(method):
 class FanEntity(ToggleEntity):
     """Representation of a fan."""
 
+    @_fan_native
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         raise NotImplementedError()
 
+    @_fan_native
     async def async_set_speed(self, speed: str):
         """Set the speed of the fan."""
         if speed == SPEED_OFF:
@@ -214,20 +216,27 @@ class FanEntity(ToggleEntity):
     @property
     def speed(self) -> Optional[str]:
         """Return the current speed."""
-        if not hasattr(self.percentage, _FAN_NATIVE):
+        if not hasattr(self.set_percentage, _FAN_NATIVE) or not hasattr(
+            self.async_set_percentage, _FAN_NATIVE
+        ):
             return self.percentage_to_speed(self.percentage)
         return None
 
     @property
-    @_fan_native
     def percentage(self) -> Optional[int]:
         """Return the current speed as a percentage."""
-        return self.speed_to_percentage(self.speed)
+        if not hasattr(self.set_speed, _FAN_NATIVE) or not hasattr(
+            self.async_set_speed, _FAN_NATIVE
+        ):
+            return self.speed_to_percentage(self.speed)
+        return 0
 
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        if not hasattr(self.percentage, _FAN_NATIVE):
+        if not hasattr(self.set_percentage, _FAN_NATIVE) or not hasattr(
+            self.async_set_percentage, _FAN_NATIVE
+        ):
             return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
         return []
 
