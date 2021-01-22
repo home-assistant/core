@@ -729,7 +729,7 @@ habitipy==0.2.0
 hangups==0.4.11
 
 # homeassistant.components.cloud
-hass-nabucasa==0.39.0
+hass-nabucasa==0.41.0
 
 # homeassistant.components.splunk
 hass_splunk==0.1.1
