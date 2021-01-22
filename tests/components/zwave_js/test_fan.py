@@ -1,4 +1,5 @@
 """Test the Z-Wave JS fan platform."""
+import pytest
 from zwave_js_server.event import Event
 
 from homeassistant.components.fan import ATTR_SPEED, SPEED_MEDIUM
@@ -46,11 +47,22 @@ async def test_fan(hass, client, in_wall_smart_fan_control, integration):
 
     client.async_send_command.reset_mock()
 
-    # Test setting speed
+    # Test setting unknown speed
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            "fan",
+            "set_speed",
+            {"entity_id": FAN_ENTITY, "speed": 99},
+            blocking=True,
+        )
+
+    client.async_send_command.reset_mock()
+
+    # Test turn on no speed
     await hass.services.async_call(
         "fan",
-        "set_speed",
-        {"entity_id": FAN_ENTITY, "speed": 99},
+        "turn_on",
+        {"entity_id": FAN_ENTITY},
         blocking=True,
     )
 
@@ -74,7 +86,7 @@ async def test_fan(hass, client, in_wall_smart_fan_control, integration):
             "label": "Target value",
         },
     }
-    assert args["value"] == 99
+    assert args["value"] == 255
 
     client.async_send_command.reset_mock()
 

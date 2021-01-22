@@ -70,21 +70,21 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
             raise ValueError(f"Invalid speed received: {speed}")
         self._previous_speed = speed
         target_value = self.get_zwave_value("targetValue")
-        self.info.node.async_set_value(target_value, SPEED_TO_VALUE[speed])
+        await self.info.node.async_set_value(target_value, SPEED_TO_VALUE[speed])
 
     async def async_turn_on(self, speed: Optional[Any] = None, **kwargs: Any) -> None:
         """Turn the device on."""
         if speed is None:
             # Value 255 tells device to return to previous value
             target_value = self.get_zwave_value("targetValue")
-            self.info.node.async_set_value(target_value, 255)
+            await self.info.node.async_set_value(target_value, 255)
         else:
             await self.async_set_speed(speed)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         target_value = self.get_zwave_value("targetValue")
-        self.info.node.async_set_value(target_value, 0)
+        await self.info.node.async_set_value(target_value, 0)
 
     @property
     def is_on(self) -> bool:
