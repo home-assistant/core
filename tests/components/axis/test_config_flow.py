@@ -9,7 +9,9 @@ from homeassistant.components.axis.const import (
     CONF_EVENTS,
     CONF_MODEL,
     CONF_STREAM_PROFILE,
+    CONF_VIDEO_SOURCE,
     DEFAULT_STREAM_PROFILE,
+    DEFAULT_VIDEO_SOURCE,
     DOMAIN as AXIS_DOMAIN,
 )
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
@@ -530,8 +532,13 @@ async def test_option_flow(hass):
     config_entry = await setup_axis_integration(hass)
     device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
     assert device.option_stream_profile == DEFAULT_STREAM_PROFILE
+    assert device.option_video_source == DEFAULT_VIDEO_SOURCE
 
-    result = await hass.config_entries.options.async_init(device.config_entry.entry_id)
+    with respx.mock:
+        mock_default_vapix_requests(respx)
+        result = await hass.config_entries.options.async_init(
+            device.config_entry.entry_id
+        )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "configure_stream"
@@ -540,15 +547,21 @@ async def test_option_flow(hass):
         "profile_1",
         "profile_2",
     }
+    assert set(result["data_schema"].schema[CONF_VIDEO_SOURCE].container) == {
+        DEFAULT_VIDEO_SOURCE,
+        1,
+    }
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_STREAM_PROFILE: "profile_1"},
+        user_input={CONF_STREAM_PROFILE: "profile_1", CONF_VIDEO_SOURCE: 1},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         CONF_EVENTS: True,
         CONF_STREAM_PROFILE: "profile_1",
+        CONF_VIDEO_SOURCE: 1,
     }
     assert device.option_stream_profile == "profile_1"
+    assert device.option_video_source == 1

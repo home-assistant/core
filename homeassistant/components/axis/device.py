@@ -34,9 +34,11 @@ from .const import (
     CONF_EVENTS,
     CONF_MODEL,
     CONF_STREAM_PROFILE,
+    CONF_VIDEO_SOURCE,
     DEFAULT_EVENTS,
     DEFAULT_STREAM_PROFILE,
     DEFAULT_TRIGGER_TIME,
+    DEFAULT_VIDEO_SOURCE,
     DOMAIN as AXIS_DOMAIN,
     LOGGER,
     PLATFORMS,
@@ -112,6 +114,11 @@ class AxisNetworkDevice:
     def option_trigger_time(self):
         """Config entry option defining minimum number of seconds to keep trigger high."""
         return self.config_entry.options.get(CONF_TRIGGER_TIME, DEFAULT_TRIGGER_TIME)
+
+    @property
+    def option_video_source(self):
+        """Config entry option defining what video source camera platform should use."""
+        return self.config_entry.options.get(CONF_VIDEO_SOURCE, DEFAULT_VIDEO_SOURCE)
 
     # Signals
 
