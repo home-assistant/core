@@ -3,6 +3,8 @@
 from copy import deepcopy
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.deconz.const import (
     CONF_ALLOW_DECONZ_GROUPS,
     DOMAIN as DECONZ_DOMAIN,
@@ -404,3 +406,118 @@ async def test_lidl_christmas_light(hass):
         )
 
     assert hass.states.get("light.xmas_light")
+
+
+async def test_non_color_light_reports_color(hass):
+    """Verify hs_color does not crash when a group gets updated with a bad color value.
+
+    After calling a scene color temp light of certain manufacturers
+    report color temp in color space.
+    """
+    data = deepcopy(DECONZ_WEB_REQUEST)
+
+    data["groups"] = {
+        "0": {
+            "action": {
+                "alert": "none",
+                "bri": 127,
+                "colormode": "hs",
+                "ct": 0,
+                "effect": "none",
+                "hue": 0,
+                "on": True,
+                "sat": 127,
+                "scene": None,
+                "xy": [0, 0],
+            },
+            "devicemembership": [],
+            "etag": "81e42cf1b47affb72fa72bc2e25ba8bf",
+            "id": "0",
+            "lights": ["0", "1"],
+            "name": "All",
+            "scenes": [],
+            "state": {"all_on": False, "any_on": True},
+            "type": "LightGroup",
+        }
+    }
+
+    data["lights"] = {
+        "0": {
+            "ctmax": 500,
+            "ctmin": 153,
+            "etag": "026bcfe544ad76c7534e5ca8ed39047c",
+            "hascolor": True,
+            "manufacturername": "dresden elektronik",
+            "modelid": "FLS-PP3",
+            "name": "Light 1",
+            "pointsymbol": {},
+            "state": {
+                "alert": None,
+                "bri": 111,
+                "colormode": "ct",
+                "ct": 307,
+                "effect": None,
+                "hascolor": True,
+                "hue": 7998,
+                "on": False,
+                "reachable": True,
+                "sat": 172,
+                "xy": [0.421253, 0.39921],
+            },
+            "swversion": "020C.201000A0",
+            "type": "Extended color light",
+            "uniqueid": "00:21:2E:FF:FF:EE:DD:CC-0A",
+        },
+        "1": {
+            "colorcapabilities": 0,
+            "ctmax": 65535,
+            "ctmin": 0,
+            "etag": "9dd510cd474791481f189d2a68a3c7f1",
+            "hascolor": True,
+            "lastannounced": "2020-12-17T17:44:38Z",
+            "lastseen": "2021-01-11T18:36Z",
+            "manufacturername": "IKEA of Sweden",
+            "modelid": "TRADFRI bulb E27 WS opal 1000lm",
+            "name": "Küchenlicht",
+            "state": {
+                "alert": "none",
+                "bri": 156,
+                "colormode": "ct",
+                "ct": 250,
+                "on": True,
+                "reachable": True,
+            },
+            "swversion": "2.0.022",
+            "type": "Color temperature light",
+            "uniqueid": "ec:1b:bd:ff:fe:ee:ed:dd-01",
+        },
+    }
+    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    gateway = get_gateway_from_config_entry(hass, config_entry)
+
+    assert len(hass.states.async_all()) == 3
+    assert hass.states.get("light.all").attributes[ATTR_COLOR_TEMP] == 307
+
+    # Updating a scene will return a faulty color value for a non-color light causing an exception in hs_color
+    state_changed_event = {
+        "e": "changed",
+        "id": "1",
+        "r": "lights",
+        "state": {
+            "alert": None,
+            "bri": 216,
+            "colormode": "xy",
+            "ct": 410,
+            "on": True,
+            "reachable": True,
+        },
+        "t": "event",
+        "uniqueid": "ec:1b:bd:ff:fe:ee:ed:dd-01",
+    }
+    gateway.api.event_handler(state_changed_event)
+    await hass.async_block_till_done()
+
+    # Bug is fixed if we reach this point, but device won't have neither color temp nor color
+    with pytest.raises(KeyError):
+        assert hass.states.get("light.all").attributes[ATTR_COLOR_TEMP]
+        assert hass.states.get("light.all").attributes[ATTR_HS_COLOR]
