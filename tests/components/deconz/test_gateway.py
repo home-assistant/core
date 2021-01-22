@@ -181,6 +181,18 @@ async def test_update_address(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_gateway_trigger_reauth_flow(hass):
+    """Failed authentication trigger a reauthentication flow."""
+    with patch(
+        "homeassistant.components.deconz.gateway.get_gateway",
+        side_effect=AuthenticationRequired,
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+        await setup_deconz_integration(hass)
+        mock_flow_init.assert_called_once()
+
+    assert hass.data[DECONZ_DOMAIN] == {}
+
+
 async def test_reset_after_successful_setup(hass):
     """Make sure that connection status triggers a dispatcher send."""
     config_entry = await setup_deconz_integration(hass)
