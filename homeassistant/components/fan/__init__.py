@@ -53,7 +53,13 @@ ATTR_SPEED_LIST = "speed_list"
 ATTR_OSCILLATING = "oscillating"
 ATTR_DIRECTION = "direction"
 
-INVALID_SPEEDS_FILTER = {"on", "auto", "smart"}
+# Invalid speeds do not conform to the entity model, but have crept
+# into core integrations at some point so we are temporarily
+# accommodating them in the transition to percentages.
+_INVALID_SPEED_ON = "on"
+_INVALID_SPEED_AUTO = "auto"
+_INVALID_SPEED_SMART = "smart"
+_INVALID_SPEEDS_FILTER = {_INVALID_SPEED_ON, _INVALID_SPEED_AUTO, _INVALID_SPEED_SMART}
 
 _FAN_NATIVE = "_fan_native"
 
@@ -303,11 +309,15 @@ class FanEntity(ToggleEntity):
     @property
     def _normalized_speed_list(self) -> List[str]:
         """Filter out invalid speeds that have crept into fans over time."""
+        speed_list = self.speed_list
+
         normalized_speed_list = [
-            speed for speed in self.speed_list if speed not in INVALID_SPEEDS_FILTER
+            speed for speed in speed_list if speed not in _INVALID_SPEEDS_FILTER
         ]
         if normalized_speed_list and normalized_speed_list[0] != SPEED_OFF:
             normalized_speed_list.insert(0, SPEED_OFF)
+        if _INVALID_SPEED_ON in speed_list:
+            normalized_speed_list.insert(_INVALID_SPEED_ON)
 
         return normalized_speed_list
 
