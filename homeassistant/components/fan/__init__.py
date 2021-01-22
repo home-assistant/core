@@ -77,7 +77,12 @@ async def async_setup(hass, config: dict):
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON, {vol.Optional(ATTR_SPEED): cv.string}, "async_turn_on"
+        SERVICE_TURN_ON,
+        {
+            vol.Optional(ATTR_SPEED): cv.string,
+            vol.Optional(ATTR_PERCENTAGE): vol.Number(),
+        },
+        "async_turn_on",
     )
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
