@@ -3,7 +3,7 @@
   "name": "Tasmota",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tasmota",
-  "requirements": ["hatasmota==0.2.5"],
+  "requirements": ["hatasmota==0.2.6"],
   "dependencies": ["mqtt"],
   "mqtt": ["tasmota/discovery/#"],
   "codeowners": ["@emontnemery"]
