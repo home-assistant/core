@@ -246,6 +246,20 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
+        "id": "fan.percentage_full_fan",
+        "name": {"name": "Percentage Full Fan"},
+        "traits": ["action.devices.traits.FanSpeed", "action.devices.traits.OnOff"],
+        "type": "action.devices.types.FAN",
+        "willReportState": False,
+    },
+    {
+        "id": "fan.percentage_limited_fan",
+        "name": {"name": "Percentage Limited Fan"},
+        "traits": ["action.devices.traits.FanSpeed", "action.devices.traits.OnOff"],
+        "type": "action.devices.types.FAN",
+        "willReportState": False,
+    },
+    {
         "id": "climate.hvac",
         "name": {"name": "Hvac"},
         "traits": [
