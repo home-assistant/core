@@ -50,7 +50,10 @@ class ScreenLogicWaterHeater(ScreenlogicEntity, WaterHeaterEntity):
 
     @property
     def name(self) -> str:
-        return self.coordinator.data["bodies"][self._entity_id]["heat_status"]["name"]
+        return (
+            "ScreenLogic "
+            + self.coordinator.data["bodies"][self._entity_id]["heat_status"]["name"]
+        )
 
     @property
     def state(self) -> str:
