@@ -125,7 +125,7 @@ class DemoPercentageFan(DemoFan):
         self, hass, unique_id: str, name: str, supported_features: int
     ) -> None:
         """Initialize the entity."""
-        super.__init__(hass, unique_id, name, supported_features)
+        super().__init__(hass, unique_id, name, supported_features)
         self._percentage = 0
         self._speed = None
 
