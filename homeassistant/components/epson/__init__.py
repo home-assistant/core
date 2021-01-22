@@ -4,7 +4,6 @@ import logging
 
 from epson_projector import Projector
 from epson_projector.const import (
-    POWER,
     PWR_OFF_STATE,
     STATE_UNAVAILABLE as EPSON_STATE_UNAVAILABLE,
 )
@@ -26,7 +25,7 @@ async def validate_projector(hass: HomeAssistant, host, check_powered_on=True):
     """Validate the given host and port allows us to connect."""
     epson_proj = Projector(host=host, loop=hass.loop, type="tcp")
     if check_powered_on:
-        _power = await epson_proj.get_property(POWER)
+        _power = await epson_proj.get_power()
         if not _power or _power == EPSON_STATE_UNAVAILABLE:
             _LOGGER.debug("Cannot connect to projector.")
             raise CannotConnect
