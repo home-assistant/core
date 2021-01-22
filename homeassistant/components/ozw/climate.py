@@ -200,7 +200,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return self._convert_units(self.values.temperature.units)
+        return self._convert_units(self._current_mode_setpoint_values[0].units)
 
     @property
     def current_temperature(self):
@@ -209,7 +209,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             return None
         return self._convert_temperature(
             self.values.temperature.value,
-            self._convert_units(self.values.temperature.units),
+            self._convert_units(self._current_mode_setpoint_values[0].units),
             self.temperature_unit,
         )
 
@@ -398,11 +398,13 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         self._hvac_presets = all_presets
 
     def _convert_units(self, units):
+        """Converts units as a string to farenheit or celcius constant."""
         if units == "F":
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
 
     def _convert_temperature(self, value, units, target_units):
+        """Wrapper for home assistants convert_temperature."""
         return convert_temperature(value, units, target_units)
 
 
