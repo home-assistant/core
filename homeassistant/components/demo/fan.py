@@ -168,7 +168,7 @@ class DemoPercentageFan(FanEntity):
 
     def turn_on(self, speed: str = None, percentage: int = None, **kwargs) -> None:
         """Turn on the entity."""
-        if speed is not None and percentage is None:
+        if percentage is not None and speed is None:
             percentage = self.speed_to_percentage(speed)
 
         if percentage is None:
@@ -256,7 +256,7 @@ class AsyncDemoPercentageFan(FanEntity):
         self, speed: str = None, percentage: int = None, **kwargs
     ) -> None:
         """Turn on the entity."""
-        if speed is not None and percentage is None:
+        if percentage is not None and speed is None:
             percentage = self.speed_to_percentage(speed)
 
         if percentage is None:
