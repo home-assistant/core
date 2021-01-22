@@ -182,7 +182,7 @@ class AisPlayerDevice(MediaPlayerEntity):
     @property
     def name(self):
         """Return the name of the device."""
-        return "AI-Speaker " + self._ais_product + " player"
+        return "AI-Speaker player"
 
     @property
     def media_image_url(self):
@@ -332,7 +332,7 @@ class AisPlayerDevice(MediaPlayerEntity):
         self._media_id = await self._ais_gate.get_media_content_id_form_ais(media_id)
         self._media_position = 0
         self._media_status_received_time = dt_util.utcnow()
-        await self._ais_gate.command("playAudio", media_id)
+        await self._ais_gate.command("playAudio", self._media_id)
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the media browsing helper."""
@@ -341,6 +341,5 @@ class AisPlayerDevice(MediaPlayerEntity):
             media_content_id,
             self._ais_gate,
         )
-        # TODO
-        # await self._ais_gate.cache_browse_media(result.as_dict())
+        await self._ais_gate.cache_browse_media(result.as_dict())
         return result

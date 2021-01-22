@@ -100,7 +100,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             "media_album_name": device.media_album_name,
             "media_content_id": device.media_content_id,
         }
-        await ais_gate.share_media_full_info(j_media_info)
+        await ais_gate.async_share_media_full_info(j_media_info)
 
         # 1. pause internal player
         await hass.services.async_call(
@@ -659,6 +659,17 @@ class ExoPlayerDevice(MediaPlayerEntity):
             _publish_command_to_frame(
                 self.hass, self._device_ip, "playAudio", media_content_id
             )
+
+        # 0. push media info to ais to share with mobile clients
+        j_media_info = {
+            "media_title": self._media_title,
+            "media_source": self._media_source,
+            "media_stream_image": self._stream_image,
+            "media_album_name": self._album_name,
+            "media_content_id": self._media_content_id,
+            "gate_id": ais_global.get_sercure_android_id_dom(),
+        }
+        self._ais_gate.share_media_full_info(j_media_info)
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""

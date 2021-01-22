@@ -84,13 +84,14 @@ class AisSensor(Entity):
     async def async_update(self):
         """Update the sensor."""
         ais_info = await self._ais_gate.get_gate_info()
-        self._ais_id = ais_info["ais_id"]
-        self._ais_product = ais_info["Product"]
-        self._ais_manufacturer = ais_info["Manufacturer"]
-        self._ais_model = ais_info["Model"]
-        self._ais_os_version = ais_info["OsVersion"]
-        self._ais_api_level = ais_info["ApiLevel"]
-        self._ais_ip_address = ais_info["IPAddressIPv4"]
-        self._ais_hostname = ais_info["Hostname"]
-        self._ais_hostname = ais_info["Hostname"]
-        self._ais_gate_network_speed = ais_info["NetworkSpeed"]
+        if ais_info is not None:
+            self._ais_id = ais_info["ais_id"]
+            self._ais_product = ais_info["Product"]
+            self._ais_manufacturer = ais_info["Manufacturer"]
+            self._ais_model = ais_info["Model"]
+            self._ais_os_version = ais_info["OsVersion"]
+            self._ais_api_level = ais_info["ApiLevel"]
+            self._ais_ip_address = ais_info["IPAddressIPv4"]
+            self._ais_hostname = ais_info["Hostname"]
+            self._ais_hostname = ais_info["Hostname"]
+            self._ais_gate_network_speed = ais_info["NetworkSpeed"]
