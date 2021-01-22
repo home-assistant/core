@@ -76,8 +76,11 @@ class DemoFan(FanEntity):
         """Get the list of available speeds."""
         return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    def turn_on(self, speed: str = None, percentage: int = None, **kwargs) -> None:
         """Turn on the entity."""
+        if speed is None and percentage is not None:
+            speed = self.percentage_to_speed(percentage)
+
         if speed is None:
             speed = SPEED_MEDIUM
         self.set_speed(speed)
@@ -118,16 +121,35 @@ class DemoFan(FanEntity):
         return self._supported_features
 
 
-class DemoPercentageFan(DemoFan):
+class DemoPercentageFan(FanEntity):
     """A demonstration fan component that uses percentages."""
 
     def __init__(
         self, hass, unique_id: str, name: str, supported_features: int
     ) -> None:
         """Initialize the entity."""
-        super().__init__(hass, unique_id, name, supported_features)
+        self.hass = hass
+        self._unique_id = unique_id
+        self._supported_features = supported_features
         self._percentage = 0
-        self._speed = None
+        self._oscillating = None
+        self._direction = None
+        self._name = name
+
+        if supported_features & SUPPORT_OSCILLATE:
+            self._oscillating = False
+        if supported_features & SUPPORT_DIRECTION:
+            self._direction = "forward"
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return self._unique_id
+
+    @property
+    def name(self) -> str:
+        """Get entity name."""
+        return self._name
 
     @property
     def should_poll(self):
@@ -146,8 +168,12 @@ class DemoPercentageFan(DemoFan):
 
     def turn_on(self, speed: str = None, percentage: int = None, **kwargs) -> None:
         """Turn on the entity."""
+        if speed is not None and percentage is None:
+            percentage = self.speed_to_percentage(speed)
+
         if percentage is None:
             percentage = 67
+
         self.set_percentage(percentage)
 
     def turn_off(self, **kwargs) -> None:
@@ -155,6 +181,27 @@ class DemoPercentageFan(DemoFan):
         self.oscillate(False)
         self.set_percentage(0)
 
-    def set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
-        raise NotImplementedError
+    def set_direction(self, direction: str) -> None:
+        """Set the direction of the fan."""
+        self._direction = direction
+        self.schedule_update_ha_state()
+
+    def oscillate(self, oscillating: bool) -> None:
+        """Set oscillation."""
+        self._oscillating = oscillating
+        self.schedule_update_ha_state()
+
+    @property
+    def current_direction(self) -> str:
+        """Fan direction."""
+        return self._direction
+
+    @property
+    def oscillating(self) -> bool:
+        """Oscillating."""
+        return self._oscillating
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return self._supported_features
