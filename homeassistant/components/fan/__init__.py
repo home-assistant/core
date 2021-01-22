@@ -1,8 +1,9 @@
 """Provides functionality to interact with fans."""
+import asyncio
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Optional
+from typing import Callable, List, Optional
 
 import voluptuous as vol
 
@@ -156,7 +157,7 @@ class FanEntity(ToggleEntity):
                 self.set_percentage, self.speed_to_percentage(speed)
             )
         else:
-            await self.hass.async_add_job(self.set_speed, speed)
+            await self.hass.async_add_executor_job(self.set_speed, speed)
 
     @_fan_native
     def set_percentage(self, percentage: int) -> None:
@@ -264,7 +265,7 @@ class FanEntity(ToggleEntity):
             return {ATTR_SPEED_LIST: self.speed_list}
         return {}
 
-    def speed_to_percentage(self, speed: str) -> int:
+    def speed_to_percentage(self, speed: str) -> Optional[int]:
         """
         Map a speed to a percentage.
 
@@ -294,7 +295,7 @@ class FanEntity(ToggleEntity):
         return ((speed_offset) * 100) // (speeds_len - 1)
 
     @property
-    def _normalized_speed_list(self):
+    def _normalized_speed_list(self) -> List[str]:
         """Filter out invalid speeds that have crept into fans over time."""
         normalized_speed_list = [
             speed for speed in self.speed_list if speed not in INVALID_SPEEDS_FILTER
@@ -304,7 +305,7 @@ class FanEntity(ToggleEntity):
 
         return normalized_speed_list
 
-    def percentage_to_speed(self, value: int) -> str:
+    def percentage_to_speed(self, value: int) -> Optional[str]:
         """
         Map a percentage onto self.speed_list.
 
@@ -361,3 +362,75 @@ class FanEntity(ToggleEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return 0
+
+
+# Decorator
+def percentage_compat(func: Callable) -> Callable:
+    """Compaitiblity for fans that expect speed."""
+
+    # Check for partials to properly determine if coroutine function
+    check_func = func
+    while isinstance(check_func, ft.partial):
+        check_func = check_func.func
+
+    if asyncio.iscoroutinefunction(check_func):
+
+        @ft.wraps(func)
+        async def wrap_async_turn_on(
+            self, speed: str = None, percentage: int = None, **kwargs
+        ) -> None:
+            """Wrap async_turn_on to add percentage compatibility."""
+            if percentage is not None and speed is None:
+                speed = self.percentage_to_speed(percentage)
+
+            return await check_func(self, speed=speed, percentage=percentage, **kwargs)
+
+        return wrap_async_turn_on
+
+    @ft.wraps(func)
+    async def wrap_turn_on(
+        self, speed: str = None, percentage: int = None, **kwargs
+    ) -> None:
+        """Wrap turn_on to add percentage compatibility."""
+        if percentage is not None and speed is None:
+            speed = self.percentage_to_speed(percentage)
+
+        return check_func(self, speed=speed, percentage=percentage, **kwargs)
+
+    return wrap_turn_on
+
+
+# Decorator
+def speed_compat(func: Callable) -> Callable:
+    """Compaitiblity for fans that expect percentage."""
+
+    # Check for partials to properly determine if coroutine function
+    check_func = func
+    while isinstance(check_func, ft.partial):
+        check_func = check_func.func
+
+    if asyncio.iscoroutinefunction(check_func):
+
+        @ft.wraps(func)
+        async def wrap_async_turn_on(
+            self, speed: str = None, percentage: int = None, **kwargs
+        ) -> None:
+            """Wrap async_turn_on to add percentage compatibility."""
+            if speed is not None and percentage is None:
+                percentage = self.speed_to_percentage(speed)
+
+            return await check_func(self, speed=speed, percentage=percentage, **kwargs)
+
+        return wrap_async_turn_on
+
+    @ft.wraps(func)
+    async def wrap_turn_on(
+        self, speed: str = None, percentage: int = None, **kwargs
+    ) -> None:
+        """Wrap turn_on to add percentage compatibility."""
+        if speed is not None and percentage is None:
+            percentage = self.speed_to_percentage(speed)
+
+        return check_func(self, speed=speed, percentage=percentage, **kwargs)
+
+    return wrap_turn_on
