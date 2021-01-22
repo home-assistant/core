@@ -3,14 +3,11 @@ import logging
 from typing import Optional
 
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
     SUPPORT_STOP,
     MediaPlayerEntity,
@@ -31,8 +28,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_AIS = (
     SUPPORT_PAUSE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_PLAY
     | SUPPORT_STOP
@@ -40,7 +35,6 @@ SUPPORT_AIS = (
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_VOLUME_STEP
     | SUPPORT_SEEK
-    | SUPPORT_SELECT_SOURCE
     | SUPPORT_SELECT_SOUND_MODE
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_BROWSE_MEDIA
