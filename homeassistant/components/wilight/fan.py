@@ -57,7 +57,7 @@ class WiLightFan(WiLightDevice, FanEntity):
 
     def __init__(self, api_device, index, item_name):
         """Initialize the device."""
-        super().__init__(self, api_device, index, item_name)
+        super().__init__(api_device, index, item_name)
         # Initialize the WiLights fan.
         self._direction = WL_DIRECTION_FORWARD
 
