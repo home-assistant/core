@@ -1,6 +1,6 @@
 """Support for Z-Wave cover devices."""
 import logging
-from typing import Callable, List
+from typing import Any, Callable, List
 
 from zwave_js_server.client import Client as ZwaveClient
 
@@ -32,16 +32,7 @@ async def async_setup_entry(
     def async_add_cover(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave cover."""
         entities: List[ZWaveBaseEntity] = []
-
-        if info.platform_hint == "cover":
-            entities.append(ZWaveCover(config_entry, client, info))
-        else:
-            LOGGER.warning(
-                "Sensor not implemented for %s/%s",
-                info.platform_hint,
-                info.primary_value.propertyname,
-            )
-            return
+        entities.append(ZWaveCover(config_entry, client, info))
         async_add_entities(entities)
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
@@ -65,27 +56,25 @@ class ZWaveCover(ZWaveBaseEntity):
     """Representation of a Z-Wave Cover device."""
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> Any:
         """Return true if cover is closed."""
-        if self.info.primary_value.value > 0:
-            return False
-        return True
+        return self.info.primary_value.value == 0
 
     @property
     def current_cover_position(self) -> int:
         """Return the current position of cover where 0 means closed and 100 is fully open."""
         return round((self.info.primary_value.value / 99) * 100)
 
-    async def async_set_cover_position(self, **kwargs: int) -> None:
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self.info.node.async_set_value(
             percent_to_zwave_position(kwargs[ATTR_POSITION])
         )
 
-    async def async_open_cover(self, **kwargs: int) -> None:
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.info.node.async_set_value(99)
 
-    async def async_close_cover(self, **kwargs: int) -> None:
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         await self.info.node.async_set_value(0)
