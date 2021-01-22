@@ -181,6 +181,12 @@ class FanEntity(ToggleEntity):
         if speed == SPEED_OFF:
             await self.async_turn_off()
         else:
+            if percentage is None and speed is not None:
+                percentage = self.speed_to_percentage(speed)
+
+            if speed is None and percentage is not None:
+                speed = self.percentage_to_speed(percentage)
+
             await self.hass.async_add_executor_job(
                 ft.partial(self.turn_on, speed=speed, percentage=percentage, **kwargs)
             )
