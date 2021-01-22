@@ -80,7 +80,9 @@ async def async_setup(hass, config: dict):
         SERVICE_TURN_ON,
         {
             vol.Optional(ATTR_SPEED): cv.string,
-            vol.Optional(ATTR_PERCENTAGE): vol.Number(),
+            vol.Optional(ATTR_PERCENTAGE): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            ),
         },
         "async_turn_on",
     )
@@ -106,7 +108,11 @@ async def async_setup(hass, config: dict):
     )
     component.async_register_entity_service(
         SERVICE_SET_PERCENTAGE,
-        {vol.Required(ATTR_PERCENTAGE): vol.Number()},
+        {
+            vol.Required(ATTR_PERCENTAGE): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            )
+        },
         "async_set_percentage",
         [SUPPORT_SET_SPEED],
     )
