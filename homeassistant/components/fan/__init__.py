@@ -156,7 +156,7 @@ class FanEntity(ToggleEntity):
                 self.set_percentage, self.speed_to_percentage(speed)
             )
         else:
-            await self.hass.async_add_job(self.set_speed, speed)
+            await self.hass.async_add_executor_job(self.set_speed, speed)
 
     @_fan_native
     def set_percentage(self, percentage: int) -> None:
