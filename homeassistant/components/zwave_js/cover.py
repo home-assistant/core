@@ -9,6 +9,7 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
+    CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -37,7 +38,9 @@ async def async_setup_entry(
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
         async_dispatcher_connect(
-            hass, f"{config_entry.entry_id}_add_{COVER_DOMAIN}", async_add_cover
+            hass,
+            f"{DOMAIN}_{config_entry.entry_id}_add_{COVER_DOMAIN}",
+            async_add_cover,
         )
     )
 
@@ -52,13 +55,13 @@ def percent_to_zwave_position(value: int) -> int:
     return 0
 
 
-class ZWaveCover(ZWaveBaseEntity):
+class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave Cover device."""
 
     @property
-    def is_closed(self) -> Any:
+    def is_closed(self) -> bool:
         """Return true if cover is closed."""
-        return self.info.primary_value.value == 0
+        return bool(self.info.primary_value.value == 0)
 
     @property
     def current_cover_position(self) -> int:
@@ -67,14 +70,17 @@ class ZWaveCover(ZWaveBaseEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
+        target_value = self.get_zwave_value("targetValue")
         await self.info.node.async_set_value(
-            percent_to_zwave_position(kwargs[ATTR_POSITION])
+            target_value, percent_to_zwave_position(kwargs[ATTR_POSITION])
         )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self.info.node.async_set_value(99)
+        target_value = self.get_zwave_value("targetValue")
+        await self.info.node.async_set_value(target_value, 99)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self.info.node.async_set_value(0)
+        target_value = self.get_zwave_value("targetValue")
+        await self.info.node.async_set_value(target_value, 0)
