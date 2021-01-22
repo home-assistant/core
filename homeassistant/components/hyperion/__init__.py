@@ -142,24 +142,6 @@ def listen_for_instance_updates(
     )
 
 
-def add_instances_from_root_client(
-    hass: HomeAssistant, config_entry: ConfigEntry, add_func: Callable
-) -> None:
-    """Call the add_func for all instances in the root client."""
-    # Note: When the YAML migration code is removed, this can be simplified by allowing
-    # instance_add(...) to be called directly via the signal in __init__.py without
-    # needing to be also called synchronously here.
-    entry_data = hass.data[DOMAIN][config_entry.entry_id]
-    for instance in entry_data[CONF_ROOT_CLIENT].instances:
-        instance_num = instance.get(hyperion_const.KEY_INSTANCE)
-        if (
-            instance_num is not None
-            and instance_num in entry_data[CONF_INSTANCE_CLIENTS]
-        ):
-            instance_name = instance.get(hyperion_const.KEY_FRIENDLY_NAME, DEFAULT_NAME)
-            add_func(instance_num, instance_name)
-
-
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Hyperion from a config entry."""
     host = config_entry.data[CONF_HOST]
