@@ -37,7 +37,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 
@@ -59,17 +59,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=80): cv.port,
     }
 )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Epson projector from a config entry."""
-    unique_id = config_entry.entry_id
-    projector = hass.data[DOMAIN][unique_id]
+    entry_id = config_entry.entry_id
+    unique_id = config_entry.unique_id
+    projector = hass.data[DOMAIN][entry_id]
     projector_entity = EpsonProjectorMediaPlayer(
-        projector, config_entry.title, unique_id
+        projector, config_entry.title, unique_id if unique_id else entry_id
     )
     async_add_entities([projector_entity], True)
     platform = entity_platform.current_platform.get()
@@ -106,7 +106,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
 
     async def async_update(self):
         """Update state of device."""
-        power_state = await self._projector.get_property(POWER)
+        power_state = await self._projector.get_power()
         _LOGGER.debug("Projector status: %s", power_state)
         if not power_state or power_state == EPSON_STATE_UNAVAILABLE:
             self._available = False

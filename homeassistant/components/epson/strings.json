@@ -4,13 +4,13 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "name": "[%key:common::config_flow::data::name%]"
         }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "powered_off": "Is projector turned on? You need to turn on projector for initial configuration."
     }
   }
 }
