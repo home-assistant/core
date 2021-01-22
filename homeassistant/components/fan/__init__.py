@@ -278,6 +278,10 @@ class FanEntity(ToggleEntity):
             return 0
 
         normalized_speed_list = self._normalized_speed_list
+
+        if speed not in normalized_speed_list:
+            return None
+
         speeds_len = len(normalized_speed_list)
         speed_offset = normalized_speed_list.index(speed)
 
@@ -318,6 +322,9 @@ class FanEntity(ToggleEntity):
 
         normalized_speed_list = self._normalized_speed_list
         speeds_len = len(normalized_speed_list)
+
+        if not speeds_len:
+            return None
 
         for offset, speed in enumerate(normalized_speed_list[1:], start=1):
             upper_bound = (offset * 100) // (speeds_len - 1)
