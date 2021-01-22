@@ -67,8 +67,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
     async def async_set_speed(self, speed: Any) -> None:
         """Set the speed of the fan."""
         if speed not in SPEED_TO_VALUE:
-            _LOGGER.warning("Invalid speed received: %s", speed)
-            return
+            raise ValueError(f"Invalid speed received: {speed}")
         self._previous_speed = speed
         target_value = self.get_zwave_value("targetValue")
         self.info.node.async_set_value(target_value, SPEED_TO_VALUE[speed])
