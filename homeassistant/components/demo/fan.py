@@ -152,7 +152,7 @@ class DemoPercentageFan(DemoFan):
     def turn_on(self, speed: str = None, percentage: int = None, **kwargs) -> None:
         """Turn on the entity."""
         if percentage is None:
-            percentage = 50
+            percentage = 67
         self.set_percentage(percentage)
 
     def turn_off(self, **kwargs) -> None:
