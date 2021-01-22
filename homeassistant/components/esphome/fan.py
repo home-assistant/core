@@ -68,8 +68,22 @@ class EsphomeFan(EsphomeEntity, FanEntity):
             self._static_info.key, speed=_fan_speeds.from_hass(speed)
         )
 
-    async def async_turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
+    async def async_turn_on(
+        self, speed: Optional[str] = None, percentage: int = None, **kwargs
+    ) -> None:
         """Turn on the fan."""
+        #
+        # The fan entity model has changed to use percentages
+        # for fan speeds. The below block is for backwards
+        # compatibility with the `turn_on` service to allow
+        # passing a `percentage`. When the entity is converted
+        # to natively set speeds in percentage, it should be removed.
+        #
+        if percentage is not None and speed is None:
+            speed = self.percentage_to_speed(percentage)
+        #
+        #
+
         if speed == SPEED_OFF:
             await self.async_turn_off()
             return

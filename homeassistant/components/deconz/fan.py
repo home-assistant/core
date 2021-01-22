@@ -107,8 +107,23 @@ class DeconzFan(DeconzDevice, FanEntity):
 
         await self._device.set_speed(SPEEDS[speed])
 
-    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    async def async_turn_on(
+        self, speed: str = None, percentage: int = None, **kwargs
+    ) -> None:
         """Turn on fan."""
+
+        #
+        # The fan entity model has changed to use percentages
+        # for fan speeds. The below block is for backwards
+        # compatibility with the `turn_on` service to allow
+        # passing a `percentage`. When the entity is converted
+        # to natively set speeds in percentage, it should be removed.
+        #
+        if percentage is not None and speed is None:
+            speed = self.percentage_to_speed(percentage)
+        #
+        #
+
         if not speed:
             speed = convert_speed(self._default_on_speed)
         await self.async_set_speed(speed)

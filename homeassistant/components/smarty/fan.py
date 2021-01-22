@@ -86,8 +86,21 @@ class SmartyFan(FanEntity):
             self._speed = speed
             self._state = True
 
-    def turn_on(self, speed=None, **kwargs):
+    def turn_on(self, speed=None, percentage=None, **kwargs):
         """Turn on the fan."""
+
+        #
+        # The fan entity model has changed to use percentages
+        # for fan speeds. The below block is for backwards
+        # compatibility with the `turn_on` service to allow
+        # passing a `percentage`. When the entity is converted
+        # to natively set speeds in percentage, it should be removed.
+        #
+        if percentage is not None and speed is None:
+            speed = self.percentage_to_speed(percentage)
+        #
+        #
+
         _LOGGER.debug("Turning on fan. Speed is %s", speed)
         if speed is None:
             if self._smarty.turn_on(SPEED_TO_MODE.get(self._speed)):

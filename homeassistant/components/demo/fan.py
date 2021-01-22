@@ -20,7 +20,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         [
             DemoFan(hass, "fan1", "Living Room Fan", FULL_SUPPORT),
             DemoFan(hass, "fan2", "Ceiling Fan", LIMITED_SUPPORT),
-            DemoPercentageFan(hass, "fan3", "Percentage Full Fan", FULL_SUPPORT),
+            AsyncDemoPercentageFan(hass, "fan3", "Percentage Full Fan", FULL_SUPPORT),
             DemoPercentageFan(hass, "fan4", "Percentage Limited Fan", LIMITED_SUPPORT),
         ]
     )
@@ -168,7 +168,7 @@ class DemoPercentageFan(FanEntity):
 
     def turn_on(self, speed: str = None, percentage: int = None, **kwargs) -> None:
         """Turn on the entity."""
-        if speed is not None and percentage is None:
+        if percentage is not None and speed is None:
             percentage = self.speed_to_percentage(speed)
 
         if percentage is None:
@@ -190,6 +190,94 @@ class DemoPercentageFan(FanEntity):
         """Set oscillation."""
         self._oscillating = oscillating
         self.schedule_update_ha_state()
+
+    @property
+    def current_direction(self) -> str:
+        """Fan direction."""
+        return self._direction
+
+    @property
+    def oscillating(self) -> bool:
+        """Oscillating."""
+        return self._oscillating
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return self._supported_features
+
+
+class AsyncDemoPercentageFan(FanEntity):
+    """An async demonstration fan component that uses percentages."""
+
+    def __init__(
+        self, hass, unique_id: str, name: str, supported_features: int
+    ) -> None:
+        """Initialize the entity."""
+        self.hass = hass
+        self._unique_id = unique_id
+        self._supported_features = supported_features
+        self._percentage = 0
+        self._oscillating = None
+        self._direction = None
+        self._name = name
+
+        if supported_features & SUPPORT_OSCILLATE:
+            self._oscillating = False
+        if supported_features & SUPPORT_DIRECTION:
+            self._direction = "forward"
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return self._unique_id
+
+    @property
+    def name(self) -> str:
+        """Get entity name."""
+        return self._name
+
+    @property
+    def should_poll(self):
+        """No polling needed for a demo fan."""
+        return False
+
+    @property
+    def percentage(self) -> str:
+        """Return the current speed."""
+        return self._percentage
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the speed of the fan, as a percentage."""
+        self._percentage = percentage
+        self.async_write_ha_state()
+
+    async def async_turn_on(
+        self, speed: str = None, percentage: int = None, **kwargs
+    ) -> None:
+        """Turn on the entity."""
+        if percentage is not None and speed is None:
+            percentage = self.speed_to_percentage(speed)
+
+        if percentage is None:
+            percentage = 67
+
+        await self.async_set_percentage(percentage)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Turn off the entity."""
+        await self.async_oscillate(False)
+        await self.async_set_percentage(0)
+
+    async def async_set_direction(self, direction: str) -> None:
+        """Set the direction of the fan."""
+        self._direction = direction
+        self.async_write_ha_state()
+
+    async def async_oscillate(self, oscillating: bool) -> None:
+        """Set oscillation."""
+        self._oscillating = oscillating
+        self.async_write_ha_state()
 
     @property
     def current_direction(self) -> str:

@@ -40,8 +40,21 @@ class WinkFanDevice(WinkDevice, FanEntity):
         """Set the speed of the fan."""
         self.wink.set_state(True, speed)
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    def turn_on(self, speed: str = None, percentage: int = None, **kwargs) -> None:
         """Turn on the fan."""
+
+        #
+        # The fan entity model has changed to use percentages
+        # for fan speeds. The below block is for backwards
+        # compatibility with the `turn_on` service to allow
+        # passing a `percentage`. When the entity is converted
+        # to natively set speeds in percentage, it should be removed.
+        #
+        if percentage is not None and speed is None:
+            speed = self.percentage_to_speed(percentage)
+        #
+        #
+
         self.wink.set_state(True, speed)
 
     def turn_off(self, **kwargs) -> None:

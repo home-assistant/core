@@ -118,8 +118,22 @@ class BondFan(BondEntity, FanEntity):
             self._device.device_id, Action.set_speed(bond_speed)
         )
 
-    async def async_turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
+    async def async_turn_on(
+        self, speed: Optional[str] = None, percentage: int = None, **kwargs
+    ) -> None:
         """Turn on the fan."""
+        #
+        # The fan entity model has changed to use percentages
+        # for fan speeds. The below block is for backwards
+        # compatibility with the `turn_on` service to allow
+        # passing a `percentage`. When the entity is converted
+        # to natively set speeds in percentage, it should be removed.
+        #
+        if percentage is not None and speed is None:
+            speed = self.percentage_to_speed(percentage)
+        #
+        #
+
         _LOGGER.debug("Fan async_turn_on called with speed %s", speed)
 
         if speed is not None:

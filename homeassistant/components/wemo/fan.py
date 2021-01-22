@@ -185,8 +185,21 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
             self._available = False
             self.wemo.reconnect_with_device()
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    def turn_on(self, speed: str = None, percentage: int = None, **kwargs) -> None:
         """Turn the switch on."""
+
+        #
+        # The fan entity model has changed to use percentages
+        # for fan speeds. The below block is for backwards
+        # compatibility with the `turn_on` service to allow
+        # passing a `percentage`. When the entity is converted
+        # to natively set speeds in percentage, it should be removed.
+        #
+        if percentage is not None and speed is None:
+            speed = self.percentage_to_speed(percentage)
+        #
+        #
+
         if speed is None:
             try:
                 self.wemo.set_state(self._last_fan_on_mode)
