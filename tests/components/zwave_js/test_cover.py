@@ -45,6 +45,8 @@ async def test_cover(hass, client, window_cover, integration):
     }
     assert args["value"] == 50
 
+    client.async_send_command.reset_mock()
+
     # Test setting position
     await hass.services.async_call(
         "cover",
@@ -53,7 +55,7 @@ async def test_cover(hass, client, window_cover, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 2
+    assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 6
@@ -75,6 +77,8 @@ async def test_cover(hass, client, window_cover, integration):
     }
     assert args["value"] == 0
 
+    client.async_send_command.reset_mock()
+
     # Test opening
     await hass.services.async_call(
         "cover",
@@ -83,7 +87,7 @@ async def test_cover(hass, client, window_cover, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 3
+    assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 6
