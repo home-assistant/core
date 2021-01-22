@@ -82,6 +82,12 @@ def nortek_thermostat_state_fixture():
     return json.loads(load_fixture("zwave_js/nortek_thermostat_state.json"))
 
 
+@pytest.fixture(name="chain_actuator_zws12_state", scope="session")
+def window_cover_state_fixture():
+    """Load the window cover node state fixture data."""
+    return json.loads(load_fixture("zwave_js/chain_actuator_zws12_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state):
     """Mock a client."""
@@ -190,3 +196,11 @@ async def integration_fixture(hass, client):
     await hass.async_block_till_done()
 
     return entry
+
+
+@pytest.fixture(name="chain_actuator_zws12")
+def window_cover_fixture(client, chain_actuator_zws12_state):
+    """Mock a window cover node."""
+    node = Node(client, chain_actuator_zws12_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
