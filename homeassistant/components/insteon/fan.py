@@ -9,6 +9,7 @@ from homeassistant.components.fan import (
     SPEED_OFF,
     SUPPORT_SET_SPEED,
     FanEntity,
+    percentage_compat,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -63,22 +64,16 @@ class InsteonFanEntity(InsteonEntity, FanEntity):
         """Flag supported features."""
         return SUPPORT_SET_SPEED
 
+    # The fan entity model has changed. The @percentage_compat decorator will ensure
+    # the speed argument is set when a percentage is passed in.  When this entity is
+    # updated to use the new model and `speed` and # `set_speed` have been removed
+    # switch the decorator to @speed_compat to ensure the percentage argument will be
+    # filled for places that still pass in speed instead of percentage.
+    @percentage_compat
     async def async_turn_on(
         self, speed: str = None, percentage: int = None, **kwargs
     ) -> None:
         """Turn on the fan."""
-        #
-        # The fan entity model has changed to use percentages
-        # for fan speeds. The below block is for backwards
-        # compatibility with the `turn_on` service to allow
-        # passing a `percentage`. When the entity is converted
-        # to natively set speeds in percentage, it should be removed.
-        #
-        if percentage is not None and speed is None:
-            speed = self.percentage_to_speed(percentage)
-        #
-        #
-
         if speed is None:
             speed = SPEED_MEDIUM
         await self.async_set_speed(speed)
