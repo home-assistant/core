@@ -46,10 +46,13 @@ async def test_subscribing_config_topic(hass, mqtt_mock):
     discovery_topic = "homeassistant"
     await async_start(hass, discovery_topic, entry)
 
-    assert mqtt_mock.async_subscribe.called
-    call_args = mqtt_mock.async_subscribe.mock_calls[0][1]
-    assert call_args[0] == discovery_topic + "/#"
-    assert call_args[2] == 0
+    call_args1 = mqtt_mock.async_subscribe.mock_calls[0][1]
+    assert call_args1[2] == 0
+    call_args2 = mqtt_mock.async_subscribe.mock_calls[1][1]
+    assert call_args2[2] == 0
+    topics = [call_args1[0], call_args2[0]]
+    assert discovery_topic + "/+/+/config" in topics
+    assert discovery_topic + "/+/+/+/config" in topics
 
 
 async def test_invalid_topic(hass, mqtt_mock):
