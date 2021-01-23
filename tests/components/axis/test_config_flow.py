@@ -19,6 +19,7 @@ from homeassistant.config_entries import (
     SOURCE_DHCP,
     SOURCE_IGNORE,
     SOURCE_REAUTH,
+    SOURCE_SSDP,
     SOURCE_USER,
     SOURCE_ZEROCONF,
 )
@@ -36,6 +37,7 @@ from homeassistant.data_entry_flow import (
 )
 
 from .test_device import (
+    DEFAULT_HOST,
     MAC,
     MODEL,
     NAME,
@@ -374,6 +376,164 @@ async def test_dhcp_flow_ignore_link_local_address(hass):
         AXIS_DOMAIN,
         data={HOSTNAME: "axis-123", IP_ADDRESS: "169.254.3.4", MAC_ADDRESS: MAC},
         context={"source": SOURCE_DHCP},
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "link_local_address"
+
+
+async def test_ssdp_flow(hass):
+    """Test that SSDP discovery for new devices work."""
+    result = await hass.config_entries.flow.async_init(
+        AXIS_DOMAIN,
+        data={
+            "st": "urn:axis-com:service:BasicService:1",
+            "usn": f"uuid:Upnp-BasicDevice-1_0-{MAC}::urn:axis-com:service:BasicService:1",
+            "ext": "",
+            "server": "Linux/4.14.173-axis8, UPnP/1.0, Portable SDK for UPnP devices/1.8.7",
+            "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+            "friendlyName": f"AXIS M1065-LW - {MAC}",
+            "manufacturer": "AXIS",
+            "manufacturerURL": "http://www.axis.com/",
+            "modelDescription": "AXIS M1065-LW Network Camera",
+            "modelName": "AXIS M1065-LW",
+            "modelNumber": "M1065-LW",
+            "modelURL": "http://www.axis.com/",
+            "serialNumber": MAC,
+            "UDN": f"uuid:Upnp-BasicDevice-1_0-{MAC}",
+            "serviceList": {
+                "service": {
+                    "serviceType": "urn:axis-com:service:BasicService:1",
+                    "serviceId": "urn:axis-com:serviceId:BasicServiceId",
+                    "controlURL": "/upnp/control/BasicServiceId",
+                    "eventSubURL": "/upnp/event/BasicServiceId",
+                    "SCPDURL": "/scpd_basic.xml",
+                }
+            },
+            "presentationURL": f"http://{DEFAULT_HOST}:80/",
+        },
+        context={"source": SOURCE_SSDP},
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == SOURCE_USER
+
+    with respx.mock:
+        mock_default_vapix_requests(respx)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "1.2.3.4",
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pass",
+                CONF_PORT: 80,
+            },
+        )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == f"M1065-LW - {MAC}"
+    assert result["data"] == {
+        CONF_HOST: "1.2.3.4",
+        CONF_USERNAME: "user",
+        CONF_PASSWORD: "pass",
+        CONF_PORT: 80,
+        CONF_MODEL: "M1065-LW",
+        CONF_NAME: "M1065-LW 0",
+    }
+
+    assert result["data"][CONF_NAME] == "M1065-LW 0"
+
+
+async def test_ssdp_flow_already_configured(hass):
+    """Test that SSDP doesn't setup already configured devices."""
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+    assert device.host == "1.2.3.4"
+
+    result = await hass.config_entries.flow.async_init(
+        AXIS_DOMAIN,
+        data={
+            "friendlyName": f"AXIS M1065-LW - {MAC}",
+            "serialNumber": MAC,
+            "presentationURL": "http://1.2.3.4:80/",
+        },
+        context={"source": SOURCE_SSDP},
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert device.host == "1.2.3.4"
+
+
+async def test_ssdp_flow_updated_configuration(hass):
+    """Test that SSDP update configuration with new parameters."""
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+    assert device.host == "1.2.3.4"
+    assert device.config_entry.data == {
+        CONF_HOST: "1.2.3.4",
+        CONF_PORT: 80,
+        CONF_USERNAME: "root",
+        CONF_PASSWORD: "pass",
+        CONF_MODEL: MODEL,
+        CONF_NAME: NAME,
+    }
+
+    with patch(
+        "homeassistant.components.axis.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, respx.mock:
+        mock_default_vapix_requests(respx, "2.3.4.5")
+        result = await hass.config_entries.flow.async_init(
+            AXIS_DOMAIN,
+            data={
+                "friendlyName": f"AXIS M1065-LW - {MAC}",
+                "serialNumber": MAC,
+                "presentationURL": "http://2.3.4.5:8080/",
+            },
+            context={"source": SOURCE_SSDP},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert device.config_entry.data == {
+        CONF_HOST: "2.3.4.5",
+        CONF_PORT: 8080,
+        CONF_USERNAME: "root",
+        CONF_PASSWORD: "pass",
+        CONF_MODEL: MODEL,
+        CONF_NAME: NAME,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_ssdp_flow_ignore_non_axis_device(hass):
+    """Test that SSDP doesn't setup devices with link local addresses."""
+    result = await hass.config_entries.flow.async_init(
+        AXIS_DOMAIN,
+        data={
+            "friendlyName": f"AXIS M1065-LW - {MAC}",
+            "serialNumber": "01234567890",
+            "presentationURL": "http://1.2.3.4:80/",
+        },
+        context={"source": SOURCE_SSDP},
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "not_axis_device"
+
+
+async def test_ssdp_flow_ignore_link_local_address(hass):
+    """Test that SSDP doesn't setup devices with link local addresses."""
+    result = await hass.config_entries.flow.async_init(
+        AXIS_DOMAIN,
+        data={
+            "friendlyName": f"AXIS M1065-LW - {MAC}",
+            "serialNumber": MAC,
+            "presentationURL": "http://169.254.3.4:80/",
+        },
+        context={"source": SOURCE_SSDP},
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
