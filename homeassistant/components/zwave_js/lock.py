@@ -117,13 +117,11 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         """Unlock the lock."""
         await self._set_lock_state(STATE_UNLOCKED)
 
-    @callback
     async def async_set_usercode(self, code_slot: int, usercode: str) -> None:
         """Set the usercode to index X on the lock."""
         await set_usercode(self.info.node, code_slot, usercode)
         LOGGER.debug("User code at slot %s set", code_slot)
 
-    @callback
     async def async_clear_usercode(self, code_slot: int) -> None:
         """Clear the usercode at index X on the lock."""
         await clear_usercode(self.info.node, code_slot)
