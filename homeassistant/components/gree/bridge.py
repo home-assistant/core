@@ -1,17 +1,22 @@
 """Helper and wrapper classes for Gree module."""
 from datetime import timedelta
 import logging
-from typing import List
 
 from greeclimate.device import Device, DeviceInfo
-from greeclimate.discovery import Discovery
+from greeclimate.discovery import Discovery, Listener
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 
-from homeassistant import exceptions
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, MAX_ERRORS
+from .const import (
+    COORDINATORS,
+    DISCOVERY_TIMEOUT,
+    DISPATCH_DEVICE_DISCOVERED,
+    DOMAIN,
+    MAX_ERRORS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,16 +50,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
                     self.name,
                     self.device.device_info,
                 )
-                raise UpdateFailed(error) from error
-        else:
-            if not self.last_update_success and self._error_count:
-                _LOGGER.warning(
-                    "Device is available: %s (%s)",
-                    self.name,
-                    str(self.device.device_info),
-                )
-
-            self._error_count = 0
+                raise UpdateFailed(f"Device {self.name} is unavailable") from error
 
     async def push_state_update(self):
         """Send state updates to the physical device."""
@@ -67,29 +63,45 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
                 self.device.device_info,
             )
 
+    @property
+    def device_info(self):
+        """Return the gree device information."""
+        return self.device.device_info
 
-class DeviceHelper:
-    """Device search and bind wrapper for Gree platform."""
 
-    @staticmethod
-    async def try_bind_device(device_info: DeviceInfo) -> Device:
-        """Try and bing with a discovered device.
+class DiscoveryService(Listener):
+    """Discovery event handler for gree devices."""
 
-        Note the you must bind with the device very quickly after it is discovered, or the
-        process may not be completed correctly, raising a `CannotConnect` error.
-        """
+    def __init__(self, hass) -> None:
+        """Initialize discovery service."""
+        super().__init__()
+        self.hass = hass
+
+        self.discovery = Discovery(DISCOVERY_TIMEOUT)
+        self.discovery.add_listener(self)
+
+        if COORDINATORS not in hass.data[DOMAIN]:
+            hass.data[DOMAIN][COORDINATORS] = []
+
+    async def device_found(self, device_info: DeviceInfo) -> None:
+        """Handle new device found on the network."""
+
         device = Device(device_info)
         try:
             await device.bind()
-        except DeviceNotBoundError as exception:
-            raise CannotConnect from exception
-        return device
+        except DeviceNotBoundError:
+            _LOGGER.error("Unable to bind to gree device: %s", device_info)
+        except DeviceTimeoutError:
+            _LOGGER.error("Timeout trying to bind to gree device: %s", device_info)
 
-    @staticmethod
-    async def find_devices() -> List[DeviceInfo]:
-        """Gather a list of device infos from the local network."""
-        return await Discovery.search_devices()
+        _LOGGER.info(
+            "Adding Gree device %s at %s:%i",
+            device.device_info.name,
+            device.device_info.ip,
+            device.device_info.port,
+        )
+        coordo = DeviceDataUpdateCoordinator(self.hass, device)
+        self.hass.data[DOMAIN][COORDINATORS].append(coordo)
+        await coordo.async_refresh()
 
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
+        async_dispatcher_send(self.hass, DISPATCH_DEVICE_DISCOVERED, coordo)

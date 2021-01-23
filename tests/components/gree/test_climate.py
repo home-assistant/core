@@ -97,7 +97,7 @@ async def test_discovery_setup(hass, discovery, device):
         name="fake-device-2", ipAddress="2.2.2.2", mac="bbccdd223344"
     )
 
-    discovery.return_value = [MockDevice1.device_info, MockDevice2.device_info]
+    discovery.return_value.mock_devices = [MockDevice1, MockDevice2]
     device.side_effect = [MockDevice1, MockDevice2]
 
     await async_setup_gree(hass)
@@ -108,22 +108,26 @@ async def test_discovery_setup(hass, discovery, device):
 
 async def test_discovery_setup_connection_error(hass, discovery, device):
     """Test gree integration is setup."""
-    MockDevice1 = build_device_mock(name="fake-device-1")
+    MockDevice1 = build_device_mock(
+        name="fake-device-1", ipAddress="1.1.1.1", mac="aabbcc112233"
+    )
     MockDevice1.bind = AsyncMock(side_effect=DeviceNotBoundError)
 
-    MockDevice2 = build_device_mock(name="fake-device-2")
-    MockDevice2.bind = AsyncMock(side_effect=DeviceNotBoundError)
+    MockDevice2 = build_device_mock(
+        name="fake-device-2", ipAddress="2.2.2.2", mac="bbccdd223344"
+    )
+    MockDevice2.bind = AsyncMock(side_effect=DeviceTimeoutError)
 
+    discovery.return_value.mock_devices = [MockDevice1, MockDevice2]
     device.side_effect = [MockDevice1, MockDevice2]
 
     await async_setup_gree(hass)
     await hass.async_block_till_done()
-    assert discovery.call_count == 1
 
-    assert not hass.states.async_all(DOMAIN)
+    assert len(hass.states.async_all(DOMAIN)) == 2
 
 
-async def test_update_connection_failure(hass, discovery, device, mock_now):
+async def test_update_connection_failure(hass, device, mock_now):
     """Testing update hvac connection failure exception."""
     device().update_state.side_effect = [
         DEFAULT_MOCK,
@@ -229,11 +233,10 @@ async def test_send_command_device_timeout(hass, discovery, device, mock_now):
     # Send failure should not raise exceptions or change device state
     assert await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVAC_MODE_AUTO},
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
@@ -243,45 +246,6 @@ async def test_send_command_device_timeout(hass, discovery, device, mock_now):
 async def test_send_power_on(hass, discovery, device, mock_now):
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
-
-    assert await hass.services.async_call(
-        DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
-
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state != HVAC_MODE_OFF
-
-
-async def test_send_power_on_device_timeout(hass, discovery, device, mock_now):
-    """Test for sending power on command to the device with a device timeout."""
-    device().push_state_update.side_effect = DeviceTimeoutError
-
-    await async_setup_gree(hass)
-
-    assert await hass.services.async_call(
-        DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
-
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state != HVAC_MODE_OFF
-
-
-async def test_send_power_off(hass, discovery, device, mock_now):
-    """Test for sending power off command to the device."""
-    await async_setup_gree(hass)
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
 
     assert await hass.services.async_call(
         DOMAIN,
@@ -300,11 +264,6 @@ async def test_send_power_off_device_timeout(hass, discovery, device, mock_now):
     device().push_state_update.side_effect = DeviceTimeoutError
 
     await async_setup_gree(hass)
-
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-    await hass.async_block_till_done()
 
     assert await hass.services.async_call(
         DOMAIN,

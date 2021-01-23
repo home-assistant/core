@@ -1,14 +1,23 @@
 """The Gree Climate integration."""
 import asyncio
+from datetime import timedelta
 import logging
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers.event import async_track_time_interval
 
-from .bridge import CannotConnect, DeviceDataUpdateCoordinator, DeviceHelper
-from .const import COORDINATOR, DOMAIN
+from .bridge import DiscoveryService
+from .const import (
+    COORDINATORS,
+    DATA_DISCOVERY_INTERVAL,
+    DATA_DISCOVERY_SERVICE,
+    DISCOVERY_SCAN_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,31 +30,20 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Gree Climate from a config entry."""
-    devices = []
+    gree_discovery = DiscoveryService(hass)
+    hass.data[DATA_DISCOVERY_SERVICE] = gree_discovery
 
-    # First we'll grab as many devices as we can find on the network
-    # it's necessary to bind static devices anyway
-    _LOGGER.debug("Scanning network for Gree devices")
+    @callback
+    def shutdown_event(_: Event) -> None:
+        if hass.data[DOMAIN].get(DATA_DISCOVERY_INTERVAL) is not None:
+            hass.data[DOMAIN][DATA_DISCOVERY_INTERVAL]()
+            hass.data[DOMAIN].pop(DATA_DISCOVERY_INTERVAL)
 
-    for device_info in await DeviceHelper.find_devices():
-        try:
-            device = await DeviceHelper.try_bind_device(device_info)
-        except CannotConnect:
-            _LOGGER.error("Unable to bind to gree device: %s", device_info)
-            continue
+        if hass.data.get(DATA_DISCOVERY_SERVICE) is not None:
+            del hass.data[DATA_DISCOVERY_SERVICE]
 
-        _LOGGER.debug(
-            "Adding Gree device at %s:%i (%s)",
-            device.device_info.ip,
-            device.device_info.port,
-            device.device_info.name,
-        )
-        devices.append(device)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_event)
 
-    coordinators = [DeviceDataUpdateCoordinator(hass, d) for d in devices]
-    await asyncio.gather(*[x.async_refresh() for x in coordinators])
-
-    hass.data[DOMAIN][COORDINATOR] = coordinators
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, CLIMATE_DOMAIN)
     )
@@ -53,11 +51,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.config_entries.async_forward_entry_setup(entry, SWITCH_DOMAIN)
     )
 
+    _LOGGER.debug("Scanning network for Gree devices")
+    await gree_discovery.discovery.scan()
+
+    async def _async_scan_update(now):
+        await gree_discovery.discovery.scan()
+
+    hass.data[DOMAIN][DATA_DISCOVERY_INTERVAL] = async_track_time_interval(
+        hass, _async_scan_update, timedelta(seconds=DISCOVERY_SCAN_INTERVAL)
+    )
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+    if hass.data[DOMAIN].get(DATA_DISCOVERY_INTERVAL) is not None:
+        hass.data[DOMAIN][DATA_DISCOVERY_INTERVAL]()
+        hass.data[DOMAIN].pop(DATA_DISCOVERY_INTERVAL)
+
+    if hass.data.get(DATA_DISCOVERY_SERVICE) is not None:
+        del hass.data[DATA_DISCOVERY_SERVICE]
+
     results = asyncio.gather(
         hass.config_entries.async_forward_entry_unload(entry, CLIMATE_DOMAIN),
         hass.config_entries.async_forward_entry_unload(entry, SWITCH_DOMAIN),
@@ -65,8 +80,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     unload_ok = all(await results)
     if unload_ok:
-        hass.data[DOMAIN].pop("devices", None)
-        hass.data[DOMAIN].pop(CLIMATE_DOMAIN, None)
-        hass.data[DOMAIN].pop(SWITCH_DOMAIN, None)
+        hass.data[DOMAIN].pop(COORDINATORS, None)
 
     return unload_ok
