@@ -57,7 +57,7 @@ PICO_2_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
 
 PICO_2_BUTTON_RAISE_LOWER_BUTTON_TYPES = {
     "on": 2,
-    "stop": 3,
+    "off": 4,
     "raise": 5,
     "lower": 6,
 }
