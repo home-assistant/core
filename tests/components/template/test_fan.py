@@ -6,12 +6,14 @@ from homeassistant import setup
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
+    ATTR_PERCENTAGE,
     ATTR_SPEED,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
+    SPEED_OFF,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
@@ -25,6 +27,8 @@ _STATE_INPUT_BOOLEAN = "input_boolean.state"
 _STATE_AVAILABILITY_BOOLEAN = "availability_boolean.state"
 # Represent for fan's speed
 _SPEED_INPUT_SELECT = "input_select.speed"
+# Represent for fan's speed percentage
+_PERCENTAGE_INPUT_NUMBER = "input_number.percentage"
 # Represent for fan's oscillating
 _OSC_INPUT = "input_select.osc"
 # Represent for fan's direction
@@ -62,7 +66,7 @@ async def test_missing_optional_config(hass, calls):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    _verify(hass, STATE_ON, None, None, None)
+    _verify(hass, STATE_ON, None, None, None, None)
 
 
 async def test_missing_value_template_config(hass, calls):
@@ -191,9 +195,14 @@ async def test_templates_with_entities(hass, calls):
                     "fans": {
                         "test_fan": {
                             "value_template": value_template,
+                            "percentage_template": "{{ states('input_number.percentage') }}",
                             "speed_template": "{{ states('input_select.speed') }}",
                             "oscillating_template": "{{ states('input_select.osc') }}",
                             "direction_template": "{{ states('input_select.direction') }}",
+                            "set_percentage": {
+                                "service": "script.fans_set_speed",
+                                "data_template": {"percentage": "{{ percentage }}"},
+                            },
                             "turn_on": {"service": "script.fan_on"},
                             "turn_off": {"service": "script.fan_off"},
                         }
@@ -206,7 +215,7 @@ async def test_templates_with_entities(hass, calls):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    _verify(hass, STATE_OFF, None, None, None)
+    _verify(hass, STATE_OFF, None, 0, None, None)
 
     hass.states.async_set(_STATE_INPUT_BOOLEAN, True)
     hass.states.async_set(_SPEED_INPUT_SELECT, SPEED_MEDIUM)
@@ -214,7 +223,19 @@ async def test_templates_with_entities(hass, calls):
     hass.states.async_set(_DIRECTION_INPUT_SELECT, DIRECTION_FORWARD)
     await hass.async_block_till_done()
 
-    _verify(hass, STATE_ON, SPEED_MEDIUM, True, DIRECTION_FORWARD)
+    _verify(hass, STATE_ON, SPEED_MEDIUM, 66, True, DIRECTION_FORWARD)
+
+    hass.states.async_set(_PERCENTAGE_INPUT_NUMBER, 33)
+    await hass.async_block_till_done()
+    _verify(hass, STATE_ON, SPEED_LOW, 33, True, DIRECTION_FORWARD)
+
+    hass.states.async_set(_PERCENTAGE_INPUT_NUMBER, 66)
+    await hass.async_block_till_done()
+    _verify(hass, STATE_ON, SPEED_MEDIUM, 66, True, DIRECTION_FORWARD)
+
+    hass.states.async_set(_PERCENTAGE_INPUT_NUMBER, 100)
+    await hass.async_block_till_done()
+    _verify(hass, STATE_ON, SPEED_HIGH, 100, True, DIRECTION_FORWARD)
 
 
 async def test_template_with_unavailable_entities(hass, calls):
@@ -272,7 +293,7 @@ async def test_template_with_unavailable_parameters(hass, calls):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    _verify(hass, STATE_ON, None, None, None)
+    _verify(hass, STATE_ON, None, 0, None, None)
 
 
 async def test_availability_template_with_entities(hass, calls):
@@ -346,7 +367,7 @@ async def test_templates_with_valid_values(hass, calls):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    _verify(hass, STATE_ON, SPEED_MEDIUM, True, DIRECTION_FORWARD)
+    _verify(hass, STATE_ON, SPEED_MEDIUM, 66, True, DIRECTION_FORWARD)
 
 
 async def test_templates_invalid_values(hass, calls):
@@ -376,7 +397,7 @@ async def test_templates_invalid_values(hass, calls):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    _verify(hass, STATE_OFF, None, None, None)
+    _verify(hass, STATE_OFF, None, 0, None, None)
 
 
 async def test_invalid_availability_template_keeps_component_available(hass, caplog):
@@ -427,14 +448,14 @@ async def test_on_off(hass, calls):
 
     # verify
     assert hass.states.get(_STATE_INPUT_BOOLEAN).state == STATE_ON
-    _verify(hass, STATE_ON, None, None, None)
+    _verify(hass, STATE_ON, None, 0, None, None)
 
     # Turn off fan
     await common.async_turn_off(hass, _TEST_FAN)
 
     # verify
     assert hass.states.get(_STATE_INPUT_BOOLEAN).state == STATE_OFF
-    _verify(hass, STATE_OFF, None, None, None)
+    _verify(hass, STATE_OFF, None, 0, None, None)
 
 
 async def test_on_with_speed(hass, calls):
@@ -447,7 +468,7 @@ async def test_on_with_speed(hass, calls):
     # verify
     assert hass.states.get(_STATE_INPUT_BOOLEAN).state == STATE_ON
     assert hass.states.get(_SPEED_INPUT_SELECT).state == SPEED_HIGH
-    _verify(hass, STATE_ON, SPEED_HIGH, None, None)
+    _verify(hass, STATE_ON, SPEED_HIGH, 100, None, None)
 
 
 async def test_set_speed(hass, calls):
@@ -462,14 +483,49 @@ async def test_set_speed(hass, calls):
 
     # verify
     assert hass.states.get(_SPEED_INPUT_SELECT).state == SPEED_HIGH
-    _verify(hass, STATE_ON, SPEED_HIGH, None, None)
+    _verify(hass, STATE_ON, SPEED_HIGH, 100, None, None)
 
     # Set fan's speed to medium
     await common.async_set_speed(hass, _TEST_FAN, SPEED_MEDIUM)
 
     # verify
     assert hass.states.get(_SPEED_INPUT_SELECT).state == SPEED_MEDIUM
-    _verify(hass, STATE_ON, SPEED_MEDIUM, None, None)
+    _verify(hass, STATE_ON, SPEED_MEDIUM, 66, None, None)
+
+    # Set fan's speed to off
+    await common.async_set_speed(hass, _TEST_FAN, SPEED_OFF)
+
+    # verify
+    assert hass.states.get(_SPEED_INPUT_SELECT).state == SPEED_OFF
+    _verify(hass, STATE_OFF, SPEED_OFF, 0, None, None)
+
+
+async def test_set_percentage(hass, calls):
+    """Test set valid speed percentage."""
+    await _register_components(hass)
+
+    # Turn on fan
+    await common.async_turn_on(hass, _TEST_FAN)
+
+    # Set fan's percentage speed to 100
+    await common.async_set_percentage(hass, _TEST_FAN, 100)
+
+    # verify
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 100
+
+    _verify(hass, STATE_ON, SPEED_HIGH, 100, None, None)
+
+    # Set fan's percentage speed to 66
+    await common.async_set_percentage(hass, _TEST_FAN, 66)
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 66
+
+    _verify(hass, STATE_ON, SPEED_MEDIUM, 66, None, None)
+
+    # Set fan's percentage speed to 0
+    await common.async_set_percentage(hass, _TEST_FAN, 0)
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 0
+
+    _verify(hass, STATE_OFF, SPEED_OFF, 0, None, None)
 
 
 async def test_set_invalid_speed_from_initial_stage(hass, calls):
@@ -484,7 +540,7 @@ async def test_set_invalid_speed_from_initial_stage(hass, calls):
 
     # verify speed is unchanged
     assert hass.states.get(_SPEED_INPUT_SELECT).state == ""
-    _verify(hass, STATE_ON, None, None, None)
+    _verify(hass, STATE_ON, None, 0, None, None)
 
 
 async def test_set_invalid_speed(hass, calls):
@@ -499,14 +555,14 @@ async def test_set_invalid_speed(hass, calls):
 
     # verify
     assert hass.states.get(_SPEED_INPUT_SELECT).state == SPEED_HIGH
-    _verify(hass, STATE_ON, SPEED_HIGH, None, None)
+    _verify(hass, STATE_ON, SPEED_HIGH, 100, None, None)
 
     # Set fan's speed to 'invalid'
     await common.async_set_speed(hass, _TEST_FAN, "invalid")
 
     # verify speed is unchanged
     assert hass.states.get(_SPEED_INPUT_SELECT).state == SPEED_HIGH
-    _verify(hass, STATE_ON, SPEED_HIGH, None, None)
+    _verify(hass, STATE_ON, SPEED_HIGH, 100, None, None)
 
 
 async def test_custom_speed_list(hass, calls):
@@ -521,14 +577,14 @@ async def test_custom_speed_list(hass, calls):
 
     # verify
     assert hass.states.get(_SPEED_INPUT_SELECT).state == "1"
-    _verify(hass, STATE_ON, "1", None, None)
+    _verify(hass, STATE_ON, "1", 33, None, None)
 
     # Set fan's speed to 'medium' which is invalid
     await common.async_set_speed(hass, _TEST_FAN, SPEED_MEDIUM)
 
     # verify that speed is unchanged
     assert hass.states.get(_SPEED_INPUT_SELECT).state == "1"
-    _verify(hass, STATE_ON, "1", None, None)
+    _verify(hass, STATE_ON, "1", 33, None, None)
 
 
 async def test_set_osc(hass, calls):
@@ -543,14 +599,14 @@ async def test_set_osc(hass, calls):
 
     # verify
     assert hass.states.get(_OSC_INPUT).state == "True"
-    _verify(hass, STATE_ON, None, True, None)
+    _verify(hass, STATE_ON, None, 0, True, None)
 
     # Set fan's osc to False
     await common.async_oscillate(hass, _TEST_FAN, False)
 
     # verify
     assert hass.states.get(_OSC_INPUT).state == "False"
-    _verify(hass, STATE_ON, None, False, None)
+    _verify(hass, STATE_ON, None, 0, False, None)
 
 
 async def test_set_invalid_osc_from_initial_state(hass, calls):
@@ -566,7 +622,7 @@ async def test_set_invalid_osc_from_initial_state(hass, calls):
 
     # verify
     assert hass.states.get(_OSC_INPUT).state == ""
-    _verify(hass, STATE_ON, None, None, None)
+    _verify(hass, STATE_ON, None, 0, None, None)
 
 
 async def test_set_invalid_osc(hass, calls):
@@ -581,7 +637,7 @@ async def test_set_invalid_osc(hass, calls):
 
     # verify
     assert hass.states.get(_OSC_INPUT).state == "True"
-    _verify(hass, STATE_ON, None, True, None)
+    _verify(hass, STATE_ON, None, 0, True, None)
 
     # Set fan's osc to None
     with pytest.raises(vol.Invalid):
@@ -589,7 +645,7 @@ async def test_set_invalid_osc(hass, calls):
 
     # verify osc is unchanged
     assert hass.states.get(_OSC_INPUT).state == "True"
-    _verify(hass, STATE_ON, None, True, None)
+    _verify(hass, STATE_ON, None, 0, True, None)
 
 
 async def test_set_direction(hass, calls):
@@ -604,14 +660,14 @@ async def test_set_direction(hass, calls):
 
     # verify
     assert hass.states.get(_DIRECTION_INPUT_SELECT).state == DIRECTION_FORWARD
-    _verify(hass, STATE_ON, None, None, DIRECTION_FORWARD)
+    _verify(hass, STATE_ON, None, 0, None, DIRECTION_FORWARD)
 
     # Set fan's direction to reverse
     await common.async_set_direction(hass, _TEST_FAN, DIRECTION_REVERSE)
 
     # verify
     assert hass.states.get(_DIRECTION_INPUT_SELECT).state == DIRECTION_REVERSE
-    _verify(hass, STATE_ON, None, None, DIRECTION_REVERSE)
+    _verify(hass, STATE_ON, None, 0, None, DIRECTION_REVERSE)
 
 
 async def test_set_invalid_direction_from_initial_stage(hass, calls):
@@ -626,7 +682,7 @@ async def test_set_invalid_direction_from_initial_stage(hass, calls):
 
     # verify direction is unchanged
     assert hass.states.get(_DIRECTION_INPUT_SELECT).state == ""
-    _verify(hass, STATE_ON, None, None, None)
+    _verify(hass, STATE_ON, None, 0, None, None)
 
 
 async def test_set_invalid_direction(hass, calls):
@@ -641,24 +697,30 @@ async def test_set_invalid_direction(hass, calls):
 
     # verify
     assert hass.states.get(_DIRECTION_INPUT_SELECT).state == DIRECTION_FORWARD
-    _verify(hass, STATE_ON, None, None, DIRECTION_FORWARD)
+    _verify(hass, STATE_ON, None, 0, None, DIRECTION_FORWARD)
 
     # Set fan's direction to 'invalid'
     await common.async_set_direction(hass, _TEST_FAN, "invalid")
 
     # verify direction is unchanged
     assert hass.states.get(_DIRECTION_INPUT_SELECT).state == DIRECTION_FORWARD
-    _verify(hass, STATE_ON, None, None, DIRECTION_FORWARD)
+    _verify(hass, STATE_ON, None, 0, None, DIRECTION_FORWARD)
 
 
 def _verify(
-    hass, expected_state, expected_speed, expected_oscillating, expected_direction
+    hass,
+    expected_state,
+    expected_speed,
+    expected_percentage,
+    expected_oscillating,
+    expected_direction,
 ):
     """Verify fan's state, speed and osc."""
     state = hass.states.get(_TEST_FAN)
     attributes = state.attributes
     assert state.state == str(expected_state)
     assert attributes.get(ATTR_SPEED) == expected_speed
+    assert attributes.get(ATTR_PERCENTAGE) == expected_percentage
     assert attributes.get(ATTR_OSCILLATING) == expected_oscillating
     assert attributes.get(ATTR_DIRECTION) == expected_direction
 
@@ -668,6 +730,23 @@ async def _register_components(hass, speed_list=None):
     with assert_setup_component(1, "input_boolean"):
         assert await setup.async_setup_component(
             hass, "input_boolean", {"input_boolean": {"state": None}}
+        )
+
+    with assert_setup_component(1, "input_number"):
+        assert await setup.async_setup_component(
+            hass,
+            "input_number",
+            {
+                "input_number": {
+                    "percentage": {
+                        "min": 0.0,
+                        "max": 100.0,
+                        "name": "Percentage",
+                        "step": 1.0,
+                        "mode": "slider",
+                    }
+                }
+            },
         )
 
     with assert_setup_component(3, "input_select"):
@@ -680,6 +759,7 @@ async def _register_components(hass, speed_list=None):
                         "name": "Speed",
                         "options": [
                             "",
+                            SPEED_OFF,
                             SPEED_LOW,
                             SPEED_MEDIUM,
                             SPEED_HIGH,
@@ -709,6 +789,7 @@ async def _register_components(hass, speed_list=None):
         test_fan_config = {
             "value_template": value_template,
             "speed_template": "{{ states('input_select.speed') }}",
+            "percentage_template": "{{ states('input_number.percentage') }}",
             "oscillating_template": "{{ states('input_select.osc') }}",
             "direction_template": "{{ states('input_select.direction') }}",
             "turn_on": {
@@ -724,6 +805,13 @@ async def _register_components(hass, speed_list=None):
                 "data_template": {
                     "entity_id": _SPEED_INPUT_SELECT,
                     "option": "{{ speed }}",
+                },
+            },
+            "set_percentage": {
+                "service": "input_number.set_value",
+                "data_template": {
+                    "entity_id": _PERCENTAGE_INPUT_NUMBER,
+                    "value": "{{ percentage }}",
                 },
             },
             "set_oscillating": {
