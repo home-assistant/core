@@ -108,6 +108,8 @@ class RefreshToken:
 
     credential: Optional["Credentials"] = attr.ib(default=None)
 
+    version: Optional[str] = attr.ib(default=None)
+
 
 @attr.s(slots=True)
 class Credentials:
