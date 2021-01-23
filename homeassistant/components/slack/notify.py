@@ -123,8 +123,14 @@ async def async_get_service(
     try:
         await client.auth_test()
     except SlackApiError as err:
-        _LOGGER.error("Error while setting up integration: %s", err)
+        _LOGGER.error("Error while setting up integration: %r", err)
         return None
+    except ClientError as err:
+        _LOGGER.warning(
+            "Error testing connection to slack: %r"
+            "Continuing setup anyway, but notify service might not work",
+            err,
+        )
 
     return SlackNotificationService(
         hass,
@@ -204,7 +210,7 @@ class SlackNotificationService(BaseNotificationService):
                 title=title or filename,
             )
         except (SlackApiError, ClientError) as err:
-            _LOGGER.error("Error while uploading file-based message: %s", err)
+            _LOGGER.error("Error while uploading file-based message: %r", err)
 
     async def _async_send_remote_file_message(
         self,
@@ -238,7 +244,7 @@ class SlackNotificationService(BaseNotificationService):
         try:
             resp.raise_for_status()
         except ClientError as err:
-            _LOGGER.error("Error while retrieving %s: %s", url, err)
+            _LOGGER.error("Error while retrieving %s: %r", url, err)
             return
 
         form_data: FormDataT = {
@@ -255,7 +261,7 @@ class SlackNotificationService(BaseNotificationService):
         try:
             await session.post("https://slack.com/api/files.upload", data=data)
         except ClientError as err:
-            _LOGGER.error("Error while uploading file message: %s", err)
+            _LOGGER.error("Error while uploading file message: %r", err)
 
     async def _async_send_text_only_message(
         self,
@@ -291,17 +297,16 @@ class SlackNotificationService(BaseNotificationService):
         for target, result in zip(tasks, results):
             if isinstance(result, SlackApiError):
                 _LOGGER.error(
-                    "There was a Slack API error while sending to %s: %s",
+                    "There was a Slack API error while sending to %s: %r",
                     target,
                     result,
                 )
+            elif isinstance(result, ClientError):
+                _LOGGER.error("Error while sending message to %s: %r", target, result)
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to Slack."""
-        data = kwargs.get(ATTR_DATA)
-
-        if data is None:
-            data = {}
+        data = kwargs.get(ATTR_DATA, {})
 
         try:
             DATA_SCHEMA(data)
