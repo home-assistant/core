@@ -1271,7 +1271,7 @@ pyarlo==0.2.4
 pyatag==0.3.4.4
 
 # homeassistant.components.netatmo
-pyatmo==4.2.1
+pyatmo==4.2.2
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -1289,7 +1289,7 @@ pyblackbird==0.5
 # pybluez==0.22
 
 # homeassistant.components.neato
-pybotvac==0.0.19
+pybotvac==0.0.20
 
 # homeassistant.components.nissan_leaf
 pycarwings2==2.10
@@ -1780,7 +1780,7 @@ python-juicenet==1.0.1
 python-miio==0.5.4
 
 # homeassistant.components.mpd
-python-mpd2==3.0.1
+python-mpd2==3.0.3
 
 # homeassistant.components.mystrom
 python-mystrom==1.1.2

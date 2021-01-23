@@ -646,7 +646,7 @@ pyarlo==0.2.4
 pyatag==0.3.4.4
 
 # homeassistant.components.netatmo
-pyatmo==4.2.1
+pyatmo==4.2.2
 
 # homeassistant.components.apple_tv
 pyatv==0.7.5
@@ -655,7 +655,7 @@ pyatv==0.7.5
 pyblackbird==0.5
 
 # homeassistant.components.neato
-pybotvac==0.0.19
+pybotvac==0.0.20
 
 # homeassistant.components.cloudflare
 pycfdns==1.2.1
