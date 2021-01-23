@@ -133,11 +133,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
         and token is None
     ):
+        await hyperion_client.async_client_disconnect()
         await _create_reauth_flow(hass, config_entry)
         return False
 
     # Client login doesn't work? => Reauth.
     if not await hyperion_client.async_client_login():
+        await hyperion_client.async_client_disconnect()
         await _create_reauth_flow(hass, config_entry)
         return False
 
@@ -146,6 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         not await hyperion_client.async_client_switch_instance()
         or not client.ServerInfoResponseOK(await hyperion_client.async_get_serverinfo())
     ):
+        await hyperion_client.async_client_disconnect()
         raise ConfigEntryNotReady
 
     hyperion_client.set_callbacks(
