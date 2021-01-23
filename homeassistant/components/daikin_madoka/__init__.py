@@ -19,13 +19,12 @@ from homeassistant.helpers.typing import HomeAssistantType
 from . import config_flow  # noqa: F401
 from .const import CONTROLLERS, DOMAIN
 
-LOGGER = logging.getLogger(__name__)
-
-
 PARALLEL_UPDATES = 0
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 COMPONENT_TYPES = ["climate"]
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
@@ -72,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         try:
             await controller.start()
         except ConnectionAbortedError as connection_aborted_error:
-            LOGGER.error(
+            _LOGGER.error(
                 "Could not connect to device %s: %s",
                 device,
                 str(connection_aborted_error),

@@ -39,9 +39,7 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from . import DOMAIN
 from .const import CONTROLLERS, MAX_TEMP, MIN_TEMP
 
-# PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-#     {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_NAME): cv.string}
-# )
+_LOGGER = logging.getLogger(__name__)
 
 HA_MODE_TO_DAIKIN = {
     HVAC_MODE_FAN_ONLY: OperationModeEnum.FAN,
@@ -200,7 +198,7 @@ class DaikinMadokaClimate(ClimateEntity):
             )
         except ConnectionAbortedError:
             # pylint: disable=logging-not-lazy
-            logging.info(
+            _LOGGER.info(
                 "Could not set target temperature on %s. "
                 + "Connection not available, please reload integration to try reenabling.",
                 self.name,
@@ -264,7 +262,7 @@ class DaikinMadokaClimate(ClimateEntity):
             self.async_schedule_update_ha_state()
         except ConnectionAbortedError:
             # pylint: disable=logging-not-lazy
-            logging.info(
+            _LOGGER.info(
                 "Could not set HVAC mode on %s. "
                 + "Connection not available, please reload integration to try reenabling.",
                 self.name,
@@ -300,7 +298,7 @@ class DaikinMadokaClimate(ClimateEntity):
             )
         except ConnectionAbortedError:
             # pylint: disable=logging-not-lazy
-            logging.info(
+            _LOGGER.info(
                 "Could not set target fan mode on %s. "
                 + "Connection not available, please reload integration to try reenabling.",
                 self.name,
@@ -322,7 +320,7 @@ class DaikinMadokaClimate(ClimateEntity):
 
         except ConnectionAbortedError:
             # pylint: disable=logging-not-lazy
-            logging.info(
+            _LOGGER.info(
                 "Could not update device status for %s. "
                 + "Connection not available, please reload integration to try reenabling.",
                 self.name,
@@ -336,7 +334,7 @@ class DaikinMadokaClimate(ClimateEntity):
             await self.controller.power_state.update(PowerStateStatus(True))
         except ConnectionAbortedError:
             # pylint: disable=logging-not-lazy
-            logging.info(
+            _LOGGER.info(
                 "Could not turn on %s. "
                 + "Connection not available, please reload integration to try reenabling.",
                 self.name,
@@ -350,7 +348,7 @@ class DaikinMadokaClimate(ClimateEntity):
             await self.controller.power_state.update(PowerStateStatus(False))
         except ConnectionAbortedError:
             # pylint: disable=logging-not-lazy
-            logging.info(
+            _LOGGER.info(
                 "Could not turn off %s. "
                 + "Connection not available, please reload integration to try reenabling.",
                 self.name,

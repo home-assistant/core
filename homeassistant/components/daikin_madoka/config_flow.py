@@ -1,6 +1,5 @@
 """Config flow for the Daikin platform."""
 
-import logging
 import re
 
 from pymadoka import discover_devices, force_device_disconnect
@@ -17,8 +16,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, TITLE, UNIQUE_ID
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
