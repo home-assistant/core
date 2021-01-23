@@ -1,0 +1,103 @@
+"""Test Home Assistant percentage conversions."""
+
+
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
+)
+
+SPEED_1 = "low"
+SPEED_2 = "medium"
+SPEED_3 = "high"
+SPEED_4 = "very_high"
+SPEED_5 = "storm"
+SPEED_6 = "hurricane"
+SPEED_7 = "solar_wind"
+
+SMALL_ORDERED_LIST = [SPEED_1, SPEED_2, SPEED_3, SPEED_4]
+
+LARGE_ORDERED_LIST = [SPEED_1, SPEED_2, SPEED_3, SPEED_4, SPEED_5, SPEED_6, SPEED_7]
+
+
+async def test_ordered_list_percentage_round_trip():
+    """Test we can round trip."""
+    for ordered_list in (SMALL_ORDERED_LIST, LARGE_ORDERED_LIST):
+        for i in range(1, 100):
+            ordered_list_item_to_percentage(
+                ordered_list, percentage_to_ordered_list_item(ordered_list, i)
+            ) == i
+
+
+async def test_ordered_list_item_to_percentage():
+    """Test percentage of an item in an ordered list."""
+
+    assert ordered_list_item_to_percentage(SMALL_ORDERED_LIST, SPEED_1) == 25
+    assert ordered_list_item_to_percentage(SMALL_ORDERED_LIST, SPEED_2) == 50
+    assert ordered_list_item_to_percentage(SMALL_ORDERED_LIST, SPEED_3) == 75
+    assert ordered_list_item_to_percentage(SMALL_ORDERED_LIST, SPEED_4) == 100
+
+    assert ordered_list_item_to_percentage(LARGE_ORDERED_LIST, SPEED_1) == 14
+    assert ordered_list_item_to_percentage(LARGE_ORDERED_LIST, SPEED_2) == 28
+    assert ordered_list_item_to_percentage(LARGE_ORDERED_LIST, SPEED_3) == 42
+    assert ordered_list_item_to_percentage(LARGE_ORDERED_LIST, SPEED_4) == 57
+    assert ordered_list_item_to_percentage(LARGE_ORDERED_LIST, SPEED_5) == 71
+    assert ordered_list_item_to_percentage(LARGE_ORDERED_LIST, SPEED_6) == 85
+    assert ordered_list_item_to_percentage(LARGE_ORDERED_LIST, SPEED_7) == 100
+
+
+async def test_percentage_to_ordered_list_item():
+    """Test item that most closely matches the percentage in an ordered list."""
+
+    assert percentage_to_ordered_list_item(SMALL_ORDERED_LIST, 1) == SPEED_1
+    assert percentage_to_ordered_list_item(SMALL_ORDERED_LIST, 25) == SPEED_1
+    assert percentage_to_ordered_list_item(SMALL_ORDERED_LIST, 26) == SPEED_2
+    assert percentage_to_ordered_list_item(SMALL_ORDERED_LIST, 50) == SPEED_2
+    assert percentage_to_ordered_list_item(SMALL_ORDERED_LIST, 51) == SPEED_3
+    assert percentage_to_ordered_list_item(SMALL_ORDERED_LIST, 75) == SPEED_3
+    assert percentage_to_ordered_list_item(SMALL_ORDERED_LIST, 76) == SPEED_4
+    assert percentage_to_ordered_list_item(SMALL_ORDERED_LIST, 100) == SPEED_4
+
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 1) == SPEED_1
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 14) == SPEED_1
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 25) == SPEED_2
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 26) == SPEED_2
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 28) == SPEED_2
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 29) == SPEED_3
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 41) == SPEED_3
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 42) == SPEED_3
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 43) == SPEED_4
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 56) == SPEED_4
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 50) == SPEED_4
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 51) == SPEED_4
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 75) == SPEED_6
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 76) == SPEED_6
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 100) == SPEED_7
+
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 1) == SPEED_1
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 25) == SPEED_2
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 26) == SPEED_2
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 50) == SPEED_4
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 51) == SPEED_4
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 75) == SPEED_6
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 76) == SPEED_6
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 100) == SPEED_7
+
+
+async def test_ranged_value_to_percentage():
+    """Test range of low and high values convert a single value to a percentage."""
+    range = (1, 255)
+
+    assert ranged_value_to_percentage(range, 255) == 100
+    assert ranged_value_to_percentage(range, 127) == 50
+    assert ranged_value_to_percentage(range, 1) == 1
+
+
+async def test_percentage_to_ranged_value():
+    """Test range of low and high values convert a percentage to a single value."""
+    range = (1, 255)
+
+    assert percentage_to_ranged_value(range, 100) == 255
+    assert percentage_to_ranged_value(range, 50) == 127.5
+    assert percentage_to_ranged_value(range, 4) == 10.2
