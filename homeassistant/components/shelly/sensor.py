@@ -11,7 +11,6 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     VOLT,
 )
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import SHAIR_MAX_WORK_HOURS
 from .entity import (
@@ -19,6 +18,7 @@ from .entity import (
     RestAttributeDescription,
     ShellyBlockAttributeEntity,
     ShellyRestAttributeEntity,
+    ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
 )
@@ -208,34 +208,17 @@ class ShellySensor(ShellyBlockAttributeEntity):
         return self.attribute_value
 
 
-class ShellySleepingSensor(ShellyBlockAttributeEntity, RestoreEntity):
-    """Represent a shelly sleeping sensor."""
-
-    def __init__(self, *args, **kwargs):
-        """Initialize the sleeping sensor."""
-        self.restored_state = None
-        super().__init__(*args, **kwargs)
+class ShellyRestSensor(ShellyRestAttributeEntity):
+    """Represent a shelly REST sensor."""
 
     @property
     def state(self):
-        """Return the state of the device."""
-        if self.block is not None:
-            return self.attribute_value
-
-        if self.restored_state is not None:
-            return self.restored_state.state
-
-        return None
-
-    async def async_added_to_hass(self):
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-
-        self.restored_state = await self.async_get_last_state()
+        """Return value of sensor."""
+        return self.attribute_value
 
 
-class ShellyRestSensor(ShellyRestAttributeEntity):
-    """Represent a shelly REST sensor."""
+class ShellySleepingSensor(ShellySleepingBlockAttributeEntity):
+    """Represent a shelly sleeping sensor."""
 
     @property
     def state(self):

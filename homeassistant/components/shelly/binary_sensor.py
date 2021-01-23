@@ -9,15 +9,16 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_VIBRATION,
+    STATE_ON,
     BinarySensorEntity,
 )
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from .entity import (
     BlockAttributeDescription,
     RestAttributeDescription,
     ShellyBlockAttributeEntity,
     ShellyRestAttributeEntity,
+    ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
 )
@@ -129,32 +130,6 @@ class ShellyBinarySensor(ShellyBlockAttributeEntity, BinarySensorEntity):
         return bool(self.attribute_value)
 
 
-class ShellySleepingBinarySensor(ShellyBlockAttributeEntity, RestoreEntity):
-    """Represent a shelly sleeping binary sensor."""
-
-    def __init__(self, *args, **kwargs):
-        """Initialize the sleeping binary sensor."""
-        self.restored_state = None
-        super().__init__(*args, **kwargs)
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        if self.block is not None:
-            return bool(self.attribute_value)
-
-        if self.restored_state is not None:
-            return self.restored_state.state
-
-        return None
-
-    async def async_added_to_hass(self):
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-
-        self.restored_state = await self.async_get_last_state()
-
-
 class ShellyRestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
     """Shelly REST binary sensor entity."""
 
@@ -162,3 +137,15 @@ class ShellyRestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
     def is_on(self):
         """Return true if REST sensor state is on."""
         return bool(self.attribute_value)
+
+
+class ShellySleepingBinarySensor(
+    ShellySleepingBlockAttributeEntity, BinarySensorEntity
+):
+    """Represent a shelly sleeping binary sensor."""
+
+    @property
+    def is_on(self):
+        """Return true if sensor state is on."""
+
+        return self.attribute_value in [STATE_ON, 1]
