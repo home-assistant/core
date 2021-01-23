@@ -105,7 +105,12 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         Z-Wave multilevel switches use a range of [0, 99] to control brightness.
         """
-        if self._target_value is not None and self._target_value.value is not None:
+        # prefer targetValue but only when there is a value that makes any sense
+        if self._target_value is not None and self._target_value.value not in [
+            None,
+            0,
+            255,
+        ]:
             return round((self._target_value.value / 99) * 255)
         if self.info.primary_value.value is not None:
             return round((self.info.primary_value.value / 99) * 255)
@@ -237,7 +242,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if self.info.primary_value.value == zwave_brightness:
             # no point in setting same brightness
             return
-        # set transition value before seinding new brightness
+        # set transition value before sending new brightness
         await self._async_set_transition_duration(transition)
         # setting a value requires setting targetValue
         await self.info.node.async_set_value(self._target_value, zwave_brightness)
@@ -324,7 +329,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                 )
             else:
                 self._color_temp = None
-        elif ww_val or cw_val:
-            # only one white channel
+        elif ww_val:
+            # only one white channel (warm white)
             self._supports_white_value = True
-            # FIXME: Update self._white_value
+            self._white_value = ww_val.value
+        elif cw_val:
+            # only one white channel (cool white)
+            self._supports_white_value = True
+            self._white_value = cw_val.value
