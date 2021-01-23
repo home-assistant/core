@@ -457,7 +457,7 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._percentage = 0
             return
 
-        if percentage >= 0 and percentage <= 100:
+        if 0 <= percentage <= 100:
             self._state = STATE_OFF if percentage == 0 else STATE_ON
             self._percentage = percentage
             if self._speed_list:
