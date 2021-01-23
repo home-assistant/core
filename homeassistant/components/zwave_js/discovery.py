@@ -154,6 +154,31 @@ DISCOVERY_SCHEMAS = [
         command_class={CommandClass.SWITCH_BINARY},
         property={"currentValue"},
     ),
+    # cover
+    ZWaveDiscoverySchema(
+        platform="cover",
+        hint="cover",
+        device_class_generic={"Multilevel Switch"},
+        device_class_specific={
+            "Motor Control Class A",
+            "Motor Control Class B",
+            "Motor Control Class C",
+            "Multiposition Motor",
+        },
+        command_class={CommandClass.SWITCH_MULTILEVEL},
+        property={"currentValue"},
+        type={"number"},
+    ),
+    # fan
+    ZWaveDiscoverySchema(
+        platform="fan",
+        hint="fan",
+        device_class_generic={"Multilevel Switch"},
+        device_class_specific={"Fan Switch"},
+        command_class={CommandClass.SWITCH_MULTILEVEL},
+        property={"currentValue"},
+        type={"number"},
+    ),
 ]
 
 

@@ -183,7 +183,7 @@ auroranoaa==0.0.2
 av==8.0.2
 
 # homeassistant.components.axis
-axis==42
+axis==43
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.1.0
@@ -379,10 +379,10 @@ ha-ffmpeg==3.0.2
 hangups==0.4.11
 
 # homeassistant.components.cloud
-hass-nabucasa==0.39.0
+hass-nabucasa==0.41.0
 
 # homeassistant.components.tasmota
-hatasmota==0.2.5
+hatasmota==0.2.6
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12
@@ -758,7 +758,7 @@ pykodi==0.2.1
 pykulersky==0.4.0
 
 # homeassistant.components.lastfm
-pylast==4.0.0
+pylast==4.1.0
 
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.0
@@ -1183,4 +1183,4 @@ zigpy-znp==0.3.0
 zigpy==0.30.1
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.11.0
+zwave-js-server-python==0.12.0

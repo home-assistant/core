@@ -79,7 +79,7 @@ def _async_assign_values(
 
 
 @callback
-def get_device(spec: Type[DysonPureCoolLink], combi=False) -> DysonPureCoolLink:
+def async_get_device(spec: Type[DysonPureCoolLink], combi=False) -> DysonPureCoolLink:
     """Return a device of the given type."""
     device = get_basic_device(spec)
     _async_assign_values(device, combi=combi)
@@ -165,7 +165,7 @@ async def test_temperature(
     """Test the temperature sensor in different units."""
     hass.config.units = unit_system
 
-    device = get_device(DysonPureCoolLink)
+    device = async_get_device(DysonPureCoolLink)
     with patch(f"{BASE_PATH}.DysonAccount.login", return_value=True), patch(
         f"{BASE_PATH}.DysonAccount.devices", return_value=[device]
     ), patch(f"{BASE_PATH}.DYSON_PLATFORMS", [PLATFORM_DOMAIN]):

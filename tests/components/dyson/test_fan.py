@@ -1,7 +1,7 @@
 """Test the Dyson fan component."""
 from typing import Type
 
-from libpurecool.const import SLEEP_TIMER_OFF, FanMode, FanSpeed, NightMode, Oscillation
+from libpurecool.const import FanMode, FanSpeed, NightMode, Oscillation
 from libpurecool.dyson_pure_cool import DysonPureCool, DysonPureCoolLink
 from libpurecool.dyson_pure_state import DysonPureCoolState
 from libpurecool.dyson_pure_state_v2 import DysonPureCoolV2State
@@ -50,33 +50,24 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 
-from .common import ENTITY_NAME, NAME, SERIAL, async_update_device, get_basic_device
+from .common import (
+    ENTITY_NAME,
+    NAME,
+    SERIAL,
+    async_get_purecool_device,
+    async_get_purecoollink_device,
+    async_update_device,
+)
 
 ENTITY_ID = f"{PLATFORM_DOMAIN}.{ENTITY_NAME}"
 
 
 @callback
-def get_device(spec: Type[DysonPureCoolLink]) -> DysonPureCoolLink:
+def async_get_device(spec: Type[DysonPureCoolLink]) -> DysonPureCoolLink:
     """Return a Dyson fan device."""
-    device = get_basic_device(spec)
     if spec == DysonPureCoolLink:
-        device.state.fan_mode = FanMode.FAN.value
-        device.state.speed = FanSpeed.FAN_SPEED_1.value
-        device.state.night_mode = "ON"
-        device.state.oscillation = "ON"
-    else:  # DysonPureCool
-        device.state.fan_power = "ON"
-        device.state.speed = FanSpeed.FAN_SPEED_1.value
-        device.state.night_mode = "ON"
-        device.state.oscillation = "OION"
-        device.state.oscillation_angle_low = "0024"
-        device.state.oscillation_angle_high = "0254"
-        device.state.auto_mode = "OFF"
-        device.state.front_direction = "ON"
-        device.state.sleep_timer = SLEEP_TIMER_OFF
-        device.state.hepa_filter_state = "0100"
-        device.state.carbon_filter_state = "0100"
-    return device
+        return async_get_purecoollink_device()
+    return async_get_purecool_device()
 
 
 @pytest.mark.parametrize("device", [DysonPureCoolLink], indirect=True)

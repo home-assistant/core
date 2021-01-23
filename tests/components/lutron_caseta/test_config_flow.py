@@ -438,12 +438,6 @@ async def test_zeroconf_not_lutron_device(hass):
     """Test starting a flow from discovery when it is not a lutron device."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "4.5.6.7"}, unique_id="abc"
-    )
-
-    config_entry.add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
