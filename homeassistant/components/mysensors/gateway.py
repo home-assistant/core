@@ -10,12 +10,12 @@ import async_timeout
 from mysensors import BaseAsyncGateway, Message, Sensor, mysensors
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 
-from ...config_entries import ConfigEntry
-from ...helpers.typing import HomeAssistantType
 from .const import (
     CONF_BAUD_RATE,
     CONF_DEVICE,

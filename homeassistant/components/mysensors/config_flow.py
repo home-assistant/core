@@ -85,12 +85,11 @@ async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bo
 
 def _get_schema_common() -> dict:
     """Create a schema with options common to all gateway types."""
-    schema = dict()
-    schema[
+    schema = {
         vol.Required(
             CONF_VERSION, default="", description={"suggested_value": DEFAULT_VERSION}
-        )
-    ] = str
+        ): str
+    }
     return schema
 
 

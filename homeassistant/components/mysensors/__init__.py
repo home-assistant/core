@@ -5,14 +5,14 @@ from typing import Callable, Dict, List, Optional, Tuple, Type, Union
 from mysensors import BaseAsyncGateway
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_OPTIMISTIC
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from ... import config_entries
-from ...config_entries import ConfigEntry
-from ...const import CONF_OPTIMISTIC
-from ...helpers.typing import ConfigType, HomeAssistantType
 from .const import (
     ATTR_DEVICES,
     CONF_BAUD_RATE,
