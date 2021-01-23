@@ -59,7 +59,18 @@ ATTR_DIRECTION = "direction"
 _INVALID_SPEED_ON = "on"
 _INVALID_SPEED_AUTO = "auto"
 _INVALID_SPEED_SMART = "smart"
-_INVALID_SPEEDS_FILTER = {_INVALID_SPEED_ON, _INVALID_SPEED_AUTO, _INVALID_SPEED_SMART}
+_INVALID_SPEED_INTERVAL = "interval"
+_INVALID_SPEED_IDLE = "idle"
+_INVALID_SPEED_FAVORITE = "favorite"
+
+_INVALID_SPEEDS_FILTER = {
+    _INVALID_SPEED_ON,
+    _INVALID_SPEED_AUTO,
+    _INVALID_SPEED_SMART,
+    _INVALID_SPEED_INTERVAL,
+    _INVALID_SPEED_IDLE,
+    _INVALID_SPEED_FAVORITE,
+}
 
 _FAN_NATIVE = "_fan_native"
 
@@ -308,11 +319,16 @@ class FanEntity(ToggleEntity):
 
     @property
     def _normalized_speed_list(self) -> List[str]:
-        """Filter out invalid speeds that have crept into fans over time."""
+        """Filter out invalid speeds that have crept into fans over time.
+
+        The goal is to get the speeds in a list from lowest to
+        highest by removing speeds that are not valid or out of order
+        so we can map them to percentages.
+        """
         speed_list = self.speed_list
 
         normalized_speed_list = [
-            speed for speed in speed_list if speed not in _INVALID_SPEEDS_FILTER
+            speed for speed in speed_list if speed.lower() not in _INVALID_SPEEDS_FILTER
         ]
         if normalized_speed_list and normalized_speed_list[0] != SPEED_OFF:
             normalized_speed_list.insert(0, SPEED_OFF)
