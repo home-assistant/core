@@ -3,6 +3,7 @@ import asyncio
 import logging
 import time
 
+import aiohttp
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -546,3 +547,32 @@ async def test_implementation_provider(hass, local_impl):
     assert await config_entry_oauth2_flow.async_get_implementations(
         hass, mock_domain_with_impl
     ) == {TEST_DOMAIN: local_impl, "cloud": provider_source[mock_domain_with_impl]}
+
+
+async def test_oauth_session_refresh_failure(
+    hass, flow_handler, local_impl, aioclient_mock
+):
+    """Test the OAuth2 session helper when no refresh is needed."""
+    flow_handler.async_register_implementation(hass, local_impl)
+
+    aioclient_mock.post(TOKEN_URL, status=400)
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "refresh_token": REFRESH_TOKEN,
+                "access_token": ACCESS_TOKEN_1,
+                # Already expired, requires a refresh
+                "expires_in": -500,
+                "expires_at": time.time() - 500,
+                "token_type": "bearer",
+                "random_other_data": "should_stay",
+            },
+        },
+    )
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
+    with pytest.raises(aiohttp.client_exceptions.ClientResponseError):
+        await session.async_request("post", "https://example.com")

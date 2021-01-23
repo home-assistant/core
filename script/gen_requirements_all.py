@@ -65,6 +65,9 @@ pycryptodome>=3.6.6
 # Constrain urllib3 to ensure we deal with CVE-2019-11236 & CVE-2019-11324
 urllib3>=1.24.3
 
+# Constrain H11 to ensure we get a new enough version to support non-rfc line endings
+h11>=0.12.0
+
 # Constrain httplib2 to protect against CVE-2020-11078
 httplib2>=0.18.0
 

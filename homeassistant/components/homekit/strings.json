@@ -30,7 +30,7 @@
             },
             "advanced": {
                 "data": {
-                    "auto_start": "[%key:component::homekit::config::step::user::data::auto_start%]",
+                    "auto_start": "Autostart (disable if you are calling the homekit.start service manually)",
                     "safe_mode": "Safe Mode (enable only if pairing fails)"
                 },
                 "description": "These settings only need to be adjusted if HomeKit is not functional.",
@@ -42,7 +42,6 @@
         "step": {
             "user": {
                 "data": {
-                    "auto_start": "Autostart (disable if using Z-Wave or other delayed start system)",
                     "include_domains": "Domains to include"
                 },
                 "description": "The HomeKit integration will allow you to access your Home Assistant entities in HomeKit. In bridge mode, HomeKit Bridges are limited to 150 accessories per instance including the bridge itself. If you wish to bridge more than the maximum number of accessories, it is recommended that you use multiple HomeKit bridges for different domains. Detailed entity configuration is only available via YAML for the primary bridge.",

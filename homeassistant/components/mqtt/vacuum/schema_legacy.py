@@ -4,14 +4,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt
-from homeassistant.components.mqtt import (
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    subscription,
-)
 from homeassistant.components.vacuum import (
     SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT,
@@ -36,6 +28,14 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import icon_for_battery_level
 
+from .. import (
+    MqttAttributes,
+    MqttAvailability,
+    MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo,
+    subscription,
+)
+from ... import mqtt
 from ..debug_info import log_messages
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 

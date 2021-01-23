@@ -8,8 +8,8 @@ from hyperion import client, const as hyperion_const
 from pkg_resources import parse_version
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -85,6 +85,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def _create_reauth_flow(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+) -> None:
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={CONF_SOURCE: SOURCE_REAUTH}, data=config_entry.data
+        )
+    )
+
+
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Hyperion from a config entry."""
     host = config_entry.data[CONF_HOST]
@@ -92,8 +103,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     token = config_entry.data.get(CONF_TOKEN)
 
     hyperion_client = await async_create_connect_hyperion_client(
-        host, port, token=token
+        host, port, token=token, raw_connection=True
     )
+
+    # Client won't connect? => Not ready.
     if not hyperion_client:
         raise ConfigEntryNotReady
     version = await hyperion_client.async_sysinfo_version()
@@ -109,6 +122,31 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 )
         except ValueError:
             pass
+
+    # Client needs authentication, but no token provided? => Reauth.
+    auth_resp = await hyperion_client.async_is_auth_required()
+    if (
+        auth_resp is not None
+        and client.ResponseOK(auth_resp)
+        and auth_resp.get(hyperion_const.KEY_INFO, {}).get(
+            hyperion_const.KEY_REQUIRED, False
+        )
+        and token is None
+    ):
+        await _create_reauth_flow(hass, config_entry)
+        return False
+
+    # Client login doesn't work? => Reauth.
+    if not await hyperion_client.async_client_login():
+        await _create_reauth_flow(hass, config_entry)
+        return False
+
+    # Cannot switch instance or cannot load state? => Not ready.
+    if (
+        not await hyperion_client.async_client_switch_instance()
+        or not client.ServerInfoResponseOK(await hyperion_client.async_get_serverinfo())
+    ):
+        raise ConfigEntryNotReady
 
     hyperion_client.set_callbacks(
         {
@@ -139,17 +177,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             ]
         )
         hass.data[DOMAIN][config_entry.entry_id][CONF_ON_UNLOAD].append(
-            config_entry.add_update_listener(_async_options_updated)
+            config_entry.add_update_listener(_async_entry_updated)
         )
 
     hass.async_create_task(setup_then_listen())
     return True
 
 
-async def _async_options_updated(
+async def _async_entry_updated(
     hass: HomeAssistantType, config_entry: ConfigEntry
 ) -> None:
-    """Handle options update."""
+    """Handle entry updates."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 

@@ -63,7 +63,7 @@ class TasmotaFan(
     @property
     def speed_list(self):
         """Get the list of available speeds."""
-        return list(HA_TO_TASMOTA_SPEED_MAP.keys())
+        return list(HA_TO_TASMOTA_SPEED_MAP)
 
     @property
     def supported_features(self):
@@ -72,6 +72,8 @@ class TasmotaFan(
 
     async def async_set_speed(self, speed):
         """Set the speed of the fan."""
+        if speed not in HA_TO_TASMOTA_SPEED_MAP:
+            raise ValueError(f"Unsupported speed {speed}")
         if speed == fan.SPEED_OFF:
             await self.async_turn_off()
         else:

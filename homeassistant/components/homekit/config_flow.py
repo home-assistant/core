@@ -128,7 +128,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         default_domains = [] if self._async_current_names() else DEFAULT_DOMAINS
         setup_schema = vol.Schema(
             {
-                vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): bool,
                 vol.Required(
                     CONF_INCLUDE_DOMAINS, default=default_domains
                 ): cv.multi_select(SUPPORTED_DOMAINS),

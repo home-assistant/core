@@ -98,7 +98,7 @@ class DemoNumber(NumberEntity):
         return self._assumed
 
     @property
-    def state(self):
+    def value(self):
         """Return the current value."""
         return self._state
 

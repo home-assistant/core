@@ -34,7 +34,7 @@
     },
     "system_health": {
         "info": {
-            "can_reach_server": "\u00dchendu Accuweatheri serveriga",
+            "can_reach_server": "\u00dchendus Accuweatheri serveriga",
             "remaining_requests": "Lubatud taotlusi on j\u00e4\u00e4nud"
         }
     }

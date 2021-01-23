@@ -59,7 +59,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Shelly."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
     host = None
     info = None
 
@@ -138,9 +138,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, zeroconf_info):
         """Handle zeroconf discovery."""
-        if not zeroconf_info.get("name", "").startswith("shelly"):
-            return self.async_abort(reason="not_shelly")
-
         try:
             self.info = info = await self._async_get_info(zeroconf_info["host"])
         except HTTP_CONNECT_ERRORS:

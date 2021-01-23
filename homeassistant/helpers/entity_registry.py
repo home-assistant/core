@@ -39,7 +39,7 @@ from homeassistant.util import slugify
 from homeassistant.util.yaml import load_yaml
 
 from .singleton import singleton
-from .typing import HomeAssistantType
+from .typing import UNDEFINED, HomeAssistantType
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry  # noqa: F401
@@ -51,7 +51,6 @@ DATA_REGISTRY = "entity_registry"
 EVENT_ENTITY_REGISTRY_UPDATED = "entity_registry_updated"
 SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
-_UNDEF = object()
 DISABLED_CONFIG_ENTRY = "config_entry"
 DISABLED_DEVICE = "device"
 DISABLED_HASS = "hass"
@@ -225,15 +224,15 @@ class EntityRegistry:
         if entity_id:
             return self._async_update_entity(  # type: ignore
                 entity_id,
-                config_entry_id=config_entry_id or _UNDEF,
-                device_id=device_id or _UNDEF,
-                area_id=area_id or _UNDEF,
-                capabilities=capabilities or _UNDEF,
-                supported_features=supported_features or _UNDEF,
-                device_class=device_class or _UNDEF,
-                unit_of_measurement=unit_of_measurement or _UNDEF,
-                original_name=original_name or _UNDEF,
-                original_icon=original_icon or _UNDEF,
+                config_entry_id=config_entry_id or UNDEFINED,
+                device_id=device_id or UNDEFINED,
+                area_id=area_id or UNDEFINED,
+                capabilities=capabilities or UNDEFINED,
+                supported_features=supported_features or UNDEFINED,
+                device_class=device_class or UNDEFINED,
+                unit_of_measurement=unit_of_measurement or UNDEFINED,
+                original_name=original_name or UNDEFINED,
+                original_icon=original_icon or UNDEFINED,
                 # When we changed our slugify algorithm, we invalidated some
                 # stored entity IDs with either a __ or ending in _.
                 # Fix introduced in 0.86 (Jan 23, 2019). Next line can be
@@ -333,12 +332,12 @@ class EntityRegistry:
         self,
         entity_id,
         *,
-        name=_UNDEF,
-        icon=_UNDEF,
-        area_id=_UNDEF,
-        new_entity_id=_UNDEF,
-        new_unique_id=_UNDEF,
-        disabled_by=_UNDEF,
+        name=UNDEFINED,
+        icon=UNDEFINED,
+        area_id=UNDEFINED,
+        new_entity_id=UNDEFINED,
+        new_unique_id=UNDEFINED,
+        disabled_by=UNDEFINED,
     ):
         """Update properties of an entity."""
         return cast(  # cast until we have _async_update_entity type hinted
@@ -359,20 +358,20 @@ class EntityRegistry:
         self,
         entity_id,
         *,
-        name=_UNDEF,
-        icon=_UNDEF,
-        config_entry_id=_UNDEF,
-        new_entity_id=_UNDEF,
-        device_id=_UNDEF,
-        area_id=_UNDEF,
-        new_unique_id=_UNDEF,
-        disabled_by=_UNDEF,
-        capabilities=_UNDEF,
-        supported_features=_UNDEF,
-        device_class=_UNDEF,
-        unit_of_measurement=_UNDEF,
-        original_name=_UNDEF,
-        original_icon=_UNDEF,
+        name=UNDEFINED,
+        icon=UNDEFINED,
+        config_entry_id=UNDEFINED,
+        new_entity_id=UNDEFINED,
+        device_id=UNDEFINED,
+        area_id=UNDEFINED,
+        new_unique_id=UNDEFINED,
+        disabled_by=UNDEFINED,
+        capabilities=UNDEFINED,
+        supported_features=UNDEFINED,
+        device_class=UNDEFINED,
+        unit_of_measurement=UNDEFINED,
+        original_name=UNDEFINED,
+        original_icon=UNDEFINED,
     ):
         """Private facing update properties method."""
         old = self.entities[entity_id]
@@ -393,10 +392,10 @@ class EntityRegistry:
             ("original_name", original_name),
             ("original_icon", original_icon),
         ):
-            if value is not _UNDEF and value != getattr(old, attr_name):
+            if value is not UNDEFINED and value != getattr(old, attr_name):
                 changes[attr_name] = value
 
-        if new_entity_id is not _UNDEF and new_entity_id != old.entity_id:
+        if new_entity_id is not UNDEFINED and new_entity_id != old.entity_id:
             if self.async_is_registered(new_entity_id):
                 raise ValueError("Entity is already registered")
 
@@ -409,7 +408,7 @@ class EntityRegistry:
             self.entities.pop(entity_id)
             entity_id = changes["entity_id"] = new_entity_id
 
-        if new_unique_id is not _UNDEF:
+        if new_unique_id is not UNDEFINED:
             conflict_entity_id = self.async_get_entity_id(
                 old.domain, old.platform, new_unique_id
             )

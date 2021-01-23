@@ -23,6 +23,9 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
         "error": {
             "dev_multi_type": "Wybrane urz\u0105dzenia do skonfigurowania musz\u0105 by\u0107 tego samego typu",
             "dev_not_config": "Typ urz\u0105dzenia nie jest konfigurowalny",

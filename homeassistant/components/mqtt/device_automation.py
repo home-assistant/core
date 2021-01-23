@@ -3,11 +3,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import ATTR_DISCOVERY_HASH, device_trigger
+from .. import mqtt
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)

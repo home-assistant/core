@@ -112,7 +112,7 @@ class BinarySensorSchema:
                 ),
                 vol.Optional(CONF_DEVICE_CLASS): cv.string,
                 vol.Optional(CONF_INVERT): cv.boolean,
-                vol.Optional(CONF_RESET_AFTER): cv.positive_int,
+                vol.Optional(CONF_RESET_AFTER): cv.positive_float,
             }
         ),
     )

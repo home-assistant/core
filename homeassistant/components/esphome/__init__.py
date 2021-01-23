@@ -257,7 +257,12 @@ async def _setup_auto_reconnect_logic(
         try:
             await cli.connect(on_stop=try_connect, login=True)
         except APIConnectionError as error:
-            _LOGGER.info("Can't connect to ESPHome API for %s: %s", host, error)
+            _LOGGER.info(
+                "Can't connect to ESPHome API for %s (%s): %s",
+                entry.unique_id,
+                host,
+                error,
+            )
             # Schedule re-connect in event loop in order not to delay HA
             # startup. First connect is scheduled in tracked tasks.
             data.reconnect_task = hass.loop.create_task(

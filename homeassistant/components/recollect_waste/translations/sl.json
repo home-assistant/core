@@ -10,5 +10,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "friendly_name": "\u010ce je to mogo\u010de, uporabi prijazna imena za vrste pobiranja."
+                },
+                "title": "Nastavi ponovno rabo zavr\u017eenega"
+            }
+        }
     }
 }

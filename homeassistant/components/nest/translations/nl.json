@@ -25,5 +25,13 @@
                 "title": "Koppel Nest-account"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Beweging gedetecteerd",
+            "camera_person": "Persoon gedetecteerd",
+            "camera_sound": "Geluid gedetecteerd",
+            "doorbell_chime": "Deurbel is ingedrukt"
+        }
     }
 }

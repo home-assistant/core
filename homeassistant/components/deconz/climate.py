@@ -32,7 +32,7 @@ from .gateway import get_gateway_from_config_entry
 
 DECONZ_FAN_SMART = "smart"
 
-FAN_MODES = {
+FAN_MODE_TO_DECONZ = {
     DECONZ_FAN_SMART: "smart",
     FAN_AUTO: "auto",
     FAN_HIGH: "high",
@@ -42,7 +42,9 @@ FAN_MODES = {
     FAN_OFF: "off",
 }
 
-HVAC_MODES = {
+DECONZ_TO_FAN_MODE = {value: key for key, value in FAN_MODE_TO_DECONZ.items()}
+
+HVAC_MODE_TO_DECONZ = {
     HVAC_MODE_AUTO: "auto",
     HVAC_MODE_COOL: "cool",
     HVAC_MODE_HEAT: "heat",
@@ -54,7 +56,7 @@ DECONZ_PRESET_COMPLEX = "complex"
 DECONZ_PRESET_HOLIDAY = "holiday"
 DECONZ_PRESET_MANUAL = "manual"
 
-PRESET_MODES = {
+PRESET_MODE_TO_DECONZ = {
     DECONZ_PRESET_AUTO: "auto",
     PRESET_BOOST: "boost",
     PRESET_COMFORT: "comfort",
@@ -63,6 +65,8 @@ PRESET_MODES = {
     DECONZ_PRESET_HOLIDAY: "holiday",
     DECONZ_PRESET_MANUAL: "manual",
 }
+
+DECONZ_TO_PRESET_MODE = {value: key for key, value in PRESET_MODE_TO_DECONZ.items()}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -111,14 +115,17 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         """Set up thermostat device."""
         super().__init__(device, gateway)
 
-        self._hvac_modes = dict(HVAC_MODES)
+        self._hvac_mode_to_deconz = dict(HVAC_MODE_TO_DECONZ)
         if "mode" not in device.raw["config"]:
-            self._hvac_modes = {
+            self._hvac_mode_to_deconz = {
                 HVAC_MODE_HEAT: True,
                 HVAC_MODE_OFF: False,
             }
         elif "coolsetpoint" not in device.raw["config"]:
-            self._hvac_modes.pop(HVAC_MODE_COOL)
+            self._hvac_mode_to_deconz.pop(HVAC_MODE_COOL)
+        self._deconz_to_hvac_mode = {
+            value: key for key, value in self._hvac_mode_to_deconz.items()
+        }
 
         self._features = SUPPORT_TARGET_TEMPERATURE
 
@@ -138,26 +145,21 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     @property
     def fan_mode(self) -> str:
         """Return fan operation."""
-        for hass_fan_mode, fan_mode in FAN_MODES.items():
-            if self._device.fanmode == fan_mode:
-                return hass_fan_mode
-
-        if self._device.state_on:
-            return FAN_ON
-
-        return FAN_OFF
+        return DECONZ_TO_FAN_MODE.get(
+            self._device.fanmode, FAN_ON if self._device.state_on else FAN_OFF
+        )
 
     @property
     def fan_modes(self) -> list:
         """Return the list of available fan operation modes."""
-        return list(FAN_MODES)
+        return list(FAN_MODE_TO_DECONZ)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        if fan_mode not in FAN_MODES:
+        if fan_mode not in FAN_MODE_TO_DECONZ:
             raise ValueError(f"Unsupported fan mode {fan_mode}")
 
-        data = {"fanmode": FAN_MODES[fan_mode]}
+        data = {"fanmode": FAN_MODE_TO_DECONZ[fan_mode]}
 
         await self._device.async_set_config(data)
 
@@ -169,28 +171,24 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
 
         Need to be one of HVAC_MODE_*.
         """
-        for hass_hvac_mode, device_mode in self._hvac_modes.items():
-            if self._device.mode == device_mode:
-                return hass_hvac_mode
-
-        if self._device.state_on:
-            return HVAC_MODE_HEAT
-
-        return HVAC_MODE_OFF
+        return self._deconz_to_hvac_mode.get(
+            self._device.mode,
+            HVAC_MODE_HEAT if self._device.state_on else HVAC_MODE_OFF,
+        )
 
     @property
     def hvac_modes(self) -> list:
         """Return the list of available hvac operation modes."""
-        return list(self._hvac_modes)
+        return list(self._hvac_mode_to_deconz)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        if hvac_mode not in self._hvac_modes:
+        if hvac_mode not in self._hvac_mode_to_deconz:
             raise ValueError(f"Unsupported HVAC mode {hvac_mode}")
 
-        data = {"mode": self._hvac_modes[hvac_mode]}
-        if len(self._hvac_modes) == 2:  # Only allow turn on and off thermostat
-            data = {"on": self._hvac_modes[hvac_mode]}
+        data = {"mode": self._hvac_mode_to_deconz[hvac_mode]}
+        if len(self._hvac_mode_to_deconz) == 2:  # Only allow turn on and off thermostat
+            data = {"on": self._hvac_mode_to_deconz[hvac_mode]}
 
         await self._device.async_set_config(data)
 
@@ -199,23 +197,19 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return preset mode."""
-        for hass_preset_mode, preset_mode in PRESET_MODES.items():
-            if self._device.preset == preset_mode:
-                return hass_preset_mode
-
-        return None
+        return DECONZ_TO_PRESET_MODE.get(self._device.preset)
 
     @property
     def preset_modes(self) -> list:
         """Return the list of available preset modes."""
-        return list(PRESET_MODES)
+        return list(PRESET_MODE_TO_DECONZ)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if preset_mode not in PRESET_MODES:
+        if preset_mode not in PRESET_MODE_TO_DECONZ:
             raise ValueError(f"Unsupported preset mode {preset_mode}")
 
-        data = {"preset": PRESET_MODES[preset_mode]}
+        data = {"preset": PRESET_MODE_TO_DECONZ[preset_mode]}
 
         await self._device.async_set_config(data)
 

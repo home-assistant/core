@@ -127,3 +127,6 @@ async def test_owserver_switch(owproxy, hass, device_id):
 
         state = hass.states.get(entity_id)
         assert state.state == expected_sensor["result"]
+        assert state.attributes["device_file"] == expected_sensor.get(
+            "device_file", registry_entry.unique_id
+        )

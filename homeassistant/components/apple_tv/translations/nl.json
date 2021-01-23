@@ -1,0 +1,9 @@
+{
+    "config": {
+        "abort": {
+            "backoff": "Het apparaat accepteert op dit moment geen koppelingsverzoeken (u heeft mogelijk te vaak een ongeldige pincode ingevoerd), probeer het later opnieuw.",
+            "device_did_not_pair": "Er is geen poging gedaan om het koppelingsproces te voltooien vanaf het apparaat.",
+            "invalid_config": "De configuratie voor dit apparaat is onvolledig. Probeer het opnieuw toe te voegen."
+        }
+    }
+}

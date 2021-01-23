@@ -284,22 +284,30 @@ async def _async_start_zeroconf_browser(hass, zeroconf):
                     # likely bad homekit data
                     return
 
+        if "name" in info:
+            lowercase_name = info["name"].lower()
+        else:
+            lowercase_name = None
+
+        if "macaddress" in info.get("properties", {}):
+            uppercase_mac = info["properties"]["macaddress"].upper()
+        else:
+            uppercase_mac = None
+
         for entry in zeroconf_types[service_type]:
             if len(entry) > 1:
-                if "macaddress" in entry:
-                    if "properties" not in info:
-                        continue
-                    if "macaddress" not in info["properties"]:
-                        continue
-                    if not fnmatch.fnmatch(
-                        info["properties"]["macaddress"], entry["macaddress"]
-                    ):
-                        continue
-                if "name" in entry:
-                    if "name" not in info:
-                        continue
-                    if not fnmatch.fnmatch(info["name"], entry["name"]):
-                        continue
+                if (
+                    uppercase_mac is not None
+                    and "macaddress" in entry
+                    and not fnmatch.fnmatch(uppercase_mac, entry["macaddress"])
+                ):
+                    continue
+                if (
+                    lowercase_name is not None
+                    and "name" in entry
+                    and not fnmatch.fnmatch(lowercase_name, entry["name"])
+                ):
+                    continue
 
             hass.add_job(
                 hass.config_entries.flow.async_init(

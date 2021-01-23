@@ -211,7 +211,13 @@ def _update_states_table_with_foreign_key_options(engine):
     inspector = reflection.Inspector.from_engine(engine)
     alters = []
     for foreign_key in inspector.get_foreign_keys(TABLE_STATES):
-        if foreign_key["name"] and not foreign_key["options"]:
+        if foreign_key["name"] and (
+            # MySQL/MariaDB will have empty options
+            not foreign_key["options"]
+            or
+            # Postgres will have ondelete set to None
+            foreign_key["options"].get("ondelete") is None
+        ):
             alters.append(
                 {
                     "old_fk": ForeignKeyConstraint((), (), name=foreign_key["name"]),
@@ -312,6 +318,10 @@ def _apply_update(engine, new_version, old_version):
         _create_index(engine, "events", "ix_events_event_type_time_fired")
         _drop_index(engine, "events", "ix_events_event_type")
     elif new_version == 10:
+        # Now done in step 11
+        pass
+    elif new_version == 11:
+        _create_index(engine, "states", "ix_states_old_state_id")
         _update_states_table_with_foreign_key_options(engine)
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")

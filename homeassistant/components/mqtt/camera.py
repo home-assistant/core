@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import camera, mqtt
+from homeassistant.components import camera
 from homeassistant.components.camera import Camera
 from homeassistant.const import CONF_DEVICE, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import callback
@@ -23,6 +23,7 @@ from . import (
     MqttEntityDeviceInfo,
     subscription,
 )
+from .. import mqtt
 from .debug_info import log_messages
 from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 

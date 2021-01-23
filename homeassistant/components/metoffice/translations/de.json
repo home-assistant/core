@@ -3,6 +3,9 @@
         "abort": {
             "already_configured": "Service ist bereits konfiguriert"
         },
+        "error": {
+            "unknown": "Unerwarteter Fehler"
+        },
         "step": {
             "user": {
                 "data": {

@@ -397,9 +397,10 @@ async def websocket_update_prefs(hass, connection, msg):
 
     # If we turn alexa linking on, validate that we can fetch access token
     if changes.get(PREF_ALEXA_REPORT_STATE):
+        alexa_config = await cloud.client.get_alexa_config()
         try:
             with async_timeout.timeout(10):
-                await cloud.client.alexa_config.async_get_access_token()
+                await alexa_config.async_get_access_token()
         except asyncio.TimeoutError:
             connection.send_error(
                 msg["id"], "alexa_timeout", "Timeout validating Alexa access token."
@@ -555,7 +556,8 @@ async def google_assistant_update(hass, connection, msg):
 async def alexa_list(hass, connection, msg):
     """List all alexa entities."""
     cloud = hass.data[DOMAIN]
-    entities = alexa_entities.async_get_entities(hass, cloud.client.alexa_config)
+    alexa_config = await cloud.client.get_alexa_config()
+    entities = alexa_entities.async_get_entities(hass, alexa_config)
 
     result = []
 
@@ -603,10 +605,11 @@ async def alexa_update(hass, connection, msg):
 async def alexa_sync(hass, connection, msg):
     """Sync with Alexa."""
     cloud = hass.data[DOMAIN]
+    alexa_config = await cloud.client.get_alexa_config()
 
     with async_timeout.timeout(10):
         try:
-            success = await cloud.client.alexa_config.async_sync_entities()
+            success = await alexa_config.async_sync_entities()
         except alexa_errors.NoTokenAvailable:
             connection.send_error(
                 msg["id"],
