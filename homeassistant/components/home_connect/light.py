@@ -98,9 +98,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     True,
                 )
             except HomeConnectError as err:
-                _LOGGER.error(
-                    "Error while trying to turn on ambient light: %s", err
-                )
+                _LOGGER.error("Error while trying to turn on ambient light: %s", err)
             if ATTR_BRIGHTNESS in kwargs or ATTR_HS_COLOR in kwargs:
                 try:
                     await self.hass.async_add_executor_job(
