@@ -292,6 +292,11 @@ class FanEntity(ToggleEntity):
             return {ATTR_SPEED_LIST: self.speed_list}
         return {}
 
+    @property
+    def _normalized_speed_list(self) -> List[str]:
+        """Filter out non-speeds from the speed list."""
+        return normalize_speed_list(self.speed_list)
+
     def speed_to_percentage(self, speed: str) -> int:
         """
         Map a speed to a percentage.
@@ -311,17 +316,10 @@ class FanEntity(ToggleEntity):
         if speed in OFF_SPEED_VALUES:
             return 0
 
-        normalized_speed_list = self._normalized_speed_list
-
         try:
-            return ordered_list_item_to_percentage(normalized_speed_list, speed)
+            return ordered_list_item_to_percentage(self._normalized_speed_list, speed)
         except ValueError as ex:
             raise NoValidSpeedsError(NO_VALID_SPEEDS_EXCEPTION_MESSAGE) from ex
-
-    @property
-    def _normalized_speed_list(self) -> List[str]:
-        """Filter out non-speeds from the speed list."""
-        return normalize_speed_list(self.speed_list)
 
     def percentage_to_speed(self, percentage: int) -> str:
         """
@@ -345,10 +343,10 @@ class FanEntity(ToggleEntity):
         if percentage == 0:
             return SPEED_OFF
 
-        normalized_speed_list = self._normalized_speed_list
-
         try:
-            return percentage_to_ordered_list_item(normalized_speed_list, percentage)
+            return percentage_to_ordered_list_item(
+                self._normalized_speed_list, percentage
+            )
         except ValueError as ex:
             raise NoValidSpeedsError(NO_VALID_SPEEDS_EXCEPTION_MESSAGE) from ex
 
