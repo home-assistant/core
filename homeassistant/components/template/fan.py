@@ -219,7 +219,7 @@ class TemplateFan(TemplateEntity, FanEntity):
 
         self._state = STATE_OFF
         self._speed = None
-        self._percentage = None
+        self._percentage = 0
         self._oscillating = None
         self._direction = None
 
@@ -384,6 +384,14 @@ class TemplateFan(TemplateEntity, FanEntity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.add_template_attribute("_state", self._template, None, self._update_state)
+        if self._percentage_template is not None:
+            self.add_template_attribute(
+                "_percentage",
+                self._speed_template,
+                None,
+                self._update_percentage,
+                none_on_template_error=True,
+            )
         if self._speed_template is not None:
             self.add_template_attribute(
                 "_speed",
@@ -417,13 +425,29 @@ class TemplateFan(TemplateEntity, FanEntity):
 
         if speed in self._speed_list:
             self._speed = speed
+            self._percentage = self.speed_to_percentage(speed)
         elif speed in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
             self._speed = None
+            self._percentage = 0
         else:
             _LOGGER.error(
                 "Received invalid speed: %s. Expected: %s", speed, self._speed_list
             )
             self._speed = None
+            self._percentage = 0
+
+    @callback
+    def _update_percentage(self, percentage):
+        # Validate percentage
+        percentage = int(percentage)
+
+        if percentage >= 0 and percentage <= 100:
+            self._percentage = percentage
+            self._speed = self.percentage_to_speed(percentage)
+        else:
+            _LOGGER.error("Received invalid percentage: %s", percentage)
+            self._speed = None
+            self._percentage = 0
 
     @callback
     def _update_oscillating(self, oscillating):
