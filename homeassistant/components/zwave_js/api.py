@@ -309,6 +309,6 @@ class DumpView(HomeAssistantView):
             body="\n".join(json.dumps(msg) for msg in msgs) + "\n",
             headers={
                 hdrs.CONTENT_TYPE: "application/jsonl",
-                hdrs.CONTENT_DISPOSITION: 'attachment; filename="zwavejs_dump.jsonl"',
+                hdrs.CONTENT_DISPOSITION: 'attachment; filename="zwave_js_dump.jsonl"',
             },
         )
