@@ -1,10 +1,10 @@
 """Helpers for tests."""
 import json
+from unittest.mock import Mock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.ozw.const import DOMAIN
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 

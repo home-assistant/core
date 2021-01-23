@@ -7,8 +7,10 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.nest import DOMAIN, NEST_EVENT
+from homeassistant.components.nest import DOMAIN
+from homeassistant.components.nest.events import NEST_EVENT
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from .common import async_setup_sdm_platform
 
@@ -100,9 +102,7 @@ async def test_get_triggers(hass):
     await async_setup_camera(hass, {DEVICE_ID: camera})
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
-    device_entry = device_registry.async_get_device(
-        {("nest", DEVICE_ID)}, connections={}
-    )
+    device_entry = device_registry.async_get_device({("nest", DEVICE_ID)})
 
     expected_triggers = [
         {
@@ -177,9 +177,7 @@ async def test_triggers_for_invalid_device_id(hass):
     await async_setup_camera(hass, {DEVICE_ID: camera})
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
-    device_entry = device_registry.async_get_device(
-        {("nest", DEVICE_ID)}, connections={}
-    )
+    device_entry = device_registry.async_get_device({("nest", DEVICE_ID)})
     assert device_entry is not None
 
     # Create an additional device that does not exist.  Fetching supported
@@ -212,7 +210,7 @@ async def test_fires_on_camera_motion(hass, calls):
     """Test camera_motion triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "camera_motion")
 
-    message = {"device_id": DEVICE_ID, "type": "camera_motion"}
+    message = {"device_id": DEVICE_ID, "type": "camera_motion", "timestamp": utcnow()}
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -223,7 +221,7 @@ async def test_fires_on_camera_person(hass, calls):
     """Test camera_person triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "camera_person")
 
-    message = {"device_id": DEVICE_ID, "type": "camera_person"}
+    message = {"device_id": DEVICE_ID, "type": "camera_person", "timestamp": utcnow()}
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -234,7 +232,7 @@ async def test_fires_on_camera_sound(hass, calls):
     """Test camera_person triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "camera_sound")
 
-    message = {"device_id": DEVICE_ID, "type": "camera_sound"}
+    message = {"device_id": DEVICE_ID, "type": "camera_sound", "timestamp": utcnow()}
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -245,7 +243,7 @@ async def test_fires_on_doorbell_chime(hass, calls):
     """Test doorbell_chime triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "doorbell_chime")
 
-    message = {"device_id": DEVICE_ID, "type": "doorbell_chime"}
+    message = {"device_id": DEVICE_ID, "type": "doorbell_chime", "timestamp": utcnow()}
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
     assert len(calls) == 1
@@ -256,7 +254,11 @@ async def test_trigger_for_wrong_device_id(hass, calls):
     """Test for turn_on and turn_off triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "camera_motion")
 
-    message = {"device_id": "wrong-device-id", "type": "camera_motion"}
+    message = {
+        "device_id": "wrong-device-id",
+        "type": "camera_motion",
+        "timestamp": utcnow(),
+    }
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -266,7 +268,11 @@ async def test_trigger_for_wrong_event_type(hass, calls):
     """Test for turn_on and turn_off triggers firing."""
     assert await setup_automation(hass, DEVICE_ID, "camera_motion")
 
-    message = {"device_id": DEVICE_ID, "type": "wrong-event-type"}
+    message = {
+        "device_id": DEVICE_ID,
+        "type": "wrong-event-type",
+        "timestamp": utcnow(),
+    }
     hass.bus.async_fire(NEST_EVENT, message)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -283,9 +289,7 @@ async def test_subscriber_automation(hass, calls):
     subscriber = await async_setup_camera(hass, {DEVICE_ID: camera})
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
-    device_entry = device_registry.async_get_device(
-        {("nest", DEVICE_ID)}, connections={}
-    )
+    device_entry = device_registry.async_get_device({("nest", DEVICE_ID)})
 
     assert await setup_automation(hass, device_entry.id, "camera_motion")
 

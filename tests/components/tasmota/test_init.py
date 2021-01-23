@@ -1,13 +1,13 @@
 """The tests for the Tasmota binary sensor platform."""
 import copy
 import json
+from unittest.mock import call
 
 from homeassistant.components import websocket_api
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 
 from .test_common import DEFAULT_CONFIG
 
-from tests.async_mock import call
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 
 

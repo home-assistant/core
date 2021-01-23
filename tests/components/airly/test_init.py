@@ -36,6 +36,7 @@ async def test_config_not_ready(hass, aioclient_mock):
             "latitude": 123,
             "longitude": 456,
             "name": "Home",
+            "use_nearest": True,
         },
     )
 

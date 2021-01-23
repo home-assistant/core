@@ -1,9 +1,9 @@
 """Pytest module configuration."""
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from .common import build_device_info_mock, build_device_mock
-
-from tests.async_mock import AsyncMock, patch
 
 
 @pytest.fixture(name="discovery")

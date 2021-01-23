@@ -1,13 +1,13 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 2021
-MINOR_VERSION = 1
+MINOR_VERSION = 2
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER = (3, 7, 1)
+REQUIRED_PYTHON_VER = (3, 8, 0)
 # Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_VER = (3, 8, 0)
-REQUIRED_NEXT_PYTHON_DATE = "December 7, 2020"
+REQUIRED_NEXT_PYTHON_VER = (3, 9, 0)
+REQUIRED_NEXT_PYTHON_DATE = ""
 
 # Format for platform files
 PLATFORM_FORMAT = "{platform}.{domain}"

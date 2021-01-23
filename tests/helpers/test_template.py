@@ -2,6 +2,7 @@
 from datetime import datetime
 import math
 import random
+from unittest.mock import patch
 
 import pytest
 import pytz
@@ -22,8 +23,6 @@ from homeassistant.helpers import template
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
-
-from tests.async_mock import patch
 
 
 def _set_up_units(hass):

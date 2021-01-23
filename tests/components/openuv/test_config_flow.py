@@ -1,4 +1,6 @@
 """Define tests for the OpenUV config flow."""
+from unittest.mock import patch
+
 from pyopenuv.errors import InvalidApiKeyError
 import pytest
 
@@ -12,7 +14,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

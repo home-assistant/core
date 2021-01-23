@@ -9,7 +9,6 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
-from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -97,14 +96,9 @@ class MotionBatterySensor(CoordinatorEntity, Entity):
         """Return device specific state attributes."""
         return {ATTR_BATTERY_VOLTAGE: self._blind.battery_voltage}
 
-    @callback
-    def push_callback(self):
-        """Update entity state when a push has been received."""
-        self.schedule_update_ha_state(force_refresh=False)
-
     async def async_added_to_hass(self):
         """Subscribe to multicast pushes."""
-        self._blind.Register_callback(self.unique_id, self.push_callback)
+        self._blind.Register_callback(self.unique_id, self.schedule_update_ha_state)
         await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self):
@@ -206,14 +200,9 @@ class MotionSignalStrengthSensor(CoordinatorEntity, Entity):
         """Return the state of the sensor."""
         return self._device.RSSI
 
-    @callback
-    def push_callback(self):
-        """Update entity state when a push has been received."""
-        self.schedule_update_ha_state(force_refresh=False)
-
     async def async_added_to_hass(self):
         """Subscribe to multicast pushes."""
-        self._device.Register_callback(self.unique_id, self.push_callback)
+        self._device.Register_callback(self.unique_id, self.schedule_update_ha_state)
         await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self):

@@ -1,5 +1,6 @@
 """Integration tests for the auth component."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.components import auth
 from homeassistant.components.auth import RESULT_TYPE_USER
@@ -8,7 +9,6 @@ from homeassistant.util.dt import utcnow
 
 from . import async_setup_auth
 
-from tests.async_mock import patch
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
 
 

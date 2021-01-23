@@ -1,12 +1,12 @@
 """Test the httpx client helper."""
 
+from unittest.mock import Mock, patch
+
 import httpx
 import pytest
 
 from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE
 import homeassistant.helpers.httpx_client as client
-
-from tests.async_mock import Mock, patch
 
 
 async def test_get_async_client_with_ssl(hass):
