@@ -3,6 +3,7 @@ import logging
 
 import radiotherm
 import voluptuous as vol
+from socket import timeout
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
@@ -264,7 +265,22 @@ class RadioThermostat(ClimateEntity):
         # First time - get the name from the thermostat.  This is
         # normally set in the radio thermostat web app.
         if self._name is None:
-            self._name = self.device.name["raw"]
+            try:
+                self._name = self.device.name["raw"]
+            except radiotherm.validate.RadiothermTstatError:
+                _LOGGER.warning(
+                    "%s (%s) was busy (invalid value returned)",
+                    self._name,
+                    self.device.host,
+                )
+                return
+            except timeout:
+                _LOGGER.warning(
+                    "Timeout waiting for response from %s (%s)",
+                    self._name,
+                    self.device.host,
+                )
+                return
 
         # Request the current state from the thermostat.
         try:
@@ -272,6 +288,13 @@ class RadioThermostat(ClimateEntity):
         except radiotherm.validate.RadiothermTstatError:
             _LOGGER.warning(
                 "%s (%s) was busy (invalid value returned)",
+                self._name,
+                self.device.host,
+            )
+            return
+        except timeout:
+            _LOGGER.warning(
+                "Timeout waiting for response from %s (%s)",
                 self._name,
                 self.device.host,
             )
@@ -285,6 +308,13 @@ class RadioThermostat(ClimateEntity):
             except radiotherm.validate.RadiothermTstatError:
                 _LOGGER.warning(
                     "%s (%s) was busy (invalid value returned)",
+                    self._name,
+                    self.device.host,
+                )
+                return
+            except timeout:
+                _LOGGER.warning(
+                    "Timeout waiting for response from %s (%s)",
                     self._name,
                     self.device.host,
                 )
