@@ -561,7 +561,58 @@ async def test_default_profiles_group(hass, mock_light_profiles):
     }
 
 
-async def test_default_profiles_light(hass, mock_light_profiles):
+@pytest.mark.parametrize(
+    "extra_call_params, expected_params",
+    (
+        (
+            {},
+            {
+                light.ATTR_HS_COLOR: (50.353, 100),
+                light.ATTR_BRIGHTNESS: 100,
+                light.ATTR_TRANSITION: 3,
+            },
+        ),
+        (
+            {light.ATTR_BRIGHTNESS: 22},
+            {
+                light.ATTR_HS_COLOR: (50.353, 100),
+                light.ATTR_BRIGHTNESS: 22,
+                light.ATTR_TRANSITION: 3,
+            },
+        ),
+        (
+            {light.ATTR_TRANSITION: 22},
+            {
+                light.ATTR_HS_COLOR: (50.353, 100),
+                light.ATTR_BRIGHTNESS: 100,
+                light.ATTR_TRANSITION: 22,
+            },
+        ),
+        (
+            {
+                light.ATTR_XY_COLOR: [0.4448, 0.4066],
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_HS_COLOR: (38.88, 49.02),
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+        ),
+        (
+            {light.ATTR_BRIGHTNESS: 11, light.ATTR_TRANSITION: 1},
+            {
+                light.ATTR_HS_COLOR: (50.353, 100),
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+        ),
+    ),
+)
+async def test_default_profiles_light(
+    hass, mock_light_profiles, extra_call_params, expected_params
+):
     """Test default turn-on light profile for a specific light."""
     platform = getattr(hass.components, "test.light")
     platform.init()
@@ -582,14 +633,26 @@ async def test_default_profiles_light(hass, mock_light_profiles):
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: dev.entity_id,
+            **extra_call_params,
         },
         blocking=True,
     )
 
     _, data = dev.last_call("turn_on")
+    assert data == expected_params
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: dev.entity_id,
+            light.ATTR_BRIGHTNESS: 0,
+        },
+        blocking=True,
+    )
+
+    _, data = dev.last_call("turn_off")
     assert data == {
-        light.ATTR_HS_COLOR: (50.353, 100),
-        light.ATTR_BRIGHTNESS: 100,
         light.ATTR_TRANSITION: 3,
     }
 
