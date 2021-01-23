@@ -313,7 +313,7 @@ async def async_init_integration(
         title=TITLE,
         unique_id=UNIQUE_ID,
         data={
-            CONF_DEVICES: TEST_DEVICES,
+            CONF_DEVICES: [TEST_DEVICES],
             CONF_DEVICE: TEST_DEVICE,
             CONF_SCAN_INTERVAL: TEST_SCAN_INTERVAL,
             CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,

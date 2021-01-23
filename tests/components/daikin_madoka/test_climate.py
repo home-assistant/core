@@ -312,12 +312,9 @@ async def test_climate_set_values(hass):
         await async_init_integration(hass, controller_mock)
 
         from homeassistant.components.daikin_madoka.const import DOMAIN
-        from homeassistant.helpers.entity_platform import (
-            EntityPlatform,
-            async_get_platforms,
-        )
+        from homeassistant.helpers.entity_platform import async_get_platforms
 
-        madoka_platforms: [EntityPlatform] = async_get_platforms(hass, DOMAIN)
+        madoka_platforms = async_get_platforms(hass, DOMAIN)
         madoka_climate = None
         for p in madoka_platforms:
             if p.domain == "climate" and "climate.test" in p.entities:
@@ -351,12 +348,9 @@ async def test_climate_set_values_connection_error(hass):
         await async_init_integration(hass, controller_mock)
 
         from homeassistant.components.daikin_madoka.const import DOMAIN
-        from homeassistant.helpers.entity_platform import (
-            EntityPlatform,
-            async_get_platforms,
-        )
+        from homeassistant.helpers.entity_platform import async_get_platforms
 
-        madoka_platforms: [EntityPlatform] = async_get_platforms(hass, DOMAIN)
+        madoka_platforms = async_get_platforms(hass, DOMAIN)
         madoka_climate = None
         for p in madoka_platforms:
             if p.domain == "climate" and "climate.test" in p.entities:
@@ -390,12 +384,9 @@ async def test_climate_set_values_aborted_error(hass):
         await async_init_integration(hass, controller_mock)
 
         from homeassistant.components.daikin_madoka.const import DOMAIN
-        from homeassistant.helpers.entity_platform import (
-            EntityPlatform,
-            async_get_platforms,
-        )
+        from homeassistant.helpers.entity_platform import async_get_platforms
 
-        madoka_platforms: [EntityPlatform] = async_get_platforms(hass, DOMAIN)
+        madoka_platforms = async_get_platforms(hass, DOMAIN)
         madoka_climate = None
         for p in madoka_platforms:
             if p.domain == "climate" and "climate.test" in p.entities:

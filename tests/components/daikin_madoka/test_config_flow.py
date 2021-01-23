@@ -23,7 +23,6 @@ from . import (
     TEST_DISCOVERED_DEVICES,
     TEST_FORCE_UPDATE,
     TEST_SCAN_INTERVAL,
-    split_devices,
 )
 
 from tests.common import MockConfigEntry
@@ -78,13 +77,12 @@ async def test_form(hass):
             assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
             assert result2["title"] == TITLE
             assert result2["data"] == {
-                CONF_DEVICES: split_devices(TEST_DEVICES),
+                CONF_DEVICES: [TEST_DEVICES],
                 CONF_DEVICE: TEST_DEVICE,
                 CONF_DISCOVERY: False,  # This is only used during the configuration, no need to store it
                 CONF_SCAN_INTERVAL: TEST_SCAN_INTERVAL,
                 CONF_FORCE_UPDATE: TEST_FORCE_UPDATE,
             }
-            print("as")
 
 
 async def test_import(hass):
@@ -128,7 +126,7 @@ async def test_import(hass):
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == TITLE
         assert result["data"] == {
-            CONF_DEVICES: split_devices(TEST_DEVICES),
+            CONF_DEVICES: [TEST_DEVICES],
             CONF_DEVICE: TEST_DEVICE,
             CONF_DISCOVERY: False,  # This is only used during the configuration, no need to store it
             CONF_SCAN_INTERVAL: TEST_SCAN_INTERVAL,
