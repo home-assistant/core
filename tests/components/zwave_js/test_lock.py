@@ -9,8 +9,8 @@ from homeassistant.components.lock import (
 )
 from homeassistant.components.zwave_js.const import DOMAIN as ZWAVE_JS_DOMAIN
 from homeassistant.components.zwave_js.lock import (
-    SERVICE_CLEAR_USERCODE,
-    SERVICE_SET_USERCODE,
+    SERVICE_CLEAR_LOCK_USERCODE,
+    SERVICE_SET_LOCK_USERCODE,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED
 
@@ -134,7 +134,7 @@ async def test_door_lock(hass, client, lock_schlage_be469, integration):
     # Test set usercode service
     await hass.services.async_call(
         ZWAVE_JS_DOMAIN,
-        SERVICE_SET_USERCODE,
+        SERVICE_SET_LOCK_USERCODE,
         {
             ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
             ATTR_CODE_SLOT: 1,
@@ -172,7 +172,7 @@ async def test_door_lock(hass, client, lock_schlage_be469, integration):
     # Test clear usercode
     await hass.services.async_call(
         ZWAVE_JS_DOMAIN,
-        SERVICE_CLEAR_USERCODE,
+        SERVICE_CLEAR_LOCK_USERCODE,
         {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY, ATTR_CODE_SLOT: 1},
         blocking=True,
     )
