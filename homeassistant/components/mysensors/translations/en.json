@@ -26,7 +26,7 @@
         },
         "description": "Choose connection method to the gateway"
       },
-      "gw_ethernet": {
+      "gw_tcp": {
         "description": "Ethernet gateway setup",
         "data": {
           "device": "IP address of the gateway",

@@ -24,9 +24,9 @@ from .const import (
     CONF_BAUD_RATE,
     CONF_GATEWAY_TYPE,
     CONF_GATEWAY_TYPE_ALL,
-    CONF_GATEWAY_TYPE_ETHERNET,
     CONF_GATEWAY_TYPE_MQTT,
     CONF_GATEWAY_TYPE_SERIAL,
+    CONF_GATEWAY_TYPE_TCP,
     CONF_GATEWAY_TYPE_TYPE,
     CONF_PERSISTENCE_FILE,
     CONF_TCP_PORT,
@@ -128,7 +128,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     is_serial_port, user_input[CONF_DEVICE]
                 )
             except vol.Invalid:
-                user_input[CONF_GATEWAY_TYPE] = CONF_GATEWAY_TYPE_ETHERNET
+                user_input[CONF_GATEWAY_TYPE] = CONF_GATEWAY_TYPE_TCP
             else:
                 user_input[CONF_GATEWAY_TYPE] = CONF_GATEWAY_TYPE_SERIAL
 
@@ -140,16 +140,13 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         schema[vol.Required(CONF_GATEWAY_TYPE)] = vol.In(CONF_GATEWAY_TYPE_ALL)
         schema = vol.Schema(schema)
 
-        if (
-            user_input is not None
-            and user_input.get(CONF_GATEWAY_TYPE) in CONF_GATEWAY_TYPE_ALL
-        ):
+        if user_input is not None and CONF_GATEWAY_TYPE in user_input:
             gw_type = user_input[CONF_GATEWAY_TYPE]
             input_pass = user_input if CONF_DEVICE in user_input else None
             if gw_type == CONF_GATEWAY_TYPE_MQTT:
                 return await self.async_step_gw_mqtt(input_pass)
-            elif gw_type == CONF_GATEWAY_TYPE_ETHERNET:
-                return await self.async_step_gw_ethernet(input_pass)
+            elif gw_type == CONF_GATEWAY_TYPE_TCP:
+                return await self.async_step_gw_tcp(input_pass)
             elif gw_type == CONF_GATEWAY_TYPE_SERIAL:
                 return await self.async_step_gw_serial(input_pass)
 
@@ -178,8 +175,8 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="gw_serial", data_schema=schema, errors=errors
         )
 
-    async def async_step_gw_ethernet(self, user_input: Optional[Dict[str, str]] = None):
-        """Create a config entry for an ethernet gateway."""
+    async def async_step_gw_tcp(self, user_input: Optional[Dict[str, str]] = None):
+        """Create a config entry for a tcp gateway."""
         errors = {}
         if user_input is not None:
             try:
@@ -193,9 +190,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     errors[CONF_TCP_PORT] = "port_out_of_range"
 
             errors.update(
-                await self.validate_common(
-                    CONF_GATEWAY_TYPE_ETHERNET, user_input, errors
-                )
+                await self.validate_common(CONF_GATEWAY_TYPE_TCP, user_input, errors)
             )
             if not errors:
                 return self.async_create_entry(
@@ -208,9 +203,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         schema[vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT)] = vol.Coerce(int)
 
         schema = vol.Schema(schema)
-        return self.async_show_form(
-            step_id="gw_ethernet", data_schema=schema, errors=errors
-        )
+        return self.async_show_form(step_id="gw_tcp", data_schema=schema, errors=errors)
 
     async def async_step_gw_mqtt(self, user_input: Optional[Dict[str, str]] = None):
         """Create a config entry for a mqtt gateway."""
@@ -263,7 +256,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if gw_type != CONF_GATEWAY_TYPE_MQTT:
                 verification_func = (
                     is_socket_address
-                    if gw_type == CONF_GATEWAY_TYPE_ETHERNET
+                    if gw_type == CONF_GATEWAY_TYPE_TCP
                     else is_serial_port
                 )
                 try:
@@ -273,7 +266,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 except vol.Invalid:
                     errors[CONF_DEVICE] = (
                         "invalid_ip"
-                        if gw_type == CONF_GATEWAY_TYPE_ETHERNET
+                        if gw_type == CONF_GATEWAY_TYPE_TCP
                         else "invalid_serial"
                     )
 
