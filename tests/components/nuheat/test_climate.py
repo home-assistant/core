@@ -4,19 +4,18 @@ from unittest.mock import patch
 
 from homeassistant.components.nuheat.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .mocks import (
+    MOCK_CONFIG_ENTRY,
     _get_mock_nuheat,
     _get_mock_thermostat_run,
     _get_mock_thermostat_schedule_hold_available,
     _get_mock_thermostat_schedule_hold_unavailable,
     _get_mock_thermostat_schedule_temporary_hold,
-    _mock_get_config,
 )
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_climate_thermostat_run(hass):
@@ -28,7 +27,9 @@ async def test_climate_thermostat_run(hass):
         "homeassistant.components.nuheat.nuheat.NuHeat",
         return_value=mock_nuheat,
     ):
-        assert await async_setup_component(hass, DOMAIN, _mock_get_config())
+        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_ENTRY)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("climate.master_bathroom")
@@ -59,7 +60,9 @@ async def test_climate_thermostat_schedule_hold_unavailable(hass):
         "homeassistant.components.nuheat.nuheat.NuHeat",
         return_value=mock_nuheat,
     ):
-        assert await async_setup_component(hass, DOMAIN, _mock_get_config())
+        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_ENTRY)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("climate.guest_bathroom")
@@ -87,7 +90,9 @@ async def test_climate_thermostat_schedule_hold_available(hass):
         "homeassistant.components.nuheat.nuheat.NuHeat",
         return_value=mock_nuheat,
     ):
-        assert await async_setup_component(hass, DOMAIN, _mock_get_config())
+        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_ENTRY)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("climate.available_bathroom")
@@ -119,7 +124,9 @@ async def test_climate_thermostat_schedule_temporary_hold(hass):
         "homeassistant.components.nuheat.nuheat.NuHeat",
         return_value=mock_nuheat,
     ):
-        assert await async_setup_component(hass, DOMAIN, _mock_get_config())
+        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_ENTRY)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("climate.temp_bathroom")
