@@ -123,6 +123,9 @@ class IASZoneChannel(ZigbeeChannel):
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 2, "zone_status", state
             )
             self.debug("Updated alarm state: %s", state)
+            # generate zha_event
+            self.zha_send_event("updated_alarm_state",
+                {"zone_status": state, "comment": "detected" if state else "clear"})
         elif command_id == 1:
             self.debug("Enroll requested")
             res = self._cluster.enroll_response(0, 0)
