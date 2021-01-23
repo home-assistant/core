@@ -12,6 +12,11 @@ SSDP = {
             "manufacturer": "ARCAM"
         }
     ],
+    "axis": [
+        {
+            "manufacturer": "AXIS"
+        }
+    ],
     "control4": [
         {
             "st": "c4:director"
