@@ -1,6 +1,6 @@
 # Describes the format for available Z-Wave services
 
-clear_usercode:
+clear_lock_usercode:
   description: Clear a usercode from lock.
   fields:
     entity_id:
@@ -10,7 +10,7 @@ clear_usercode:
       description: Code slot to clear code from.
       example: 1
 
-set_usercode:
+set_lock_usercode:
   description: Set a usercode to lock.
   fields:
     entity_id:

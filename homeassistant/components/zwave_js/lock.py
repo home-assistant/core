@@ -39,8 +39,8 @@ STATE_TO_ZWAVE_MAP: Dict[int, Dict[str, Union[int, bool]]] = {
     },
 }
 
-SERVICE_SET_USERCODE = "set_usercode"
-SERVICE_CLEAR_USERCODE = "clear_usercode"
+SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
+SERVICE_CLEAR_LOCK_USERCODE = "clear_lock_usercode"
 
 
 async def async_setup_entry(
@@ -67,20 +67,20 @@ async def async_setup_entry(
     assert platform
 
     platform.async_register_entity_service(  # type: ignore
-        SERVICE_SET_USERCODE,
+        SERVICE_SET_LOCK_USERCODE,
         {
             vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
             vol.Required(ATTR_USERCODE): cv.string,
         },
-        "async_set_usercode",
+        "async_set_lock_usercode",
     )
 
     platform.async_register_entity_service(  # type: ignore
-        SERVICE_CLEAR_USERCODE,
+        SERVICE_CLEAR_LOCK_USERCODE,
         {
             vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
         },
-        "async_clear_usercode",
+        "async_clear_lock_usercode",
     )
 
 
@@ -117,12 +117,12 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         """Unlock the lock."""
         await self._set_lock_state(STATE_UNLOCKED)
 
-    async def async_set_usercode(self, code_slot: int, usercode: str) -> None:
+    async def async_set_lock_usercode(self, code_slot: int, usercode: str) -> None:
         """Set the usercode to index X on the lock."""
         await set_usercode(self.info.node, code_slot, usercode)
         LOGGER.debug("User code at slot %s set", code_slot)
 
-    async def async_clear_usercode(self, code_slot: int) -> None:
+    async def async_clear_lock_usercode(self, code_slot: int) -> None:
         """Clear the usercode at index X on the lock."""
         await clear_usercode(self.info.node, code_slot)
         LOGGER.debug("User code at slot %s cleared", code_slot)
