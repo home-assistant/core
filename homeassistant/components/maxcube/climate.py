@@ -47,13 +47,6 @@ MAX_TEMPERATURE = 30.0
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
-HASS_PRESET_TO_MAX_MODE = {
-    PRESET_AWAY: MAX_DEVICE_MODE_VACATION,
-    PRESET_BOOST: MAX_DEVICE_MODE_BOOST,
-    PRESET_NONE: MAX_DEVICE_MODE_AUTOMATIC,
-    PRESET_ON: MAX_DEVICE_MODE_MANUAL,
-}
-
 MAX_MODE_TO_HASS_PRESET = {
     MAX_DEVICE_MODE_AUTOMATIC: PRESET_NONE,
     MAX_DEVICE_MODE_BOOST: PRESET_BOOST,
@@ -160,13 +153,7 @@ class MaxCubeClimate(ClimateEntity):
         elif hvac_mode == HVAC_MODE_HEAT:
             temp = max(temp, self.min_temp)
         else:
-            # Reset the temperature to a sane value.
-            # Ideally, we should send 0 and the device will set its
-            # temperature according to the schedule. However, current
-            # version of the library has a bug which causes an
-            # exception when setting values below 8.
-            if temp in [OFF_TEMPERATURE, ON_TEMPERATURE]:
-                temp = device.eco_temperature
+            temp = None
             mode = MAX_DEVICE_MODE_AUTOMATIC
 
         cube = self._cubehandle.cube
@@ -264,19 +251,21 @@ class MaxCubeClimate(ClimateEntity):
     def set_preset_mode(self, preset_mode):
         """Set new operation mode."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-        temp = device.target_temperature
-        mode = MAX_DEVICE_MODE_AUTOMATIC
+        temp = None
+        mode = MAX_DEVICE_MODE_MANUAL
 
-        if preset_mode in [PRESET_COMFORT, PRESET_ECO, PRESET_ON]:
-            mode = MAX_DEVICE_MODE_MANUAL
-            if preset_mode == PRESET_COMFORT:
-                temp = device.comfort_temperature
-            elif preset_mode == PRESET_ECO:
-                temp = device.eco_temperature
-            else:
-                temp = ON_TEMPERATURE
+        if preset_mode == PRESET_COMFORT:
+            temp = device.comfort_temperature
+        elif preset_mode == PRESET_ECO:
+            temp = device.eco_temperature
+        elif preset_mode == PRESET_ON:
+            temp = ON_TEMPERATURE
+        elif preset_mode == PRESET_AWAY:
+            mode = MAX_DEVICE_MODE_VACATION
+        elif preset_mode == PRESET_BOOST:
+            mode = MAX_DEVICE_MODE_BOOST
         else:
-            mode = HASS_PRESET_TO_MAX_MODE[preset_mode] or MAX_DEVICE_MODE_AUTOMATIC
+            mode = MAX_DEVICE_MODE_AUTOMATIC
 
         with self._cubehandle.mutex:
             try:
