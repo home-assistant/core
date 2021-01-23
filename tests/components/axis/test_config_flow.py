@@ -454,7 +454,7 @@ async def test_ssdp_flow_already_configured(hass):
         AXIS_DOMAIN,
         data={
             "friendlyName": f"AXIS M1065-LW - {MAC}",
-            "serialNumber": {MAC},
+            "serialNumber": MAC,
             "presentationURL": "http://1.2.3.4:80/",
         },
         context={"source": SOURCE_SSDP},
@@ -488,7 +488,7 @@ async def test_ssdp_flow_updated_configuration(hass):
             AXIS_DOMAIN,
             data={
                 "friendlyName": f"AXIS M1065-LW - {MAC}",
-                "serialNumber": {MAC},
+                "serialNumber": MAC,
                 "presentationURL": "http://2.3.4.5:8080/",
             },
             context={"source": SOURCE_SSDP},
@@ -530,7 +530,7 @@ async def test_ssdp_flow_ignore_link_local_address(hass):
         AXIS_DOMAIN,
         data={
             "friendlyName": f"AXIS M1065-LW - {MAC}",
-            "serialNumber": {MAC},
+            "serialNumber": MAC,
             "presentationURL": "http://169.254.3.4:80/",
         },
         context={"source": SOURCE_SSDP},
