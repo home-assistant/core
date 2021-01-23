@@ -6,10 +6,12 @@ components. Instead call the service directly.
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
+    ATTR_PERCENTAGE,
     ATTR_SPEED,
     DOMAIN,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
+    SERVICE_SET_PERCENTAGE,
     SERVICE_SET_SPEED,
 )
 from homeassistant.const import (
@@ -20,11 +22,17 @@ from homeassistant.const import (
 )
 
 
-async def async_turn_on(hass, entity_id=ENTITY_MATCH_ALL, speed: str = None) -> None:
+async def async_turn_on(
+    hass, entity_id=ENTITY_MATCH_ALL, speed: str = None, percentage: int = None
+) -> None:
     """Turn all or specified fan on."""
     data = {
         key: value
-        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_SPEED, speed)]
+        for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_SPEED, speed),
+            (ATTR_PERCENTAGE, percentage),
+        ]
         if value is not None
     }
 
@@ -63,6 +71,19 @@ async def async_set_speed(hass, entity_id=ENTITY_MATCH_ALL, speed: str = None) -
     }
 
     await hass.services.async_call(DOMAIN, SERVICE_SET_SPEED, data, blocking=True)
+
+
+async def async_set_percentage(
+    hass, entity_id=ENTITY_MATCH_ALL, percentage: int = None
+) -> None:
+    """Set percentage for all or specified fan."""
+    data = {
+        key: value
+        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_PERCENTAGE, percentage)]
+        if value is not None
+    }
+
+    await hass.services.async_call(DOMAIN, SERVICE_SET_PERCENTAGE, data, blocking=True)
 
 
 async def async_set_direction(

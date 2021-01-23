@@ -14,6 +14,7 @@ from homeassistant.components.fan import (
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
     FanEntity,
+    percentage_compat,
 )
 from homeassistant.const import (
     CONF_DEVICE,
@@ -317,7 +318,15 @@ class MqttFan(MqttEntity, FanEntity):
         """Return the oscillation state."""
         return self._oscillation
 
-    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    # The fan entity model has changed. The @percentage_compat decorator will ensure
+    # the speed argument is set when a percentage is passed in.  When this entity is
+    # updated to use the new model and `speed` and # `set_speed` have been removed
+    # switch the decorator to @speed_compat to ensure the percentage argument will be
+    # filled for places that still pass in speed instead of percentage.
+    @percentage_compat
+    async def async_turn_on(
+        self, speed: str = None, percentage: int = None, **kwargs
+    ) -> None:
         """Turn on the entity.
 
         This method is a coroutine.

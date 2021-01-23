@@ -13,6 +13,7 @@ from homeassistant.components.fan import (
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
     FanEntity,
+    percentage_compat,
 )
 from homeassistant.core import callback
 
@@ -130,9 +131,18 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             {CharacteristicsTypes.SWING_MODE: 1 if oscillating else 0}
         )
 
-    async def async_turn_on(self, speed=None, **kwargs):
+    #
+    # The fan entity model has changed to use percentages.
+    #
+    # The @percentage_compat decorator will ensure the speed argument is set
+    # when a percentage is passed in. When this entity is updated to use the
+    # new model with `speed` and `set_speed` removed, switch the decorator to
+    # @speed_compat to ensure the percentage argument will be filled for
+    # places that still pass in speed instead of percentage.
+    #
+    @percentage_compat
+    async def async_turn_on(self, speed=None, percentage=None, **kwargs):
         """Turn the specified fan on."""
-
         characteristics = {}
 
         if not self.is_on:

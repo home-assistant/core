@@ -16,6 +16,7 @@ from homeassistant.components.fan import (
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
     FanEntity,
+    percentage_compat,
 )
 from homeassistant.helpers import config_validation as cv, entity_platform
 
@@ -233,7 +234,15 @@ class DysonPureCoolLinkEntity(DysonFanEntity):
         """Initialize the fan."""
         super().__init__(device, DysonPureCoolState)
 
-    def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
+    # The fan entity model has changed. The @percentage_compat decorator will ensure
+    # the speed argument is set when a percentage is passed in.  When this entity is
+    # updated to use the new model and `speed` and # `set_speed` have been removed
+    # switch the decorator to @speed_compat to ensure the percentage argument will be
+    # filled for places that still pass in speed instead of percentage.
+    @percentage_compat
+    def turn_on(
+        self, speed: Optional[str] = None, percentage: int = None, **kwargs
+    ) -> None:
         """Turn on the fan."""
         _LOGGER.debug("Turn on fan %s with speed %s", self.name, speed)
         if speed is not None:
@@ -299,7 +308,15 @@ class DysonPureCoolEntity(DysonFanEntity):
         """Initialize the fan."""
         super().__init__(device, DysonPureCoolV2State)
 
-    def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
+    # The fan entity model has changed. The @percentage_compat decorator will ensure
+    # the speed argument is set when a percentage is passed in.  When this entity is
+    # updated to use the new model and `speed` and # `set_speed` have been removed
+    # switch the decorator to @speed_compat to ensure the percentage argument will be
+    # filled for places that still pass in speed instead of percentage.
+    @percentage_compat
+    def turn_on(
+        self, speed: Optional[str] = None, percentage: int = None, **kwargs
+    ) -> None:
         """Turn on the fan."""
         _LOGGER.debug("Turn on fan %s", self.name)
 
