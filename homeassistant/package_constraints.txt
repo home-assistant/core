@@ -61,3 +61,4 @@ uuid==1000000000.0.0
 #
 # AIS dom
 pyinotify>=0.9.6
+aisapi>=0.0.8
