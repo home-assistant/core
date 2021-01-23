@@ -19,7 +19,6 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_DRY,
     CURRENT_HVAC_FAN,
     CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
     FAN_AUTO,
     FAN_HIGH,
@@ -90,12 +89,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     entities = []
 
-    for controller in hass.data[DOMAIN][CONTROLLERS].values():
+    for controller in hass.data[DOMAIN][entry.entry_id][CONTROLLERS].values():
         try:
             entity = DaikinMadokaClimate(controller)
             entities.append(entity)
             await entity.controller.update()
         except ConnectionAbortedError:
+            pass
+        except ConnectionException:
             pass
 
     async_add_entities(entities, update_before_add=True)
@@ -107,6 +108,7 @@ class DaikinMadokaClimate(ClimateEntity):
     def __init__(self, controller: Controller):
         """Initialize the climate device."""
         self.controller = controller
+        self.dev_info = None
 
     @property
     def supported_features(self):
@@ -143,7 +145,7 @@ class DaikinMadokaClimate(ClimateEntity):
     def current_temperature(self):
         """Return the current temperature."""
         if self.controller.temperatures.status is None:
-            return None
+            return MIN_TEMP
 
         return self.controller.temperatures.status.indoor
 
@@ -210,7 +212,10 @@ class DaikinMadokaClimate(ClimateEntity):
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
 
-        if self.controller.power_state.status.turn_on is False:
+        if (
+            self.controller.power_state.status is None
+            or self.controller.power_state.status.turn_on is False
+        ):
             return HVAC_MODE_OFF
 
         return DAIKIN_TO_HA_MODE.get(
@@ -226,7 +231,10 @@ class DaikinMadokaClimate(ClimateEntity):
     def hvac_action(self):
         """Return the HVAC current action."""
 
-        if self.controller.power_state.status.turn_on is False:
+        if (
+            self.controller.power_state.status is None
+            or self.controller.power_state.status.turn_on is False
+        ):
             return CURRENT_HVAC_OFF
 
         if (
@@ -234,14 +242,12 @@ class DaikinMadokaClimate(ClimateEntity):
             == OperationModeEnum.AUTO
         ):
             # pylint: disable=no-else-return
-            if self.target_temperature == self.current_temperature:
-                return CURRENT_HVAC_IDLE
-            elif self.target_temperature > self.current_temperature:
+            if self.target_temperature >= self.current_temperature:
                 return CURRENT_HVAC_HEAT
             else:
                 return CURRENT_HVAC_COOL
         else:
-            return DAIKIN_TO_HA_MODE.get(
+            return DAIKIN_TO_HA_CURRENT_HVAC_MODE.get(
                 self.controller.operation_mode.status.operation_mode
             )
 
@@ -295,7 +301,7 @@ class DaikinMadokaClimate(ClimateEntity):
         except ConnectionAbortedError:
             # pylint: disable=logging-not-lazy
             logging.info(
-                "Could not set fan mode on %s. "
+                "Could not set target fan mode on %s. "
                 + "Connection not available, please reload integration to try reenabling.",
                 self.name,
             )
@@ -311,7 +317,7 @@ class DaikinMadokaClimate(ClimateEntity):
         """Retrieve latest state."""
 
         try:
-            await self.controller.read_info()
+            self.dev_info = await self.controller.read_info()
             await self.controller.update()
 
         except ConnectionAbortedError:
@@ -353,7 +359,7 @@ class DaikinMadokaClimate(ClimateEntity):
             pass
 
     @property
-    async def async_device_info(self):
+    def device_info(self):
         """Return a device description for device registry."""
 
-        return await self.controller.read_info()
+        return self.dev_info

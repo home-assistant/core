@@ -16,11 +16,13 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
+from .const import DOMAIN, TITLE, UNIQUE_ID
+
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register("daikin_madoka")
-class FlowHandler(config_entries.ConfigFlow, domain="daikin_madoka"):
+@config_entries.HANDLERS.register(DOMAIN)
+class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -49,7 +51,7 @@ class FlowHandler(config_entries.ConfigFlow, domain="daikin_madoka"):
         """Register new entry."""
 
         return self.async_create_entry(
-            title="BRC1H",
+            title=TITLE,
             data={
                 CONF_DEVICES: list(map(lambda x: x.strip(), devices.split(","))),
                 CONF_DEVICE: device,
@@ -83,7 +85,7 @@ class FlowHandler(config_entries.ConfigFlow, domain="daikin_madoka"):
         errors = {}
         macs = []
 
-        await self.async_set_unique_id("BRC1H-id")
+        await self.async_set_unique_id(UNIQUE_ID)
         self._abort_if_unique_id_configured()
 
         if user_input is not None:
@@ -134,9 +136,6 @@ class FlowHandler(config_entries.ConfigFlow, domain="daikin_madoka"):
 
     async def async_step_import(self, user_input):
         """Import a config entry."""
-        devices = user_input.get(CONF_DEVICES)
-        if not devices:
-            return await self.async_step_user()
         return await self._create_entry(
             user_input[CONF_DEVICES],
             user_input.get(CONF_SCAN_INTERVAL),

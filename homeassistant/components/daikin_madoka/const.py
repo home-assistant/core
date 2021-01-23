@@ -1,4 +1,9 @@
 """Daikin Madoka consts."""
+
+DOMAIN = "daikin_madoka"
+TITLE = "BRC1H"
+UNIQUE_ID = "BRC1H-id"
+
 CONTROLLERS = "controllers"
 
 ATTR_TARGET_TEMPERATURE = "target_temperature"

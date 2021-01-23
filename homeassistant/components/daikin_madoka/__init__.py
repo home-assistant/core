@@ -6,7 +6,7 @@ import logging
 from pymadoka import Controller, discover_devices, force_device_disconnect
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_DEVICES,
@@ -17,16 +17,15 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import config_flow  # noqa: F401
-from .const import CONTROLLERS
+from .const import CONTROLLERS, DOMAIN
 
 LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "daikin_madoka"
 
 PARALLEL_UPDATES = 0
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-COMPONENT_TYPES = ["climate", "sensor"]
+COMPONENT_TYPES = ["climate"]
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
@@ -53,18 +52,6 @@ async def async_setup(hass, config):
 
     hass.data.setdefault(DOMAIN, {})
 
-    if DOMAIN not in config:
-        return True
-
-    for conf in config[DOMAIN]:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=conf,
-            )
-        )
-
     return True
 
 
@@ -86,11 +73,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             await controller.start()
         except ConnectionAbortedError as connection_aborted_error:
             LOGGER.error(
-                "Could not connect to device %s", str(connection_aborted_error)
+                "Could not connect to device %s: %s",
+                device,
+                str(connection_aborted_error),
             )
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][CONTROLLERS] = controllers
+    hass.data[DOMAIN][entry.entry_id] = {CONTROLLERS: controllers}
     for component in COMPONENT_TYPES:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
@@ -107,7 +96,6 @@ async def async_unload_entry(hass, config_entry):
             for component in COMPONENT_TYPES
         ]
     )
-    # hass.data[DOMAIN].pop(config_entry.entry_id)
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
+    hass.data[DOMAIN].pop(config_entry.entry_id)
+
     return True
