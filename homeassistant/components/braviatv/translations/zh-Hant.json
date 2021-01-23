@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "no_ip_control": "\u96fb\u8996\u4e0a\u7684 IP \u5df2\u95dc\u9589\u6216\u4e0d\u652f\u63f4\u6b64\u6b3e\u96fb\u8996\u3002"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "invalid_host": "\u7121\u6548\u4e3b\u6a5f\u540d\u6216 IP \u4f4d\u5740",
+            "invalid_host": "\u7121\u6548\u4e3b\u6a5f\u540d\u7a31\u6216 IP \u4f4d\u5740",
             "unsupported_model": "\u4e0d\u652f\u63f4\u6b64\u6b3e\u96fb\u8996\u578b\u865f\u3002"
         },
         "step": {

@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "auth_fail": "Brukernavn eller passord er feil.",
-            "cannot_connect": "Tilkobling mislyktes.",
+            "auth_fail": "Brukernavn eller passord er feil",
+            "cannot_connect": "Tilkobling mislyktes",
             "connection_error": "Kunne ikke koble til en ZoneMinder-server.",
             "invalid_auth": "Ugyldig godkjenning"
         },
@@ -10,12 +10,12 @@
             "default": "ZoneMinder-serveren er lagt til."
         },
         "error": {
-            "auth_fail": "Brukernavn eller passord er feil.",
-            "cannot_connect": "Tilkobling mislyktes.",
+            "auth_fail": "Brukernavn eller passord er feil",
+            "cannot_connect": "Tilkobling mislyktes",
             "connection_error": "Kunne ikke koble til en ZoneMinder-server.",
             "invalid_auth": "Ugyldig godkjenning"
         },
-        "flow_title": "ZoneMinder",
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {

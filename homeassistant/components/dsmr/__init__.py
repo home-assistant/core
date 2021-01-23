@@ -1,14 +1,11 @@
 """The dsmr component."""
 import asyncio
 from asyncio import CancelledError
-import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DATA_TASK, DOMAIN, PLATFORMS
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DATA_LISTENER, DATA_TASK, DOMAIN, PLATFORMS
 
 
 async def async_setup(hass, config: dict):
@@ -26,12 +23,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
+    listener = entry.add_update_listener(async_update_options)
+    hass.data[DOMAIN][entry.entry_id][DATA_LISTENER] = listener
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     task = hass.data[DOMAIN][entry.entry_id][DATA_TASK]
+    listener = hass.data[DOMAIN][entry.entry_id][DATA_LISTENER]
 
     # Cancel the reconnect task
     task.cancel()
@@ -49,6 +50,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
+        listener()
+
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Update options."""
+    await hass.config_entries.async_reload(config_entry.entry_id)

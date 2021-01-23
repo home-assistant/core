@@ -1,8 +1,7 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Kontot \u00e4r redan registrerat",
-            "invalid_credentials": "Ogiltiga autentiseringsuppgifter"
+            "identifier_exists": "Kontot \u00e4r redan registrerat"
         },
         "step": {
             "user": {

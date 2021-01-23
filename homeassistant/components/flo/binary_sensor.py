@@ -36,13 +36,13 @@ class FloPendingAlertsBinarySensor(FloEntity, BinarySensorEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self._device.has_alerts:
-            return {
-                "info": self._device.pending_info_alerts_count,
-                "warning": self._device.pending_warning_alerts_count,
-                "critical": self._device.pending_critical_alerts_count,
-            }
-        return {}
+        if not self._device.has_alerts:
+            return {}
+        return {
+            "info": self._device.pending_info_alerts_count,
+            "warning": self._device.pending_warning_alerts_count,
+            "critical": self._device.pending_critical_alerts_count,
+        }
 
     @property
     def device_class(self):

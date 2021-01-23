@@ -88,7 +88,7 @@ async def async_setup_entry(
         udn = data[CONFIG_ENTRY_UDN]
     else:
         # any device will do
-        udn = list(hass.data[DOMAIN][DOMAIN_DEVICES].keys())[0]
+        udn = list(hass.data[DOMAIN][DOMAIN_DEVICES])[0]
 
     device: Device = hass.data[DOMAIN][DOMAIN_DEVICES][udn]
 

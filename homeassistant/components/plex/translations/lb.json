@@ -3,10 +3,10 @@
         "abort": {
             "all_configured": "All verbonne Server sinn scho konfigur\u00e9iert",
             "already_configured": "D\u00ebse Plex Server ass scho konfigur\u00e9iert",
-            "already_in_progress": "Plex g\u00ebtt konfigur\u00e9iert",
+            "already_in_progress": "Konfiguratioun's Oflaf ass schonn am gaang.",
             "reauth_successful": "Erfollegr\u00e4ich re-authentifiz\u00e9iert",
             "token_request_timeout": "Z\u00e4it Iwwerschreidung beim kr\u00e9ien vum Jeton",
-            "unknown": "Onbekannte Feeler opgetrueden"
+            "unknown": "Onerwaarte Feeler"
         },
         "error": {
             "faulty_credentials": "Feeler bei der Autorisatioun, iwwerpr\u00e9if de Jeton",
@@ -21,7 +21,7 @@
                 "data": {
                     "host": "Apparat",
                     "port": "Port",
-                    "ssl": "SSL benotzen",
+                    "ssl": "Benotzt ee SSL Zertifikat",
                     "token": "Jeton (Optionell)",
                     "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
                 },

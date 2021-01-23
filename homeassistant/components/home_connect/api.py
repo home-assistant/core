@@ -168,6 +168,30 @@ class DeviceWithDoor(HomeConnectDevice):
         }
 
 
+class DeviceWithLight(HomeConnectDevice):
+    """Device that has lighting."""
+
+    def get_light_entity(self):
+        """Get a dictionary with info about the lighting."""
+        return {
+            "device": self,
+            "desc": "Light",
+            "ambient": None,
+        }
+
+
+class DeviceWithAmbientLight(HomeConnectDevice):
+    """Device that has ambient lighting."""
+
+    def get_ambientlight_entity(self):
+        """Get a dictionary with info about the ambient lighting."""
+        return {
+            "device": self,
+            "desc": "AmbientLight",
+            "ambient": True,
+        }
+
+
 class Dryer(DeviceWithDoor, DeviceWithPrograms):
     """Dryer class."""
 
@@ -202,7 +226,7 @@ class Dryer(DeviceWithDoor, DeviceWithPrograms):
         }
 
 
-class Dishwasher(DeviceWithDoor, DeviceWithPrograms):
+class Dishwasher(DeviceWithDoor, DeviceWithAmbientLight, DeviceWithPrograms):
     """Dishwasher class."""
 
     PROGRAMS = [
@@ -335,7 +359,7 @@ class CoffeeMaker(DeviceWithPrograms):
         return {"switch": program_switches, "sensor": program_sensors}
 
 
-class Hood(DeviceWithPrograms):
+class Hood(DeviceWithLight, DeviceWithAmbientLight, DeviceWithPrograms):
     """Hood class."""
 
     PROGRAMS = [
@@ -346,9 +370,15 @@ class Hood(DeviceWithPrograms):
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
+        light_entity = self.get_light_entity()
+        ambientlight_entity = self.get_ambientlight_entity()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
-        return {"switch": program_switches, "sensor": program_sensors}
+        return {
+            "switch": program_switches,
+            "sensor": program_sensors,
+            "light": [light_entity, ambientlight_entity],
+        }
 
 
 class FridgeFreezer(DeviceWithDoor):

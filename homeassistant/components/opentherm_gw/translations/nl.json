@@ -2,9 +2,7 @@
     "config": {
         "error": {
             "already_configured": "Gateway al geconfigureerd",
-            "id_exists": "Gateway id bestaat al",
-            "serial_error": "Fout bij het verbinden met het apparaat",
-            "timeout": "Er is een time-out opgetreden voor de verbindingspoging"
+            "id_exists": "Gateway id bestaat al"
         },
         "step": {
             "init": {

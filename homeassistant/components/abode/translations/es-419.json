@@ -3,11 +3,6 @@
         "abort": {
             "single_instance_allowed": "Solo se permite una \u00fanica configuraci\u00f3n de Abode."
         },
-        "error": {
-            "connection_error": "No se puede conectar a Abode.",
-            "identifier_exists": "Cuenta ya registrada.",
-            "invalid_credentials": "Credenciales inv\u00e1lidas."
-        },
         "step": {
             "user": {
                 "data": {

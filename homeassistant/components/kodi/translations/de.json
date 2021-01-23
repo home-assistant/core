@@ -1,23 +1,29 @@
 {
     "config": {
+        "abort": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "unknown": "Unerwarteter Fehler"
+        },
         "flow_title": "Kodi: {name}",
         "step": {
             "credentials": {
                 "data": {
                     "password": "Passwort",
                     "username": "Benutzername"
-                }
+                },
+                "description": "Bitte gib deinen Kodi-Benutzernamen und Passwort ein. Diese findest du unter System/Einstellungen/Netzwerk/Dienste."
             },
-            "host": {
-                "data": {
-                    "host": "Host",
-                    "port": "Port"
-                }
+            "discovery_confirm": {
+                "description": "M\u00f6chtest du Kodi (` {name} `) zu Home Assistant hinzuf\u00fcgen?"
             },
             "user": {
                 "data": {
                     "host": "Host",
-                    "port": "Port"
+                    "port": "Port",
+                    "ssl": "Verwendet ein SSL Zertifikat"
                 }
             },
             "ws_port": {

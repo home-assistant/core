@@ -4,12 +4,14 @@
             "already_configured": "Deze co\u00f6rdinaten of Node / Pro ID zijn al geregistreerd."
         },
         "error": {
+            "cannot_connect": "Kan geen verbinding maken",
             "general_error": "Er is een onbekende fout opgetreden.",
-            "unable_to_connect": "Kan geen verbinding maken met Node / Pro-apparaat."
+            "invalid_api_key": "Ongeldige API-sleutel"
         },
         "step": {
             "geography": {
                 "data": {
+                    "api_key": "API-sleutel",
                     "latitude": "Breedtegraad",
                     "longitude": "Lengtegraad"
                 },
@@ -23,6 +25,12 @@
                 },
                 "description": "Monitor een persoonlijke AirVisual-eenheid. Het wachtwoord kan worden opgehaald uit de gebruikersinterface van het apparaat.",
                 "title": "Configureer een AirVisual Node / Pro"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-sleutel"
+                },
+                "title": "Verifieer AirVisual opnieuw"
             },
             "user": {
                 "data": {

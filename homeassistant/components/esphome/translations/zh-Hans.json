@@ -1,11 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP \u5df2\u914d\u7f6e\u5b8c\u6210"
+            "already_configured": "\u8bbe\u5907\u5df2\u7ecf\u914d\u7f6e\u8fc7\u4e86",
+            "already_in_progress": "\u914d\u7f6e\u6d41\u7a0b\u5df2\u5728\u8fdb\u884c\u4e2d"
         },
         "error": {
             "connection_error": "\u65e0\u6cd5\u8fde\u63a5\u5230 ESP\u3002\u8bf7\u786e\u8ba4\u60a8\u7684 YAML \u6587\u4ef6\u4e2d\u5305\u542b 'api:' \u884c\u3002",
-            "invalid_password": "\u65e0\u6548\u7684\u5bc6\u7801\uff01",
+            "invalid_auth": "\u8eab\u4efd\u8ba4\u8bc1\u65e0\u6548",
             "resolve_error": "\u65e0\u6cd5\u89e3\u6790 ESP \u7684\u5730\u5740\u3002\u5982\u679c\u6b64\u9519\u8bef\u6301\u7eed\u5b58\u5728\uff0c\u8bf7\u8bbe\u7f6e\u9759\u6001IP\u5730\u5740\uff1ahttps://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",

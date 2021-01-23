@@ -78,7 +78,7 @@ class DiscordNotificationService(BaseNotificationService):
                     ) or discord_bot.get_user(channelid)
 
                     if channel is None:
-                        _LOGGER.warning("Channel not found for id: %s", channelid)
+                        _LOGGER.warning("Channel not found for ID: %s", channelid)
                         continue
                     # Must create new instances of File for each channel.
                     files = None

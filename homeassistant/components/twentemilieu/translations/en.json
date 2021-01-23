@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "address_exists": "Address already set up."
+            "already_configured": "Location is already configured"
         },
         "error": {
-            "connection_error": "Failed to connect.",
+            "cannot_connect": "Failed to connect",
             "invalid_address": "Address not found in Twente Milieu service area."
         },
         "step": {

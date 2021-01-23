@@ -6,9 +6,6 @@
         "create_entry": {
             "default": "AlarmDecoder\uc5d0 \uc131\uacf5\uc801\uc73c\ub85c \uc5f0\uacb0\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
         },
-        "error": {
-            "service_unavailable": "\uc5f0\uacb0 \uc2e4\ud328"
-        },
         "step": {
             "protocol": {
                 "data": {

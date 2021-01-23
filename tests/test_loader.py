@@ -1,11 +1,12 @@
 """Test to verify that we can load components."""
+from unittest.mock import ANY, patch
+
 import pytest
 
+from homeassistant import core, loader
 from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
-import homeassistant.loader as loader
 
-from tests.async_mock import ANY, patch
 from tests.common import MockModule, async_mock_service, mock_integration
 
 
@@ -83,6 +84,7 @@ async def test_helpers_wrapper(hass):
 
     result = []
 
+    @core.callback
     def discovery_callback(service, discovered):
         """Handle discovery callback."""
         result.append(discovered)
@@ -96,7 +98,7 @@ async def test_helpers_wrapper(hass):
 
 
 async def test_custom_component_name(hass):
-    """Test the name attribte of custom components."""
+    """Test the name attribute of custom components."""
     integration = await loader.async_get_integration(hass, "test_standalone")
     int_comp = integration.get_component()
     assert int_comp.__name__ == "custom_components.test_standalone"
@@ -149,7 +151,7 @@ async def test_get_integration_legacy(hass):
     assert integration.get_platform("switch") is not None
 
 
-async def test_get_integration_custom_component(hass):
+async def test_get_integration_custom_component(hass, enable_custom_integrations):
     """Test resolving integration."""
     integration = await loader.async_get_integration(hass, "test_package")
     print(integration)
@@ -170,6 +172,11 @@ def test_integration_properties(hass):
             "requirements": ["test-req==1.0.0"],
             "zeroconf": ["_hue._tcp.local."],
             "homekit": {"models": ["BSB002"]},
+            "dhcp": [
+                {"hostname": "tesla_*", "macaddress": "4CFCAA*"},
+                {"hostname": "tesla_*", "macaddress": "044EAF*"},
+                {"hostname": "tesla_*", "macaddress": "98ED5C*"},
+            ],
             "ssdp": [
                 {
                     "manufacturer": "Royal Philips Electronics",
@@ -181,12 +188,18 @@ def test_integration_properties(hass):
                 },
                 {"manufacturer": "Signify", "modelName": "Philips hue bridge 2015"},
             ],
+            "mqtt": ["hue/discovery"],
         },
     )
     assert integration.name == "Philips Hue"
     assert integration.domain == "hue"
     assert integration.homekit == {"models": ["BSB002"]}
     assert integration.zeroconf == ["_hue._tcp.local."]
+    assert integration.dhcp == [
+        {"hostname": "tesla_*", "macaddress": "4CFCAA*"},
+        {"hostname": "tesla_*", "macaddress": "044EAF*"},
+        {"hostname": "tesla_*", "macaddress": "98ED5C*"},
+    ]
     assert integration.ssdp == [
         {
             "manufacturer": "Royal Philips Electronics",
@@ -198,6 +211,7 @@ def test_integration_properties(hass):
         },
         {"manufacturer": "Signify", "modelName": "Philips hue bridge 2015"},
     ]
+    assert integration.mqtt == ["hue/discovery"]
     assert integration.dependencies == ["test-dep"]
     assert integration.requirements == ["test-req==1.0.0"]
     assert integration.is_built_in is True
@@ -216,7 +230,9 @@ def test_integration_properties(hass):
     assert integration.is_built_in is False
     assert integration.homekit is None
     assert integration.zeroconf is None
+    assert integration.dhcp is None
     assert integration.ssdp is None
+    assert integration.mqtt is None
 
     integration = loader.Integration(
         hass,
@@ -233,6 +249,7 @@ def test_integration_properties(hass):
     assert integration.is_built_in is False
     assert integration.homekit is None
     assert integration.zeroconf == [{"type": "_hue._tcp.local.", "name": "hue*"}]
+    assert integration.dhcp is None
     assert integration.ssdp is None
 
 
@@ -266,6 +283,7 @@ def _get_test_integration(hass, name, config_flow):
             "zeroconf": [f"_{name}._tcp.local."],
             "homekit": {"models": [name]},
             "ssdp": [{"manufacturer": name, "modelName": name}],
+            "mqtt": [f"{name}/discovery"],
         },
     )
 
@@ -289,7 +307,31 @@ def _get_test_integration_with_zeroconf_matcher(hass, name, config_flow):
     )
 
 
-async def test_get_custom_components(hass):
+def _get_test_integration_with_dhcp_matcher(hass, name, config_flow):
+    """Return a generated test integration with a dhcp matcher."""
+    return loader.Integration(
+        hass,
+        f"homeassistant.components.{name}",
+        None,
+        {
+            "name": name,
+            "domain": name,
+            "config_flow": config_flow,
+            "dependencies": [],
+            "requirements": [],
+            "zeroconf": [],
+            "dhcp": [
+                {"hostname": "tesla_*", "macaddress": "4CFCAA*"},
+                {"hostname": "tesla_*", "macaddress": "044EAF*"},
+                {"hostname": "tesla_*", "macaddress": "98ED5C*"},
+            ],
+            "homekit": {"models": [name]},
+            "ssdp": [{"manufacturer": name, "modelName": name}],
+        },
+    )
+
+
+async def test_get_custom_components(hass, enable_custom_integrations):
     """Verify that custom components are cached."""
     test_1_integration = _get_test_integration(hass, "test_1", False)
     test_2_integration = _get_test_integration(hass, "test_2", True)
@@ -341,6 +383,23 @@ async def test_get_zeroconf(hass):
         ]
 
 
+async def test_get_dhcp(hass):
+    """Verify that custom components with dhcp are found."""
+    test_1_integration = _get_test_integration_with_dhcp_matcher(hass, "test_1", True)
+
+    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
+        mock_get.return_value = {
+            "test_1": test_1_integration,
+        }
+        dhcp = await loader.async_get_dhcp(hass)
+        dhcp_for_domain = [entry for entry in dhcp if entry["domain"] == "test_1"]
+        assert dhcp_for_domain == [
+            {"domain": "test_1", "hostname": "tesla_*", "macaddress": "4CFCAA*"},
+            {"domain": "test_1", "hostname": "tesla_*", "macaddress": "044EAF*"},
+            {"domain": "test_1", "hostname": "tesla_*", "macaddress": "98ED5C*"},
+        ]
+
+
 async def test_get_homekit(hass):
     """Verify that custom components with homekit are found."""
     test_1_integration = _get_test_integration(hass, "test_1", True)
@@ -369,6 +428,21 @@ async def test_get_ssdp(hass):
         ssdp = await loader.async_get_ssdp(hass)
         assert ssdp["test_1"] == [{"manufacturer": "test_1", "modelName": "test_1"}]
         assert ssdp["test_2"] == [{"manufacturer": "test_2", "modelName": "test_2"}]
+
+
+async def test_get_mqtt(hass):
+    """Verify that custom components with MQTT are found."""
+    test_1_integration = _get_test_integration(hass, "test_1", True)
+    test_2_integration = _get_test_integration(hass, "test_2", True)
+
+    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
+        mock_get.return_value = {
+            "test_1": test_1_integration,
+            "test_2": test_2_integration,
+        }
+        mqtt = await loader.async_get_mqtt(hass)
+        assert mqtt["test_1"] == ["test_1/discovery"]
+        assert mqtt["test_2"] == ["test_2/discovery"]
 
 
 async def test_get_custom_components_safe_mode(hass):

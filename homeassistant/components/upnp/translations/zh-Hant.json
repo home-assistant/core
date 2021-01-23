@@ -1,20 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "UPnP/IGD \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "incomplete_discovery": "\u672a\u5b8c\u6210\u63a2\u7d22",
-            "no_devices_discovered": "\u672a\u641c\u5c0b\u5230 UPnP/IGD",
-            "no_devices_found": "\u5728\u7db2\u8def\u4e0a\u627e\u4e0d\u5230 UPnP/IGD \u8a2d\u5099\u3002"
+            "no_devices_found": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230\u88dd\u7f6e"
         },
         "flow_title": "UPnP/IGD\uff1a{name}",
         "step": {
             "ssdp_confirm": {
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a UPnP/IGD \u8a2d\u5099\uff1f"
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a UPnP/IGD \u88dd\u7f6e\uff1f"
             },
             "user": {
                 "data": {
                     "scan_interval": "\u66f4\u65b0\u9593\u9694\uff08\u79d2\u3001\u6700\u5c11 30 \u79d2\uff09",
-                    "usn": "\u8a2d\u5099"
+                    "usn": "\u88dd\u7f6e"
                 }
             }
         }

@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "name_exists": "\uc774\ub984\uc774 \uc774\ubbf8 \uc874\uc7ac\ud569\ub2c8\ub2e4"
-        },
         "step": {
             "user": {
                 "data": {

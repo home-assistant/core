@@ -3,20 +3,20 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_host": "Ugyldig vertsnavn eller IP-adresse",
             "not_supported": "Enheten st\u00f8ttes ikke",
             "unknown": "Uventet feil"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_host": "Ugyldig vertsnavn eller IP-adresse",
             "unknown": "Uventet feil"
         },
-        "flow_title": "{name} ( {model} hos {host} )",
+        "flow_title": "{name} ({model} p\u00e5 {host})",
         "step": {
             "auth": {
-                "title": "Autentiser til enheten"
+                "title": "Godkjenning til enheten"
             },
             "finish": {
                 "data": {
@@ -25,14 +25,14 @@
                 "title": "Velg et navn p\u00e5 enheten"
             },
             "reset": {
-                "description": "Enheten er l\u00e5st for godkjenning. F\u00f8lg instruksjonene for \u00e5 l\u00e5se den opp:\n1. Tilbakestill enheten til fabrikkstandard.\n2. Bruk den offisielle appen til \u00e5 legge til enheten i ditt lokale nettverk.\n3. Stopp. Ikke fullf\u00f8r oppsettet. Lukk appen.\n4. Klikk p\u00e5 Send.",
+                "description": "{name} ({model} p\u00e5 {host}) er l\u00e5st. Du m\u00e5 l\u00e5se opp enheten for \u00e5 godkjenne og fullf\u00f8re konfigurasjonen. Bruksanvisning:\n 1. \u00c5pne Broadlink-appen\n 2. Klikk p\u00e5 enheten\n 3. Klikk p\u00e5 `...` \u00f8verst til h\u00f8yre\n 4. Bla til bunnen av siden\n 5. Deaktiver l\u00e5sen",
                 "title": "L\u00e5s opp enheten"
             },
             "unlock": {
                 "data": {
                     "unlock": "Ja, gj\u00f8r det."
                 },
-                "description": "Enheten er l\u00e5st. Dette kan f\u00f8re til godkjenningsproblemer i Home Assistant. Vil du l\u00e5se den opp?",
+                "description": "{name} ({model} p\u00e5 {host}) er l\u00e5st. Dette kan f\u00f8re til godkjenningsproblemer i Home Assistant. Vil du l\u00e5se den opp?",
                 "title": "L\u00e5s opp enheten (valgfritt)"
             },
             "user": {

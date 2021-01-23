@@ -1,15 +1,35 @@
 {
     "config": {
+        "abort": {
+            "cannot_connect": "Kon niet verbinden",
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden",
+            "select_single": "Selecteer een optie."
+        },
         "step": {
-            "hub2": {
+            "hubv1": {
                 "data": {
-                    "username": "Gebruikersnaam"
-                }
+                    "host": "IP-adres",
+                    "port": "Poort"
+                },
+                "description": "Configureer de Insteon Hub versie 1 (pre-2014).",
+                "title": "Insteon Hub versie 1"
             },
             "hubv2": {
                 "data": {
+                    "host": "IP-adres",
+                    "password": "Wachtwoord",
+                    "port": "Poort",
                     "username": "Gebruikersnaam"
-                }
+                },
+                "description": "Configureer de Insteon Hub versie 2.",
+                "title": "Insteon Hub versie 2"
+            },
+            "plm": {
+                "description": "Configureer de Insteon PowerLink Modem (PLM).",
+                "title": "Insteon PLM"
             },
             "user": {
                 "data": {
@@ -21,13 +41,48 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Kon niet verbinden",
+            "input_error": "Ongeldige invoer, controleer uw waarden.",
+            "select_single": "Selecteer \u00e9\u00e9n optie."
+        },
         "step": {
+            "add_override": {
+                "data": {
+                    "address": "Apparaatadres (bijv. 1a2b3c)",
+                    "cat": "Apparaatcategorie (bijv. 0x10)",
+                    "subcat": "Apparaatsubcategorie (bijv. 0x0a)"
+                },
+                "description": "Voeg een apparaat overschrijven toe.",
+                "title": "Insteon"
+            },
+            "add_x10": {
+                "data": {
+                    "housecode": "Huiscode (a - p)",
+                    "platform": "Platform",
+                    "steps": "Dimmerstappen (alleen voor verlichtingsapparaten, standaard 22)",
+                    "unitcode": "Unitcode (1 - 16)"
+                },
+                "description": "Wijzig het wachtwoord van de Insteon Hub.",
+                "title": "Insteon"
+            },
             "change_hub_config": {
                 "data": {
                     "host": "IP-adres",
                     "password": "Wachtwoord",
                     "port": "Poort",
                     "username": "Gebruikersnaam"
+                },
+                "description": "Wijzig de verbindingsgegevens van de Insteon Hub. Je moet Home Assistant opnieuw opstarten nadat je deze wijziging hebt aangebracht. Dit verandert niets aan de configuratie van de Hub zelf. Gebruik de Hub-app om de configuratie in de Hub te wijzigen.",
+                "title": "Insteon"
+            },
+            "init": {
+                "data": {
+                    "add_override": "Voeg een apparaat overschrijven toe.",
+                    "add_x10": "Voeg een X10-apparaat toe.",
+                    "change_hub_config": "Wijzig de Hub-configuratie.",
+                    "remove_override": "Verwijder een apparaatoverschrijving.",
+                    "remove_x10": "Verwijder een X10-apparaat."
                 }
             }
         }

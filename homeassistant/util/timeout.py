@@ -7,15 +7,12 @@ from __future__ import annotations
 
 import asyncio
 import enum
-import logging
 from types import TracebackType
 from typing import Any, Dict, List, Optional, Type, Union
 
 from .async_ import run_callback_threadsafe
 
 ZONE_GLOBAL = "global"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class _State(str, enum.Enum):
@@ -52,14 +49,14 @@ class _GlobalFreezeContext:
         self._loop.call_soon_threadsafe(self._enter)
         return self
 
-    def __exit__(
+    def __exit__(  # pylint: disable=useless-return
         self,
         exc_type: Type[BaseException],
         exc_val: BaseException,
         exc_tb: TracebackType,
     ) -> Optional[bool]:
         self._loop.call_soon_threadsafe(self._exit)
-        return True
+        return None
 
     def _enter(self) -> None:
         """Run freeze."""
@@ -120,14 +117,14 @@ class _ZoneFreezeContext:
         self._loop.call_soon_threadsafe(self._enter)
         return self
 
-    def __exit__(
+    def __exit__(  # pylint: disable=useless-return
         self,
         exc_type: Type[BaseException],
         exc_val: BaseException,
         exc_tb: TracebackType,
     ) -> Optional[bool]:
         self._loop.call_soon_threadsafe(self._exit)
-        return True
+        return None
 
     def _enter(self) -> None:
         """Run freeze."""
@@ -349,6 +346,10 @@ class _ZoneTimeoutManager:
         self._zone: str = zone
         self._tasks: List[_ZoneTaskContext] = []
         self._freezes: List[_ZoneFreezeContext] = []
+
+    def __repr__(self) -> str:
+        """Representation of a zone."""
+        return f"<{self.name}: {len(self._tasks)} / {len(self._freezes)}>"
 
     @property
     def name(self) -> str:

@@ -14,10 +14,8 @@
                     "base_path": "Pfad zur API",
                     "host": "Host",
                     "port": "Port"
-                },
-                "title": "Mit Sonarr verbinden"
+                }
             }
         }
-    },
-    "title": "Sonarr"
+    }
 }

@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_API_SECRET): cv.string,
-        vol.Optional(CONF_SENSOR_ID): cv.string,
+        vol.Required(CONF_SENSOR_ID): cv.string,
     }
 )
 
@@ -81,14 +81,6 @@ class NeurioData:
 
         neurio_tp = neurio.TokenProvider(key=api_key, secret=api_secret)
         self.neurio_client = neurio.Client(token_provider=neurio_tp)
-
-        if not self.sensor_id:
-            user_info = self.neurio_client.get_user_information()
-            _LOGGER.warning(
-                "Sensor ID auto-detected: %s",
-                user_info["locations"][0]["sensors"][0]["sensorId"],
-            )
-            self.sensor_id = user_info["locations"][0]["sensors"][0]["sensorId"]
 
     @property
     def daily_usage(self):

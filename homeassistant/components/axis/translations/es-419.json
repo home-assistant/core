@@ -2,15 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "bad_config_file": "Datos err\u00f3neos del archivo de configuraci\u00f3n",
             "link_local_address": "Las direcciones locales de enlace no son compatibles",
             "not_axis_device": "El dispositivo descubierto no es un dispositivo de Axis"
         },
         "error": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
-            "already_in_progress": "El flujo de configuraci\u00f3n para el dispositivo ya est\u00e1 en progreso.",
-            "device_unavailable": "El dispositivo no est\u00e1 disponible",
-            "faulty_credentials": "Credenciales de usuario incorrectas"
+            "already_in_progress": "El flujo de configuraci\u00f3n para el dispositivo ya est\u00e1 en progreso."
         },
         "flow_title": "Dispositivo Axis: {name} ({host})",
         "step": {

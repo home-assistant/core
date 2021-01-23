@@ -5,6 +5,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     DOMAIN as BINARY_SENSOR_DOMAIN,
 )
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 
 from .test_device import NAME, setup_axis_integration
@@ -17,6 +18,14 @@ EVENTS = [
         "source_idx": "0",
         "type": "state",
         "value": "0",
+    },
+    {
+        "operation": "Initialized",
+        "topic": "tns1:PTZController/tnsaxis:PTZPresets/Channel_1",
+        "source": "PresetToken",
+        "source_idx": "0",
+        "type": "on_preset",
+        "value": "1",
     },
     {
         "operation": "Initialized",
@@ -50,20 +59,20 @@ async def test_no_binary_sensors(hass):
 
 async def test_binary_sensors(hass):
     """Test that sensors are loaded properly."""
-    device = await setup_axis_integration(hass)
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
-    for event in EVENTS:
-        device.api.event.process_event(event)
+    device.api.event.update(EVENTS)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 2
 
-    pir = hass.states.get(f"binary_sensor.{NAME}_pir_0")
-    assert pir.state == "off"
+    pir = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_pir_0")
+    assert pir.state == STATE_OFF
     assert pir.name == f"{NAME} PIR 0"
     assert pir.attributes["device_class"] == DEVICE_CLASS_MOTION
 
-    vmd4 = hass.states.get(f"binary_sensor.{NAME}_vmd4_profile_1")
-    assert vmd4.state == "on"
+    vmd4 = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_vmd4_profile_1")
+    assert vmd4.state == STATE_ON
     assert vmd4.name == f"{NAME} VMD4 Profile 1"
     assert vmd4.attributes["device_class"] == DEVICE_CLASS_MOTION

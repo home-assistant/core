@@ -1,11 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Voit m\u00e4\u00e4ritt\u00e4\u00e4 vain yhden Nest-tilin.",
             "authorize_url_fail": "Tuntematon virhe luotaessa valtuutuksen URL-osoitetta."
-        },
-        "error": {
-            "invalid_code": "Virheellinen koodi"
         },
         "step": {
             "init": {

@@ -3,10 +3,6 @@
         "abort": {
             "already_configured": "Deze RainMachine controller is al geconfigureerd."
         },
-        "error": {
-            "identifier_exists": "Account bestaat al",
-            "invalid_credentials": "Ongeldige gebruikersgegevens"
-        },
         "step": {
             "user": {
                 "data": {

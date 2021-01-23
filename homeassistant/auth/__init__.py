@@ -2,7 +2,6 @@
 import asyncio
 from collections import OrderedDict
 from datetime import timedelta
-import logging
 from typing import Any, Dict, List, Optional, Tuple, cast
 
 import jwt
@@ -20,7 +19,6 @@ from .providers import AuthProvider, LoginFlow, auth_provider_from_config
 EVENT_USER_ADDED = "user_added"
 EVENT_USER_REMOVED = "user_removed"
 
-_LOGGER = logging.getLogger(__name__)
 _MfaModuleDict = Dict[str, MultiFactorAuthModule]
 _ProviderKey = Tuple[str, Optional[str]]
 _ProviderDict = Dict[_ProviderKey, AuthProvider]
@@ -286,6 +284,7 @@ class AuthManager:
         self,
         user: models.User,
         name: Optional[str] = None,
+        is_active: Optional[bool] = None,
         group_ids: Optional[List[str]] = None,
     ) -> None:
         """Update a user."""
@@ -295,6 +294,12 @@ class AuthManager:
         if group_ids is not None:
             kwargs["group_ids"] = group_ids
         await self._store.async_update_user(user, **kwargs)
+
+        if is_active is not None:
+            if is_active is True:
+                await self.async_activate_user(user)
+            else:
+                await self.async_deactivate_user(user)
 
     async def async_activate_user(self, user: models.User) -> None:
         """Activate a user."""

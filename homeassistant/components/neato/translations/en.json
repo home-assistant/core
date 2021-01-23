@@ -2,19 +2,26 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
             "invalid_auth": "Invalid authentication",
-            "invalid_credentials": "Invalid credentials"
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "reauth_successful": "Re-authentication was successful"
         },
         "create_entry": {
-            "default": "See [Neato documentation]({docs_url})."
+            "default": "Successfully authenticated"
         },
         "error": {
             "invalid_auth": "Invalid authentication",
-            "invalid_credentials": "Invalid credentials",
-            "unexpected_error": "Unexpected error",
             "unknown": "Unexpected error"
         },
         "step": {
+            "pick_implementation": {
+                "title": "Pick Authentication Method"
+            },
+            "reauth_confirm": {
+                "title": "Do you want to start set up?"
+            },
             "user": {
                 "data": {
                     "password": "Password",
@@ -25,5 +32,6 @@
                 "title": "Neato Account Info"
             }
         }
-    }
+    },
+    "title": "Neato Botvac"
 }

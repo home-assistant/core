@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
+            "connection_error": "\u9023\u7dda\u5931\u6557"
+        },
+        "flow_title": "Motion Blinds",
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API \u5bc6\u9470",
+                    "host": "IP \u4f4d\u5740"
+                },
+                "description": "\u5c07\u9700\u8981\u8f38\u5165 16 \u4f4d\u5b57\u5143 API \u5bc6\u9470\uff0c\u8acb\u53c3\u95b1 https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key \u4ee5\u7372\u5f97\u7372\u53d6\u5bc6\u9470\u7684\u6559\u5b78\u3002",
+                "title": "Motion Blinds"
+            }
+        }
+    }
+}

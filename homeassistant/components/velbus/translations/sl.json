@@ -1,12 +1,5 @@
 {
     "config": {
-        "abort": {
-            "port_exists": "Ta vrata so \u017ee nastavljena"
-        },
-        "error": {
-            "connection_failed": "Povezava z velbusom ni uspela",
-            "port_exists": "Ta vrata so \u017ee nastavljena"
-        },
         "step": {
             "user": {
                 "data": {

@@ -6,7 +6,6 @@
             "no_bridges": "No se han descubierto pasarelas deCONZ",
             "no_hardware_available": "No hay hardware de radio conectado a deCONZ",
             "not_deconz_bridge": "No es una pasarela deCONZ",
-            "one_instance_only": "El componente solo admite una instancia de deCONZ",
             "updated_instance": "Instancia deCONZ actualizada con nueva direcci\u00f3n de host"
         },
         "error": {
@@ -67,6 +66,7 @@
             "remote_button_quadruple_press": "Bot\u00f3n \"{subtype}\" cu\u00e1druple pulsaci\u00f3n",
             "remote_button_quintuple_press": "Bot\u00f3n \"{subtype}\" qu\u00edntuple pulsaci\u00f3n",
             "remote_button_rotated": "Bot\u00f3n \"{subtype}\" girado",
+            "remote_button_rotated_fast": "Bot\u00f3n \"{subtype}\" girado r\u00e1pido",
             "remote_button_rotation_stopped": "Bot\u00f3n rotativo \"{subtype}\" detenido",
             "remote_button_short_press": "Bot\u00f3n \"{subtype}\" pulsado",
             "remote_button_short_release": "Bot\u00f3n \"{subtype}\" soltado",

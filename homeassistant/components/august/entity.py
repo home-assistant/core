@@ -1,14 +1,9 @@
 """Base class for August entity."""
-
-import logging
-
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 from .const import MANUFACTURER
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class AugustEntityMixin(Entity):
@@ -51,18 +46,13 @@ class AugustEntityMixin(Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to updates."""
-        self._data.async_subscribe_device_id(
-            self._device_id, self._update_from_data_and_write_state
+        self.async_on_remove(
+            self._data.async_subscribe_device_id(
+                self._device_id, self._update_from_data_and_write_state
+            )
         )
-        self._data.activity_stream.async_subscribe_device_id(
-            self._device_id, self._update_from_data_and_write_state
-        )
-
-    async def async_will_remove_from_hass(self):
-        """Undo subscription."""
-        self._data.async_unsubscribe_device_id(
-            self._device_id, self._update_from_data_and_write_state
-        )
-        self._data.activity_stream.async_unsubscribe_device_id(
-            self._device_id, self._update_from_data_and_write_state
+        self.async_on_remove(
+            self._data.activity_stream.async_subscribe_device_id(
+                self._device_id, self._update_from_data_and_write_state
+            )
         )

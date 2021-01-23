@@ -9,7 +9,7 @@ from datetime import timedelta
 import logging
 
 from georss_client import UPDATE_OK, UPDATE_OK_NO_DATA
-from georss_client.generic_feed import GenericFeed
+from georss_generic_client import GenericFeed
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA

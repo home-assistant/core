@@ -7,7 +7,7 @@
             "default": "Pomy\u015blnie po\u0142\u0105czono z AlarmDecoder."
         },
         "error": {
-            "service_unavailable": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "protocol": {
@@ -29,9 +29,10 @@
     },
     "options": {
         "error": {
-            "int": "Poni\u017csze pole musi by\u0107 liczb\u0105 ca\u0142kowit\u0105.",
-            "loop_range": "P\u0119tla RF (RF Loop) musi by\u0107 liczb\u0105 ca\u0142kowit\u0105 od 1 do 4.",
-            "relay_inclusive": "Adres przeka\u017anika i kana\u0142 przeka\u017anika s\u0105 wsp\u00f3\u0142zale\u017cne i musz\u0105 by\u0107 zawarte razem."
+            "int": "Poni\u017csze pole musi by\u0107 liczb\u0105 ca\u0142kowit\u0105",
+            "loop_range": "P\u0119tla RF (RF Loop) musi by\u0107 liczb\u0105 ca\u0142kowit\u0105 od 1 do 4",
+            "loop_rfid": "P\u0119tli RF (RF Loop) nie mo\u017cna u\u017cywa\u0107 bez us\u0142ugi RF Serial",
+            "relay_inclusive": "Adres przeka\u017anika i kana\u0142 przeka\u017anika s\u0105 wsp\u00f3\u0142zale\u017cne i musz\u0105 by\u0107 zawarte razem"
         },
         "step": {
             "arm_settings": {
@@ -55,9 +56,10 @@
                     "zone_name": "Nazwa strefy",
                     "zone_relayaddr": "Adres przeka\u017anika",
                     "zone_relaychan": "Kana\u0142 przeka\u017anika",
+                    "zone_rfid": "RF Serial",
                     "zone_type": "Rodzaj strefy"
                 },
-                "description": "Wprowad\u017a szczeg\u00f3\u0142y dla strefy {zone_number} . Aby usun\u0105\u0107 stref\u0119 {zone_number}, pozostaw nazw\u0119 strefy pust\u0105.",
+                "description": "Wprowad\u017a szczeg\u00f3\u0142y dla strefy {zone_number}. Aby usun\u0105\u0107 stref\u0119 {zone_number}, pozostaw nazw\u0119 strefy pust\u0105.",
                 "title": "Konfiguracja AlarmDecoder"
             },
             "zone_select": {

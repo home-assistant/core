@@ -5,13 +5,14 @@
             "not_forked_daapd": "Enheten er ikke en forked-daapd-server."
         },
         "error": {
+            "forbidden": "Kan ikke koble til, vennligst sjekk dine forked-daapd nettverkstillatelser",
             "unknown_error": "Uventet feil",
             "websocket_not_enabled": "websocket for forked-daapd server ikke aktivert.",
             "wrong_host_or_port": "Kan ikke koble til. Vennligst sjekk vert og port.",
             "wrong_password": "Feil passord.",
             "wrong_server_type": "Forked-daapd integrasjon krever en gaffel-daapd server med versjon \"= 27.0."
         },
-        "flow_title": "forked-daapd-server: {name} ( {host} )",
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {

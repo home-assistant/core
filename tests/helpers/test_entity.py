@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import threading
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -10,7 +11,6 @@ from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
 from homeassistant.core import Context
 from homeassistant.helpers import entity, entity_registry
 
-from tests.async_mock import MagicMock, PropertyMock, patch
 from tests.common import (
     MockConfigEntry,
     MockEntity,

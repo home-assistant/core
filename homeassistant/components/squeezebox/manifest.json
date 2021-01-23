@@ -6,7 +6,10 @@
     "@rajlaud"
   ],
   "requirements": [
-    "pysqueezebox==0.3.1"
+    "pysqueezebox==0.5.5"
   ],
-  "config_flow": true
+  "config_flow": true,
+  "dhcp": [
+    {"hostname":"squeezebox*","macaddress":"000420*"}
+  ]
 }

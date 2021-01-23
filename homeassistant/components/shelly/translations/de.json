@@ -1,5 +1,9 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Verbindungsfehler",
+            "unknown": "Unerwarteter Fehler"
+        },
         "flow_title": "Shelly: {name}",
         "step": {
             "credentials": {
@@ -14,6 +18,5 @@
                 }
             }
         }
-    },
-    "title": "Shelly"
+    }
 }

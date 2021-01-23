@@ -289,6 +289,8 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_plex_website_auth(self):
         """Begin external auth flow on Plex website."""
         self.hass.http.register_view(PlexAuthorizationCallbackView)
+        hass_url = get_url(self.hass)
+        headers = {"Origin": hass_url}
         payload = {
             "X-Plex-Device-Name": X_PLEX_DEVICE_NAME,
             "X-Plex-Version": X_PLEX_VERSION,
@@ -298,9 +300,9 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "X-Plex-Model": "Plex OAuth",
         }
         session = async_get_clientsession(self.hass)
-        self.plexauth = PlexAuth(payload, session)
+        self.plexauth = PlexAuth(payload, session, headers)
         await self.plexauth.initiate_auth()
-        forward_url = f"{get_url(self.hass)}{AUTH_CALLBACK_PATH}?flow_id={self.flow_id}"
+        forward_url = f"{hass_url}{AUTH_CALLBACK_PATH}?flow_id={self.flow_id}"
         auth_url = self.plexauth.auth_url(forward_url)
         return self.async_external_step(step_id="obtain_token", url=auth_url)
 

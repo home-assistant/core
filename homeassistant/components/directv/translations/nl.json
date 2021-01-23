@@ -10,6 +10,10 @@
         "flow_title": "DirecTV: {name}",
         "step": {
             "ssdp_confirm": {
+                "data": {
+                    "one": "Leeg",
+                    "other": "Leeg"
+                },
                 "description": "Wilt u {name} instellen?"
             },
             "user": {

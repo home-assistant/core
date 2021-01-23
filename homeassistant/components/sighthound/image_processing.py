@@ -172,6 +172,6 @@ class SighthoundEntity(ImageProcessingEntity):
     @property
     def device_state_attributes(self):
         """Return the attributes."""
-        if self._last_detection:
-            return {"last_person": self._last_detection}
-        return {}
+        if not self._last_detection:
+            return {}
+        return {"last_person": self._last_detection}

@@ -1,4 +1,6 @@
 """Define tests for the Notion config flow."""
+from unittest.mock import AsyncMock, patch
+
 import aionotion
 import pytest
 
@@ -7,7 +9,6 @@ from homeassistant.components.notion import DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 
@@ -66,23 +67,6 @@ async def test_show_form(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-
-
-async def test_step_import(hass, mock_aionotion):
-    """Test that the import step works."""
-    conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
-
-    flow = config_flow.NotionFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-
-    result = await flow.async_step_import(import_config=conf)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "user@host.com"
-    assert result["data"] == {
-        CONF_USERNAME: "user@host.com",
-        CONF_PASSWORD: "password123",
-    }
 
 
 async def test_step_user(hass, mock_aionotion):

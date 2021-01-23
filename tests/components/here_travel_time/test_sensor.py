@@ -1,5 +1,6 @@
 """The test for the here_travel_time sensor platform."""
 import logging
+from unittest.mock import patch
 import urllib
 
 import herepy
@@ -42,7 +43,6 @@ from homeassistant.const import ATTR_ICON, EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, load_fixture
 
 DOMAIN = "sensor"

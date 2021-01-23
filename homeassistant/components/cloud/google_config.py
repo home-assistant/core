@@ -11,7 +11,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     HTTP_OK,
 )
-from homeassistant.core import CoreState, callback, split_entity_id
+from homeassistant.core import CoreState, split_entity_id
 from homeassistant.helpers import entity_registry
 
 from .const import (
@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 class CloudGoogleConfig(AbstractConfig):
     """HA Cloud Configuration for Google Assistant."""
 
-    def __init__(self, hass, config, cloud_user, prefs: CloudPreferences, cloud):
+    def __init__(self, hass, config, cloud_user: str, prefs: CloudPreferences, cloud):
         """Initialize the Google config."""
         super().__init__(hass)
         self._config = config
@@ -201,7 +201,6 @@ class CloudGoogleConfig(AbstractConfig):
 
         self._sync_on_started = True
 
-        @callback
         async def sync_google(_):
             """Sync entities to Google."""
             await self.async_sync_entities_all()

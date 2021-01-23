@@ -1,7 +1,6 @@
 """Entity class that represents Z-Wave node."""
 # pylint: disable=import-outside-toplevel
 from itertools import count
-import logging
 
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_WAKEUP
 from homeassistant.core import callback
@@ -22,8 +21,6 @@ from .const import (
     EVENT_SCENE_ACTIVATED,
 )
 from .util import is_node_parsed, node_device_id_and_name, node_name
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_QUERY_STAGE = "query_stage"
 ATTR_AWAKE = "is_awake"
@@ -249,14 +246,12 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         # Set the name in the devices. If they're customised
         # the customisation will not be stored as name and will stick.
         dev_reg = await get_dev_reg(self.hass)
-        device = dev_reg.async_get_device(identifiers={identifier}, connections=set())
+        device = dev_reg.async_get_device(identifiers={identifier})
         dev_reg.async_update_device(device.id, name=self._name)
         # update sub-devices too
         for i in count(2):
             identifier, new_name = node_device_id_and_name(self.node, i)
-            device = dev_reg.async_get_device(
-                identifiers={identifier}, connections=set()
-            )
+            device = dev_reg.async_get_device(identifiers={identifier})
             if not device:
                 break
             dev_reg.async_update_device(device.id, name=new_name)

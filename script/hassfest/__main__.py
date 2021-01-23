@@ -9,8 +9,10 @@ from . import (
     config_flow,
     coverage,
     dependencies,
+    dhcp,
     json,
     manifest,
+    mqtt,
     requirements,
     services,
     ssdp,
@@ -25,10 +27,12 @@ INTEGRATION_PLUGINS = [
     config_flow,
     dependencies,
     manifest,
+    mqtt,
     services,
     ssdp,
     translations,
     zeroconf,
+    dhcp,
 ]
 HASS_PLUGINS = [
     coverage,

@@ -2,14 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "already_in_progress": "Proces konfiguracji dla urz\u0105dzenia ONVIF jest ju\u017c w toku.",
-            "no_h264": "Nie by\u0142o dost\u0119pnych \u017cadnych strumieni H264.  Sprawd\u017a konfiguracj\u0119 profilu w swoim urz\u0105dzeniu.",
-            "no_mac": "Nie mo\u017cna utworzy\u0107 unikalnego identyfikatora urz\u0105dzenia ONVIF.",
-            "onvif_error": "Wyst\u0105pi\u0142 b\u0142\u0105d podczas konfigurowania urz\u0105dzenia ONVIF.  Sprawd\u017a logi, aby uzyska\u0107 wi\u0119cej informacji."
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "no_h264": "Nie by\u0142o dost\u0119pnych \u017cadnych strumieni H264. Sprawd\u017a konfiguracj\u0119 profilu w swoim urz\u0105dzeniu.",
+            "no_mac": "Nie mo\u017cna utworzy\u0107 unikalnego identyfikatora urz\u0105dzenia ONVIF",
+            "onvif_error": "Wyst\u0105pi\u0142 b\u0142\u0105d podczas konfigurowania urz\u0105dzenia ONVIF. Sprawd\u017a logi, aby uzyska\u0107 wi\u0119cej informacji."
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "connection_failed": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z us\u0142ug\u0105 ONVIF z podanymi po\u015bwiadczeniami."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "auth": {
@@ -17,14 +16,14 @@
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "title": "Konfigurowanie uwierzytelniania"
+                "title": "Konfiguracja uwierzytelniania"
             },
             "configure_profile": {
                 "data": {
                     "include": "Utw\u00f3rz encj\u0119 kamery"
                 },
                 "description": "Czy utworzy\u0107 encj\u0119 kamery dla {profile} o rozdzielczo\u015bci {resolution}?",
-                "title": "Konfigurowanie profili"
+                "title": "Konfiguracja profili"
             },
             "device": {
                 "data": {
@@ -38,7 +37,7 @@
                     "name": "Nazwa",
                     "port": "Port"
                 },
-                "title": "Konfigurowanie urz\u0105dzenia ONVIF"
+                "title": "Konfiguracja urz\u0105dzenia ONVIF"
             },
             "user": {
                 "description": "Klikaj\u0105c przycisk Zatwierd\u017a, Twoja sie\u0107 zostanie przeszukana pod k\u0105tem urz\u0105dze\u0144 ONVIF obs\u0142uguj\u0105cych profil S.\n\nNiekt\u00f3rzy producenci zacz\u0119li domy\u015blnie wy\u0142\u0105cza\u0107 ONVIF. Upewnij si\u0119, \u017ce ONVIF jest w\u0142\u0105czony w konfiguracji kamery.",

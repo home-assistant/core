@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "duplicate_entry": "See host on juba lisatud.",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "link": {
+                "description": "Pead Roonis koduabilise volitama. Kui oled kl\u00f5psanud nuppu Esita, mine rakendusse Roon Core, ava Seaded ja luba vahekaardil Laiendused Home Assistant.",
+                "title": "Volita HomeAssistant Roonis"
+            },
+            "user": {
+                "data": {
+                    "host": ""
+                },
+                "description": "Sisesta oma Rooni serveri hostinimi v\u00f5i IP."
+            }
+        }
+    }
+}

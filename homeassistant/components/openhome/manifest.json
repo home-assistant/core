@@ -3,5 +3,5 @@
   "name": "Linn / OpenHome",
   "documentation": "https://www.home-assistant.io/integrations/openhome",
   "requirements": ["openhomedevice==0.7.2"],
-  "codeowners": []
+  "codeowners": ["@bazwilliams"]
 }

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Csak egy Almond fi\u00f3kot konfigur\u00e1lhat.",
             "cannot_connect": "Nem lehet csatlakozni az Almond szerverhez.",
             "missing_configuration": "K\u00e9rj\u00fck, ellen\u0151rizze az Almond be\u00e1ll\u00edt\u00e1s\u00e1nak dokument\u00e1ci\u00f3j\u00e1t."
         },

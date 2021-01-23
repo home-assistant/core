@@ -5,7 +5,7 @@ import logging
 from pynello.private import Nello
 import voluptuous as vol
 
-from homeassistant.components.lock import PLATFORM_SCHEMA, LockEntity
+from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockEntity
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
@@ -85,3 +85,13 @@ class NelloLock(LockEntity):
         """Unlock the device."""
         if not self._nello_lock.open_door():
             _LOGGER.error("Failed to unlock")
+
+    def open(self, **kwargs):
+        """Unlock the device."""
+        if not self._nello_lock.open_door():
+            _LOGGER.error("Failed to open")
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_OPEN

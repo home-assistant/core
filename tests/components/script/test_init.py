@@ -2,6 +2,7 @@
 # pylint: disable=protected-access
 import asyncio
 import unittest
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -23,7 +24,6 @@ from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component, setup_component
 
-from tests.async_mock import Mock, patch
 from tests.common import async_mock_service, get_test_home_assistant
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
@@ -705,4 +705,4 @@ async def test_script_variables(hass, caplog):
     await hass.services.async_call("script", "script3", {"break": 0}, blocking=True)
 
     assert len(mock_calls) == 4
-    assert mock_calls[3].data["value"] == "1"
+    assert mock_calls[3].data["value"] == 1

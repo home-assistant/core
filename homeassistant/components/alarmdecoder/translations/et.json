@@ -3,15 +3,37 @@
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
         },
+        "create_entry": {
+            "default": "AlarmDecoderiga \u00fchendamine \u00f5nnestus."
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
         "step": {
+            "protocol": {
+                "data": {
+                    "device_baudrate": "Seadme edastuskiirus",
+                    "device_path": "Seadme asukoht",
+                    "host": "",
+                    "port": ""
+                },
+                "title": "M\u00e4\u00e4ra \u00fchenduse seaded"
+            },
             "user": {
                 "data": {
                     "protocol": "Protokoll"
-                }
+                },
+                "title": "Vali AlarmDecoderi protokoll"
             }
         }
     },
     "options": {
+        "error": {
+            "int": "Allolev v\u00e4li peab olema t\u00e4isarv.",
+            "loop_range": "RF Loop peab olema t\u00e4isarv vahemikus 1\u20134.",
+            "loop_rfid": "RF Loopi ei saa kasutada ilma RF Serial-ita.",
+            "relay_inclusive": "Releeaadress ja releekanal s\u00f5ltuvad \u00fcksteisest ja need peavad olema koos."
+        },
         "step": {
             "arm_settings": {
                 "data": {
@@ -37,14 +59,14 @@
                     "zone_rfid": "RF jada\u00fchendus",
                     "zone_type": "Ala t\u00fc\u00fcp"
                 },
-                "description": "Sisestage ala {zone_number} \u00fcksikasjad. Ala {zone_number} kustutamiseks j\u00e4tke ala nimi t\u00fchjaks.",
+                "description": "Sisesta ala {zone_number} \u00fcksikasjad. Ala {zone_number} kustutamiseks j\u00e4ta ala nimi t\u00fchjaks.",
                 "title": "Seadista AlarmDecoder"
             },
             "zone_select": {
                 "data": {
                     "zone_number": "Ala number"
                 },
-                "description": "Sisestage ala number mida soovite lisada, muuta v\u00f5i eemaldada.",
+                "description": "Sisesta ala number mida soovid lisada, muuta v\u00f5i eemaldada.",
                 "title": "Seadista AlarmDecoder"
             }
         }

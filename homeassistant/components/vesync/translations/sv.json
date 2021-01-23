@@ -1,11 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_setup": "Endast en Vesync-instans \u00e4r till\u00e5ten"
-        },
-        "error": {
-            "invalid_login": "Ogiltigt anv\u00e4ndarnamn eller l\u00f6senord"
-        },
         "step": {
             "user": {
                 "data": {

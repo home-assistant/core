@@ -7,7 +7,7 @@
             "default": "Succesvol verbonden met AlarmDecoder."
         },
         "error": {
-            "service_unavailable": "Kon niet verbinden"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "protocol": {
@@ -59,6 +59,7 @@
                     "zone_rfid": "RF Serieel",
                     "zone_type": "Zone Type"
                 },
+                "description": "Voer details in voor zone {zone_number}. Om zone {zone_number} te verwijderen, laat u Zone Name leeg.",
                 "title": "Configureer AlarmDecoder"
             },
             "zone_select": {

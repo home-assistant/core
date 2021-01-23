@@ -1,10 +1,9 @@
 {
     "config": {
         "error": {
-            "already_configured": "Bramka jest ju\u017c skonfigurowana.",
-            "id_exists": "Identyfikator bramki ju\u017c istnieje.",
-            "serial_error": "B\u0142\u0105d po\u0142\u0105czenia z urz\u0105dzeniem",
-            "timeout": "Przekroczono limit czasu pr\u00f3by po\u0142\u0105czenia."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "id_exists": "Identyfikator bramki ju\u017c istnieje"
         },
         "step": {
             "init": {

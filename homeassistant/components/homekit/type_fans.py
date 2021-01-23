@@ -49,7 +49,7 @@ class Fan(HomeAccessory):
     """
 
     def __init__(self, *args):
-        """Initialize a new Light accessory object."""
+        """Initialize a new Fan accessory object."""
         super().__init__(*args, category=CATEGORY_FAN)
         chars = []
         state = self.hass.states.get(self.entity_id)

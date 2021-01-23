@@ -6,7 +6,7 @@
             "unknown": "\u53d1\u751f\u672a\u77e5\u7684\u9519\u8bef"
         },
         "error": {
-            "auth_error": "\u53cc\u91cd\u8ba4\u8bc1\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5\u3002"
+            "invalid_auth": "\u9a8c\u8bc1\u7801\u65e0\u6548"
         },
         "step": {
             "auth": {

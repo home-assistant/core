@@ -1,5 +1,5 @@
 """The tests for the MQTT automation."""
-from unittest import mock
+from unittest.mock import ANY
 
 import pytest
 
@@ -8,6 +8,7 @@ from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_O
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_fire_mqtt_message, async_mock_service, mock_component
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 
 @pytest.fixture
@@ -115,9 +116,7 @@ async def test_encoding_default(hass, calls, mqtt_mock):
         },
     )
 
-    mqtt_mock.async_subscribe.assert_called_once_with(
-        "test-topic", mock.ANY, 0, "utf-8"
-    )
+    mqtt_mock.async_subscribe.assert_called_once_with("test-topic", ANY, 0, "utf-8")
 
 
 async def test_encoding_custom(hass, calls, mqtt_mock):
@@ -133,4 +132,4 @@ async def test_encoding_custom(hass, calls, mqtt_mock):
         },
     )
 
-    mqtt_mock.async_subscribe.assert_called_once_with("test-topic", mock.ANY, 0, None)
+    mqtt_mock.async_subscribe.assert_called_once_with("test-topic", ANY, 0, None)

@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Z-Wave jest ju\u017c skonfigurowany.",
-            "one_instance_only": "Komponent obs\u0142uguje tylko jedn\u0105 instancj\u0119 Z-Wave"
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
             "option_error": "Walidacja Z-Wave si\u0119 nie powiod\u0142a. Czy \u015bcie\u017cka do kontrolera Z-Wave USB jest prawid\u0142owa?"
@@ -21,9 +21,9 @@
     "state": {
         "_": {
             "dead": "martwy",
-            "initializing": "Inicjowanie",
-            "ready": "Gotowe",
-            "sleeping": "U\u015bpiony"
+            "initializing": "inicjalizacja",
+            "ready": "gotowy",
+            "sleeping": "u\u015bpiony"
         },
         "query_stage": {
             "dead": "martwy",

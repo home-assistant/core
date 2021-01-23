@@ -6,7 +6,6 @@
             "unknown": "Une erreur inconnue s'est produite."
         },
         "error": {
-            "invalid_pin": "Code PIN invalide, veuillez r\u00e9essayer.",
             "invalid_sgtin_or_pin": "Code SGTIN ou PIN invalide, veuillez r\u00e9essayer.",
             "press_the_button": "Veuillez appuyer sur le bouton bleu.",
             "register_failed": "\u00c9chec d'enregistrement. Veuillez r\u00e9essayer.",

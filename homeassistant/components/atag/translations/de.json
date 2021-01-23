@@ -4,7 +4,7 @@
             "already_configured": "Dieses Ger\u00e4t wurde bereits zu HomeAssistant hinzugef\u00fcgt"
         },
         "error": {
-            "connection_error": "Verbindung fehlgeschlagen, versuchen Sie es erneut"
+            "cannot_connect": "Verbindungsfehler"
         },
         "step": {
             "user": {
@@ -16,6 +16,5 @@
                 "title": "Stellen Sie eine Verbindung zum Ger\u00e4t her"
             }
         }
-    },
-    "title": "Atag"
+    }
 }

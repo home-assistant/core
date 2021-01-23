@@ -6,7 +6,7 @@
         },
         "error": {
             "connection_error": "No se puede conectar a ESP. Aseg\u00farate de que tu archivo YAML contenga una l\u00ednea 'api:'.",
-            "invalid_password": "\u00a1Contrase\u00f1a incorrecta!",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "resolve_error": "No se puede resolver la direcci\u00f3n de ESP. Si el error persiste, configura una direcci\u00f3n IP est\u00e1tica: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",
