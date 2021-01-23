@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import Event, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -235,7 +235,7 @@ async def _gw_start(hass: HomeAssistantType, gateway: BaseAsyncGateway):
         gateway.start()
     )  # store the connect task so it can be cancelled in gw_stop
 
-    async def stop_this_gw():
+    async def stop_this_gw(_: Event):
         await gw_stop(hass, gateway)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_this_gw)
