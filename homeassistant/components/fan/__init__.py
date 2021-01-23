@@ -453,7 +453,7 @@ def normalize_speed_list(speed_list: List):
 
     Examples:
       input: ["off", "low", "low-medium", "medium", "medium-high", "high"]
-      output: [low", "low-medium", "medium", "medium-high", "high"]
+      output: ["low", "low-medium", "medium", "medium-high", "high"]
 
       input: ["off", "auto", "low", "medium", "high"]
       output: ["low", "medium", "high"]
