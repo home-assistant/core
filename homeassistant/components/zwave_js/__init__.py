@@ -14,6 +14,7 @@ from homeassistant.helpers import device_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
+from .api import async_register_api
 from .const import (
     DATA_CLIENT,
     DATA_UNSUBSCRIBE,
@@ -22,7 +23,6 @@ from .const import (
     PLATFORMS,
 )
 from .discovery import async_discover_values
-from .websocket_api import async_register_api
 
 LOGGER = logging.getLogger(__name__)
 CONNECT_TIMEOUT = 10

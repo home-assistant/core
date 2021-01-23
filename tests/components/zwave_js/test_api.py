@@ -1,12 +1,14 @@
 """Test the Z-Wave JS Websocket API."""
+from unittest.mock import patch
+
 from zwave_js_server.event import Event
 
+from homeassistant.components.zwave_js.api import ENTRY_ID, ID, NODE_ID, TYPE
 from homeassistant.components.zwave_js.const import DOMAIN
-from homeassistant.components.zwave_js.websocket_api import ENTRY_ID, ID, NODE_ID, TYPE
 from homeassistant.helpers.device_registry import async_get_registry
 
 
-async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
+async def test_api(hass, integration, multisensor_6, hass_ws_client):
     """Test the network and node status websocket commands."""
     entry = integration
     ws_client = await hass_ws_client(hass)
@@ -151,3 +153,17 @@ async def test_remove_node(
         identifiers={(DOMAIN, "3245146787-67")},
     )
     assert device is None
+
+
+async def test_dump_view(integration, hass_client):
+    """Test the HTTP dump view."""
+    client = await hass_client()
+    with patch(
+        "zwave_js_server.dump.dump_msgs",
+        return_value=[{"hello": "world"}, {"second": "msg"}],
+    ):
+        resp = await client.post(
+            "/api/zwave_js/dump", json={"config_entry_id": integration.entry_id}
+        )
+    assert resp.status == 200
+    assert await resp.text() == '{"hello": "world"}\n{"second": "msg"}\n'
