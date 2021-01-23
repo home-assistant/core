@@ -89,7 +89,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Switch the light on, change brightness, change color."""
-        if self._ambient
+        if self._ambient:
             _LOGGER.debug("Switching ambient light on for: %s", self.name)
             try:
                 await self.hass.async_add_executor_job(
