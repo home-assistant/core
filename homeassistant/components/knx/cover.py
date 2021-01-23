@@ -79,6 +79,9 @@ class KNXCover(KnxEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
+        # state shall be "unknown" when xknx travelcalculator is not initialized
+        if self._device.current_position() is None:
+            return None
         return self._device.is_closed()
 
     @property

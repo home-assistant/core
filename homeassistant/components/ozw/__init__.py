@@ -18,7 +18,6 @@ from openzwavemqtt.const import (
 from openzwavemqtt.models.node import OZWNode
 from openzwavemqtt.models.value import OZWValue
 from openzwavemqtt.util.mqtt_client import MQTTClient
-import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.hassio.handler import HassioAPIError
@@ -36,6 +35,7 @@ from .const import (
     DATA_UNSUBSCRIBE,
     DOMAIN,
     MANAGER,
+    NODES_VALUES,
     PLATFORMS,
     TOPIC_OPENZWAVE,
 )
@@ -51,7 +51,6 @@ from .websocket_api import async_register_api
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 DATA_DEVICES = "zwave-mqtt-devices"
 DATA_STOP_MQTT_CLIENT = "ozw_stop_mqtt_client"
 
@@ -68,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     ozw_data[DATA_UNSUBSCRIBE] = []
 
     data_nodes = {}
-    data_values = {}
+    hass.data[DOMAIN][NODES_VALUES] = data_values = {}
     removed_nodes = []
     manager_options = {"topic_prefix": f"{TOPIC_OPENZWAVE}/"}
 

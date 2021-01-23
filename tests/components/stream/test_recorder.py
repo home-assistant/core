@@ -1,6 +1,8 @@
 """The tests for hls streams."""
 from datetime import timedelta
-from io import BytesIO
+import logging
+import os
+import threading
 from unittest.mock import patch
 
 import av
@@ -14,39 +16,95 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video, preload_stream
 
+TEST_TIMEOUT = 10
 
-@pytest.mark.skip("Flaky in CI")
-async def test_record_stream(hass, hass_client):
+
+class SaveRecordWorkerSync:
+    """
+    Test fixture to manage RecordOutput thread for recorder_save_worker.
+
+    This is used to assert that the worker is started and stopped cleanly
+    to avoid thread leaks in tests.
+    """
+
+    def __init__(self):
+        """Initialize SaveRecordWorkerSync."""
+        self.reset()
+
+    def recorder_save_worker(self, *args, **kwargs):
+        """Mock method for patch."""
+        logging.debug("recorder_save_worker thread started")
+        assert self._save_thread is None
+        self._save_thread = threading.current_thread()
+        self._save_event.set()
+
+    def join(self):
+        """Verify save worker was invoked and block on shutdown."""
+        assert self._save_event.wait(timeout=TEST_TIMEOUT)
+        self._save_thread.join()
+
+    def reset(self):
+        """Reset callback state for reuse in tests."""
+        self._save_thread = None
+        self._save_event = threading.Event()
+
+
+@pytest.fixture()
+def record_worker_sync(hass):
+    """Patch recorder_save_worker for clean thread shutdown for test."""
+    sync = SaveRecordWorkerSync()
+    with patch(
+        "homeassistant.components.stream.recorder.recorder_save_worker",
+        side_effect=sync.recorder_save_worker,
+        autospec=True,
+    ):
+        yield sync
+
+
+async def test_record_stream(hass, hass_client, stream_worker_sync, record_worker_sync):
     """
     Test record stream.
 
-    Purposefully not mocking anything here to test full
-    integration with the stream component.
+    Tests full integration with the stream component, and captures the
+    stream worker and save worker to allow for clean shutdown of background
+    threads.  The actual save logic is tested in test_recorder_save below.
     """
     await async_setup_component(hass, "stream", {"stream": {}})
 
-    with patch("homeassistant.components.stream.recorder.recorder_save_worker"):
-        # Setup demo track
-        source = generate_h264_video()
-        stream = preload_stream(hass, source)
-        recorder = stream.add_provider("recorder")
-        stream.start()
+    stream_worker_sync.pause()
 
-        while True:
-            segment = await recorder.recv()
-            if not segment:
-                break
-            segments = segment.sequence
+    # Setup demo track
+    source = generate_h264_video()
+    stream = preload_stream(hass, source)
+    recorder = stream.add_provider("recorder")
+    stream.start()
 
-        stream.stop()
+    while True:
+        segment = await recorder.recv()
+        if not segment:
+            break
+        segments = segment.sequence
+        if segments > 1:
+            stream_worker_sync.resume()
 
-        assert segments > 1
+    stream.stop()
+    assert segments > 1
+
+    # Verify that the save worker was invoked, then block until its
+    # thread completes and is shutdown completely to avoid thread leaks.
+    record_worker_sync.join()
 
 
-@pytest.mark.skip("Flaky in CI")
-async def test_recorder_timeout(hass, hass_client):
-    """Test recorder timeout."""
+async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
+    """
+    Test recorder timeout.
+
+    Mocks out the cleanup to assert that it is invoked after a timeout.
+    This test does not start the recorder save thread.
+    """
     await async_setup_component(hass, "stream", {"stream": {}})
+
+    stream_worker_sync.pause()
 
     with patch(
         "homeassistant.components.stream.recorder.RecorderOutput.cleanup"
@@ -66,24 +124,28 @@ async def test_recorder_timeout(hass, hass_client):
 
         assert mock_cleanup.called
 
+        stream_worker_sync.resume()
+        stream.stop()
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
-@pytest.mark.skip("Flaky in CI")
-async def test_recorder_save():
+
+async def test_recorder_save(tmpdir):
     """Test recorder save."""
     # Setup
     source = generate_h264_video()
-    output = BytesIO()
-    output.name = "test.mp4"
+    filename = f"{tmpdir}/test.mp4"
 
     # Run
-    recorder_save_worker(output, [Segment(1, source, 4)], "mp4")
+    recorder_save_worker(filename, [Segment(1, source, 4)], "mp4")
 
     # Assert
-    assert output.getvalue()
+    assert os.path.exists(filename)
 
 
-@pytest.mark.skip("Flaky in CI")
-async def test_record_stream_audio(hass, hass_client):
+async def test_record_stream_audio(
+    hass, hass_client, stream_worker_sync, record_worker_sync
+):
     """
     Test treatment of different audio inputs.
 
@@ -98,23 +160,31 @@ async def test_record_stream_audio(hass, hass_client):
         ("empty", 0),  # audio stream with no packets
         (None, 0),  # no audio stream
     ):
-        with patch("homeassistant.components.stream.recorder.recorder_save_worker"):
-            # Setup demo track
-            source = generate_h264_video(
-                container_format="mov", audio_codec=a_codec
-            )  # mov can store PCM
-            stream = preload_stream(hass, source)
-            recorder = stream.add_provider("recorder")
-            stream.start()
+        record_worker_sync.reset()
+        stream_worker_sync.pause()
 
-            while True:
-                segment = await recorder.recv()
-                if not segment:
-                    break
-                last_segment = segment
+        # Setup demo track
+        source = generate_h264_video(
+            container_format="mov", audio_codec=a_codec
+        )  # mov can store PCM
+        stream = preload_stream(hass, source)
+        recorder = stream.add_provider("recorder")
+        stream.start()
 
-            result = av.open(last_segment.segment, "r", format="mp4")
+        while True:
+            segment = await recorder.recv()
+            if not segment:
+                break
+            last_segment = segment
+            stream_worker_sync.resume()
 
-            assert len(result.streams.audio) == expected_audio_streams
-            result.close()
-            stream.stop()
+        result = av.open(last_segment.segment, "r", format="mp4")
+
+        assert len(result.streams.audio) == expected_audio_streams
+        result.close()
+        stream.stop()
+        await hass.async_block_till_done()
+
+        # Verify that the save worker was invoked, then block until its
+        # thread completes and is shutdown completely to avoid thread leaks.
+        record_worker_sync.join()

@@ -56,7 +56,6 @@ homeassistant/components/auth/* @home-assistant/core
 homeassistant/components/automation/* @home-assistant/core
 homeassistant/components/avea/* @pattyland
 homeassistant/components/awair/* @ahayworth @danielsjf
-homeassistant/components/aws/* @awarecan
 homeassistant/components/axis/* @Kane610
 homeassistant/components/azure_devops/* @timmo001
 homeassistant/components/azure_event_hub/* @eavanvalkenburg
@@ -108,6 +107,7 @@ homeassistant/components/derivative/* @afaucogney
 homeassistant/components/device_automation/* @home-assistant/core
 homeassistant/components/devolo_home_control/* @2Fake @Shutgun
 homeassistant/components/dexcom/* @gagebenne
+homeassistant/components/dhcp/* @bdraco
 homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/directv/* @ctalkington
 homeassistant/components/discogs/* @thibmaek
@@ -257,7 +257,7 @@ homeassistant/components/luci/* @mzdrale
 homeassistant/components/luftdaten/* @fabaff
 homeassistant/components/lupusec/* @majuss
 homeassistant/components/lutron/* @JonGilmore
-homeassistant/components/lutron_caseta/* @swails
+homeassistant/components/lutron_caseta/* @swails @bdraco
 homeassistant/components/mastodon/* @fabaff
 homeassistant/components/matrix/* @tinloaf
 homeassistant/components/mcp23017/* @jardiamj
@@ -290,7 +290,7 @@ homeassistant/components/neato/* @dshokouhi @Santobert
 homeassistant/components/nederlandse_spoorwegen/* @YarmoM
 homeassistant/components/nello/* @pschmitt
 homeassistant/components/ness_alarm/* @nickw444
-homeassistant/components/nest/* @awarecan @allenporter
+homeassistant/components/nest/* @allenporter
 homeassistant/components/netatmo/* @cgtobi
 homeassistant/components/netdata/* @fabaff
 homeassistant/components/nexia/* @bdraco
@@ -421,6 +421,7 @@ homeassistant/components/solarlog/* @Ernst79
 homeassistant/components/solax/* @squishykid
 homeassistant/components/soma/* @ratsept
 homeassistant/components/somfy/* @tetienne
+homeassistant/components/somfy_mylink/* @bdraco
 homeassistant/components/sonarr/* @ctalkington
 homeassistant/components/songpal/* @rytilahti @shenxn
 homeassistant/components/sonos/* @cgtobi
@@ -536,6 +537,7 @@ homeassistant/components/zodiac/* @JulienTant
 homeassistant/components/zone/* @home-assistant/core
 homeassistant/components/zoneminder/* @rohankapoorcom
 homeassistant/components/zwave/* @home-assistant/z-wave
+homeassistant/components/zwave_js/* @home-assistant/z-wave
 
 # Individual files
 homeassistant/components/demo/weather @fabaff

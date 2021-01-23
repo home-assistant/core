@@ -37,7 +37,11 @@ from homeassistant.helpers.typing import (
 )
 import homeassistant.util.color as color_util
 
-from . import async_create_connect_hyperion_client, get_hyperion_unique_id
+from . import (
+    async_create_connect_hyperion_client,
+    create_hyperion_client,
+    get_hyperion_unique_id,
+)
 from .const import (
     CONF_ON_UNLOAD,
     CONF_PRIORITY,
@@ -132,12 +136,12 @@ async def async_setup_platform(
 
     # First, connect to the server and get the server id (which will be unique_id on a config_entry
     # if there is one).
-    hyperion_client = await async_create_connect_hyperion_client(host, port)
-    if not hyperion_client:
-        raise PlatformNotReady
-    hyperion_id = await hyperion_client.async_sysinfo_id()
-    if not hyperion_id:
-        raise PlatformNotReady
+    async with create_hyperion_client(host, port) as hyperion_client:
+        if not hyperion_client:
+            raise PlatformNotReady
+        hyperion_id = await hyperion_client.async_sysinfo_id()
+        if not hyperion_id:
+            raise PlatformNotReady
 
     future_unique_id = get_hyperion_unique_id(
         hyperion_id, instance, TYPE_HYPERION_LIGHT

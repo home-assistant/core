@@ -66,6 +66,7 @@ FLOWS = [
     "flume",
     "flunearyou",
     "forked_daapd",
+    "foscam",
     "freebox",
     "fritzbox",
     "garmin_connect",
@@ -116,6 +117,7 @@ FLOWS = [
     "locative",
     "logi_circle",
     "luftdaten",
+    "lutron_caseta",
     "mailgun",
     "melcloud",
     "met",
@@ -190,6 +192,7 @@ FLOWS = [
     "solarlog",
     "soma",
     "somfy",
+    "somfy_mylink",
     "sonarr",
     "songpal",
     "sonos",
@@ -239,5 +242,6 @@ FLOWS = [
     "yeelight",
     "zerproc",
     "zha",
-    "zwave"
+    "zwave",
+    "zwave_js"
 ]

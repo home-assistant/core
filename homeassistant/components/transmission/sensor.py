@@ -1,9 +1,14 @@
 """Support for monitoring the Transmission BitTorrent client API."""
+from typing import List
+
+from transmissionrpc.torrent import Torrent
+
 from homeassistant.const import CONF_NAME, DATA_RATE_MEGABYTES_PER_SECOND, STATE_IDLE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
+from . import TransmissionClient
 from .const import (
     CONF_LIMIT,
     CONF_ORDER,
@@ -38,7 +43,7 @@ class TransmissionSensor(Entity):
 
     def __init__(self, tm_client, client_name, sensor_name, sub_type=None):
         """Initialize the sensor."""
-        self._tm_client = tm_client
+        self._tm_client = tm_client  # type: TransmissionClient
         self._client_name = client_name
         self._name = sensor_name
         self._sub_type = sub_type
@@ -163,7 +168,7 @@ class TransmissionTorrentsSensor(TransmissionSensor):
         self._state = len(torrents)
 
 
-def _filter_torrents(torrents, statuses=None):
+def _filter_torrents(torrents: List[Torrent], statuses=None) -> List[Torrent]:
     return [
         torrent
         for torrent in torrents
