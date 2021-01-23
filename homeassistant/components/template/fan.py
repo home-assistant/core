@@ -219,7 +219,7 @@ class TemplateFan(TemplateEntity, FanEntity):
 
         self._state = STATE_OFF
         self._speed = None
-        self._percentage = 0
+        self._percentage = None
         self._oscillating = None
         self._direction = None
 
@@ -304,25 +304,34 @@ class TemplateFan(TemplateEntity, FanEntity):
         if self._set_speed_script is None:
             return
 
-        if speed in self._speed_list:
-            self._speed = speed
-            self._percentage = self.speed_to_percentage(speed)
-            await self._set_speed_script.async_run(
-                {ATTR_SPEED: speed}, context=self._context
-            )
-        else:
+        if speed not in self._speed_list:
             _LOGGER.error(
                 "Received invalid speed: %s. Expected: %s", speed, self._speed_list
             )
+            return
+
+        self._state = STATE_OFF if speed == SPEED_OFF else STATE_ON
+        self._speed = speed
+        self._percentage = self.speed_to_percentage(speed)
+        await self._set_speed_script.async_run(
+            {ATTR_SPEED: speed}, context=self._context
+        )
 
     async def async_set_percentage(self, percentage: int) -> None:
-        """Set the speed of the fan."""
+        """Set the percentage speed of the fan."""
         if self._set_percentage_script is None:
             return
 
-        self._speed = self.percentage_to_speed(percentage)
-        self._percentage = percentage
+        try:
+            percentage = int(float(percentage))
+        except ValueError:
+            _LOGGER.error("Received invalid percentage: %s", percentage)
+            return
 
+        self._state = STATE_OFF if percentage == 0 else STATE_ON
+        if self._speed_list:
+            self._speed = self.percentage_to_speed(percentage)
+        self._percentage = percentage
         await self._set_percentage_script.async_run(
             {ATTR_PERCENTAGE: percentage}, context=self._context
         )
@@ -387,7 +396,7 @@ class TemplateFan(TemplateEntity, FanEntity):
         if self._percentage_template is not None:
             self.add_template_attribute(
                 "_percentage",
-                self._speed_template,
+                self._percentage_template,
                 None,
                 self._update_percentage,
                 none_on_template_error=True,
@@ -424,6 +433,7 @@ class TemplateFan(TemplateEntity, FanEntity):
         speed = str(speed)
 
         if speed in self._speed_list:
+            self._state = STATE_OFF if speed == SPEED_OFF else STATE_ON
             self._speed = speed
             self._percentage = self.speed_to_percentage(speed)
         elif speed in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
@@ -439,11 +449,19 @@ class TemplateFan(TemplateEntity, FanEntity):
     @callback
     def _update_percentage(self, percentage):
         # Validate percentage
-        percentage = int(percentage)
+        try:
+            percentage = int(float(percentage))
+        except ValueError:
+            _LOGGER.error("Received invalid percentage: %s", percentage)
+            self._speed = None
+            self._percentage = 0
+            return
 
         if percentage >= 0 and percentage <= 100:
+            self._state = STATE_OFF if percentage == 0 else STATE_ON
             self._percentage = percentage
-            self._speed = self.percentage_to_speed(percentage)
+            if self._speed_list:
+                self._speed = self.percentage_to_speed(percentage)
         else:
             _LOGGER.error("Received invalid percentage: %s", percentage)
             self._speed = None
