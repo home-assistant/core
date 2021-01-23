@@ -88,7 +88,10 @@ def _get_schema_common() -> dict:
     schema = {
         vol.Required(
             CONF_VERSION, default="", description={"suggested_value": DEFAULT_VERSION}
-        ): str
+        ): str,
+        vol.Optional(
+            CONF_PERSISTENCE_FILE,
+        ): str,
     }
     return schema
 

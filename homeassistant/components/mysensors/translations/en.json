@@ -21,7 +21,6 @@
         "data": {
           "optimistic": "optimistic",
           "persistence": "persistence",
-          "persistence_file": "persistence file name",
           "gateway_type_mqtt": "MQTT"
         },
         "description": "Choose connection method to the gateway"
@@ -31,7 +30,8 @@
         "data": {
           "device": "IP address of the gateway",
           "tcp_port": "port",
-          "version": "MySensors version"
+          "version": "MySensors version",
+          "persistence_file": "persistence file (leave empty to auto-generate)"
         }
       },
       "gw_serial": {
@@ -39,7 +39,8 @@
         "data": {
           "device": "Serial port",
           "baud_rate": "baud rate",
-          "version": "MySensors version"
+          "version": "MySensors version",
+          "persistence_file": "persistence file (leave empty to auto-generate)"
         }
       },
       "gw_mqtt": {
@@ -48,7 +49,8 @@
           "retain": "mqtt retain",
           "topic_in_prefix": "prefix for input topics (topic_in_prefix)",
           "topic_out_prefix": "prefix for output topics (topic_out_prefix)",
-          "version": "MySensors version"
+          "version": "MySensors version",
+          "persistence_file": "persistence file (leave empty to auto-generate)"
         }
       }
     }
