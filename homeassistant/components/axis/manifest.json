@@ -15,5 +15,6 @@
     { "hostname": "axis-b8a44f*", "macaddress": "B8A44F*" }
   ],
   "after_dependencies": ["mqtt"],
-  "codeowners": ["@Kane610"]
+  "codeowners": ["@Kane610"],
+  "quality_scale": "platinum"
 }
