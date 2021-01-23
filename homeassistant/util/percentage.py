@@ -1,6 +1,7 @@
 """Percentage util functions."""
 
-from typing import List
+from math import ceil
+from typing import List, Tuple
 
 
 def ordered_list_item_to_percentage(ordered_list: List[str], item: str) -> int:
@@ -20,8 +21,8 @@ def ordered_list_item_to_percentage(ordered_list: List[str], item: str) -> int:
         raise ValueError
 
     list_len = len(ordered_list)
-    list_offset = ordered_list.index(item)
-    return (list_offset * 100) // list_len
+    list_position = ordered_list.index(item) + 1
+    return (list_position * 100) // list_len
 
 
 def percentage_to_ordered_list_item(ordered_list: List[str], percentage: int) -> str:
@@ -41,36 +42,35 @@ def percentage_to_ordered_list_item(ordered_list: List[str], percentage: int) ->
         raise ValueError
 
     for offset, speed in enumerate(ordered_list):
-        upper_bound = (offset * 100) // list_len
+        list_position = offset + 1
+        upper_bound = (list_position * 100) // list_len
         if percentage <= upper_bound:
             return speed
 
     return ordered_list[-1]
 
 
-def convert_ranged_value_to_percentage(low: float, high: float, value: float) -> int:
+def ranged_value_to_percentage(range: Tuple[float, float], value: float) -> int:
     """Given a range of low and high values convert a single value to a percentage.
 
     Given a low value of 1 and a high value of 255 this function
     will return:
 
-    255: 100
-    127: 50
-    10: 4
+    (1,255), 255: 100
+    (1,255), 127: 50
+    (1,255), 10: 4
     """
-    return round(value / (high - low + 1) * 100)
+    return ceil(value / (range[1] - range[0] + 1) * 100)
 
 
-def convert_percentage_to_ranged_value(
-    low: float, high: float, percentage: int
-) -> float:
+def percentage_to_ranged_value(range: Tuple[float, float], percentage: int) -> float:
     """Given a range of low and high values convert a percentage to a single value.
 
     Given a low value of 1 and a high value of 255 this function
     will return:
 
-    100: 255
-    50: 127.5
-    4: 10.2
+    (1,255), 100: 255
+    (1,255), 50: 127.5
+    (1,255), 4: 10.2
     """
-    return (high - low + 1) * percentage / 100
+    return (range[1] - range[0] + 1) * percentage / 100
