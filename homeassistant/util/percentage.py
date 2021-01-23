@@ -54,7 +54,9 @@ def percentage_to_ordered_list_item(ordered_list: List[str], percentage: int) ->
     return ordered_list[-1]
 
 
-def ranged_value_to_percentage(range: Tuple[float, float], value: float) -> int:
+def ranged_value_to_percentage(
+    low_high_range: Tuple[float, float], value: float
+) -> int:
     """Given a range of low and high values convert a single value to a percentage.
 
     When using this utility for fan speeds, do not include 0 if it is off
@@ -66,10 +68,12 @@ def ranged_value_to_percentage(range: Tuple[float, float], value: float) -> int:
     (1,255), 127: 50
     (1,255), 10: 4
     """
-    return ceil(value / (range[1] - range[0] + 1) * 100)
+    return ceil(value / (low_high_range[1] - low_high_range[0] + 1) * 100)
 
 
-def percentage_to_ranged_value(range: Tuple[float, float], percentage: int) -> float:
+def percentage_to_ranged_value(
+    low_high_range: Tuple[float, float], percentage: int
+) -> float:
     """Given a range of low and high values convert a percentage to a single value.
 
     When using this utility for fan speeds, do not include 0 if it is off
@@ -81,4 +85,4 @@ def percentage_to_ranged_value(range: Tuple[float, float], percentage: int) -> f
     (1,255), 50: 127.5
     (1,255), 4: 10.2
     """
-    return (range[1] - range[0] + 1) * percentage / 100
+    return (low_high_range[1] - low_high_range[0] + 1) * percentage / 100
