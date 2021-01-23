@@ -1,0 +1,25 @@
+{
+	"madoka": {
+		"temperatures": {
+			"indoor": 30,
+			"outdoor": 30
+		},
+		"operation_mode": "AUTO",
+		"fan_speed": {
+			"cooling": "AUTO",
+			"heating": "AUTO"
+		},
+		"set_point": {
+			"cooling": 23,
+			"heating": 23
+		},
+		"power_state": true
+	},
+	"defaults": {
+		"fan_mode": "off",
+		"hvac_action": "off",
+		"hvac_mode": "off",
+		"current_temperature": 16,
+		"temperature": 16
+	}
+}
