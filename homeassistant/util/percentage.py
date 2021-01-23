@@ -7,7 +7,9 @@ from typing import List, Tuple
 def ordered_list_item_to_percentage(ordered_list: List[str], item: str) -> int:
     """Determine the percentage of an item in an ordered list.
 
-    Given the list: ["low","medium","high","very_high"], this
+    When using this utility for fan speeds, do not include "off"
+
+    Given the list: ["low", "medium", "high", "very_high"], this
     function will return the following when when the item is passed
     in:
 
@@ -28,7 +30,9 @@ def ordered_list_item_to_percentage(ordered_list: List[str], item: str) -> int:
 def percentage_to_ordered_list_item(ordered_list: List[str], percentage: int) -> str:
     """Find the item that most closely matches the percentage in an ordered list.
 
-    Given the list: ["low","medium","high","very_high"], this
+    When using this utility for fan speeds, do not include "off"
+
+    Given the list: ["low", "medium", "high", "very_high"], this
     function will return the following when when the item is passed
     in:
 
@@ -53,6 +57,8 @@ def percentage_to_ordered_list_item(ordered_list: List[str], percentage: int) ->
 def ranged_value_to_percentage(range: Tuple[float, float], value: float) -> int:
     """Given a range of low and high values convert a single value to a percentage.
 
+    When using this utility for fan speeds, do not include 0 if it is off
+
     Given a low value of 1 and a high value of 255 this function
     will return:
 
@@ -65,6 +71,8 @@ def ranged_value_to_percentage(range: Tuple[float, float], value: float) -> int:
 
 def percentage_to_ranged_value(range: Tuple[float, float], percentage: int) -> float:
     """Given a range of low and high values convert a percentage to a single value.
+
+    When using this utility for fan speeds, do not include 0 if it is off
 
     Given a low value of 1 and a high value of 255 this function
     will return:
