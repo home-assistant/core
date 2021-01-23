@@ -120,6 +120,8 @@ class AisMqttSoftBridge(Entity):
             return "service unavailable"
         elif self._ais_mqtt_connection_code == 4:
             return "bad username or password"
+        elif self._ais_mqtt_connection_code == 5:
+            return "not authorised"
         return self._ais_mqtt_connection_code
 
     @property
@@ -167,6 +169,8 @@ class AisMqttSoftBridge(Entity):
 
     async def async_update(self):
         """Update the sensor."""
+        if self._ais_mqtt_connection_code != 0:
+            self._ais_mqtt_client = None
         if self._ais_mqtt_client is None:
             self._ais_mqtt_client = ais_mqtt.Client(self._client_id)
             self._ais_mqtt_client.username_pw_set(

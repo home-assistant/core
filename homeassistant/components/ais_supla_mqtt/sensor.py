@@ -127,6 +127,8 @@ class SuplaMqttSoftBridge(Entity):
             return "service unavailable"
         elif self._supla_mqtt_connection_code == 4:
             return "bad username or password"
+        elif self._supla_mqtt_connection_code == 5:
+            return "not authorised"
         return self._supla_mqtt_connection_code
 
     @property
@@ -179,6 +181,8 @@ class SuplaMqttSoftBridge(Entity):
 
     async def async_update(self):
         """Update the sensor."""
+        if self._supla_mqtt_connection_code != 0:
+            self._supla_mqtt_client = None
         if self._supla_mqtt_client is None:
             client_id = ais_global.get_sercure_android_id_dom()
             self._supla_mqtt_client = supla_mqtt.Client(client_id)
