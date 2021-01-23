@@ -527,6 +527,12 @@ async def test_set_percentage(hass, calls):
 
     _verify(hass, STATE_OFF, SPEED_OFF, 0, None, None)
 
+    # Set fan's percentage speed to 50
+    await common.async_turn_on(hass, _TEST_FAN, percentage=50)
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 50
+
+    _verify(hass, STATE_ON, SPEED_MEDIUM, 50, None, None)
+
 
 async def test_set_invalid_speed_from_initial_stage(hass, calls):
     """Test set invalid speed when fan is in initial state."""
