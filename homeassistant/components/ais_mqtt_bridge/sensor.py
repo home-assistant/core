@@ -144,7 +144,7 @@ class AisMqttSoftBridge(Entity):
         """Return the icon to use in the frontend."""
         return "mdi:bridge"
 
-    def on_ais_connect(self, client_, userdata, flags, result_code):
+    def on_ais_connect(self, client_, userdata, flags, result_code, properties):
         """Handle connection result.
         Subscribing in on_connect() means that if we lose the connection and
         reconnect then subscriptions will be renewed."""
@@ -172,7 +172,9 @@ class AisMqttSoftBridge(Entity):
         if self._ais_mqtt_connection_code != 0:
             self._ais_mqtt_client = None
         if self._ais_mqtt_client is None:
-            self._ais_mqtt_client = ais_mqtt.Client(self._client_id)
+            self._ais_mqtt_client = ais_mqtt.Client(
+                self._client_id, protocol=ais_mqtt.MQTTv5
+            )
             self._ais_mqtt_client.username_pw_set(
                 self._username, password=self._password
             )

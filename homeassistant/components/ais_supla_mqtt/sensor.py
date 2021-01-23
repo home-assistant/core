@@ -152,7 +152,7 @@ class SuplaMqttSoftBridge(Entity):
         """Return the icon to use in the frontend."""
         return "mdi:bridge"
 
-    def on_supla_connect(self, client_, userdata, flags, result_code):
+    def on_supla_connect(self, client_, userdata, flags, result_code, properties):
         """Handle connection result."""
         _LOGGER.debug(f"on_supla_connect {result_code}")
         self._supla_mqtt_connection_code = result_code
@@ -185,7 +185,9 @@ class SuplaMqttSoftBridge(Entity):
             self._supla_mqtt_client = None
         if self._supla_mqtt_client is None:
             client_id = ais_global.get_sercure_android_id_dom()
-            self._supla_mqtt_client = supla_mqtt.Client(client_id)
+            self._supla_mqtt_client = supla_mqtt.Client(
+                client_id, protocol=supla_mqtt.MQTTv5
+            )
             self._supla_mqtt_client.username_pw_set(
                 self._username, password=self._password
             )
