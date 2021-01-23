@@ -105,6 +105,7 @@ async def test_setup_yaml_already_converted(hass: HomeAssistantType) -> None:
     add_test_config_entry(hass)
     client = create_mock_client()
     await _setup_entity_yaml(hass, client=client)
+    assert client.async_client_disconnect.called
 
     # Setup should be skipped for the YAML config as there is a pre-existing config
     # entry.
@@ -127,6 +128,7 @@ async def test_setup_yaml_old_style_unique_id(hass: HomeAssistantType) -> None:
 
     client = create_mock_client()
     await _setup_entity_yaml(hass, client=client)
+    assert client.async_client_disconnect.called
 
     # The entity should have been created with the same entity_id.
     assert hass.states.get(TEST_YAML_ENTITY_ID) is not None
@@ -166,6 +168,7 @@ async def test_setup_yaml_new_style_unique_id_wo_config(
 
     client = create_mock_client()
     await _setup_entity_yaml(hass, client=client)
+    assert client.async_client_disconnect.called
 
     # The entity should have been created with the same entity_id.
     assert hass.states.get(entity_id_to_preserve) is not None
@@ -189,6 +192,7 @@ async def test_setup_yaml_no_registry_entity(hass: HomeAssistantType) -> None:
     # Add a pre-existing config entry.
     client = create_mock_client()
     await _setup_entity_yaml(hass, client=client)
+    assert client.async_client_disconnect.called
 
     # The entity should have been created with the same entity_id.
     assert hass.states.get(TEST_YAML_ENTITY_ID) is not None
@@ -210,6 +214,7 @@ async def test_setup_yaml_not_ready(hass: HomeAssistantType) -> None:
     client = create_mock_client()
     client.async_client_connect = AsyncMock(return_value=False)
     await _setup_entity_yaml(hass, client=client)
+    assert client.async_client_disconnect.called
     assert hass.states.get(TEST_YAML_ENTITY_ID) is None
 
 
@@ -236,6 +241,7 @@ async def test_setup_config_entry_not_ready_switch_instance_fail(
     client = create_mock_client()
     client.async_client_switch_instance = AsyncMock(return_value=False)
     await setup_test_config_entry(hass, hyperion_client=client)
+    assert client.async_client_disconnect.called
     assert hass.states.get(TEST_ENTITY_ID_1) is None
 
 
@@ -252,6 +258,7 @@ async def test_setup_config_entry_not_ready_load_state_fail(
     )
 
     await setup_test_config_entry(hass, hyperion_client=client)
+    assert client.async_client_disconnect.called
     assert hass.states.get(TEST_ENTITY_ID_1) is None
 
 
@@ -802,6 +809,7 @@ async def test_setup_entry_no_token_reauth(hass: HomeAssistantType) -> None:
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
     ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        assert client.async_client_disconnect.called
         mock_flow_init.assert_called_once_with(
             DOMAIN,
             context={CONF_SOURCE: SOURCE_REAUTH},
@@ -825,6 +833,7 @@ async def test_setup_entry_bad_token_reauth(hass: HomeAssistantType) -> None:
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
     ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        assert client.async_client_disconnect.called
         mock_flow_init.assert_called_once_with(
             DOMAIN,
             context={CONF_SOURCE: SOURCE_REAUTH},

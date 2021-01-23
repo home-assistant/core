@@ -374,7 +374,7 @@ class MqttFan(MqttEntity, FanEntity):
         elif speed == SPEED_OFF:
             mqtt_payload = self._payload["SPEED_OFF"]
         else:
-            raise ValueError
+            raise ValueError(f"{speed} is not a valid fan speed")
 
         mqtt.async_publish(
             self.hass,
