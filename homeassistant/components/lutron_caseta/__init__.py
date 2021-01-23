@@ -5,7 +5,6 @@ import logging
 from aiolip import LIP
 from aiolip.data import LIPMode
 from aiolip.protocol import LIP_BUTTON_PRESS
-from pylutron_caseta import BridgeResponseError
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
@@ -96,7 +95,7 @@ async def async_setup_entry(hass, config_entry):
     certfile = hass.config.path(config_entry.data[CONF_CERTFILE])
     ca_certs = hass.config.path(config_entry.data[CONF_CA_CERTS])
 
-    bridge = LIPSmartbridge.create_tls(
+    bridge = Smartbridge.create_tls(
         hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
     )
 
@@ -120,7 +119,7 @@ async def async_setup_entry(hass, config_entry):
         BRIDGE_LIP: None,
     }
 
-    lip_devices = await bridge.async_load_lip_devices()
+    lip_devices = bridge.lip_devices
     if lip_devices:
         # If the bridge also supports LIP (Lutron Integration Protocol)
         # we can fire events when pico buttons are pressed to allow
@@ -342,22 +341,3 @@ class LutronCasetaDevice(Entity):
     def should_poll(self):
         """No polling needed."""
         return False
-
-
-class LIPSmartbridge(Smartbridge):
-    """Smartbridge augmented with LIP support."""
-
-    async def async_load_lip_devices(self):
-        """Load the LIP device list from the SSL LEAP server interface."""
-        try:
-            device_json = await self._request("ReadRequest", "/server/2/id")
-        except BridgeResponseError:
-            # Only the PRO and RASelect2 hubs support getting the LIP devices
-            return
-
-        devices = device_json.Body.get("LIPIdList", {}).get("Devices", {})
-        return {
-            device["ID"]: device
-            for device in devices
-            if "ID" in device and "Name" in device
-        }
