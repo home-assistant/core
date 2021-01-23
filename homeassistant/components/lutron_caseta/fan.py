@@ -11,6 +11,7 @@ from homeassistant.components.fan import (
     SPEED_OFF,
     SUPPORT_SET_SPEED,
     FanEntity,
+    percentage_compat,
 )
 
 from . import LutronCasetaDevice
@@ -75,7 +76,13 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
         """Flag supported features. Speed Only."""
         return SUPPORT_SET_SPEED
 
-    async def async_turn_on(self, speed: str = None, **kwargs):
+    # The fan entity model has changed. The @percentage_compat decorator will ensure
+    # the speed argument is set when a percentage is passed in.  When this entity is
+    # updated to use the new model and `speed` and # `set_speed` have been removed
+    # switch the decorator to @speed_compat to ensure the percentage argument will be
+    # filled for places that still pass in speed instead of percentage.
+    @percentage_compat
+    async def async_turn_on(self, speed: str = None, percentage: int = None, **kwargs):
         """Turn the fan on."""
         if speed is None:
             speed = SPEED_MEDIUM

@@ -21,6 +21,10 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,11 +57,34 @@ ATTR_SPEED_LIST = "speed_list"
 ATTR_OSCILLATING = "oscillating"
 ATTR_DIRECTION = "direction"
 
-INVALID_SPEEDS_FILTER = {"on", "auto", "smart"}
+# Invalid speeds do not conform to the entity model, but have crept
+# into core integrations at some point so we are temporarily
+# accommodating them in the transition to percentages.
+_NOT_SPEED_OFF = "off"
+_NOT_SPEED_AUTO = "auto"
+_NOT_SPEED_SMART = "smart"
+_NOT_SPEED_INTERVAL = "interval"
+_NOT_SPEED_IDLE = "idle"
+_NOT_SPEED_FAVORITE = "favorite"
+
+_NOT_SPEEDS_FILTER = {
+    _NOT_SPEED_OFF,
+    _NOT_SPEED_AUTO,
+    _NOT_SPEED_SMART,
+    _NOT_SPEED_INTERVAL,
+    _NOT_SPEED_IDLE,
+    _NOT_SPEED_FAVORITE,
+}
 
 _FAN_NATIVE = "_fan_native"
 
 OFF_SPEED_VALUES = [SPEED_OFF, None]
+
+NO_VALID_SPEEDS_EXCEPTION_MESSAGE = "The speed_list contains no valid speeds"
+
+
+class NoValidSpeedsError(ValueError):
+    """Exception class when there are no valid speeds."""
 
 
 @bind_hass
@@ -265,7 +292,7 @@ class FanEntity(ToggleEntity):
             return {ATTR_SPEED_LIST: self.speed_list}
         return {}
 
-    def speed_to_percentage(self, speed: str) -> Optional[int]:
+    def speed_to_percentage(self, speed: str) -> int:
         """
         Map a speed to a percentage.
 
@@ -286,26 +313,17 @@ class FanEntity(ToggleEntity):
 
         normalized_speed_list = self._normalized_speed_list
 
-        if speed not in normalized_speed_list:
-            return None
-
-        speeds_len = len(normalized_speed_list)
-        speed_offset = normalized_speed_list.index(speed)
-
-        return ((speed_offset) * 100) // (speeds_len - 1)
+        try:
+            return ordered_list_item_to_percentage(normalized_speed_list, speed)
+        except ValueError as ex:
+            raise NoValidSpeedsError(NO_VALID_SPEEDS_EXCEPTION_MESSAGE) from ex
 
     @property
     def _normalized_speed_list(self) -> List[str]:
-        """Filter out invalid speeds that have crept into fans over time."""
-        normalized_speed_list = [
-            speed for speed in self.speed_list if speed not in INVALID_SPEEDS_FILTER
-        ]
-        if normalized_speed_list and normalized_speed_list[0] != SPEED_OFF:
-            normalized_speed_list.insert(0, SPEED_OFF)
+        """Filter out non-speeds from the speed list."""
+        return normalize_speed_list(self.speed_list)
 
-        return normalized_speed_list
-
-    def percentage_to_speed(self, value: int) -> Optional[str]:
+    def percentage_to_speed(self, percentage: int) -> str:
         """
         Map a percentage onto self.speed_list.
 
@@ -324,21 +342,15 @@ class FanEntity(ToggleEntity):
         Until fans have been corrected a more complicated and dynamic
         mapping is used.
         """
-        if value == 0:
+        if percentage == 0:
             return SPEED_OFF
 
         normalized_speed_list = self._normalized_speed_list
-        speeds_len = len(normalized_speed_list)
 
-        if not speeds_len:
-            return None
-
-        for offset, speed in enumerate(normalized_speed_list[1:], start=1):
-            upper_bound = (offset * 100) // (speeds_len - 1)
-            if value <= upper_bound:
-                return speed
-
-        return normalized_speed_list[-1]
+        try:
+            return percentage_to_ordered_list_item(normalized_speed_list, percentage)
+        except ValueError as ex:
+            raise NoValidSpeedsError(NO_VALID_SPEEDS_EXCEPTION_MESSAGE) from ex
 
     @property
     def state_attributes(self) -> dict:
@@ -430,3 +442,24 @@ def speed_compat(func: Callable) -> Callable:
         return check_func(self, speed=speed, percentage=percentage, **kwargs)
 
     return wrap_turn_on
+
+
+def normalize_speed_list(speed_list: List):
+    """Filter out non-speeds from the speed list.
+
+    The goal is to get the speeds in a list from lowest to
+    highest by removing speeds that are not valid or out of order
+    so we can map them to percentages.
+
+    Examples:
+      input: ["off", "low", "low-medium", "medium", "medium-high", "high"]
+      output: ["low", "low-medium", "medium", "medium-high", "high"]
+
+      input: ["off", "auto", "low", "medium", "high"]
+      output: ["low", "medium", "high"]
+
+      input: ["off", "1", "2", "3", "4", "5", "6", "7", "smart"]
+      output: ["1", "2", "3", "4", "5", "6", "7"]
+    """
+
+    return [speed for speed in speed_list if speed.lower() not in _NOT_SPEEDS_FILTER]

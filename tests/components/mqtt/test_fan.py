@@ -435,15 +435,6 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     assert state.state is STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_speed(hass, "fan.test", "cUsToM")
-    mqtt_mock.async_publish.assert_called_once_with(
-        "speed-command-topic", "cUsToM", 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get("fan.test")
-    assert state.state is STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-
 
 async def test_attributes(hass, mqtt_mock):
     """Test attributes."""
@@ -520,13 +511,6 @@ async def test_attributes(hass, mqtt_mock):
     assert state.state is STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
     assert state.attributes.get(fan.ATTR_SPEED) == "off"
-    assert state.attributes.get(fan.ATTR_OSCILLATING) is False
-
-    await common.async_set_speed(hass, "fan.test", "cUsToM")
-    state = hass.states.get("fan.test")
-    assert state.state is STATE_OFF
-    assert state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes.get(fan.ATTR_SPEED) == "cUsToM"
     assert state.attributes.get(fan.ATTR_OSCILLATING) is False
 
 
