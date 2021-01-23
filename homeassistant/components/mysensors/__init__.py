@@ -269,7 +269,7 @@ def setup_mysensors_platform(
         gateway_id, node_id, child_id, value_type = dev_id
         gateway: Optional[BaseAsyncGateway] = get_mysensors_gateway(hass, gateway_id)
         if not gateway:
-            _LOGGER.warning("skipping setup of %s, no gateway found.", dev_id)
+            _LOGGER.warning("Skipping setup of %s, no gateway found", dev_id)
             continue
         device_class_copy = device_class
         if isinstance(device_class, dict):
