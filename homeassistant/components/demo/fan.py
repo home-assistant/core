@@ -24,6 +24,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the demo fan platform."""
     async_add_entities(
         [
+            # These fans implement the old model
             DemoFan(
                 hass,
                 "fan1",
@@ -40,13 +41,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 None,
                 [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
             ),
+            # These fans implement the newer model
             AsyncDemoPercentageFan(
                 hass,
                 "fan3",
                 "Percentage Full Fan",
                 FULL_SUPPORT,
                 [PRESET_MODE_AUTO, PRESET_MODE_WOOSH],
-                [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
+                None,
             ),
             DemoPercentageFan(
                 hass,
@@ -54,7 +56,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "Percentage Limited Fan",
                 LIMITED_SUPPORT,
                 [],
-                [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
+                None,
             ),
         ]
     )
@@ -93,11 +95,6 @@ class BaseDemoFan(FanEntity):
             self._oscillating = False
         if supported_features & SUPPORT_DIRECTION:
             self._direction = "forward"
-
-    @property
-    def speed_list(self):
-        """Return the speed list."""
-        return self._speed_list
 
     @property
     def unique_id(self):
@@ -139,9 +136,9 @@ class DemoFan(BaseDemoFan, FanEntity):
         return self._speed
 
     @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+    def speed_list(self):
+        """Return the speed list."""
+        return self._speed_list
 
     @fan_compat
     def turn_on(
