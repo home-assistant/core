@@ -185,6 +185,7 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         self._percentage = percentage
+        self._preset_mode = None
         self.schedule_update_ha_state()
 
     @property
@@ -201,6 +202,7 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
         """Set new preset mode."""
         if preset_mode in self.preset_modes:
             self._preset_mode = preset_mode
+            self._percentage = None
             self.async_write_ha_state()
         else:
             raise ValueError
@@ -214,6 +216,10 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
         **kwargs,
     ) -> None:
         """Turn on the entity."""
+        if preset_mode:
+            self.set_preset_mode(preset_mode)
+            return
+
         if percentage is None:
             percentage = 67
 
@@ -252,6 +258,7 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
         """Set new preset mode."""
         if preset_mode in self.preset_modes:
             self._preset_mode = preset_mode
+            self._percentage = None
             self.async_write_ha_state()
         else:
             raise ValueError
@@ -265,6 +272,10 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
         **kwargs,
     ) -> None:
         """Turn on the entity."""
+        if preset_mode:
+            await self.async_set_preset_mode(preset_mode)
+            return
+
         if percentage is None:
             percentage = 67
 
