@@ -62,7 +62,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 
-from .common import ENTITY_NAME, NAME, SERIAL, async_update_device, get_basic_device
+from .common import (
+    ENTITY_NAME,
+    NAME,
+    SERIAL,
+    async_get_basic_device,
+    async_update_device,
+)
 
 ENTITY_ID = f"{PLATFORM_DOMAIN}.{ENTITY_NAME}"
 
@@ -70,7 +76,7 @@ ENTITY_ID = f"{PLATFORM_DOMAIN}.{ENTITY_NAME}"
 @callback
 def async_get_device(spec: Type[DysonDevice]) -> DysonDevice:
     """Return a Dyson climate device."""
-    device = get_basic_device(spec)
+    device = async_get_basic_device(spec)
     device.state.heat_target = 2900
     device.environmental_state.temperature = 275
     device.environmental_state.humidity = 50
