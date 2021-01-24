@@ -7,11 +7,13 @@ from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
     ATTR_SPEED,
     DOMAIN,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
+    SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SPEED,
 )
 from homeassistant.const import (
@@ -23,7 +25,11 @@ from homeassistant.const import (
 
 
 async def async_turn_on(
-    hass, entity_id=ENTITY_MATCH_ALL, speed: str = None, percentage: int = None
+    hass,
+    entity_id=ENTITY_MATCH_ALL,
+    speed: str = None,
+    percentage: int = None,
+    preset_mode: str = None,
 ) -> None:
     """Turn all or specified fan on."""
     data = {
@@ -32,6 +38,7 @@ async def async_turn_on(
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_SPEED, speed),
             (ATTR_PERCENTAGE, percentage),
+            (ATTR_PRESET_MODE, preset_mode),
         ]
         if value is not None
     }
@@ -71,6 +78,19 @@ async def async_set_speed(hass, entity_id=ENTITY_MATCH_ALL, speed: str = None) -
     }
 
     await hass.services.async_call(DOMAIN, SERVICE_SET_SPEED, data, blocking=True)
+
+
+async def async_set_preset_mode(
+    hass, entity_id=ENTITY_MATCH_ALL, preset_mode: str = None
+) -> None:
+    """Set preset mode for all or specified fan."""
+    data = {
+        key: value
+        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_PRESET_MODE, preset_mode)]
+        if value is not None
+    }
+
+    await hass.services.async_call(DOMAIN, SERVICE_SET_PRESET_MODE, data, blocking=True)
 
 
 async def async_set_percentage(
