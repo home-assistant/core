@@ -186,14 +186,20 @@ class FanEntity(ToggleEntity):
         """Set the speed of the fan."""
         if speed == SPEED_OFF:
             await self.async_turn_off()
-        elif not hasattr(self.async_set_percentage, _FAN_NATIVE):
-            await self.async_set_percentage(self.speed_to_percentage(speed))
-        elif not hasattr(self.set_percentage, _FAN_NATIVE):
-            await self.hass.async_add_executor_job(
-                self.set_percentage, self.speed_to_percentage(speed)
-            )
-        else:
-            await self.hass.async_add_executor_job(self.set_speed, speed)
+            return
+
+        if speed not in self.preset_modes:
+            if not hasattr(self.async_set_percentage, _FAN_NATIVE):
+                await self.async_set_percentage(self.speed_to_percentage(speed))
+                return
+
+            if not hasattr(self.set_percentage, _FAN_NATIVE):
+                await self.hass.async_add_executor_job(
+                    self.set_percentage, self.speed_to_percentage(speed)
+                )
+                return
+
+        await self.hass.async_add_executor_job(self.set_speed, speed)
 
     @_fan_native
     def set_percentage(self, percentage: int) -> None:
@@ -210,6 +216,7 @@ class FanEntity(ToggleEntity):
         else:
             await self.async_set_speed(self.percentage_to_speed(percentage))
 
+    @_fan_native
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if not self._implemented_speed and not self._implemented_percentage:
@@ -220,6 +227,7 @@ class FanEntity(ToggleEntity):
         else:
             raise ValueError
 
+    @_fan_native
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if not self._implemented_speed and not self._implemented_percentage:
