@@ -58,15 +58,16 @@ def register_node_in_dev_reg(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Z-Wave JS from a config entry."""
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
-    initialized = asyncio.Event()
+    init_connect = asyncio.Event()
     dev_reg = await device_registry.async_get_registry(hass)
 
     async def async_on_connect() -> None:
         """Handle websocket is (re)connected."""
         LOGGER.info("Connected to Zwave JS Server")
-        if initialized.is_set():
+        if init_connect.is_set():
             # update entity availability
             async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
+        init_connect.set()
 
     async def async_on_disconnect() -> None:
         """Handle websocket is disconnected."""
@@ -76,7 +77,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_on_initialized() -> None:
         """Handle initial full state received."""
         LOGGER.info("Connection to Zwave JS Server initialized.")
-        initialized.set()
+        # wait until all required platforms are ready
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_setup(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+        # run discovery on all nodes
+        for node in client.driver.controller.nodes.values():
+            async_on_node_added(node)
+        # listen for new nodes being added to the mesh
+        client.driver.controller.on(
+            "node added", lambda event: async_on_node_added(event["node"])
+        )
 
     @callback
     def async_on_node_ready(node: ZwaveNode) -> None:
@@ -127,7 +141,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     asyncio.create_task(client.connect())
     try:
         async with timeout(CONNECT_TIMEOUT):
-            await initialized.wait()
+            await init_connect.wait()
     except asyncio.TimeoutError as err:
         for unsub in unsubs:
             unsub()
@@ -141,27 +155,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Set up websocket API
     async_register_api(hass)
-
-    async def start_platforms() -> None:
-        """Start platforms and perform discovery."""
-        # wait until all required platforms are ready
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_setup(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-
-        # run discovery on all ready nodes
-        for node in client.driver.controller.nodes.values():
-            async_on_node_added(node)
-
-        # listen for new nodes being added to the mesh
-        client.driver.controller.on(
-            "node added", lambda event: async_on_node_added(event["node"])
-        )
-
-    hass.async_create_task(start_platforms())
 
     return True
 
