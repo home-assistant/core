@@ -233,12 +233,14 @@ class FanEntity(ToggleEntity):
         if not self._implemented_speed and not self._implemented_percentage:
             raise NotImplementedError
 
-        if preset_mode in self.preset_modes:
-            self.set_speed(preset_mode)
-        else:
+        preset_modes = self.preset_modes
+
+        if preset_mode not in preset_modes:
             raise ValueError(
-                f"The preset_mode {preset_mode} is not a valid preset_mode."
+                f"The preset_mode {preset_mode} is not a valid preset_mode: {preset_modes}"
             )
+
+        self.set_speed(preset_mode)
 
     @_fan_native
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -246,12 +248,14 @@ class FanEntity(ToggleEntity):
         if not self._implemented_speed and not self._implemented_percentage:
             raise NotImplementedError
 
-        if preset_mode in self.preset_modes:
-            await self.async_set_speed(preset_mode)
-        else:
+        preset_modes = self.preset_modes
+
+        if preset_mode not in preset_modes:
             raise ValueError(
-                f"The preset_mode {preset_mode} is not a valid preset_mode."
+                f"The preset_mode {preset_mode} is not a valid preset_mode: {preset_modes}"
             )
+
+        await self.async_set_speed(preset_mode)
 
     def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
@@ -300,6 +304,11 @@ class FanEntity(ToggleEntity):
     def _convert_legacy_turn_on_arguments(self, speed, percentage, preset_mode):
         """Convert turn on arguments for backwards compatibility."""
         if preset_mode is not None:
+            preset_modes = self.preset_modes
+            if preset_mode not in preset_modes:
+                raise ValueError(
+                    f"The preset_mode {preset_mode} is not a valid preset_mode: {preset_modes}"
+                )
             speed = preset_mode
             percentage = None
         elif speed is not None:

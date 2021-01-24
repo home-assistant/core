@@ -263,12 +263,13 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if preset_mode in self.preset_modes:
-            self._preset_mode = preset_mode
-            self._percentage = None
-            self.async_write_ha_state()
-        else:
-            raise ValueError
+        if preset_mode not in self.preset_modes:
+            raise ValueError(
+                "{preset_mode} is not a valid preset_mode: {self.preset_modes}"
+            )
+        self._preset_mode = preset_mode
+        self._percentage = None
+        self.async_write_ha_state()
 
     @fan_compat
     async def async_turn_on(
