@@ -235,6 +235,31 @@ async def test_set_preset_mode(hass, fan_entity_id):
     assert state.attributes[fan.ATTR_PRESET_MODE] == PRESET_MODE_AUTO
 
 
+@pytest.mark.parametrize("fan_entity_id", LIMITED_AND_FULL_FAN_ENTITY_IDS)
+async def test_set_preset_mode_invalid(hass, fan_entity_id):
+    """Test setting a invalid preset mode for the device."""
+    state = hass.states.get(fan_entity_id)
+    assert state.state == STATE_OFF
+
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            fan.DOMAIN,
+            fan.SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: fan_entity_id, fan.ATTR_PRESET_MODE: "invalid"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            fan.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: fan_entity_id, fan.ATTR_PRESET_MODE: "invalid"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+
 @pytest.mark.parametrize("fan_entity_id", FULL_FAN_ENTITY_IDS)
 async def test_set_percentage(hass, fan_entity_id):
     """Test setting the percentage speed of the device."""
