@@ -106,7 +106,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         Z-Wave multilevel switches use a range of [0, 99] to control brightness.
         """
         # prefer targetValue but only when there is a value that makes any sense
-        if self._target_value is not None and self._target_value.value not in [
+        if self._target_value and self._target_value.value not in [
             None,
             0,
             255,
