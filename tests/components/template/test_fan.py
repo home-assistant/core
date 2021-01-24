@@ -238,6 +238,61 @@ async def test_templates_with_entities(hass, calls):
     _verify(hass, STATE_ON, SPEED_HIGH, 100, True, DIRECTION_FORWARD)
 
 
+async def test_templates_with_entities_and_invalid_percentage(hass, calls):
+    """Test tempalates with values from other entities."""
+    hass.states.async_set("sensor.percentage", "0")
+
+    with assert_setup_component(1, "fan"):
+        assert await setup.async_setup_component(
+            hass,
+            "fan",
+            {
+                "fan": {
+                    "platform": "template",
+                    "fans": {
+                        "test_fan": {
+                            "value_template": "{{ 'on' }}",
+                            "percentage_template": "{{ states('sensor.percentage') }}",
+                            "turn_on": {"service": "script.fan_on"},
+                            "turn_off": {"service": "script.fan_off"},
+                        },
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    _verify(hass, STATE_OFF, SPEED_OFF, 0, None, None)
+
+    hass.states.async_set("sensor.percentage", "33")
+    await hass.async_block_till_done()
+
+    _verify(hass, STATE_ON, SPEED_LOW, 33, None, None)
+
+    hass.states.async_set("sensor.percentage", "invalid")
+    await hass.async_block_till_done()
+
+    _verify(hass, STATE_ON, None, 0, None, None)
+
+    hass.states.async_set("sensor.percentage", "5000")
+    await hass.async_block_till_done()
+
+    _verify(hass, STATE_ON, None, 0, None, None)
+
+    hass.states.async_set("sensor.percentage", "100")
+    await hass.async_block_till_done()
+
+    _verify(hass, STATE_ON, SPEED_HIGH, 100, None, None)
+
+    hass.states.async_set("sensor.percentage", "0")
+    await hass.async_block_till_done()
+
+    _verify(hass, STATE_OFF, SPEED_OFF, 0, None, None)
+
+
 async def test_template_with_unavailable_entities(hass, calls):
     """Test unavailability with value_template."""
 

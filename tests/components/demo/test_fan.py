@@ -137,7 +137,7 @@ async def test_turn_on_with_preset_mode(hass, fan_entity_id):
             {ATTR_ENTITY_ID: fan_entity_id, fan.ATTR_PRESET_MODE: "invalid"},
             blocking=True,
         )
-        await hass.aync_block_till_done()
+        await hass.async_block_till_done()
 
     state = hass.states.get(fan_entity_id)
     assert state.state == STATE_OFF
