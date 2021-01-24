@@ -43,11 +43,12 @@ def register_node_in_dev_reg(
     node: ZwaveNode,
 ) -> None:
     """Register node in dev reg."""
+    node_name = node.name or node.device_config.description
     device = dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")},
         sw_version=node.firmware_version,
-        name=node.name or node.device_config.description or f"Node {node.node_id}",
+        name=f"{node_name} (Node {node.node_id})",
         model=node.device_config.label,
         manufacturer=node.device_config.manufacturer,
     )
