@@ -89,7 +89,9 @@ class TasmotaFan(
 
     #
     @fan.fan_compat
-    async def async_turn_on(self, speed=None, percentage=None, **kwargs):
+    async def async_turn_on(
+        self, speed=None, percentage=None, preset_mode=None, **kwargs
+    ):
         """Turn the fan on."""
         # Tasmota does not support turning a fan on with implicit speed
         await self.async_set_speed(speed or fan.SPEED_MEDIUM)

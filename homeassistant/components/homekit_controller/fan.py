@@ -141,7 +141,9 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
 
     #
     @fan_compat
-    async def async_turn_on(self, speed=None, percentage=None, **kwargs):
+    async def async_turn_on(
+        self, speed=None, percentage=None, preset_mode=None, **kwargs
+    ):
         """Turn the specified fan on."""
         characteristics = {}
 

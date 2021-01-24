@@ -65,7 +65,7 @@ class ZwaveFan(ZWaveDeviceEntity, FanEntity):
     # switch the decorator to @fan_compat to ensure the percentage argument will be
     # filled for places that still pass in speed instead of percentage.
     @fan_compat
-    def turn_on(self, speed=None, percentage=None, **kwargs):
+    def turn_on(self, speed=None, percentage=None, preset_mode=None, **kwargs):
         """Turn the device on."""
         if speed is None:
             # Value 255 tells device to return to previous value

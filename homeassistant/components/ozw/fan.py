@@ -68,7 +68,9 @@ class ZwaveFan(ZWaveDeviceEntity, FanEntity):
 
     #
     @fan_compat
-    async def async_turn_on(self, speed=None, percentage=None, **kwargs):
+    async def async_turn_on(
+        self, speed=None, percentage=None, preset_mode=None, **kwargs
+    ):
         """Turn the device on."""
         if speed is None:
             # Value 255 tells device to return to previous value

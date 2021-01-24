@@ -102,7 +102,9 @@ class BaseFan(FanEntity):
     # switch the decorator to @fan_compat to ensure the percentage argument will be
     # filled for places that still pass in speed instead of percentage.
     @fan_compat
-    async def async_turn_on(self, speed=None, percentage=None, **kwargs) -> None:
+    async def async_turn_on(
+        self, speed=None, percentage=None, preset_mode=None, **kwargs
+    ) -> None:
         """Turn the entity on."""
         if speed is None:
             speed = SPEED_MEDIUM

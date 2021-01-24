@@ -97,7 +97,7 @@ class SmartyFan(FanEntity):
 
     #
     @fan_compat
-    def turn_on(self, speed=None, percentage=None, **kwargs):
+    def turn_on(self, speed=None, percentage=None, preset_mode=None, **kwargs):
         """Turn on the fan."""
         _LOGGER.debug("Turning on fan. Speed is %s", speed)
         if speed is None:
