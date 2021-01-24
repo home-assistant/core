@@ -41,9 +41,9 @@ from homeassistant.helpers.typing import (
 import homeassistant.util.color as color_util
 
 from . import (
-    async_create_connect_hyperion_client,
     create_hyperion_client,
     get_hyperion_unique_id,
+    listen_for_instance_updates,
 )
 from .const import (
     CONF_INSTANCE_CLIENTS,
