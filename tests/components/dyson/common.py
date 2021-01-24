@@ -36,39 +36,21 @@ CONFIG = {
 }
 
 
-def load_mock_device(device: DysonDevice) -> None:
-    """Load the mock with default values so it doesn't throw errors."""
+@callback
+def async_get_basic_device(spec: Type[DysonDevice]) -> DysonDevice:
+    """Return a basic device with common fields filled out."""
+    device = MagicMock(spec=spec)
     device.serial = SERIAL
     device.name = NAME
     device.connect = mock.Mock(return_value=True)
     device.auto_connect = mock.Mock(return_value=True)
-    device.state.hepa_filter_state = 0
-    device.state.carbon_filter_state = 0
-    device.state.speed = FanSpeed.FAN_SPEED_1.value
-    device.state.oscillation_angle_low = "000"
-    device.state.oscillation_angle_high = "000"
-    device.state.filter_life = "000"
-    device.state.heat_target = 200
-    if hasattr(device, "environmental_state"):
-        device.environmental_state.particulate_matter_25 = "0000"
-        device.environmental_state.particulate_matter_10 = "0000"
-        device.environmental_state.nitrogen_dioxide = "0000"
-        device.environmental_state.volatil_organic_compounds = "0000"
-        device.environmental_state.volatile_organic_compounds = "0000"
-        device.environmental_state.temperature = 250
-
-
-def get_basic_device(spec: Type[DysonDevice]) -> DysonDevice:
-    """Return a basic device with common fields filled out."""
-    device = MagicMock(spec=spec)
-    load_mock_device(device)
     return device
 
 
 @callback
 def async_get_360eye_device(state=Dyson360EyeMode.FULL_CLEAN_RUNNING) -> Dyson360Eye:
     """Return a Dyson 360 Eye device."""
-    device = get_basic_device(Dyson360Eye)
+    device = async_get_basic_device(Dyson360Eye)
     device.state.state = state
     device.state.battery_level = 85
     device.state.power_mode = PowerMode.QUIET
@@ -79,7 +61,7 @@ def async_get_360eye_device(state=Dyson360EyeMode.FULL_CLEAN_RUNNING) -> Dyson36
 @callback
 def async_get_purecoollink_device() -> DysonPureCoolLink:
     """Return a Dyson Pure Cool Link device."""
-    device = get_basic_device(DysonPureCoolLink)
+    device = async_get_basic_device(DysonPureCoolLink)
     device.state.fan_mode = FanMode.FAN.value
     device.state.speed = FanSpeed.FAN_SPEED_1.value
     device.state.night_mode = "ON"
@@ -90,7 +72,7 @@ def async_get_purecoollink_device() -> DysonPureCoolLink:
 @callback
 def async_get_purecool_device() -> DysonPureCool:
     """Return a Dyson Pure Cool device."""
-    device = get_basic_device(DysonPureCool)
+    device = async_get_basic_device(DysonPureCool)
     device.state.fan_power = "ON"
     device.state.speed = FanSpeed.FAN_SPEED_1.value
     device.state.night_mode = "ON"
