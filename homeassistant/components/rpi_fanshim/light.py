@@ -31,7 +31,7 @@ class FanShimLightEntity(LightEntity):
         self._color = (255, 255, 255)
 
         # Switch off LED
-        self._fanshim.hub.set_light(0, 0, 0)
+        self._fanshim.set_light(0, 0, 0)
         self._state = False
 
     @property
@@ -54,10 +54,10 @@ class FanShimLightEntity(LightEntity):
         if ATTR_HS_COLOR in kwargs:
             self._color = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
 
-        self._fanshim.hub.set_light(*self._color)
+        self._fanshim.set_light(*self._color)
         self._state = True
 
     def turn_off(self, **kwargs):
         """Turn off LED."""
-        self._fanshim.hub.set_light(0, 0, 0)
+        self._fanshim.set_light(0, 0, 0)
         self._state = False

@@ -20,14 +20,6 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 PLATFORMS = ["light"]
 
 
-class FanShimHub:
-    """Initialize the Fan Shim Hub class."""
-
-    def __init__(self):
-        """Initialize the class."""
-        self.hub = None
-
-
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the RPi Pimoroni Fan Shim component."""
     return True
@@ -36,8 +28,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up RPi Pimoroni Fan Shim from a config entry."""
 
-    fanshim = FanShimHub()
-    fanshim.hub = FanShim()
+    fanshim = FanShim()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = fanshim
