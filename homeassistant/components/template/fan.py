@@ -332,7 +332,7 @@ class TemplateFan(TemplateEntity, FanEntity):
 
         if preset_mode is not None:
             await self.async_set_preset_mode(preset_mode)
-        if percentage is not None:
+        elif percentage is not None:
             await self.async_set_percentage(percentage)
         elif speed is not None:
             await self.async_set_speed(speed)
@@ -348,9 +348,9 @@ class TemplateFan(TemplateEntity, FanEntity):
         if self._set_speed_script is None:
             return
 
-        if speed not in self._speed_list:
+        if speed not in self.speed_list:
             _LOGGER.error(
-                "Received invalid speed: %s. Expected: %s", speed, self._speed_list
+                "Received invalid speed: %s. Expected: %s", speed, self.speed_list
             )
             return
 
@@ -378,7 +378,7 @@ class TemplateFan(TemplateEntity, FanEntity):
             return
 
         self._state = STATE_OFF if percentage == 0 else STATE_ON
-        if self._speed_list:
+        if self.speed_list:
             self._speed = self.percentage_to_speed(percentage)
         self._percentage = percentage
         self._preset_mode = None
