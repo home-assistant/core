@@ -118,7 +118,9 @@ class ComfoConnectFan(FanEntity):
     # remove the @fan_compat decorator.
     #
     @fan_compat
-    def turn_on(self, speed: str = None, percentage=None, **kwargs) -> None:
+    def turn_on(
+        self, speed: str = None, percentage=None, preset_mode=None, **kwargs
+    ) -> None:
         """Turn on the fan."""
         if speed is None:
             speed = SPEED_LOW

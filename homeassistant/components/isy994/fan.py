@@ -72,11 +72,20 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         """Send the set speed command to the ISY994 fan device."""
         self._node.turn_on(val=STATE_TO_VALUE.get(speed, 255))
 
-    # The fan entity model has changed. The @fan_compat decorator will ensure
-    # the speed argument is set when a percentage is passed in.  When this entity is
-    # updated to use the new model and `speed` and # `set_speed` have been removed
-    # switch the decorator to @fan_compat to ensure the percentage argument will be
-    # filled for places that still pass in speed instead of percentage.
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # The @fan_compat decorator provides backwards compatibility
+    # by setting the preset_mode or percentage when speed is passed in,
+    # and forward compatibility by setting speed when preset_mode or
+    # percentage is passed in.
+    #
+    # When the deprecation of the old model is completed and this
+    # entity has been updated to implement `set_percentage`
+    # `percentage`, `set_preset_mode`, `preset_modes`, and `preset_mode`,
+    # remove the @fan_compat decorator.
+    #
     @fan_compat
     def turn_on(
         self,
@@ -136,7 +145,13 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
     # remove the @fan_compat decorator.
     #
     @fan_compat
-    def turn_on(self, speed: str = None, percentage=None, **kwargs) -> None:
+    def turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
         """Send the turn off command to ISY994 fan program."""
         if not self._actions.run_else():
             _LOGGER.error("Unable to turn on the fan")
