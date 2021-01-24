@@ -158,21 +158,6 @@ class Order(CoordinatorEntity):
         self._icon = "mdi:checkbook"
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return len(self._get_data())
-
-    @property
-    def unique_id(self):
-        """Return a unique id for the sensor."""
-        return self._unique_id
-
-    @property
     def icon(self):
         """Icon to use in the frontend."""
         return self._icon
@@ -199,6 +184,21 @@ class OpenOrder(Order):
         """Return the data from self.coordinator.data."""
         return self.coordinator.data[CONF_OPEN_ORDERS]
 
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return len(self._get_data())
+
+    @property
+    def unique_id(self):
+        """Return a unique id for the sensor."""
+        return self._unique_id
+
 
 class ClosedOrder(Order):
     """Implementation of the closed order sensor."""
@@ -213,3 +213,18 @@ class ClosedOrder(Order):
     def _get_data(self):
         """Return the data from self.coordinator.data."""
         return self.coordinator.data[CONF_CLOSED_ORDERS]
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return len(self._get_data())
+
+    @property
+    def unique_id(self):
+        """Return a unique id for the sensor."""
+        return self._unique_id
