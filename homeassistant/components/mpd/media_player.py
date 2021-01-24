@@ -73,6 +73,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -83,6 +84,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
     password = config.get(CONF_PASSWORD)
+    unique_id = config.get(CONF_UNIQUE_ID)
 
     entity = MpdDevice(host, port, password, name)
     async_add_entities([entity], True)
@@ -92,7 +94,7 @@ class MpdDevice(MediaPlayerEntity):
     """Representation of a MPD server."""
 
     # pylint: disable=no-member
-    def __init__(self, server, port, password, name):
+    def __init__(self, server, port, password, name, unique_id):
         """Initialize the MPD device."""
         self.server = server
         self.port = port
@@ -109,6 +111,7 @@ class MpdDevice(MediaPlayerEntity):
         self._media_position_updated_at = None
         self._media_position = None
         self._commands = None
+        self._unique_id = unique_id
 
         # set up MPD client
         self._client = MPDClient()
@@ -177,6 +180,11 @@ class MpdDevice(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of this media player."""
+        return self._unique_id
 
     @property
     def state(self):
