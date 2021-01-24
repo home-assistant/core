@@ -3,5 +3,5 @@
   "name": "Radio Thermostat",
   "documentation": "https://www.home-assistant.io/integrations/radiotherm",
   "requirements": ["radiotherm==2.1.0"],
-  "codeowners": []
+  "codeowners": ["@vinnyfuria"]
 }
