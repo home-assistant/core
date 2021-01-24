@@ -37,6 +37,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_UNIQUE_ID,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
@@ -86,7 +87,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     password = config.get(CONF_PASSWORD)
     unique_id = config.get(CONF_UNIQUE_ID)
 
-    entity = MpdDevice(host, port, password, name)
+    entity = MpdDevice(host, port, password, name, unique_id)
     async_add_entities([entity], True)
 
 
