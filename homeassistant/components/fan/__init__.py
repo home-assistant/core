@@ -83,8 +83,6 @@ _FAN_NATIVE = "_fan_native"
 
 OFF_SPEED_VALUES = [SPEED_OFF, None]
 
-NO_VALID_SPEEDS_EXCEPTION_MESSAGE = "The speed_list contains no valid speeds"
-
 
 class NoValidSpeedsError(ValueError):
     """Exception class when there are no valid speeds."""
