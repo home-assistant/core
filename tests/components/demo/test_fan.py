@@ -8,6 +8,7 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SPEED_OFF,
     STATE_OFF,
     STATE_ON,
 )
@@ -114,8 +115,20 @@ async def test_turn_on_with_preset_mode(hass, fan_entity_id):
     )
     state = hass.states.get(fan_entity_id)
     assert state.state == STATE_OFF
-    assert state.attributes[fan.ATTR_SPEED] is None
-    assert state.attributes[fan.ATTR_PERCENTAGE] is None
+    assert state.attributes[fan.ATTR_SPEED] == SPEED_OFF
+    assert state.attributes[fan.ATTR_PERCENTAGE] == 0
+    assert state.attributes[fan.ATTR_PRESET_MODE] is None
+
+    await hass.services.async_call(
+        fan.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: fan_entity_id, fan.ATTR_PRESET_MODE: "invalid"},
+        blocking=True,
+    )
+    state = hass.states.get(fan_entity_id)
+    assert state.state == STATE_OFF
+    assert state.attributes[fan.ATTR_SPEED] == SPEED_OFF
+    assert state.attributes[fan.ATTR_PERCENTAGE] == 0
     assert state.attributes[fan.ATTR_PRESET_MODE] is None
 
 
