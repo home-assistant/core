@@ -56,7 +56,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     #
     # The @fan_compat decorator will ensure the speed argument is set
     # when a percentage is passed in. When the entity model completes
-    # the completes the deprecation of speed, the decorator
+    # the deprecation of speed, the decorator
     # @fan_compat should be removed.
 
     #
