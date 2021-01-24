@@ -13,6 +13,9 @@ from homeassistant.components.fan import (
     fan_compat,
 )
 
+PRESET_MODE_AUTO = "auto"
+PRESET_MODE_WOOSH = "woosh"
+
 FULL_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
 LIMITED_SUPPORT = SUPPORT_SET_SPEED
 
@@ -21,13 +24,37 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the demo fan platform."""
     async_add_entities(
         [
-            DemoFan(hass, "fan1", "Living Room Fan", FULL_SUPPORT, None),
-            DemoFan(hass, "fan2", "Ceiling Fan", LIMITED_SUPPORT, None),
+            DemoFan(
+                hass,
+                "fan1",
+                "Living Room Fan",
+                FULL_SUPPORT,
+                None,
+                [PRESET_MODE_AUTO, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
+            ),
+            DemoFan(
+                hass,
+                "fan2",
+                "Ceiling Fan",
+                LIMITED_SUPPORT,
+                None,
+                [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
+            ),
             AsyncDemoPercentageFan(
-                hass, "fan3", "Percentage Full Fan", FULL_SUPPORT, ["auto", "woosh"]
+                hass,
+                "fan3",
+                "Percentage Full Fan",
+                FULL_SUPPORT,
+                [PRESET_MODE_AUTO, PRESET_MODE_WOOSH],
+                [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
             ),
             DemoPercentageFan(
-                hass, "fan4", "Percentage Limited Fan", LIMITED_SUPPORT, []
+                hass,
+                "fan4",
+                "Percentage Limited Fan",
+                LIMITED_SUPPORT,
+                [],
+                [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
             ),
         ]
     )
@@ -48,6 +75,7 @@ class BaseDemoFan(FanEntity):
         name: str,
         supported_features: int,
         preset_modes: Optional[List[str]],
+        speed_list: Optional[List[str]],
     ) -> None:
         """Initialize the entity."""
         self.hass = hass
@@ -55,6 +83,7 @@ class BaseDemoFan(FanEntity):
         self._supported_features = supported_features
         self._speed = SPEED_OFF
         self._percentage = 0
+        self._speed_list = speed_list
         self._preset_modes = preset_modes
         self._preset_mode = None
         self._oscillating = None
@@ -64,6 +93,11 @@ class BaseDemoFan(FanEntity):
             self._oscillating = False
         if supported_features & SUPPORT_DIRECTION:
             self._direction = "forward"
+
+    @property
+    def speed_list(self):
+        """Return the speed list."""
+        return self._speed_list
 
     @property
     def unique_id(self):
