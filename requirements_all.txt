@@ -1916,7 +1916,7 @@ quantum-gateway==0.0.5
 rachiopy==1.0.3
 
 # homeassistant.components.radiotherm
-radiotherm==2.0.0
+radiotherm==2.1.0
 
 # homeassistant.components.raincloud
 raincloudy==0.0.7

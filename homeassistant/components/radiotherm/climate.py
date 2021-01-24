@@ -1,5 +1,6 @@
 """Support for Radio Thermostat wifi-enabled home thermostats."""
 import logging
+from socket import timeout
 
 import radiotherm
 import voluptuous as vol
@@ -261,60 +262,60 @@ class RadioThermostat(ClimateEntity):
         # thermostats tend to time out sometimes when they're actively
         # heating or cooling.
 
-        # First time - get the name from the thermostat.  This is
-        # normally set in the radio thermostat web app.
-        if self._name is None:
-            self._name = self.device.name["raw"]
-
-        # Request the current state from the thermostat.
         try:
+            # First time - get the name from the thermostat.  This is
+            # normally set in the radio thermostat web app.
+            if self._name is None:
+                self._name = self.device.name["raw"]
+
+            # Request the current state from the thermostat.
             data = self.device.tstat["raw"]
+
+            if self._is_model_ct80:
+                humiditydata = self.device.humidity["raw"]
+
         except radiotherm.validate.RadiothermTstatError:
             _LOGGER.warning(
                 "%s (%s) was busy (invalid value returned)",
                 self._name,
                 self.device.host,
             )
-            return
 
-        current_temp = data["temp"]
+        except timeout:
+            _LOGGER.warning(
+                "Timeout waiting for response from %s (%s)",
+                self._name,
+                self.device.host,
+            )
 
-        if self._is_model_ct80:
-            try:
-                humiditydata = self.device.humidity["raw"]
-            except radiotherm.validate.RadiothermTstatError:
-                _LOGGER.warning(
-                    "%s (%s) was busy (invalid value returned)",
-                    self._name,
-                    self.device.host,
-                )
-                return
-            self._current_humidity = humiditydata
-            self._program_mode = data["program_mode"]
-            self._preset_mode = CODE_TO_PRESET_MODE[data["program_mode"]]
-
-        # Map thermostat values into various STATE_ flags.
-        self._current_temperature = current_temp
-        self._fmode = CODE_TO_FAN_MODE[data["fmode"]]
-        self._fstate = CODE_TO_FAN_STATE[data["fstate"]]
-        self._tmode = CODE_TO_TEMP_MODE[data["tmode"]]
-        self._tstate = CODE_TO_TEMP_STATE[data["tstate"]]
-
-        self._current_operation = self._tmode
-        if self._tmode == HVAC_MODE_COOL:
-            self._target_temperature = data["t_cool"]
-        elif self._tmode == HVAC_MODE_HEAT:
-            self._target_temperature = data["t_heat"]
-        elif self._tmode == HVAC_MODE_AUTO:
-            # This doesn't really work - tstate is only set if the HVAC is
-            # active. If it's idle, we don't know what to do with the target
-            # temperature.
-            if self._tstate == CURRENT_HVAC_COOL:
-                self._target_temperature = data["t_cool"]
-            elif self._tstate == CURRENT_HVAC_HEAT:
-                self._target_temperature = data["t_heat"]
         else:
-            self._current_operation = HVAC_MODE_OFF
+            if self._is_model_ct80:
+                self._current_humidity = humiditydata
+                self._program_mode = data["program_mode"]
+                self._preset_mode = CODE_TO_PRESET_MODE[data["program_mode"]]
+
+            # Map thermostat values into various STATE_ flags.
+            self._current_temperature = data["temp"]
+            self._fmode = CODE_TO_FAN_MODE[data["fmode"]]
+            self._fstate = CODE_TO_FAN_STATE[data["fstate"]]
+            self._tmode = CODE_TO_TEMP_MODE[data["tmode"]]
+            self._tstate = CODE_TO_TEMP_STATE[data["tstate"]]
+
+            self._current_operation = self._tmode
+            if self._tmode == HVAC_MODE_COOL:
+                self._target_temperature = data["t_cool"]
+            elif self._tmode == HVAC_MODE_HEAT:
+                self._target_temperature = data["t_heat"]
+            elif self._tmode == HVAC_MODE_AUTO:
+                # This doesn't really work - tstate is only set if the HVAC is
+                # active. If it's idle, we don't know what to do with the target
+                # temperature.
+                if self._tstate == CURRENT_HVAC_COOL:
+                    self._target_temperature = data["t_cool"]
+                elif self._tstate == CURRENT_HVAC_HEAT:
+                    self._target_temperature = data["t_heat"]
+            else:
+                self._current_operation = HVAC_MODE_OFF
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
