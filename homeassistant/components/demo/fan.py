@@ -32,12 +32,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 FULL_SUPPORT,
                 None,
                 [
-                    PRESET_MODE_AUTO,
-                    PRESET_MODE_SMART,
                     SPEED_OFF,
                     SPEED_LOW,
                     SPEED_MEDIUM,
                     SPEED_HIGH,
+                    PRESET_MODE_AUTO,
+                    PRESET_MODE_SMART,
                 ],
             ),
             DemoFan(

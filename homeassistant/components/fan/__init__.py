@@ -333,6 +333,13 @@ class FanEntity(ToggleEntity):
         )
 
     @property
+    def _implemented_preset_mode(self):
+        """Return true if preset_mode has been implemented."""
+        return not hasattr(self.set_preset_mode, _FAN_NATIVE) or not hasattr(
+            self.async_set_preset_mode, _FAN_NATIVE
+        )
+
+    @property
     def _implemented_speed(self):
         """Return true if speed has been implemented."""
         return not hasattr(self.set_speed, _FAN_NATIVE) or not hasattr(
@@ -362,9 +369,12 @@ class FanEntity(ToggleEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
+        speeds = []
         if self._implemented_percentage:
-            return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
-        return []
+            speeds += [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+        if self._implemented_preset_mode:
+            speeds += self.preset_modes
+        return speeds
 
     @property
     def current_direction(self) -> Optional[str]:

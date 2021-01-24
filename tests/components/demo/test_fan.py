@@ -84,6 +84,14 @@ async def test_turn_on_with_preset_mode(hass, fan_entity_id):
     assert state.attributes[fan.ATTR_SPEED] == PRESET_MODE_AUTO
     assert state.attributes[fan.ATTR_PERCENTAGE] is None
     assert state.attributes[fan.ATTR_PRESET_MODE] == PRESET_MODE_AUTO
+    assert state.attributes[fan.ATTR_PRESET_MODES] == [
+        fan.SPEED_OFF,
+        fan.SPEED_LOW,
+        fan.SPEED_MEDIUM,
+        fan.SPEED_HIGH,
+        PRESET_MODE_AUTO,
+        PRESET_MODE_SMART,
+    ]
 
     await hass.services.async_call(
         fan.DOMAIN,
