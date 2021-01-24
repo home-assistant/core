@@ -25,7 +25,7 @@ from .discovery import async_discover_values
 from .websocket_api import async_register_api
 
 LOGGER = logging.getLogger(__name__)
-CONNECT_TIMEOUT = 10
+CONNECT_TIMEOUT = 300
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
