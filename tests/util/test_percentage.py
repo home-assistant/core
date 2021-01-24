@@ -1,5 +1,6 @@
 """Test Home Assistant percentage conversions."""
 
+import pytest
 
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
@@ -46,6 +47,9 @@ async def test_ordered_list_item_to_percentage():
     assert ordered_list_item_to_percentage(LARGE_ORDERED_LIST, SPEED_6) == 85
     assert ordered_list_item_to_percentage(LARGE_ORDERED_LIST, SPEED_7) == 100
 
+    with pytest.raises(ValueError):
+        assert ordered_list_item_to_percentage([], SPEED_1)
+
 
 async def test_percentage_to_ordered_list_item():
     """Test item that most closely matches the percentage in an ordered list."""
@@ -83,6 +87,11 @@ async def test_percentage_to_ordered_list_item():
     assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 75) == SPEED_6
     assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 76) == SPEED_6
     assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 100) == SPEED_7
+
+    assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 100.1) == SPEED_7
+
+    with pytest.raises(ValueError):
+        assert percentage_to_ordered_list_item([], 100)
 
 
 async def test_ranged_value_to_percentage():
