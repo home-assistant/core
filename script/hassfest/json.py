@@ -17,8 +17,6 @@ def validate_json_files(integration: Integration):
             relative_path = json_file.relative_to(integration.path)
             integration.add_error("json", f"Invalid JSON file {relative_path}")
 
-    return
-
 
 def validate(integrations: Dict[str, Integration], config):
     """Handle JSON files inside integrations."""
