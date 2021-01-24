@@ -41,6 +41,9 @@ turn_on:
     percentage:
       description: Percentage speed setting
       example: 75
+    preset_mode:
+      description: Preset mode setting
+      example: "auto"
 
 turn_off:
   description: Turns fan off.
