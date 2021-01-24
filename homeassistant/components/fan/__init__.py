@@ -188,23 +188,22 @@ class FanEntity(ToggleEntity):
             await self.async_turn_off()
             return
 
-        if speed not in self.preset_modes:
+        if speed in self.preset_modes:
+            if not hasattr(self.async_set_preset_mode, _FAN_NATIVE):
+                await self.async_set_preset_mode(speed)
+                return
+            if not hasattr(self.set_preset_mode, _FAN_NATIVE):
+                await self.hass.async_add_executor_job(self.set_preset_mode, speed)
+                return
+        else:
             if not hasattr(self.async_set_percentage, _FAN_NATIVE):
                 await self.async_set_percentage(self.speed_to_percentage(speed))
                 return
-
             if not hasattr(self.set_percentage, _FAN_NATIVE):
                 await self.hass.async_add_executor_job(
                     self.set_percentage, self.speed_to_percentage(speed)
                 )
                 return
-
-        if not hasattr(self.async_set_preset_mode, _FAN_NATIVE):
-            await self.async_set_preset_mode(speed)
-            return
-        if not hasattr(self.set_preset_mode, _FAN_NATIVE):
-            await self.hass.async_add_executor_job(self.set_preset_mode, speed)
-            return
 
         await self.hass.async_add_executor_job(self.set_speed, speed)
 
