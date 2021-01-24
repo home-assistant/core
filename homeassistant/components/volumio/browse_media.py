@@ -1,5 +1,4 @@
 """Support for media browsing."""
-import hashlib
 import json
 
 from homeassistant.components.media_player import BrowseError, BrowseMedia
@@ -105,7 +104,7 @@ def _raw_item_payload(entity, item, parent_item=None, title=None, info=None):
     if "type" in item:
         thumbnail = item.get("albumart")
         if thumbnail:
-            item_hash = hashlib.md5(thumbnail.encode("utf-8")).hexdigest()
+            item_hash = str(hash(thumbnail))
             entity.thumbnail_cache.setdefault(item_hash, thumbnail)
             thumbnail = entity.get_browse_image_url(MEDIA_TYPE_MUSIC, item_hash)
     else:
