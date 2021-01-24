@@ -212,6 +212,9 @@ class FanEntity(ToggleEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
+        if not self._implemented_speed and not self._implemented_percentage:
+            raise NotImplementedError
+
         if preset_mode in self.preset_modes:
             self.set_speed(preset_mode)
         else:
@@ -219,6 +222,9 @@ class FanEntity(ToggleEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
+        if not self._implemented_speed and not self._implemented_percentage:
+            raise NotImplementedError
+
         if preset_mode in self.preset_modes:
             await self.async_set_speed(preset_mode)
         else:
@@ -300,6 +306,13 @@ class FanEntity(ToggleEntity):
         """Return true if percentage has been implemented."""
         return not hasattr(self.set_percentage, _FAN_NATIVE) or not hasattr(
             self.async_set_percentage, _FAN_NATIVE
+        )
+
+    @property
+    def _implemented_speed(self):
+        """Return true if speed has been implemented."""
+        return not hasattr(self.set_speed, _FAN_NATIVE) or not hasattr(
+            self.async_set_speed, _FAN_NATIVE
         )
 
     @property
