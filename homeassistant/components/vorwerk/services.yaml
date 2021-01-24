@@ -1,0 +1,18 @@
+custom_cleaning:
+  description: Zone Cleaning service call specific to Vorwerk Kobolds.
+  fields:
+    entity_id:
+      description: Name of the vacuum entity. [Required]
+      example: "vacuum.mein_vr"
+    mode:
+      description: "Set the cleaning mode: 1 for eco and 2 for turbo. Defaults to turbo if not set."
+      example: 2
+    navigation:
+      description: "Set the navigation mode: 1 for normal, 2 for extra care, 3 for deep. Defaults to normal if not set."
+      example: 1
+    category:
+      description: "Whether to use a persistent map or not for cleaning (i.e. No go lines): 2 for no map, 4 for map. Default to using map if not set (and fallback to no map if no map is found)."
+      example: 2
+    zone:
+      description: Only supported on the VR300. Name of the zone to clean. Defaults to no zone i.e. complete house cleanup.
+      example: "Kitchen"

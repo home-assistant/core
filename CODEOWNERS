@@ -1013,6 +1013,7 @@ homeassistant/components/volkszaehler/* @fabaff
 homeassistant/components/volumio/* @OnFreund
 tests/components/volumio/* @OnFreund
 homeassistant/components/volvooncall/* @molobrakos @decompil3d
+homeassistant/components/vorwerk/* @trunneml
 homeassistant/components/wake_on_lan/* @ntilley905
 tests/components/wake_on_lan/* @ntilley905
 homeassistant/components/wallbox/* @hesselonline

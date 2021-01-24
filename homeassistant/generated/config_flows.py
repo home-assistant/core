@@ -339,6 +339,7 @@ FLOWS = [
     "vizio",
     "vlc_telnet",
     "volumio",
+    "vorwerk",
     "wallbox",
     "watttime",
     "waze_travel_time",

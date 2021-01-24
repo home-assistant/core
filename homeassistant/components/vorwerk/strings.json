@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Vorwerk Account Info",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]"
+        },
+        "description": "To recieve an authentication code, enter the email address of your vorwerk account.\n\nSee [Vorwerk documentation]({docs_url})."
+      },
+      "code": {
+        "title": "Vorwerk Account Info",
+        "data": {
+          "code": "Code"
+        },
+        "description": "Enter the code you received by email.\n\nSee [Vorwerk documentation]({docs_url})."
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  },
+  "title": "Vorwerk Botvac"
+}

@@ -854,6 +854,7 @@ pybalboa==0.13
 pyblackbird==0.5
 
 # homeassistant.components.neato
+# homeassistant.components.vorwerk
 pybotvac==0.0.22
 
 # homeassistant.components.cloudflare
