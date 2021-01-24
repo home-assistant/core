@@ -9,8 +9,10 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_FORCE,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_MASS,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_POWER_FACTOR,
     DEVICE_CLASS_PRESSURE,
@@ -38,7 +40,9 @@ DEVICE_CLASSES = [
     DEVICE_CLASS_BATTERY,  # % of battery that is left
     DEVICE_CLASS_CURRENT,  # current (A)
     DEVICE_CLASS_ENERGY,  # energy (kWh, Wh)
+    DEVICE_CLASS_FORCE,  # force (N)
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air
+    DEVICE_CLASS_MASS,  # mass (kg/lb)
     DEVICE_CLASS_ILLUMINANCE,  # current light level (lx/lm)
     DEVICE_CLASS_SIGNAL_STRENGTH,  # signal strength (dB/dBm)
     DEVICE_CLASS_TEMPERATURE,  # temperature (C/F)

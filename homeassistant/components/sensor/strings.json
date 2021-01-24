@@ -14,6 +14,8 @@
       "is_energy": "Current {entity_name} energy",
       "is_power_factor": "Current {entity_name} power factor",
       "is_voltage": "Current {entity_name} voltage",
+      "is_force": "Current {entity_name} force",
+      "is_mass": "Current {entity_name} mass",
       "is_value": "Current {entity_name} value"
     },
     "trigger_type": {
@@ -29,6 +31,8 @@
       "energy": "{entity_name} energy changes",
       "power_factor": "{entity_name} power factor changes",
       "voltage": "{entity_name} voltage changes",
+      "force": "{entity_name} force changes",
+      "mass": "{entity_name} mass changes",
       "value": "{entity_name} value changes"
     }
   },
