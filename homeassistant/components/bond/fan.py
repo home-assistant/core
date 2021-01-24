@@ -15,7 +15,7 @@ from homeassistant.components.fan import (
     SUPPORT_DIRECTION,
     SUPPORT_SET_SPEED,
     FanEntity,
-    percentage_compat,
+    fan_compat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -120,17 +120,26 @@ class BondFan(BondEntity, FanEntity):
         )
 
     #
-    # The fan entity model has changed to use percentages.
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
     #
-    # The @percentage_compat decorator will ensure the speed argument is set
-    # when a percentage is passed in. When this entity is updated to use the
-    # new model with `speed` and `set_speed` removed, switch the decorator to
-    # @speed_compat to ensure the percentage argument will be filled for
-    # places that still pass in speed instead of percentage.
+    # The @fan_compat decorator provides backwards compatibility
+    # by setting the preset_mode or percentage when speed is passed in,
+    # and forward compatibility by setting speed when preset_mode or
+    # percentage is passed in.
     #
-    @percentage_compat
+    # When the deprecation of the old model is completed and this
+    # entity has been updated to implement `set_percentage`
+    # `percentage`, `set_preset_mode`, `preset_modes`, and `preset_mode`,
+    # remove the @fan_compat decorator.
+    #
+    @fan_compat
     async def async_turn_on(
-        self, speed: Optional[str] = None, percentage: int = None, **kwargs
+        self,
+        speed: Optional[str] = None,
+        percentage: Optional[int] = None,
+        preset_mode: Optional[str] = None,
+        **kwargs,
     ) -> None:
         """Turn on the fan."""
         _LOGGER.debug("Fan async_turn_on called with speed %s", speed)

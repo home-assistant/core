@@ -80,16 +80,23 @@ class TasmotaFan(
             self._tasmota_entity.set_speed(HA_TO_TASMOTA_SPEED_MAP[speed])
 
     #
-    # The fan entity model has changed to use percentages.
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
     #
-    # The @percentage_compat decorator will ensure the speed argument is set
-    # when a percentage is passed in. When this entity is updated to use the
-    # new model with `speed` and `set_speed` removed, switch the decorator to
-    # @speed_compat to ensure the percentage argument will be filled for
-    # places that still pass in speed instead of percentage.
+    # The @fan_compat decorator provides backwards compatibility
+    # by setting the preset_mode or percentage when speed is passed in,
+    # and forward compatibility by setting speed when preset_mode or
+    # percentage is passed in.
     #
-    @fan.percentage_compat
-    async def async_turn_on(self, speed=None, percentage=None, **kwargs):
+    # When the deprecation of the old model is completed and this
+    # entity has been updated to implement `set_percentage`
+    # `percentage`, `set_preset_mode`, `preset_modes`, and `preset_mode`,
+    # remove the @fan_compat decorator.
+    #
+    @fan.fan_compat
+    async def async_turn_on(
+        self, speed=None, percentage=None, preset_mode=None, **kwargs
+    ):
         """Turn the fan on."""
         # Tasmota does not support turning a fan on with implicit speed
         await self.async_set_speed(speed or fan.SPEED_MEDIUM)
