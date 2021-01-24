@@ -20,6 +20,7 @@ from homeassistant.const import (
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_MASS,
     DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_POWER_FACTOR,
@@ -57,6 +58,7 @@ DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_CURRENT,  # current (A)
     DEVICE_CLASS_ENERGY,  # energy (kWh, Wh)
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air
+    DEVICE_CLASS_MASS,  # mass (kg/lb)
     DEVICE_CLASS_ILLUMINANCE,  # current light level (lx/lm)
     DEVICE_CLASS_MONETARY,  # Amount of money (currency)
     DEVICE_CLASS_SIGNAL_STRENGTH,  # signal strength (dB/dBm)
