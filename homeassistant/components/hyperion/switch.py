@@ -28,9 +28,11 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import slugify
 
 from . import get_hyperion_unique_id, listen_for_instance_updates
 from .const import (
+    COMPONENT_TO_NAME,
     CONF_INSTANCE_CLIENTS,
     DOMAIN,
     NAME_SUFFIX_HYPERION_COMPONENT_SWITCH,
@@ -38,19 +40,16 @@ from .const import (
     TYPE_HYPERION_COMPONENT_SWITCH_BASE,
 )
 
-COMPONENT_TO_SWITCH_TYPE = {
-    component: f"{TYPE_HYPERION_COMPONENT_SWITCH_BASE}_{component.lower()}"
-    for component in [
-        KEY_COMPONENTID_ALL,
-        KEY_COMPONENTID_SMOOTHING,
-        KEY_COMPONENTID_BLACKBORDER,
-        KEY_COMPONENTID_FORWARDER,
-        KEY_COMPONENTID_BOBLIGHTSERVER,
-        KEY_COMPONENTID_GRABBER,
-        KEY_COMPONENTID_LEDDEVICE,
-        KEY_COMPONENTID_V4L,
-    ]
-}
+COMPONENT_SWITCHES = [
+    KEY_COMPONENTID_ALL,
+    KEY_COMPONENTID_SMOOTHING,
+    KEY_COMPONENTID_BLACKBORDER,
+    KEY_COMPONENTID_FORWARDER,
+    KEY_COMPONENTID_BOBLIGHTSERVER,
+    KEY_COMPONENTID_GRABBER,
+    KEY_COMPONENTID_LEDDEVICE,
+    KEY_COMPONENTID_V4L,
+]
 
 
 async def async_setup_entry(
@@ -60,17 +59,36 @@ async def async_setup_entry(
     entry_data = hass.data[DOMAIN][config_entry.entry_id]
     server_id = config_entry.unique_id
 
+    def component_to_switch_type(component: str) -> str:
+        """Convert a component to a switch type string."""
+        return slugify(
+            f"{TYPE_HYPERION_COMPONENT_SWITCH_BASE} {COMPONENT_TO_NAME[component]}"
+        )
+
+    def component_to_unique_id(component: str, instance_num: int) -> str:
+        """Convert a component to a unique_id."""
+        assert server_id
+        return get_hyperion_unique_id(
+            server_id, instance_num, component_to_switch_type(component)
+        )
+
+    def component_to_switch_name(component: str, instance_name: str) -> str:
+        """Convert a component to a switch name."""
+        return (
+            f"{instance_name} "
+            f"{NAME_SUFFIX_HYPERION_COMPONENT_SWITCH} "
+            f"{COMPONENT_TO_NAME.get(component, component.capitalize())}"
+        )
+
     def instance_add(instance_num: int, instance_name: str) -> None:
         """Add entities for a new Hyperion instance."""
         assert server_id
         switches = []
-        for component in COMPONENT_TO_SWITCH_TYPE:
+        for component in COMPONENT_SWITCHES:
             switches.append(
                 HyperionComponentSwitch(
-                    get_hyperion_unique_id(
-                        server_id, instance_num, COMPONENT_TO_SWITCH_TYPE[component]
-                    ),
-                    f"{instance_name} {NAME_SUFFIX_HYPERION_COMPONENT_SWITCH} {component.capitalize()}",
+                    component_to_unique_id(component, instance_num),
+                    component_to_switch_name(component, instance_name),
                     component,
                     entry_data[CONF_INSTANCE_CLIENTS][instance_num],
                 ),
@@ -80,13 +98,11 @@ async def async_setup_entry(
     def instance_remove(instance_num: int) -> None:
         """Remove entities for an old Hyperion instance."""
         assert server_id
-        for component in COMPONENT_TO_SWITCH_TYPE:
+        for component in COMPONENT_SWITCHES:
             async_dispatcher_send(
                 hass,
                 SIGNAL_ENTITY_REMOVE.format(
-                    get_hyperion_unique_id(
-                        server_id, instance_num, COMPONENT_TO_SWITCH_TYPE[component]
-                    )
+                    component_to_unique_id(component, instance_num),
                 ),
             )
 
@@ -148,6 +164,7 @@ class HyperionComponentSwitch(SwitchEntity):
         return bool(self._client.has_loaded_state)
 
     async def _async_send_set_component(self, value: bool) -> None:
+        """Send a component control request."""
         await self._client.async_send_set_component(
             **{
                 KEY_COMPONENTSTATE: {
