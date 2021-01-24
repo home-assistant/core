@@ -236,7 +236,9 @@ class FanEntity(ToggleEntity):
         if preset_mode in self.preset_modes:
             self.set_speed(preset_mode)
         else:
-            raise ValueError
+            raise ValueError(
+                f"The preset_mode {preset_mode} is not a valid preset_mode."
+            )
 
     @_fan_native
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -247,7 +249,9 @@ class FanEntity(ToggleEntity):
         if preset_mode in self.preset_modes:
             await self.async_set_speed(preset_mode)
         else:
-            raise ValueError
+            raise ValueError(
+                f"The preset_mode {preset_mode} is not a valid preset_mode."
+            )
 
     def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
