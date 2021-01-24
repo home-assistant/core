@@ -4,7 +4,7 @@ from asyncio import gather
 from collections.abc import Mapping
 import logging
 import pprint
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from aiohttp.web import json_response
 
@@ -61,6 +61,30 @@ async def _get_area(hass, entity_id) -> Optional[AreaEntry]:
         area_id = device_entry.area_id
 
     return area_reg.areas.get(area_id)
+
+
+async def _get_device_info(hass, entity_id) -> Optional[Dict[str, str]]:
+    """Retrieve the device info for a entity_id."""
+    dev_reg, ent_reg = await gather(
+        hass.helpers.device_registry.async_get_registry(),
+        hass.helpers.entity_registry.async_get_registry(),
+    )
+
+    entity_entry = ent_reg.async_get(entity_id)
+    if not entity_entry:
+        return None
+    device_entry = dev_reg.devices.get(entity_entry.device_id)
+    if not device_entry:
+        return None
+
+    device_info = {}
+    if device_entry.manufacturer:
+        device_info["manufacturer"] = device_entry.manufacturer
+    if device_entry.model:
+        device_info["model"] = device_entry.model
+    if device_entry.sw_version:
+        device_info["swVersion"] = device_entry.sw_version
+    return device_info
 
 
 class AbstractConfig(ABC):
@@ -478,6 +502,10 @@ class GoogleEntity:
             area = await _get_area(self.hass, state.entity_id)
             if area and area.name:
                 device["roomHint"] = area.name
+
+        device_info = await _get_device_info(self.hass, state.entity_id)
+        if device_info:
+            device["deviceInfo"] = device_info
 
         return device
 
