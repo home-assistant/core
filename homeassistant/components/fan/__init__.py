@@ -90,6 +90,10 @@ class NoValidSpeedsError(ValueError):
     """Exception class when there are no valid speeds."""
 
 
+class NotValidSpeedError(ValueError):
+    """Exception class when the speed in not in the speed list."""
+
+
 @bind_hass
 def is_on(hass, entity_id: str) -> bool:
     """Return if the fans are on based on the statemachine."""
@@ -396,10 +400,13 @@ class FanEntity(ToggleEntity):
         if speed in OFF_SPEED_VALUES:
             return 0
 
+        speed_list = _filter_out_preset_modes(self.speed_list)
+
+        if speed_list and speed not in speed_list:
+            raise NotValidSpeedError(f"The speed {speed} is not a valid speed.")
+
         try:
-            return ordered_list_item_to_percentage(
-                _filter_out_preset_modes(self.speed_list), speed
-            )
+            return ordered_list_item_to_percentage(speed_list, speed)
         except ValueError as ex:
             raise NoValidSpeedsError(NO_VALID_SPEEDS_EXCEPTION_MESSAGE) from ex
 
