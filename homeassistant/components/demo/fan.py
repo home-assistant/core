@@ -235,6 +235,7 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         self._percentage = percentage
+        self._preset_mode = None
         self.async_write_ha_state()
 
     @property
