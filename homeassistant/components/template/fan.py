@@ -20,7 +20,7 @@ from homeassistant.components.fan import (
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
     FanEntity,
-    preset_modes_filter,
+    preset_modes_from_speed_list,
 )
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -291,7 +291,7 @@ class TemplateFan(TemplateEntity, FanEntity):
         """Get the list of available preset modes."""
         if self._preset_modes is not None:
             return self._preset_modes
-        return preset_modes_filter(self._speed_list)
+        return preset_modes_from_speed_list(self._speed_list)
 
     @property
     def is_on(self):
