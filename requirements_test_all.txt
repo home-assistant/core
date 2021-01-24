@@ -149,7 +149,7 @@ aioymaps==1.1.0
 airly==1.0.0
 
 # homeassistant.components.ai_speaker
-aisapi==0.0.4
+aisapi==0.0.9
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1

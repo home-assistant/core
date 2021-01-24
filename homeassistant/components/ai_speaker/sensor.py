@@ -29,9 +29,6 @@ class AisSensor(Entity):
         self._ais_manufacturer = None
         self._ais_model = None
         self._ais_os_version = None
-        self._ais_api_level = None
-        self._ais_ip_address = None
-        self._ais_hostname = None
         self._ais_gate_network_speed = None
 
     @property
@@ -67,16 +64,6 @@ class AisSensor(Entity):
         return DATA_RATE_KILOBITS_PER_SECOND
 
     @property
-    def device_state_attributes(self):
-        """Return the attributes of the device."""
-        return {
-            "ais_id": self._ais_id,
-            "ais_api_level": self._ais_api_level,
-            "ais_ip_address": self._ais_ip_address,
-            "ais_hostname": self._ais_hostname,
-        }
-
-    @property
     def icon(self):
         """Return the icon to use in the frontend."""
         return "mdi:speaker"
@@ -89,8 +76,4 @@ class AisSensor(Entity):
         self._ais_manufacturer = ais_info["Manufacturer"]
         self._ais_model = ais_info["Model"]
         self._ais_os_version = ais_info["OsVersion"]
-        self._ais_api_level = ais_info["ApiLevel"]
-        self._ais_ip_address = ais_info["IPAddressIPv4"]
-        self._ais_hostname = ais_info["Hostname"]
-        self._ais_hostname = ais_info["Hostname"]
         self._ais_gate_network_speed = ais_info["NetworkSpeed"]

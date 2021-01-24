@@ -1,4 +1,5 @@
 """Config flow for AI Speaker integration."""
+import asyncio
 import logging
 
 from aisapi.ws import AisWebService
@@ -25,8 +26,11 @@ class AisDevice:
 
     async def get_gate_info(self):
         """Return the ais gate info."""
-        ais_ws = AisWebService(self.hass.loop, self.web_session, self.host)
-        return await ais_ws.get_gate_info()
+        try:
+            ais_ws = AisWebService(self.web_session, self.host)
+            return await ais_ws.get_gate_info()
+        except asyncio.TimeoutError:
+            _LOGGER.error("Failed to connect to AIS.")
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -35,10 +39,9 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     ais_gate = AisDevice(hass, data["host"])
-
     ais_gate_info = await ais_gate.get_gate_info()
-    if ais_gate_info is None:
-        raise InvalidAuth
+    if not ais_gate_info:
+        raise CannotConnect()
 
     product = ais_gate_info["Product"]
     ais_id = ais_gate_info["ais_id"]
@@ -62,8 +65,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
+        except CannotConnect:
+            _LOGGER.error("Aborted, cannot connect to %s", user_input["host"])
+            return self.async_abort(reason="cannot_connect")
         except Exception as error:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception %s", error)
             errors["base"] = "unknown"
@@ -79,5 +83,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
