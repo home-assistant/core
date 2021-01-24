@@ -6,7 +6,7 @@ import logging
 import logging.handlers
 import queue
 import traceback
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable, Coroutine, Union
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant, callback
@@ -108,7 +108,7 @@ def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
 
 def catch_log_exception(
     func: Callable[..., Any], format_err: Callable[..., Any], *args: Any
-) -> Callable[[], None]:
+) -> Union[Callable[..., None], Callable[..., Coroutine[Any, Any, None]]]:
     """Decorate a callback to catch and log exceptions."""
 
     # Check for partials to properly determine if coroutine function
@@ -116,7 +116,7 @@ def catch_log_exception(
     while isinstance(check_func, partial):
         check_func = check_func.func
 
-    wrapper_func = None
+    wrapper_func: Union[Callable[..., None], Callable[..., Coroutine[Any, Any, None]]]
     if asyncio.iscoroutinefunction(check_func):
 
         @wraps(func)
