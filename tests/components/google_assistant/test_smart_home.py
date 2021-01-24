@@ -161,6 +161,7 @@ async def test_sync_in_area(area_on_device, hass, registries):
     device = registries.device.async_get_or_create(
         config_entry_id="1234",
         manufacturer="Someone",
+        model="Some model",
         sw_version="Some Version",
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
@@ -253,6 +254,7 @@ async def test_sync_in_area(area_on_device, hass, registries):
                     },
                     "deviceInfo": {
                         "manufacturer": "Someone",
+                        "model": "Some model",
                         "swVersion": "Some Version",
                     },
                     "roomHint": "Living Room",
