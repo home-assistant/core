@@ -9,6 +9,16 @@ set_speed:
       description: Speed setting
       example: "low"
 
+set_preset_mode:
+  description: Set preset mode for a fan device.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: "fan.kitchen"
+    preset_mode:
+      description: New value of preset mode
+      example: "auto"
+
 set_percentage:
   description: Sets fan speed percentage.
   fields:
@@ -31,6 +41,9 @@ turn_on:
     percentage:
       description: Percentage speed setting
       example: 75
+    preset_mode:
+      description: Preset mode setting
+      example: "auto"
 
 turn_off:
   description: Turns fan off.
