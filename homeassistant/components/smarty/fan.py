@@ -88,13 +88,18 @@ class SmartyFan(FanEntity):
             self._state = True
 
     #
-    # The fan entity model has changed to use percentages.
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
     #
-    # The @fan_compat decorator will ensure the speed argument is set
-    # when a percentage is passed in. When the entity model completes
-    # the deprecation of speed, the decorator
-    # @fan_compat should be removed.
-
+    # The @fan_compat decorator provides backwards compatibility
+    # by setting the preset_mode or percentage when speed is passed in,
+    # and forward compatibility by setting speed when preset_mode or
+    # percentage is passed in.
+    #
+    # When the deprecation of the old model is completed and this
+    # entity has been updated to implement `set_percentage`
+    # `percentage`, `set_preset_mode`, `preset_modes`, and `preset_mode`,
+    # remove the @fan_compat decorator.
     #
     @fan_compat
     def turn_on(self, speed=None, percentage=None, preset_mode=None, **kwargs):
