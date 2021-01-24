@@ -244,6 +244,7 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._state = STATE_OFF
         self._speed = None
         self._percentage = None
+        self._preset_mode = None
         self._oscillating = None
         self._direction = None
 
