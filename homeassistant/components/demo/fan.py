@@ -8,8 +8,7 @@ from homeassistant.components.fan import (
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
     FanEntity,
-    percentage_compat,
-    speed_compat,
+    fan_compat,
 )
 
 FULL_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
@@ -97,8 +96,14 @@ class DemoFan(BaseDemoFan, FanEntity):
         """Get the list of available speeds."""
         return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-    @percentage_compat
-    def turn_on(self, speed: str = None, percentage: int = None, **kwargs) -> None:
+    @fan_compat
+    def turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
         """Turn on the entity."""
         if speed is None:
             speed = SPEED_MEDIUM
@@ -138,8 +143,14 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
         self._percentage = percentage
         self.schedule_update_ha_state()
 
-    @speed_compat
-    def turn_on(self, speed: str = None, percentage: int = None, **kwargs) -> None:
+    @fan_compat
+    def turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
         """Turn on the entity."""
         if percentage is None:
             percentage = 67
@@ -164,9 +175,13 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
         self._percentage = percentage
         self.async_write_ha_state()
 
-    @speed_compat
+    @fan_compat
     async def async_turn_on(
-        self, speed: str = None, percentage: int = None, **kwargs
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
     ) -> None:
         """Turn on the entity."""
         if percentage is None:

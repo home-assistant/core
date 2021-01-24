@@ -9,7 +9,7 @@ from homeassistant.components.fan import (
     SPEED_OFF,
     SUPPORT_SET_SPEED,
     FanEntity,
-    percentage_compat,
+    fan_compat,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -59,12 +59,12 @@ class ZwaveFan(ZWaveDeviceEntity, FanEntity):
         """Set the speed of the fan."""
         self.node.set_dimmer(self.values.primary.value_id, SPEED_TO_VALUE[speed])
 
-    # The fan entity model has changed. The @percentage_compat decorator will ensure
+    # The fan entity model has changed. The @fan_compat decorator will ensure
     # the speed argument is set when a percentage is passed in.  When this entity is
     # updated to use the new model and `speed` and # `set_speed` have been removed
-    # switch the decorator to @speed_compat to ensure the percentage argument will be
+    # switch the decorator to @fan_compat to ensure the percentage argument will be
     # filled for places that still pass in speed instead of percentage.
-    @percentage_compat
+    @fan_compat
     def turn_on(self, speed=None, percentage=None, **kwargs):
         """Turn the device on."""
         if speed is None:

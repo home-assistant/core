@@ -9,7 +9,7 @@ from homeassistant.components.fan import (
     SPEED_OFF,
     SUPPORT_SET_SPEED,
     FanEntity,
-    percentage_compat,
+    fan_compat,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -90,13 +90,13 @@ class SmartyFan(FanEntity):
     #
     # The fan entity model has changed to use percentages.
     #
-    # The @percentage_compat decorator will ensure the speed argument is set
-    # when a percentage is passed in. When this entity is updated to use the
-    # new model with `speed` and `set_speed` removed, switch the decorator to
-    # @speed_compat to ensure the percentage argument will be filled for
-    # places that still pass in speed instead of percentage.
+    # The @fan_compat decorator will ensure the speed argument is set
+    # when a percentage is passed in. When the entity model completes
+    # the completes the deprecation of speed, the decorator
+    # @fan_compat should be removed.
+
     #
-    @percentage_compat
+    @fan_compat
     def turn_on(self, speed=None, percentage=None, **kwargs):
         """Turn on the fan."""
         _LOGGER.debug("Turning on fan. Speed is %s", speed)
