@@ -356,8 +356,12 @@ class TemplateFan(TemplateEntity, FanEntity):
 
         self._state = STATE_OFF if speed == SPEED_OFF else STATE_ON
         self._speed = speed
-        self._percentage = self.speed_to_percentage(speed)
-        self._preset_mode = speed if speed in self.preset_modes else None
+        if speed in self.preset_modes:
+            self._preset_mode = speed
+            self._percentage = None
+        else:
+            self._preset_mode = None
+            self._percentage = self.speed_to_percentage(speed)
         await self._set_speed_script.async_run(
             {ATTR_SPEED: speed}, context=self._context
         )
