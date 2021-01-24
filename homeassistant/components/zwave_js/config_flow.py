@@ -258,6 +258,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Failed to start Z-Wave JS add-on: %s", err)
                 errors["base"] = "addon_start_failed"
             else:
+                # Sleep some seconds to let the add-on start properly before connecting.
+                await asyncio.sleep(10)
                 discovery_info = await self._async_get_addon_discovery_info()
                 self.ws_address = (
                     f"ws://{discovery_info['host']}:{discovery_info['port']}"
