@@ -16,9 +16,6 @@ async def test_form(hass):
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.ai_speaker.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ), patch(
         "homeassistant.components.ai_speaker.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.ai_speaker.async_setup_entry",
@@ -30,11 +27,9 @@ async def test_form(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
-    assert result2["data"] == {"host": "1.1.1.1"}
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result2["type"] == "abort"
+    assert len(mock_setup.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_form_cannot_connect(hass):
