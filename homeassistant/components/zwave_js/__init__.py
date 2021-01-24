@@ -106,6 +106,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async_dispatcher_send(
                 hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
             )
+        # add listener for node events
+        node.on("value notification", on_node_event)
 
     @callback
     def async_on_node_added(node: ZwaveNode) -> None:
