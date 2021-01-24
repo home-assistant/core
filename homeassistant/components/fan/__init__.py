@@ -232,11 +232,7 @@ class FanEntity(ToggleEntity):
     @_fan_native
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if not self._implemented_speed and not self._implemented_percentage:
-            raise NotImplementedError
-
         preset_modes = self.preset_modes
-
         if preset_mode not in preset_modes:
             raise ValueError(
                 f"The preset_mode {preset_mode} is not a valid preset_mode: {preset_modes}"
@@ -247,11 +243,11 @@ class FanEntity(ToggleEntity):
     @_fan_native
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if not self._implemented_speed and not self._implemented_percentage:
-            raise NotImplementedError
+        if not hasattr(self.set_preset_mode, _FAN_NATIVE):
+            await self.hass.async_add_executor_job(self.set_preset_mode, preset_mode)
+            return
 
         preset_modes = self.preset_modes
-
         if preset_mode not in preset_modes:
             raise ValueError(
                 f"The preset_mode {preset_mode} is not a valid preset_mode: {preset_modes}"
