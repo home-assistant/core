@@ -415,7 +415,7 @@ class FanEntity(ToggleEntity):
         if speed in OFF_SPEED_VALUES:
             return 0
 
-        speed_list = _filter_out_preset_modes(self.speed_list)
+        speed_list = preset_modes_filter(self.speed_list)
 
         if speed_list and speed not in speed_list:
             raise NotValidSpeedError(f"The speed {speed} is not a valid speed.")
@@ -449,7 +449,7 @@ class FanEntity(ToggleEntity):
 
         try:
             return percentage_to_ordered_list_item(
-                _filter_out_preset_modes(self.speed_list), percentage
+                preset_modes_filter(self.speed_list), percentage
             )
         except ValueError as ex:
             raise NoValidSpeedsError(NO_VALID_SPEEDS_EXCEPTION_MESSAGE) from ex
@@ -495,7 +495,7 @@ class FanEntity(ToggleEntity):
 
         Requires SUPPORT_SET_SPEED.
         """
-        return _filter_out_speeds(self.speed_list)
+        return speeds_filter(self.speed_list)
 
 
 # Decorator
@@ -550,7 +550,7 @@ def fan_compat(func: Callable) -> Callable:
     return wrap_turn_on
 
 
-def _filter_out_preset_modes(speed_list: List):
+def speeds_filter(speed_list: List):
     """Filter out non-speeds from the speed list.
 
     The goal is to get the speeds in a list from lowest to
@@ -574,7 +574,7 @@ def _filter_out_preset_modes(speed_list: List):
     return [speed for speed in speed_list if speed.lower() not in _NOT_SPEEDS_FILTER]
 
 
-def _filter_out_speeds(speed_list: List):
+def preset_modes_filter(speed_list: List):
     """Filter out non-preset modes from the speed list.
 
     The goal is to return only preset modes.

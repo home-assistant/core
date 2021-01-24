@@ -7,6 +7,7 @@ from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
     ATTR_SPEED,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
@@ -19,6 +20,7 @@ from homeassistant.components.fan import (
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
     FanEntity,
+    preset_modes_filter,
 )
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -44,8 +46,10 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_FANS = "fans"
 CONF_SPEED_LIST = "speeds"
+CONF_PRESET_MODES = "preset_modes"
 CONF_SPEED_TEMPLATE = "speed_template"
 CONF_PERCENTAGE_TEMPLATE = "percentage_template"
+CONF_PRESET_MODE_TEMPLATE = "preset_mode_template"
 CONF_OSCILLATING_TEMPLATE = "oscillating_template"
 CONF_DIRECTION_TEMPLATE = "direction_template"
 CONF_ON_ACTION = "turn_on"
@@ -54,6 +58,7 @@ CONF_SET_PERCENTAGE_ACTION = "set_percentage"
 CONF_SET_SPEED_ACTION = "set_speed"
 CONF_SET_OSCILLATING_ACTION = "set_oscillating"
 CONF_SET_DIRECTION_ACTION = "set_direction"
+CONF_SET_PRESET_MODE_ACTION = "set_preset_mode"
 
 _VALID_STATES = [STATE_ON, STATE_OFF]
 _VALID_OSC = [True, False]
@@ -70,6 +75,7 @@ FAN_SCHEMA = vol.All(
             vol.Required(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_SPEED_TEMPLATE): cv.template,
             vol.Optional(CONF_PERCENTAGE_TEMPLATE): cv.template,
+            vol.Optional(CONF_PRESET_MODE_TEMPLATE): cv.template,
             vol.Optional(CONF_OSCILLATING_TEMPLATE): cv.template,
             vol.Optional(CONF_DIRECTION_TEMPLATE): cv.template,
             vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
@@ -77,12 +83,14 @@ FAN_SCHEMA = vol.All(
             vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SET_SPEED_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(
                 CONF_SPEED_LIST,
                 default=[SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
             ): cv.ensure_list,
+            vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
             vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
@@ -104,6 +112,7 @@ async def _async_create_entities(hass, config):
         state_template = device_config[CONF_VALUE_TEMPLATE]
         speed_template = device_config.get(CONF_SPEED_TEMPLATE)
         percentage_template = device_config.get(CONF_PERCENTAGE_TEMPLATE)
+        preset_mode_template = device_config.get(CONF_PRESET_MODE_TEMPLATE)
         oscillating_template = device_config.get(CONF_OSCILLATING_TEMPLATE)
         direction_template = device_config.get(CONF_DIRECTION_TEMPLATE)
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
@@ -112,10 +121,12 @@ async def _async_create_entities(hass, config):
         off_action = device_config[CONF_OFF_ACTION]
         set_speed_action = device_config.get(CONF_SET_SPEED_ACTION)
         set_percentage_action = device_config.get(CONF_SET_PERCENTAGE_ACTION)
+        set_preset_mode_action = device_config.get(CONF_SET_PRESET_MODE_ACTION)
         set_oscillating_action = device_config.get(CONF_SET_OSCILLATING_ACTION)
         set_direction_action = device_config.get(CONF_SET_DIRECTION_ACTION)
 
         speed_list = device_config[CONF_SPEED_LIST]
+        preset_modes = device_config.get(CONF_PRESET_MODES)
         unique_id = device_config.get(CONF_UNIQUE_ID)
 
         fans.append(
@@ -126,6 +137,7 @@ async def _async_create_entities(hass, config):
                 state_template,
                 speed_template,
                 percentage_template,
+                preset_mode_template,
                 oscillating_template,
                 direction_template,
                 availability_template,
@@ -133,9 +145,11 @@ async def _async_create_entities(hass, config):
                 off_action,
                 set_speed_action,
                 set_percentage_action,
+                set_preset_mode_action,
                 set_oscillating_action,
                 set_direction_action,
                 speed_list,
+                preset_modes,
                 unique_id,
             )
         )
@@ -161,6 +175,7 @@ class TemplateFan(TemplateEntity, FanEntity):
         state_template,
         speed_template,
         percentage_template,
+        preset_mode_template,
         oscillating_template,
         direction_template,
         availability_template,
@@ -168,9 +183,11 @@ class TemplateFan(TemplateEntity, FanEntity):
         off_action,
         set_speed_action,
         set_percentage_action,
+        set_preset_mode_action,
         set_oscillating_action,
         set_direction_action,
         speed_list,
+        preset_modes,
         unique_id,
     ):
         """Initialize the fan."""
@@ -184,6 +201,7 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._template = state_template
         self._speed_template = speed_template
         self._percentage_template = percentage_template
+        self._preset_mode_template = preset_mode_template
         self._oscillating_template = oscillating_template
         self._direction_template = direction_template
         self._supported_features = 0
@@ -205,6 +223,12 @@ class TemplateFan(TemplateEntity, FanEntity):
                 hass, set_percentage_action, friendly_name, domain
             )
 
+        self._set_preset_mode_script = None
+        if set_preset_mode_action:
+            self._set_preset_mode_script = Script(
+                hass, set_preset_mode_action, friendly_name, domain
+            )
+
         self._set_oscillating_script = None
         if set_oscillating_action:
             self._set_oscillating_script = Script(
@@ -223,7 +247,11 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._oscillating = None
         self._direction = None
 
-        if self._speed_template or self._percentage_template:
+        if (
+            self._speed_template
+            or self._percentage_template
+            or self._preset_mode_template
+        ):
             self._supported_features |= SUPPORT_SET_SPEED
         if self._oscillating_template:
             self._supported_features |= SUPPORT_OSCILLATE
@@ -234,6 +262,9 @@ class TemplateFan(TemplateEntity, FanEntity):
 
         # List of valid speeds
         self._speed_list = speed_list
+
+        # List of valid preset modes
+        self._preset_modes = preset_modes
 
     @property
     def name(self):
@@ -254,6 +285,13 @@ class TemplateFan(TemplateEntity, FanEntity):
     def speed_list(self) -> list:
         """Get the list of available speeds."""
         return self._speed_list
+
+    @property
+    def preset_modes(self) -> list:
+        """Get the list of available preset modes."""
+        if self._preset_modes is not None:
+            return self._preset_modes
+        return preset_modes_filter(self._speed_list)
 
     @property
     def is_on(self):
@@ -282,12 +320,18 @@ class TemplateFan(TemplateEntity, FanEntity):
 
     # pylint: disable=arguments-differ
     async def async_turn_on(
-        self, speed: str = None, percentage: int = None, **kwargs
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
     ) -> None:
         """Turn on the fan."""
         await self._on_script.async_run({ATTR_SPEED: speed}, context=self._context)
         self._state = STATE_ON
 
+        if preset_mode is not None:
+            await self.async_set_preset_mode(preset_mode)
         if percentage is not None:
             await self.async_set_percentage(percentage)
         elif speed is not None:
@@ -313,6 +357,7 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._state = STATE_OFF if speed == SPEED_OFF else STATE_ON
         self._speed = speed
         self._percentage = self.speed_to_percentage(speed)
+        self._preset_mode = speed if speed in self.preset_modes else None
         await self._set_speed_script.async_run(
             {ATTR_SPEED: speed}, context=self._context
         )
@@ -332,8 +377,30 @@ class TemplateFan(TemplateEntity, FanEntity):
         if self._speed_list:
             self._speed = self.percentage_to_speed(percentage)
         self._percentage = percentage
+        self._preset_mode = None
         await self._set_percentage_script.async_run(
             {ATTR_PERCENTAGE: percentage}, context=self._context
+        )
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset_mode of the fan."""
+        if self._set_preset_mode_script is None:
+            return
+
+        if preset_mode not in self.preset_modes:
+            _LOGGER.error(
+                "Received invalid preset_mode: %s. Expected: %s",
+                preset_mode,
+                self.preset_modes,
+            )
+            return
+
+        self._state = STATE_ON
+        self._preset_mode = preset_mode
+        self._speed = preset_mode
+        self._percentage = None
+        await self._set_preset_mode_script.async_run(
+            {ATTR_PRESET_MODE: preset_mode}, context=self._context
         )
 
     async def async_oscillate(self, oscillating: bool) -> None:
@@ -393,6 +460,14 @@ class TemplateFan(TemplateEntity, FanEntity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.add_template_attribute("_state", self._template, None, self._update_state)
+        if self._preset_mode_template is not None:
+            self.add_template_attribute(
+                "_preset_mode",
+                self._preset_mode_template,
+                None,
+                self._update_preset_mode,
+                none_on_template_error=True,
+            )
         if self._percentage_template is not None:
             self.add_template_attribute(
                 "_percentage",
@@ -436,15 +511,18 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._state = STATE_OFF if speed == SPEED_OFF else STATE_ON
             self._speed = speed
             self._percentage = self.speed_to_percentage(speed)
+            self._preset_mode = speed if speed in self.preset_modes else None
         elif speed in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
             self._speed = None
             self._percentage = 0
+            self._preset_mode = None
         else:
             _LOGGER.error(
                 "Received invalid speed: %s. Expected: %s", speed, self._speed_list
             )
             self._speed = None
             self._percentage = 0
+            self._preset_mode = None
 
     @callback
     def _update_percentage(self, percentage):
@@ -455,6 +533,7 @@ class TemplateFan(TemplateEntity, FanEntity):
             _LOGGER.error("Received invalid percentage: %s", percentage)
             self._speed = None
             self._percentage = 0
+            self._preset_mode = None
             return
 
         if 0 <= percentage <= 100:
@@ -462,10 +541,36 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._percentage = percentage
             if self._speed_list:
                 self._speed = self.percentage_to_speed(percentage)
+            self._preset_mode = None
         else:
             _LOGGER.error("Received invalid percentage: %s", percentage)
             self._speed = None
             self._percentage = 0
+            self._preset_mode = None
+
+    @callback
+    def _update_preset_mode(self, preset_mode):
+        # Validate preset mode
+        preset_mode = str(preset_mode)
+
+        if preset_mode in self.preset_modes:
+            self._state = STATE_ON
+            self._speed = preset_mode
+            self._percentage = None
+            self._preset_mode = preset_mode
+        elif preset_mode in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+            self._speed = None
+            self._percentage = 0
+            self._preset_mode = None
+        else:
+            _LOGGER.error(
+                "Received invalid preset_mode: %s. Expected: %s",
+                preset_mode,
+                self.preset_mode,
+            )
+            self._speed = None
+            self._percentage = 0
+            self._preset_mode = None
 
     @callback
     def _update_oscillating(self, oscillating):
