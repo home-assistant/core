@@ -263,7 +263,6 @@ class RadioThermostat(ClimateEntity):
         # heating or cooling.
 
         try:
-
             # First time - get the name from the thermostat.  This is
             # normally set in the radio thermostat web app.
             if self._name is None:
@@ -274,6 +273,23 @@ class RadioThermostat(ClimateEntity):
 
             if self._is_model_ct80:
                 humiditydata = self.device.humidity["raw"]
+
+        except radiotherm.validate.RadiothermTstatError:
+            _LOGGER.warning(
+                "%s (%s) was busy (invalid value returned)",
+                self._name,
+                self.device.host,
+            )
+
+        except timeout:
+            _LOGGER.warning(
+                "Timeout waiting for response from %s (%s)",
+                self._name,
+                self.device.host,
+            )
+
+        else:
+            if self._is_model_ct80:
                 self._current_humidity = humiditydata
                 self._program_mode = data["program_mode"]
                 self._preset_mode = CODE_TO_PRESET_MODE[data["program_mode"]]
@@ -300,20 +316,6 @@ class RadioThermostat(ClimateEntity):
                     self._target_temperature = data["t_heat"]
             else:
                 self._current_operation = HVAC_MODE_OFF
-
-        except radiotherm.validate.RadiothermTstatError:
-            _LOGGER.warning(
-                "%s (%s) was busy (invalid value returned)",
-                self._name,
-                self.device.host,
-            )
-
-        except timeout:
-            _LOGGER.warning(
-                "Timeout waiting for response from %s (%s)",
-                self._name,
-                self.device.host,
-            )
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
