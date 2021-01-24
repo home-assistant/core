@@ -1,9 +1,9 @@
 """Support for Radio Thermostat wifi-enabled home thermostats."""
 import logging
+from socket import timeout
 
 import radiotherm
 import voluptuous as vol
-from socket import timeout
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
