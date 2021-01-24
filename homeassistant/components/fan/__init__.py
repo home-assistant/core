@@ -92,6 +92,10 @@ class NotValidSpeedError(ValueError):
     """Exception class when the speed in not in the speed list."""
 
 
+class NotValidPresetModeError(ValueError):
+    """Exception class when the preset_mode in not in the preset_modes list."""
+
+
 @bind_hass
 def is_on(hass, entity_id: str) -> bool:
     """Return if the fans are on based on the statemachine."""
@@ -304,7 +308,7 @@ class FanEntity(ToggleEntity):
         if preset_mode is not None:
             preset_modes = self.preset_modes
             if preset_mode not in preset_modes:
-                raise ValueError(
+                raise NotValidPresetModeError(
                     f"The preset_mode {preset_mode} is not a valid preset_mode: {preset_modes}"
                 )
             speed = preset_mode
