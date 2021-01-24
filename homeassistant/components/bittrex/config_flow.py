@@ -147,6 +147,8 @@ class BittrexConfigFlow(ConfigFlow, domain=DOMAIN):
             title = "Markets: " + ", ".join(self.bittrex_config[CONF_MARKETS])
 
             if CONF_BALANCES in self.bittrex_config:
+                await self.async_set_unique_id(user_input[CONF_BALANCES])
+
                 title = (
                     title
                     + " - "

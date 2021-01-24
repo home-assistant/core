@@ -39,8 +39,8 @@ class Ticker(CoordinatorEntity):
         self._currency = self._symbol.split("-")[0]
         self._unit_of_measurement = self._symbol.split("-")[1]
 
-        self._name = f"Bittrex Ticker - {self._symbol}"
-        self._unique_id = f"bittrex_ticker_{self._symbol})"
+        self._name = f"Ticker - {self._symbol}"
+        self._unique_id = f"ticker_{self._symbol})"
 
     def _get_data_property(self, property_name):
         """Return the property from self.coordinator.data."""
@@ -81,6 +81,7 @@ class Ticker(CoordinatorEntity):
             "ask_rate": self._get_data_property("askRate"),
             "currency": self._currency,
             "unit_of_measurement": self._unit_of_measurement,
+            "source": "Bittrex",
         }
 
 
@@ -92,8 +93,8 @@ class Balance(CoordinatorEntity):
         super().__init__(coordinator)
         self._balance = balance
 
-        self._name = f"Bittrex Balance - {self._balance}"
-        self._unique_id = f"bittrex_balance_{self._balance})"
+        self._name = f"Balance - {self._balance}"
+        self._unique_id = f"balance_{self._balance})"
 
     def _get_data_property(self, property_name):
         """Return the property from self.coordinator.data."""
@@ -135,4 +136,5 @@ class Balance(CoordinatorEntity):
             "available": self._get_data_property("available"),
             "updated_at": self._get_data_property("updatedAt"),
             "unit_of_measurement": self._get_data_property("currencySymbol"),
+            "source": "Bittrex",
         }
