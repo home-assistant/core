@@ -114,6 +114,7 @@ async def async_setup(hass, config: dict):
             vol.Optional(ATTR_PERCENTAGE): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=100)
             ),
+            vol.Optional(ATTR_PRESET_MODE): cv.string,
         },
         "async_turn_on",
     )
