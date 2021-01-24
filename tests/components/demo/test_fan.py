@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant.components import fan
-from homeassistant.components.demo.fan import PRESET_MODE_AUTO, PRESET_MODE_WOOSH
+from homeassistant.components.demo.fan import PRESET_MODE_AUTO, PRESET_MODE_SMART
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
@@ -84,6 +84,14 @@ async def test_turn_on_with_preset_mode(hass, fan_entity_id):
     assert state.attributes[fan.ATTR_SPEED] == PRESET_MODE_AUTO
     assert state.attributes[fan.ATTR_PERCENTAGE] is None
     assert state.attributes[fan.ATTR_PRESET_MODE] == PRESET_MODE_AUTO
+    assert state.attributes[fan.ATTR_PRESET_MODES] == [
+        fan.SPEED_OFF,
+        fan.SPEED_LOW,
+        fan.SPEED_MEDIUM,
+        fan.SPEED_HIGH,
+        PRESET_MODE_AUTO,
+        PRESET_MODE_SMART,
+    ]
 
     await hass.services.async_call(
         fan.DOMAIN,
@@ -100,14 +108,14 @@ async def test_turn_on_with_preset_mode(hass, fan_entity_id):
     await hass.services.async_call(
         fan.DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: fan_entity_id, fan.ATTR_PRESET_MODE: PRESET_MODE_WOOSH},
+        {ATTR_ENTITY_ID: fan_entity_id, fan.ATTR_PRESET_MODE: PRESET_MODE_SMART},
         blocking=True,
     )
     state = hass.states.get(fan_entity_id)
     assert state.state == STATE_ON
-    assert state.attributes[fan.ATTR_SPEED] == PRESET_MODE_WOOSH
+    assert state.attributes[fan.ATTR_SPEED] == PRESET_MODE_SMART
     assert state.attributes[fan.ATTR_PERCENTAGE] is None
-    assert state.attributes[fan.ATTR_PRESET_MODE] == PRESET_MODE_WOOSH
+    assert state.attributes[fan.ATTR_PRESET_MODE] == PRESET_MODE_SMART
 
     await hass.services.async_call(
         fan.DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: fan_entity_id}, blocking=True

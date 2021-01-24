@@ -14,7 +14,7 @@ from homeassistant.components.fan import (
 )
 
 PRESET_MODE_AUTO = "auto"
-PRESET_MODE_WOOSH = "woosh"
+PRESET_MODE_SMART = "smart"
 
 FULL_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
 LIMITED_SUPPORT = SUPPORT_SET_SPEED
@@ -32,12 +32,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 FULL_SUPPORT,
                 None,
                 [
-                    PRESET_MODE_AUTO,
-                    PRESET_MODE_WOOSH,
                     SPEED_OFF,
                     SPEED_LOW,
                     SPEED_MEDIUM,
                     SPEED_HIGH,
+                    PRESET_MODE_AUTO,
+                    PRESET_MODE_SMART,
                 ],
             ),
             DemoFan(
@@ -54,7 +54,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "fan3",
                 "Percentage Full Fan",
                 FULL_SUPPORT,
-                [PRESET_MODE_AUTO, PRESET_MODE_WOOSH],
+                [PRESET_MODE_AUTO, PRESET_MODE_SMART],
                 None,
             ),
             DemoPercentageFan(
