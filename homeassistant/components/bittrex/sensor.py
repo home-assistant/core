@@ -5,6 +5,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_BALANCES,
+    CONF_CLOSED_ORDERS,
+    CONF_OPEN_ORDERS,
     CONF_TICKERS,
     CURRENCY_ICONS,
     DEFAULT_COIN_ICON,
@@ -25,6 +27,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if CONF_BALANCES in coordinator.data:
         for balance in coordinator.data[CONF_BALANCES]:
             entities.append(Balance(coordinator, balance))
+
+    if CONF_OPEN_ORDERS in coordinator.data:
+        entities.append(OpenOrder(coordinator, coordinator.data[CONF_OPEN_ORDERS]))
+
+    if CONF_CLOSED_ORDERS in coordinator.data:
+        entities.append(ClosedOrder(coordinator, coordinator.data[CONF_CLOSED_ORDERS]))
 
     async_add_entities(entities, False)
 
@@ -138,3 +146,70 @@ class Balance(CoordinatorEntity):
             "unit_of_measurement": self._get_data_property("currencySymbol"),
             "source": "Bittrex",
         }
+
+
+class Order(CoordinatorEntity):
+    """Implementation of the order sensor."""
+
+    def __init__(self, coordinator, order):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._order = order
+        self._icon = "mdi:checkbook"
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return len(self._get_data())
+
+    @property
+    def unique_id(self):
+        """Return a unique id for the sensor."""
+        return self._unique_id
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return self._icon
+
+    @property
+    def device_state_attributes(self):
+        """Return additional sensor state attributes."""
+        return {
+            "source": "Bittrex",
+        }
+
+
+class OpenOrder(Order):
+    """Implementation of the open order sensor."""
+
+    def __init__(self, coordinator, order):
+        """Initialize the sensor."""
+        super().__init__(coordinator, order)
+
+        self._name = "Bittrex Orders - Open"
+        self._unique_id = "bittrex_orders_open"
+
+    def _get_data(self):
+        """Return the data from self.coordinator.data."""
+        return self.coordinator.data[CONF_OPEN_ORDERS]
+
+
+class ClosedOrder(Order):
+    """Implementation of the closed order sensor."""
+
+    def __init__(self, coordinator, order):
+        """Initialize the sensor."""
+        super().__init__(coordinator, order)
+
+        self._name = "Bittrex Orders - Closed"
+        self._unique_id = "bittrex_orders_closed"
+
+    def _get_data(self):
+        """Return the data from self.coordinator.data."""
+        return self.coordinator.data[CONF_CLOSED_ORDERS]
