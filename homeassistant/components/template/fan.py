@@ -345,9 +345,6 @@ class TemplateFan(TemplateEntity, FanEntity):
 
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
-        if self._set_speed_script is None:
-            return
-
         if speed not in self.speed_list:
             _LOGGER.error(
                 "Received invalid speed: %s. Expected: %s", speed, self.speed_list
@@ -362,35 +359,46 @@ class TemplateFan(TemplateEntity, FanEntity):
         else:
             self._preset_mode = None
             self._percentage = self.speed_to_percentage(speed)
-        await self._set_speed_script.async_run(
-            {ATTR_SPEED: speed}, context=self._context
-        )
+
+        if self._set_speed_script:
+            await self._set_speed_script.async_run(
+                {ATTR_SPEED: self._speed}, context=self._context
+            )
+        elif self._set_percentage_script is None and self._percentage:
+            await self._set_percentage_script.async_run(
+                {ATTR_PERCENTAGE: self._percentage}, context=self._context
+            )
+        elif self._set_preset_mode_script and self._preset_mode:
+            await self._set_preset_mode_script.async_run(
+                {ATTR_PRESET_MODE: self._preset_mode}, context=self._context
+            )
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage speed of the fan."""
-        if self._set_percentage_script is None:
-            return
-
         try:
             percentage = int(float(percentage))
         except ValueError:
             _LOGGER.error("Received invalid percentage: %s", percentage)
             return
 
+        speed_list = self.speed_list
         self._state = STATE_OFF if percentage == 0 else STATE_ON
-        if self.speed_list:
+        if speed_list:
             self._speed = self.percentage_to_speed(percentage)
         self._percentage = percentage
         self._preset_mode = None
-        await self._set_percentage_script.async_run(
-            {ATTR_PERCENTAGE: percentage}, context=self._context
-        )
+
+        if self._set_percentage_script is None:
+            await self._set_percentage_script.async_run(
+                {ATTR_PERCENTAGE: self._percentage}, context=self._context
+            )
+        elif self._set_speed_script and speed_list:
+            await self._set_speed_script.async_run(
+                {ATTR_SPEED: self._speed}, context=self._context
+            )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset_mode of the fan."""
-        if self._set_preset_mode_script is None:
-            return
-
         if preset_mode not in self.preset_modes:
             _LOGGER.error(
                 "Received invalid preset_mode: %s. Expected: %s",
@@ -403,9 +411,15 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._preset_mode = preset_mode
         self._speed = preset_mode
         self._percentage = None
-        await self._set_preset_mode_script.async_run(
-            {ATTR_PRESET_MODE: preset_mode}, context=self._context
-        )
+
+        if self._set_preset_mode_script:
+            await self._set_preset_mode_script.async_run(
+                {ATTR_PRESET_MODE: self._preset_mode}, context=self._context
+            )
+        elif self._set_speed_script:
+            await self._set_speed_script.async_run(
+                {ATTR_SPEED: self._speed}, context=self._context
+            )
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation of the fan."""
