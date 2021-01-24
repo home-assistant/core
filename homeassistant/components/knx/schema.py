@@ -430,3 +430,42 @@ class WeatherSchema:
             vol.Optional(CONF_KNX_HUMIDITY_ADDRESS): cv.string,
         }
     )
+
+
+class FanSchema:
+    """Voluptuous schema for KNX fans."""
+
+    CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
+
+    DEFAULT_NAME = "KNX Fan"
+
+    CONF_FAN_VALUE_OFF = "fan_value_off"
+    CONF_FAN_VALUE_LOW = "fan_value_low"
+    CONF_FAN_VALUE_MEDIUM = "fan_value_medim"
+    CONF_FAN_VALUE_HIGH = "fan_value_high"
+
+
+    DEFAULT_FAN_VALUE_OFF = 0
+    DEFAULT_FAN_VALUE_LOW = 33
+    DEFAULT_FAN_VALUE_MEDIUM= 66
+    DEFAULT_FAN_VALUE_HIGH = 100
+
+    SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_ADDRESS): cv.string,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Required(CONF_STATE_ADDRESS): cv.string,
+            vol.Optional(
+                CONF_FAN_VALUE_OFF, default=DEFAULT_FAN_VALUE_OFF
+            ): vol.All(float, vol.Range(min=0, max=100)),
+            vol.Optional(
+                CONF_FAN_VALUE_LOW, default=DEFAULT_FAN_VALUE_LOW
+            ): vol.All(float, vol.Range(min=0, max=100)),
+            vol.Optional(
+                CONF_FAN_VALUE_MEDIUM, default=DEFAULT_FAN_VALUE_MEDIUM
+            ): vol.All(float, vol.Range(min=0, max=100)),
+            vol.Optional(
+                CONF_FAN_VALUE_HIGH, default=DEFAULT_FAN_VALUE_HIGH
+            ): vol.All(float, vol.Range(min=0, max=100)),
+        }
+    )

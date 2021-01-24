@@ -14,6 +14,7 @@ from xknx.devices import (
     Sensor as XknxSensor,
     Switch as XknxSwitch,
     Weather as XknxWeather,
+    Fan as XknxFan,
 )
 
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, CONF_TYPE
@@ -29,6 +30,7 @@ from .schema import (
     SensorSchema,
     SwitchSchema,
     WeatherSchema,
+    FanSchema,
 )
 
 
@@ -64,6 +66,9 @@ def create_knx_device(
 
     if platform is SupportedPlatforms.weather:
         return _create_weather(knx_module, config)
+
+    if platform is SupportedPlatforms.fan:
+        return _create_fan(knx_module, config)
 
 
 def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
@@ -352,4 +357,15 @@ def _create_weather(knx_module: XKNX, config: ConfigType) -> XknxWeather:
             WeatherSchema.CONF_KNX_AIR_PRESSURE_ADDRESS
         ),
         group_address_humidity=config.get(WeatherSchema.CONF_KNX_HUMIDITY_ADDRESS),
+    )
+
+
+def _create_fan(knx_module: XKNX, config: ConfigType) -> XknxFan:
+    """Return a KNX Fan device to be used within XKNX."""
+
+    return XknxFan(
+        knx_module,
+        name=config[CONF_NAME],
+        group_address_speed=config.get(CONF_ADDRESS),
+        group_address_speed_state=config.get(FanSchema.CONF_STATE_ADDRESS),
     )

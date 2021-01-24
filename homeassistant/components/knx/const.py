@@ -42,6 +42,7 @@ class SupportedPlatforms(Enum):
     scene = "scene"
     sensor = "sensor"
     weather = "weather"
+    fan = "fan"
 
 
 # Map KNX controller modes to HA modes. This list might not be complete.
