@@ -199,6 +199,13 @@ class FanEntity(ToggleEntity):
                 )
                 return
 
+        if not hasattr(self.async_set_preset_mode, _FAN_NATIVE):
+            await self.async_set_preset_mode(speed)
+            return
+        if not hasattr(self.set_preset_mode, _FAN_NATIVE):
+            await self.hass.async_add_executor_job(self.set_preset_mode, speed)
+            return
+
         await self.hass.async_add_executor_job(self.set_speed, speed)
 
     @_fan_native
