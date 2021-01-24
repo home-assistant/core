@@ -350,7 +350,10 @@ class FanEntity(ToggleEntity):
     def capability_attributes(self):
         """Return capability attributes."""
         if self.supported_features & SUPPORT_SET_SPEED:
-            return {ATTR_SPEED_LIST: self.speed_list}
+            return {
+                ATTR_SPEED_LIST: self.speed_list,
+                ATTR_PRESET_MODES: self.preset_modes,
+            }
         return {}
 
     def speed_to_percentage(self, speed: str) -> int:
