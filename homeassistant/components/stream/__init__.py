@@ -60,7 +60,7 @@ def create_stream(hass, stream_source, options=None):
     """Create a stream based on the source url.
 
     The stream_source is typically an rtsp url and options are passed into
-    pyav / ffpmpeg as options.
+    pyav / ffmpeg as options.
     """
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
