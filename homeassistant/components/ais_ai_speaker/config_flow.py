@@ -25,7 +25,7 @@ class AisDevice:
 
     async def get_gate_info(self):
         """Return the ais gate info."""
-        ais_ws = AisWebService(self.hass.loop, self.web_session, self.host)
+        ais_ws = AisWebService(self.web_session, self.host)
         return await ais_ws.get_gate_info()
 
 

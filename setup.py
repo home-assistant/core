@@ -54,7 +54,7 @@ REQUIRES = [
     "voluptuous==0.12.1",
     "voluptuous-serialize==2.4.0",
     "ais-dom-frontend==20201229.8",
-    "aisapi==0.0.8",
+    "aisapi==0.0.9",
     "yarl==1.6.3",
 ]
 

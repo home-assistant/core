@@ -146,7 +146,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     _unique_id = config.get("unique_id")
 
     web_session = aiohttp_client.async_get_clientsession(hass)
-    ais_gate = AisWebService(hass.loop, web_session, _ip)
+    ais_gate = AisWebService(web_session, _ip)
 
     device = ExoPlayerDevice(_ip, _unique_id, name, ais_gate)
     _LOGGER.info("device: " + str(device))

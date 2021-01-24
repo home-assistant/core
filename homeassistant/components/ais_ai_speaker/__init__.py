@@ -21,7 +21,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up AI Speaker from a config entry."""
     web_session = aiohttp_client.async_get_clientsession(hass)
-    ais = AisWebService(hass.loop, web_session, entry.data["host"])
+    ais = AisWebService(web_session, entry.data["host"])
     hass.data[DOMAIN][entry.entry_id] = ais
 
     for component in PLATFORMS:
