@@ -1,0 +1,16 @@
+{
+  "domain": "anova_cooker",
+  "name": "Anova Sous Vide Cooker",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/anova_cooker",
+  "requirements": [
+    "pyanova-api==0.0.1"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@BR3NDA"
+  ]
+}

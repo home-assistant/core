@@ -36,6 +36,7 @@ homeassistant/components/ambiclimate/* @danielhiversen
 homeassistant/components/ambient_station/* @bachya
 homeassistant/components/amcrest/* @pnbruckner
 homeassistant/components/androidtv/* @JeffLIrion
+homeassistant/components/anova_cooker/* @BR3NDA
 homeassistant/components/apache_kafka/* @bachya
 homeassistant/components/api/* @home-assistant/core
 homeassistant/components/apple_tv/* @postlund

@@ -645,6 +645,9 @@ pyairvisual==5.0.4
 # homeassistant.components.almond
 pyalmond==0.0.2
 
+# homeassistant.components.anova_cooker
+pyanova-api==0.0.1
+
 # homeassistant.components.arlo
 pyarlo==0.2.4
 

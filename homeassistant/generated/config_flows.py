@@ -19,6 +19,7 @@ FLOWS = [
     "almond",
     "ambiclimate",
     "ambient_station",
+    "anova_cooker",
     "apple_tv",
     "arcam_fmj",
     "atag",
