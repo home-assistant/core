@@ -42,6 +42,7 @@ SERVICE_SET_SPEED = "set_speed"
 SERVICE_OSCILLATE = "oscillate"
 SERVICE_SET_DIRECTION = "set_direction"
 SERVICE_SET_PERCENTAGE = "set_percentage"
+SERVICE_SET_PRESET_MODE = "set_preset_mode"
 
 SPEED_OFF = "off"
 SPEED_LOW = "low"
@@ -56,6 +57,8 @@ ATTR_PERCENTAGE = "percentage"
 ATTR_SPEED_LIST = "speed_list"
 ATTR_OSCILLATING = "oscillating"
 ATTR_DIRECTION = "direction"
+ATTR_PRESET_MODE = "preset_mode"
+ATTR_PRESET_MODES = "preset_modes"
 
 # Invalid speeds do not conform to the entity model, but have crept
 # into core integrations at some point so we are temporarily
@@ -87,6 +90,10 @@ class NoValidSpeedsError(ValueError):
     """Exception class when there are no valid speeds."""
 
 
+class NotValidSpeedError(ValueError):
+    """Exception class when the speed in not in the speed list."""
+
+
 @bind_hass
 def is_on(hass, entity_id: str) -> bool:
     """Return if the fans are on based on the statemachine."""
@@ -111,6 +118,7 @@ async def async_setup(hass, config: dict):
             vol.Optional(ATTR_PERCENTAGE): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=100)
             ),
+            vol.Optional(ATTR_PRESET_MODE): cv.string,
         },
         "async_turn_on",
     )
@@ -142,6 +150,12 @@ async def async_setup(hass, config: dict):
             )
         },
         "async_set_percentage",
+        [SUPPORT_SET_SPEED],
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_PRESET_MODE,
+        {vol.Required(ATTR_PRESET_MODE): cv.string},
+        "async_set_preset_mode",
         [SUPPORT_SET_SPEED],
     )
 
@@ -177,14 +191,26 @@ class FanEntity(ToggleEntity):
         """Set the speed of the fan."""
         if speed == SPEED_OFF:
             await self.async_turn_off()
-        elif not hasattr(self.async_set_percentage, _FAN_NATIVE):
-            await self.async_set_percentage(self.speed_to_percentage(speed))
-        elif not hasattr(self.set_percentage, _FAN_NATIVE):
-            await self.hass.async_add_executor_job(
-                self.set_percentage, self.speed_to_percentage(speed)
-            )
+            return
+
+        if speed in self.preset_modes:
+            if not hasattr(self.async_set_preset_mode, _FAN_NATIVE):
+                await self.async_set_preset_mode(speed)
+                return
+            if not hasattr(self.set_preset_mode, _FAN_NATIVE):
+                await self.hass.async_add_executor_job(self.set_preset_mode, speed)
+                return
         else:
-            await self.hass.async_add_executor_job(self.set_speed, speed)
+            if not hasattr(self.async_set_percentage, _FAN_NATIVE):
+                await self.async_set_percentage(self.speed_to_percentage(speed))
+                return
+            if not hasattr(self.set_percentage, _FAN_NATIVE):
+                await self.hass.async_add_executor_job(
+                    self.set_percentage, self.speed_to_percentage(speed)
+                )
+                return
+
+        await self.hass.async_add_executor_job(self.set_speed, speed)
 
     @_fan_native
     def set_percentage(self, percentage: int) -> None:
@@ -201,6 +227,36 @@ class FanEntity(ToggleEntity):
         else:
             await self.async_set_speed(self.percentage_to_speed(percentage))
 
+    @_fan_native
+    def set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        if not self._implemented_speed and not self._implemented_percentage:
+            raise NotImplementedError
+
+        preset_modes = self.preset_modes
+
+        if preset_mode not in preset_modes:
+            raise ValueError(
+                f"The preset_mode {preset_mode} is not a valid preset_mode: {preset_modes}"
+            )
+
+        self.set_speed(preset_mode)
+
+    @_fan_native
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        if not self._implemented_speed and not self._implemented_percentage:
+            raise NotImplementedError
+
+        preset_modes = self.preset_modes
+
+        if preset_mode not in preset_modes:
+            raise ValueError(
+                f"The preset_mode {preset_mode} is not a valid preset_mode: {preset_modes}"
+            )
+
+        await self.async_set_speed(preset_mode)
+
     def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         raise NotImplementedError()
@@ -211,28 +267,59 @@ class FanEntity(ToggleEntity):
 
     # pylint: disable=arguments-differ
     def turn_on(
-        self, speed: Optional[str] = None, percentage: Optional[int] = None, **kwargs
+        self,
+        speed: Optional[str] = None,
+        percentage: Optional[int] = None,
+        preset_mode: Optional[str] = None,
+        **kwargs,
     ) -> None:
         """Turn on the fan."""
         raise NotImplementedError()
 
     # pylint: disable=arguments-differ
     async def async_turn_on(
-        self, speed: Optional[str] = None, percentage: Optional[int] = None, **kwargs
+        self,
+        speed: Optional[str] = None,
+        percentage: Optional[int] = None,
+        preset_mode: Optional[str] = None,
+        **kwargs,
     ) -> None:
         """Turn on the fan."""
         if speed == SPEED_OFF:
             await self.async_turn_off()
         else:
-            if percentage is None and speed is not None:
-                percentage = self.speed_to_percentage(speed)
-
-            if speed is None and percentage is not None:
-                speed = self.percentage_to_speed(percentage)
-
-            await self.hass.async_add_executor_job(
-                ft.partial(self.turn_on, speed=speed, percentage=percentage, **kwargs)
+            speed, percentage, preset_mode = self._convert_legacy_turn_on_arguments(
+                speed, percentage, preset_mode
             )
+            await self.hass.async_add_executor_job(
+                ft.partial(
+                    self.turn_on,
+                    speed=speed,
+                    percentage=percentage,
+                    preset_mode=preset_mode,
+                    **kwargs,
+                )
+            )
+
+    def _convert_legacy_turn_on_arguments(self, speed, percentage, preset_mode):
+        """Convert turn on arguments for backwards compatibility."""
+        if preset_mode is not None:
+            preset_modes = self.preset_modes
+            if preset_mode not in preset_modes:
+                raise ValueError(
+                    f"The preset_mode {preset_mode} is not a valid preset_mode: {preset_modes}"
+                )
+            speed = preset_mode
+            percentage = None
+        elif speed is not None:
+            if speed in self.preset_modes:
+                preset_mode = speed
+                percentage = None
+            else:
+                percentage = self.speed_to_percentage(speed)
+        elif percentage is not None:
+            speed = self.percentage_to_speed(percentage)
+        return speed, percentage, preset_mode
 
     def oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
@@ -255,9 +342,26 @@ class FanEntity(ToggleEntity):
         )
 
     @property
+    def _implemented_preset_mode(self):
+        """Return true if preset_mode has been implemented."""
+        return not hasattr(self.set_preset_mode, _FAN_NATIVE) or not hasattr(
+            self.async_set_preset_mode, _FAN_NATIVE
+        )
+
+    @property
+    def _implemented_speed(self):
+        """Return true if speed has been implemented."""
+        return not hasattr(self.set_speed, _FAN_NATIVE) or not hasattr(
+            self.async_set_speed, _FAN_NATIVE
+        )
+
+    @property
     def speed(self) -> Optional[str]:
         """Return the current speed."""
         if self._implemented_percentage:
+            preset_mode = self.preset_mode
+            if preset_mode:
+                return preset_mode
             return self.percentage_to_speed(self.percentage)
         return None
 
@@ -265,15 +369,21 @@ class FanEntity(ToggleEntity):
     def percentage(self) -> Optional[int]:
         """Return the current speed as a percentage."""
         if not self._implemented_percentage:
-            return self.speed_to_percentage(self.speed)
+            speed = self.speed
+            if speed in self.preset_modes:
+                return None
+            return self.speed_to_percentage(speed)
         return 0
 
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
+        speeds = []
         if self._implemented_percentage:
-            return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
-        return []
+            speeds += [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+        if self._implemented_preset_mode:
+            speeds += self.preset_modes
+        return speeds
 
     @property
     def current_direction(self) -> Optional[str]:
@@ -289,13 +399,11 @@ class FanEntity(ToggleEntity):
     def capability_attributes(self):
         """Return capability attributes."""
         if self.supported_features & SUPPORT_SET_SPEED:
-            return {ATTR_SPEED_LIST: self.speed_list}
+            return {
+                ATTR_SPEED_LIST: self.speed_list,
+                ATTR_PRESET_MODES: self.preset_modes,
+            }
         return {}
-
-    @property
-    def _normalized_speed_list(self) -> List[str]:
-        """Filter out non-speeds from the speed list."""
-        return normalize_speed_list(self.speed_list)
 
     def speed_to_percentage(self, speed: str) -> int:
         """
@@ -316,10 +424,17 @@ class FanEntity(ToggleEntity):
         if speed in OFF_SPEED_VALUES:
             return 0
 
+        speed_list = speed_list_without_preset_modes(self.speed_list)
+
+        if speed_list and speed not in speed_list:
+            raise NotValidSpeedError(f"The speed {speed} is not a valid speed.")
+
         try:
-            return ordered_list_item_to_percentage(self._normalized_speed_list, speed)
+            return ordered_list_item_to_percentage(speed_list, speed)
         except ValueError as ex:
-            raise NoValidSpeedsError(NO_VALID_SPEEDS_EXCEPTION_MESSAGE) from ex
+            raise NoValidSpeedsError(
+                f"The speed_list {speed_list} does not contain any valid speeds."
+            ) from ex
 
     def percentage_to_speed(self, percentage: int) -> str:
         """
@@ -343,12 +458,14 @@ class FanEntity(ToggleEntity):
         if percentage == 0:
             return SPEED_OFF
 
+        speed_list = speed_list_without_preset_modes(self.speed_list)
+
         try:
-            return percentage_to_ordered_list_item(
-                self._normalized_speed_list, percentage
-            )
+            return percentage_to_ordered_list_item(speed_list, percentage)
         except ValueError as ex:
-            raise NoValidSpeedsError(NO_VALID_SPEEDS_EXCEPTION_MESSAGE) from ex
+            raise NoValidSpeedsError(
+                f"The speed_list {speed_list} does not contain any valid speeds."
+            ) from ex
 
     @property
     def state_attributes(self) -> dict:
@@ -365,6 +482,7 @@ class FanEntity(ToggleEntity):
         if supported_features & SUPPORT_SET_SPEED:
             data[ATTR_SPEED] = self.speed
             data[ATTR_PERCENTAGE] = self.percentage
+            data[ATTR_PRESET_MODE] = self.preset_mode
 
         return data
 
@@ -373,10 +491,29 @@ class FanEntity(ToggleEntity):
         """Flag supported features."""
         return 0
 
+    @property
+    def preset_mode(self) -> Optional[str]:
+        """Return the current preset mode, e.g., auto, smart, interval, favorite.
+
+        Requires SUPPORT_SET_SPEED.
+        """
+        speed = self.speed
+        if speed in self.preset_modes:
+            return speed
+        return None
+
+    @property
+    def preset_modes(self) -> Optional[List[str]]:
+        """Return a list of available preset modes.
+
+        Requires SUPPORT_SET_SPEED.
+        """
+        return preset_modes_from_speed_list(self.speed_list)
+
 
 # Decorator
-def percentage_compat(func: Callable) -> Callable:
-    """Compaitiblity for fans that expect speed."""
+def fan_compat(func: Callable) -> Callable:
+    """Compatibility for fans during the transition to percentage and preset mode."""
 
     # Check for partials to properly determine if coroutine function
     check_func = func
@@ -387,62 +524,46 @@ def percentage_compat(func: Callable) -> Callable:
 
         @ft.wraps(func)
         async def wrap_async_turn_on(
-            self, speed: str = None, percentage: int = None, **kwargs
+            self,
+            speed: str = None,
+            percentage: int = None,
+            preset_mode: Optional[str] = None,
+            **kwargs,
         ) -> None:
-            """Wrap async_turn_on to add percentage compatibility."""
-            if percentage is not None and speed is None:
-                speed = self.percentage_to_speed(percentage)
-
-            return await check_func(self, speed=speed, percentage=percentage, **kwargs)
+            """Wrap async_turn_on to add percentage and preset mode compatibility."""
+            speed, percentage, preset_mode = self._convert_legacy_turn_on_arguments(
+                speed, percentage, preset_mode
+            )
+            return await check_func(
+                self,
+                speed=speed,
+                percentage=percentage,
+                preset_mode=preset_mode,
+                **kwargs,
+            )
 
         return wrap_async_turn_on
 
     @ft.wraps(func)
-    def wrap_turn_on(self, speed: str = None, percentage: int = None, **kwargs) -> None:
-        """Wrap turn_on to add percentage compatibility."""
-        if percentage is not None and speed is None:
-            speed = self.percentage_to_speed(percentage)
-
-        return check_func(self, speed=speed, percentage=percentage, **kwargs)
-
-    return wrap_turn_on
-
-
-# Decorator
-def speed_compat(func: Callable) -> Callable:
-    """Compaitiblity for fans that expect percentage."""
-
-    # Check for partials to properly determine if coroutine function
-    check_func = func
-    while isinstance(check_func, ft.partial):
-        check_func = check_func.func
-
-    if asyncio.iscoroutinefunction(check_func):
-
-        @ft.wraps(func)
-        async def wrap_async_turn_on(
-            self, speed: str = None, percentage: int = None, **kwargs
-        ) -> None:
-            """Wrap async_turn_on to add percentage compatibility."""
-            if speed is not None and percentage is None:
-                percentage = self.speed_to_percentage(speed)
-
-            return await check_func(self, speed=speed, percentage=percentage, **kwargs)
-
-        return wrap_async_turn_on
-
-    @ft.wraps(func)
-    def wrap_turn_on(self, speed: str = None, percentage: int = None, **kwargs) -> None:
-        """Wrap turn_on to add percentage compatibility."""
-        if speed is not None and percentage is None:
-            percentage = self.speed_to_percentage(speed)
-
-        return check_func(self, speed=speed, percentage=percentage, **kwargs)
+    def wrap_turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: Optional[str] = None,
+        **kwargs,
+    ) -> None:
+        """Wrap turn_on to add percentage and preset mode compatibility."""
+        speed, percentage, preset_mode = self._convert_legacy_turn_on_arguments(
+            speed, percentage, preset_mode
+        )
+        return check_func(
+            self, speed=speed, percentage=percentage, preset_mode=preset_mode, **kwargs
+        )
 
     return wrap_turn_on
 
 
-def normalize_speed_list(speed_list: List):
+def speed_list_without_preset_modes(speed_list: List):
     """Filter out non-speeds from the speed list.
 
     The goal is to get the speeds in a list from lowest to
@@ -450,7 +571,7 @@ def normalize_speed_list(speed_list: List):
     so we can map them to percentages.
 
     Examples:
-      input: ["off", "low", "low-medium", "medium", "medium-high", "high"]
+      input: ["off", "low", "low-medium", "medium", "medium-high", "high", "auto"]
       output: ["low", "low-medium", "medium", "medium-high", "high"]
 
       input: ["off", "auto", "low", "medium", "high"]
@@ -458,6 +579,35 @@ def normalize_speed_list(speed_list: List):
 
       input: ["off", "1", "2", "3", "4", "5", "6", "7", "smart"]
       output: ["1", "2", "3", "4", "5", "6", "7"]
+
+      input: ["Auto", "Silent", "Favorite", "Idle", "Medium", "High", "Strong"]
+      output: ["Silent", "Medium", "High", "Strong"]
     """
 
     return [speed for speed in speed_list if speed.lower() not in _NOT_SPEEDS_FILTER]
+
+
+def preset_modes_from_speed_list(speed_list: List):
+    """Filter out non-preset modes from the speed list.
+
+    The goal is to return only preset modes.
+
+    Examples:
+      input: ["off", "low", "low-medium", "medium", "medium-high", "high", "auto"]
+      output: ["auto"]
+
+      input: ["off", "auto", "low", "medium", "high"]
+      output: ["auto"]
+
+      input: ["off", "1", "2", "3", "4", "5", "6", "7", "smart"]
+      output: ["smart"]
+
+      input: ["Auto", "Silent", "Favorite", "Idle", "Medium", "High", "Strong"]
+      output: ["Auto", "Favorite", "Idle"]
+    """
+
+    return [
+        speed
+        for speed in speed_list
+        if speed.lower() in _NOT_SPEEDS_FILTER and speed.lower() != SPEED_OFF
+    ]
