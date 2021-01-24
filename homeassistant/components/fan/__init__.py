@@ -423,7 +423,9 @@ class FanEntity(ToggleEntity):
         try:
             return ordered_list_item_to_percentage(speed_list, speed)
         except ValueError as ex:
-            raise NoValidSpeedsError(NO_VALID_SPEEDS_EXCEPTION_MESSAGE) from ex
+            raise NoValidSpeedsError(
+                f"The speed_list {speed_list} does not contain any valid speeds."
+            ) from ex
 
     def percentage_to_speed(self, percentage: int) -> str:
         """
@@ -447,12 +449,14 @@ class FanEntity(ToggleEntity):
         if percentage == 0:
             return SPEED_OFF
 
+        speed_list = preset_modes_filter(self.speed_list)
+
         try:
-            return percentage_to_ordered_list_item(
-                preset_modes_filter(self.speed_list), percentage
-            )
+            return percentage_to_ordered_list_item(speed_list, percentage)
         except ValueError as ex:
-            raise NoValidSpeedsError(NO_VALID_SPEEDS_EXCEPTION_MESSAGE) from ex
+            raise NoValidSpeedsError(
+                f"The speed_list {speed_list} does not contain any valid speeds."
+            ) from ex
 
     @property
     def state_attributes(self) -> dict:
