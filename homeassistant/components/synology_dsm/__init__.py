@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Dict
 
+import async_timeout
 from synology_dsm import SynologyDSM
 from synology_dsm.api.core.security import SynoCoreSecurity
 from synology_dsm.api.core.system import SynoCoreSystem
@@ -14,6 +15,7 @@ from synology_dsm.api.dsm.network import SynoDSMNetwork
 from synology_dsm.api.storage.storage import SynoStorage
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 from synology_dsm.exceptions import (
+    SynologyDSMAPIErrorException,
     SynologyDSMLoginFailedException,
     SynologyDSMRequestException,
 )
@@ -44,6 +46,11 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
     CONF_SERIAL,
@@ -205,6 +212,47 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_MAC: network.macs}
         )
+
+    # setup DataUpdateCoordinator
+    async def async_coordinator_update_data_surveillance_station():
+        """Fetch all surveillance station data from api."""
+        surveillance_station = api.surveillance_station
+        try:
+            async with async_timeout.timeout(10):
+                await hass.async_add_executor_job(surveillance_station.update)
+        except SynologyDSMAPIErrorException as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+        data = {
+            "cameras": {},
+            "home_mode": {
+                "info": {},
+                "state": False,
+            },
+        }
+        if SynoSurveillanceStation.CAMERA_API_KEY in api.dsm.apis:
+            for camera in surveillance_station.get_all_cameras():
+                data["cameras"][camera.id] = camera
+
+        if SynoSurveillanceStation.INFO_API_KEY in api.dsm.apis:
+            data["home_mode"]["info"] = await hass.async_add_executor_job(
+                surveillance_station.get_info
+            )
+            data["home_mode"]["state"] = await hass.async_add_executor_job(
+                surveillance_station.get_home_mode_status
+            )
+
+        return data
+
+    hass.data[DOMAIN][entry.unique_id][
+        "surveillance_station_coordinator"
+    ] = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"{entry.unique_id}_surveillance_station",
+        update_method=async_coordinator_update_data_surveillance_station,
+        update_interval=timedelta(seconds=30),
+    )
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -588,6 +636,78 @@ class SynologyDSMEntity(Entity):
         )
 
         self.async_on_remove(self._api.subscribe(self._api_key, self.unique_id))
+
+
+class SynologyDSMCoordinatorEntity(CoordinatorEntity):
+    """Representation of a Synology NAS entry."""
+
+    def __init__(
+        self,
+        api: SynoApi,
+        entity_type: str,
+        entity_info: Dict[str, str],
+        coordinator: DataUpdateCoordinator,
+    ):
+        """Initialize the Synology DSM entity."""
+        super().__init__(coordinator)
+
+        self._api = api
+        self._api_key = entity_type.split(":")[0]
+        self.entity_type = entity_type.split(":")[-1]
+        self._name = f"{api.network.hostname} {entity_info[ENTITY_NAME]}"
+        self._class = entity_info.get(ENTITY_CLASS)
+        self._enable_default = entity_info.get(ENTITY_ENABLE, False)
+        self._icon = entity_info.get(ENTITY_ICON)
+        self._unit = entity_info.get(ENTITY_UNIT)
+        self._unique_id = f"{self._api.information.serial}_{entity_type}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
+    def name(self) -> str:
+        """Return the name."""
+        return self._name
+
+    @property
+    def icon(self) -> str:
+        """Return the icon."""
+        return self._icon
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit the value is expressed in."""
+        if self.entity_type in TEMP_SENSORS_KEYS:
+            return self.hass.config.units.temperature_unit
+        return self._unit
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device."""
+        return self._class
+
+    @property
+    def device_state_attributes(self) -> Dict[str, any]:
+        """Return the state attributes."""
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
+
+    @property
+    def device_info(self) -> Dict[str, any]:
+        """Return the device information."""
+        return {
+            "identifiers": {(DOMAIN, self._api.information.serial)},
+            "name": "Synology NAS",
+            "manufacturer": "Synology",
+            "model": self._api.information.model,
+            "sw_version": self._api.information.version_string,
+        }
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._enable_default
 
 
 class SynologyDSMDeviceEntity(SynologyDSMEntity):
