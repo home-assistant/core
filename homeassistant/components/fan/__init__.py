@@ -490,7 +490,7 @@ class FanEntity(ToggleEntity):
 
 # Decorator
 def fan_compat(func: Callable) -> Callable:
-    """Compaitiblity for fans that did not implement percentage or preset mode."""
+    """Compatibility for fans during the transition to percentage and preset mode."""
 
     # Check for partials to properly determine if coroutine function
     check_func = func
