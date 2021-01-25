@@ -83,6 +83,7 @@ class Volumio(MediaPlayerEntity):
         self._state = {}
         self._playlists = []
         self._currentplaylist = None
+        self.thumbnail_cache = {}
 
     async def async_update(self):
         """Update state."""
@@ -257,7 +258,18 @@ class Volumio(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
+        self.thumbnail_cache = {}
         if media_content_type in [None, "library"]:
             return await browse_top_level(self._volumio)
 
-        return await browse_node(self._volumio, media_content_type, media_content_id)
+        return await browse_node(
+            self, self._volumio, media_content_type, media_content_id
+        )
+
+    async def async_get_browse_image(
+        self, media_content_type, media_content_id, media_image_id=None
+    ):
+        """Get album art from Volumio."""
+        cached_url = self.thumbnail_cache.get(media_content_id)
+        image_url = self._volumio.canonic_url(cached_url)
+        return await self._async_fetch_image(image_url)
