@@ -125,7 +125,7 @@ async def async_get_service(
         return None
     except ClientError as err:
         _LOGGER.warning(
-            "Error testing connection to slack: %r"
+            "Error testing connection to slack: %r "
             "Continuing setup anyway, but notify service might not work",
             err,
         )
@@ -304,7 +304,7 @@ class SlackNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to Slack."""
-        data = kwargs.get(ATTR_DATA, {})
+        data = kwargs.get(ATTR_DATA) or {}
 
         try:
             DATA_SCHEMA(data)
