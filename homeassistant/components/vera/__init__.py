@@ -148,8 +148,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
+    def stop_subscription(event):
+        """Stop SubscriptionRegistry updates."""
+        controller.stop()
+
     await hass.async_add_executor_job(controller.start)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.stop)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
 
     return True
 
