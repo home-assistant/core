@@ -76,7 +76,7 @@ def get_deprecated(
     return config.get(new_name, default)
 
 
-def deprecated_function(replacement: str):
+def deprecated_function(replacement: str) -> Callable[..., Callable]:
     """Mark function as deprecated and provide a replacement function to be used instead."""
 
     def deprecated_decorator(func):
