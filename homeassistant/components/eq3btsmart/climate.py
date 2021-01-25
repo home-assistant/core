@@ -1,6 +1,8 @@
 """Support for eQ-3 Bluetooth Smart thermostats."""
 import asyncio
+from datetime import datetime
 import logging
+from typing import Optional
 
 from bluepy.btle import BTLEException  # pylint: disable=import-error, no-name-in-module
 import eq3bt as eq3  # pylint: disable=import-error
@@ -44,6 +46,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,6 +67,8 @@ ATTR_STATE_LOCKED = "is_locked"
 ATTR_STATE_LOW_BAT = "low_battery"
 ATTR_STATE_AWAY_END = "away_end"
 ATTR_STATE_THERMOSTAT = "thermostat_state"
+ATTR_STATE_ERROR = "error"
+ATTR_STATE_LAST_ERROR_AT = "last_error_at"
 
 EQ_TO_HA_HVAC = {
     eq3.Mode.Open: HVAC_MODE_HEAT,
@@ -165,6 +170,8 @@ class EQ3BTSmartThermostat(ClimateEntity, RestoreEntity):
         self._hvac_mode = None
         self._active = False
         self._temp_lock = asyncio.Lock()
+        self._error: Optional[str] = None
+        self._last_error_at: Optional[datetime] = None
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
@@ -451,6 +458,8 @@ class EQ3BTSmartThermostat(ClimateEntity, RestoreEntity):
             ATTR_STATE_LOW_BAT: self._thermostat.low_battery,
             ATTR_STATE_VALVE: self._thermostat.valve_state,
             ATTR_STATE_WINDOW_OPEN: self._thermostat.window_open,
+            ATTR_STATE_ERROR: self._error,
+            ATTR_STATE_LAST_ERROR_AT: self._last_error_at,
         }
         if self._sensor_control:
             dev_specific[ATTR_STATE_THERMOSTAT] = EQ_TO_STRING[self._thermostat.mode]
@@ -492,7 +501,9 @@ class EQ3BTSmartThermostat(ClimateEntity, RestoreEntity):
         _LOGGER.debug("%s - Updating thermostat", self._name)
         try:
             self._thermostat.update()
+            self.set_error(None)
         except BTLEException as ex:
+            self.set_error(ex)
             _LOGGER.warning("%s - Updating the state failed: %s", self._name, ex)
 
     def set_device_mode(self, mode):
@@ -503,7 +514,9 @@ class EQ3BTSmartThermostat(ClimateEntity, RestoreEntity):
         )
         try:
             self._thermostat.mode = mode
+            self.set_error(None)
         except BTLEException as ex:
+            self.set_error(ex)
             _LOGGER.warning("%s - Setting the state failed: %s", self._name, ex)
 
     def turn_off(self):
@@ -531,3 +544,12 @@ class EQ3BTSmartThermostat(ClimateEntity, RestoreEntity):
         else:
             self.set_device_mode(eq3.Mode.Manual)
             self._thermostat.target_temperature = self._on_temp
+
+    def set_error(self, exc):
+        """Set error attributes."""
+
+        if exc:
+            self._error = str(exc)
+            self._last_error_at = utcnow()
+        else:
+            self._error = None
