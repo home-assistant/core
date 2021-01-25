@@ -73,3 +73,19 @@ def get_deprecated(
         )
         return config.get(old_name)
     return config.get(new_name, default)
+
+
+def deprecated_function(replacement: str):
+    def deprecated_decorator(func):
+        def deprecated_func(*args, **kwargs):
+            logger = logging.getLogger(func.__module__)
+            logger.warning(
+                "%s is a deprecated function. Use %s instead",
+                func.__name__,
+                replacement,
+            )
+            return func(*args, **kwargs)
+
+        return deprecated_func
+
+    return deprecated_decorator

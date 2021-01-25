@@ -1,7 +1,11 @@
 """Test deprecation helpers."""
 from unittest.mock import MagicMock, patch
 
-from homeassistant.helpers.deprecation import deprecated_substitute, get_deprecated
+from homeassistant.helpers.deprecation import (
+    deprecated_substitute,
+    get_deprecated,
+    deprecated_function,
+)
 
 
 class MockBaseClass:
@@ -78,3 +82,21 @@ def test_config_get_deprecated_new(mock_get_logger):
     config = {"new_name": True}
     assert get_deprecated(config, "new_name", "old_name") is True
     assert not mock_logger.warning.called
+
+
+@patch("logging.getLogger")
+def test_deprecated_function(mock_get_logger):
+    """Test deprecated_function decorator."""
+    mock_logger = MagicMock()
+    mock_get_logger.return_value = mock_logger
+
+    @deprecated_function("new_function")
+    def mock_deprecated_function():
+        pass
+
+    mock_deprecated_function()
+    mock_logger.warning.assert_called_with(
+        "%s is a deprecated function. Use %s instead",
+        "mock_deprecated_function",
+        "new_function",
+    )
