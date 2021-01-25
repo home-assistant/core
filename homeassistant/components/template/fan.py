@@ -305,6 +305,11 @@ class TemplateFan(TemplateEntity, FanEntity):
         return self._speed
 
     @property
+    def preset_mode(self):
+        """Return the current preset mode."""
+        return self._preset_mode
+
+    @property
     def percentage(self):
         """Return the current speed percentage."""
         return self._percentage
