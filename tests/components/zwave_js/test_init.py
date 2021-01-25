@@ -51,9 +51,11 @@ async def test_home_assistant_stop(hass, client, integration):
     assert client.disconnect.call_count == 1
 
 
-async def test_on_connect_disconnect(hass, client, multisensor_6, integration):
+async def test_availability_reflect_connection_status(
+    hass, client, multisensor_6, integration
+):
     """Test we handle disconnect and reconnect."""
-    on_connect = client.register_on_connect.call_args[0][0]
+    on_initialized = client.register_on_initialized.call_args[0][0]
     on_disconnect = client.register_on_disconnect.call_args[0][0]
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
@@ -72,7 +74,7 @@ async def test_on_connect_disconnect(hass, client, multisensor_6, integration):
 
     client.connected = True
 
-    await on_connect()
+    await on_initialized()
     await hass.async_block_till_done()
 
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
