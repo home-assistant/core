@@ -36,6 +36,7 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SUPPORT_SET_SPEED = 1
 SUPPORT_OSCILLATE = 2
 SUPPORT_DIRECTION = 4
+SUPPORT_PRESET_MODE = 8
 
 SERVICE_SET_SPEED = "set_speed"
 SERVICE_OSCILLATE = "oscillate"
@@ -161,7 +162,7 @@ async def async_setup(hass, config: dict):
         SERVICE_SET_PRESET_MODE,
         {vol.Required(ATTR_PRESET_MODE): cv.string},
         "async_set_preset_mode",
-        [SUPPORT_SET_SPEED],
+        [SUPPORT_SET_SPEED, SUPPORT_PRESET_MODE],
     )
 
     return True
@@ -392,11 +393,10 @@ class FanEntity(ToggleEntity):
     def percentage(self) -> Optional[int]:
         """Return the current speed as a percentage."""
         if not self._implemented_preset_mode:
-            speed = self.speed
-            if speed in self.preset_modes:
+            if self.speed in self.preset_modes:
                 return None
         if not self._implemented_percentage:
-            return self.speed_to_percentage(speed)
+            return self.speed_to_percentage(self.speed)
         return 0
 
     @property
@@ -422,12 +422,17 @@ class FanEntity(ToggleEntity):
     @property
     def capability_attributes(self):
         """Return capability attributes."""
+        attrs = {}
         if self.supported_features & SUPPORT_SET_SPEED:
-            return {
-                ATTR_SPEED_LIST: self.speed_list,
-                ATTR_PRESET_MODES: self.preset_modes,
-            }
-        return {}
+            attrs[ATTR_SPEED_LIST] = self.speed_list
+
+        if (
+            self.supported_features & SUPPORT_SET_SPEED
+            or self.supported_features & SUPPORT_PRESET_MODE
+        ):
+            attrs[ATTR_PRESET_MODES] = self.preset_modes
+
+        return attrs
 
     def speed_to_percentage(self, speed: str) -> int:
         """
@@ -506,6 +511,11 @@ class FanEntity(ToggleEntity):
         if supported_features & SUPPORT_SET_SPEED:
             data[ATTR_SPEED] = self.speed
             data[ATTR_PERCENTAGE] = self.percentage
+
+        if (
+            supported_features & SUPPORT_PRESET_MODE
+            or supported_features & SUPPORT_SET_SPEED
+        ):
             data[ATTR_PRESET_MODE] = self.preset_mode
 
         return data
