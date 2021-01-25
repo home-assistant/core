@@ -84,19 +84,15 @@ def test_config_get_deprecated_new(mock_get_logger):
     assert not mock_logger.warning.called
 
 
-@patch("logging.getLogger")
-def test_deprecated_function(mock_get_logger):
+def test_deprecated_function(caplog):
     """Test deprecated_function decorator."""
-    mock_logger = MagicMock()
-    mock_get_logger.return_value = mock_logger
 
     @deprecated_function("new_function")
     def mock_deprecated_function():
         pass
 
     mock_deprecated_function()
-    mock_logger.warning.assert_called_with(
-        "%s is a deprecated function. Use %s instead",
-        "mock_deprecated_function",
-        "new_function",
+    assert (
+        "mock_deprecated_function is a deprecated function. Use new_function instead"
+        == caplog.text
     )
