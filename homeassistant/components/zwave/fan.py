@@ -46,16 +46,21 @@ class ZwaveFan(ZWaveDeviceEntity, FanEntity):
 
     def set_percentage(self, percentage):
         """Set the speed percentage of the fan."""
-        zwave_speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+        if percentage is None:
+            # Value 255 tells device to return to previous value
+            zwave_speed = 255
+        elif percentage == 0:
+            zwave_speed = 0
+        else:
+            zwave_speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
         self.node.set_dimmer(self.values.primary.value_id, zwave_speed)
 
     def turn_on(self, speed=None, percentage=None, preset_mode=None, **kwargs):
         """Turn the device on."""
-        if speed is None:
-            # Value 255 tells device to return to previous value
-            self.node.set_dimmer(self.values.primary.value_id, 255)
-        else:
-            self.set_percentage(percentage)
+        import pprint
+
+        pprint.pprint([speed, percentage, preset_mode])
+        self.set_percentage(percentage)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
