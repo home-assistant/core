@@ -914,7 +914,6 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                         )
                 # Allow ignored entries to be configured on manual user step
                 if entry.source == SOURCE_IGNORE and self.source == SOURCE_USER:
-                    _LOGGER.error("AHHHH")
                     continue
                 raise data_entry_flow.AbortFlow("already_configured")
 
