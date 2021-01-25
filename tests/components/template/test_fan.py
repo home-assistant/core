@@ -581,7 +581,7 @@ async def test_on_with_speed(hass, calls):
 
     # verify
     assert hass.states.get(_STATE_INPUT_BOOLEAN).state == STATE_ON
-    assert hass.states.get(_SPEED_INPUT_SELECT).state == SPEED_HIGH
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 100
     _verify(hass, STATE_ON, SPEED_HIGH, 100, None, None, None)
 
 
