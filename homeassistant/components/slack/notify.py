@@ -7,7 +7,7 @@ import os
 from typing import Any, List, Optional, TypedDict
 from urllib.parse import urlparse
 
-from aiohttp import BasicAuth, ClientResponse, ClientSession, FormData
+from aiohttp import BasicAuth, FormData
 from aiohttp.client_exceptions import ClientError
 from slack import WebClient
 from slack.errors import SlackApiError
@@ -103,10 +103,10 @@ class MessageT(TypedDict, total=False):
 
     link_names: bool
     text: str
-    username: str  # Optional
-    icon_url: str  # Optional
-    icon_emoji: str  # Optional
-    blocks: List[Any]  # Optional
+    username: str  # Optional key
+    icon_url: str  # Optional key
+    icon_emoji: str  # Optional key
+    blocks: List[Any]  # Optional key
 
 
 async def async_get_service(
@@ -115,10 +115,8 @@ async def async_get_service(
     discovery_info: Optional[DiscoveryInfoType] = None,
 ) -> Optional[SlackNotificationService]:
     """Set up the Slack notification service."""
-    session: ClientSession = aiohttp_client.async_get_clientsession(hass)
-    client: WebClient = WebClient(
-        token=config[CONF_API_KEY], run_async=True, session=session
-    )
+    session = aiohttp_client.async_get_clientsession(hass)
+    client = WebClient(token=config[CONF_API_KEY], run_async=True, session=session)
 
     try:
         await client.auth_test()
@@ -164,7 +162,7 @@ def _async_templatize_blocks(hass: HomeAssistantType, value: Any) -> Any:
             key: _async_templatize_blocks(hass, item) for key, item in value.items()
         }
 
-    tmpl = template.Template(value, hass=hass)  # type: ignore
+    tmpl = template.Template(value, hass=hass)  # type: ignore  # no-untyped-call
     return tmpl.async_render(parse_result=False)
 
 
@@ -199,7 +197,7 @@ class SlackNotificationService(BaseNotificationService):
             return
 
         parsed_url = urlparse(path)
-        filename: str = os.path.basename(parsed_url.path)
+        filename = os.path.basename(parsed_url.path)
 
         try:
             await self._client.files_upload(
@@ -232,14 +230,14 @@ class SlackNotificationService(BaseNotificationService):
             _LOGGER.error("URL is not allowed: %s", url)
             return
 
-        filename: str = _async_get_filename_from_url(url)
-        session: ClientSession = aiohttp_client.async_get_clientsession(self._hass)
+        filename = _async_get_filename_from_url(url)
+        session = aiohttp_client.async_get_clientsession(self._hass)
 
         kwargs: AuthDictT = {}
         if username and password is not None:
             kwargs = {"auth": BasicAuth(username, password=password)}
 
-        resp: ClientResponse = await session.request("get", url, **kwargs)
+        resp = await session.request("get", url, **kwargs)
 
         try:
             resp.raise_for_status()
@@ -255,7 +253,7 @@ class SlackNotificationService(BaseNotificationService):
             "token": self._client.token,
         }
 
-        data: FormData = FormData(form_data, charset="utf-8")
+        data = FormData(form_data, charset="utf-8")
         data.add_field("file", resp.content, filename=filename)
 
         try:
@@ -314,8 +312,8 @@ class SlackNotificationService(BaseNotificationService):
             _LOGGER.error("Invalid message data: %s", err)
             data = {}
 
-        title: Optional[str] = kwargs.get(ATTR_TITLE)
-        targets: List[str] = _async_sanitize_channel_names(
+        title = kwargs.get(ATTR_TITLE)
+        targets = _async_sanitize_channel_names(
             kwargs.get(ATTR_TARGET, [self._default_channel])
         )
 
