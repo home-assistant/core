@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.components.wilight import (
+from . import (
     HOST,
     UPNP_MAC_ADDRESS,
     UPNP_MODEL_NAME_LIGHT_FAN,
