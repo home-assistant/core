@@ -62,7 +62,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "fan4",
                 "Percentage Limited Fan",
                 LIMITED_SUPPORT,
-                [],
+                [PRESET_MODE_AUTO, PRESET_MODE_SMART],
                 None,
             ),
         ]
