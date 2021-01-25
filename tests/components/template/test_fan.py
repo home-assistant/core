@@ -241,6 +241,10 @@ async def test_templates_with_entities(hass, calls):
     await hass.async_block_till_done()
     _verify(hass, STATE_ON, SPEED_HIGH, 100, True, DIRECTION_FORWARD, None)
 
+    hass.states.async_set(_PERCENTAGE_INPUT_NUMBER, "dog")
+    await hass.async_block_till_done()
+    _verify(hass, STATE_ON, None, 0, True, DIRECTION_FORWARD, None)
+
 
 async def test_templates_with_entities_and_invalid_percentage(hass, calls):
     """Test templates with values from other entities."""
@@ -583,7 +587,7 @@ async def test_on_with_speed(hass, calls):
 
 async def test_set_speed(hass, calls):
     """Test set valid speed."""
-    await _register_components(hass)
+    await _register_components(hass, preset_modes=["auto", "smart"])
 
     # Turn on fan
     await common.async_turn_on(hass, _TEST_FAN)
@@ -731,7 +735,7 @@ async def test_preset_modes(hass, calls):
     assert hass.states.get(_PRESET_MODE_INPUT_SELECT).state == "smart"
 
     # Set fan's preset_mode to "auto"
-    await common.async_turn_on(hass, _TEST_FAN, STATE_ON, preset_mode="auto")
+    await common.async_turn_on(hass, _TEST_FAN, preset_mode="auto")
 
     # verify
     assert hass.states.get(_PRESET_MODE_INPUT_SELECT).state == "auto"
