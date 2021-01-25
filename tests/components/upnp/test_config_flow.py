@@ -1,6 +1,7 @@
 """Test UPnP/IGD config flow."""
 
 from datetime import timedelta
+from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
@@ -21,7 +22,6 @@ from homeassistant.setup import async_setup_component
 
 from .mock_device import MockDevice
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 

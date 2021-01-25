@@ -21,6 +21,8 @@ DEFAULT_VOICE = "cmu-slt-hsmm"
 DEFAULT_CODEC = "WAVE_FILE"
 DEFAULT_EFFECTS = {}
 
+MAP_MARYTTS_CODEC = {"WAVE_FILE": "wav", "AIFF_FILE": "aiff", "AU_FILE": "au"}
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -81,5 +83,6 @@ class MaryTTSProvider(Provider):
         effects = options[CONF_EFFECT]
 
         data = self._mary.speak(message, effects)
+        audiotype = MAP_MARYTTS_CODEC[self._mary.codec]
 
-        return self._mary.codec, data
+        return audiotype, data

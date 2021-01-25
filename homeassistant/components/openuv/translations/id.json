@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Koordinat sudah terdaftar",
             "invalid_api_key": "Kunci API tidak valid"
         },
         "step": {

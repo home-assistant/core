@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+            "already_configured": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk.",
+            "cannot_connect": "Kon niet verbinden"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken"
@@ -10,8 +11,21 @@
             "setup_network": {
                 "data": {
                     "port": "Poort"
-                }
+                },
+                "title": "Selecteer verbindingsadres"
+            },
+            "user": {
+                "data": {
+                    "type": "Verbindingstype"
+                },
+                "title": "Selecteer verbindingstype"
             }
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured_device": "Apparaat is al geconfigureerd",
+            "unknown": "Onverwachte fout"
         }
     }
 }

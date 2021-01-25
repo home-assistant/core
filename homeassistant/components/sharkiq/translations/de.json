@@ -1,5 +1,13 @@
 {
     "config": {
+        "abort": {
+            "cannot_connect": "Verbindungsfehler",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "cannot_connect": "Verbindungsfehler",
+            "unknown": "Unerwarteter Fehler"
+        },
         "step": {
             "reauth": {
                 "data": {

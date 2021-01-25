@@ -4,7 +4,6 @@
             "already_configured": "Lokalizacja jest ju\u017c skonfigurowana"
         },
         "error": {
-            "auth": "Nieprawid\u0142owy klucz API",
             "invalid_api_key": "Nieprawid\u0142owy klucz API",
             "wrong_location": "Brak stacji pomiarowych Airly w tym rejonie"
         },
@@ -19,6 +18,11 @@
                 "description": "Konfiguracja integracji Airly. By wygenerowa\u0107 klucz API, przejd\u017a na stron\u0119 https://developer.airly.eu/register",
                 "title": "Airly"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Dost\u0119p do serwera Airly"
         }
     }
 }

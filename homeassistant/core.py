@@ -73,7 +73,6 @@ from homeassistant.exceptions import (
 from homeassistant.util import location, network
 from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
 import homeassistant.util.dt as dt_util
-from homeassistant.util.thread import fix_threading_exception_logging
 from homeassistant.util.timeout import TimeoutManager
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 import homeassistant.util.uuid as uuid_util
@@ -86,10 +85,9 @@ if TYPE_CHECKING:
 
 
 block_async_io.enable()
-fix_threading_exception_logging()
 
 T = TypeVar("T")
-_UNDEF: dict = {}
+_UNDEF: dict = {}  # Internal; not helpers.typing.UNDEFINED due to circular dependency
 # pylint: disable=invalid-name
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
 CALLBACK_TYPE = Callable[[], None]
@@ -118,7 +116,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def split_entity_id(entity_id: str) -> List[str]:
-    """Split a state entity_id into domain, object_id."""
+    """Split a state entity ID into domain and object ID."""
     return entity_id.split(".", 1)
 
 
@@ -257,12 +255,9 @@ class HomeAssistant:
         fire_coroutine_threadsafe(self.async_start(), self.loop)
 
         # Run forever
-        try:
-            # Block until stopped
-            _LOGGER.info("Starting Home Assistant core loop")
-            self.loop.run_forever()
-        finally:
-            self.loop.close()
+        # Block until stopped
+        _LOGGER.info("Starting Home Assistant core loop")
+        self.loop.run_forever()
         return self.exit_code
 
     async def async_run(self, *, attach_signals: bool = True) -> int:
@@ -309,7 +304,7 @@ class HomeAssistant:
             _LOGGER.warning(
                 "Something is blocking Home Assistant from wrapping up the "
                 "start up phase. We're going to continue anyway. Please "
-                "report the following info at http://bit.ly/2ogP58T : %s",
+                "report the following info at https://github.com/home-assistant/core/issues: %s",
                 ", ".join(self.config.components),
             )
 
@@ -422,7 +417,9 @@ class HomeAssistant:
         self._track_task = False
 
     @callback
-    def async_run_hass_job(self, hassjob: HassJob, *args: Any) -> None:
+    def async_run_hass_job(
+        self, hassjob: HassJob, *args: Any
+    ) -> Optional[asyncio.Future]:
         """Run a HassJob from within the event loop.
 
         This method must be run in the event loop.
@@ -432,13 +429,14 @@ class HomeAssistant:
         """
         if hassjob.job_type == HassJobType.Callback:
             hassjob.target(*args)
-        else:
-            self.async_add_hass_job(hassjob, *args)
+            return None
+
+        return self.async_add_hass_job(hassjob, *args)
 
     @callback
     def async_run_job(
         self, target: Callable[..., Union[None, Awaitable]], *args: Any
-    ) -> None:
+    ) -> Optional[asyncio.Future]:
         """Run a job from within the event loop.
 
         This method must be run in the event loop.
@@ -447,10 +445,9 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         if asyncio.iscoroutine(target):
-            self.async_create_task(cast(Coroutine, target))
-            return
+            return self.async_create_task(cast(Coroutine, target))
 
-        self.async_run_hass_job(HassJob(target), *args)
+        return self.async_run_hass_job(HassJob(target), *args)
 
     def block_till_done(self) -> None:
         """Block until all pending work is done."""
@@ -559,16 +556,11 @@ class HomeAssistant:
                 "Timed out waiting for shutdown stage 3 to complete, the shutdown will continue"
             )
 
-        # Python 3.9+ and backported in runner.py
-        await self.loop.shutdown_default_executor()  # type: ignore
-
         self.exit_code = exit_code
         self.state = CoreState.stopped
 
         if self._stopped is not None:
             self._stopped.set()
-        else:
-            self.loop.stop()
 
 
 @attr.s(slots=True, frozen=True)
@@ -579,7 +571,7 @@ class Context:
     parent_id: Optional[str] = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> Dict[str, Optional[str]]:
         """Return a dictionary representation of the context."""
         return {"id": self.id, "parent_id": self.parent_id, "user_id": self.user_id}
 
@@ -620,7 +612,7 @@ class Event:
         # The only event type that shares context are the TIME_CHANGED
         return hash((self.event_type, self.context.id, self.time_fired))
 
-    def as_dict(self) -> Dict:
+    def as_dict(self) -> Dict[str, Any]:
         """Create a dict representation of this Event.
 
         Async friendly.
@@ -690,7 +682,7 @@ class EventBus:
     def async_fire(
         self,
         event_type: str,
-        event_data: Optional[Dict] = None,
+        event_data: Optional[Dict[str, Any]] = None,
         origin: EventOrigin = EventOrigin.local,
         context: Optional[Context] = None,
         time_fired: Optional[datetime.datetime] = None,
@@ -820,7 +812,7 @@ class EventBus:
         except (KeyError, ValueError):
             # KeyError is key event_type listener did not exist
             # ValueError if listener did not exist within event_type
-            _LOGGER.warning("Unable to remove unknown job listener %s", hassjob)
+            _LOGGER.exception("Unable to remove unknown job listener %s", hassjob)
 
 
 class State:
@@ -852,7 +844,7 @@ class State:
         self,
         entity_id: str,
         state: str,
-        attributes: Optional[Mapping] = None,
+        attributes: Optional[Mapping[str, Any]] = None,
         last_changed: Optional[datetime.datetime] = None,
         last_updated: Optional[datetime.datetime] = None,
         context: Optional[Context] = None,
@@ -869,7 +861,7 @@ class State:
 
         if not valid_state(state):
             raise InvalidStateError(
-                f"Invalid state encountered for entity id: {entity_id}. "
+                f"Invalid state encountered for entity ID: {entity_id}. "
                 "State max length is 255 characters."
             )
 
@@ -973,6 +965,7 @@ class StateMachine:
     def __init__(self, bus: EventBus, loop: asyncio.events.AbstractEventLoop) -> None:
         """Initialize state machine."""
         self._states: Dict[str, State] = {}
+        self._reservations: Set[str] = set()
         self._bus = bus
         self._loop = loop
 
@@ -1080,6 +1073,9 @@ class StateMachine:
         entity_id = entity_id.lower()
         old_state = self._states.pop(entity_id, None)
 
+        if entity_id in self._reservations:
+            self._reservations.remove(entity_id)
+
         if old_state is None:
             return False
 
@@ -1095,7 +1091,7 @@ class StateMachine:
         self,
         entity_id: str,
         new_state: str,
-        attributes: Optional[Dict] = None,
+        attributes: Optional[Mapping[str, Any]] = None,
         force_update: bool = False,
         context: Optional[Context] = None,
     ) -> None:
@@ -1117,11 +1113,34 @@ class StateMachine:
         ).result()
 
     @callback
+    def async_reserve(self, entity_id: str) -> None:
+        """Reserve a state in the state machine for an entity being added.
+
+        This must not fire an event when the state is reserved.
+
+        This avoids a race condition where multiple entities with the same
+        entity_id are added.
+        """
+        entity_id = entity_id.lower()
+        if entity_id in self._states or entity_id in self._reservations:
+            raise HomeAssistantError(
+                "async_reserve must not be called once the state is in the state machine."
+            )
+
+        self._reservations.add(entity_id)
+
+    @callback
+    def async_available(self, entity_id: str) -> bool:
+        """Check to see if an entity_id is available to be used."""
+        entity_id = entity_id.lower()
+        return entity_id not in self._states and entity_id not in self._reservations
+
+    @callback
     def async_set(
         self,
         entity_id: str,
         new_state: str,
-        attributes: Optional[Dict] = None,
+        attributes: Optional[Mapping[str, Any]] = None,
         force_update: bool = False,
         context: Optional[Context] = None,
     ) -> None:
@@ -1153,12 +1172,14 @@ class StateMachine:
         if context is None:
             context = Context()
 
+        now = dt_util.utcnow()
+
         state = State(
             entity_id,
             new_state,
             attributes,
             last_changed,
-            None,
+            now,
             context,
             old_state is None,
         )
@@ -1168,6 +1189,7 @@ class StateMachine:
             {"entity_id": entity_id, "old_state": old_state, "new_state": state},
             EventOrigin.local,
             context,
+            time_fired=now,
         )
 
 

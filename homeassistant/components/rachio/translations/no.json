@@ -13,7 +13,7 @@
                 "data": {
                     "api_key": "API-n\u00f8kkel"
                 },
-                "description": "Du trenger API-n\u00f8kkelen fra https://app.rach.io/. Velg 'Kontoinnstillinger' og klikk deretter p\u00e5 'F\u00e5 API n\u00f8kkel'.",
+                "description": "Du trenger API-n\u00f8kkelen fra https://app.rach.io/. G\u00e5 til Innstillinger, og klikk deretter 'GET API KEY'.",
                 "title": "Koble til Rachio-enheten din"
             }
         }
@@ -22,7 +22,7 @@
         "step": {
             "init": {
                 "data": {
-                    "manual_run_mins": "Hvor lenge, i minutter, for \u00e5 sl\u00e5 p\u00e5 en stasjon n\u00e5r bryteren er aktivert."
+                    "manual_run_mins": "Varighet i minutter \u00e5 kj\u00f8re n\u00e5r du aktiverer en sonebryter"
                 }
             }
         }

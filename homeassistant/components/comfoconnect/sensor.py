@@ -15,6 +15,7 @@ from pycomfoconnect import (
     SENSOR_HUMIDITY_OUTDOOR,
     SENSOR_HUMIDITY_SUPPLY,
     SENSOR_POWER_CURRENT,
+    SENSOR_PREHEATER_POWER_CURRENT,
     SENSOR_TEMPERATURE_EXHAUST,
     SENSOR_TEMPERATURE_EXTRACT,
     SENSOR_TEMPERATURE_OUTDOOR,
@@ -33,8 +34,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TIME_DAYS,
-    TIME_HOURS,
-    VOLUME_CUBIC_METERS,
+    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -55,6 +55,7 @@ ATTR_EXHAUST_TEMPERATURE = "exhaust_temperature"
 ATTR_OUTSIDE_HUMIDITY = "outside_humidity"
 ATTR_OUTSIDE_TEMPERATURE = "outside_temperature"
 ATTR_POWER_CURRENT = "power_usage"
+ATTR_PREHEATER_POWER_CURRENT = "preheater_power_usage"
 ATTR_SUPPLY_FAN_DUTY = "supply_fan_duty"
 ATTR_SUPPLY_FAN_SPEED = "supply_fan_speed"
 ATTR_SUPPLY_HUMIDITY = "supply_humidity"
@@ -160,14 +161,14 @@ SENSOR_TYPES = {
     ATTR_AIR_FLOW_SUPPLY: {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Supply airflow",
-        ATTR_UNIT: f"{VOLUME_CUBIC_METERS}/{TIME_HOURS}",
+        ATTR_UNIT: VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
         ATTR_ICON: "mdi:fan",
         ATTR_ID: SENSOR_FAN_SUPPLY_FLOW,
     },
     ATTR_AIR_FLOW_EXHAUST: {
         ATTR_DEVICE_CLASS: None,
         ATTR_LABEL: "Exhaust airflow",
-        ATTR_UNIT: f"{VOLUME_CUBIC_METERS}/{TIME_HOURS}",
+        ATTR_UNIT: VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
         ATTR_ICON: "mdi:fan",
         ATTR_ID: SENSOR_FAN_EXHAUST_FLOW,
     },
@@ -191,6 +192,13 @@ SENSOR_TYPES = {
         ATTR_UNIT: POWER_WATT,
         ATTR_ICON: "mdi:flash",
         ATTR_ID: SENSOR_POWER_CURRENT,
+    },
+    ATTR_PREHEATER_POWER_CURRENT: {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
+        ATTR_LABEL: "Preheater power usage",
+        ATTR_UNIT: POWER_WATT,
+        ATTR_ICON: None,
+        ATTR_ID: SENSOR_PREHEATER_POWER_CURRENT,
     },
 }
 

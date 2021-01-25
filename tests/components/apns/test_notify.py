@@ -1,5 +1,6 @@
 """The tests for the APNS component."""
 import io
+from unittest.mock import Mock, mock_open, patch
 
 from apns2.errors import Unregistered
 import pytest
@@ -10,7 +11,6 @@ import homeassistant.components.notify as notify
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, mock_open, patch
 from tests.common import assert_setup_component
 
 CONFIG = {

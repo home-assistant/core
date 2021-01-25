@@ -68,6 +68,7 @@ def purge_old_data(instance, purge_days: int, repack: bool) -> bool:
             deleted_rows = (
                 session.query(RecorderRuns)
                 .filter(RecorderRuns.start < purge_before)
+                .filter(RecorderRuns.run_id != instance.run_info.run_id)
                 .delete(synchronize_session=False)
             )
             _LOGGER.debug("Deleted %s recorder_runs", deleted_rows)

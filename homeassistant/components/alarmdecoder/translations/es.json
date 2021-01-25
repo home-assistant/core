@@ -7,8 +7,7 @@
             "default": "Conectado con \u00e9xito a AlarmDecoder."
         },
         "error": {
-            "cannot_connect": "No se pudo conectar",
-            "service_unavailable": "No se pudo conectar"
+            "cannot_connect": "No se pudo conectar"
         },
         "step": {
             "protocol": {

@@ -3,6 +3,6 @@
   "name": "OpenWeatherMap",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/openweathermap",
-  "requirements": ["pyowm==2.10.0"],
-  "codeowners": ["@fabaff", "@freekode"]
+  "requirements": ["pyowm==3.1.1"],
+  "codeowners": ["@fabaff", "@freekode", "@nzapponi"]
 }

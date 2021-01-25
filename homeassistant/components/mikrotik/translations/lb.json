@@ -1,13 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Mikrotik ass scho konfigur\u00e9iert"
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
-            "cannot_connect": "Verbindung net erfollegr\u00e4ich",
+            "cannot_connect": "Feeler beim verbannen",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
-            "name_exists": "Numm g\u00ebtt et schonn",
-            "wrong_credentials": "Falsch Login Informatiounen"
+            "name_exists": "Numm g\u00ebtt et schonn"
         },
         "step": {
             "user": {

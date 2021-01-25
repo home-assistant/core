@@ -325,6 +325,11 @@ class Zone(entity.Entity):
         """Return the state attributes of the zone."""
         return self._attrs
 
+    @property
+    def should_poll(self) -> bool:
+        """Zone does not poll."""
+        return False
+
     async def async_update_config(self, config: Dict) -> None:
         """Handle when the config is updated."""
         if self._config == config:

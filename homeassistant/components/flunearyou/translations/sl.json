@@ -3,9 +3,6 @@
         "abort": {
             "already_configured": "Te koordinate so \u017ee registrirane."
         },
-        "error": {
-            "general_error": "Pri\u0161lo je do neznane napake."
-        },
         "step": {
             "user": {
                 "data": {

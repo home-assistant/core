@@ -1,6 +1,7 @@
 """The tests for the notify demo platform."""
 
 import logging
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -11,7 +12,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component
 
 CONFIG = {notify.DOMAIN: {"platform": "demo"}}
@@ -72,7 +72,7 @@ async def test_discover_notify(hass, mock_demo_notify):
     """Test discovery of notify demo platform."""
     assert notify.DOMAIN not in hass.config.components
     mock_demo_notify.return_value = None
-    discovery.load_platform(
+    await discovery.async_load_platform(
         hass, "notify", "demo", {"test_key": "test_val"}, {"notify": {}}
     )
     await hass.async_block_till_done()
@@ -108,7 +108,7 @@ async def test_sending_templated_message(hass, events):
     await hass.async_block_till_done()
     last_event = events[-1]
     assert last_event.data[notify.ATTR_TITLE] == "temperature"
-    assert last_event.data[notify.ATTR_MESSAGE] == 10
+    assert last_event.data[notify.ATTR_MESSAGE] == "10"
 
 
 async def test_method_forwards_correct_data(hass, events):

@@ -144,6 +144,7 @@ class FanEntity(ToggleEntity):
 
     def oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
+        raise NotImplementedError()
 
     async def async_oscillate(self, oscillating: bool):
         """Oscillate the fan."""

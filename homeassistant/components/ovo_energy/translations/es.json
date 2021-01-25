@@ -2,12 +2,18 @@
     "config": {
         "error": {
             "already_configured": "La cuenta ya est\u00e1 configurada",
-            "authorization_error": "Error de autorizaci\u00f3n. Comprueba tus credenciales.",
             "cannot_connect": "No se pudo conectar",
-            "connection_error": "No se ha podido conectar a OVO Energy.",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
         },
+        "flow_title": "OVO Energy: {username}",
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Contrase\u00f1a"
+                },
+                "description": "Error de autenticaci\u00f3n para OVO Energy. Ingrese sus credenciales actuales.",
+                "title": "Reautenticaci\u00f3n"
+            },
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",

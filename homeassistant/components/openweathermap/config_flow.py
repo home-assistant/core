@@ -1,7 +1,6 @@
 """Config flow for OpenWeatherMap."""
 from pyowm import OWM
-from pyowm.exceptions.api_call_error import APICallError
-from pyowm.exceptions.api_response_error import UnauthorizedError
+from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -17,6 +16,7 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_LANGUAGE,
+    CONFIG_FLOW_VERSION,
     DEFAULT_FORECAST_MODE,
     DEFAULT_LANGUAGE,
     DEFAULT_NAME,
@@ -25,22 +25,11 @@ from .const import (
 )
 from .const import DOMAIN  # pylint:disable=unused-import
 
-SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_API_KEY): str,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_MODE, default=DEFAULT_FORECAST_MODE): vol.In(FORECAST_MODES),
-        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(LANGUAGES),
-    }
-)
-
 
 class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for OpenWeatherMap."""
 
-    VERSION = 1
+    VERSION = CONFIG_FLOW_VERSION
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @staticmethod
@@ -62,35 +51,40 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 api_online = await _is_owm_api_online(
-                    self.hass, user_input[CONF_API_KEY]
+                    self.hass, user_input[CONF_API_KEY], latitude, longitude
                 )
                 if not api_online:
                     errors["base"] = "invalid_api_key"
             except UnauthorizedError:
                 errors["base"] = "invalid_api_key"
-            except APICallError:
+            except APIRequestError:
                 errors["base"] = "cannot_connect"
 
             if not errors:
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
-        return self.async_show_form(step_id="user", data_schema=SCHEMA, errors=errors)
 
-    async def async_step_import(self, import_input=None):
-        """Set the config entry up from yaml."""
-        config = import_input.copy()
-        if CONF_NAME not in config:
-            config[CONF_NAME] = DEFAULT_NAME
-        if CONF_LATITUDE not in config:
-            config[CONF_LATITUDE] = self.hass.config.latitude
-        if CONF_LONGITUDE not in config:
-            config[CONF_LONGITUDE] = self.hass.config.longitude
-        if CONF_MODE not in config:
-            config[CONF_MODE] = DEFAULT_FORECAST_MODE
-        if CONF_LANGUAGE not in config:
-            config[CONF_LANGUAGE] = DEFAULT_LANGUAGE
-        return await self.async_step_user(config)
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_API_KEY): str,
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+                vol.Optional(
+                    CONF_LATITUDE, default=self.hass.config.latitude
+                ): cv.latitude,
+                vol.Optional(
+                    CONF_LONGITUDE, default=self.hass.config.longitude
+                ): cv.longitude,
+                vol.Optional(CONF_MODE, default=DEFAULT_FORECAST_MODE): vol.In(
+                    FORECAST_MODES
+                ),
+                vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
+                    LANGUAGES
+                ),
+            }
+        )
+
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
 
 class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
@@ -129,6 +123,6 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
         )
 
 
-async def _is_owm_api_online(hass, api_key):
-    owm = OWM(api_key)
-    return await hass.async_add_executor_job(owm.is_API_online)
+async def _is_owm_api_online(hass, api_key, lat, lon):
+    owm = OWM(api_key).weather_manager()
+    return await hass.async_add_executor_job(owm.one_call, lat, lon)

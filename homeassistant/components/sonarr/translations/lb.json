@@ -13,7 +13,7 @@
         "step": {
             "reauth_confirm": {
                 "description": "Sonarr Integratioun muss manuell mat der Sonarr API um {host} re-authentifiz\u00e9iert ginn.",
-                "title": "Mat Sonarr re-authentifiz\u00e9ieren"
+                "title": "Integratioun re-authentifiz\u00e9ieren"
             },
             "user": {
                 "data": {
@@ -21,10 +21,9 @@
                     "base_path": "Pad zur API",
                     "host": "Host",
                     "port": "Port",
-                    "ssl": "Sonarr benotzt een SSL Zertifikat",
-                    "verify_ssl": "Sonarr benotzt ee g\u00ebltegen SSL Zertifikat"
-                },
-                "title": "Mat Sonarr verbannen"
+                    "ssl": "Benotzt ee SSL Zertifikat",
+                    "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
+                }
             }
         }
     },
@@ -37,6 +36,5 @@
                 }
             }
         }
-    },
-    "title": "Sonarr"
+    }
 }

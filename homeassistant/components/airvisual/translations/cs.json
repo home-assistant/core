@@ -7,8 +7,7 @@
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "general_error": "Neo\u010dek\u00e1van\u00e1 chyba",
-            "invalid_api_key": "Neplatn\u00fd kl\u00ed\u010d API",
-            "unable_to_connect": "Nelze se p\u0159ipojit k jednotce Node/Pro."
+            "invalid_api_key": "Neplatn\u00fd kl\u00ed\u010d API"
         },
         "step": {
             "geography": {
@@ -45,6 +44,9 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "show_on_map": "Uk\u00e1zat monitorovanou oblast na map\u011b"
+                },
                 "title": "Nastavte AirVisual"
             }
         }

@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "invalid_place_or_service_id": "Nieprawid\u0142owy identyfikator \"Place\" lub \"Service\""
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "place_id": "Identyfikator \"Place\" (place_id)",
+                    "service_id": "Identyfikator \"Service\" (service_id)"
+                }
+            }
+        }
+    }
+}

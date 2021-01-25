@@ -4,9 +4,9 @@
             "already_configured": "Diese Koordinaten oder Node/Pro ID sind bereits registriert."
         },
         "error": {
+            "cannot_connect": "Verbindungsfehler",
             "general_error": "Es gab einen unbekannten Fehler.",
-            "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel bereitgestellt.",
-            "unable_to_connect": "Verbindung zum Node/Pro-Ger\u00e4t nicht m\u00f6glich."
+            "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel bereitgestellt."
         },
         "step": {
             "geography": {

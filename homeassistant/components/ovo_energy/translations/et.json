@@ -3,15 +3,23 @@
         "error": {
             "already_configured": "Konto on juba seadistatud",
             "cannot_connect": "\u00dchendus nurjus",
-            "connection_error": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamise viga"
         },
+        "flow_title": "OVO Energy: {username}",
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                },
+                "description": "OVO Energy autentimine nurjus. Sisesta oma praegused volitused.",
+                "title": "Taastuvastamine"
+            },
             "user": {
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
                 },
+                "description": "Oma energiatarbimisele juurdep\u00e4\u00e4su saamiseks seadista OVO Energy.",
                 "title": "Lisa OVO Energy konto"
             }
         }

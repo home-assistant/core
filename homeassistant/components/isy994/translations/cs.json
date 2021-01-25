@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "invalid_host": "Z\u00e1znam hostitele nebyl v \u00fapln\u00e9m form\u00e1tu URL, nap\u0159. http://192.168.10.100:80",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
@@ -13,8 +14,10 @@
                 "data": {
                     "host": "URL",
                     "password": "Heslo",
+                    "tls": "Verze TLS ovlada\u010de ISY.",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
                 },
+                "description": "Polo\u017eka hostitele mus\u00ed b\u00fdt v \u00fapln\u00e9m form\u00e1tu URL, nap\u0159 http://192.168.10.100:80.",
                 "title": "P\u0159ipojen\u00ed k ISY994"
             }
         }

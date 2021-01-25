@@ -13,6 +13,7 @@
                 "data": {
                     "host": "Hostitel"
                 },
+                "description": "Nastaven\u00ed integrace Dune HD. Pokud m\u00e1te probl\u00e9my s nastaven\u00edm, p\u0159ejd\u011bte na: https://www.home-assistant.io/integrations/dunehd \n\nUjist\u011bte se, \u017ee je v\u00e1\u0161 p\u0159ehr\u00e1va\u010d zapnut\u00fd.",
                 "title": "Dune HD"
             }
         }

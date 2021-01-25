@@ -6,17 +6,14 @@
             "not_huawei_lte": "No \u00e9s un dispositiu Huawei LTE"
         },
         "error": {
-            "connection_failed": "La connexi\u00f3 ha fallat",
             "connection_timeout": "S'ha acabat el temps d'espera de la connexi\u00f3",
             "incorrect_password": "Contrasenya incorrecta",
             "incorrect_username": "Nom d'usuari incorrecte",
-            "incorrect_username_or_password": "Nom d'usuari o contrasenya incorrectes",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "invalid_url": "URL inv\u00e0lid",
             "login_attempts_exceeded": "Nombre m\u00e0xim d'intents d'inici de sessi\u00f3 superat, torna-ho a provar m\u00e9s tard",
             "response_error": "S'ha produ\u00eft un error desconegut del dispositiu",
-            "unknown": "Error inesperat",
-            "unknown_connection_error": "S'ha produ\u00eft un error desconegut en connectar-se al dispositiu"
+            "unknown": "Error inesperat"
         },
         "flow_title": "Huawei LTE: {name}",
         "step": {

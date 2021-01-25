@@ -5,7 +5,6 @@
         },
         "error": {
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
-            "invalid_credentials": "Usuario o contrase\u00f1a no v\u00e1lido",
             "no_devices": "No se han encontrado dispositivos en la cuenta"
         },
         "step": {

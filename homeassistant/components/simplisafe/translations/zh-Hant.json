@@ -7,7 +7,6 @@
         "error": {
             "identifier_exists": "\u5e33\u865f\u5df2\u8a3b\u518a",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
-            "invalid_credentials": "\u6191\u8b49\u7121\u6548",
             "still_awaiting_mfa": "\u4ecd\u5728\u7b49\u5019\u9ede\u64ca\u591a\u6b65\u9a5f\u8a8d\u8b49\u90f5\u4ef6",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },

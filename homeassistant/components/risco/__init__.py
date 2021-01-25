@@ -60,10 +60,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         EVENTS_COORDINATOR: events_coordinator,
     }
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+    async def start_platforms():
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_setup(entry, component)
+                for component in PLATFORMS
+            ]
         )
+        await events_coordinator.async_refresh()
+
+    hass.async_create_task(start_platforms())
 
     return True
 

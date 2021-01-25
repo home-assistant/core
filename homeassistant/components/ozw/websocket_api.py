@@ -1,4 +1,6 @@
 """Web socket API for OpenZWave."""
+import logging
+
 from openzwavemqtt.const import (
     ATTR_CODE_SLOT,
     ATTR_LABEL,
@@ -15,20 +17,26 @@ from openzwavemqtt.util.node import (
     set_config_parameter,
 )
 import voluptuous as vol
+import voluptuous_serialize
 
 from homeassistant.components import websocket_api
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import ATTR_CONFIG_PARAMETER, ATTR_CONFIG_VALUE, DOMAIN, MANAGER, OPTIONS
+from .const import ATTR_CONFIG_PARAMETER, ATTR_CONFIG_VALUE, DOMAIN, MANAGER
 from .lock import ATTR_USERCODE
+from .migration import async_get_migration_data, async_migrate, map_node_values
 
+_LOGGER = logging.getLogger(__name__)
+
+DRY_RUN = "dry_run"
 TYPE = "type"
 ID = "id"
 OZW_INSTANCE = "ozw_instance"
 NODE_ID = "node_id"
 PARAMETER = ATTR_CONFIG_PARAMETER
 VALUE = ATTR_CONFIG_VALUE
+SCHEMA = "schema"
 
 ATTR_NODE_QUERY_STAGE = "node_query_stage"
 ATTR_IS_ZWAVE_PLUS = "is_zwave_plus"
@@ -50,6 +58,7 @@ ATTR_NEIGHBORS = "neighbors"
 @callback
 def async_register_api(hass):
     """Register all of our api endpoints."""
+    websocket_api.async_register_command(hass, websocket_migrate_zwave)
     websocket_api.async_register_command(hass, websocket_get_instances)
     websocket_api.async_register_command(hass, websocket_get_nodes)
     websocket_api.async_register_command(hass, websocket_network_status)
@@ -104,6 +113,116 @@ def _call_util_function(hass, connection, msg, send_result, function, *args):
         return
 
     connection.send_result(msg[ID])
+
+
+def _get_config_params(node, *args):
+    raw_values = get_config_parameters(node)
+    config_params = []
+
+    for param in raw_values:
+        schema = {}
+
+        if param["type"] in ["Byte", "Int", "Short"]:
+            schema = vol.Schema(
+                {
+                    vol.Required(param["label"], default=param["value"]): vol.All(
+                        vol.Coerce(int), vol.Range(min=param["min"], max=param["max"])
+                    )
+                }
+            )
+            data = {param["label"]: param["value"]}
+
+        if param["type"] == "List":
+
+            for options in param["options"]:
+                if options["Label"] == param["value"]:
+                    selected = options
+                    break
+
+            schema = vol.Schema(
+                {
+                    vol.Required(param["label"],): vol.In(
+                        {
+                            option["Value"]: option["Label"]
+                            for option in param["options"]
+                        }
+                    )
+                }
+            )
+            data = {param["label"]: selected["Value"]}
+
+        config_params.append(
+            {
+                "type": param["type"],
+                "label": param["label"],
+                "parameter": param["parameter"],
+                "help": param["help"],
+                "value": param["value"],
+                "schema": voluptuous_serialize.convert(
+                    schema, custom_serializer=cv.custom_serializer
+                ),
+                "data": data,
+            }
+        )
+
+    return config_params
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "ozw/migrate_zwave",
+        vol.Optional(DRY_RUN, default=True): bool,
+    }
+)
+async def websocket_migrate_zwave(hass, connection, msg):
+    """Migrate the zwave integration device and entity data to ozw integration."""
+    if "zwave" not in hass.config.components:
+        _LOGGER.error("Can not migrate, zwave integration is not loaded")
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], "zwave_not_loaded", "Integration zwave is not loaded"
+            )
+        )
+        return
+
+    zwave = hass.components.zwave
+    zwave_data = await zwave.async_get_ozw_migration_data(hass)
+    _LOGGER.debug("Migration zwave data: %s", zwave_data)
+
+    ozw_data = await async_get_migration_data(hass)
+    _LOGGER.debug("Migration ozw data: %s", ozw_data)
+
+    can_migrate = map_node_values(zwave_data, ozw_data)
+
+    zwave_entity_ids = [
+        entry["entity_entry"].entity_id for entry in zwave_data.values()
+    ]
+    ozw_entity_ids = [entry["entity_entry"].entity_id for entry in ozw_data.values()]
+    migration_device_map = {
+        zwave_device_id: ozw_device_id
+        for ozw_device_id, zwave_device_id in can_migrate["device_entries"].items()
+    }
+    migration_entity_map = {
+        zwave_entry["entity_entry"].entity_id: ozw_entity_id
+        for ozw_entity_id, zwave_entry in can_migrate["entity_entries"].items()
+    }
+    _LOGGER.debug("Migration entity map: %s", migration_entity_map)
+
+    if not msg[DRY_RUN]:
+        await async_migrate(hass, can_migrate)
+
+    connection.send_result(
+        msg[ID],
+        {
+            "migration_device_map": migration_device_map,
+            "zwave_entity_ids": zwave_entity_ids,
+            "ozw_entity_ids": ozw_entity_ids,
+            "migration_entity_map": migration_entity_map,
+            "migrated": not msg[DRY_RUN],
+        },
+    )
 
 
 @websocket_api.websocket_command({vol.Required(TYPE): "ozw/get_instances"})
@@ -213,7 +332,7 @@ def websocket_get_code_slots(hass, connection, msg):
 )
 def websocket_get_config_parameters(hass, connection, msg):
     """Get a list of configuration parameters for an OZW node instance."""
-    _call_util_function(hass, connection, msg, True, get_config_parameters)
+    _call_util_function(hass, connection, msg, True, _get_config_params)
 
 
 @websocket_api.websocket_command(
@@ -245,7 +364,7 @@ def websocket_get_config_parameters(hass, connection, msg):
 def websocket_set_config_parameter(hass, connection, msg):
     """Set a config parameter to a node."""
     _call_util_function(
-        hass, connection, msg, False, set_config_parameter, msg[PARAMETER], msg[VALUE]
+        hass, connection, msg, True, set_config_parameter, msg[PARAMETER], msg[VALUE]
     )
 
 
@@ -406,7 +525,7 @@ def websocket_refresh_node_info(hass, connection, msg):
     """Tell OpenZWave to re-interview a node."""
 
     manager = hass.data[DOMAIN][MANAGER]
-    options = hass.data[DOMAIN][OPTIONS]
+    options = manager.options
 
     @callback
     def forward_node(node):

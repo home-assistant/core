@@ -482,18 +482,19 @@ class HistoryPeriodView(HomeAssistantView):
         if start_time > now:
             return self.json([])
 
-        end_time = request.query.get("end_time")
-        if end_time:
-            end_time = dt_util.parse_datetime(end_time)
+        end_time_str = request.query.get("end_time")
+        if end_time_str:
+            end_time = dt_util.parse_datetime(end_time_str)
             if end_time:
                 end_time = dt_util.as_utc(end_time)
             else:
                 return self.json_message("Invalid end_time", HTTP_BAD_REQUEST)
         else:
             end_time = start_time + one_day
-        entity_ids = request.query.get("filter_entity_id")
-        if entity_ids:
-            entity_ids = entity_ids.lower().split(",")
+        entity_ids_str = request.query.get("filter_entity_id")
+        entity_ids = None
+        if entity_ids_str:
+            entity_ids = entity_ids_str.lower().split(",")
         include_start_time_state = "skip_initial_state" not in request.query
         significant_changes_only = (
             request.query.get("significant_changes_only", "1") != "0"

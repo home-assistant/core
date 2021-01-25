@@ -24,14 +24,6 @@
                 "description": "Voulez-vous ajouter Kodi (` {name} `) \u00e0 Home Assistant ?",
                 "title": "Kodi d\u00e9couvert"
             },
-            "host": {
-                "data": {
-                    "host": "H\u00f4te",
-                    "port": "Port",
-                    "ssl": "Connexion via SSL"
-                },
-                "description": "Informations de connexion Kodi. Veuillez vous assurer d'activer \"Autoriser le contr\u00f4le de Kodi via HTTP\" dans Syst\u00e8me / Param\u00e8tres / R\u00e9seau / Services."
-            },
             "user": {
                 "data": {
                     "host": "H\u00f4te",

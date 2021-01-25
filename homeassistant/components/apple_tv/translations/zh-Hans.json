@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "pair_no_pin": {
+                "title": "\u914d\u5bf9\u4e2d"
+            },
+            "pair_with_pin": {
+                "data": {
+                    "pin": "PIN\u7801"
+                }
+            }
+        }
+    },
+    "title": "Apple TV"
+}

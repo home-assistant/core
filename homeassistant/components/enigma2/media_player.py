@@ -127,11 +127,21 @@ class Enigma2Device(MediaPlayerEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return the unique ID for this entity."""
+        return self.e2_box.mac_address
+
+    @property
     def state(self):
         """Return the state of the device."""
         if self.e2_box.is_recording_playback:
             return STATE_PLAYING
         return STATE_OFF if self.e2_box.in_standby else STATE_ON
+
+    @property
+    def available(self):
+        """Return True if the device is available."""
+        return not self.e2_box.is_offline
 
     @property
     def supported_features(self):

@@ -98,6 +98,10 @@
             "off": "Tavaline",
             "on": "Madal"
         },
+        "battery_charging": {
+            "off": "Ei lae",
+            "on": "Laeb"
+        },
         "cold": {
             "off": "Normaalne",
             "on": "Jahe"
@@ -122,6 +126,10 @@
             "off": "Normaalne",
             "on": "Palav"
         },
+        "light": {
+            "off": "Valgus puudub",
+            "on": "Valgus tuvastatud"
+        },
         "lock": {
             "off": "Lukus",
             "on": "Lukustamata"
@@ -134,6 +142,10 @@
             "off": "Liikumine puudub",
             "on": "Liikumine tuvastatud"
         },
+        "moving": {
+            "off": "Ei liigu",
+            "on": "Liigub"
+        },
         "occupancy": {
             "off": "Puudub",
             "on": "Tuvastatud"
@@ -141,6 +153,10 @@
         "opening": {
             "off": "Suletud",
             "on": "Avatud"
+        },
+        "plug": {
+            "off": "Lahti \u00fchendatud",
+            "on": "\u00dchendatud"
         },
         "presence": {
             "off": "Eemal",

@@ -6,6 +6,15 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "loadzone": "Load Zone (arvelduspunkt)"
+                },
+                "description": "Load Zone asub Griddy konto valikutes \u201cAccount > Meter > Load Zone.\u201d",
+                "title": "Seadista oma Griddy Load Zone"
+            }
         }
     }
 }

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "connection_error": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Anahtar\u0131",
+                    "host": "IP adresi"
+                }
+            }
+        }
+    }
+}

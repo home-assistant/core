@@ -9,6 +9,7 @@
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Tuvastamine nurjus"
         },
+        "flow_title": "",
         "step": {
             "reauth_confirm": {
                 "description": "Sonarr-i sidumine tuleb k\u00e4sitsi taastuvastada Sonarr API abil: {host}",
@@ -16,12 +17,24 @@
             },
             "user": {
                 "data": {
+                    "api_key": "API v\u00f5ti",
+                    "base_path": "API asukoht",
                     "host": "",
                     "port": "",
+                    "ssl": "Kasutab SSL serti",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 }
             }
         }
     },
-    "title": ""
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "upcoming_days": "Kuvatavate eelseisvate p\u00e4evade arv",
+                    "wanted_max_items": "Kuvatavate soovitud \u00fcksuste maksimaalne arv"
+                }
+            }
+        }
+    }
 }

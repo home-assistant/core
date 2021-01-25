@@ -1,10 +1,7 @@
 {
     "config": {
-        "abort": {
-            "address_exists": "Adresse bereits eingerichtet."
-        },
         "error": {
-            "connection_error": "Fehler beim Herstellen einer Verbindung.",
+            "cannot_connect": "Verbindungsfehler",
             "invalid_address": "Adresse nicht im Einzugsgebiet von Twente Milieu gefunden."
         },
         "step": {

@@ -405,6 +405,11 @@ class OnkyoAVR(MediaPlayerEntity):
         return False
 
     @property
+    def unique_id(self):
+        """Return unique ID for this device."""
+        return self._unique_id
+
+    @property
     def name(self):
         """Return name of device."""
         return self._name

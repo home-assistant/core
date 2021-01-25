@@ -1,0 +1,16 @@
+{
+    "system_health": {
+        "info": {
+            "alexa_enabled": "Alexa activada",
+            "can_reach_cert_server": "Servidor de certificaci\u00f3 accessible",
+            "can_reach_cloud": "Home Assistant Cloud accessible",
+            "can_reach_cloud_auth": "Servidor d'autenticaci\u00f3 accessible",
+            "google_enabled": "Google activat",
+            "logged_in": "Sessi\u00f3 iniciada",
+            "relayer_connected": "Encaminador connectat",
+            "remote_connected": "Connexi\u00f3 remota establerta",
+            "remote_enabled": "Connexi\u00f3 remota activada",
+            "subscription_expiration": "Caducitat de la subscripci\u00f3"
+        }
+    }
+}

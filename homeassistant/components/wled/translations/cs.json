@@ -2,12 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "connection_error": "P\u0159ipojen\u00ed k za\u0159\u00edzen\u00ed WLED se nezda\u0159ilo."
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "error": {
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "connection_error": "P\u0159ipojen\u00ed k za\u0159\u00edzen\u00ed WLED se nezda\u0159ilo."
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "flow_title": "WLED: {name}",
         "step": {
@@ -18,7 +16,7 @@
                 "description": "Nastavte WLED k integraci s Home Assistant."
             },
             "zeroconf_confirm": {
-                "description": "Chcete p\u0159idat WLED se jm\u00e9nem {name} do Home Assistant?",
+                "description": "Chcete p\u0159idat WLED se jm\u00e9nem `{name}` do Home Assistant?",
                 "title": "Nalezen\u00e9 za\u0159\u00edzen\u00ed WLED"
             }
         }

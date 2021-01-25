@@ -51,16 +51,15 @@ async def test_hue_bridge_setup(hass):
     ]
 
     for button in ("button1", "button2", "button3", "button4"):
-        for subtype in ("single_press", "double_press", "long_press"):
-            expected.append(
-                {
-                    "device_id": device.id,
-                    "domain": "homekit_controller",
-                    "platform": "device",
-                    "type": button,
-                    "subtype": subtype,
-                }
-            )
+        expected.append(
+            {
+                "device_id": device.id,
+                "domain": "homekit_controller",
+                "platform": "device",
+                "type": button,
+                "subtype": "single_press",
+            }
+        )
 
     triggers = await async_get_device_automations(hass, "trigger", device.id)
     assert_lists_same(triggers, expected)

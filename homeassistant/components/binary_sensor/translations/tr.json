@@ -53,8 +53,8 @@
             "on": "A\u00e7\u0131k"
         },
         "presence": {
-            "off": "D\u0131\u015farda",
-            "on": "Evde"
+            "off": "[%key:common::state::evde_degil%]",
+            "on": "[%key:common::state::evde%]"
         },
         "problem": {
             "off": "Tamam",

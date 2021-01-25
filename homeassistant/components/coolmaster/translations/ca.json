@@ -2,7 +2,6 @@
     "config": {
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "connection_error": "No s'ha pogut connectar amb la inst\u00e0ncia de CoolMasterNet. Comprova l'amfitri\u00f3.",
             "no_units": "No s'ha pogut trobar cap unitat d'HVAC a l'amfitri\u00f3 de CoolMasterNet."
         },
         "step": {

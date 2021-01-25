@@ -1,6 +1,8 @@
 """Test Dynalite bridge."""
 
 
+from unittest.mock import AsyncMock, Mock, patch
+
 from dynalite_devices_lib.dynalite_devices import (
     CONF_AREA as dyn_CONF_AREA,
     CONF_PRESET as dyn_CONF_PRESET,
@@ -18,7 +20,6 @@ from homeassistant.components.dynalite.const import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 

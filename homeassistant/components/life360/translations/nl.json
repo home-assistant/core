@@ -1,17 +1,15 @@
 {
     "config": {
         "abort": {
-            "invalid_credentials": "Ongeldige gebruikersgegevens",
-            "user_already_configured": "Account is al geconfigureerd"
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "create_entry": {
             "default": "Om geavanceerde opties in te stellen, zie [Life360 documentatie]({docs_url})."
         },
         "error": {
-            "invalid_credentials": "Ongeldige gebruikersgegevens",
-            "invalid_username": "Ongeldige gebruikersnaam",
-            "unexpected": "Onverwachte fout bij communicatie met Life360-server",
-            "user_already_configured": "Account is al geconfigureerd"
+            "already_configured": "Account is al geconfigureerd",
+            "invalid_auth": "Ongeldige authenticatie",
+            "invalid_username": "Ongeldige gebruikersnaam"
         },
         "step": {
             "user": {

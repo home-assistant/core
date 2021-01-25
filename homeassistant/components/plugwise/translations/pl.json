@@ -12,10 +12,7 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Typ po\u0142\u0105czenia",
-                    "host": "Adres IP",
-                    "password": "Identyfikator Smile",
-                    "port": "Port"
+                    "flow_type": "Typ po\u0142\u0105czenia"
                 },
                 "description": "Wybierz produkt:",
                 "title": "Wybierz typ Plugwise"
@@ -24,7 +21,8 @@
                 "data": {
                     "host": "Adres IP",
                     "password": "Identyfikator Smile",
-                    "port": "Port"
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Wprowad\u017a:",
                 "title": "Po\u0142\u0105czenie ze Smile"
