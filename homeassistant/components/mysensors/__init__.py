@@ -1,4 +1,5 @@
 """Connect to a MySensors gateway via pymysensors API."""
+import asyncio
 import logging
 from typing import Callable, Dict, List, Optional, Tuple, Type, Union
 
@@ -199,8 +200,16 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
         _LOGGER.error("Can't unload configentry %s, no gateway found", entry.entry_id)
         return False
 
-    for platform in SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT:
-        await hass.config_entries.async_forward_entry_unload(entry, platform)
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT
+            ]
+        )
+    )
+    if not unload_ok:
+        return False
 
     key = MYSENSORS_ON_UNLOAD.format(entry.entry_id)
     if key in hass.data[DOMAIN]:

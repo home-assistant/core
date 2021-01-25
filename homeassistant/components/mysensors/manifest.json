@@ -9,7 +9,8 @@
     "mqtt"
   ],
   "codeowners": [
-    "@MartinHjelmare", "@functionpointer"
+    "@MartinHjelmare",
+    "@functionpointer"
   ],
   "config_flow": true
 }
