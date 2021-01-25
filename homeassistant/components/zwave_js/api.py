@@ -60,7 +60,7 @@ def websocket_network_status(
         },
         "controller": {
             "home_id": client.driver.controller.data["homeId"],
-            "nodes": list(client.driver.controller.nodes.keys()),
+            "nodes": list(client.driver.controller.nodes),
         },
     }
     connection.send_result(
