@@ -2,7 +2,7 @@
 
 import pytest
 
-from homeassistant.components.fan import FanEntity
+from homeassistant.components.fan import FanEntity, NotValidPresetModeError
 
 
 class BaseFan(FanEntity):
@@ -27,7 +27,7 @@ def test_fanentity():
         fan.set_speed("slow")
     with pytest.raises(NotImplementedError):
         fan.set_percentage(0)
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(NotValidPresetModeError):
         fan.set_preset_mode("auto")
     with pytest.raises(NotImplementedError):
         fan.turn_on()
@@ -51,7 +51,7 @@ async def test_async_fanentity(hass):
         await fan.async_set_speed("slow")
     with pytest.raises(NotImplementedError):
         await fan.async_set_percentage(0)
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(NotValidPresetModeError):
         await fan.async_set_preset_mode("auto")
     with pytest.raises(NotImplementedError):
         await fan.async_turn_on()
