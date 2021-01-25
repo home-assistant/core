@@ -76,6 +76,8 @@ class BondFan(BondEntity, FanEntity):
     @property
     def percentage(self) -> Optional[str]:
         """Return the current speed percentage for the fan."""
+        if not self._speed or not self._power:
+            return 0
         return ranged_value_to_percentage(self._speed_range, self._speed)
 
     @property
@@ -97,7 +99,12 @@ class BondFan(BondEntity, FanEntity):
             await self.async_turn_off()
             return
 
-        bond_speed = percentage_to_ranged_value(self._speed_range, percentage)
+        bond_speed = round(percentage_to_ranged_value(self._speed_range, percentage))
+        _LOGGER.debug(
+            "async_set_percentage converted percentage %s to bond speed %s",
+            percentage,
+            bond_speed,
+        )
 
         await self._hub.bond.action(
             self._device.device_id, Action.set_speed(bond_speed)

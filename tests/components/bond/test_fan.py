@@ -93,13 +93,13 @@ async def test_non_standard_speed_list(hass: core.HomeAssistant):
         with patch_bond_action() as mock_set_speed_low:
             await turn_fan_on(hass, "fan.name_1", fan.SPEED_LOW)
         mock_set_speed_low.assert_called_once_with(
-            "test-device-id", Action.set_speed(1)
+            "test-device-id", Action.set_speed(2)
         )
 
         with patch_bond_action() as mock_set_speed_medium:
             await turn_fan_on(hass, "fan.name_1", fan.SPEED_MEDIUM)
         mock_set_speed_medium.assert_called_once_with(
-            "test-device-id", Action.set_speed(3)
+            "test-device-id", Action.set_speed(4)
         )
 
         with patch_bond_action() as mock_set_speed_high:
