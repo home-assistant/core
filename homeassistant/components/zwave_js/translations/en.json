@@ -4,6 +4,7 @@
             "addon_get_discovery_info_failed": "Failed to get Z-Wave JS add-on discovery info.",
             "addon_info_failed": "Failed to get Z-Wave JS add-on info.",
             "addon_install_failed": "Failed to install the Z-Wave JS add-on.",
+            "addon_missing_discovery_info": "Missing Z-Wave JS add-on discovery info.",
             "addon_set_config_failed": "Failed to set Z-Wave JS configuration.",
             "already_configured": "Device is already configured",
             "already_in_progress": "Configuration flow is already in progress",

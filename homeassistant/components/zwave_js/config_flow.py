@@ -28,6 +28,8 @@ CONF_USB_PATH = "usb_path"
 DEFAULT_URL = "ws://localhost:3000"
 TITLE = "Z-Wave JS"
 
+ADDON_SETUP_TIME = 10
+
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_URL, default=DEFAULT_URL): str})
 
@@ -134,7 +136,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(version_info.home_id)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_URL: self.ws_address})
 
         return await self.async_step_hassio_confirm()
 
@@ -259,7 +261,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "addon_start_failed"
             else:
                 # Sleep some seconds to let the add-on start properly before connecting.
-                await asyncio.sleep(10)
+                await asyncio.sleep(ADDON_SETUP_TIME)
                 discovery_info = await self._async_get_addon_discovery_info()
                 self.ws_address = (
                     f"ws://{discovery_info['host']}:{discovery_info['port']}"
@@ -361,7 +363,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if not discovery_info:
             _LOGGER.error("Failed to get Z-Wave JS add-on discovery info")
-            raise AbortFlow("addon_get_discovery_info_failed")
+            raise AbortFlow("addon_missing_discovery_info")
 
         discovery_info_config: dict = discovery_info["config"]
         return discovery_info_config
