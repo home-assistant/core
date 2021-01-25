@@ -66,22 +66,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Handle websocket is (re)connected."""
         LOGGER.info("Connected to Zwave JS Server")
         connected.set()
-        if initialized.is_set():
-            # update entity availability
-            async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
-
-        initialized.clear()
 
     async def async_on_disconnect() -> None:
         """Handle websocket is disconnected."""
         LOGGER.info("Disconnected from Zwave JS Server")
         connected.clear()
-        async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
+        if initialized.is_set():
+            initialized.clear()
+            # update entity availability
+            async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
 
     async def async_on_initialized() -> None:
         """Handle initial full state received."""
         LOGGER.info("Connection to Zwave JS Server initialized.")
         initialized.set()
+        # update entity availability
+        async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
 
     @callback
     def async_on_node_ready(node: ZwaveNode) -> None:
