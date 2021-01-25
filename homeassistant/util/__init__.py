@@ -22,8 +22,8 @@ from typing import (
 
 import slugify as unicode_slug
 
-from .dt import as_local, utcnow
 from ..helpers.deprecation import deprecated_function
+from .dt import as_local, utcnow
 
 T = TypeVar("T")
 U = TypeVar("U")  # pylint: disable=invalid-name

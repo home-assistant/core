@@ -1,7 +1,7 @@
 """Deprecation helpers for Home Assistant."""
+import functools
 import inspect
 import logging
-import functools
 from typing import Any, Callable, Dict, Optional
 
 
