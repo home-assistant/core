@@ -22,6 +22,7 @@ WATER_USAGE_TODAY = "water_usage_today"
 POWER_USAGE_TODAY = "power_usage_today"
 ALERT_COUNT = "alert_count"
 WIFI_SIGNAL = "wifi_signal"
+RUNNING_STATE = "running_state"
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,6 +41,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
             sensors.append(EcoNetSensor(water_heater, COMPRESSOR_HEALTH))
         if water_heater.override_status:
             sensors.append(EcoNetSensor(water_heater, OVERRIDE_STATUS))
+        if water_heater.running_state is not None:
+            sensors.append(EcoNetSensor(water_heater, RUNNING_STATE))
         # All units have this
         sensors.append(EcoNetSensor(water_heater, ALERT_COUNT))
         # These aren't part of the device and start off as None in pyeconet so always add them
@@ -83,6 +86,8 @@ class EcoNetSensor(EcoNetEntity):
             return None
         if self._device_name == ALERT_COUNT:
             return self._econet.alert_count
+        if self._device_name == RUNNING_STATE:
+            return self._econet.running_state
         return None
 
     @property
