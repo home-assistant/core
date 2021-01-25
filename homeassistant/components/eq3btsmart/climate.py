@@ -26,6 +26,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
     ATTR_TEMPERATURE,
     CONF_DEVICES,
     CONF_MAC,
@@ -115,6 +116,7 @@ DEVICE_SCHEMA = vol.Schema(
         vol.Optional(CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
         vol.Optional(CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
     }
 )
 
@@ -144,7 +146,7 @@ class EQ3BTSmartThermostat(ClimateEntity, RestoreEntity):
         # We want to avoid name clash with this module.
 
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, _name, hass=hass)
-        self._name = _name
+        self._name = device_cfg.get(ATTR_FRIENDLY_NAME, _name)
         self._unique_id = device_cfg.get(
             CONF_UNIQUE_ID, self.entity_id + "_" + device_cfg[CONF_MAC]
         )
