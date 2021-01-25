@@ -62,6 +62,12 @@ def bulb_6_multi_color_state_fixture():
     return json.loads(load_fixture("zwave_js/bulb_6_multi_color_state.json"))
 
 
+@pytest.fixture(name="eaton_rf9640_dimmer_state", scope="session")
+def eaton_rf9640_dimmer_state_fixture():
+    """Load the bulb 6 multi-color node state fixture data."""
+    return json.loads(load_fixture("zwave_js/eaton_rf9640_dimmer_state.json"))
+
+
 @pytest.fixture(name="lock_schlage_be469_state", scope="session")
 def lock_schlage_be469_state_fixture():
     """Load the schlage lock node state fixture data."""
@@ -164,6 +170,14 @@ def hank_binary_switch_fixture(client, hank_binary_switch_state):
 def bulb_6_multi_color_fixture(client, bulb_6_multi_color_state):
     """Mock a bulb 6 multi-color node."""
     node = Node(client, bulb_6_multi_color_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="eaton_rf9640_dimmer")
+def eaton_rf9640_dimmer_fixture(client, eaton_rf9640_dimmer_state):
+    """Mock a Eaton RF9640 (V4 compatible) dimmer node."""
+    node = Node(client, eaton_rf9640_dimmer_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
 
