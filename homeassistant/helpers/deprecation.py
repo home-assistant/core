@@ -77,9 +77,14 @@ def get_deprecated(
 
 
 def deprecated_function(replacement: str):
+    """Mark function as deprecated and provide a replacement function to be used instead."""
+
     def deprecated_decorator(func):
+        """Decorate function as deprecated."""
+
         @functools.wraps(func)
         def deprecated_func(*args, **kwargs):
+            """Wrap for the original function."""
             logger = logging.getLogger(func.__module__)
             logger.warning(
                 "%s is a deprecated function. Use %s instead",
