@@ -45,8 +45,11 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util.dt import utcnow
+
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,6 +138,9 @@ SUPPORT_FLAGS_SENSOR_CONTROL = SUPPORT_TARGET_TEMPERATURE
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the eQ-3 BLE thermostats."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     devices = []
 
     for name, device_cfg in config[CONF_DEVICES].items():
