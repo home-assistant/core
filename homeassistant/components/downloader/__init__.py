@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.const import HTTP_OK
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import raise_if_invalid_filename
+from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +70,8 @@ def setup(hass, config):
 
                 overwrite = service.data.get(ATTR_OVERWRITE)
 
-                raise_if_invalid_filename(subdir)
+                # Check the path
+                raise_if_invalid_path(subdir)
 
                 final_path = None
 
@@ -100,7 +101,7 @@ def setup(hass, config):
                     if not filename:
                         filename = "ha_download"
 
-                    # Remove stuff to ruin paths
+                    # Check the filename
                     raise_if_invalid_filename(filename)
 
                     # Do we want to download to subdir, create if needed

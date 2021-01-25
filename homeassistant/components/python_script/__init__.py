@@ -105,7 +105,10 @@ def discover_scripts(hass):
 
     def python_script_service_handler(call):
         """Handle python script service calls."""
-        execute_script(hass, call.service, call.data)
+        try:
+            execute_script(hass, call.service, call.data)
+        except ValueError:
+            _LOGGER.error("Invalid path")
 
     existing = hass.services.services.get(DOMAIN, {}).keys()
     for existing_service in existing:

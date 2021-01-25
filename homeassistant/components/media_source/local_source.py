@@ -52,8 +52,8 @@ class LocalSource(MediaSource):
 
         try:
             raise_if_invalid_filename(location)
-        except ValueError:
-            raise Unresolvable("Invalid path.")
+        except ValueError as err:
+            raise Unresolvable("Invalid path.") from err
 
         return source_dir_id, location
 
@@ -193,8 +193,8 @@ class LocalMediaView(HomeAssistantView):
         """Start a GET request."""
         try:
             raise_if_invalid_filename(location)
-        except ValueError:
-            raise web.HTTPNotFound()
+        except ValueError as err:
+            raise web.HTTPNotFound() from err
 
         if source_dir_id not in self.hass.config.media_dirs:
             raise web.HTTPNotFound()

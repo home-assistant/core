@@ -46,7 +46,7 @@ YAML_DASHBOARD_SCHEMA = vol.Schema(
     {
         **DASHBOARD_BASE_CREATE_FIELDS,
         vol.Required(CONF_MODE): MODE_YAML,
-        vol.Required(CONF_FILENAME): vol.All(cv.string, cv.path),
+        vol.Required(CONF_FILENAME): cv.path,
     }
 )
 

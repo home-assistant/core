@@ -1,6 +1,7 @@
 """Deprecation helpers for Home Assistant."""
 import inspect
 import logging
+import functools
 from typing import Any, Callable, Dict, Optional
 
 
@@ -77,6 +78,7 @@ def get_deprecated(
 
 def deprecated_function(replacement: str):
     def deprecated_decorator(func):
+        @functools.wraps(func)
         def deprecated_func(*args, **kwargs):
             logger = logging.getLogger(func.__module__)
             logger.warning(

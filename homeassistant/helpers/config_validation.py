@@ -120,8 +120,8 @@ def path(value: Any) -> str:
 
     try:
         raise_if_invalid_path(value)
-    except ValueError:
-        raise vol.Invalid("Invalid path")
+    except ValueError as err:
+        raise vol.Invalid("Invalid path") from err
 
     return value
 
