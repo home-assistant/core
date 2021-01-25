@@ -56,7 +56,7 @@ def verify_version(value: str):
     version = AwesomeVersion(value)
     if version.strategy == AwesomeVersionStrategy.UNKNOWN:
         raise vol.Invalid(
-            f"'{version}' is not a valid version, this will block the integration from be loaded in future versions of Home Assistant",
+            f"'{version}' is not a valid version. This will cause a future version of Home Assistant to block this integration.",
         )
     return value
 
