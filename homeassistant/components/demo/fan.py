@@ -10,7 +10,6 @@ from homeassistant.components.fan import (
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
     FanEntity,
-    fan_compat,
 )
 
 PRESET_MODE_AUTO = "auto"
@@ -147,7 +146,6 @@ class DemoFan(BaseDemoFan, FanEntity):
         """Return the speed list."""
         return self._speed_list
 
-    @fan_compat
     def turn_on(
         self,
         speed: str = None,
@@ -214,7 +212,6 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
         else:
             raise ValueError
 
-    @fan_compat
     def turn_on(
         self,
         speed: str = None,
@@ -271,7 +268,6 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
         self._percentage = None
         self.async_write_ha_state()
 
-    @fan_compat
     async def async_turn_on(
         self,
         speed: str = None,
