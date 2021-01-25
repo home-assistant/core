@@ -8,7 +8,6 @@ from homeassistant.components.fan import (
     SUPPORT_DIRECTION,
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
-    SUPPORT_SET_SPEED_PERCENTAGE,
     FanEntity,
 )
 from homeassistant.core import callback
@@ -46,8 +45,8 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         return self.service.value(self.on_characteristic) == 1
 
     @property
-    def percentage_speed(self):
-        """Return the current speed."""
+    def percentage(self):
+        """Return the current speed percentage."""
         if not self.is_on:
             return 0
 
@@ -74,7 +73,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             features |= SUPPORT_DIRECTION
 
         if self.service.has(CharacteristicsTypes.ROTATION_SPEED):
-            features |= SUPPORT_SET_SPEED | SUPPORT_SET_SPEED_PERCENTAGE
+            features |= SUPPORT_SET_SPEED
 
         if self.service.has(CharacteristicsTypes.SWING_MODE):
             features |= SUPPORT_OSCILLATE
@@ -87,13 +86,13 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             {CharacteristicsTypes.ROTATION_DIRECTION: DIRECTION_TO_HK[direction]}
         )
 
-    async def async_set_speed_percentage(self, speed):
+    async def async_set_percentage(self, percentage):
         """Set the speed of the fan."""
-        if speed == 0:
+        if percentage == 0:
             return await self.async_turn_off()
 
         await self.async_put_characteristics(
-            {CharacteristicsTypes.ROTATION_SPEED: speed}
+            {CharacteristicsTypes.ROTATION_SPEED: percentage}
         )
 
     async def async_oscillate(self, oscillating: bool):
@@ -102,13 +101,6 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             {CharacteristicsTypes.SWING_MODE: 1 if oscillating else 0}
         )
 
-    #
-    # The fan entity model has changed to use percentages and preset_modes
-    # instead of speeds.
-    #
-    # Please review
-    # https://developers.home-assistant.io/docs/core/entity/fan/
-    #
     async def async_turn_on(
         self, speed=None, percentage=None, preset_mode=None, **kwargs
     ):
@@ -118,10 +110,8 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         if not self.is_on:
             characteristics[self.on_characteristic] = True
 
-        if self.supported_features & SUPPORT_SET_SPEED_PERCENTAGE and speed:
-            characteristics[
-                CharacteristicsTypes.ROTATION_SPEED
-            ] = self.speed_to_percentage(speed)
+        if self.supported_features & SUPPORT_SET_SPEED:
+            characteristics[CharacteristicsTypes.ROTATION_SPEED] = percentage
 
         if characteristics:
             await self.async_put_characteristics(characteristics)
