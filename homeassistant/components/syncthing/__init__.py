@@ -3,7 +3,6 @@ import asyncio
 import logging
 
 import aiosyncthing
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -24,8 +23,6 @@ from .const import (
     SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
 )
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 PLATFORMS = ["sensor"]
 

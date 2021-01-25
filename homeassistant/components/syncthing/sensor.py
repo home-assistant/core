@@ -167,7 +167,7 @@ class FolderSensor(Entity):
             )
         )
 
-        async def handle_state_chaged(event):
+        async def handle_state_changed(event):
             if self._state is not None:
                 self._state["state"] = event["data"]["to"]
                 self.async_write_ha_state()
@@ -176,7 +176,7 @@ class FolderSensor(Entity):
             async_dispatcher_connect(
                 self.hass,
                 f"{STATE_CHANGED_RECEIVED}-{self._name}-{self._folder_id}",
-                handle_state_chaged,
+                handle_state_changed,
             )
         )
 
