@@ -530,8 +530,12 @@ class Entity(ABC):
         await self.async_added_to_hass()
         self.async_write_ha_state()
 
-    async def async_remove(self) -> None:
-        """Remove entity from Home Assistant."""
+    async def async_remove(self, *, force_remove: bool = False) -> None:
+        """Remove entity from Home Assistant.
+
+        Pass in force_remove=True to skip writing unavailable state
+        when the entity still exists in the entity registry.
+        """
         assert self.hass is not None
 
         if self.platform and not self._added:
@@ -548,7 +552,15 @@ class Entity(ABC):
         await self.async_internal_will_remove_from_hass()
         await self.async_will_remove_from_hass()
 
-        self.hass.states.async_remove(self.entity_id, context=self._context)
+        # Check if entry still exists in entity registry (ie unloading config entry)
+        if (
+            not force_remove
+            and self.registry_entry
+            and not self.registry_entry.disabled
+        ):
+            self.registry_entry.write_unavailable_state(self.hass)
+        else:
+            self.hass.states.async_remove(self.entity_id, context=self._context)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass.
@@ -606,6 +618,7 @@ class Entity(ABC):
         data = event.data
         if data["action"] == "remove":
             await self.async_removed_from_registry()
+            self.registry_entry = None
             await self.async_remove()
 
         if data["action"] != "update":
@@ -617,7 +630,7 @@ class Entity(ABC):
         self.registry_entry = ent_reg.async_get(data["entity_id"])
         assert self.registry_entry is not None
 
-        if self.registry_entry.disabled_by is not None:
+        if self.registry_entry.disabled:
             await self.async_remove()
             return
 
@@ -626,7 +639,7 @@ class Entity(ABC):
             self.async_write_ha_state()
             return
 
-        await self.async_remove()
+        await self.async_remove(force_remove=True)
 
         assert self.platform is not None
         self.entity_id = self.registry_entry.entity_id
