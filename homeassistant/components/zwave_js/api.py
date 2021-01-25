@@ -299,7 +299,9 @@ class DumpView(HomeAssistantView):
         hass = request.app["hass"]
 
         if data["config_entry_id"] not in hass.data[DOMAIN]:
-            raise http_exceptions.HttpBadRequest
+            raise http_exceptions.HttpBadRequest(
+                f"Invalid config entry ID: {data['config_entry_id']}."
+            )
 
         entry = hass.config_entries.async_get_entry(data["config_entry_id"])
 
