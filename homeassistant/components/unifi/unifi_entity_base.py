@@ -64,10 +64,7 @@ class UniFiBase(Entity):
 
     @callback
     def async_update_callback(self) -> None:
-        """Update the entity's state.
-
-        Optional input to tell call is made because of controller state changed.
-        """
+        """Update the entity's state."""
         _LOGGER.debug(
             "Updating %s entity %s (%s)",
             self.TYPE,
