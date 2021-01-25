@@ -6,7 +6,11 @@ from bluepy.btle import BTLEException  # pylint: disable=import-error, no-name-i
 import eq3bt as eq3  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    ENTITY_ID_FORMAT,
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+)
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     CURRENT_HVAC_HEAT,
@@ -25,6 +29,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_DEVICES,
     CONF_MAC,
+    CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_START,
     PRECISION_HALVES,
     PRECISION_TENTHS,
@@ -35,6 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -108,6 +114,7 @@ DEVICE_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
         vol.Optional(CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -135,7 +142,12 @@ class EQ3BTSmartThermostat(ClimateEntity, RestoreEntity):
     def __init__(self, hass, _name, device_cfg):
         """Initialize the thermostat."""
         # We want to avoid name clash with this module.
+
+        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, _name, hass=hass)
         self._name = _name
+        self._unique_id = device_cfg.get(
+            CONF_UNIQUE_ID, self.entity_id + "_" + device_cfg[CONF_MAC]
+        )
         self._thermostat = eq3.Thermostat(device_cfg[CONF_MAC])
 
         self._sensor_entity_id = device_cfg.get(CONF_SENSOR)
@@ -308,6 +320,11 @@ class EQ3BTSmartThermostat(ClimateEntity, RestoreEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def temperature_unit(self):
