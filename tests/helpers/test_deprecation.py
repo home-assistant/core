@@ -94,5 +94,5 @@ def test_deprecated_function(caplog):
     mock_deprecated_function()
     assert (
         "mock_deprecated_function is a deprecated function. Use new_function instead"
-        == caplog.text
+        in caplog.text
     )
