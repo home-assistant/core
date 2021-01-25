@@ -15,7 +15,7 @@ CONF_MODEL_NAME = "model_name"
 WILIGHT_MANUFACTURER = "All Automacao Ltda"
 
 # List the components supported by this integration.
-ALLOWED_WILIGHT_COMPONENTS = ["light", "fan"]
+ALLOWED_WILIGHT_COMPONENTS = ["cover", "fan", "light"]
 
 
 class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
