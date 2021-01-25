@@ -2,6 +2,8 @@
 from typing import Dict
 from urllib.parse import urlparse
 
+from awesomeversion import AwesomeVersion
+from awesomeversion.strategy import AwesomeVersionStrategy
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -53,6 +55,7 @@ MANIFEST_SCHEMA = vol.Schema(
     {
         vol.Required("domain"): str,
         vol.Required("name"): str,
+        vol.Optional("version"): str,
         vol.Optional("config_flow"): bool,
         vol.Optional("mqtt"): [str],
         vol.Optional("zeroconf"): [
@@ -95,6 +98,25 @@ MANIFEST_SCHEMA = vol.Schema(
 )
 
 
+def validate_version(integration: Integration):
+    """Validate the version of the integration."""
+    if not integration.manifest.get("version"):
+        integration.add_warning(
+            "manifest",
+            "No 'version' key in the manifest file, this will block the integration from be loaded in future versions of Home Assistant",
+        )
+        return
+
+    version = AwesomeVersion(integration.manifest["version"])
+
+    if version.strategy == AwesomeVersionStrategy.UNKNOWN:
+        integration.add_warning(
+            "manifest",
+            f"'{version}' is not a valid version, this will block the integration from be loaded in future versions of Home Assistant",
+        )
+        return
+
+
 def validate_manifest(integration: Integration):
     """Validate manifest."""
     try:
@@ -103,11 +125,12 @@ def validate_manifest(integration: Integration):
         integration.add_error(
             "manifest", f"Invalid manifest: {humanize_error(integration.manifest, err)}"
         )
-        integration.manifest = None
-        return
 
     if integration.manifest["domain"] != integration.path.name:
         integration.add_error("manifest", "Domain does not match dir name")
+
+    if not integration.core:
+        validate_version(integration)
 
 
 def validate(integrations: Dict[str, Integration], config):

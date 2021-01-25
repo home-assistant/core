@@ -75,6 +75,11 @@ class Integration:
         return self.path.name
 
     @property
+    def core(self) -> bool:
+        """Core integration."""
+        return "homeassistant/components" in self.path.as_posix()
+
+    @property
     def disabled(self) -> Optional[str]:
         """List of disabled."""
         return self.manifest.get("disabled")
