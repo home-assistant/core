@@ -3,9 +3,15 @@ import asyncio
 from datetime import timedelta
 import logging
 
+from aiohttp.client_exceptions import ClientError
 from pyeconet import EcoNetApiInterface
 from pyeconet.equipment import EquipmentType
-from pyeconet.errors import InvalidCredentialsError, PyeconetError
+from pyeconet.errors import (
+    GenericHTTPError,
+    InvalidCredentialsError,
+    InvalidResponseFormat,
+    PyeconetError,
+)
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import callback
@@ -49,7 +55,7 @@ async def async_setup_entry(hass, config_entry):
 
     try:
         equipment = await api.get_equipment_by_type([EquipmentType.WATER_HEATER])
-    except Exception as err:  # pylint: disable=broad-except
+    except (ClientError, GenericHTTPError, InvalidResponseFormat) as err:
         raise ConfigEntryNotReady from err
     hass.data[DOMAIN][API_CLIENT][config_entry.entry_id] = api
     hass.data[DOMAIN][EQUIPMENT][config_entry.entry_id] = equipment
