@@ -243,7 +243,7 @@ async def test_templates_with_entities(hass, calls):
 
 
 async def test_templates_with_entities_and_invalid_percentage(hass, calls):
-    """Test tempalates with values from other entities."""
+    """Test templates with values from other entities."""
     hass.states.async_set("sensor.percentage", "0")
 
     with assert_setup_component(1, "fan"):
@@ -295,6 +295,56 @@ async def test_templates_with_entities_and_invalid_percentage(hass, calls):
     await hass.async_block_till_done()
 
     _verify(hass, STATE_OFF, SPEED_OFF, 0, None, None, None)
+
+
+async def test_templates_with_entities_and_preset_modes(hass, calls):
+    """Test templates with values from other entities."""
+    hass.states.async_set("sensor.preset_mode", "0")
+
+    with assert_setup_component(1, "fan"):
+        assert await setup.async_setup_component(
+            hass,
+            "fan",
+            {
+                "fan": {
+                    "platform": "template",
+                    "fans": {
+                        "test_fan": {
+                            "value_template": "{{ 'on' }}",
+                            "preset_modes": ["auto", "smart"],
+                            "preset_mode_template": "{{ states('sensor.preset_mode') }}",
+                            "turn_on": {"service": "script.fan_on"},
+                            "turn_off": {"service": "script.fan_off"},
+                        },
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    _verify(hass, STATE_ON, None, None, None, None, None)
+
+    hass.states.async_set("sensor.preset_mode", "invalid")
+    await hass.async_block_till_done()
+
+    _verify(hass, STATE_ON, None, None, None, None, None)
+
+    hass.states.async_set("sensor.preset_mode", "auto")
+    await hass.async_block_till_done()
+
+    _verify(hass, STATE_ON, "auto", None, None, None, "auto")
+
+    hass.states.async_set("sensor.preset_mode", "smart")
+    await hass.async_block_till_done()
+
+    _verify(hass, STATE_ON, "smart", None, None, None, "smart")
+
+    hass.states.async_set("sensor.preset_mode", "invalid")
+    await hass.async_block_till_done()
+    _verify(hass, STATE_ON, None, None, None, None, None)
 
 
 async def test_template_with_unavailable_entities(hass, calls):
@@ -664,7 +714,6 @@ async def test_preset_modes(hass, calls):
 
     # Set fan's preset_mode to "auto"
     await common.async_set_preset_mode(hass, _TEST_FAN, "auto")
-    await hass.async_block_till_done()
 
     # verify
     assert hass.states.get(_PRESET_MODE_INPUT_SELECT).state == "auto"
@@ -680,6 +729,12 @@ async def test_preset_modes(hass, calls):
 
     # Verify fan's preset_mode is still "smart"
     assert hass.states.get(_PRESET_MODE_INPUT_SELECT).state == "smart"
+
+    # Set fan's preset_mode to "auto"
+    await common.async_turn_on(hass, _TEST_FAN, STATE_ON, preset_mode="auto")
+
+    # verify
+    assert hass.states.get(_PRESET_MODE_INPUT_SELECT).state == "auto"
 
 
 async def test_set_osc(hass, calls):

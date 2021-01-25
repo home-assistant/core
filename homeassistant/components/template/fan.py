@@ -583,7 +583,7 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._preset_mode = preset_mode
         elif preset_mode in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
             self._speed = None
-            self._percentage = 0
+            self._percentage = None
             self._preset_mode = None
         else:
             _LOGGER.error(
@@ -592,7 +592,7 @@ class TemplateFan(TemplateEntity, FanEntity):
                 self.preset_mode,
             )
             self._speed = None
-            self._percentage = 0
+            self._percentage = None
             self._preset_mode = None
 
     @callback
