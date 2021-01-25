@@ -771,7 +771,7 @@ homeassistant-pyozw==0.1.10
 homeconnect==0.6.3
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.13.0
+homematicip==0.13.1
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -1889,10 +1889,10 @@ pyvolumio==0.1.3
 pywebpush==1.9.2
 
 # homeassistant.components.wemo
-pywemo==0.5.6
+pywemo==0.6.1
 
 # homeassistant.components.wilight
-pywilight==0.0.65
+pywilight==0.0.66
 
 # homeassistant.components.xeoma
 pyxeoma==1.4.1
@@ -1913,7 +1913,7 @@ quantum-gateway==0.0.5
 rachiopy==1.0.3
 
 # homeassistant.components.radiotherm
-radiotherm==2.0.0
+radiotherm==2.1.0
 
 # homeassistant.components.raincloud
 raincloudy==0.0.7
@@ -2311,7 +2311,7 @@ xboxapi==2.0.1
 xfinity-gateway==0.0.4
 
 # homeassistant.components.knx
-xknx==0.16.1
+xknx==0.16.2
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest
@@ -2333,7 +2333,7 @@ yeelight==0.5.4
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2021.01.03
+youtube_dl==2021.01.16
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0
@@ -2375,4 +2375,4 @@ zigpy==0.30.1
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.12.0
+zwave-js-server-python==0.13.0
