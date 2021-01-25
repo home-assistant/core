@@ -70,13 +70,13 @@ async def test_loading_light_fan(
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     # First segment of the strip
-    state = hass.states.get("light.wl000000000099_1")
+    state = hass.states.get("fan.wl000000000099_2")
     assert state
     assert state.state == STATE_OFF
 
-    entry = entity_registry.async_get("light.wl000000000099_1")
+    entry = entity_registry.async_get("fan.wl000000000099_2")
     assert entry
-    assert entry.unique_id == "WL000000000099_0"
+    assert entry.unique_id == "WL000000000099_1"
 
 
 async def test_on_off_fan_state(
