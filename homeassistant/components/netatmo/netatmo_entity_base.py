@@ -72,16 +72,6 @@ class NetatmoBase(Entity):
                 data_class[SIGNAL_NAME], self.async_update_callback
             )
 
-    async def async_remove(self):
-        """Clean up when removing entity."""
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
-        entity_entry = entity_registry.async_get(self.entity_id)
-        if not entity_entry:
-            await super().async_remove()
-            return
-
-        entity_registry.async_remove(self.entity_id)
-
     @callback
     def async_update_callback(self):
         """Update the entity's state."""
