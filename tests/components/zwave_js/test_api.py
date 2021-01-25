@@ -162,7 +162,7 @@ async def test_dump_view(integration, hass_client):
         "zwave_js_server.dump.dump_msgs",
         return_value=[{"hello": "world"}, {"second": "msg"}],
     ):
-        resp = await client.get("/api/zwave_js/dump/integration.entry_id")
+        resp = await client.get(f"/api/zwave_js/dump/{integration.entry_id}")
     assert resp.status == 200
     assert await resp.text() == '{"hello": "world"}\n{"second": "msg"}\n'
 
