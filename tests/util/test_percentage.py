@@ -9,16 +9,20 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-SPEED_1 = "low"
-SPEED_2 = "medium"
-SPEED_3 = "high"
+SPEED_LOW = "low"
+SPEED_MEDIUM = "medium"
+SPEED_HIGH = "high"
+
+SPEED_1 = SPEED_LOW
+SPEED_2 = SPEED_MEDIUM
+SPEED_3 = SPEED_HIGH
 SPEED_4 = "very_high"
 SPEED_5 = "storm"
 SPEED_6 = "hurricane"
 SPEED_7 = "solar_wind"
 
+LEGACY_ORDERED_LIST = [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 SMALL_ORDERED_LIST = [SPEED_1, SPEED_2, SPEED_3, SPEED_4]
-
 LARGE_ORDERED_LIST = [SPEED_1, SPEED_2, SPEED_3, SPEED_4, SPEED_5, SPEED_6, SPEED_7]
 
 
@@ -33,6 +37,10 @@ async def test_ordered_list_percentage_round_trip():
 
 async def test_ordered_list_item_to_percentage():
     """Test percentage of an item in an ordered list."""
+
+    assert ordered_list_item_to_percentage(LEGACY_ORDERED_LIST, SPEED_LOW) == 33
+    assert ordered_list_item_to_percentage(LEGACY_ORDERED_LIST, SPEED_MEDIUM) == 66
+    assert ordered_list_item_to_percentage(LEGACY_ORDERED_LIST, SPEED_HIGH) == 100
 
     assert ordered_list_item_to_percentage(SMALL_ORDERED_LIST, SPEED_1) == 25
     assert ordered_list_item_to_percentage(SMALL_ORDERED_LIST, SPEED_2) == 50
@@ -62,6 +70,13 @@ async def test_percentage_to_ordered_list_item():
     assert percentage_to_ordered_list_item(SMALL_ORDERED_LIST, 75) == SPEED_3
     assert percentage_to_ordered_list_item(SMALL_ORDERED_LIST, 76) == SPEED_4
     assert percentage_to_ordered_list_item(SMALL_ORDERED_LIST, 100) == SPEED_4
+
+    assert percentage_to_ordered_list_item(LEGACY_ORDERED_LIST, 17) == SPEED_LOW
+    assert percentage_to_ordered_list_item(LEGACY_ORDERED_LIST, 33) == SPEED_LOW
+    assert percentage_to_ordered_list_item(LEGACY_ORDERED_LIST, 50) == SPEED_MEDIUM
+    assert percentage_to_ordered_list_item(LEGACY_ORDERED_LIST, 66) == SPEED_MEDIUM
+    assert percentage_to_ordered_list_item(LEGACY_ORDERED_LIST, 84) == SPEED_HIGH
+    assert percentage_to_ordered_list_item(LEGACY_ORDERED_LIST, 100) == SPEED_HIGH
 
     assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 1) == SPEED_1
     assert percentage_to_ordered_list_item(LARGE_ORDERED_LIST, 14) == SPEED_1
