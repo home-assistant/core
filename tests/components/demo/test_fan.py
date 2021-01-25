@@ -18,7 +18,10 @@ LIMITED_AND_FULL_FAN_ENTITY_IDS = FULL_FAN_ENTITY_IDS + [
     "fan.ceiling_fan",
     "fan.percentage_limited_fan",
 ]
-FANS_WITH_PRESET_MODES = FULL_FAN_ENTITY_IDS + ["fan.percentage_limited_fan"]
+FANS_WITH_PRESET_MODES = FULL_FAN_ENTITY_IDS + [
+    "fan.percentage_limited_fan",
+    "fan.preset_only_limited_fan",
+]
 
 
 @pytest.fixture(autouse=True)
