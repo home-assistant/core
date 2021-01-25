@@ -106,9 +106,9 @@ def _get_device_event_description(modelid: str, event: str) -> tuple:
     """Get device event description."""
     device_event_descriptions: dict = REMOTES[modelid]
 
-    for k, v in device_event_descriptions.items():
-        if event == v[CONF_EVENT]:
-            return k
+    for event_type_tuple, event_dict in device_event_descriptions.items():
+        if event == event_dict[CONF_EVENT]:
+            return event_type_tuple
 
 
 @callback
