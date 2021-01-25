@@ -77,7 +77,7 @@ class Integration:
     @property
     def core(self) -> bool:
         """Core integration."""
-        return "homeassistant/components" in self.path.as_posix()
+        return self.path.as_posix().startswith("homeassistant/components")
 
     @property
     def disabled(self) -> Optional[str]:

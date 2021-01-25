@@ -54,7 +54,12 @@ def verify_uppercase(value: str):
 def verify_version(value: str):
     """Verify the version."""
     version = AwesomeVersion(value)
-    if version.strategy == AwesomeVersionStrategy.UNKNOWN:
+    if version.strategy in [
+        AwesomeVersionStrategy.CALVER,
+        AwesomeVersionStrategy.SEMVER,
+        AwesomeVersionStrategy.SIMPLEVER,
+        AwesomeVersionStrategy.BUILDVER,
+    ]:
         raise vol.Invalid(
             f"'{version}' is not a valid version. This will cause a future version of Home Assistant to block this integration.",
         )
@@ -122,7 +127,7 @@ def validate_version(integration: Integration):
     if not integration.manifest.get("version"):
         integration.add_warning(
             "manifest",
-            "No 'version' key in the manifest file, this will block the integration from be loaded in future versions of Home Assistant",
+            "No 'version' key in the manifest file. This will cause a future version of Home Assistant to block this integration.",
         )
         return
 
