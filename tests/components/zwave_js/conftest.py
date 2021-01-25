@@ -1,6 +1,6 @@
 """Provide common Z-Wave JS fixtures."""
 import json
-from unittest.mock import DEFAULT, patch
+from unittest.mock import DEFAULT, Mock, patch
 
 import pytest
 from zwave_js_server.event import Event
@@ -97,16 +97,37 @@ def in_wall_smart_fan_control_state_fixture():
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state):
     """Mock a client."""
+
+    def mock_callback():
+        callbacks = []
+
+        def add_callback(cb):
+            callbacks.append(cb)
+            return DEFAULT
+
+        return callbacks, Mock(side_effect=add_callback)
+
     with patch(
         "homeassistant.components.zwave_js.ZwaveClient", autospec=True
     ) as client_class:
-        driver = Driver(client_class.return_value, controller_state)
-        version = VersionInfo.from_message(version_state)
-        client_class.return_value.driver = driver
-        client_class.return_value.version = version
-        client_class.return_value.ws_server_url = "ws://test:3000/zjs"
-        client_class.return_value.state = "connected"
-        yield client_class.return_value
+        client = client_class.return_value
+
+        connect_callback, client.register_on_connect = mock_callback()
+        initialized_callback, client.register_on_initialized = mock_callback()
+
+        async def connect():
+            for cb in connect_callback:
+                await cb()
+
+            for cb in initialized_callback:
+                await cb()
+
+        client.connect = Mock(side_effect=connect)
+        client.driver = Driver(client, controller_state)
+        client.version = VersionInfo.from_message(version_state)
+        client.ws_server_url = "ws://test:3000/zjs"
+        client.state = "connected"
+        yield client
 
 
 @pytest.fixture(name="multisensor_6")
@@ -190,14 +211,6 @@ async def integration_fixture(hass, client):
     """Set up the zwave_js integration."""
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
-
-    def initialize_client(async_on_initialized):
-        """Init the client."""
-        hass.async_create_task(async_on_initialized())
-        return DEFAULT
-
-    client.register_on_initialized.side_effect = initialize_client
-
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
