@@ -54,7 +54,7 @@ def verify_uppercase(value: str):
 def verify_version(value: str):
     """Verify the version."""
     version = AwesomeVersion(value)
-    if version.strategy in [
+    if version.strategy not in [
         AwesomeVersionStrategy.CALVER,
         AwesomeVersionStrategy.SEMVER,
         AwesomeVersionStrategy.SIMPLEVER,
