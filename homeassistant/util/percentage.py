@@ -1,6 +1,5 @@
 """Percentage util functions."""
 
-from math import ceil
 from typing import List, Tuple
 
 
@@ -68,7 +67,7 @@ def ranged_value_to_percentage(
     (1,255), 127: 50
     (1,255), 10: 4
     """
-    return ceil(value / (low_high_range[1] - low_high_range[0] + 1) * 100)
+    return int((value * 100) // (low_high_range[1] - low_high_range[0] + 1))
 
 
 def percentage_to_ranged_value(

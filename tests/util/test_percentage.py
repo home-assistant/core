@@ -1,5 +1,7 @@
 """Test Home Assistant percentage conversions."""
 
+import math
+
 import pytest
 
 from homeassistant.util.percentage import (
@@ -109,19 +111,48 @@ async def test_percentage_to_ordered_list_item():
         assert percentage_to_ordered_list_item([], 100)
 
 
-async def test_ranged_value_to_percentage():
-    """Test range of low and high values convert a single value to a percentage."""
+async def test_ranged_value_to_percentage_large():
+    """Test a large range of low and high values convert a single value to a percentage."""
     range = (1, 255)
 
     assert ranged_value_to_percentage(range, 255) == 100
-    assert ranged_value_to_percentage(range, 127) == 50
-    assert ranged_value_to_percentage(range, 1) == 1
+    assert ranged_value_to_percentage(range, 127) == 49
+    assert ranged_value_to_percentage(range, 10) == 3
+    assert ranged_value_to_percentage(range, 1) == 0
 
 
-async def test_percentage_to_ranged_value():
-    """Test range of low and high values convert a percentage to a single value."""
+async def test_percentage_to_ranged_value_large():
+    """Test a large range of low and high values convert a percentage to a single value."""
     range = (1, 255)
 
     assert percentage_to_ranged_value(range, 100) == 255
     assert percentage_to_ranged_value(range, 50) == 127.5
     assert percentage_to_ranged_value(range, 4) == 10.2
+
+    assert math.ceil(percentage_to_ranged_value(range, 100)) == 255
+    assert math.ceil(percentage_to_ranged_value(range, 50)) == 128
+    assert math.ceil(percentage_to_ranged_value(range, 4)) == 11
+
+
+async def test_ranged_value_to_percentage_small():
+    """Test a small range of low and high values convert a single value to a percentage."""
+    range = (1, 6)
+
+    assert ranged_value_to_percentage(range, 1) == 16
+    assert ranged_value_to_percentage(range, 2) == 33
+    assert ranged_value_to_percentage(range, 3) == 50
+    assert ranged_value_to_percentage(range, 4) == 66
+    assert ranged_value_to_percentage(range, 5) == 83
+    assert ranged_value_to_percentage(range, 6) == 100
+
+
+async def test_percentage_to_ranged_value_small():
+    """Test a small range of low and high values convert a percentage to a single value."""
+    range = (1, 6)
+
+    assert math.ceil(percentage_to_ranged_value(range, 16)) == 1
+    assert math.ceil(percentage_to_ranged_value(range, 33)) == 2
+    assert math.ceil(percentage_to_ranged_value(range, 50)) == 3
+    assert math.ceil(percentage_to_ranged_value(range, 66)) == 4
+    assert math.ceil(percentage_to_ranged_value(range, 83)) == 5
+    assert math.ceil(percentage_to_ranged_value(range, 100)) == 6
