@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_MODE,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
@@ -285,7 +286,10 @@ class EQ3BTSmartThermostat(ClimateEntity, RestoreEntity):
     @property
     def _is_device_active(self):
         """If the thermostat currently active."""
-        return self._thermostat.mode == eq3.Mode.Open
+        return self._thermostat.mode == eq3.Mode.Open or (
+            self._thermostat.mode == eq3.Mode.Manual
+            and self._thermostat.target_temperature == self._on_temp
+        )
 
     @property
     def supported_features(self):
@@ -337,16 +341,18 @@ class EQ3BTSmartThermostat(ClimateEntity, RestoreEntity):
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
-            return
+        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
 
-        if self._sensor_control:
-            self._target_temp = temperature
-            await self._async_control_heating()
-            self.async_write_ha_state()
-            return
+        if temperature is not None:
+            if self._sensor_control:
+                self._target_temp = temperature
+                await self._async_control_heating()
+                self.async_write_ha_state()
+            else:
+                self._thermostat.target_temperature = temperature
 
-        self._thermostat.target_temperature = temperature
+        if hvac_mode is not None:
+            await self.async_set_hvac_mode(hvac_mode)
 
     @property
     def hvac_mode(self):
@@ -370,6 +376,9 @@ class EQ3BTSmartThermostat(ClimateEntity, RestoreEntity):
         if self.hvac_mode == HVAC_MODE_OFF:
             return CURRENT_HVAC_OFF
 
+        if self._thermostat.mode == eq3.Mode.Manual:
+            return CURRENT_HVAC_HEAT if self._is_device_active else CURRENT_HVAC_IDLE
+
         return EQ_TO_HA_HVAC_ACTION.get(self._thermostat.mode, "-")
 
     @property
@@ -390,7 +399,7 @@ class EQ3BTSmartThermostat(ClimateEntity, RestoreEntity):
             _LOGGER.debug("%s - Setting HVAC state to %s", self._name, hvac_mode)
             self._hvac_mode = hvac_mode
             await self._async_control_heating()
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
             return
 
         if self.preset_mode:
@@ -479,17 +488,27 @@ class EQ3BTSmartThermostat(ClimateEntity, RestoreEntity):
             _LOGGER.warning("%s - Setting the state failed: %s", self._name, ex)
 
     def turn_off(self):
-        """Turn off thermostat."""
+        """Turn off thermostat based on the off_temp value."""
 
         _LOGGER.info("%s - Turning off thermostat", self._name)
-        self.set_device_mode(eq3.Mode.Closed)
+
+        if self._off_temp is None or self._hvac_mode == HVAC_MODE_OFF:
+            self.set_device_mode(eq3.Mode.Closed)
+        else:
+            self.set_device_mode(eq3.Mode.Manual)
+            self._thermostat.target_temperature = self._off_temp
 
     def turn_on(self):
-        """Turn on thermostat."""
+        """Turn on thermostat based on the on_temp value."""
 
         if self._hvac_mode == HVAC_MODE_OFF:
             _LOGGER.error("%s - Invalid turn on request", self._name)
             return
 
-        _LOGGER.debug("%s - Turning on thermostat", self._name)
-        self.set_device_mode(eq3.Mode.Open)
+        _LOGGER.info("%s - Turning on thermostat", self._name)
+
+        if self._on_temp is None:
+            self.set_device_mode(eq3.Mode.Open)
+        else:
+            self.set_device_mode(eq3.Mode.Manual)
+            self._thermostat.target_temperature = self._on_temp
