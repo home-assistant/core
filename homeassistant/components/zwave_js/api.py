@@ -9,7 +9,6 @@ from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.node import Node as ZwaveNode
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import CONF_URL
@@ -290,20 +289,21 @@ async def remove_from_device_registry(
 class DumpView(HomeAssistantView):
     """View to dump the state of the Z-Wave JS server."""
 
-    url = "/api/zwave_js/dump"
+    url = "/api/zwave_js/dump/{config_entry_id}"
     name = "api:zwave_js:dump"
 
-    @RequestDataValidator({"config_entry_id": str})
-    async def post(self, request: web.Request, data: dict) -> web.Response:
+    async def get(self, request: web.Request, config_entry_id: str) -> web.Response:
         """Dump the state of Z-Wave."""
         hass = request.app["hass"]
 
-        if data["config_entry_id"] not in hass.data[DOMAIN]:
+        if config_entry_id not in hass.data[DOMAIN]:
             raise web_exceptions.HTTPBadRequest
 
-        entry = hass.config_entries.async_get_entry(data["config_entry_id"])
+        entry = hass.config_entries.async_get_entry(config_entry_id)
 
-        msgs = await dump.dump_msgs(entry.data[CONF_URL], async_get_clientsession(hass))
+        msgs = await dump.dump_msgs(
+            entry.data[CONF_URL], async_get_clientsession(hass), wait_nodes_ready=False
+        )
 
         return web.Response(
             body="\n".join(json.dumps(msg) for msg in msgs) + "\n",
