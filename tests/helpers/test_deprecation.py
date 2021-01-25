@@ -2,9 +2,9 @@
 from unittest.mock import MagicMock, patch
 
 from homeassistant.helpers.deprecation import (
+    deprecated_function,
     deprecated_substitute,
     get_deprecated,
-    deprecated_function,
 )
 
 
