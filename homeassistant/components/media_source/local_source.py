@@ -194,7 +194,7 @@ class LocalMediaView(HomeAssistantView):
         try:
             raise_if_invalid_filename(location)
         except ValueError as err:
-            raise web.HTTPNotFound() from err
+            raise web.HTTPBadRequest() from err
 
         if source_dir_id not in self.hass.config.media_dirs:
             raise web.HTTPNotFound()
