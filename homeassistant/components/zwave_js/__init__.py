@@ -58,25 +58,30 @@ def register_node_in_dev_reg(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Z-Wave JS from a config entry."""
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
+    connected = asyncio.Event()
     initialized = asyncio.Event()
     dev_reg = await device_registry.async_get_registry(hass)
 
     async def async_on_connect() -> None:
         """Handle websocket is (re)connected."""
         LOGGER.info("Connected to Zwave JS Server")
-        if initialized.is_set():
-            # update entity availability
-            async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
+        connected.set()
 
     async def async_on_disconnect() -> None:
         """Handle websocket is disconnected."""
         LOGGER.info("Disconnected from Zwave JS Server")
-        async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
+        connected.clear()
+        if initialized.is_set():
+            initialized.clear()
+            # update entity availability
+            async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
 
     async def async_on_initialized() -> None:
         """Handle initial full state received."""
         LOGGER.info("Connection to Zwave JS Server initialized.")
         initialized.set()
+        # update entity availability
+        async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
 
     @callback
     def async_on_node_ready(node: ZwaveNode) -> None:
@@ -127,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     asyncio.create_task(client.connect())
     try:
         async with timeout(CONNECT_TIMEOUT):
-            await initialized.wait()
+            await connected.wait()
     except asyncio.TimeoutError as err:
         for unsub in unsubs:
             unsub()
@@ -151,6 +156,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 for component in PLATFORMS
             ]
         )
+
+        # Wait till we're initialized
+        LOGGER.info("Waiting for Z-Wave to be fully initialized")
+        await initialized.wait()
 
         # run discovery on all ready nodes
         for node in client.driver.controller.nodes.values():

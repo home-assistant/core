@@ -324,7 +324,13 @@ class TemplateFan(TemplateEntity, FanEntity):
         """Return the oscillation state."""
         return self._direction
 
-    # pylint: disable=arguments-differ
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
     async def async_turn_on(
         self,
         speed: str = None,
@@ -333,7 +339,14 @@ class TemplateFan(TemplateEntity, FanEntity):
         **kwargs,
     ) -> None:
         """Turn on the fan."""
-        await self._on_script.async_run({ATTR_SPEED: speed}, context=self._context)
+        await self._on_script.async_run(
+            {
+                ATTR_SPEED: speed,
+                ATTR_PERCENTAGE: percentage,
+                ATTR_PRESET_MODE: preset_mode,
+            },
+            context=self._context,
+        )
         self._state = STATE_ON
 
         if preset_mode is not None:
