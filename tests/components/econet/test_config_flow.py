@@ -1,4 +1,6 @@
 """Tests for the Econet component."""
+from unittest.mock import patch
+
 from pyeconet.api import EcoNetApiInterface
 from pyeconet.errors import InvalidCredentialsError, PyeconetError
 
@@ -11,7 +13,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
