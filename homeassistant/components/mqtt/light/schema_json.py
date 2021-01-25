@@ -191,36 +191,39 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._state = False
 
             if self._supported_features and SUPPORT_COLOR:
-                try:
-                    red = int(values["color"]["r"])
-                    green = int(values["color"]["g"])
-                    blue = int(values["color"]["b"])
+                if "color" in values and values["color"] is None:
+                    self._hs = None
+                else:
+                    try:
+                        red = int(values["color"]["r"])
+                        green = int(values["color"]["g"])
+                        blue = int(values["color"]["b"])
 
-                    self._hs = color_util.color_RGB_to_hs(red, green, blue)
-                except KeyError:
-                    pass
-                except ValueError:
-                    _LOGGER.warning("Invalid RGB color value received")
+                        self._hs = color_util.color_RGB_to_hs(red, green, blue)
+                    except KeyError:
+                        pass
+                    except ValueError:
+                        _LOGGER.warning("Invalid RGB color value received")
 
-                try:
-                    x_color = float(values["color"]["x"])
-                    y_color = float(values["color"]["y"])
+                    try:
+                        x_color = float(values["color"]["x"])
+                        y_color = float(values["color"]["y"])
 
-                    self._hs = color_util.color_xy_to_hs(x_color, y_color)
-                except KeyError:
-                    pass
-                except ValueError:
-                    _LOGGER.warning("Invalid XY color value received")
+                        self._hs = color_util.color_xy_to_hs(x_color, y_color)
+                    except KeyError:
+                        pass
+                    except ValueError:
+                        _LOGGER.warning("Invalid XY color value received")
 
-                try:
-                    hue = float(values["color"]["h"])
-                    saturation = float(values["color"]["s"])
+                    try:
+                        hue = float(values["color"]["h"])
+                        saturation = float(values["color"]["s"])
 
-                    self._hs = (hue, saturation)
-                except KeyError:
-                    pass
-                except ValueError:
-                    _LOGGER.warning("Invalid HS color value received")
+                        self._hs = (hue, saturation)
+                    except KeyError:
+                        pass
+                    except ValueError:
+                        _LOGGER.warning("Invalid HS color value received")
 
             if self._supported_features and SUPPORT_BRIGHTNESS:
                 try:
@@ -236,7 +239,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
             if self._supported_features and SUPPORT_COLOR_TEMP:
                 try:
-                    self._color_temp = int(values["color_temp"])
+                    if values["color_temp"] is None:
+                        self._color_temp = None
+                    else:
+                        self._color_temp = int(values["color_temp"])
                 except KeyError:
                     pass
                 except ValueError:
@@ -250,7 +256,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
             if self._supported_features and SUPPORT_WHITE_VALUE:
                 try:
-                    self._white_value = int(values["white_value"])
+                    if values["white_value"] is None:
+                        self._white_value = None
+                    else:
+                        self._white_value = int(values["white_value"])
                 except KeyError:
                     pass
                 except ValueError:

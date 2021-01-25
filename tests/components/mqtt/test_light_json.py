@@ -295,10 +295,20 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     light_state = hass.states.get("light.test")
     assert light_state.attributes.get("hs_color") == (180.0, 50.0)
 
+    async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON", "color":null}')
+
+    light_state = hass.states.get("light.test")
+    assert "hs_color" not in light_state.attributes
+
     async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON", "color_temp":155}')
 
     light_state = hass.states.get("light.test")
     assert light_state.attributes.get("color_temp") == 155
+
+    async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON", "color_temp":null}')
+
+    light_state = hass.states.get("light.test")
+    assert "color_temp" not in light_state.attributes
 
     async_fire_mqtt_message(
         hass, "test_light_rgb", '{"state":"ON", "effect":"colorloop"}'
@@ -311,6 +321,13 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
 
     light_state = hass.states.get("light.test")
     assert light_state.attributes.get("white_value") == 155
+
+    async_fire_mqtt_message(
+        hass, "test_light_rgb", '{"state":"ON", "white_value":null}'
+    )
+
+    light_state = hass.states.get("light.test")
+    assert "white_value" not in light_state.attributes
 
 
 async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
