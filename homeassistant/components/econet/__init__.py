@@ -34,12 +34,9 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up EcoNet as config entry."""
-    entry_updates = {}
-    if entry_updates:
-        hass.config_entries.async_update_entry(config_entry, **entry_updates)
 
-    email = config_entry.data.get(CONF_EMAIL)
-    password = config_entry.data.get(CONF_PASSWORD)
+    email = config_entry.data[CONF_EMAIL]
+    password = config_entry.data[CONF_PASSWORD]
 
     try:
         api = await EcoNetApiInterface.login(email, password=password)
@@ -49,7 +46,11 @@ async def async_setup_entry(hass, config_entry):
     except PyeconetError as err:
         _LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
-    equipment = await api.get_equipment_by_type([EquipmentType.WATER_HEATER])
+
+    try:
+        equipment = await api.get_equipment_by_type([EquipmentType.WATER_HEATER])
+    except Exception as err:  # pylint: disable=broad-except
+        raise ConfigEntryNotReady from err
     hass.data[DOMAIN][API_CLIENT][config_entry.entry_id] = api
     hass.data[DOMAIN][EQUIPMENT][config_entry.entry_id] = equipment
 
