@@ -172,11 +172,5 @@ async def test_dump_view(integration, hass_client):
 async def test_dump_view_invalid_entry_id(integration, hass_client):
     """Test an invalid config entry id parameter."""
     client = await hass_client()
-    with patch(
-        "zwave_js_server.dump.dump_msgs",
-        return_value=[{"hello": "world"}, {"second": "msg"}],
-    ):
-        resp = await client.post(
-            "/api/zwave_js/dump", json={"config_entry_id": "INVALID"}
-        )
+    resp = await client.post("/api/zwave_js/dump", json={"config_entry_id": "INVALID"})
     assert resp.status == 400

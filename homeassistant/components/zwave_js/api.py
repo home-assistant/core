@@ -2,7 +2,7 @@
 import json
 import logging
 
-from aiohttp import hdrs, http_exceptions, web
+from aiohttp import hdrs, web, web_exceptions
 import voluptuous as vol
 from zwave_js_server import dump
 from zwave_js_server.client import Client as ZwaveClient
@@ -299,9 +299,7 @@ class DumpView(HomeAssistantView):
         hass = request.app["hass"]
 
         if data["config_entry_id"] not in hass.data[DOMAIN]:
-            raise http_exceptions.HttpBadRequest(
-                f"Invalid config entry ID: {data['config_entry_id']}."
-            )
+            raise web_exceptions.HTTPBadRequest
 
         entry = hass.config_entries.async_get_entry(data["config_entry_id"])
 
