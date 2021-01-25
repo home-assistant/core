@@ -475,13 +475,21 @@ class RoonDevice(MediaPlayerEntity):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
-        # media_id is treated as a path matching the Roon menu structure
 
-        path_list = split_media_path(media_id)
-        if not self._server.roonapi.play_media(self.zone_id, path_list):
-            _LOGGER.error(
-                "Playback request for %s / %s was unsuccessful", media_id, path_list
-            )
+        _LOGGER.debug("Playback request for %s / %s", media_type, media_id)
+        if media_type in ("library", "track"):
+            # media_id is a roon browser id
+            self._server.roonapi.play_id(self.zone_id, media_id)
+        else:
+            # media_id is a path matching the Roon menu structure
+            path_list = split_media_path(media_id)
+            if not self._server.roonapi.play_media(self.zone_id, path_list):
+                _LOGGER.error(
+                    "Playback request for %s / %s / %s was unsuccessful",
+                    media_type,
+                    media_id,
+                    path_list,
+                )
 
     def join(self, join_ids):
         """Add another Roon player to this player's join group."""
