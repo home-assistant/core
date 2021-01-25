@@ -41,6 +41,10 @@ async def test_user_step_full(hass):
     assert result2["title"] == "Z-Wave JS"
     assert result2["data"] == {
         "url": "ws://localhost:3000",
+        "usb_path": None,
+        "network_key": None,
+        "use_addon": False,
+        "integration_created_addon": False,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
