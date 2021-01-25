@@ -15,7 +15,6 @@ from homeassistant.components.fan import (
     SUPPORT_DIRECTION,
     SUPPORT_SET_SPEED,
     FanEntity,
-    fan_compat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -123,17 +122,9 @@ class BondFan(BondEntity, FanEntity):
     # The fan entity model has changed to use percentages and preset_modes
     # instead of speeds.
     #
-    # The @fan_compat decorator provides backwards compatibility
-    # by setting the preset_mode or percentage when speed is passed in,
-    # and forward compatibility by setting speed when preset_mode or
-    # percentage is passed in.
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
     #
-    # When the deprecation of the old model is completed and this
-    # entity has been updated to implement `set_percentage`
-    # `percentage`, `set_preset_mode`, `preset_modes`, and `preset_mode`,
-    # remove the @fan_compat decorator.
-    #
-    @fan_compat
     async def async_turn_on(
         self,
         speed: Optional[str] = None,

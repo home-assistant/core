@@ -1,9 +1,8 @@
 """Provides functionality to interact with fans."""
-import asyncio
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Callable, List, Optional
+from typing import List, Optional
 
 import voluptuous as vol
 
@@ -113,6 +112,8 @@ async def async_setup(hass, config: dict):
 
     await component.async_setup(config)
 
+    # After the transition to percentage and preset_modes concludes,
+    # switch this back to async_turn_on and remove async_turn_on_compat
     component.async_register_entity_service(
         SERVICE_TURN_ON,
         {
@@ -122,14 +123,16 @@ async def async_setup(hass, config: dict):
             ),
             vol.Optional(ATTR_PRESET_MODE): cv.string,
         },
-        "async_turn_on",
+        "async_turn_on_compat",
     )
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
+    # After the transition to percentage and preset_modes concludes,
+    # remove this service
     component.async_register_entity_service(
         SERVICE_SET_SPEED,
         {vol.Required(ATTR_SPEED): cv.string},
-        "async_set_speed",
+        "async_set_speed_deprecated",
         [SUPPORT_SET_SPEED],
     )
     component.async_register_entity_service(
@@ -187,6 +190,13 @@ class FanEntity(ToggleEntity):
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         raise NotImplementedError()
+
+    async def async_set_speed_deprecated(self, speed: str):
+        """Set the speed of the fan."""
+        _LOGGER.warning(
+            "fan.set_speed is deprecated, use fan.set_percentage or fan.set_preset_mode instead."
+        )
+        await self.async_set_speed(speed)
 
     @_fan_native
     async def async_set_speed(self, speed: str):
@@ -273,6 +283,45 @@ class FanEntity(ToggleEntity):
         raise NotImplementedError()
 
     # pylint: disable=arguments-differ
+    async def async_turn_on_compat(
+        self,
+        speed: Optional[str] = None,
+        percentage: Optional[int] = None,
+        preset_mode: Optional[str] = None,
+        **kwargs,
+    ) -> None:
+        """Turn on the fan.
+
+        This _compat version wraps async_turn_on with
+        backwards and forward compatibility.
+
+        After the transition to percentage and preset_modes concludes, it
+        should be removed.
+        """
+        if preset_mode is not None:
+            self._valid_preset_mode_or_raise(preset_mode)
+            speed = preset_mode
+            percentage = None
+        elif speed is not None:
+            _LOGGER.warning(
+                "Calling fan.turn_on with the speed argument is deprecated, use percentage or preset_mode instead."
+            )
+            if speed in self.preset_modes:
+                preset_mode = speed
+                percentage = None
+            else:
+                percentage = self.speed_to_percentage(speed)
+        elif percentage is not None:
+            speed = self.percentage_to_speed(percentage)
+
+        await self.async_turn_on(
+            speed=speed,
+            percentage=percentage,
+            preset_mode=preset_mode,
+            **kwargs,
+        )
+
+    # pylint: disable=arguments-differ
     async def async_turn_on(
         self,
         speed: Optional[str] = None,
@@ -284,9 +333,6 @@ class FanEntity(ToggleEntity):
         if speed == SPEED_OFF:
             await self.async_turn_off()
         else:
-            speed, percentage, preset_mode = self._convert_legacy_turn_on_arguments(
-                speed, percentage, preset_mode
-            )
             await self.hass.async_add_executor_job(
                 ft.partial(
                     self.turn_on,
@@ -296,22 +342,6 @@ class FanEntity(ToggleEntity):
                     **kwargs,
                 )
             )
-
-    def _convert_legacy_turn_on_arguments(self, speed, percentage, preset_mode):
-        """Convert turn on arguments for backwards compatibility."""
-        if preset_mode is not None:
-            self._valid_preset_mode_or_raise(preset_mode)
-            speed = preset_mode
-            percentage = None
-        elif speed is not None:
-            if speed in self.preset_modes:
-                preset_mode = speed
-                percentage = None
-            else:
-                percentage = self.speed_to_percentage(speed)
-        elif percentage is not None:
-            speed = self.percentage_to_speed(percentage)
-        return speed, percentage, preset_mode
 
     def oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
@@ -501,58 +531,6 @@ class FanEntity(ToggleEntity):
         Requires SUPPORT_SET_SPEED.
         """
         return preset_modes_from_speed_list(self.speed_list)
-
-
-# Decorator
-def fan_compat(func: Callable) -> Callable:
-    """Compatibility for fans during the transition to percentage and preset mode."""
-
-    # Check for partials to properly determine if coroutine function
-    check_func = func
-    while isinstance(check_func, ft.partial):
-        check_func = check_func.func
-
-    if asyncio.iscoroutinefunction(check_func):
-
-        @ft.wraps(func)
-        async def wrap_async_turn_on(
-            self,
-            speed: str = None,
-            percentage: int = None,
-            preset_mode: Optional[str] = None,
-            **kwargs,
-        ) -> None:
-            """Wrap async_turn_on to add percentage and preset mode compatibility."""
-            speed, percentage, preset_mode = self._convert_legacy_turn_on_arguments(
-                speed, percentage, preset_mode
-            )
-            return await check_func(
-                self,
-                speed=speed,
-                percentage=percentage,
-                preset_mode=preset_mode,
-                **kwargs,
-            )
-
-        return wrap_async_turn_on
-
-    @ft.wraps(func)
-    def wrap_turn_on(
-        self,
-        speed: str = None,
-        percentage: int = None,
-        preset_mode: Optional[str] = None,
-        **kwargs,
-    ) -> None:
-        """Wrap turn_on to add percentage and preset mode compatibility."""
-        speed, percentage, preset_mode = self._convert_legacy_turn_on_arguments(
-            speed, percentage, preset_mode
-        )
-        return check_func(
-            self, speed=speed, percentage=percentage, preset_mode=preset_mode, **kwargs
-        )
-
-    return wrap_turn_on
 
 
 def speed_list_without_preset_modes(speed_list: List):
