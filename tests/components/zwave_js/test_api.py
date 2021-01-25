@@ -8,7 +8,7 @@ from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.helpers.device_registry import async_get_registry
 
 
-async def test_api(hass, integration, multisensor_6, hass_ws_client):
+async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     """Test the network and node status websocket commands."""
     entry = integration
     ws_client = await hass_ws_client(hass)
