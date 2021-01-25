@@ -75,7 +75,9 @@ CONST_FAN_HIGH = "HIGH"
 
 
 # When we change the temperature setting, we need an overlay mode
-CONST_OVERLAY_TADO_MODE = "TADO_MODE"  # wait until tado changes the mode automatic
+CONST_OVERLAY_TADO_MODE = (
+    "NEXT_TIME_BLOCK"  # wait until tado changes the mode automatic
+)
 CONST_OVERLAY_MANUAL = "MANUAL"  # the user has change the temperature or mode manually
 CONST_OVERLAY_TIMER = "TIMER"  # the temperature will be reset after a timespan
 
