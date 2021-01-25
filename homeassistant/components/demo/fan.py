@@ -8,6 +8,7 @@ from homeassistant.components.fan import (
     SPEED_OFF,
     SUPPORT_DIRECTION,
     SUPPORT_OSCILLATE,
+    SUPPORT_PRESET_MODE,
     SUPPORT_SET_SPEED,
     FanEntity,
 )
@@ -63,6 +64,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 LIMITED_SUPPORT,
                 [PRESET_MODE_AUTO, PRESET_MODE_SMART],
                 None,
+            ),
+            AsyncDemoPercentageFan(
+                hass,
+                "fan5",
+                "Preset Only Limited Fan",
+                SUPPORT_PRESET_MODE,
+                [PRESET_MODE_AUTO, PRESET_MODE_SMART],
+                [],
             ),
         ]
     )
