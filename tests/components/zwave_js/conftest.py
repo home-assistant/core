@@ -68,6 +68,12 @@ def lock_schlage_be469_state_fixture():
     return json.loads(load_fixture("zwave_js/lock_schlage_be469_state.json"))
 
 
+@pytest.fixture(name="lock_august_asl03_state", scope="session")
+def lock_august_asl03_state_fixture():
+    """Load the August Pro lock node state fixture data."""
+    return json.loads(load_fixture("zwave_js/lock_august_asl03_state.json"))
+
+
 @pytest.fixture(name="climate_radio_thermostat_ct100_plus_state", scope="session")
 def climate_radio_thermostat_ct100_plus_state_fixture():
     """Load the climate radio thermostat ct100 plus node state fixture data."""
@@ -166,6 +172,14 @@ def bulb_6_multi_color_fixture(client, bulb_6_multi_color_state):
 def lock_schlage_be469_fixture(client, lock_schlage_be469_state):
     """Mock a schlage lock node."""
     node = Node(client, lock_schlage_be469_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="lock_august_pro")
+def lock_august_asl03_fixture(client, lock_august_asl03_state):
+    """Mock a August Pro lock node."""
+    node = Node(client, lock_august_asl03_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
 

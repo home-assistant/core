@@ -252,6 +252,28 @@ NOTIFICATION_SENSOR_MAPPINGS: List[NotificationSensorMapping] = [
     },
 ]
 
+PROPERTY_DOOR_STATUS = "doorStatus"
+
+
+class PropertySensorMapping(TypedDict, total=False):
+    """Represent a property sensor mapping dict type."""
+
+    property_name: str  # required
+    on_states: List[str]  # required
+    device_class: str
+    enabled: bool
+
+
+# Mappings for property sensors
+PROPERTY_SENSOR_MAPPINGS: List[PropertySensorMapping] = [
+    {
+        "property_name": PROPERTY_DOOR_STATUS,
+        "on_states": ["open"],
+        "device_class": DEVICE_CLASS_DOOR,
+        "enabled": True,
+    },
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
@@ -266,6 +288,8 @@ async def async_setup_entry(
 
         if info.platform_hint == "notification":
             entities.append(ZWaveNotificationBinarySensor(config_entry, client, info))
+        elif info.platform_hint == "property":
+            entities.append(ZWavePropertyBinarySensor(config_entry, client, info))
         else:
             # boolean sensor
             entities.append(ZWaveBooleanBinarySensor(config_entry, client, info))
@@ -356,3 +380,43 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
                 mapping_info = mapping.copy()
                 return mapping_info
         return {}
+
+
+class ZWavePropertyBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
+    """Representation of a Z-Wave binary_sensor from a property."""
+
+    def __init__(
+        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize a ZWavePropertyBinarySensor entity."""
+        super().__init__(config_entry, client, info)
+        # check if we have a custom mapping for this value
+        self._mapping_info = self._get_sensor_mapping()
+
+    @property
+    def is_on(self) -> bool:
+        """Return if the sensor is on or off."""
+        return self.info.primary_value.value in self._mapping_info["on_states"]
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return device class."""
+        return self._mapping_info.get("device_class")
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        # We hide some more advanced sensors by default to not overwhelm users
+        # unless explicitly stated in a mapping, assume deisabled by default
+        return self._mapping_info.get("enabled", False)
+
+    @callback
+    def _get_sensor_mapping(self) -> PropertySensorMapping:
+        """Try to get a device specific mapping for this sensor."""
+        mapping_info = PropertySensorMapping()
+        for mapping in PROPERTY_SENSOR_MAPPINGS:
+            if mapping["property_name"] == self.info.primary_value.property_name:
+                mapping_info = mapping.copy()
+                break
+
+        return mapping_info
