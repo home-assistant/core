@@ -48,13 +48,18 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_TIMEOUT,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STARTED,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.core import CoreState, callback
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry,
+    entity_platform,
+)
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
@@ -63,7 +68,6 @@ from .const import (
     CONF_WS_PORT,
     DATA_CONNECTION,
     DATA_KODI,
-    DATA_VERSION,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_TIMEOUT,
@@ -91,7 +95,7 @@ DEPRECATED_TURN_OFF_ACTIONS = {
     "shutdown": "System.Shutdown",
 }
 
-WEBSOCKET_WATCHDOG_INTERVAL = timedelta(minutes=3)
+WEBSOCKET_WATCHDOG_INTERVAL = timedelta(seconds=10)
 
 # https://github.com/xbmc/xbmc/blob/master/xbmc/media/MediaType.h
 MEDIA_TYPES = {
@@ -229,14 +233,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     data = hass.data[DOMAIN][config_entry.entry_id]
     connection = data[DATA_CONNECTION]
-    version = data[DATA_VERSION]
     kodi = data[DATA_KODI]
     name = config_entry.data[CONF_NAME]
     uid = config_entry.unique_id
     if uid is None:
         uid = config_entry.entry_id
 
-    entity = KodiEntity(connection, kodi, name, uid, version)
+    entity = KodiEntity(connection, kodi, name, uid)
     async_add_entities([entity])
 
 
@@ -264,13 +267,12 @@ def cmd(func):
 class KodiEntity(MediaPlayerEntity):
     """Representation of a XBMC/Kodi device."""
 
-    def __init__(self, connection, kodi, name, uid, version):
+    def __init__(self, connection, kodi, name, uid):
         """Initialize the Kodi entity."""
         self._connection = connection
         self._kodi = kodi
         self._name = name
         self._unique_id = uid
-        self._version = version
         self._players = None
         self._properties = {}
         self._item = {}
@@ -347,7 +349,6 @@ class KodiEntity(MediaPlayerEntity):
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "manufacturer": "Kodi",
-            "sw_version": self._version,
         }
 
     @property
@@ -370,27 +371,43 @@ class KodiEntity(MediaPlayerEntity):
             return
 
         if self._connection.connected:
-            self._on_ws_connected()
+            await self._on_ws_connected()
 
-        self.async_on_remove(
-            async_track_time_interval(
-                self.hass,
-                self._async_connect_websocket_if_disconnected,
-                WEBSOCKET_WATCHDOG_INTERVAL,
+        async def start_watchdog(event=None):
+            """Start websocket watchdog."""
+            await self._async_connect_websocket_if_disconnected()
+            self.async_on_remove(
+                async_track_time_interval(
+                    self.hass,
+                    self._async_connect_websocket_if_disconnected,
+                    WEBSOCKET_WATCHDOG_INTERVAL,
+                )
             )
-        )
 
-    @callback
-    def _on_ws_connected(self):
+        # If Home Assistant is already in a running state, start the watchdog
+        # immediately, else trigger it after Home Assistant has finished starting.
+        if self.hass.state == CoreState.running:
+            await start_watchdog()
+        else:
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_watchdog)
+
+    async def _on_ws_connected(self):
         """Call after ws is connected."""
         self._register_ws_callbacks()
+
+        version = (await self._kodi.get_application_properties(["version"]))["version"]
+        sw_version = f"{version['major']}.{version['minor']}"
+        dev_reg = await device_registry.async_get_registry(self.hass)
+        device = dev_reg.async_get_device({(DOMAIN, self.unique_id)})
+        dev_reg.async_update_device(device.id, sw_version=sw_version)
+
         self.async_schedule_update_ha_state(True)
 
     async def _async_ws_connect(self):
         """Connect to Kodi via websocket protocol."""
         try:
             await self._connection.connect()
-            self._on_ws_connected()
+            await self._on_ws_connected()
         except (jsonrpc_base.jsonrpc.TransportError, CannotConnectError):
             _LOGGER.debug("Unable to connect to Kodi via websocket", exc_info=True)
             await self._clear_connection(False)
@@ -426,6 +443,7 @@ class KodiEntity(MediaPlayerEntity):
         self._connection.server.System.OnRestart = self.async_on_quit
         self._connection.server.System.OnSleep = self.async_on_quit
 
+    @cmd
     async def async_update(self):
         """Retrieve latest state."""
         if not self._connection.connected:

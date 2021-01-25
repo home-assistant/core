@@ -74,6 +74,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if value_template is not None:
             value_template.hass = hass
 
+        # MSSQL uses TOP and not LIMIT
+        if not ("LIMIT" in query_str or "SELECT TOP" in query_str):
+            query_str = (
+                query_str.replace("SELECT", "SELECT TOP 1")
+                if "mssql" in db_url
+                else query_str.replace(";", " LIMIT 1;")
+            )
+
         sensor = SQLSensor(
             name, sessmaker, query_str, column_name, unit, value_template
         )
@@ -88,10 +96,7 @@ class SQLSensor(Entity):
     def __init__(self, name, sessmaker, query, column, unit, value_template):
         """Initialize the SQL sensor."""
         self._name = name
-        if "LIMIT" in query:
-            self._query = query
-        else:
-            self._query = query.replace(";", " LIMIT 1;")
+        self._query = query
         self._unit_of_measurement = unit
         self._template = value_template
         self._column_name = column

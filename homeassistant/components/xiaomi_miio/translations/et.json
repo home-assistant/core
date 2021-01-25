@@ -6,7 +6,6 @@
         },
         "error": {
             "cannot_connect": "\u00dchendus nurjus",
-            "connect_error": "\u00dchendamine nurjus",
             "no_device_selected": "Seadmeid pole valitud, vali \u00fcks seade."
         },
         "flow_title": "Xiaomi Miio: {name}",

@@ -4,14 +4,12 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/guardian",
   "requirements": [
-    "aioguardian==1.0.1"
+    "aioguardian==1.0.4"
   ],
-  "ssdp": [],
   "zeroconf": [
     "_api._udp.local."
   ],
   "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@bachya"
   ]

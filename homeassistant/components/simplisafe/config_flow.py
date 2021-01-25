@@ -15,6 +15,15 @@ from homeassistant.helpers import aiohttp_client
 from . import async_get_client_id
 from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
 
+FULL_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Optional(CONF_CODE): str,
+    }
+)
+PASSWORD_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+
 
 class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a SimpliSafe config flow."""
@@ -24,15 +33,6 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the config flow."""
-        self.full_data_schema = vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Optional(CONF_CODE): str,
-            }
-        )
-        self.password_data_schema = vol.Schema({vol.Required(CONF_PASSWORD): str})
-
         self._code = None
         self._password = None
         self._username = None
@@ -125,21 +125,19 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle re-auth completion."""
         if not user_input:
             return self.async_show_form(
-                step_id="reauth_confirm", data_schema=self.password_data_schema
+                step_id="reauth_confirm", data_schema=PASSWORD_DATA_SCHEMA
             )
 
         self._password = user_input[CONF_PASSWORD]
 
         return await self._async_login_during_step(
-            step_id="reauth_confirm", form_schema=self.password_data_schema
+            step_id="reauth_confirm", form_schema=PASSWORD_DATA_SCHEMA
         )
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
         if not user_input:
-            return self.async_show_form(
-                step_id="user", data_schema=self.full_data_schema
-            )
+            return self.async_show_form(step_id="user", data_schema=FULL_DATA_SCHEMA)
 
         await self.async_set_unique_id(user_input[CONF_USERNAME])
         self._abort_if_unique_id_configured()
@@ -149,7 +147,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._username = user_input[CONF_USERNAME]
 
         return await self._async_login_during_step(
-            step_id="user", form_schema=self.full_data_schema
+            step_id="user", form_schema=FULL_DATA_SCHEMA
         )
 
 
@@ -171,7 +169,9 @@ class SimpliSafeOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_CODE,
-                        default=self.config_entry.options.get(CONF_CODE),
+                        description={
+                            "suggested_value": self.config_entry.options.get(CONF_CODE)
+                        },
                     ): str
                 }
             ),

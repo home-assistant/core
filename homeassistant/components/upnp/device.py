@@ -109,7 +109,7 @@ class Device:
 
     def __str__(self) -> str:
         """Get string representation."""
-        return f"IGD Device: {self.name}/{self.udn}"
+        return f"IGD Device: {self.name}/{self.udn}::{self.device_type}"
 
     async def async_get_traffic_data(self) -> Mapping[str, any]:
         """

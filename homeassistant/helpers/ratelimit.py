@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any, Callable, Dict, Hashable, Optional
 
-from homeassistant.const import MAX_TIME_TRACKING_ERROR
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.util.dt as dt_util
 
@@ -95,7 +94,7 @@ class KeyedRateLimit:
 
         if key not in self._rate_limit_timers:
             self._rate_limit_timers[key] = self.hass.loop.call_later(
-                (next_call_time - now).total_seconds() + MAX_TIME_TRACKING_ERROR,
+                (next_call_time - now).total_seconds(),
                 action,
                 *args,
             )

@@ -1,9 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert. Nur eine Konfiguration m\u00f6glich.",
+            "cannot_connect": "Verbindungsfehler"
+        },
+        "error": {
+            "cannot_connect": "Verbindungsfehler"
         },
         "step": {
+            "setup_network": {
+                "title": "Verbindungsadresse ausw\u00e4hlen"
+            },
             "setup_serial": {
                 "data": {
                     "device": "Ger\u00e4t w\u00e4hlen"
@@ -18,6 +25,18 @@
                     "type": "Verbindungstyp"
                 },
                 "title": "Verbindungstyp ausw\u00e4hlen"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "debug": "Debugging aktivieren"
+                }
             }
         }
     }

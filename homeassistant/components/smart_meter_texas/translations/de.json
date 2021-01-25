@@ -1,5 +1,9 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Verbindungsfehler",
+            "unknown": "Unerwarteter Fehler"
+        },
         "step": {
             "user": {
                 "data": {
@@ -8,6 +12,5 @@
                 }
             }
         }
-    },
-    "title": "Smart Meter Texas"
+    }
 }

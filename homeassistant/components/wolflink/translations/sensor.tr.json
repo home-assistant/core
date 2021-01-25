@@ -1,7 +1,7 @@
 {
     "state": {
         "wolflink__state": {
-            "standby": "Bekleme modu",
+            "standby": "Bekleme",
             "start": "Ba\u015flat",
             "storung": "Hata",
             "test": "Test"

@@ -2,9 +2,7 @@
     "config": {
         "abort": {
             "access_token": "Onbekende fout bij het genereren van een toegangstoken.",
-            "already_configured_account": "Account is al geconfigureerd",
-            "already_setup": "Het Ambiclimate-account is geconfigureerd.",
-            "no_config": "U moet Ambiclimate configureren voordat u zich ermee kunt authenticeren. (Lees de instructies) (https://www.home-assistant.io/components/ambiclimate/)."
+            "already_configured": "Account is al geconfigureerd"
         },
         "create_entry": {
             "default": "Succesvol geverifieerd met Ambiclimate"

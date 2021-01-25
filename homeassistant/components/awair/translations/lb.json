@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Kont ass",
-            "no_devices": "Keng Apparater am Netzwierk fonnt",
+            "no_devices_found": "Keng Apparater am Netzwierk fonnt",
             "reauth_successful": "Erfollegr\u00e4ich aktualis\u00e9iert"
         },
         "error": {
-            "auth": "Ong\u00ebltege Acc\u00e8s Jeton",
-            "unknown": "Onbekannten Awair API Feeler"
+            "invalid_access_token": "Ong\u00ebltegen Acc\u00e8s jeton",
+            "unknown": "Onerwaarte Feeler"
         },
         "step": {
             "reauth": {

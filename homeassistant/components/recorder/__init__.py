@@ -514,6 +514,14 @@ class Recorder(threading.Thread):
                         self.event_session.expunge(dbstate)
                 self._pending_expunge = []
             self.event_session.commit()
+        except exc.IntegrityError as err:
+            _LOGGER.error(
+                "Integrity error executing query (database likely deleted out from under us): %s",
+                err,
+            )
+            self.event_session.rollback()
+            self._old_states = {}
+            raise
         except Exception as err:
             _LOGGER.error("Error executing query: %s", err)
             self.event_session.rollback()

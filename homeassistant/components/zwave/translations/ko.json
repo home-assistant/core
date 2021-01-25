@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Z-Wave \uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
-            "one_instance_only": "\uad6c\uc131\uc694\uc18c\ub294 \ud558\ub098\uc758 Z-Wave \uc778\uc2a4\ud134\uc2a4\ub9cc \uc9c0\uc6d0\ud569\ub2c8\ub2e4"
+            "already_configured": "Z-Wave \uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "error": {
             "option_error": "Z-Wave \uc720\ud6a8\uc131 \uac80\uc0ac\uc5d0 \uc2e4\ud328\ud588\uc2b5\ub2c8\ub2e4. USB \uc2a4\ud2f1\uc758 \uacbd\ub85c\uac00 \uc815\ud655\ud569\ub2c8\uae4c?"

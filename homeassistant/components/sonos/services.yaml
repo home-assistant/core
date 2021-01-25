@@ -7,6 +7,10 @@ join:
     entity_id:
       description: Name(s) of entities that will join the master.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
 
 unjoin:
   description: Unjoin the player from a group.
@@ -14,6 +18,10 @@ unjoin:
     entity_id:
       description: Name(s) of entities that will be unjoined from their group.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
 
 snapshot:
   description: Take a snapshot of the media player.
@@ -21,6 +29,10 @@ snapshot:
     entity_id:
       description: Name(s) of entities that will be snapshot.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
     with_group:
       description: True (default) or False. Also snapshot the group layout.
       example: "true"
@@ -31,6 +43,10 @@ restore:
     entity_id:
       description: Name(s) of entities that will be restored.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
     with_group:
       description: True (default) or False. Also restore the group layout.
       example: "true"
@@ -41,6 +57,10 @@ set_sleep_timer:
     entity_id:
       description: Name(s) of entities that will have a timer set.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
     sleep_time:
       description: Number of seconds to set the timer.
       example: "900"
@@ -51,6 +71,10 @@ clear_sleep_timer:
     entity_id:
       description: Name(s) of entities that will have the timer cleared.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
 
 set_option:
   description: Set Sonos sound options.
@@ -58,6 +82,10 @@ set_option:
     entity_id:
       description: Name(s) of entities that will have options set.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
     night_sound:
       description: Enable Night Sound mode
       example: "true"
@@ -74,6 +102,10 @@ play_queue:
     entity_id:
       description: Name(s) of entities that will start playing.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
     queue_position:
       description: Position of the song in the queue to start playing from.
       example: "0"
@@ -84,6 +116,10 @@ remove_from_queue:
     entity_id:
       description: Name(s) of entities that will remove an item.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
     queue_position:
       description: Position in the queue to remove.
       example: "0"

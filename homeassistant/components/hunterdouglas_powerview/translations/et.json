@@ -9,12 +9,14 @@
         },
         "step": {
             "link": {
-                "description": "Kas soovid seadistada {name}({host})?"
+                "description": "Kas soovid seadistada {name}({host})?",
+                "title": "Loo \u00fchendusPowerView Hub-iga"
             },
             "user": {
                 "data": {
                     "host": "IP aadress"
-                }
+                },
+                "title": "Loo \u00fchendusPowerView Hub-iga"
             }
         }
     }

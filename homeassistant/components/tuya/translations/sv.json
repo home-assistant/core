@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "auth_failed": "Ogiltig anv\u00e4ndarinformation"
-        },
         "flow_title": "Tuya-konfiguration",
         "step": {
             "user": {

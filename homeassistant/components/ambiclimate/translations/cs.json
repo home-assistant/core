@@ -3,10 +3,7 @@
         "abort": {
             "access_token": "Nezn\u00e1m\u00e1 chyba p\u0159i generov\u00e1n\u00ed p\u0159\u00edstupov\u00e9ho tokenu.",
             "already_configured": "\u00da\u010det je ji\u017e nastaven",
-            "already_configured_account": "\u00da\u010det je ji\u017e nastaven",
-            "already_setup": "\u00da\u010det Ambiclimate je nastaven.",
-            "missing_configuration": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace.",
-            "oauth2_missing_configuration": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace."
+            "missing_configuration": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace."
         },
         "create_entry": {
             "default": "\u00dasp\u011b\u0161n\u011b ov\u011b\u0159eno"

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "link": {
+                "data": {
+                    "verify_ssl": "SSL sertifikalar\u0131n\u0131 do\u011frula"
+                }
+            },
+            "user": {
+                "data": {
+                    "verify_ssl": "SSL sertifikalar\u0131n\u0131 do\u011frula"
+                }
+            }
+        }
+    }
+}

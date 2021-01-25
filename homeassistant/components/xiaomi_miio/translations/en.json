@@ -6,7 +6,6 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "connect_error": "Failed to connect",
             "no_device_selected": "No device selected, please select one device."
         },
         "flow_title": "Xiaomi Miio: {name}",

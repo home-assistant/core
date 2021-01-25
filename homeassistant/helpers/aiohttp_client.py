@@ -118,17 +118,18 @@ async def async_aiohttp_proxy_stream(
     hass: HomeAssistantType,
     request: web.BaseRequest,
     stream: aiohttp.StreamReader,
-    content_type: str,
+    content_type: Optional[str],
     buffer_size: int = 102400,
     timeout: int = 10,
 ) -> web.StreamResponse:
     """Stream a stream to aiohttp web response."""
     response = web.StreamResponse()
-    response.content_type = content_type
+    if content_type is not None:
+        response.content_type = content_type
     await response.prepare(request)
 
     try:
-        while True:
+        while hass.is_running:
             with async_timeout.timeout(timeout):
                 data = await stream.read(buffer_size)
 

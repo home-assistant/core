@@ -18,7 +18,7 @@ from typing import (
     List,
     Optional,
     Tuple,
-    cast,
+    Union,
 )
 
 import attr
@@ -27,6 +27,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
+    ATTR_RESTORED,
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
@@ -38,25 +39,21 @@ from homeassistant.util import slugify
 from homeassistant.util.yaml import load_yaml
 
 from .singleton import singleton
-from .typing import HomeAssistantType
+from .typing import UNDEFINED, HomeAssistantType, UndefinedType
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry  # noqa: F401
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 PATH_REGISTRY = "entity_registry.yaml"
 DATA_REGISTRY = "entity_registry"
 EVENT_ENTITY_REGISTRY_UPDATED = "entity_registry_updated"
 SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
-_UNDEF = object()
 DISABLED_CONFIG_ENTRY = "config_entry"
+DISABLED_DEVICE = "device"
 DISABLED_HASS = "hass"
-DISABLED_USER = "user"
 DISABLED_INTEGRATION = "integration"
-
-ATTR_RESTORED = "restored"
+DISABLED_USER = "user"
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "core.entity_registry"
@@ -84,15 +81,17 @@ class RegistryEntry:
     name: Optional[str] = attr.ib(default=None)
     icon: Optional[str] = attr.ib(default=None)
     device_id: Optional[str] = attr.ib(default=None)
+    area_id: Optional[str] = attr.ib(default=None)
     config_entry_id: Optional[str] = attr.ib(default=None)
     disabled_by: Optional[str] = attr.ib(
         default=None,
         validator=attr.validators.in_(
             (
-                DISABLED_HASS,
-                DISABLED_USER,
-                DISABLED_INTEGRATION,
                 DISABLED_CONFIG_ENTRY,
+                DISABLED_DEVICE,
+                DISABLED_HASS,
+                DISABLED_INTEGRATION,
+                DISABLED_USER,
                 None,
             )
         ),
@@ -127,7 +126,7 @@ class EntityRegistry:
         self._index: Dict[Tuple[str, str, str], str] = {}
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self.hass.bus.async_listen(
-            EVENT_DEVICE_REGISTRY_UPDATED, self.async_device_removed
+            EVENT_DEVICE_REGISTRY_UPDATED, self.async_device_modified
         )
 
     @callback
@@ -183,7 +182,7 @@ class EntityRegistry:
         while (
             test_string in self.entities
             or test_string in known_object_ids
-            or self.hass.states.get(test_string)
+            or not self.hass.states.async_available(test_string)
         ):
             tries += 1
             test_string = f"{preferred_string}_{tries}"
@@ -205,6 +204,7 @@ class EntityRegistry:
         # Data that we want entry to have
         config_entry: Optional["ConfigEntry"] = None,
         device_id: Optional[str] = None,
+        area_id: Optional[str] = None,
         capabilities: Optional[Dict[str, Any]] = None,
         supported_features: Optional[int] = None,
         device_class: Optional[str] = None,
@@ -220,16 +220,17 @@ class EntityRegistry:
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
 
         if entity_id:
-            return self._async_update_entity(  # type: ignore
+            return self._async_update_entity(
                 entity_id,
-                config_entry_id=config_entry_id or _UNDEF,
-                device_id=device_id or _UNDEF,
-                capabilities=capabilities or _UNDEF,
-                supported_features=supported_features or _UNDEF,
-                device_class=device_class or _UNDEF,
-                unit_of_measurement=unit_of_measurement or _UNDEF,
-                original_name=original_name or _UNDEF,
-                original_icon=original_icon or _UNDEF,
+                config_entry_id=config_entry_id or UNDEFINED,
+                device_id=device_id or UNDEFINED,
+                area_id=area_id or UNDEFINED,
+                capabilities=capabilities or UNDEFINED,
+                supported_features=supported_features or UNDEFINED,
+                device_class=device_class or UNDEFINED,
+                unit_of_measurement=unit_of_measurement or UNDEFINED,
+                original_name=original_name or UNDEFINED,
+                original_icon=original_icon or UNDEFINED,
                 # When we changed our slugify algorithm, we invalidated some
                 # stored entity IDs with either a __ or ending in _.
                 # Fix introduced in 0.86 (Jan 23, 2019). Next line can be
@@ -254,6 +255,7 @@ class EntityRegistry:
             entity_id=entity_id,
             config_entry_id=config_entry_id,
             device_id=device_id,
+            area_id=area_id,
             unique_id=unique_id,
             platform=platform,
             disabled_by=disabled_by,
@@ -283,62 +285,85 @@ class EntityRegistry:
         )
         self.async_schedule_save()
 
-    @callback
-    def async_device_removed(self, event: Event) -> None:
-        """Handle the removal of a device.
+    async def async_device_modified(self, event: Event) -> None:
+        """Handle the removal or update of a device.
 
         Remove entities from the registry that are associated to a device when
         the device is removed.
+
+        Disable entities in the registry that are associated to a device when
+        the device is disabled.
         """
-        if event.data["action"] != "remove":
+        if event.data["action"] == "remove":
+            entities = async_entries_for_device(
+                self, event.data["device_id"], include_disabled_entities=True
+            )
+            for entity in entities:
+                self.async_remove(entity.entity_id)
             return
+
+        if event.data["action"] != "update":
+            return
+
+        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device = device_registry.async_get(event.data["device_id"])
+        if not device.disabled:
+            entities = async_entries_for_device(
+                self, event.data["device_id"], include_disabled_entities=True
+            )
+            for entity in entities:
+                if entity.disabled_by != DISABLED_DEVICE:
+                    continue
+                self.async_update_entity(entity.entity_id, disabled_by=None)
+            return
+
         entities = async_entries_for_device(self, event.data["device_id"])
         for entity in entities:
-            self.async_remove(entity.entity_id)
+            self.async_update_entity(entity.entity_id, disabled_by=DISABLED_DEVICE)
 
     @callback
     def async_update_entity(
         self,
-        entity_id,
+        entity_id: str,
         *,
-        name=_UNDEF,
-        icon=_UNDEF,
-        new_entity_id=_UNDEF,
-        new_unique_id=_UNDEF,
-        disabled_by=_UNDEF,
-    ):
+        name: Union[str, None, UndefinedType] = UNDEFINED,
+        icon: Union[str, None, UndefinedType] = UNDEFINED,
+        area_id: Union[str, None, UndefinedType] = UNDEFINED,
+        new_entity_id: Union[str, UndefinedType] = UNDEFINED,
+        new_unique_id: Union[str, UndefinedType] = UNDEFINED,
+        disabled_by: Union[str, None, UndefinedType] = UNDEFINED,
+    ) -> RegistryEntry:
         """Update properties of an entity."""
-        return cast(  # cast until we have _async_update_entity type hinted
-            RegistryEntry,
-            self._async_update_entity(
-                entity_id,
-                name=name,
-                icon=icon,
-                new_entity_id=new_entity_id,
-                new_unique_id=new_unique_id,
-                disabled_by=disabled_by,
-            ),
+        return self._async_update_entity(
+            entity_id,
+            name=name,
+            icon=icon,
+            area_id=area_id,
+            new_entity_id=new_entity_id,
+            new_unique_id=new_unique_id,
+            disabled_by=disabled_by,
         )
 
     @callback
     def _async_update_entity(
         self,
-        entity_id,
+        entity_id: str,
         *,
-        name=_UNDEF,
-        icon=_UNDEF,
-        config_entry_id=_UNDEF,
-        new_entity_id=_UNDEF,
-        device_id=_UNDEF,
-        new_unique_id=_UNDEF,
-        disabled_by=_UNDEF,
-        capabilities=_UNDEF,
-        supported_features=_UNDEF,
-        device_class=_UNDEF,
-        unit_of_measurement=_UNDEF,
-        original_name=_UNDEF,
-        original_icon=_UNDEF,
-    ):
+        name: Union[str, None, UndefinedType] = UNDEFINED,
+        icon: Union[str, None, UndefinedType] = UNDEFINED,
+        config_entry_id: Union[str, None, UndefinedType] = UNDEFINED,
+        new_entity_id: Union[str, UndefinedType] = UNDEFINED,
+        device_id: Union[str, None, UndefinedType] = UNDEFINED,
+        area_id: Union[str, None, UndefinedType] = UNDEFINED,
+        new_unique_id: Union[str, UndefinedType] = UNDEFINED,
+        disabled_by: Union[str, None, UndefinedType] = UNDEFINED,
+        capabilities: Union[Dict[str, Any], None, UndefinedType] = UNDEFINED,
+        supported_features: Union[int, UndefinedType] = UNDEFINED,
+        device_class: Union[str, None, UndefinedType] = UNDEFINED,
+        unit_of_measurement: Union[str, None, UndefinedType] = UNDEFINED,
+        original_name: Union[str, None, UndefinedType] = UNDEFINED,
+        original_icon: Union[str, None, UndefinedType] = UNDEFINED,
+    ) -> RegistryEntry:
         """Private facing update properties method."""
         old = self.entities[entity_id]
 
@@ -349,6 +374,7 @@ class EntityRegistry:
             ("icon", icon),
             ("config_entry_id", config_entry_id),
             ("device_id", device_id),
+            ("area_id", area_id),
             ("disabled_by", disabled_by),
             ("capabilities", capabilities),
             ("supported_features", supported_features),
@@ -357,12 +383,12 @@ class EntityRegistry:
             ("original_name", original_name),
             ("original_icon", original_icon),
         ):
-            if value is not _UNDEF and value != getattr(old, attr_name):
+            if value is not UNDEFINED and value != getattr(old, attr_name):
                 changes[attr_name] = value
 
-        if new_entity_id is not _UNDEF and new_entity_id != old.entity_id:
+        if new_entity_id is not UNDEFINED and new_entity_id != old.entity_id:
             if self.async_is_registered(new_entity_id):
-                raise ValueError("Entity is already registered")
+                raise ValueError("Entity with this ID is already registered")
 
             if not valid_entity_id(new_entity_id):
                 raise ValueError("Invalid entity ID")
@@ -373,7 +399,7 @@ class EntityRegistry:
             self.entities.pop(entity_id)
             entity_id = changes["entity_id"] = new_entity_id
 
-        if new_unique_id is not _UNDEF:
+        if new_unique_id is not UNDEFINED:
             conflict_entity_id = self.async_get_entity_id(
                 old.domain, old.platform, new_unique_id
             )
@@ -426,6 +452,7 @@ class EntityRegistry:
                     entity_id=entity["entity_id"],
                     config_entry_id=entity.get("config_entry_id"),
                     device_id=entity.get("device_id"),
+                    area_id=entity.get("area_id"),
                     unique_id=entity["unique_id"],
                     platform=entity["platform"],
                     name=entity.get("name"),
@@ -457,6 +484,7 @@ class EntityRegistry:
                 "entity_id": entry.entity_id,
                 "config_entry_id": entry.config_entry_id,
                 "device_id": entry.device_id,
+                "area_id": entry.area_id,
                 "unique_id": entry.unique_id,
                 "platform": entry.platform,
                 "name": entry.name,
@@ -483,6 +511,13 @@ class EntityRegistry:
             if config_entry == entry.config_entry_id
         ]:
             self.async_remove(entity_id)
+
+    @callback
+    def async_clear_area_id(self, area_id: str) -> None:
+        """Clear area id from registry entries."""
+        for entity_id, entry in self.entities.items():
+            if area_id == entry.area_id:
+                self._async_update_entity(entity_id, area_id=None)
 
     def _register_entry(self, entry: RegistryEntry) -> None:
         self.entities[entry.entity_id] = entry
@@ -514,12 +549,23 @@ async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
 
 @callback
 def async_entries_for_device(
-    registry: EntityRegistry, device_id: str
+    registry: EntityRegistry, device_id: str, include_disabled_entities: bool = False
 ) -> List[RegistryEntry]:
     """Return entries that match a device."""
     return [
-        entry for entry in registry.entities.values() if entry.device_id == device_id
+        entry
+        for entry in registry.entities.values()
+        if entry.device_id == device_id
+        and (not entry.disabled_by or include_disabled_entities)
     ]
+
+
+@callback
+def async_entries_for_area(
+    registry: EntityRegistry, area_id: str
+) -> List[RegistryEntry]:
+    """Return entries that match an area."""
+    return [entry for entry in registry.entities.values() if entry.area_id == area_id]
 
 
 @callback

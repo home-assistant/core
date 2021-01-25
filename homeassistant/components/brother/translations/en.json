@@ -6,7 +6,6 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "connection_error": "Failed to connect",
             "snmp_error": "SNMP server turned off or printer not supported.",
             "wrong_host": "Invalid hostname or IP address."
         },

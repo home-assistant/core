@@ -6,7 +6,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.helpers.event as evt
 
-from .const import DOMAIN as TASMOTA_DOMAIN
+from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
 
@@ -25,9 +25,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             ]
         )
 
-    async_dispatcher_connect(
+    hass.data[
+        DATA_REMOVE_DISCOVER_COMPONENT.format(binary_sensor.DOMAIN)
+    ] = async_dispatcher_connect(
         hass,
-        TASMOTA_DISCOVERY_ENTITY_NEW.format(binary_sensor.DOMAIN, TASMOTA_DOMAIN),
+        TASMOTA_DISCOVERY_ENTITY_NEW.format(binary_sensor.DOMAIN),
         async_discover,
     )
 
@@ -45,7 +47,6 @@ class TasmotaBinarySensor(
         self._state = None
 
         super().__init__(
-            discovery_update=self.discovery_update,
             **kwds,
         )
 

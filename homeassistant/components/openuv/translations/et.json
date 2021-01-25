@@ -4,7 +4,6 @@
             "already_configured": "Asukoht on juba m\u00e4\u00e4ratud"
         },
         "error": {
-            "identifier_exists": "Koordinaadid on juba registreeritud",
             "invalid_api_key": "Vigane API v\u00f5ti"
         },
         "step": {
@@ -14,7 +13,8 @@
                     "elevation": "K\u00f5rgus merepinnast",
                     "latitude": "Laiuskraad",
                     "longitude": "Pikkuskraad"
-                }
+                },
+                "title": "Sisesta oma teave"
             }
         }
     }

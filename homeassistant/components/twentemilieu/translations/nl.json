@@ -1,10 +1,9 @@
 {
     "config": {
         "abort": {
-            "address_exists": "Adres al ingesteld."
+            "already_configured": "Locatie is al geconfigureerd"
         },
         "error": {
-            "connection_error": "Kon niet verbinden.",
             "invalid_address": "Adres niet gevonden in servicegebied Twente Milieu."
         },
         "step": {

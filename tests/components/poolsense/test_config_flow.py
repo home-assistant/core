@@ -1,10 +1,10 @@
 """Test the PoolSense config flow."""
+from unittest.mock import patch
+
 from homeassistant import data_entry_flow
 from homeassistant.components.poolsense.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
-from tests.async_mock import patch
 
 
 async def test_show_form(hass):
@@ -47,10 +47,10 @@ async def test_valid_credentials(hass):
             context={"source": SOURCE_USER},
             data={CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "test-email"
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured_account": "Account ist bereits konfiguriert"
+            "already_configured": "Konto ist bereits konfiguriert"
         },
         "error": {
-            "session_error": "Verbindung nicht m\u00f6glich",
+            "cannot_connect": "Verbindungsfehler",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {

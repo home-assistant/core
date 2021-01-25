@@ -3,10 +3,6 @@
         "abort": {
             "already_configured": "OpenWeatherMap-integrationen f\u00f6r dessa koordinater \u00e4r redan konfigurerad."
         },
-        "error": {
-            "auth": "API-nyckeln \u00e4r inte korrekt.",
-            "connection": "Kan inte ansluta till OWM API"
-        },
         "step": {
             "user": {
                 "data": {

@@ -16,5 +16,15 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure RainMachine",
+        "data": {
+          "zone_run_time": "Default zone run time (in seconds)"
+        }
+      }
+    }
   }
 }

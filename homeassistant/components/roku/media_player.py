@@ -238,16 +238,30 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         """Emulate opening the search screen and entering the search keyword."""
         await self.coordinator.roku.search(keyword)
 
+    async def async_get_browse_image(
+        self, media_content_type, media_content_id, media_image_id=None
+    ):
+        """Fetch media browser image to serve via proxy."""
+        if media_content_type == MEDIA_TYPE_APP and media_content_id:
+            image_url = self.coordinator.roku.app_icon_url(media_content_id)
+            return await self._async_fetch_image(image_url)
+
+        return (None, None)
+
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
+
+        def _get_thumbnail_url(*args, **kwargs):
+            return self.get_browse_image_url(*args, **kwargs)
+
         if media_content_type in [None, "library"]:
-            return library_payload(self.coordinator)
+            return library_payload(self.coordinator, _get_thumbnail_url)
 
         payload = {
             "search_type": media_content_type,
             "search_id": media_content_id,
         }
-        response = build_item_response(self.coordinator, payload)
+        response = build_item_response(self.coordinator, payload, _get_thumbnail_url)
 
         if response is None:
             raise BrowseError(

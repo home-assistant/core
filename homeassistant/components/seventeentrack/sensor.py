@@ -152,6 +152,7 @@ class SeventeenTrackSummarySensor(Entity):
                     ATTR_FRIENDLY_NAME: package.friendly_name,
                     ATTR_INFO_TEXT: package.info_text,
                     ATTR_STATUS: package.status,
+                    ATTR_LOCATION: package.location,
                     ATTR_TRACKING_NUMBER: package.tracking_number,
                 }
             )

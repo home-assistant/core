@@ -13,6 +13,7 @@
       }
     },
     "error": {
+      "forbidden": "Unable to connect. Please check your forked-daapd network permissions.",
       "websocket_not_enabled": "forked-daapd server websocket not enabled.",
       "wrong_host_or_port": "Unable to connect. Please check host and port.",
       "wrong_password": "Incorrect password.",

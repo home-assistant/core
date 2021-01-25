@@ -1,6 +1,7 @@
 # pylint: disable=redefined-outer-name
 """Tests for the Daikin config flow."""
 import asyncio
+from unittest.mock import PropertyMock, patch
 
 from aiohttp import ClientError
 from aiohttp.web_exceptions import HTTPForbidden
@@ -20,7 +21,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from tests.async_mock import PropertyMock, patch
 from tests.common import MockConfigEntry
 
 MAC = "AABBCCDDEEFF"

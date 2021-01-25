@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "UPnP/IGD je \u017ee konfiguriran",
-            "no_devices_discovered": "Ni odkritih UPnP/IGD naprav",
             "no_devices_found": "Naprav UPnP/IGD ni mogo\u010de najti v omre\u017eju."
         },
         "error": {

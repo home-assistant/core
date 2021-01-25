@@ -1,4 +1,6 @@
 """Test the Rachio config flow."""
+from unittest.mock import MagicMock, patch
+
 from homeassistant import config_entries, setup
 from homeassistant.components.rachio.const import (
     CONF_CUSTOM_URL,
@@ -7,7 +9,6 @@ from homeassistant.components.rachio.const import (
 )
 from homeassistant.const import CONF_API_KEY
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 
@@ -50,6 +51,7 @@ async def test_form(hass):
                 CONF_MANUAL_RUN_MINS: 5,
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "myusername"
@@ -58,7 +60,6 @@ async def test_form(hass):
         CONF_CUSTOM_URL: "http://custom.url",
         CONF_MANUAL_RUN_MINS: 5,
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

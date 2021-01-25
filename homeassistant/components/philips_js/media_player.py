@@ -313,10 +313,11 @@ class PhilipsTVMediaPlayer(MediaPlayerEntity):
         self._tv.update()
 
         self._sources = {
-            srcid: source["name"] or f"Source {srcid}"
+            srcid: source.get("name") or f"Source {srcid}"
             for srcid, source in (self._tv.sources or {}).items()
         }
 
         self._channels = {
-            chid: channel["name"] for chid, channel in (self._tv.channels or {}).items()
+            chid: channel.get("name") or f"Channel {chid}"
+            for chid, channel in (self._tv.channels or {}).items()
         }

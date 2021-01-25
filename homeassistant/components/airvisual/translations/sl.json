@@ -5,8 +5,7 @@
         },
         "error": {
             "general_error": "Pri\u0161lo je do neznane napake.",
-            "invalid_api_key": "Vpisan neveljaven API klju\u010d",
-            "unable_to_connect": "Ni mogo\u010de povezati z enoto Node/Pro."
+            "invalid_api_key": "Vpisan neveljaven API klju\u010d"
         },
         "step": {
             "geography": {

@@ -1,6 +1,14 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Verbindungsfehler"
+        },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Passwort"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Passwort",

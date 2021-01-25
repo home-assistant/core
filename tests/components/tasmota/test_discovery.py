@@ -1,14 +1,14 @@
 """The tests for the MQTT discovery."""
 import copy
 import json
+from unittest.mock import patch
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.components.tasmota.discovery import ALREADY_DISCOVERED
 
 from .conftest import setup_tasmota_helper
-from .test_common import DEFAULT_CONFIG
+from .test_common import DEFAULT_CONFIG, DEFAULT_CONFIG_9_0_0_3
 
-from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
 
 
@@ -22,45 +22,65 @@ async def test_subscribing_config_topic(hass, mqtt_mock, setup_tasmota):
     assert call_args[2] == 0
 
 
-async def test_valid_discovery_message(hass, mqtt_mock, caplog):
-    """Test discovery callback called."""
+async def test_future_discovery_message(hass, mqtt_mock, caplog):
+    """Test we handle backwards compatible discovery messages."""
     config = copy.deepcopy(DEFAULT_CONFIG)
+    config["future_option"] = "BEST_SINCE_SLICED_BREAD"
+    config["so"]["another_future_option"] = "EVEN_BETTER"
 
     with patch(
-        "homeassistant.components.tasmota.discovery.tasmota_has_entities_with_platform"
-    ) as mock_tasmota_has_entities:
+        "homeassistant.components.tasmota.discovery.tasmota_get_device_config",
+        return_value={},
+    ) as mock_tasmota_get_device_config:
         await setup_tasmota_helper(hass)
 
         async_fire_mqtt_message(
             hass, f"{DEFAULT_PREFIX}/00000049A3BC/config", json.dumps(config)
         )
         await hass.async_block_till_done()
-        assert mock_tasmota_has_entities.called
+        assert mock_tasmota_get_device_config.called
+
+
+async def test_valid_discovery_message(hass, mqtt_mock, caplog):
+    """Test discovery callback called."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+
+    with patch(
+        "homeassistant.components.tasmota.discovery.tasmota_get_device_config",
+        return_value={},
+    ) as mock_tasmota_get_device_config:
+        await setup_tasmota_helper(hass)
+
+        async_fire_mqtt_message(
+            hass, f"{DEFAULT_PREFIX}/00000049A3BC/config", json.dumps(config)
+        )
+        await hass.async_block_till_done()
+        assert mock_tasmota_get_device_config.called
 
 
 async def test_invalid_topic(hass, mqtt_mock):
     """Test receiving discovery message on wrong topic."""
     with patch(
-        "homeassistant.components.tasmota.discovery.tasmota_has_entities_with_platform"
-    ) as mock_tasmota_has_entities:
+        "homeassistant.components.tasmota.discovery.tasmota_get_device_config"
+    ) as mock_tasmota_get_device_config:
         await setup_tasmota_helper(hass)
 
         async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/123456/configuration", "{}")
         await hass.async_block_till_done()
-        assert not mock_tasmota_has_entities.called
+        assert not mock_tasmota_get_device_config.called
 
 
 async def test_invalid_message(hass, mqtt_mock, caplog):
     """Test receiving an invalid message."""
     with patch(
-        "homeassistant.components.tasmota.discovery.tasmota_has_entities_with_platform"
-    ) as mock_tasmota_has_entities:
+        "homeassistant.components.tasmota.discovery.tasmota_get_device_config"
+    ) as mock_tasmota_get_device_config:
         await setup_tasmota_helper(hass)
 
         async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/123456/config", "asd")
         await hass.async_block_till_done()
         assert "Invalid discovery message" in caplog.text
-        assert not mock_tasmota_has_entities.called
+        assert not mock_tasmota_get_device_config.called
 
 
 async def test_invalid_mac(hass, mqtt_mock, caplog):
@@ -68,8 +88,8 @@ async def test_invalid_mac(hass, mqtt_mock, caplog):
     config = copy.deepcopy(DEFAULT_CONFIG)
 
     with patch(
-        "homeassistant.components.tasmota.discovery.tasmota_has_entities_with_platform"
-    ) as mock_tasmota_has_entities:
+        "homeassistant.components.tasmota.discovery.tasmota_get_device_config"
+    ) as mock_tasmota_get_device_config:
         await setup_tasmota_helper(hass)
 
         async_fire_mqtt_message(
@@ -77,7 +97,7 @@ async def test_invalid_mac(hass, mqtt_mock, caplog):
         )
         await hass.async_block_till_done()
         assert "MAC mismatch" in caplog.text
-        assert not mock_tasmota_has_entities.called
+        assert not mock_tasmota_get_device_config.called
 
 
 async def test_correct_config_discovery(
@@ -113,6 +133,29 @@ async def test_device_discover(
 ):
     """Test setting up a device."""
     config = copy.deepcopy(DEFAULT_CONFIG)
+    mac = config["mac"]
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    # Verify device and registry entries are created
+    device_entry = device_reg.async_get_device(set(), {("mac", mac)})
+    assert device_entry is not None
+    assert device_entry.manufacturer == "Tasmota"
+    assert device_entry.model == config["md"]
+    assert device_entry.name == config["dn"]
+    assert device_entry.sw_version == config["sw"]
+
+
+async def test_device_discover_deprecated(
+    hass, mqtt_mock, caplog, device_reg, entity_reg, setup_tasmota
+):
+    """Test setting up a device with deprecated discovery message."""
+    config = copy.deepcopy(DEFAULT_CONFIG_9_0_0_3)
     mac = config["mac"]
 
     async_fire_mqtt_message(

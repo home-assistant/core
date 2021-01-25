@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Je kunt slechts \u00e9\u00e9n Nest-account configureren.",
             "authorize_url_fail": "Onbekende fout bij het genereren van een autoriseer-URL.",
-            "authorize_url_timeout": "Toestemming voor het genereren van autoriseer-url.",
-            "no_flows": "U moet Nest configureren voordat u zich ermee kunt authenticeren. [Gelieve de instructies te lezen](https://www.home-assistant.io/components/nest/)."
+            "authorize_url_timeout": "Toestemming voor het genereren van autoriseer-url."
         },
         "error": {
             "internal_error": "Interne foutvalidatiecode",
-            "invalid_code": "Ongeldige code",
             "timeout": "Time-out validatie van code",
             "unknown": "Onbekende foutvalidatiecode"
         },
@@ -27,6 +24,14 @@
                 "description": "Als je je Nest-account wilt koppelen, [autoriseer je account] ( {url} ). \n\nNa autorisatie, kopieer en plak de voorziene pincode hieronder.",
                 "title": "Koppel Nest-account"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Beweging gedetecteerd",
+            "camera_person": "Persoon gedetecteerd",
+            "camera_sound": "Geluid gedetecteerd",
+            "doorbell_chime": "Deurbel is ingedrukt"
         }
     }
 }

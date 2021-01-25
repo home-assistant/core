@@ -1,6 +1,7 @@
 """Constants for Synology DSM."""
 
 from synology_dsm.api.core.security import SynoCoreSecurity
+from synology_dsm.api.core.upgrade import SynoCoreUpgrade
 from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.storage.storage import SynoStorage
@@ -24,9 +25,11 @@ SYNO_API = "syno_api"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 # Configuration
+CONF_SERIAL = "serial"
 CONF_VOLUMES = "volumes"
 
-DEFAULT_SSL = True
+DEFAULT_USE_SSL = True
+DEFAULT_VERIFY_SSL = False
 DEFAULT_PORT = 5000
 DEFAULT_PORT_SSL = 5001
 # Options
@@ -40,9 +43,27 @@ ENTITY_ICON = "icon"
 ENTITY_CLASS = "device_class"
 ENTITY_ENABLE = "enable"
 
+# Services
+SERVICE_REBOOT = "reboot"
+SERVICE_SHUTDOWN = "shutdown"
+SERVICES = [
+    SERVICE_REBOOT,
+    SERVICE_SHUTDOWN,
+]
+
 # Entity keys should start with the API_KEY to fetch
 
 # Binary sensors
+UPGRADE_BINARY_SENSORS = {
+    f"{SynoCoreUpgrade.API_KEY}:update_available": {
+        ENTITY_NAME: "Update available",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:update",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+}
+
 SECURITY_BINARY_SENSORS = {
     f"{SynoCoreSecurity.API_KEY}:status": {
         ENTITY_NAME: "Security status",

@@ -11,8 +11,10 @@
         "step": {
             "user": {
                 "data": {
+                    "email": "E-post",
                     "password": "Salas\u00f5na"
-                }
+                },
+                "title": "\u00dchendu oma Sense Energy Monitor'iga"
             }
         }
     }

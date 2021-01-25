@@ -83,12 +83,28 @@ class HassIO:
         return self.send_command("/host/info", method="get")
 
     @api_data
+    def get_os_info(self):
+        """Return data for the OS.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/os/info", method="get")
+
+    @api_data
     def get_core_info(self):
         """Return data for Home Asssistant Core.
 
         This method returns a coroutine.
         """
         return self.send_command("/core/info", method="get")
+
+    @api_data
+    def get_supervisor_info(self):
+        """Return data for the Supervisor.
+
+        This method returns a coroutine.
+        """
+        return self.send_command("/supervisor/info", method="get")
 
     @api_data
     def get_addon_info(self, addon):

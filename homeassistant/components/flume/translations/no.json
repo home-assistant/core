@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "client_id": "Klient-ID",
+                    "client_id": "Klient ID",
                     "client_secret": "Klienthemmelighet",
                     "password": "Passord",
                     "username": "Brukernavn"

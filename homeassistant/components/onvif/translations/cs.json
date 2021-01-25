@@ -8,8 +8,7 @@
             "onvif_error": "P\u0159i nastavov\u00e1n\u00ed za\u0159\u00edzen\u00ed ONVIF do\u0161lo k chyb\u011b. Dal\u0161\u00ed informace naleznete v protokolech."
         },
         "error": {
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "connection_failed": "Nelze se p\u0159ipojit ke slu\u017eb\u011b ONVIF s poskytnut\u00fdmi p\u0159ihla\u0161ovac\u00edmi \u00fadaji."
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
             "auth": {

@@ -5,7 +5,6 @@
             "already_configured_local_device": "Los dispositivos locales ya est\u00e1n configurados. Elim\u00ednelos primero antes de configurar un dispositivo en la nube.",
             "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n.",
             "cannot_connect": "No se pudo conectar",
-            "connection_error": "No se pudo conectar al dispositivo Smappee.",
             "invalid_mdns": "Dispositivo no compatible para la integraci\u00f3n de Smappee.",
             "missing_configuration": "El componente no est\u00e1 configurado. Consulta la documentaci\u00f3n.",
             "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})"

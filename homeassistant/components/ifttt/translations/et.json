@@ -1,14 +1,16 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
+            "webhook_not_internet_accessible": "Veebikonksu s\u00f5numite vastuv\u00f5tmiseks peab Home Assistant olema Interneti kaudu juurdep\u00e4\u00e4setav."
         },
         "create_entry": {
-            "default": "S\u00fcndmuste saatmiseks Home Assistantile peate kasutama toimingut \"Make a web request\" [IFTTT Webhooki apletilt] ({applet_url}).\n\nSisestage j\u00e4rgmine teave:\n\n- URL: {webhook_url}.\n- Method: POST\n- Content Type: application/json\n\nVaadake [dokumentatsiooni]({docs_url}) kuidas seadistada sissetulevate andmete t\u00f6\u00f6tlemiseks automatiseerimisi."
+            "default": "S\u00fcndmuste saatmiseks Home Assistantile peate kasutama toimingut \"Make a web request\" [IFTTT Webhooki apletilt] ({applet_url}).\n\nSisesta j\u00e4rgmine teave:\n\n- URL: {webhook_url}.\n- Method: POST\n- Content Type: application/json\n\nVaadake [dokumentatsiooni]({docs_url}) kuidas seadistada sissetulevate andmete t\u00f6\u00f6tlemiseks automatiseerimisi."
         },
         "step": {
             "user": {
-                "description": "Kas soovid kindlasti IFTTT seadistada?"
+                "description": "Kas soovid kindlasti IFTTT seadistada?",
+                "title": "Seadista IFTTT Webhook Applet"
             }
         }
     }

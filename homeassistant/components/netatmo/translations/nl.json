@@ -1,11 +1,27 @@
 {
     "config": {
+        "abort": {
+            "authorize_url_timeout": "Time-out genereren autorisatie-URL.",
+            "missing_configuration": "Het component is niet geconfigureerd. Volg de documentatie."
+        },
         "create_entry": {
             "default": "Succesvol geauthenticeerd met Netatmo."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Kies de verificatiemethode"
+            }
         }
     },
     "options": {
         "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Naam van het gebied",
+                    "mode": "Berekening",
+                    "show_on_map": "Toon op kaart"
+                }
+            },
             "public_weather_areas": {
                 "description": "Configureer openbare weersensoren."
             }

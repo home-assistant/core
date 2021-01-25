@@ -9,9 +9,13 @@
         "step": {
             "user": {
                 "data": {
+                    "api_key": "API-sleutel",
+                    "host": "Host",
                     "location": "Locatie",
                     "name": "Naam",
-                    "port": "Poort"
+                    "port": "Poort",
+                    "ssl": "Maakt gebruik van een SSL-certificaat",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 }
             }
         }

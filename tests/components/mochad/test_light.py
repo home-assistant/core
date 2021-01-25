@@ -1,14 +1,12 @@
 """The tests for the mochad light platform."""
-import unittest
+
+import unittest.mock as mock
 
 import pytest
 
 from homeassistant.components import light
 from homeassistant.components.mochad import light as mochad
-from homeassistant.setup import setup_component
-
-import tests.async_mock as mock
-from tests.common import get_test_home_assistant
+from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)
@@ -18,122 +16,51 @@ def pymochad_mock():
         yield device
 
 
-class TestMochadSwitchSetup(unittest.TestCase):
-    """Test the mochad light."""
-
-    PLATFORM = mochad
-    COMPONENT = light
-    THING = "light"
-
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.addCleanup(self.hass.stop)
-
-    @mock.patch("homeassistant.components.mochad.light.MochadLight")
-    def test_setup_adds_proper_devices(self, mock_light):
-        """Test if setup adds devices."""
-        good_config = {
-            "mochad": {},
-            "light": {
-                "platform": "mochad",
-                "devices": [{"name": "Light1", "address": "a1"}],
-            },
-        }
-        assert setup_component(self.hass, light.DOMAIN, good_config)
+@pytest.fixture
+def light_mock(hass, brightness):
+    """Mock light."""
+    controller_mock = mock.MagicMock()
+    dev_dict = {"address": "a1", "name": "fake_light", "brightness_levels": brightness}
+    return mochad.MochadLight(hass, controller_mock, dev_dict)
 
 
-class TestMochadLight(unittest.TestCase):
-    """Test for mochad light platform."""
-
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        controller_mock = mock.MagicMock()
-        dev_dict = {"address": "a1", "name": "fake_light", "brightness_levels": 32}
-        self.light = mochad.MochadLight(self.hass, controller_mock, dev_dict)
-
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_name(self):
-        """Test the name."""
-        assert "fake_light" == self.light.name
-
-    def test_turn_on_with_no_brightness(self):
-        """Test turn_on."""
-        self.light.turn_on()
-        self.light.light.send_cmd.assert_called_once_with("on")
-
-    def test_turn_on_with_brightness(self):
-        """Test turn_on."""
-        self.light.turn_on(brightness=45)
-        self.light.light.send_cmd.assert_has_calls(
-            [mock.call("on"), mock.call("dim 25")]
-        )
-
-    def test_turn_off(self):
-        """Test turn_off."""
-        self.light.turn_off()
-        self.light.light.send_cmd.assert_called_once_with("off")
+async def test_setup_adds_proper_devices(hass):
+    """Test if setup adds devices."""
+    good_config = {
+        "mochad": {},
+        "light": {
+            "platform": "mochad",
+            "devices": [{"name": "Light1", "address": "a1"}],
+        },
+    }
+    assert await async_setup_component(hass, light.DOMAIN, good_config)
 
 
-class TestMochadLight256Levels(unittest.TestCase):
-    """Test for mochad light platform."""
-
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        controller_mock = mock.MagicMock()
-        dev_dict = {"address": "a1", "name": "fake_light", "brightness_levels": 256}
-        self.light = mochad.MochadLight(self.hass, controller_mock, dev_dict)
-
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_turn_on_with_no_brightness(self):
-        """Test turn_on."""
-        self.light.turn_on()
-        self.light.light.send_cmd.assert_called_once_with("xdim 255")
-
-    def test_turn_on_with_brightness(self):
-        """Test turn_on."""
-        self.light.turn_on(brightness=45)
-        self.light.light.send_cmd.assert_called_once_with("xdim 45")
-
-    def test_turn_off(self):
-        """Test turn_off."""
-        self.light.turn_off()
-        self.light.light.send_cmd.assert_called_once_with("off")
+@pytest.mark.parametrize(
+    "brightness,expected", [(32, "on"), (256, "xdim 255"), (64, "xdim 63")]
+)
+async def test_turn_on_with_no_brightness(light_mock, expected):
+    """Test turn_on."""
+    light_mock.turn_on()
+    light_mock.light.send_cmd.assert_called_once_with(expected)
 
 
-class TestMochadLight64Levels(unittest.TestCase):
-    """Test for mochad light platform."""
+@pytest.mark.parametrize(
+    "brightness,expected",
+    [
+        (32, [mock.call("on"), mock.call("dim 25")]),
+        (256, [mock.call("xdim 45")]),
+        (64, [mock.call("xdim 11")]),
+    ],
+)
+async def test_turn_on_with_brightness(light_mock, expected):
+    """Test turn_on."""
+    light_mock.turn_on(brightness=45)
+    light_mock.light.send_cmd.assert_has_calls(expected)
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        controller_mock = mock.MagicMock()
-        dev_dict = {"address": "a1", "name": "fake_light", "brightness_levels": 64}
-        self.light = mochad.MochadLight(self.hass, controller_mock, dev_dict)
 
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_turn_on_with_no_brightness(self):
-        """Test turn_on."""
-        self.light.turn_on()
-        self.light.light.send_cmd.assert_called_once_with("xdim 63")
-
-    def test_turn_on_with_brightness(self):
-        """Test turn_on."""
-        self.light.turn_on(brightness=45)
-        self.light.light.send_cmd.assert_called_once_with("xdim 11")
-
-    def test_turn_off(self):
-        """Test turn_off."""
-        self.light.turn_off()
-        self.light.light.send_cmd.assert_called_once_with("off")
+@pytest.mark.parametrize("brightness", [32])
+async def test_turn_off(light_mock):
+    """Test turn_off."""
+    light_mock.turn_off()
+    light_mock.light.send_cmd.assert_called_once_with("off")

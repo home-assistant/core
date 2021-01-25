@@ -7,8 +7,7 @@
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "general_error": "\u672a\u9810\u671f\u932f\u8aa4",
-            "invalid_api_key": "API \u5bc6\u9470\u7121\u6548",
-            "unable_to_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 Node/Pro \u8a2d\u5099\u3002"
+            "invalid_api_key": "API \u5bc6\u9470\u7121\u6548"
         },
         "step": {
             "geography": {
@@ -25,7 +24,7 @@
                     "ip_address": "\u4e3b\u6a5f\u7aef",
                     "password": "\u5bc6\u78bc"
                 },
-                "description": "\u76e3\u63a7\u500b\u4eba AirVisual \u8a2d\u5099\uff0c\u5bc6\u78bc\u53ef\u4ee5\u900f\u904e\u8a2d\u5099 UI \u7372\u5f97\u3002",
+                "description": "\u76e3\u63a7\u500b\u4eba AirVisual \u88dd\u7f6e\uff0c\u5bc6\u78bc\u53ef\u4ee5\u900f\u904e\u88dd\u7f6e UI \u7372\u5f97\u3002",
                 "title": "\u8a2d\u5b9a AirVisual Node/Pro"
             },
             "reauth_confirm": {
