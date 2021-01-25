@@ -109,7 +109,7 @@ class EQ3BTSmartThermostat(ClimateEntity):
     @property
     def available(self) -> bool:
         """Return if thermostat is available."""
-        return self._thermostat.mode >= 0
+        return self._thermostat.mode != eq3.Mode.Unknown
 
     @property
     def name(self):
