@@ -57,9 +57,6 @@ class ZwaveFan(ZWaveDeviceEntity, FanEntity):
 
     def turn_on(self, speed=None, percentage=None, preset_mode=None, **kwargs):
         """Turn the device on."""
-        import pprint
-
-        pprint.pprint([speed, percentage, preset_mode])
         self.set_percentage(percentage)
 
     def turn_off(self, **kwargs):
