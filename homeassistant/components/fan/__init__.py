@@ -380,20 +380,22 @@ class FanEntity(ToggleEntity):
     @property
     def speed(self) -> Optional[str]:
         """Return the current speed."""
-        if self._implemented_percentage:
+        if self._implemented_preset_mode:
             preset_mode = self.preset_mode
             if preset_mode:
                 return preset_mode
+        if self._implemented_percentage:
             return self.percentage_to_speed(self.percentage)
         return None
 
     @property
     def percentage(self) -> Optional[int]:
         """Return the current speed as a percentage."""
-        if not self._implemented_percentage:
+        if not self._implemented_preset_mode:
             speed = self.speed
             if speed in self.preset_modes:
                 return None
+        if not self._implemented_percentage:
             return self.speed_to_percentage(speed)
         return 0
 
