@@ -6,12 +6,13 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from . import DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE
 
 
-async def async_check_significant_change(
+@callback
+def async_check_significant_change(
     hass: HomeAssistant,
     old_state: str,
     old_attrs: dict,
