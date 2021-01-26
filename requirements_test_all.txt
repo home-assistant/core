@@ -1162,7 +1162,7 @@ zeep[async]==4.0.0
 zeroconf==0.28.8
 
 # homeassistant.components.zha
-zha-quirks==0.0.52
+zha-quirks==0.0.53
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2
@@ -1180,7 +1180,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.3.0
 
 # homeassistant.components.zha
-zigpy==0.30.1
+zigpy==0.32.0
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.13.0
