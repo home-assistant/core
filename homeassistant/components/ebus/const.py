@@ -20,7 +20,8 @@ UNIT_DEVICE_CLASS_MAP = {
 TTL = 30000
 CHECKINTERVAL = 60
 TIMEOUT = 5
-PRIO_TIMEDELTAS = [timedelta(hours=1), timedelta(hours=4), timedelta(days=1)]
+PRIO_TIMEDELTAS = [timedelta(hours=4), timedelta(days=1)]
+PRIO_OFF = 9  # there is not OFF
 SCAN = "scan"
 
 CONF_CIRCUITINFOS = "circuitinfos"
@@ -29,7 +30,7 @@ CONF_MSGDEFCODES = "msgdefcodes"
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = "8888"
-DEFAULT_PRIO = 4
+DEFAULT_PRIO = 3
 DEFAULT_CIRCUITMAP = {
     "broadcast": "",
     "ui": "UI",
