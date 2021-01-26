@@ -183,6 +183,21 @@ class AccessoryEntity(HomeKitEntity):
         return f"homekit-{serial}-aid:{self._aid}"
 
 
+class CharacteristicEntity(HomeKitEntity):
+    """
+    A HomeKit entity that is related to an single characteristic rather than a whole service.
+
+    This is typically used to expose additional sensor, binary_sensor or number entities that don't belong with
+    the service entity.
+    """
+
+    @property
+    def unique_id(self) -> str:
+        """Return the ID of this device."""
+        serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
+        return f"homekit-{serial}-aid:{self._aid}-sid:{self._iid}-cid:{self._iid}"
+
+
 async def async_setup_entry(hass, entry):
     """Set up a HomeKit connection on a config entry."""
     conn = HKDevice(hass, entry, entry.data)
