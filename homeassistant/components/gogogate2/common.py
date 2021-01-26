@@ -15,6 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DATA_UPDATE_COORDINATOR, DEVICE_TYPE_ISMARTGATE, DOMAIN
@@ -106,4 +107,5 @@ def get_api(config_data: dict) -> AbstractGateApi:
         config_data[CONF_IP_ADDRESS],
         config_data[CONF_USERNAME],
         config_data[CONF_PASSWORD],
+        httpx_async_client=get_async_client(),
     )
