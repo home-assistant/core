@@ -34,10 +34,10 @@ async def test_significant_change_temperature():
         ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT,
     }
     assert async_check_significant_change(
-        None, "70", freedom_attrs, "74", freedom_attrs
+        None, "70", freedom_attrs, "71", freedom_attrs
     )
     assert not async_check_significant_change(
-        None, "70", freedom_attrs, "71", freedom_attrs
+        None, "70", freedom_attrs, "70.5", freedom_attrs
     )
 
 
@@ -47,7 +47,7 @@ async def test_significant_change_battery():
         ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY,
     }
     assert not async_check_significant_change(None, "100", attrs, "100", attrs)
-    assert async_check_significant_change(None, "100", attrs, "97", attrs)
+    assert async_check_significant_change(None, "100", attrs, "99", attrs)
 
 
 async def test_significant_change_humidity():
@@ -56,4 +56,4 @@ async def test_significant_change_humidity():
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
     }
     assert not async_check_significant_change(None, "100", attrs, "100", attrs)
-    assert async_check_significant_change(None, "100", attrs, "97", attrs)
+    assert async_check_significant_change(None, "100", attrs, "99", attrs)
