@@ -1,4 +1,6 @@
 """Constants for the homekit_controller component."""
+from aiohomekit.model.characteristics import CharacteristicsTypes
+
 DOMAIN = "homekit_controller"
 
 KNOWN_DEVICES = f"{DOMAIN}-devices"
@@ -39,4 +41,8 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "television": "media_player",
     "valve": "switch",
     "camera-rtp-stream-management": "camera",
+}
+
+CHARACTERISTIC_PLATFORMS = {
+    CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY: "sensor",
 }
