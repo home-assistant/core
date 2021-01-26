@@ -10,13 +10,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entries):
-    """Set up the binary_sensor platform."""
+    """Set up the sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
-    name = f"{coordinator.name} Aurora Visibility %"
 
     entity = AuroraSensor(
         coordinator=coordinator,
-        name=name,
+        name=f"{coordinator.name} Aurora Visibility %",
         icon="mdi:gauge",
     )
 
