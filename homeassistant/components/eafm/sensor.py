@@ -31,7 +31,7 @@ def get_measures(station_data):
 
 
 def get_stage_scale(station_data):
-    """Force stageStake key to always be a list"""
+    """Force stageStake key to always be a list."""
     if "stageScale" not in station_data:
         return []
     if isinstance(station_data["stageScale"], dict):
