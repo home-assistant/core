@@ -144,8 +144,8 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         super().__init__(client, controller)
 
         self.heartbeat_check = False
-        self.schedule_update = False
         self._is_connected = False
+
         if client.last_seen:
             self._is_connected = (
                 self.is_wired == client.is_wired
@@ -153,8 +153,8 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
                 - dt_util.utc_from_timestamp(float(client.last_seen))
                 < controller.option_detection_time
             )
-            if self._is_connected:
-                self.schedule_update = True
+
+        self.schedule_update = self._is_connected
 
     async def async_added_to_hass(self) -> None:
         """Watch object when added."""
@@ -173,10 +173,23 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         await super().async_will_remove_from_hass()
 
     @callback
-    def async_update_callback(self) -> None:
+    def async_signal_reachable_callback(self) -> None:
+        """Call when controller connection state change."""
+        self.async_update_callback(controller_state_change=True)
+
+    # pylint: disable=arguments-differ
+    @callback
+    def async_update_callback(self, controller_state_change: bool = False) -> None:
         """Update the clients state."""
 
-        if self.client.last_updated == SOURCE_EVENT:
+        if controller_state_change:
+            if self.controller.available:
+                self.schedule_update = True
+
+            else:
+                self.controller.async_heartbeat(self.unique_id)
+
+        elif self.client.last_updated == SOURCE_EVENT:
             if (self.is_wired and self.client.event.event in WIRED_CONNECTION) or (
                 not self.is_wired and self.client.event.event in WIRELESS_CONNECTION
             ):
@@ -291,6 +304,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
 
         self.device = self._item
         self._is_connected = device.state == 1
+        self.schedule_update = False
 
     async def async_added_to_hass(self) -> None:
         """Watch object when added."""
@@ -309,15 +323,26 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         await super().async_will_remove_from_hass()
 
     @callback
-    def async_update_callback(self):
+    def async_signal_reachable_callback(self) -> None:
+        """Call when controller connection state change."""
+        self.async_update_callback(controller_state_change=True)
+
+    # pylint: disable=arguments-differ
+    @callback
+    def async_update_callback(self, controller_state_change: bool = False) -> None:
         """Update the devices' state."""
 
-        if self.device.last_updated == SOURCE_DATA:
+        if controller_state_change:
+            if self.controller.available:
+                if self._is_connected:
+                    self.schedule_update = True
+
+            else:
+                self.controller.async_heartbeat(self.unique_id)
+
+        elif self.device.last_updated == SOURCE_DATA:
             self._is_connected = True
-            self.controller.async_heartbeat(
-                self.unique_id,
-                dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 60),
-            )
+            self.schedule_update = True
 
         elif (
             self.device.last_updated == SOURCE_EVENT
@@ -325,6 +350,13 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         ):
             self.hass.async_create_task(self.async_update_device_registry())
             return
+
+        if self.schedule_update:
+            self.schedule_update = False
+            self.controller.async_heartbeat(
+                self.unique_id,
+                dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 60),
+            )
 
         super().async_update_callback()
 

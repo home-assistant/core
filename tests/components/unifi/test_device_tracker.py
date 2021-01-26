@@ -376,6 +376,12 @@ async def test_controller_state_change(hass):
     )
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
 
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == "not_home"
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1.state == "home"
+
     # Controller unavailable
     controller.async_unifi_signalling_callback(
         SIGNAL_CONNECTION_STATE, STATE_DISCONNECTED
@@ -393,7 +399,7 @@ async def test_controller_state_change(hass):
     await hass.async_block_till_done()
 
     client_1 = hass.states.get("device_tracker.client_1")
-    assert client_1.state == "home"
+    assert client_1.state == "not_home"
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1.state == "home"
