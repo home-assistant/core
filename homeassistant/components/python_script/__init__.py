@@ -23,7 +23,7 @@ from homeassistant.const import SERVICE_RELOAD
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.loader import bind_hass
-from homeassistant.util import sanitize_filename
+from homeassistant.util import raise_if_invalid_filename
 import homeassistant.util.dt as dt_util
 from homeassistant.util.yaml.loader import load_yaml
 
@@ -135,7 +135,8 @@ def discover_scripts(hass):
 def execute_script(hass, name, data=None):
     """Execute a script."""
     filename = f"{name}.py"
-    with open(hass.config.path(FOLDER, sanitize_filename(filename))) as fil:
+    raise_if_invalid_filename(filename)
+    with open(hass.config.path(FOLDER, filename)) as fil:
         source = fil.read()
     execute(hass, filename, source, data)
 
