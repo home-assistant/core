@@ -1,4 +1,6 @@
 """Test the Google Maps Travel Time config flow."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -18,8 +20,6 @@ from homeassistant.components.google_travel_time.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_UNIT_SYSTEM_IMPERIAL
-
-from tests.async_mock import patch
 
 
 @pytest.fixture(name="skip_notifications", autouse=True)
