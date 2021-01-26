@@ -215,7 +215,11 @@ omit =
     homeassistant/components/ecobee/notify.py
     homeassistant/components/ecobee/sensor.py
     homeassistant/components/ecobee/weather.py
-    homeassistant/components/econet/*
+    homeassistant/components/econet/__init__.py
+    homeassistant/components/econet/binary_sensor.py
+    homeassistant/components/econet/const.py
+    homeassistant/components/econet/sensor.py
+    homeassistant/components/econet/water_heater.py
     homeassistant/components/ecovacs/*
     homeassistant/components/edl21/*
     homeassistant/components/eddystone_temperature/sensor.py
