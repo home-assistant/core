@@ -495,16 +495,25 @@ class PlexMediaPlayer(MediaPlayerEntity):
         if isinstance(src, int):
             src = {"plex_key": src}
 
-        shuffle = src.pop("shuffle", 0)
-        media = self.plex_server.lookup_media(media_type, **src)
+        playqueue_id = src.pop("playqueue_id", None)
 
-        if media is None:
-            _LOGGER.error("Media could not be found: %s", media_id)
-            return
+        if playqueue_id:
+            try:
+                playqueue = self.plex_server.get_playqueue(playqueue_id)
+            except plexapi.exceptions.NotFound:
+                _LOGGER.error("PlayQueue '%s' could not be found", playqueue_id)
+                return
+        else:
+            shuffle = src.pop("shuffle", 0)
+            media = self.plex_server.lookup_media(media_type, **src)
 
-        _LOGGER.debug("Attempting to play %s on %s", media, self.name)
+            if media is None:
+                _LOGGER.error("Media could not be found: %s", media_id)
+                return
 
-        playqueue = self.plex_server.create_playqueue(media, shuffle=shuffle)
+            _LOGGER.debug("Attempting to play %s on %s", media, self.name)
+            playqueue = self.plex_server.create_playqueue(media, shuffle=shuffle)
+
         try:
             self.device.playMedia(playqueue)
         except requests.exceptions.ConnectTimeout:
