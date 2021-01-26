@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+import math
 
 from pywemo.ouimeaux_device.api.service import ActionException
 import voluptuous as vol
@@ -10,8 +11,8 @@ from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.percentage import (
-    ordered_list_item_to_percentage,
-    percentage_to_ordered_list_item,
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
 )
 
 from .const import (
@@ -45,24 +46,16 @@ WEMO_HUMIDITY_100 = 4
 
 WEMO_FAN_OFF = 0
 WEMO_FAN_MINIMUM = 1
-WEMO_FAN_LOW = 2
-WEMO_FAN_MEDIUM = 3
-WEMO_FAN_HIGH = 4
+WEMO_FAN_MEDIUM = 4
 WEMO_FAN_MAXIMUM = 5
+
+SPEED_RANGE = (WEMO_FAN_MINIMUM, WEMO_FAN_MAXIMUM)  # off is not included
 
 WEMO_WATER_EMPTY = 0
 WEMO_WATER_LOW = 1
 WEMO_WATER_GOOD = 2
 
 SUPPORTED_FEATURES = SUPPORT_SET_SPEED
-
-ORDERED_NAMED_FAN_SPEEDS = [
-    WEMO_FAN_MINIMUM,
-    WEMO_FAN_LOW,
-    WEMO_FAN_MEDIUM,
-    WEMO_FAN_HIGH,
-    WEMO_FAN_MAXIMUM,
-]
 
 
 SET_HUMIDITY_SCHEMA = {
@@ -108,6 +101,7 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         """Initialize the WeMo switch."""
         super().__init__(device)
         self._fan_mode = None
+        self._fan_mode_string = None
         self._target_humidity = None
         self._current_humidity = None
         self._water_level = None
@@ -126,7 +120,7 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         return {
             ATTR_CURRENT_HUMIDITY: self._current_humidity,
             ATTR_TARGET_HUMIDITY: self._target_humidity,
-            ATTR_FAN_MODE: self._fan_mode,
+            ATTR_FAN_MODE: self._fan_mode_string,
             ATTR_WATER_LEVEL: self._water_level,
             ATTR_FILTER_LIFE: self._filter_life,
             ATTR_FILTER_EXPIRED: self._filter_expired,
@@ -135,7 +129,7 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
     @property
     def percentage(self) -> str:
         """Return the current speed percentage."""
-        return ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, self._fan_mode)
+        return ranged_value_to_percentage(SPEED_RANGE, self._fan_mode)
 
     @property
     def supported_features(self) -> int:
@@ -147,7 +141,8 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         try:
             self._state = self.wemo.get_state(force_update)
 
-            self._fan_mode = self.wemo.fan_mode_string
+            self._fan_mode = self.wemo.fan_mode
+            self._fan_mode_string = self.wemo.fan_mode_string
             self._target_humidity = self.wemo.desired_humidity_percent
             self._current_humidity = self.wemo.current_humidity_percent
             self._water_level = self.wemo.water_level_string
@@ -192,9 +187,7 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         elif percentage == 0:
             named_speed = WEMO_FAN_OFF
         else:
-            named_speed = percentage_to_ordered_list_item(
-                ORDERED_NAMED_FAN_SPEEDS, percentage
-            )
+            named_speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
 
         try:
             self.wemo.set_state(named_speed)
