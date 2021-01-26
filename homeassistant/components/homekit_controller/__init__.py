@@ -1,5 +1,4 @@
 """Support for Homekit device discovery."""
-import logging
 from typing import Any, Dict
 
 import aiohomekit
@@ -20,8 +19,6 @@ from .connection import HKDevice
 from .const import CONTROLLER, DOMAIN, ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
 from .storage import EntityMapStorage
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def escape_characteristic_name(char_name):
     """Escape any dash or dots in a characteristics name."""
@@ -40,6 +37,8 @@ class HomeKitEntity(Entity):
         self.setup()
 
         self._signals = []
+
+        super().__init__()
 
     @property
     def accessory(self) -> Accessory:
@@ -172,6 +171,16 @@ class HomeKitEntity(Entity):
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
         raise NotImplementedError
+
+
+class AccessoryEntity(HomeKitEntity):
+    """A HomeKit entity that is related to an entire accessory rather than a specific service or characteristic."""
+
+    @property
+    def unique_id(self) -> str:
+        """Return the ID of this device."""
+        serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
+        return f"homekit-{serial}-aid:{self._aid}"
 
 
 async def async_setup_entry(hass, entry):

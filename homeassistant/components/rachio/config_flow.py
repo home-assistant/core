@@ -2,6 +2,7 @@
 import logging
 
 from rachiopy import Rachio
+from requests.exceptions import ConnectTimeout
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -14,7 +15,6 @@ from .const import (
     KEY_ID,
     KEY_STATUS,
     KEY_USERNAME,
-    RACHIO_API_EXCEPTIONS,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
 
@@ -31,7 +31,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     rachio = Rachio(data[CONF_API_KEY])
     username = None
     try:
-        data = await hass.async_add_executor_job(rachio.person.getInfo)
+        data = await hass.async_add_executor_job(rachio.person.info)
         _LOGGER.debug("rachio.person.getInfo: %s", data)
         if int(data[0][KEY_STATUS]) != HTTP_OK:
             raise InvalidAuth
@@ -43,8 +43,7 @@ async def validate_input(hass: core.HomeAssistant, data):
             raise CannotConnect
 
         username = data[1][KEY_USERNAME]
-    # Yes we really do get all these exceptions (hopefully rachiopy switches to requests)
-    except RACHIO_API_EXCEPTIONS as error:
+    except ConnectTimeout as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
         raise CannotConnect from error
 
@@ -94,10 +93,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         await self.async_set_unique_id(properties["id"])
         return await self.async_step_user()
-
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        return await self.async_step_user(user_input)
 
     @staticmethod
     @callback

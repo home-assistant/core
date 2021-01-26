@@ -57,9 +57,7 @@ class BroadlinkDevice:
         Triggered when the device is renamed on the frontend.
         """
         device_registry = await dr.async_get_registry(hass)
-        device_entry = device_registry.async_get_device(
-            {(DOMAIN, entry.unique_id)}, set()
-        )
+        device_entry = device_registry.async_get_device({(DOMAIN, entry.unique_id)})
         device_registry.async_update_device(device_entry.id, name=entry.title)
         await hass.config_entries.async_reload(entry.entry_id)
 
@@ -74,6 +72,7 @@ class BroadlinkDevice:
             name=config.title,
         )
         api.timeout = config.data[CONF_TIMEOUT]
+        self.api = api
 
         try:
             await self.hass.async_add_executor_job(api.auth)
@@ -91,7 +90,6 @@ class BroadlinkDevice:
             )
             return False
 
-        self.api = api
         self.authorized = True
 
         update_manager = get_update_manager(self)
@@ -165,8 +163,12 @@ class BroadlinkDevice:
         self.authorized = False
 
         _LOGGER.error(
-            "The device at %s is locked for authentication. Follow the configuration flow to unlock it",
-            self.config.data[CONF_HOST],
+            "%s (%s at %s) is locked. Click Configuration in the sidebar, "
+            "click Integrations, click Configure on the device and follow "
+            "the instructions to unlock it",
+            self.name,
+            self.api.model,
+            self.api.host[0],
         )
 
         self.hass.async_create_task(

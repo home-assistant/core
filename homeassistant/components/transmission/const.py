@@ -36,6 +36,8 @@ ATTR_TORRENT = "torrent"
 
 SERVICE_ADD_TORRENT = "add_torrent"
 SERVICE_REMOVE_TORRENT = "remove_torrent"
+SERVICE_START_TORRENT = "start_torrent"
+SERVICE_STOP_TORRENT = "stop_torrent"
 
 DATA_UPDATED = "transmission_data_updated"
 

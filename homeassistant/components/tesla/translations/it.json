@@ -2,13 +2,8 @@
     "config": {
         "error": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato",
-            "already_configured_account": "L'account \u00e8 gi\u00e0 configurato",
             "cannot_connect": "Impossibile connettersi",
-            "connection_error": "Errore durante la connessione; controllare la rete e riprovare",
-            "identifier_exists": "E-mail gi\u00e0 registrata",
-            "invalid_auth": "Autenticazione non valida",
-            "invalid_credentials": "Credenziali non valide",
-            "unknown_error": "Errore sconosciuto, si prega di segnalare le informazioni del registro"
+            "invalid_auth": "Autenticazione non valida"
         },
         "step": {
             "user": {

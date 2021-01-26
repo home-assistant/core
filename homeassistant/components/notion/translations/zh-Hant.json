@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u6b64\u4f7f\u7528\u8005\u540d\u7a31\u5df2\u88ab\u4f7f\u7528\u3002"
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
-            "invalid_credentials": "\u4f7f\u7528\u8005\u540d\u7a31\u6216\u5bc6\u78bc\u7121\u6548",
-            "no_devices": "\u5e33\u865f\u4e2d\u627e\u4e0d\u5230\u4efb\u4f55\u8a2d\u5099"
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "no_devices": "\u5e33\u865f\u4e2d\u627e\u4e0d\u5230\u4efb\u4f55\u88dd\u7f6e"
         },
         "step": {
             "user": {

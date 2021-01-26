@@ -2,14 +2,13 @@
 import asyncio
 import logging
 import queue
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import system_log
 from homeassistant.core import callback
-
-from tests.async_mock import MagicMock, patch
 
 _LOGGER = logging.getLogger("test_logger")
 BASIC_CONFIG = {"system_log": {"max_entries": 2}}
@@ -230,9 +229,7 @@ async def test_clear_logs(hass, simple_queue, hass_client):
     _LOGGER.error("error message")
     await _async_block_until_queue_empty(hass, simple_queue)
 
-    hass.async_add_job(
-        hass.services.async_call(system_log.DOMAIN, system_log.SERVICE_CLEAR, {})
-    )
+    await hass.services.async_call(system_log.DOMAIN, system_log.SERVICE_CLEAR, {})
     await _async_block_until_queue_empty(hass, simple_queue)
 
     # Assert done by get_error_log
@@ -244,10 +241,8 @@ async def test_write_log(hass):
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     logger = MagicMock()
     with patch("logging.getLogger", return_value=logger) as mock_logging:
-        hass.async_add_job(
-            hass.services.async_call(
-                system_log.DOMAIN, system_log.SERVICE_WRITE, {"message": "test_message"}
-            )
+        await hass.services.async_call(
+            system_log.DOMAIN, system_log.SERVICE_WRITE, {"message": "test_message"}
         )
         await hass.async_block_till_done()
     mock_logging.assert_called_once_with("homeassistant.components.system_log.external")
@@ -258,12 +253,10 @@ async def test_write_choose_logger(hass):
     """Test that correct logger is chosen."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     with patch("logging.getLogger") as mock_logging:
-        hass.async_add_job(
-            hass.services.async_call(
-                system_log.DOMAIN,
-                system_log.SERVICE_WRITE,
-                {"message": "test_message", "logger": "myLogger"},
-            )
+        await hass.services.async_call(
+            system_log.DOMAIN,
+            system_log.SERVICE_WRITE,
+            {"message": "test_message", "logger": "myLogger"},
         )
         await hass.async_block_till_done()
     mock_logging.assert_called_once_with("myLogger")
@@ -274,12 +267,10 @@ async def test_write_choose_level(hass):
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     logger = MagicMock()
     with patch("logging.getLogger", return_value=logger):
-        hass.async_add_job(
-            hass.services.async_call(
-                system_log.DOMAIN,
-                system_log.SERVICE_WRITE,
-                {"message": "test_message", "level": "debug"},
-            )
+        await hass.services.async_call(
+            system_log.DOMAIN,
+            system_log.SERVICE_WRITE,
+            {"message": "test_message", "level": "debug"},
         )
         await hass.async_block_till_done()
     assert logger.method_calls[0] == ("debug", ("test_message",))

@@ -4,7 +4,7 @@
             "already_configured": "Tjenesten er allerede konfigurert"
         },
         "error": {
-            "connection_error": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_access_token": "Ugyldig tilgangstoken",
             "timeout": "Tidsavbrudd for tilkobling til Tibber"
         },
@@ -17,6 +17,5 @@
                 "title": ""
             }
         }
-    },
-    "title": ""
+    }
 }

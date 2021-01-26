@@ -34,8 +34,6 @@ class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
         """Emit a log record."""
         try:
             self.enqueue(record)
-        except asyncio.CancelledError:
-            raise
         except Exception:  # pylint: disable=broad-except
             self.handleError(record)
 
@@ -172,7 +170,7 @@ def async_create_catching_coro(target: Coroutine) -> Coroutine:
     wrapped_target = catch_log_coro_exception(
         target,
         lambda *args: "Exception in {} called from\n {}".format(
-            target.__name__,  # type: ignore
+            target.__name__,
             "".join(traceback.format_list(trace[:-1])),
         ),
     )

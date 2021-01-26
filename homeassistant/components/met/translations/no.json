@@ -1,8 +1,7 @@
 {
     "config": {
         "error": {
-            "already_configured": "Tjenesten er allerede konfigurert",
-            "name_exists": "Lokasjonen finnes allerede"
+            "already_configured": "Tjenesten er allerede konfigurert"
         },
         "step": {
             "user": {
@@ -13,7 +12,7 @@
                     "name": "Navn"
                 },
                 "description": "",
-                "title": "Lokasjon"
+                "title": "Plassering"
             }
         }
     }

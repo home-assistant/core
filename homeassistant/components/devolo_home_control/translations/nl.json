@@ -1,17 +1,15 @@
 {
     "config": {
-        "error": {
-            "invalid_credentials": "Verkeerde gebruikersnaam en/of wachtwoord."
+        "abort": {
+            "already_configured": "Account is al geconfigureerd"
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Wachtwoord",
                     "username": "E-mail adres / devolo ID"
-                },
-                "title": "devolo Home Control"
+                }
             }
         }
-    },
-    "title": "devolo Home Control"
+    }
 }

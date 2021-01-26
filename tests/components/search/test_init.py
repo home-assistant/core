@@ -3,6 +3,7 @@ from homeassistant.components import search
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 
 async def test_search(hass):

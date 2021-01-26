@@ -1,6 +1,4 @@
 """Support for mill wifi-enabled home heaters."""
-import logging
-
 from mill import Mill
 import voluptuous as vol
 
@@ -35,8 +33,6 @@ from .const import (
     MIN_TEMP,
     SERVICE_SET_ROOM_TEMP,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
@@ -118,6 +114,8 @@ class MillHeater(ClimateEntity):
             "heating": self._heater.is_heating,
             "controlled_by_tibber": self._heater.tibber_control,
             "heater_generation": 1 if self._heater.is_gen1 else 2,
+            "consumption_today": self._heater.day_consumption,
+            "consumption_total": self._heater.total_consumption,
         }
         if self._heater.room:
             res["room"] = self._heater.room.name

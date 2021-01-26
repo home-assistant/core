@@ -1,6 +1,4 @@
 """Config flow for flo integration."""
-import logging
-
 from aioflo import async_get_api
 from aioflo.errors import RequestError
 import voluptuous as vol
@@ -9,9 +7,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN  # pylint:disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER  # pylint:disable=unused-import
 
 DATA_SCHEMA = vol.Schema({"username": str, "password": str})
 
@@ -28,7 +24,7 @@ async def validate_input(hass: core.HomeAssistant, data):
             data[CONF_USERNAME], data[CONF_PASSWORD], session=session
         )
     except RequestError as request_error:
-        _LOGGER.error("Error connecting to the Flo API: %s", request_error)
+        LOGGER.error("Error connecting to the Flo API: %s", request_error)
         raise CannotConnect from request_error
 
     user_info = await api.user.get_info()

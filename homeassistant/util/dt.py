@@ -11,6 +11,7 @@ import pytz.tzinfo as pytzinfo
 from homeassistant.const import MATCH_ALL
 
 DATE_STR_FORMAT = "%Y-%m-%d"
+NATIVE_UTC = dt.timezone.utc
 UTC = pytz.utc
 DEFAULT_TIME_ZONE: dt.tzinfo = pytz.utc
 
@@ -52,7 +53,7 @@ def get_time_zone(time_zone_str: str) -> Optional[dt.tzinfo]:
 
 def utcnow() -> dt.datetime:
     """Get now in UTC time."""
-    return dt.datetime.utcnow().replace(tzinfo=UTC)
+    return dt.datetime.now(NATIVE_UTC)
 
 
 def now(time_zone: Optional[dt.tzinfo] = None) -> dt.datetime:
@@ -107,6 +108,9 @@ def start_of_local_day(
         date: dt.date = now().date()
     elif isinstance(dt_or_d, dt.datetime):
         date = dt_or_d.date()
+    else:
+        date = dt_or_d
+
     return DEFAULT_TIME_ZONE.localize(  # type: ignore
         dt.datetime.combine(date, dt.time())
     )
@@ -213,9 +217,13 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> Lis
     """Parse the time expression part and return a list of times to match."""
     if parameter is None or parameter == MATCH_ALL:
         res = list(range(min_value, max_value + 1))
-    elif isinstance(parameter, str) and parameter.startswith("/"):
-        parameter = int(parameter[1:])
-        res = [x for x in range(min_value, max_value + 1) if x % parameter == 0]
+    elif isinstance(parameter, str):
+        if parameter.startswith("/"):
+            parameter = int(parameter[1:])
+            res = [x for x in range(min_value, max_value + 1) if x % parameter == 0]
+        else:
+            res = [int(parameter)]
+
     elif not hasattr(parameter, "__iter__"):
         res = [int(parameter)]
     else:
@@ -310,7 +318,7 @@ def find_next_time_expression_time(
     # Now we need to handle timezones. We will make this datetime object
     # "naive" first and then re-convert it to the target timezone.
     # This is so that we can call pytz's localize and handle DST changes.
-    tzinfo: pytzinfo.DstTzInfo = result.tzinfo
+    tzinfo: pytzinfo.DstTzInfo = UTC if result.tzinfo == NATIVE_UTC else result.tzinfo
     result = result.replace(tzinfo=None)
 
     try:
@@ -333,7 +341,7 @@ def find_next_time_expression_time(
         return find_next_time_expression_time(result, seconds, minutes, hours)
 
     result_dst = cast(dt.timedelta, result.dst())
-    now_dst = cast(dt.timedelta, now.dst())
+    now_dst = cast(dt.timedelta, now.dst()) or dt.timedelta(0)
     if result_dst >= now_dst:
         return result
 

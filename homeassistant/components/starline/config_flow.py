@@ -8,6 +8,7 @@ from homeassistant import config_entries, core
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import (  # pylint: disable=unused-import
+    _LOGGER,
     CONF_APP_ID,
     CONF_APP_SECRET,
     CONF_CAPTCHA_CODE,
@@ -20,7 +21,6 @@ from .const import (  # pylint: disable=unused-import
     ERROR_AUTH_APP,
     ERROR_AUTH_MFA,
     ERROR_AUTH_USER,
-    LOGGER,
 )
 
 
@@ -182,7 +182,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self._async_form_auth_user(error)
         except Exception as err:  # pylint: disable=broad-except
-            LOGGER.error("Error auth StarLine: %s", err)
+            _LOGGER.error("Error auth StarLine: %s", err)
             return self._async_form_auth_app(ERROR_AUTH_APP)
 
     async def _async_authenticate_user(self, error=None):
@@ -215,7 +215,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             raise Exception(data)
         except Exception as err:  # pylint: disable=broad-except
-            LOGGER.error("Error auth user: %s", err)
+            _LOGGER.error("Error auth user: %s", err)
             return self._async_form_auth_user(ERROR_AUTH_USER)
 
     async def _async_get_entry(self):

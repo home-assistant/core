@@ -2,12 +2,14 @@
     "config": {
         "abort": {
             "wrong_server_id": "Server ID ist ung\u00fcltig"
+        },
+        "step": {
+            "user": {
+                "description": "Einrichtung beginnen?"
+            }
         }
     },
     "options": {
-        "error": {
-            "retrive_error": "Fehler beim Abrufen der Serverliste"
-        },
         "step": {
             "init": {
                 "data": {

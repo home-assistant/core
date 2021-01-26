@@ -1,4 +1,6 @@
 """Tests for the Tuya config flow."""
+from unittest.mock import Mock, patch
+
 import pytest
 from tuyaha.tuyaapi import TuyaAPIException, TuyaNetException
 
@@ -6,7 +8,6 @@ from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.tuya.const import CONF_COUNTRYCODE, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 USERNAME = "myUsername"
@@ -47,6 +48,7 @@ async def test_user(hass, tuya):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=TUYA_USER_DATA
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == USERNAME
@@ -56,7 +58,6 @@ async def test_user(hass, tuya):
     assert result["data"][CONF_PLATFORM] == TUYA_PLATFORM
     assert not result["result"].unique_id
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -76,6 +77,7 @@ async def test_import(hass, tuya):
             context={"source": config_entries.SOURCE_IMPORT},
             data=TUYA_USER_DATA,
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == USERNAME
@@ -85,7 +87,6 @@ async def test_import(hass, tuya):
     assert result["data"][CONF_PLATFORM] == TUYA_PLATFORM
     assert not result["result"].unique_id
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

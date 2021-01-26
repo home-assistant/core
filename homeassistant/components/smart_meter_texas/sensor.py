@@ -1,6 +1,4 @@
 """Support for Smart Meter Texas sensors."""
-import logging
-
 from smart_meter_texas import Meter
 
 from homeassistant.const import CONF_ADDRESS, ENERGY_KILO_WATT_HOUR
@@ -19,8 +17,6 @@ from .const import (
     ESIID,
     METER_NUMBER,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

@@ -8,5 +8,10 @@
                 "description": "\u00bfQuieres configurar el componente de la aplicaci\u00f3n para el m\u00f3vil?"
             }
         }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "Enviar una notificaci\u00f3n"
+        }
     }
 }

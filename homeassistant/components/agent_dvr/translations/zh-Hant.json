@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
             "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
-            "device_unavailable": "\u8a2d\u5099\u7121\u6cd5\u4f7f\u7528"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "step": {
             "user": {
@@ -16,6 +16,5 @@
                 "title": "\u8a2d\u5b9a Agent DVR"
             }
         }
-    },
-    "title": "Agent DVR"
+    }
 }

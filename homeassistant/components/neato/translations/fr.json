@@ -2,16 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "D\u00e9j\u00e0 configur\u00e9",
-            "invalid_auth": "Authentification invalide",
-            "invalid_credentials": "Informations d'identification invalides"
+            "invalid_auth": "Authentification invalide"
         },
         "create_entry": {
             "default": "Voir [Documentation Neato]({docs_url})."
         },
         "error": {
             "invalid_auth": "Authentification invalide",
-            "invalid_credentials": "Informations d'identification invalides",
-            "unexpected_error": "Erreur inattendue",
             "unknown": "Erreur inattendue"
         },
         "step": {

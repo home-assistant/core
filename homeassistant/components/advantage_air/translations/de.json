@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindungsfehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP Adresse",
+                    "port": "Port"
+                },
+                "title": "Verbinden"
+            }
+        }
+    }
+}

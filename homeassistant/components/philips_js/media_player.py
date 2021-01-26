@@ -96,7 +96,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class PhilipsTVMediaPlayer(MediaPlayerEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
 
-    def __init__(self, tv, name, on_script):
+    def __init__(self, tv: PhilipsTV, name: str, on_script: Script):
         """Initialize the Philips TV."""
         self._tv = tv
         self._name = name
@@ -193,7 +193,7 @@ class PhilipsTVMediaPlayer(MediaPlayerEntity):
     def turn_on(self):
         """Turn on the device."""
         if self._on_script:
-            self._on_script.run()
+            self._on_script.run(context=self._context)
             self._update_soon(DELAY_ACTION_ON)
 
     def turn_off(self):
@@ -313,10 +313,11 @@ class PhilipsTVMediaPlayer(MediaPlayerEntity):
         self._tv.update()
 
         self._sources = {
-            srcid: source["name"] or f"Source {srcid}"
+            srcid: source.get("name") or f"Source {srcid}"
             for srcid, source in (self._tv.sources or {}).items()
         }
 
         self._channels = {
-            chid: channel["name"] for chid, channel in (self._tv.channels or {}).items()
+            chid: channel.get("name") or f"Channel {chid}"
+            for chid, channel in (self._tv.channels or {}).items()
         }

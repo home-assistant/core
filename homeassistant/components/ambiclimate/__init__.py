@@ -1,6 +1,4 @@
 """Support for Ambiclimate devices."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
@@ -8,8 +6,6 @@ from homeassistant.helpers import config_validation as cv
 
 from . import config_flow
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {

@@ -1,7 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Toto PS\u010c ji\u017e bylo nakonfigurov\u00e1no."
+            "already_configured": "Slu\u017eba je ji\u017e nastavena"
+        },
+        "error": {
+            "invalid_zip_code": "PS\u010c je neplatn\u00e9"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "zip_code": "PS\u010c"
+                },
+                "description": "Vypl\u0148te sv\u00e9 americk\u00e9 nebo kanadsk\u00e9 PS\u010c.",
+                "title": "IQVIA"
+            }
         }
     }
 }

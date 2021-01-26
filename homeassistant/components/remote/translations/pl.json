@@ -1,19 +1,23 @@
 {
     "device_automation": {
         "action_type": {
-            "toggle": "Prze\u0142\u0105cz {entity_name}",
-            "turn_off": "Wy\u0142\u0105cz {entity_name}",
-            "turn_on": "W\u0142\u0105cz {entity_name}"
+            "toggle": "prze\u0142\u0105cz {entity_name}",
+            "turn_off": "wy\u0142\u0105cz {entity_name}",
+            "turn_on": "w\u0142\u0105cz {entity_name}"
         },
         "condition_type": {
-            "is_off": "{entity_name} jest wy\u0142\u0105czony",
-            "is_on": "{entity_name} jest w\u0142\u0105czony"
+            "is_off": "pilot {entity_name} jest wy\u0142\u0105czony",
+            "is_on": "pilot {entity_name} jest w\u0142\u0105czony"
+        },
+        "trigger_type": {
+            "turned_off": "nast\u0105pi wy\u0142\u0105czenie {entity_name}",
+            "turned_on": "nast\u0105pi w\u0142\u0105czenie {entity_name}"
         }
     },
     "state": {
         "_": {
-            "off": "wy\u0142\u0105czony",
-            "on": "w\u0142\u0105czony"
+            "off": "wy\u0142.",
+            "on": "w\u0142."
         }
     },
     "title": "Pilot"

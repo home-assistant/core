@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ten kraj jest ju\u017c skonfigurowany."
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
         },
         "step": {
             "user": {

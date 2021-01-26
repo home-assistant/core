@@ -89,7 +89,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     i2c_address = config[CONF_I2C_ADDRESS]
 
     bus = smbus.SMBus(config[CONF_I2C_BUS])
-    sensor = await hass.async_add_job(
+    sensor = await hass.async_add_executor_job(
         partial(
             BME280,
             bus,
@@ -108,7 +108,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.error("BME280 sensor not detected at %s", i2c_address)
         return False
 
-    sensor_handler = await hass.async_add_job(BME280Handler, sensor)
+    sensor_handler = await hass.async_add_executor_job(BME280Handler, sensor)
 
     dev = []
     try:
@@ -166,12 +166,12 @@ class BME280Sensor(Entity):
 
     async def async_update(self):
         """Get the latest data from the BME280 and update the states."""
-        await self.hass.async_add_job(self.bme280_client.update)
+        await self.hass.async_add_executor_job(self.bme280_client.update)
         if self.bme280_client.sensor.sample_ok:
             if self.type == SENSOR_TEMP:
-                temperature = round(self.bme280_client.sensor.temperature, 1)
+                temperature = round(self.bme280_client.sensor.temperature, 2)
                 if self.temp_unit == TEMP_FAHRENHEIT:
-                    temperature = round(celsius_to_fahrenheit(temperature), 1)
+                    temperature = round(celsius_to_fahrenheit(temperature), 2)
                 self._state = temperature
             elif self.type == SENSOR_HUMID:
                 self._state = round(self.bme280_client.sensor.humidity, 1)

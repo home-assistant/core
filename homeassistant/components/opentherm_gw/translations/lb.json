@@ -1,10 +1,9 @@
 {
     "config": {
         "error": {
-            "already_configured": "Gateway ass scho konfigur\u00e9iert",
-            "id_exists": "Gateway ID g\u00ebtt et schonn",
-            "serial_error": "Feeler beim verbannen",
-            "timeout": "Z\u00e4it Iwwerschreidung beim Verbindungs Versuch"
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "cannot_connect": "Feeler beim verbannen",
+            "id_exists": "Gateway ID g\u00ebtt et schonn"
         },
         "step": {
             "init": {

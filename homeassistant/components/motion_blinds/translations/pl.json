@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "connection_error": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "flow_title": "Motion Blinds",
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "host": "Adres IP"
+                },
+                "description": "B\u0119dziesz potrzebowa\u0142 16-znakowego klucza API, instrukcje znajdziesz na https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key",
+                "title": "Motion Blinds"
+            }
+        }
+    }
+}

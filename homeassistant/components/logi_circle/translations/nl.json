@@ -1,18 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_setup": "U kunt slechts \u00e9\u00e9n Logi Circle-account configureren.",
+            "already_configured": "Account is al geconfigureerd",
             "external_error": "Uitzondering opgetreden uit een andere stroom.",
-            "external_setup": "Logi Circle is met succes geconfigureerd vanuit een andere stroom.",
-            "no_flows": "U moet Logi Circle configureren voordat u ermee kunt authenticeren. [Lees de instructies] (https://www.home-assistant.io/components/logi_circle/)."
-        },
-        "create_entry": {
-            "default": "Succesvol geverifieerd met Logi Circle."
+            "external_setup": "Logi Circle is met succes geconfigureerd vanuit een andere stroom."
         },
         "error": {
-            "auth_error": "API-autorisatie mislukt.",
-            "auth_timeout": "Er is een time-out opgetreden bij autorisatie bij het aanvragen van toegangstoken.",
-            "follow_link": "Volg de link en authenticeer voordat u op Verzenden drukt."
+            "follow_link": "Volg de link en authenticeer voordat u op Verzenden drukt.",
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
             "auth": {

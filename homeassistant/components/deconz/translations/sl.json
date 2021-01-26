@@ -5,7 +5,6 @@
             "already_in_progress": "Konfiguracijski tok za most je \u017ee v teku.",
             "no_bridges": "Ni odkritih mostov deCONZ",
             "not_deconz_bridge": "Ni deCONZ most",
-            "one_instance_only": "Komponenta podpira le en primerek deCONZ",
             "updated_instance": "Posodobljen deCONZ z novim naslovom gostitelja"
         },
         "error": {

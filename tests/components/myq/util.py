@@ -1,12 +1,12 @@
 """Tests for the myq integration."""
 
 import json
+from unittest.mock import patch
 
 from homeassistant.components.myq.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 

@@ -1,14 +1,13 @@
 """Support for NuHeat thermostats."""
 import asyncio
+from datetime import timedelta
 import logging
 
 import nuheat
 import requests
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_DEVICES,
     CONF_PASSWORD,
     CONF_USERNAME,
     HTTP_BAD_REQUEST,
@@ -17,55 +16,25 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_DEVICES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the NuHeat component."""
     hass.data.setdefault(DOMAIN, {})
-    conf = config.get(DOMAIN)
-    if not conf:
-        return True
-
-    for serial_number in conf[CONF_DEVICES]:
-        # Since the api currently doesn't permit fetching the serial numbers
-        # and they have to be specified we create a separate config entry for
-        # each serial number. This won't increase the number of http
-        # requests as each thermostat has to be updated anyways.
-        # This also allows us to validate that the entered valid serial
-        # numbers and do not end up with a config entry where half of the
-        # devices work.
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_USERNAME: conf[CONF_USERNAME],
-                    CONF_PASSWORD: conf[CONF_PASSWORD],
-                    CONF_SERIAL_NUMBER: serial_number,
-                },
-            )
-        )
-
     return True
+
+
+def _get_thermostat(api, serial_number):
+    """Authenticate and create the thermostat object."""
+    api.authenticate()
+    return api.get_thermostat(serial_number)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -80,7 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     api = nuheat.NuHeat(username, password)
 
     try:
-        await hass.async_add_executor_job(api.authenticate)
+        thermostat = await hass.async_add_executor_job(
+            _get_thermostat, api, serial_number
+        )
     except requests.exceptions.Timeout as ex:
         raise ConfigEntryNotReady from ex
     except requests.exceptions.HTTPError as ex:
@@ -95,7 +66,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.error("Failed to login to nuheat: %s", ex)
         return False
 
-    hass.data[DOMAIN][entry.entry_id] = (api, serial_number)
+    async def _async_update_data():
+        """Fetch data from API endpoint."""
+        await hass.async_add_executor_job(thermostat.get_data)
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"nuheat {serial_number}",
+        update_method=_async_update_data,
+        update_interval=timedelta(minutes=5),
+    )
+
+    hass.data[DOMAIN][entry.entry_id] = (thermostat, coordinator)
 
     for component in PLATFORMS:
         hass.async_create_task(

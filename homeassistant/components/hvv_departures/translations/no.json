@@ -4,7 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "no_results": "Ingen resultater. Pr\u00f8v med en annen stasjon/adresse"
         },
@@ -43,6 +43,5 @@
                 "title": "Alternativer"
             }
         }
-    },
-    "title": "HVV Avganger"
+    }
 }

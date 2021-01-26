@@ -37,6 +37,7 @@ from .const import (
     DATA_TYPE_STRING,
     DATA_TYPE_UINT,
     DEFAULT_HUB,
+    DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
 )
 
@@ -99,21 +100,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus sensors."""
     sensors = []
-    data_types = {
-        DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"},
-        DATA_TYPE_UINT: {1: "H", 2: "I", 4: "Q"},
-        DATA_TYPE_FLOAT: {1: "e", 2: "f", 4: "d"},
-    }
 
     for register in config[CONF_REGISTERS]:
-        structure = ">i"
         if register[CONF_DATA_TYPE] == DATA_TYPE_STRING:
             structure = str(register[CONF_COUNT] * 2) + "s"
         elif register[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
             try:
-                structure = (
-                    f">{data_types[register[CONF_DATA_TYPE]][register[CONF_COUNT]]}"
-                )
+                structure = f">{DEFAULT_STRUCT_FORMAT[register[CONF_DATA_TYPE]][register[CONF_COUNT]]}"
             except KeyError:
                 _LOGGER.error(
                     "Unable to detect data type for %s sensor, try a custom type",
@@ -257,16 +250,32 @@ class ModbusRegisterSensor(RestoreEntity):
             registers.reverse()
 
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
-        if self._data_type != DATA_TYPE_STRING:
-            val = struct.unpack(self._structure, byte_string)[0]
-            val = self._scale * val + self._offset
-            if isinstance(val, int):
-                self._value = str(val)
-                if self._precision > 0:
-                    self._value += "." + "0" * self._precision
-            else:
-                self._value = f"{val:.{self._precision}f}"
-        else:
+        if self._data_type == DATA_TYPE_STRING:
             self._value = byte_string.decode()
+        else:
+            val = struct.unpack(self._structure, byte_string)
+
+            # Issue: https://github.com/home-assistant/core/issues/41944
+            # If unpack() returns a tuple greater than 1, don't try to process the value.
+            # Instead, return the values of unpack(...) separated by commas.
+            if len(val) > 1:
+                self._value = ",".join(map(str, val))
+            else:
+                val = val[0]
+
+                # Apply scale and precision to floats and ints
+                if isinstance(val, (float, int)):
+                    val = self._scale * val + self._offset
+
+                    # We could convert int to float, and the code would still work; however
+                    # we lose some precision, and unit tests will fail. Therefore, we do
+                    # the conversion only when it's absolutely necessary.
+                    if isinstance(val, int) and self._precision == 0:
+                        self._value = str(val)
+                    else:
+                        self._value = f"{float(val):.{self._precision}f}"
+                else:
+                    # Don't process remaining datatypes (bytes and booleans)
+                    self._value = str(val)
 
         self._available = True

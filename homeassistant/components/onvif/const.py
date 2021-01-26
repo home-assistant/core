@@ -39,5 +39,6 @@ CONTINUOUS_MOVE = "ContinuousMove"
 RELATIVE_MOVE = "RelativeMove"
 ABSOLUTE_MOVE = "AbsoluteMove"
 GOTOPRESET_MOVE = "GotoPreset"
+STOP_MOVE = "Stop"
 
 SERVICE_PTZ = "ptz"

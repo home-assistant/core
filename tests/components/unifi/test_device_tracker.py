@@ -1,6 +1,7 @@
 """The tests for the UniFi device tracker platform."""
 from copy import copy
 from datetime import timedelta
+from unittest.mock import patch
 
 from aiounifi.controller import (
     MESSAGE_CLIENT,
@@ -188,6 +189,10 @@ async def test_tracked_wireless_clients(hass):
 
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1.state == "home"
+    assert client_1.attributes["ip"] == "10.0.0.1"
+    assert client_1.attributes["mac"] == "00:00:00:00:00:01"
+    assert client_1.attributes["hostname"] == "client_1"
+    assert client_1.attributes["host_name"] == "client_1"
 
     # State change signalling works with events
     controller.api.websocket._data = {
@@ -200,8 +205,10 @@ async def test_tracked_wireless_clients(hass):
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1.state == "home"
 
-    async_fire_time_changed(hass, dt_util.utcnow() + controller.option_detection_time)
-    await hass.async_block_till_done()
+    new_time = dt_util.utcnow() + controller.option_detection_time
+    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+        async_fire_time_changed(hass, new_time)
+        await hass.async_block_till_done()
 
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1.state == "not_home"
@@ -294,8 +301,10 @@ async def test_tracked_devices(hass):
     device_2 = hass.states.get("device_tracker.device_2")
     assert device_2.state == "home"
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=90))
-    await hass.async_block_till_done()
+    new_time = dt_util.utcnow() + timedelta(seconds=90)
+    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+        async_fire_time_changed(hass, new_time)
+        await hass.async_block_till_done()
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1.state == "not_home"
@@ -597,6 +606,7 @@ async def test_option_ssid_filter(hass):
         controller.config_entry,
         options={CONF_SSID_FILTER: []},
     )
+    await hass.async_block_till_done()
     event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_copy]}
     controller.api.message_handler(event)
     event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_3_copy]}
@@ -609,12 +619,17 @@ async def test_option_ssid_filter(hass):
     client_3 = hass.states.get("device_tracker.client_3")
     assert client_3.state == "home"
 
-    async_fire_time_changed(hass, dt_util.utcnow() + controller.option_detection_time)
-    await hass.async_block_till_done()
+    new_time = dt_util.utcnow() + controller.option_detection_time
+    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+        async_fire_time_changed(hass, new_time)
+        await hass.async_block_till_done()
 
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1.state == "not_home"
 
+    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_3_copy]}
+    controller.api.message_handler(event)
+    await hass.async_block_till_done()
     # Client won't go away until after next update
     client_3 = hass.states.get("device_tracker.client_3")
     assert client_3.state == "home"
@@ -622,8 +637,14 @@ async def test_option_ssid_filter(hass):
     # Trigger update to get client marked as away
     event = {"meta": {"message": MESSAGE_CLIENT}, "data": [CLIENT_3]}
     controller.api.message_handler(event)
-    async_fire_time_changed(hass, dt_util.utcnow() + controller.option_detection_time)
     await hass.async_block_till_done()
+
+    new_time = (
+        dt_util.utcnow() + controller.option_detection_time + timedelta(seconds=1)
+    )
+    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+        async_fire_time_changed(hass, new_time)
+        await hass.async_block_till_done()
 
     client_3 = hass.states.get("device_tracker.client_3")
     assert client_3.state == "not_home"
@@ -658,8 +679,10 @@ async def test_wireless_client_go_wired_issue(hass):
     assert client_1.attributes["is_wired"] is False
 
     # Pass time
-    async_fire_time_changed(hass, dt_util.utcnow() + controller.option_detection_time)
-    await hass.async_block_till_done()
+    new_time = dt_util.utcnow() + controller.option_detection_time
+    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+        async_fire_time_changed(hass, new_time)
+        await hass.async_block_till_done()
 
     # Marked as home according to the timer
     client_1 = hass.states.get("device_tracker.client_1")
@@ -716,8 +739,10 @@ async def test_option_ignore_wired_bug(hass):
     assert client_1.attributes["is_wired"] is True
 
     # pass time
-    async_fire_time_changed(hass, dt_util.utcnow() + controller.option_detection_time)
-    await hass.async_block_till_done()
+    new_time = dt_util.utcnow() + controller.option_detection_time
+    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+        async_fire_time_changed(hass, new_time)
+        await hass.async_block_till_done()
 
     # Timer marks client as away
     client_1 = hass.states.get("device_tracker.client_1")

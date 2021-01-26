@@ -1,8 +1,24 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus",
-            "connection_error": "BSB-Lan seadmega \u00fchenduse loomine nurjus."
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "flow_title": "BSB-Lan: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "passkey": "Juurdep\u00e4\u00e4sut\u00f5endi string",
+                    "password": "Salas\u00f5na",
+                    "port": "",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Seadista oma BSB-Lan seadme sidumine Home Assistant'iga.",
+                "title": "\u00dchendu BSB-Lan seadmega"
+            }
         }
     }
 }

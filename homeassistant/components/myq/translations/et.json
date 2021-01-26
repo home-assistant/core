@@ -1,8 +1,21 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud"
+        },
         "error": {
             "cannot_connect": "\u00dchenduse loomine nurjus. Proovi uuesti",
+            "invalid_auth": "Tuvastamine nurjus",
             "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Loo \u00fchendus MyQ Gatewayga"
+            }
         }
     }
 }

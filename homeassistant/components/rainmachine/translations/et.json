@@ -1,7 +1,30 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
         "error": {
             "invalid_auth": "Tuvastamise viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Hostinimi v\u00f5i IP-aadress",
+                    "password": "Salas\u00f5na",
+                    "port": ""
+                },
+                "title": "Sisesta oma teave"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Vaiketsooni k\u00e4itamisaeg (sekundites)"
+                },
+                "title": "Seadista RainMachine"
+            }
         }
     }
 }

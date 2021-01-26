@@ -2,19 +2,18 @@
     "config": {
         "abort": {
             "already_configured_device": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "updated_entry": "Aquesta entrada ja s'ha configurat per\u00f2 el nom, les aplicacions i/o les opcions definides a la configuraci\u00f3 no coincideixen amb els valors importats anteriorment, en conseq\u00fc\u00e8ncia, l'entrada de configuraci\u00f3 s'ha actualitzat."
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "complete_pairing_failed": "No s'ha pogut completar la vinculaci\u00f3. Verifica que el PIN proporcionat sigui el correcte i que el televisor segueix connectat a la xarxa abans de provar-ho de nou.",
-            "existing_config_entry_found": "Ja s'ha configurat una entrada de configuraci\u00f3 del Dispositiu VIZIO SmartCast amb el mateix n\u00famero de s\u00e8rie. Per poder configurar aquesta, has de suprimir l'entrada existent.",
-            "host_exists": "Dispositiu VIZIO SmartCast amb aquest nom d'amfitri\u00f3 ja configurat.",
-            "name_exists": "Dispositiu VIZIO SmartCast amb aquest nom ja configurat."
+            "existing_config_entry_found": "Ja s'ha configurat una entrada de configuraci\u00f3 del Dispositiu VIZIO SmartCast amb el mateix n\u00famero de s\u00e8rie. Per poder configurar aquesta, has de suprimir l'entrada existent."
         },
         "step": {
             "pair_tv": {
                 "data": {
-                    "pin": "PIN"
+                    "pin": "Codi PIN"
                 },
                 "description": "El televisor hauria d'estar mostrant un codi. Introdueix aquest codi al formulari i segueix amb els seg\u00fcents passos per completar la vinculaci\u00f3.",
                 "title": "Proc\u00e9s de vinculaci\u00f3 complet"

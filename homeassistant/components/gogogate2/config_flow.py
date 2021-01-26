@@ -1,6 +1,5 @@
 """Config flow for Gogogate2."""
 import dataclasses
-import logging
 import re
 
 from gogogate2_api.common import AbstractInfoResponse, ApiError
@@ -19,8 +18,6 @@ from homeassistant.const import (
 from .common import get_api
 from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE
 from .const import DOMAIN  # pylint: disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -63,9 +60,7 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input:
             api = get_api(user_input)
             try:
-                data: AbstractInfoResponse = await self.hass.async_add_executor_job(
-                    api.info
-                )
+                data: AbstractInfoResponse = await api.async_info()
                 data_dict = dataclasses.asdict(data)
                 title = data_dict.get(
                     "gogogatename", data_dict.get("ismartgatename", "Cover")

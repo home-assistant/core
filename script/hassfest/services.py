@@ -6,8 +6,9 @@ from typing import Dict
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
+from homeassistant.const import CONF_SELECTOR
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.util.yaml import load_yaml
 
 from .model import Integration
@@ -27,6 +28,7 @@ FIELD_SCHEMA = vol.Schema(
         vol.Optional("default"): exists,
         vol.Optional("values"): exists,
         vol.Optional("required"): bool,
+        vol.Optional(CONF_SELECTOR): selector.validate_selector,
     }
 )
 

@@ -8,5 +8,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "client_control": {
+                "data": {
+                    "dpi_restrictions": "DPI k\u0131s\u0131tlama gruplar\u0131n\u0131n kontrol\u00fcne izin ver"
+                }
+            }
+        }
     }
 }

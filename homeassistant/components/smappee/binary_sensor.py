@@ -1,14 +1,10 @@
 """Support for monitoring a Smappee appliance binary sensor."""
-import logging
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PRESENCE,
     BinarySensorEntity,
 )
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 BINARY_SENSOR_PREFIX = "Appliance"
 PRESENCE_PREFIX = "Presence"

@@ -1,6 +1,5 @@
 """Sensor for the Open Sky Network."""
 from datetime import timedelta
-import logging
 
 import requests
 import voluptuous as vol
@@ -20,8 +19,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import distance as util_distance, location as util_location
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_ALTITUDE = "altitude"
 
@@ -120,14 +117,20 @@ class OpenSkySensor(Entity):
         for flight in flights:
             if flight in metadata:
                 altitude = metadata[flight].get(ATTR_ALTITUDE)
+                longitude = metadata[flight].get(ATTR_LONGITUDE)
+                latitude = metadata[flight].get(ATTR_LATITUDE)
             else:
                 # Assume Flight has landed if missing.
                 altitude = 0
+                longitude = None
+                latitude = None
 
             data = {
                 ATTR_CALLSIGN: flight,
                 ATTR_ALTITUDE: altitude,
                 ATTR_SENSOR: self._name,
+                ATTR_LONGITUDE: longitude,
+                ATTR_LATITUDE: latitude,
             }
             self._hass.bus.fire(event, data)
 

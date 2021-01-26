@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "conn_error": "Verbindung fehlgeschlagen"
+            "cannot_connect": "Verbindungsfehler",
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "flow_title": "Tuya Konfiguration",
         "step": {
@@ -13,6 +14,15 @@
                 "description": "Geben Sie Ihre Tuya-Anmeldeinformationen ein.",
                 "title": "Tuya"
             }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "error": {
+            "dev_not_config": "Ger\u00e4tetyp nicht konfigurierbar",
+            "dev_not_found": "Ger\u00e4t nicht gefunden"
         }
     }
 }

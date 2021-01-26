@@ -1,9 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured_account": "La cuenta ya ha sido configurada",
+            "already_configured": "La cuenta ya est\u00e1 configurada",
             "cannot_connect": "No se pudo conectar",
-            "reauth_successful": "Token de acceso actualizado correctamente",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "unknown": "Error inesperado"
         },
         "error": {

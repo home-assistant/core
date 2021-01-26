@@ -5,12 +5,11 @@
             "unsupported_model": "Denne skrivermodellen er ikke st\u00f8ttet."
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
-            "connection_error": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "snmp_error": "SNMP verten er skrudd av eller printeren er ikke st\u00f8ttet.",
             "wrong_host": "Ugyldig vertsnavn eller IP-adresse."
         },
-        "flow_title": "Brother Printer: {model} {serial_number}",
+        "flow_title": "Brother skriver: {model} {serial_number}",
         "step": {
             "user": {
                 "data": {

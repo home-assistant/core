@@ -11,8 +11,15 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant.components import history
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.sensor import (
+    DEVICE_CLASSES as SENSOR_DEVICE_CLASSES,
+    DOMAIN as SENSOR_DOMAIN,
+    PLATFORM_SCHEMA,
+)
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -132,7 +139,11 @@ FILTER_TIME_THROTTLE_SCHEMA = FILTER_SCHEMA.extend(
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): vol.Any(
+            cv.entity_domain(SENSOR_DOMAIN),
+            cv.entity_domain(BINARY_SENSOR_DOMAIN),
+            cv.entity_domain(INPUT_NUMBER_DOMAIN),
+        ),
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_FILTERS): vol.All(
             cv.ensure_list,
@@ -178,16 +189,28 @@ class SensorFilter(Entity):
         self._state = None
         self._filters = filters
         self._icon = None
+        self._device_class = None
 
     @callback
     def _update_filter_sensor_state_event(self, event):
         """Handle device state changes."""
+        _LOGGER.debug("Update filter on event: %s", event)
         self._update_filter_sensor_state(event.data.get("new_state"))
 
     @callback
     def _update_filter_sensor_state(self, new_state, update_ha=True):
         """Process device state changes."""
-        if new_state is None or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+        if new_state is None:
+            _LOGGER.warning(
+                "While updating filter %s, the new_state is None", self._name
+            )
+            self._state = None
+            self.async_write_ha_state()
+            return
+
+        if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+            self._state = new_state.state
+            self.async_write_ha_state()
             return
 
         temp_state = new_state
@@ -206,13 +229,23 @@ class SensorFilter(Entity):
                     return
                 temp_state = filtered_state
         except ValueError:
-            _LOGGER.error("Could not convert state: %s to number", self._state)
+            _LOGGER.error(
+                "Could not convert state: %s (%s) to number",
+                new_state.state,
+                type(new_state.state),
+            )
             return
 
         self._state = temp_state.state
 
         if self._icon is None:
             self._icon = new_state.attributes.get(ATTR_ICON, ICON)
+
+        if (
+            self._device_class is None
+            and new_state.attributes.get(ATTR_DEVICE_CLASS) in SENSOR_DEVICE_CLASSES
+        ):
+            self._device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
 
         if self._unit_of_measurement is None:
             self._unit_of_measurement = new_state.attributes.get(
@@ -245,7 +278,7 @@ class SensorFilter(Entity):
 
             # Retrieve the largest window_size of each type
             if largest_window_items > 0:
-                filter_history = await self.hass.async_add_job(
+                filter_history = await self.hass.async_add_executor_job(
                     partial(
                         history.get_last_state_changes,
                         self.hass,
@@ -257,7 +290,7 @@ class SensorFilter(Entity):
                     history_list.extend(filter_history[self._entity])
             if largest_window_time > timedelta(seconds=0):
                 start = dt_util.utcnow() - largest_window_time
-                filter_history = await self.hass.async_add_job(
+                filter_history = await self.hass.async_add_executor_job(
                     partial(
                         history.state_changes_during_period,
                         self.hass,
@@ -283,7 +316,8 @@ class SensorFilter(Entity):
 
             # Replay history through the filter chain
             for state in history_list:
-                self._update_filter_sensor_state(state, False)
+                if state.state not in [STATE_UNKNOWN, STATE_UNAVAILABLE, None]:
+                    self._update_filter_sensor_state(state, False)
 
         self.async_on_remove(
             async_track_state_change_event(
@@ -320,6 +354,11 @@ class SensorFilter(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_ENTITY_ID: self._entity}
+
+    @property
+    def device_class(self):
+        """Return device class."""
+        return self._device_class
 
 
 class FilterState:
@@ -401,7 +440,7 @@ class Filter:
         """Implement a common interface for filters."""
         fstate = FilterState(new_state)
         if self._only_numbers and not isinstance(fstate.state, Number):
-            raise ValueError
+            raise ValueError(f"State <{fstate.state}> is not a Number")
 
         filtered = self._filter_state(fstate)
         filtered.set_precision(self.precision)
