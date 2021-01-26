@@ -1,6 +1,7 @@
 """Test sensor of Brother integration."""
 from datetime import datetime, timedelta
 import json
+from unittest.mock import Mock, patch
 
 from homeassistant.components.brother.const import DOMAIN, UNIT_PAGES
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -16,7 +17,6 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import UTC, utcnow
 
-from tests.async_mock import Mock, patch
 from tests.common import async_fire_time_changed, load_fixture
 from tests.components.brother import init_integration
 

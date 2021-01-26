@@ -1,7 +1,8 @@
 """Tests for the Broadlink integration."""
+from unittest.mock import MagicMock, patch
+
 from homeassistant.components.broadlink.const import DOMAIN
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 # Do not edit/remove. Adding is ok.

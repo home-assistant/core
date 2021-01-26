@@ -7,7 +7,9 @@
         "error": {
             "connection_timeout": "Liga\u00e7\u00e3o expirou",
             "incorrect_password": "Palavra-passe incorreta",
-            "incorrect_username": "Nome de Utilizador incorreto"
+            "incorrect_username": "Nome de Utilizador incorreto",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "unknown": "Erro inesperado"
         },
         "flow_title": "Huawei LTE: {name}",
         "step": {

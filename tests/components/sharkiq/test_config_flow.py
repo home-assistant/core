@@ -1,4 +1,6 @@
 """Test the Shark IQ config flow."""
+from unittest.mock import patch
+
 import aiohttp
 import pytest
 from sharkiqpy import AylaApi, SharkIqAuthError
@@ -9,7 +11,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import CONFIG, TEST_PASSWORD, TEST_USERNAME, UNIQUE_ID
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

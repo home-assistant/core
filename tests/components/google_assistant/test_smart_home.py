@@ -1,4 +1,6 @@
 """Test Google Smart Home."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import camera
@@ -28,7 +30,6 @@ from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.async_mock import patch
 from tests.common import mock_area_registry, mock_device_registry, mock_registry
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
@@ -152,7 +153,8 @@ async def test_sync_message(hass):
 
 
 # pylint: disable=redefined-outer-name
-async def test_sync_in_area(hass, registries):
+@pytest.mark.parametrize("area_on_device", [True, False])
+async def test_sync_in_area(area_on_device, hass, registries):
     """Test a sync message where room hint comes from area."""
     area = registries.area.async_create("Living Room")
 
@@ -160,10 +162,17 @@ async def test_sync_in_area(hass, registries):
         config_entry_id="1234",
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    registries.device.async_update_device(device.id, area_id=area.id)
+    registries.device.async_update_device(
+        device.id, area_id=area.id if area_on_device else None
+    )
 
     entity = registries.entity.async_get_or_create(
-        "light", "test", "1235", suggested_object_id="demo_light", device_id=device.id
+        "light",
+        "test",
+        "1235",
+        suggested_object_id="demo_light",
+        device_id=device.id,
+        area_id=area.id if not area_on_device else None,
     )
 
     light = DemoLight(

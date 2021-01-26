@@ -1,5 +1,5 @@
 """Lighting channels module for Zigbee Home Automation."""
-from typing import Optional
+from typing import Coroutine, Optional
 
 import zigpy.zcl.clusters.lighting as lighting
 
@@ -75,15 +75,13 @@ class ColorChannel(ZigbeeChannel):
         """Return the warmest color_temp that this channel supports."""
         return self.cluster.get("color_temp_physical_max", self.MAX_MIREDS)
 
-    async def async_configure(self) -> None:
+    def async_configure_channel_specific(self) -> Coroutine:
         """Configure channel."""
-        await self.fetch_color_capabilities(False)
-        await super().async_configure()
+        return self.fetch_color_capabilities(False)
 
-    async def async_initialize(self, from_cache: bool) -> None:
+    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
         """Initialize channel."""
-        await self.fetch_color_capabilities(True)
-        await super().async_initialize(from_cache)
+        return self.fetch_color_capabilities(True)
 
     async def fetch_color_capabilities(self, from_cache: bool) -> None:
         """Get the color configuration."""

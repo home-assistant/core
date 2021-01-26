@@ -6,6 +6,7 @@ import logging
 from async_timeout import timeout
 
 from homeassistant import config_entries
+from homeassistant.core import callback
 from homeassistant.helpers import config_entry_flow
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -18,9 +19,12 @@ _LOGGER = logging.getLogger(__name__)
 async def _async_has_devices(hass):
 
     controller_ready = asyncio.Event()
-    async_dispatcher_connect(
-        hass, DISPATCH_CONTROLLER_DISCOVERED, lambda x: controller_ready.set()
-    )
+
+    @callback
+    def dispatch_discovered(_):
+        controller_ready.set()
+
+    async_dispatcher_connect(hass, DISPATCH_CONTROLLER_DISCOVERED, dispatch_discovered)
 
     disco = await async_start_discovery_service(hass)
 

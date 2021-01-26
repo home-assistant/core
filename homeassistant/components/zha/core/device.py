@@ -254,8 +254,10 @@ class ZHADevice(LogMixin):
                 "device_event_type": "device_offline"
             }
         }
+
         if hasattr(self._zigpy_device, "device_automation_triggers"):
             triggers.update(self._zigpy_device.device_automation_triggers)
+
         return triggers
 
     @property

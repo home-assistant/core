@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from types import TracebackType
 from typing import Any, Dict, Optional, Type
+from unittest.mock import AsyncMock, Mock, patch  # type: ignore[attr-defined]
 
 from hyperion import const
 
@@ -13,13 +14,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import AsyncMock, Mock, patch  # type: ignore[attr-defined]
 from tests.common import MockConfigEntry
 
 TEST_HOST = "test"
 TEST_PORT = const.DEFAULT_PORT_JSON + 1
 TEST_PORT_UI = const.DEFAULT_PORT_UI + 1
 TEST_INSTANCE = 1
+TEST_ID = "default"
 TEST_SYSINFO_ID = "f9aab089-f85a-55cf-b7c1-222a72faebe9"
 TEST_SYSINFO_VERSION = "2.0.0-alpha.8"
 TEST_PRIORITY = 180
@@ -50,6 +51,20 @@ TEST_INSTANCE_3: Dict[str, Any] = {
     "running": True,
 }
 
+TEST_AUTH_REQUIRED_RESP: Dict[str, Any] = {
+    "command": "authorize-tokenRequired",
+    "info": {
+        "required": True,
+    },
+    "success": True,
+    "tan": 1,
+}
+
+TEST_AUTH_NOT_REQUIRED_RESP = {
+    **TEST_AUTH_REQUIRED_RESP,
+    "info": {"required": False},
+}
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -78,12 +93,7 @@ def create_mock_client() -> Mock:
     mock_client.async_client_connect = AsyncMock(return_value=True)
     mock_client.async_client_disconnect = AsyncMock(return_value=True)
     mock_client.async_is_auth_required = AsyncMock(
-        return_value={
-            "command": "authorize-tokenRequired",
-            "info": {"required": False},
-            "success": True,
-            "tan": 1,
-        }
+        return_value=TEST_AUTH_NOT_REQUIRED_RESP
     )
     mock_client.async_login = AsyncMock(
         return_value={"command": "authorize-login", "success": True, "tan": 0}
@@ -91,6 +101,17 @@ def create_mock_client() -> Mock:
 
     mock_client.async_sysinfo_id = AsyncMock(return_value=TEST_SYSINFO_ID)
     mock_client.async_sysinfo_version = AsyncMock(return_value=TEST_SYSINFO_ID)
+    mock_client.async_client_switch_instance = AsyncMock(return_value=True)
+    mock_client.async_client_login = AsyncMock(return_value=True)
+    mock_client.async_get_serverinfo = AsyncMock(
+        return_value={
+            "command": "serverinfo",
+            "success": True,
+            "tan": 0,
+            "info": {"fake": "data"},
+        }
+    )
+
     mock_client.adjustment = None
     mock_client.effects = None
     mock_client.instances = [
@@ -100,12 +121,15 @@ def create_mock_client() -> Mock:
     return mock_client
 
 
-def add_test_config_entry(hass: HomeAssistantType) -> ConfigEntry:
+def add_test_config_entry(
+    hass: HomeAssistantType, data: Optional[Dict[str, Any]] = None
+) -> ConfigEntry:
     """Add a test config entry."""
     config_entry: MockConfigEntry = MockConfigEntry(  # type: ignore[no-untyped-call]
         entry_id=TEST_CONFIG_ENTRY_ID,
         domain=DOMAIN,
-        data={
+        data=data
+        or {
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
         },
@@ -118,10 +142,12 @@ def add_test_config_entry(hass: HomeAssistantType) -> ConfigEntry:
 
 
 async def setup_test_config_entry(
-    hass: HomeAssistantType, hyperion_client: Optional[Mock] = None
+    hass: HomeAssistantType,
+    config_entry: Optional[ConfigEntry] = None,
+    hyperion_client: Optional[Mock] = None,
 ) -> ConfigEntry:
     """Add a test Hyperion entity to hass."""
-    config_entry = add_test_config_entry(hass)
+    config_entry = config_entry or add_test_config_entry(hass)
 
     hyperion_client = hyperion_client or create_mock_client()
     # pylint: disable=attribute-defined-outside-init

@@ -6,6 +6,7 @@ import logging
 from tuyaha import TuyaApi
 from tuyaha.tuyaapi import (
     TuyaAPIException,
+    TuyaAPIRateLimitException,
     TuyaFrequentlyInvokeException,
     TuyaNetException,
     TuyaServerException,
@@ -135,6 +136,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         TuyaServerException,
         TuyaFrequentlyInvokeException,
     ) as exc:
+        raise ConfigEntryNotReady() from exc
+
+    except TuyaAPIRateLimitException as exc:
+        _LOGGER.error("Tuya login rate limited")
         raise ConfigEntryNotReady() from exc
 
     except TuyaAPIException as exc:

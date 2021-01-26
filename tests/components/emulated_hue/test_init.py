@@ -1,7 +1,7 @@
 """Test the Emulated Hue component."""
-from homeassistant.components.emulated_hue import Config
+from unittest.mock import MagicMock, Mock, patch
 
-from tests.async_mock import MagicMock, Mock, patch
+from homeassistant.components.emulated_hue import Config
 
 
 def test_config_google_home_entity_id_to_number():

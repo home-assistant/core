@@ -225,6 +225,14 @@ async def _setup_auto_reconnect_logic(
             # When removing/disconnecting manually
             return
 
+        device_registry = await hass.helpers.device_registry.async_get_registry()
+        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+        for device in devices:
+            # There is only one device in ESPHome
+            if device.disabled:
+                # Don't attempt to connect if it's disabled
+                return
+
         data: RuntimeEntryData = hass.data[DOMAIN][entry.entry_id]
         for disconnect_cb in data.disconnect_callbacks:
             disconnect_cb()
@@ -257,7 +265,12 @@ async def _setup_auto_reconnect_logic(
         try:
             await cli.connect(on_stop=try_connect, login=True)
         except APIConnectionError as error:
-            _LOGGER.info("Can't connect to ESPHome API for %s: %s", host, error)
+            _LOGGER.info(
+                "Can't connect to ESPHome API for %s (%s): %s",
+                entry.unique_id,
+                host,
+                error,
+            )
             # Schedule re-connect in event loop in order not to delay HA
             # startup. First connect is scheduled in tracked tasks.
             data.reconnect_task = hass.loop.create_task(

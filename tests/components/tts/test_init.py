@@ -1,4 +1,6 @@
 """The tests for the TTS component."""
+from unittest.mock import PropertyMock, patch
+
 import pytest
 import yarl
 
@@ -16,7 +18,6 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import PropertyMock, patch
 from tests.common import assert_setup_component, async_mock_service
 
 

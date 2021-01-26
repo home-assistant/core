@@ -5,6 +5,7 @@ import functools
 import logging
 import ssl
 import threading
+from unittest.mock import MagicMock, patch
 
 from aiohttp.test_utils import make_mocked_request
 import multidict
@@ -27,7 +28,6 @@ from homeassistant.helpers import config_entry_oauth2_flow, event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
-from tests.async_mock import MagicMock, patch
 from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
 pytest.register_assert_rewrite("tests.common")
@@ -400,7 +400,7 @@ def mqtt_client_mock(hass):
 async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     """Fixture to mock MQTT component."""
     if mqtt_config is None:
-        mqtt_config = {mqtt.CONF_BROKER: "mock-broker"}
+        mqtt_config = {mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}
 
     result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: mqtt_config})
     assert result

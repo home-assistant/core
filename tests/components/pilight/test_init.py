@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 import socket
+from unittest.mock import patch
 
 from voluptuous import MultipleInvalid
 
@@ -9,7 +10,6 @@ from homeassistant.components import pilight
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)

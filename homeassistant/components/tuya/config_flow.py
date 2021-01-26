@@ -2,7 +2,12 @@
 import logging
 
 from tuyaha import TuyaApi
-from tuyaha.tuyaapi import TuyaAPIException, TuyaNetException, TuyaServerException
+from tuyaha.tuyaapi import (
+    TuyaAPIException,
+    TuyaAPIRateLimitException,
+    TuyaNetException,
+    TuyaServerException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -103,7 +108,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             tuya.init(
                 self._username, self._password, self._country_code, self._platform
             )
-        except (TuyaNetException, TuyaServerException):
+        except (TuyaAPIRateLimitException, TuyaNetException, TuyaServerException):
             return RESULT_CONN_ERROR
         except TuyaAPIException:
             return RESULT_AUTH_FAILED
@@ -249,6 +254,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
+
+        if self.config_entry.state != config_entries.ENTRY_STATE_LOADED:
+            _LOGGER.error("Tuya integration not yet loaded")
+            return self.async_abort(reason="cannot_connect")
+
         if user_input is not None:
             dev_ids = user_input.get(CONF_LIST_DEVICES)
             if dev_ids:

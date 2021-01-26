@@ -1,4 +1,6 @@
 """Tests for the Abode config flow."""
+from unittest.mock import patch
+
 from abodepy.exceptions import AbodeAuthenticationException
 from abodepy.helpers.errors import MFA_CODE_REQUIRED
 
@@ -13,7 +15,6 @@ from homeassistant.const import (
     HTTP_INTERNAL_SERVER_ERROR,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONF_POLLING = "polling"

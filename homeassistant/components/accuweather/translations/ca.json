@@ -31,5 +31,11 @@
                 "title": "Opcions d'AccuWeather"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Servidor d'Accuweather accessible",
+            "remaining_requests": "Sol\u00b7licituds permeses restants"
+        }
     }
 }

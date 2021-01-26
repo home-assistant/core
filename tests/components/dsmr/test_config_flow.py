@@ -1,13 +1,13 @@
 """Test the DSMR config flow."""
 import asyncio
 from itertools import chain, repeat
+from unittest.mock import DEFAULT, AsyncMock, patch
 
 import serial
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.dsmr import DOMAIN
 
-from tests.async_mock import DEFAULT, AsyncMock, patch
 from tests.common import MockConfigEntry
 
 SERIAL_DATA = {"serial_id": "12345678", "serial_id_gas": "123456789"}
@@ -242,3 +242,26 @@ async def test_options_flow(hass):
         await hass.async_block_till_done()
 
     assert entry.options == {"time_between_update": 15}
+
+
+async def test_import_luxembourg(hass, dsmr_connection_send_validate_fixture):
+    """Test we can import."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "5L",
+        "precision": 4,
+        "reconnect_interval": 30,
+    }
+
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=entry_data,
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "/dev/ttyUSB0"
+    assert result["data"] == {**entry_data, **SERIAL_DATA}

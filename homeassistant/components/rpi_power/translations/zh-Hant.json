@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "no_devices_found": "\u627e\u4e0d\u5230\u7cfb\u7d71\u6240\u9700\u7684\u5143\u4ef6\uff0c\u8acb\u78ba\u5b9a Kernel \u70ba\u6700\u65b0\u7248\u672c\u3001\u540c\u6642\u786c\u9ad4\u70ba\u652f\u63f4\u72c0\u614b",
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "step": {
             "confirm": {

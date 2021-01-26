@@ -17,12 +17,15 @@
                     "platform": "\u00c4pp kus teie konto registreeriti",
                     "username": "Kasutajanimi"
                 },
-                "description": "Sisestage oma Tuya konto andmed.",
+                "description": "Sisesta oma Tuya konto andmed.",
                 "title": ""
             }
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
         "error": {
             "dev_multi_type": "Mitu h\u00e4\u00e4lestatavat seadet peavad olema sama t\u00fc\u00fcpi",
             "dev_not_config": "Seda t\u00fc\u00fcpi seade pole seadistatav",

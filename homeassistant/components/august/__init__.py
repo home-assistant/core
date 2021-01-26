@@ -43,17 +43,22 @@ _LOGGER = logging.getLogger(__name__)
 TWO_FA_REVALIDATE = "verify_configurator"
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_LOGIN_METHOD): vol.In(LOGIN_METHODS),
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_INSTALL_ID): cv.string,
-                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_LOGIN_METHOD): vol.In(LOGIN_METHODS),
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(CONF_INSTALL_ID): cv.string,
+                    vol.Optional(
+                        CONF_TIMEOUT, default=DEFAULT_TIMEOUT
+                    ): cv.positive_int,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 

@@ -1,4 +1,7 @@
 """The tests for the Input select component."""
+# pylint: disable=protected-access
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.input_select import (
@@ -25,8 +28,6 @@ from homeassistant.helpers import entity_registry
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
 
-# pylint: disable=protected-access
-from tests.async_mock import patch
 from tests.common import mock_restore_cache
 
 

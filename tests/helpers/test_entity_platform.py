@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -16,7 +17,6 @@ from homeassistant.helpers.entity_component import (
 )
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockEntity,
@@ -747,7 +747,7 @@ async def test_device_info_called(hass):
 
     assert len(hass.states.async_entity_ids()) == 2
 
-    device = registry.async_get_device({("hue", "1234")}, set())
+    device = registry.async_get_device({("hue", "1234")})
     assert device is not None
     assert device.identifiers == {("hue", "1234")}
     assert device.connections == {("mac", "abcd")}

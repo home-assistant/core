@@ -15,5 +15,10 @@
                 "title": "Posizione"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Endpoint API IPMA raggiungibile"
+        }
     }
 }

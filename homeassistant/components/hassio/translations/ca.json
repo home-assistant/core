@@ -3,7 +3,7 @@
         "info": {
             "board": "Placa",
             "disk_total": "Total disc",
-            "disk_used": "Disc utilitzat",
+            "disk_used": "Emmagatzematge utilitzat",
             "docker_version": "Versi\u00f3 de Docker",
             "healthy": "Saludable",
             "host_os": "Sistema operatiu amfitri\u00f3",

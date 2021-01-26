@@ -21,7 +21,7 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -37,7 +37,11 @@ from homeassistant.helpers.typing import (
 )
 import homeassistant.util.color as color_util
 
-from . import async_create_connect_hyperion_client, get_hyperion_unique_id
+from . import (
+    async_create_connect_hyperion_client,
+    create_hyperion_client,
+    get_hyperion_unique_id,
+)
 from .const import (
     CONF_ON_UNLOAD,
     CONF_PRIORITY,
@@ -47,7 +51,6 @@ from .const import (
     DOMAIN,
     SIGNAL_INSTANCE_REMOVED,
     SIGNAL_INSTANCES_UPDATED,
-    SOURCE_IMPORT,
     TYPE_HYPERION_LIGHT,
 )
 
@@ -80,13 +83,13 @@ SUPPORT_HYPERION = SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
 
 # Usage of YAML for configuration of the Hyperion component is deprecated.
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_HDMI_PRIORITY, invalidation_version="0.118"),
+    cv.deprecated(CONF_HDMI_PRIORITY),
     cv.deprecated(CONF_HOST),
     cv.deprecated(CONF_PORT),
-    cv.deprecated(CONF_DEFAULT_COLOR, invalidation_version="0.118"),
+    cv.deprecated(CONF_DEFAULT_COLOR),
     cv.deprecated(CONF_NAME),
     cv.deprecated(CONF_PRIORITY),
-    cv.deprecated(CONF_EFFECT_LIST, invalidation_version="0.118"),
+    cv.deprecated(CONF_EFFECT_LIST),
     PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_HOST): cv.string,
@@ -133,12 +136,12 @@ async def async_setup_platform(
 
     # First, connect to the server and get the server id (which will be unique_id on a config_entry
     # if there is one).
-    hyperion_client = await async_create_connect_hyperion_client(host, port)
-    if not hyperion_client:
-        raise PlatformNotReady
-    hyperion_id = await hyperion_client.async_sysinfo_id()
-    if not hyperion_id:
-        raise PlatformNotReady
+    async with create_hyperion_client(host, port) as hyperion_client:
+        if not hyperion_client:
+            raise PlatformNotReady
+        hyperion_id = await hyperion_client.async_sysinfo_id()
+        if not hyperion_id:
+            raise PlatformNotReady
 
     future_unique_id = get_hyperion_unique_id(
         hyperion_id, instance, TYPE_HYPERION_LIGHT
@@ -315,7 +318,6 @@ class HyperionLight(LightEntity):
         self._brightness: int = 255
         self._rgb_color: Sequence[int] = DEFAULT_COLOR
         self._effect: str = KEY_EFFECT_SOLID
-        self._icon: str = ICON_LIGHTBULB
 
         self._effect_list: List[str] = []
 
@@ -347,7 +349,12 @@ class HyperionLight(LightEntity):
     @property
     def icon(self) -> str:
         """Return state specific icon."""
-        return self._icon
+        if self.is_on:
+            if self.effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+                return ICON_EXTERNAL_SOURCE
+            if self.effect != KEY_EFFECT_SOLID:
+                return ICON_EFFECT
+        return ICON_LIGHTBULB
 
     @property
     def effect(self) -> str:
@@ -412,7 +419,6 @@ class HyperionLight(LightEntity):
                 return
 
         # == Get key parameters ==
-        brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
         if ATTR_EFFECT not in kwargs and ATTR_HS_COLOR in kwargs:
             effect = KEY_EFFECT_SOLID
         else:
@@ -424,17 +430,21 @@ class HyperionLight(LightEntity):
             rgb_color = self._rgb_color
 
         # == Set brightness ==
-        if self._brightness != brightness:
-            if not await self._client.async_send_set_adjustment(
-                **{
-                    const.KEY_ADJUSTMENT: {
-                        const.KEY_BRIGHTNESS: int(
-                            round((float(brightness) * 100) / 255)
-                        )
-                    }
-                }
-            ):
-                return
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            for item in self._client.adjustment:
+                if const.KEY_ID in item:
+                    if not await self._client.async_send_set_adjustment(
+                        **{
+                            const.KEY_ADJUSTMENT: {
+                                const.KEY_BRIGHTNESS: int(
+                                    round((float(brightness) * 100) / 255)
+                                ),
+                                const.KEY_ID: item[const.KEY_ID],
+                            }
+                        }
+                    ):
+                        return
 
         # == Set an external source
         if effect and effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
@@ -510,12 +520,6 @@ class HyperionLight(LightEntity):
             self._rgb_color = rgb_color
         if effect is not None:
             self._effect = effect
-            if effect == KEY_EFFECT_SOLID:
-                self._icon = ICON_LIGHTBULB
-            elif effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
-                self._icon = ICON_EXTERNAL_SOURCE
-            else:
-                self._icon = ICON_EFFECT
 
     def _update_components(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion components."""

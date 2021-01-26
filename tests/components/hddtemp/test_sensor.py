@@ -1,11 +1,11 @@
 """The tests for the hddtemp platform."""
 import socket
 import unittest
+from unittest.mock import patch
 
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.setup import setup_component
 
-from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 VALID_CONFIG_MINIMAL = {"sensor": {"platform": "hddtemp"}}

@@ -4,6 +4,7 @@ import asyncio
 import async_timeout
 from pydeconz import DeconzSession, errors
 
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -19,7 +20,7 @@ from .const import (
     DEFAULT_ALLOW_CLIP_SENSOR,
     DEFAULT_ALLOW_DECONZ_GROUPS,
     DEFAULT_ALLOW_NEW_DEVICES,
-    DOMAIN,
+    DOMAIN as DECONZ_DOMAIN,
     LOGGER,
     NEW_GROUP,
     NEW_LIGHT,
@@ -34,7 +35,7 @@ from .errors import AuthenticationRequired, CannotConnect
 @callback
 def get_gateway_from_config_entry(hass, config_entry):
     """Return gateway with a matching bridge id."""
-    return hass.data[DOMAIN][config_entry.unique_id]
+    return hass.data[DECONZ_DOMAIN][config_entry.unique_id]
 
 
 class DeconzGateway:
@@ -121,9 +122,11 @@ class DeconzGateway:
         async_dispatcher_send(self.hass, self.signal_reachable, True)
 
     @callback
-    def async_add_device_callback(self, device_type, device=None) -> None:
+    def async_add_device_callback(
+        self, device_type, device=None, force: bool = False
+    ) -> None:
         """Handle event of new device creation in deCONZ."""
-        if not self.option_allow_new_devices:
+        if not force and not self.option_allow_new_devices:
             return
 
         args = []
@@ -150,7 +153,7 @@ class DeconzGateway:
         # Gateway service
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, self.api.config.bridgeid)},
+            identifiers={(DECONZ_DOMAIN, self.api.config.bridgeid)},
             manufacturer="Dresden Elektronik",
             model=self.api.config.modelid,
             name=self.api.config.name,
@@ -171,8 +174,14 @@ class DeconzGateway:
         except CannotConnect as err:
             raise ConfigEntryNotReady from err
 
-        except Exception as err:  # pylint: disable=broad-except
-            LOGGER.error("Error connecting with deCONZ gateway: %s", err, exc_info=True)
+        except AuthenticationRequired:
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    DECONZ_DOMAIN,
+                    context={"source": SOURCE_REAUTH},
+                    data=self.config_entry.data,
+                )
+            )
             return False
 
         for component in SUPPORTED_PLATFORMS:

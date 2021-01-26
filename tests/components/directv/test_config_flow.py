@@ -1,4 +1,6 @@
 """Test the DirecTV config flow."""
+from unittest.mock import patch
+
 from aiohttp import ClientError as HTTPClientError
 
 from homeassistant.components.directv.const import CONF_RECEIVER_ID, DOMAIN
@@ -12,7 +14,6 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import patch
 from tests.components.directv import (
     HOST,
     MOCK_SSDP_DISCOVERY_INFO,

@@ -35,11 +35,6 @@ class DoorLockChannel(ZigbeeChannel):
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
             )
 
-    async def async_initialize(self, from_cache):
-        """Initialize channel."""
-        await self.get_attribute_value(self._value_attribute, from_cache=from_cache)
-        await super().async_initialize(from_cache)
-
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(closures.Shade.cluster_id)
 class Shade(ZigbeeChannel):
@@ -85,8 +80,3 @@ class WindowCovering(ZigbeeChannel):
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
             )
-
-    async def async_initialize(self, from_cache):
-        """Initialize channel."""
-        await self.get_attribute_value(self._value_attribute, from_cache=from_cache)
-        await super().async_initialize(from_cache)

@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device_id = entry.data[DEVICE_ID]
     gateway_id = entry.data[DEVICE_GATEWAY]
     _LOGGER.debug(
-        "Setting up wolflink integration for device: %s (id: %s, gateway: %s)",
+        "Setting up wolflink integration for device: %s (ID: %s, gateway: %s)",
         device_name,
         device_id,
         gateway_id,

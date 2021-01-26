@@ -1,5 +1,6 @@
 """Tests for the Roku Media Player platform."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from rokuecp import RokuError
 
@@ -62,7 +63,6 @@ from homeassistant.const import (
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.roku import UPNP_SERIAL, setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker

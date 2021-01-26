@@ -1,4 +1,6 @@
 """Test the Plugwise config flow."""
+from unittest.mock import MagicMock, patch
+
 from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
@@ -22,7 +24,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 TEST_HOST = "1.1.1.1"
