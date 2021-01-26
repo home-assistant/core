@@ -115,6 +115,9 @@ aiohue==2.1.0
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
 
+# homeassistant.components.lutron_caseta
+aiolip==1.0.1
+
 # homeassistant.components.notion
 aionotion==1.1.0
 
@@ -764,7 +767,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.8.0
+pylutron-caseta==0.9.0
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
