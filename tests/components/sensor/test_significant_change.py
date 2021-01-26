@@ -19,13 +19,13 @@ async def test_significant_change_temperature():
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
     }
-    assert not await async_check_significant_change(
+    assert not async_check_significant_change(
         None, "12", celsius_attrs, "12", celsius_attrs
     )
-    assert await async_check_significant_change(
+    assert async_check_significant_change(
         None, "12", celsius_attrs, "13", celsius_attrs
     )
-    assert not await async_check_significant_change(
+    assert not async_check_significant_change(
         None, "12.1", celsius_attrs, "12.2", celsius_attrs
     )
 
@@ -33,10 +33,10 @@ async def test_significant_change_temperature():
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT,
     }
-    assert await async_check_significant_change(
+    assert async_check_significant_change(
         None, "70", freedom_attrs, "74", freedom_attrs
     )
-    assert not await async_check_significant_change(
+    assert not async_check_significant_change(
         None, "70", freedom_attrs, "71", freedom_attrs
     )
 
@@ -46,8 +46,8 @@ async def test_significant_change_battery():
     attrs = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY,
     }
-    assert not await async_check_significant_change(None, "100", attrs, "100", attrs)
-    assert await async_check_significant_change(None, "100", attrs, "97", attrs)
+    assert not async_check_significant_change(None, "100", attrs, "100", attrs)
+    assert async_check_significant_change(None, "100", attrs, "97", attrs)
 
 
 async def test_significant_change_humidity():
@@ -55,5 +55,5 @@ async def test_significant_change_humidity():
     attrs = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
     }
-    assert not await async_check_significant_change(None, "100", attrs, "100", attrs)
-    assert await async_check_significant_change(None, "100", attrs, "97", attrs)
+    assert not async_check_significant_change(None, "100", attrs, "100", attrs)
+    assert async_check_significant_change(None, "100", attrs, "97", attrs)
