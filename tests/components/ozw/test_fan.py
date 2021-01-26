@@ -1,6 +1,4 @@
 """Test Z-Wave Lights."""
-from homeassistant.components.ozw.fan import SPEED_TO_VALUE
-
 from .common import setup_ozw
 
 
@@ -38,11 +36,10 @@ async def test_fan(hass, fan_data, fan_msg, sent_messages, caplog):
     assert state.state == "off"
 
     # Test turning on
-    new_speed = "medium"
     await hass.services.async_call(
         "fan",
         "turn_on",
-        {"entity_id": "fan.in_wall_smart_fan_control_level", "speed": new_speed},
+        {"entity_id": "fan.in_wall_smart_fan_control_level", "percentage": 66},
         blocking=True,
     )
 
@@ -50,13 +47,13 @@ async def test_fan(hass, fan_data, fan_msg, sent_messages, caplog):
     msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {
-        "Value": SPEED_TO_VALUE[new_speed],
+        "Value": 66,
         "ValueIDKey": 172589073,
     }
 
     # Feedback on state
     fan_msg.decode()
-    fan_msg.payload["Value"] = SPEED_TO_VALUE[new_speed]
+    fan_msg.payload["Value"] = 66
     fan_msg.encode()
     receive_message(fan_msg)
     await hass.async_block_till_done()
@@ -64,7 +61,7 @@ async def test_fan(hass, fan_data, fan_msg, sent_messages, caplog):
     state = hass.states.get("fan.in_wall_smart_fan_control_level")
     assert state is not None
     assert state.state == "on"
-    assert state.attributes["speed"] == new_speed
+    assert state.attributes["percentage"] == 66
 
     # Test turn on without speed
     await hass.services.async_call(
@@ -84,7 +81,7 @@ async def test_fan(hass, fan_data, fan_msg, sent_messages, caplog):
 
     # Feedback on state
     fan_msg.decode()
-    fan_msg.payload["Value"] = SPEED_TO_VALUE[new_speed]
+    fan_msg.payload["Value"] = 99
     fan_msg.encode()
     receive_message(fan_msg)
     await hass.async_block_till_done()
@@ -92,14 +89,13 @@ async def test_fan(hass, fan_data, fan_msg, sent_messages, caplog):
     state = hass.states.get("fan.in_wall_smart_fan_control_level")
     assert state is not None
     assert state.state == "on"
-    assert state.attributes["speed"] == new_speed
+    assert state.attributes["percentage"] == 100
 
-    # Test set speed to off
-    new_speed = "off"
+    # Test set percentage to 0
     await hass.services.async_call(
         "fan",
-        "set_speed",
-        {"entity_id": "fan.in_wall_smart_fan_control_level", "speed": new_speed},
+        "set_percentage",
+        {"entity_id": "fan.in_wall_smart_fan_control_level", "percentage": 0},
         blocking=True,
     )
 
@@ -107,13 +103,13 @@ async def test_fan(hass, fan_data, fan_msg, sent_messages, caplog):
     msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     assert msg["payload"] == {
-        "Value": SPEED_TO_VALUE[new_speed],
+        "Value": 0,
         "ValueIDKey": 172589073,
     }
 
     # Feedback on state
     fan_msg.decode()
-    fan_msg.payload["Value"] = SPEED_TO_VALUE[new_speed]
+    fan_msg.payload["Value"] = 0
     fan_msg.encode()
     receive_message(fan_msg)
     await hass.async_block_till_done()
