@@ -108,18 +108,12 @@ async def async_setup(hass, config):
     """Set up the Tuya integration."""
 
     conf = config.get(DOMAIN)
-    if conf is None:
-        return True
-
-    domains_list = hass.config_entries.async_domains()
-    if DOMAIN in domains_list:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+    if conf is not None:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+            )
         )
-    )
 
     return True
 
