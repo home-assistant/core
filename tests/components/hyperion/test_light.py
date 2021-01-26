@@ -629,6 +629,11 @@ async def test_light_async_turn_off(hass: HomeAssistantType) -> None:
         }
     )
 
+    _call_registered_callback(client, "components-update")
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
+    assert entity_state
+    assert entity_state.attributes["icon"] == hyperion_light.ICON_LIGHTBULB
+
     # No calls if no state loaded.
     client.has_loaded_state = False
     client.async_send_set_component = AsyncMock(return_value=True)
