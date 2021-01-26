@@ -1,6 +1,6 @@
 """Test the Plugwise config flow."""
 import os
-from unittest.mock import AsyncMock, MagicMock, patch, sentinel
+from unittest.mock import MagicMock, patch
 
 from plugwise.exceptions import (
     ConnectionFailedError,
@@ -42,6 +42,7 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
+from tests.async_mock import AsyncMock, sentinel
 from tests.common import MockConfigEntry
 
 TEST_HOST = "1.1.1.1"
