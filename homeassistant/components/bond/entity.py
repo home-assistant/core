@@ -1,6 +1,6 @@
 """An abstract class common to all Bond entities."""
 from abc import abstractmethod
-from asyncio import TimeoutError as AsyncIOTimeoutError
+from asyncio import Lock, TimeoutError as AsyncIOTimeoutError
 from datetime import timedelta
 import logging
 from typing import Any, Dict, Optional
@@ -37,6 +37,8 @@ class BondEntity(Entity):
         self._available = True
         self._bpup_subs = bpup_subs
         self._cancel_updates = None
+        self._update_lock = None
+        self._first_update = False
 
     @property
     def unique_id(self) -> Optional[str]:
@@ -77,19 +79,32 @@ class BondEntity(Entity):
 
     async def async_update(self):
         """Fetch assumed state of the cover from the hub using API."""
+
         await self._async_update_from_api()
 
     async def _async_update_if_bpup_not_alive(self, now):
         """Fetch via the API if BPUP is not alive."""
-        if self._bpup_subs.alive:
+        if self._bpup_subs.alive and self._first_update:
             return
-        await self._async_update_from_api()
+
+        if self._update_lock.locked():
+            _LOGGER.warning(
+                "Updating %s took longer than the scheduled update interval %s",
+                self.entity_id,
+                _FALLBACK_SCAN_INTERVAL,
+            )
+            return
+
+        async with self._update_lock:
+            await self._async_update_from_api()
+
         self.async_write_ha_state()
 
     async def _async_update_from_api(self):
         """Fetch via the API."""
         try:
             state: dict = await self._hub.bond.device_state(self._device.device_id)
+            self._first_update = True
         except (ClientError, AsyncIOTimeoutError, OSError) as error:
             if self._available:
                 _LOGGER.warning(
@@ -116,6 +131,7 @@ class BondEntity(Entity):
     async def async_added_to_hass(self):
         """Subscribe to BPUP."""
         await super().async_added_to_hass()
+        self._update_lock = Lock()
         self._bpup_subs.subscribe(self._device.device_id, self._bpup_callback)
         self._cancel_updates = async_track_time_interval(
             self.hass, self._async_update_if_bpup_not_alive, _FALLBACK_SCAN_INTERVAL
