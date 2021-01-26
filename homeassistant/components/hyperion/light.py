@@ -318,7 +318,6 @@ class HyperionLight(LightEntity):
         self._brightness: int = 255
         self._rgb_color: Sequence[int] = DEFAULT_COLOR
         self._effect: str = KEY_EFFECT_SOLID
-        self._icon: str = ICON_LIGHTBULB
 
         self._effect_list: List[str] = []
 
@@ -350,7 +349,12 @@ class HyperionLight(LightEntity):
     @property
     def icon(self) -> str:
         """Return state specific icon."""
-        return self._icon
+        if self.is_on:
+            if self.effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+                return ICON_EXTERNAL_SOURCE
+            if self.effect != KEY_EFFECT_SOLID:
+                return ICON_EFFECT
+        return ICON_LIGHTBULB
 
     @property
     def effect(self) -> str:
@@ -415,7 +419,6 @@ class HyperionLight(LightEntity):
                 return
 
         # == Get key parameters ==
-        brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
         if ATTR_EFFECT not in kwargs and ATTR_HS_COLOR in kwargs:
             effect = KEY_EFFECT_SOLID
         else:
@@ -427,17 +430,21 @@ class HyperionLight(LightEntity):
             rgb_color = self._rgb_color
 
         # == Set brightness ==
-        if self._brightness != brightness:
-            if not await self._client.async_send_set_adjustment(
-                **{
-                    const.KEY_ADJUSTMENT: {
-                        const.KEY_BRIGHTNESS: int(
-                            round((float(brightness) * 100) / 255)
-                        )
-                    }
-                }
-            ):
-                return
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            for item in self._client.adjustment:
+                if const.KEY_ID in item:
+                    if not await self._client.async_send_set_adjustment(
+                        **{
+                            const.KEY_ADJUSTMENT: {
+                                const.KEY_BRIGHTNESS: int(
+                                    round((float(brightness) * 100) / 255)
+                                ),
+                                const.KEY_ID: item[const.KEY_ID],
+                            }
+                        }
+                    ):
+                        return
 
         # == Set an external source
         if effect and effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
@@ -513,12 +520,6 @@ class HyperionLight(LightEntity):
             self._rgb_color = rgb_color
         if effect is not None:
             self._effect = effect
-            if effect == KEY_EFFECT_SOLID:
-                self._icon = ICON_LIGHTBULB
-            elif effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
-                self._icon = ICON_EXTERNAL_SOURCE
-            else:
-                self._icon = ICON_EFFECT
 
     def _update_components(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion components."""
