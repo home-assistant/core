@@ -73,12 +73,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         # find themselves.
         data["measures"] = {measure["@id"]: measure for measure in measures}
 
-        data["stageScale"] = {
-            0: stage_scale for stage_scale in stage_scales
-        }
-
-
-        _LOGGER.error(data["stageScale"][0])
+        data["stageScale"] = {0: stage_scale for stage_scale in stage_scales}
 
         return data
 
@@ -176,14 +171,30 @@ class Measurement(CoordinatorEntity):
     def device_state_attributes(self):
         """Return the sensor specific state attributes."""
         return {
-            "typical_range_high": self.coordinator.data["stageScale"][0]["typicalRangeHigh"],
-            "typical_range_low": self.coordinator.data["stageScale"][0]["typicalRangeLow"],
-            "highest_recent": self.coordinator.data["stageScale"][0]["highestRecent"]["value"],
-            "highest_recent_date": self.coordinator.data["stageScale"][0]["highestRecent"]["dateTime"],
-            "maximum_on_record": self.coordinator.data["stageScale"][0]["maxOnRecord"]["value"],
-            "maximim_on_record_date": self.coordinator.data["stageScale"][0]["maxOnRecord"]["dateTime"],
-            "minimum_on_record": self.coordinator.data["stageScale"][0]["minOnRecord"]["value"],
-            "minimum_on_record_date": self.coordinator.data["stageScale"][0]["minOnRecord"]["dateTime"],
+            "typical_range_high": self.coordinator.data["stageScale"][0][
+                "typicalRangeHigh"
+            ],
+            "typical_range_low": self.coordinator.data["stageScale"][0][
+                "typicalRangeLow"
+            ],
+            "highest_recent": self.coordinator.data["stageScale"][0]["highestRecent"][
+                "value"
+            ],
+            "highest_recent_date": self.coordinator.data["stageScale"][0][
+                "highestRecent"
+            ]["dateTime"],
+            "maximum_on_record": self.coordinator.data["stageScale"][0]["maxOnRecord"][
+                "value"
+            ],
+            "maximim_on_record_date": self.coordinator.data["stageScale"][0][
+                "maxOnRecord"
+            ]["dateTime"],
+            "minimum_on_record": self.coordinator.data["stageScale"][0]["minOnRecord"][
+                "value"
+            ],
+            "minimum_on_record_date": self.coordinator.data["stageScale"][0][
+                "minOnRecord"
+            ]["dateTime"],
             ATTR_ATTRIBUTION: self.attribution,
         }
 
