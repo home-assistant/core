@@ -50,7 +50,6 @@ class ZwaveFan(ZWaveDeviceEntity, FanEntity):
         else:
             zwave_speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
         self.values.primary.send_value(zwave_speed)
-        self.node.set_dimmer(self.values.primary.value_id, zwave_speed)
 
     async def async_turn_on(
         self, speed=None, percentage=None, preset_mode=None, **kwargs
