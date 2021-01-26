@@ -157,7 +157,9 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
         return self._door
 
     def _get_door_status(self) -> AbstractDoor:
-        return self._api._get_door_statuses(self.coordinator.data)[self._door.door_id]
+        return self._api.async_get_door_statuses_from_info(self.coordinator.data)[
+            self._door.door_id
+        ]
 
     @property
     def device_info(self):
