@@ -912,7 +912,7 @@ python-tado==0.10.0
 python-twitch-client==0.6.0
 
 # homeassistant.components.velbus
-python-velbus==2.1.1
+python-velbus==2.1.2
 
 # homeassistant.components.awair
 python_awair==0.2.1
