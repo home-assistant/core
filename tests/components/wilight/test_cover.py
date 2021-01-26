@@ -4,7 +4,15 @@ from unittest.mock import patch
 import pytest
 import pywilight
 
-from homeassistant.const import STATE_CLOSED
+from homeassistant.components.cover import ATTR_POSITION, DOMAIN as COVER_DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
+    STATE_CLOSED,
+    STATE_OPEN,
+)
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
@@ -59,3 +67,50 @@ async def test_loading_cover(
     entry = entity_registry.async_get("cover.wl000000000099_1")
     assert entry
     assert entry.unique_id == "WL000000000099_0"
+
+
+async def test_open_close_cover_state(
+    hass: HomeAssistantType, dummy_device_from_host_cover
+) -> None:
+    """Test the change of state of the cover."""
+    await setup_integration(hass)
+
+    # Open
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: "cover.wl000000000099_1"},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.wl000000000099_1")
+    assert state
+    assert state.state == STATE_OPEN
+
+    # Close
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: "cover.wl000000000099_1"},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.wl000000000099_1")
+    assert state
+    assert state.state == STATE_CLOSED
+
+    # Set position
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_POSITION: 50, ATTR_ENTITY_ID: "cover.wl000000000099_1"},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.wl000000000099_1")
+    assert state
+    assert state.state == STATE_CLOSED
+    assert state.attributes.get(ATTR_POSITION) == 50
