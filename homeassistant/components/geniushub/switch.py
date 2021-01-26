@@ -1,8 +1,6 @@
 """Support for Genius Hub switch/outlet devices."""
 from datetime import timedelta
 
-import voluptuous as vol
-
 from homeassistant.components.switch import DEVICE_CLASS_OUTLET, SwitchEntity
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import config_validation as cv, entity_platform
