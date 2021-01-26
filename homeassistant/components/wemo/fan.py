@@ -132,6 +132,7 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
             ATTR_FILTER_EXPIRED: self._filter_expired,
         }
 
+    @property
     def percentage(self) -> str:
         """Return the current speed percentage."""
         return ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, self._fan_mode)
