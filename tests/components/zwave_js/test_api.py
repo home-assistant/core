@@ -1,8 +1,10 @@
 """Test the Z-Wave JS Websocket API."""
+from unittest.mock import patch
+
 from zwave_js_server.event import Event
 
+from homeassistant.components.zwave_js.api import ENTRY_ID, ID, NODE_ID, TYPE
 from homeassistant.components.zwave_js.const import DOMAIN
-from homeassistant.components.zwave_js.websocket_api import ENTRY_ID, ID, NODE_ID, TYPE
 from homeassistant.helpers.device_registry import async_get_registry
 
 
@@ -151,3 +153,22 @@ async def test_remove_node(
         identifiers={(DOMAIN, "3245146787-67")},
     )
     assert device is None
+
+
+async def test_dump_view(integration, hass_client):
+    """Test the HTTP dump view."""
+    client = await hass_client()
+    with patch(
+        "zwave_js_server.dump.dump_msgs",
+        return_value=[{"hello": "world"}, {"second": "msg"}],
+    ):
+        resp = await client.get(f"/api/zwave_js/dump/{integration.entry_id}")
+    assert resp.status == 200
+    assert await resp.text() == '{"hello": "world"}\n{"second": "msg"}\n'
+
+
+async def test_dump_view_invalid_entry_id(integration, hass_client):
+    """Test an invalid config entry id parameter."""
+    client = await hass_client()
+    resp = await client.get("/api/zwave_js/dump/INVALID")
+    assert resp.status == 400

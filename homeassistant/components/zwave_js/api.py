@@ -1,15 +1,20 @@
 """Websocket API for Z-Wave JS."""
-
+import json
 import logging
 
+from aiohttp import hdrs, web, web_exceptions
 import voluptuous as vol
+from zwave_js_server import dump
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.node import Node as ZwaveNode
 
 from homeassistant.components import websocket_api
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -32,6 +37,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_remove_node)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
+    hass.http.register_view(DumpView)  # type: ignore
 
 
 @websocket_api.require_admin
@@ -54,7 +60,7 @@ def websocket_network_status(
         },
         "controller": {
             "home_id": client.driver.controller.data["homeId"],
-            "node_count": len(client.driver.controller.nodes),
+            "nodes": list(client.driver.controller.nodes),
         },
     }
     connection.send_result(
@@ -278,3 +284,31 @@ async def remove_from_device_registry(
         return
 
     registry.async_remove_device(device.id)
+
+
+class DumpView(HomeAssistantView):
+    """View to dump the state of the Z-Wave JS server."""
+
+    url = "/api/zwave_js/dump/{config_entry_id}"
+    name = "api:zwave_js:dump"
+
+    async def get(self, request: web.Request, config_entry_id: str) -> web.Response:
+        """Dump the state of Z-Wave."""
+        hass = request.app["hass"]
+
+        if config_entry_id not in hass.data[DOMAIN]:
+            raise web_exceptions.HTTPBadRequest
+
+        entry = hass.config_entries.async_get_entry(config_entry_id)
+
+        msgs = await dump.dump_msgs(
+            entry.data[CONF_URL], async_get_clientsession(hass), wait_nodes_ready=False
+        )
+
+        return web.Response(
+            body="\n".join(json.dumps(msg) for msg in msgs) + "\n",
+            headers={
+                hdrs.CONTENT_TYPE: "application/jsonl",
+                hdrs.CONTENT_DISPOSITION: 'attachment; filename="zwave_js_dump.jsonl"',
+            },
+        )
