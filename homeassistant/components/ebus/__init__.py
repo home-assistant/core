@@ -33,6 +33,7 @@ from .const import (
     DEFAULT_CIRCUITMAP,
     DEFAULT_PRIO,
     DOMAIN,
+    PRIO_OFF,
     PRIO_TIMEDELTAS,
     SCAN,
     TTL,
@@ -121,7 +122,6 @@ class Api:
         )
         ebus.msgdefcodes = entry.data[CONF_MSGDEFCODES]
         ebus.decode_msgdefcodes()
-        ebus.msgdefs.set_defaultprio(DEFAULT_PRIO)
         self._monitor = Monitor(copy.copy(ebus), self._checkinterval)
         self._circuitinfos = {
             circuitinfo.circuit: circuitinfo for circuitinfo in ebus.circuitinfos
@@ -175,6 +175,7 @@ class Monitor:
         self._data = {}
         self._msglistener = collections.defaultdict(list)
         self._prioritizer = Prioritizer(ebus.msgdefs, PRIO_TIMEDELTAS)
+        self._polledmsgs = set()
         self._state = None
         self._info = None
         self._tasks = []
@@ -205,26 +206,22 @@ class Monitor:
 
     def attach(self, entity, fielddef=None):
         """Attach an entity to updates."""
-        key = self._get_msglistener_key(fielddef and fielddef.msgdef)
-        listeners = self._msglistener[key]
+        ident = fielddef and fielddef.msgdef.ident
+        listeners = self._msglistener[ident]
         listeners.append(entity)
-        _LOGGER.debug("attach: %s %s listeners=%d", key, entity, len(listeners))
+        _LOGGER.debug("attach: %s %s listeners=%d", ident, entity, len(listeners))
 
     def detach(self, entity, fielddef=None):
         """Attach an entity to updates."""
-        key = self._get_msglistener_key(fielddef and fielddef.msgdef)
-        listeners = self._msglistener[key]
+        ident = fielddef and fielddef.msgdef.ident
+        listeners = self._msglistener[ident]
         listeners.remove(entity)
-        _LOGGER.debug("detach: %s %s listeners=%d", key, entity, len(listeners))
-
-    @staticmethod
-    def _get_msglistener_key(msgdef):
-        return (msgdef.circuit, msgdef.name) if msgdef else None
+        _LOGGER.debug("detach: %s %s listeners=%d", ident, entity, len(listeners))
 
     async def _async_main(self):
         """Observe EBUS."""
         ebus = self._ebus
-        observerebus = copy.copy(ebus)
+        listenebus = copy.copy(ebus)
         prioebus = copy.copy(ebus)
         localtasks = []
         while True:
@@ -245,7 +242,7 @@ class Monitor:
                         # Start
                         self._set_state(state)
                         localtasks = [
-                            asyncio.create_task(self._async_observe(observerebus)),
+                            asyncio.create_task(self._async_listen(listenebus)),
                             asyncio.create_task(self._async_prioritize(prioebus)),
                         ]
                         self._tasks += localtasks
@@ -261,10 +258,10 @@ class Monitor:
                     self._set_state(state)
             await asyncio.sleep(self._checkinterval)
 
-    async def _async_observe(self, ebus):
+    async def _async_listen(self, ebus):
         try:
-            async for msg in ebus.async_observe(ttl=TTL):
-                _LOGGER.debug("Observed %s", msg)
+            async for msg in ebus.async_listen():
+                _LOGGER.debug("Listened %s", msg)
                 self._set_msg(msg)
                 if self._state != OK:
                     break
@@ -276,28 +273,62 @@ class Monitor:
     async def _async_prioritize(self, ebus):
         try:
             while True:
+                # Enable/Disable Listening
+                listened = {
+                    ident
+                    for ident, listener in self._msglistener.items()
+                    if ident and listener
+                }
+                for ident in listened - self._polledmsgs:
+                    await self._enable_polling(ebus, ident)
+                for ident in self._polledmsgs - listened:
+                    await self._disable_polling(ebus, ident)
+                # Prioritize depending on update rate
                 for msgdef in self._prioritizer.iter_priochanges():
-                    msg = await ebus.async_read(msgdef, ttl=TTL)
-                    _LOGGER.info(
-                        "Prioritize %s to prio=%d", msgdef.ident, msgdef.setprio
-                    )
-                    self._set_msg(msg)
+                    if msgdef.ident in listened:
+                        _LOGGER.info(
+                            "Setting %s prio to %d", msgdef.ident, msgdef.setprio
+                        )
+                        self._set_msg(await ebus.async_read(msgdef, ttl=TTL))
+                # Info
                 self._set_info(await ebus.async_get_info())
+                # Wait
                 await asyncio.sleep(self._checkinterval)
         except (ConnectionError, CommandError) as exc:
             _LOGGER.info("Prioritizer stopped: %s", exc)
         finally:
             self._set_state("error")
 
+    async def _enable_polling(self, ebus, ident):
+        msgdef = ebus.msgdefs.get_ident(ident)
+        if self._state == OK and msgdef.read:
+            msg = await ebus.async_read(msgdef, ttl=TTL)
+            _LOGGER.debug("Read %s", msg)
+            if msg.valid:
+                msgdef = msgdef.replace(setprio=DEFAULT_PRIO)
+                msg = await ebus.async_read(msgdef, ttl=TTL)
+                _LOGGER.info("Enabling polling %s", msgdef.ident)
+            else:
+                _LOGGER.warning("Skip polling %s", msg)
+            self._set_msg(msg)
+            self._polledmsgs.add(ident)
+
+    async def _disable_polling(self, ebus, ident):
+        msgdef = ebus.msgdefs.get_ident(ident)
+        if self._state == OK and msgdef.read:
+            _LOGGER.info("Disabling polling %s", msgdef.ident)
+            msgdef = msgdef.replace(setprio=PRIO_OFF)
+            await ebus.async_read(msgdef, ttl=TTL)
+            self._polledmsgs.discard(ident)
+
     def _set_state(self, state):
         """Notify about field update."""
         self._state = state
         if state != OK:
-            self._prioritizer.clear()  # ebusd restart, requires reset of priorities.
-        if state not in (
-            None,
-            SCAN,
-        ):  # do not propagate broken values, while ebus is restarting
+            # ebusd restart, requires reset
+            self._prioritizer.clear()
+            self._polledmsgs.clear()
+        if state not in (None, SCAN):  # do not propagate broken values, during restart
             self._notify(itertools.chain.from_iterable(self._msglistener.values()))
         else:
             self._notify(self._msglistener[None])
@@ -316,7 +347,7 @@ class Monitor:
             # remove outdated values
             for fielddef in msg.msgdef.fields:
                 data.pop(fielddef.ident, None)
-        self._notify(self._msglistener[self._get_msglistener_key(msg.msgdef)])
+        self._notify(self._msglistener[msg.msgdef.ident])
 
     @staticmethod
     def _notify(entities):
