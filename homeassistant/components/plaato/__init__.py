@@ -36,8 +36,8 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, InvalidStateError
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -97,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     use_webhook = entry.data.get(CONF_USE_WEBHOOK, False)
 
     if use_webhook:
-        setup_webhook(hass, entry)
+        async_setup_webhook(hass, entry)
     else:
         await async_setup_coordinator(hass, entry)
 
@@ -110,15 +110,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-def setup_webhook(hass: HomeAssistant, entry: ConfigEntry):
+@callback
+def async_setup_webhook(hass: HomeAssistant, entry: ConfigEntry):
     """Init webhook based on config entry."""
-    if entry.data[CONF_WEBHOOK_ID] is None:
-        raise InvalidStateError
-
     webhook_id = entry.data[CONF_WEBHOOK_ID]
     device_name = entry.data[CONF_DEVICE_NAME]
 
-    __set_entry_data(entry, hass)
+    _set_entry_data(entry, hass)
 
     hass.components.webhook.async_register(
         DOMAIN, f"{DOMAIN}.{device_name}", webhook_id, handle_webhook
@@ -140,14 +138,14 @@ async def async_setup_coordinator(hass: HomeAssistant, entry: ConfigEntry):
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
-    __set_entry_data(entry, hass, coordinator, auth_token)
+    _set_entry_data(entry, hass, coordinator, auth_token)
 
     for platform in PLATFORMS:
         if entry.options.get(platform, True):
             coordinator.platforms.append(platform)
 
 
-def __set_entry_data(entry, hass, coordinator=None, device_id=None):
+def _set_entry_data(entry, hass, coordinator=None, device_id=None):
     device = {
         DEVICE_NAME: entry.data[CONF_DEVICE_NAME],
         DEVICE_TYPE: entry.data[CONF_DEVICE_TYPE],

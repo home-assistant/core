@@ -26,17 +26,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Plaato from a config entry."""
     devices = {}
+    entry_data = hass.data[DOMAIN][entry.entry_id]
 
     async def _update_sensor(device_id, sensor_data: PlaatoDevice):
         """Update/Create the sensors."""
-        entry_data = hass.data[DOMAIN][entry.entry_id]
         entry_data[SENSOR_DATA] = sensor_data
 
         if entry.entry_id not in devices:
             entry_data[DEVICE][DEVICE_ID] = device_id
 
             entities = [
-                PlaatoSensor(hass.data[DOMAIN][entry.entry_id], sensor_type)
+                PlaatoSensor(entry_data, sensor_type)
                 for sensor_type in sensor_data.sensors.keys()
             ]
             devices[entry.entry_id] = entities
@@ -48,9 +48,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     if entry.data.get(CONF_USE_WEBHOOK, False):
         async_dispatcher_connect(hass, SENSOR_UPDATE, _update_sensor)
     else:
-        coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
+        coordinator = entry_data[COORDINATOR]
         async_add_entities(
-            PlaatoSensor(hass.data[DOMAIN][entry.entry_id], sensor_type, coordinator)
+            PlaatoSensor(entry_data, sensor_type, coordinator)
             for sensor_type in coordinator.data.sensors.keys()
         )
 
