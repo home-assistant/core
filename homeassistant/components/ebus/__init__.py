@@ -6,7 +6,17 @@ import itertools
 import logging
 from typing import Dict
 
-from pyebus import AUTO, NA, OK, CircuitMap, CommandError, Ebus, FieldDef, get_icon
+from pyebus import (
+    NA,
+    OK,
+    CircuitInfo,
+    CircuitMap,
+    CommandError,
+    Ebus,
+    FieldDef,
+    Prioritizer,
+    get_icon,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
@@ -17,10 +27,14 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import (
     API,
     CHECKINTERVAL,
+    CONF_CIRCUITINFOS,
     CONF_CIRCUITMAP,
     CONF_MSGDEFCODES,
     DEFAULT_CIRCUITMAP,
+    DEFAULT_PRIO,
     DOMAIN,
+    PRIO_TIMEDELTAS,
+    SCAN,
     TTL,
     UNDO_UPDATE_LISTENER,
     UNIT_DEVICE_CLASS_MAP,
@@ -94,18 +108,24 @@ class Api:
         self._ebus = None
         self._monitor = None
         self.circuitmap = None
+        self._circuitinfos = {}
 
     def configure(self, entry: ConfigEntry):
         """Configure."""
         # ebus
         host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
-        msgdefcodes = entry.data[CONF_MSGDEFCODES]
         self._ebus = ebus = Ebus(host, port)
-        ebus.msgdefcodes = msgdefcodes
+        ebus.circuitinfos = tuple(
+            CircuitInfo(**circuitinfo) for circuitinfo in entry.data[CONF_CIRCUITINFOS]
+        )
+        ebus.msgdefcodes = entry.data[CONF_MSGDEFCODES]
         ebus.decode_msgdefcodes()
+        ebus.msgdefs.set_defaultprio(DEFAULT_PRIO)
         self._monitor = Monitor(copy.copy(ebus), self._checkinterval)
-
+        self._circuitinfos = {
+            circuitinfo.circuit: circuitinfo for circuitinfo in ebus.circuitinfos
+        }
         # circuitmap
         circuitmap = entry.data.get(CONF_CIRCUITMAP, {})
         self.circuitmap = CircuitMap(DEFAULT_CIRCUITMAP)
@@ -154,10 +174,14 @@ class Monitor:
         self._checkinterval = checkinterval
         self._data = {}
         self._msglistener = collections.defaultdict(list)
-        self._polledmsgs = set()
+        self._prioritizer = Prioritizer(ebus.msgdefs, PRIO_TIMEDELTAS)
         self._state = None
         self._info = None
         self._tasks = []
+
+    def get_prio(self, fielddef):
+        """Return Corresponding Message Priority."""
+        return self._prioritizer.get_prio(fielddef.msgdef)
 
     @property
     def state(self):
@@ -212,7 +236,7 @@ class Monitor:
                     # Reconnect
                     if self._state:
                         _LOGGER.warning("Reconnecting %s", ebus.ident)
-                    self._set_state("SCAN")
+                    self._set_state(SCAN)
                     try:
                         await ebus.async_wait_scancompleted()
                     except (ConnectionError, CommandError):
@@ -252,69 +276,31 @@ class Monitor:
     async def _async_prioritize(self, ebus):
         try:
             while True:
-                listened = {key for key, value in self._msglistener.items() if value}
-                add = listened - self._polledmsgs
-                remove = self._polledmsgs - listened
-                if add or remove:
+                for msgdef in self._prioritizer.iter_priochanges():
+                    msg = await ebus.async_read(msgdef, ttl=TTL)
                     _LOGGER.info(
-                        "Prioritize: monitored=%d add=%d remove=%d",
-                        len(listened),
-                        len(add),
-                        len(remove),
+                        "Prioritize %s to prio=%d", msgdef.ident, msgdef.setprio
                     )
-                await self._update_info(ebus, listened)
-                await self._enable_polling(ebus, add)
-                await self._disable_polling(ebus, remove)
+                    self._set_msg(msg)
+                self._set_info(await ebus.async_get_info())
                 await asyncio.sleep(self._checkinterval)
         except (ConnectionError, CommandError) as exc:
             _LOGGER.info("Prioritizer stopped: %s", exc)
         finally:
             self._set_state("error")
 
-    async def _update_info(self, ebus, listened):
-        # grep info
-        info = await ebus.async_get_info()
-        info["monitored messages"] = len(listened)
-        info["monitored fields"] = sum(
-            len(entities) for entities in self._msglistener.values()
-        )
-        self._set_info(info)
-
-    async def _enable_polling(self, ebus, items):
-        for item in items:
-            if self._state != OK:
-                break
-            if item:
-                msgdef = ebus.msgdefs.get(*item)
-                if msgdef.read:
-                    msg = await ebus.async_read(msgdef, ttl=TTL)
-                    _LOGGER.debug("Read %s", msg)
-                    self._set_msg(msg)
-                    if msg.valid:
-                        await ebus.async_setprio(msgdef, AUTO)
-                        _LOGGER.info("Polling %s", msgdef.ident)
-                    else:
-                        _LOGGER.warning("Not polling %s", msg)
-            self._polledmsgs.add(item)
-
-    async def _disable_polling(self, ebus, items):
-        for item in items:
-            if self._state != OK:
-                break
-            if item:
-                msgdef = ebus.msgdefs.get(*item)
-                if msgdef.read:
-                    # Note: there is no disable polling, so we use the lowest-prio
-                    await ebus.async_setprio(msgdef, 9)
-                    _LOGGER.info("Disable Polling %s", msgdef.ident)
-            self._polledmsgs.discard(item)
-
     def _set_state(self, state):
         """Notify about field update."""
         self._state = state
         if state != OK:
-            self._polledmsgs.clear()  # ebusd restart, requires reset of priorities.
-        self._notify(itertools.chain.from_iterable(self._msglistener.values()))
+            self._prioritizer.clear()  # ebusd restart, requires reset of priorities.
+        if state not in (
+            None,
+            SCAN,
+        ):  # do not propagate broken values, while ebus is restarting
+            self._notify(itertools.chain.from_iterable(self._msglistener.values()))
+        else:
+            self._notify(self._msglistener[None])
 
     def _set_info(self, info):
         self._info = info
@@ -325,6 +311,7 @@ class Monitor:
         if msg.valid:
             for field in msg.fields:
                 data[field.fielddef.ident] = field.value
+            self._prioritizer.notify(msg)
         else:
             # remove outdated values
             for fielddef in msg.msgdef.fields:
@@ -374,7 +361,8 @@ class EbusEntity(Entity):
         return {
             "identifiers": {(DOMAIN, self._api.ident)},
             "name": "EBUS",
-            "model": "daemon",
+            "manufacturer": "EBUSD",
+            "model": "EBUSD",
         }
 
     @property
@@ -422,18 +410,26 @@ class EbusFieldEntity(EbusEntity):
     def device_info(self) -> Dict[str, any]:
         """Return the device information."""
         msgdef = self._fielddef.parent
-        circuit = self._api.circuitmap.get_humanname(msgdef.circuit)
-        return {
+        circuitname = self._api.circuitmap.get_humanname(msgdef.circuit)
+        circuitinfo = self._api.ebus.get_circuitinfo(msgdef.circuit)
+        info = {
             "identifiers": {(DOMAIN, self._api.ident, msgdef.circuit)},
-            "name": f"EBUS - {circuit}" if circuit else "EBUS",
-            "model": msgdef.circuit,
+            "name": f"EBUS - {circuitname}" if circuitname else "EBUS",
+            "via_device": (DOMAIN, self._api.ident),
         }
+        if circuitinfo:
+            info["manufacturer"] = circuitinfo.manufacturer
+            info["model"] = circuitinfo.model
+            info["sw_version"] = circuitinfo.swversion
+        return info
 
     @property
     def device_state_attributes(self):
         """Device State Attributes."""
+        fielddef = self._fielddef
         return {
-            "Identifier": self._fielddef.ident,
-            "Writeable": "Yes" if self._fielddef.parent.write else "No",
-            "Values": self._fielddef.type_.comment,
+            "EBUS Identifier": fielddef.ident,
+            "Poll Priority": self._api.monitor.get_prio(fielddef),
+            "Writeable": "Yes" if fielddef.parent.write else "No",
+            "Values": fielddef.type_.comment,
         }

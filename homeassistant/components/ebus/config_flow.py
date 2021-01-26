@@ -9,7 +9,14 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .const import CONF_MSGDEFCODES, DEFAULT_HOST, DEFAULT_PORT, DOMAIN, TIMEOUT
+from .const import (  # pylint: disable=unused-import
+    CONF_CIRCUITINFOS,
+    CONF_MSGDEFCODES,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DOMAIN,
+    TIMEOUT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +56,7 @@ class EbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     is_online = await self.ebus.async_is_online()
                     await self.ebus.async_wait_scancompleted()
                     await self.ebus.async_load_msgdefs()
+                    await self.ebus.async_load_circuitinfos()
                     if is_online:
                         await self.async_set_unique_id(
                             f"{self.ebus.host}:{self.ebus.port}"
@@ -65,6 +73,10 @@ class EbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_HOST: self.host,
                         CONF_PORT: self.port,
                         CONF_MSGDEFCODES: self.ebus.msgdefcodes,
+                        CONF_CIRCUITINFOS: [
+                            circuitinfo._asdict()
+                            for circuitinfo in self.ebus.circuitinfos
+                        ],
                     }
                     return self.async_create_entry(title=title, data=data)
             else:
