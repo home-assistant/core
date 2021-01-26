@@ -255,8 +255,8 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
 
     await hass.config_entries.async_remove(entry.entry_id)
 
-    stop_addon.call_count == 1
-    uninstall_addon.call_count == 1
+    assert stop_addon.call_count == 1
+    assert uninstall_addon.call_count == 1
     assert entry.state == ENTRY_STATE_NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     stop_addon.reset_mock()
@@ -269,8 +269,8 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
 
     await hass.config_entries.async_remove(entry.entry_id)
 
-    stop_addon.call_count == 1
-    uninstall_addon.call_count == 0
+    assert stop_addon.call_count == 1
+    assert uninstall_addon.call_count == 0
     assert entry.state == ENTRY_STATE_NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to stop the Z-Wave JS add-on" in caplog.text
@@ -285,8 +285,8 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
 
     await hass.config_entries.async_remove(entry.entry_id)
 
-    stop_addon.call_count == 1
-    uninstall_addon.call_count == 1
+    assert stop_addon.call_count == 1
+    assert uninstall_addon.call_count == 1
     assert entry.state == ENTRY_STATE_NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to uninstall the Z-Wave JS add-on" in caplog.text
