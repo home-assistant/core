@@ -100,7 +100,7 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
     def __init__(self, device):
         """Initialize the WeMo switch."""
         super().__init__(device)
-        self._fan_mode = None
+        self._fan_mode = WEMO_FAN_OFF
         self._fan_mode_string = None
         self._target_humidity = None
         self._current_humidity = None
@@ -129,8 +129,6 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
     @property
     def percentage(self) -> str:
         """Return the current speed percentage."""
-        if self._fan_mode is None:
-            return None
         return ranged_value_to_percentage(SPEED_RANGE, self._fan_mode)
 
     @property
