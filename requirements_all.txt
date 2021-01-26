@@ -778,7 +778,7 @@ horimote==0.4.1
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
-httplib2==0.10.3
+httplib2==0.18.1
 
 # homeassistant.components.huawei_lte
 huawei-lte-api==1.4.17
