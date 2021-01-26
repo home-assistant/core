@@ -228,7 +228,10 @@ class DHCPWatcher(WatcherBase):
 
     def handle_dhcp_packet(self, packet):
         """Process a dhcp packet."""
-        _LOGGER.debug("Got a packet: %s", packet)
+        if DHCP not in packet:
+            _LOGGER.debug("Got an unexpected packet: %s", packet)
+            return
+
         options = packet[DHCP].options
 
         request_type = _decode_dhcp_option(options, MESSAGE_TYPE)
