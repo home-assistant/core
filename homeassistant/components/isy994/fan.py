@@ -63,13 +63,6 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
 
         self._node.turn_on(val=isy_speed)
 
-    #
-    # The fan entity model has changed to use percentages and preset_modes
-    # instead of speeds.
-    #
-    # Please review
-    # https://developers.home-assistant.io/docs/core/entity/fan/
-    #
     def turn_on(
         self,
         speed: str = None,
@@ -108,13 +101,6 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
         if not self._actions.run_then():
             _LOGGER.error("Unable to turn off the fan")
 
-    #
-    # The fan entity model has changed to use percentages and preset_modes
-    # instead of speeds.
-    #
-    # Please review
-    # https://developers.home-assistant.io/docs/core/entity/fan/
-    #
     def turn_on(
         self,
         speed: str = None,
