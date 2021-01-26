@@ -108,14 +108,14 @@ async def test_open_close_cover_state(
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_POSITION: 50, ATTR_ENTITY_ID: "cover.wl000000000099_1"},
+        {ATTR_POSITION: 0, ATTR_ENTITY_ID: "cover.wl000000000099_1"},
         blocking=True,
     )
 
     await hass.async_block_till_done()
     state = hass.states.get("cover.wl000000000099_1")
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == STATE_CLOSED
 
     # Stop
     await hass.services.async_call(
