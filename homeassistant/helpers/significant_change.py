@@ -36,7 +36,7 @@ from .integration_platform import async_process_integration_platforms
 
 PLATFORM = "significant_change"
 DATA_FUNCTIONS = "significant_change"
-CHECK_TYPE_FUNC = Callable[
+CheckTypeFunc = Callable[
     [
         HomeAssistant,
         str,
@@ -109,7 +109,7 @@ class SignificantlyChangedChecker:
             self.last_approved_entities[new_state.entity_id] = new_state
             return True
 
-        functions: Optional[Dict[str, CHECK_TYPE_FUNC]] = self.hass.data.get(
+        functions: Optional[Dict[str, CheckTypeFunc]] = self.hass.data.get(
             DATA_FUNCTIONS
         )
 
