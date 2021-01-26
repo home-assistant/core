@@ -3,14 +3,11 @@ from datetime import timedelta
 from typing import Optional
 
 from homeassistant.components.switch import DEVICE_CLASS_OUTLET, SwitchEntity
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
     ATTR_DURATION,
     DOMAIN,
-    SET_SWITCH_OVERRIDE_SCHEMA,
     SVC_SET_SWITCH_OVERRIDE,
     GeniusZone,
 )
