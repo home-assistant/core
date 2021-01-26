@@ -5,12 +5,7 @@ from typing import Optional
 from homeassistant.components.switch import DEVICE_CLASS_OUTLET, SwitchEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import (
-    ATTR_DURATION,
-    DOMAIN,
-    SVC_SET_SWITCH_OVERRIDE,
-    GeniusZone,
-)
+from . import ATTR_DURATION, DOMAIN, SVC_SET_SWITCH_OVERRIDE, GeniusZone
 
 GH_ON_OFF_ZONE = "on / off"
 
