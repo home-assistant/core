@@ -281,7 +281,7 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
         self._is_blocked = client.blocked
 
     @callback
-    def async_update_callback(self) -> None:
+    def async_update_callback(self, **kwargs) -> None:
         """Update the clients state."""
         if self.client.last_updated == SOURCE_EVENT:
 

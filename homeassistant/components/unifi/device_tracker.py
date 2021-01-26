@@ -178,9 +178,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         self.async_update_callback(controller_state_change=True)
 
     @callback
-    def async_update_callback(
-        self, controller_state_change: bool = False
-    ) -> None:  # pylint: disable=arguments-differ
+    def async_update_callback(self, controller_state_change: bool = False) -> None:
         """Update the clients state."""
 
         if controller_state_change:
@@ -329,9 +327,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         self.async_update_callback(controller_state_change=True)
 
     @callback
-    def async_update_callback(
-        self, controller_state_change: bool = False
-    ) -> None:  # pylint: disable=arguments-differ
+    def async_update_callback(self, controller_state_change: bool = False) -> None:
         """Update the devices' state."""
 
         if controller_state_change:
