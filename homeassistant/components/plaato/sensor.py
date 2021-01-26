@@ -73,6 +73,9 @@ class PlaatoSensor(PlaatoEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
+        if self._coordinator is not None:
+            return self._coordinator.data.sensors.get(self._sensor_type)
+
         return self._sensor_data.sensors.get(self._sensor_type)
 
     @property
