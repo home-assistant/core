@@ -13,6 +13,7 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
 
 BULB_6_MULTI_COLOR_LIGHT_ENTITY = "light.bulb_6_multi_color_current_value"
+EATON_RF9640_ENTITY = "light.allloaddimmer_current_value"
 
 
 async def test_light(hass, client, bulb_6_multi_color, integration):
@@ -375,3 +376,13 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         },
     }
     assert args["value"] == 0
+
+
+async def test_v4_dimmer_light(hass, client, eaton_rf9640_dimmer, integration):
+    """Test a light that supports MultiLevelSwitch CommandClass version 4."""
+    state = hass.states.get(EATON_RF9640_ENTITY)
+
+    assert state
+    assert state.state == STATE_ON
+    # the light should pick targetvalue which has zwave value 20
+    assert state.attributes[ATTR_BRIGHTNESS] == 52

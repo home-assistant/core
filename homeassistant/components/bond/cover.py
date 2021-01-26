@@ -1,14 +1,14 @@
 """Support for Bond covers."""
 from typing import Any, Callable, List, Optional
 
-from bond_api import Action, DeviceType
+from bond_api import Action, BPUPSubscriptions, DeviceType
 
 from homeassistant.components.cover import DEVICE_CLASS_SHADE, CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import BPUP_SUBS, DOMAIN, HUB
 from .entity import BondEntity
 from .utils import BondDevice, BondHub
 
@@ -19,10 +19,12 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up Bond cover devices."""
-    hub: BondHub = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
+    hub: BondHub = data[HUB]
+    bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
 
     covers = [
-        BondCover(hub, device)
+        BondCover(hub, device, bpup_subs)
         for device in hub.devices
         if device.type == DeviceType.MOTORIZED_SHADES
     ]
@@ -33,9 +35,9 @@ async def async_setup_entry(
 class BondCover(BondEntity, CoverEntity):
     """Representation of a Bond cover."""
 
-    def __init__(self, hub: BondHub, device: BondDevice):
+    def __init__(self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions):
         """Create HA entity representing Bond cover."""
-        super().__init__(hub, device)
+        super().__init__(hub, device, bpup_subs)
 
         self._closed: Optional[bool] = None
 
