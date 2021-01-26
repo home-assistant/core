@@ -7,7 +7,7 @@ from homeassistant.helpers import entity_platform
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import Api, EbusEntity, EbusFieldEntity
-from .const import API, DOMAIN
+from .const import API, DOMAIN, SERVICE_SETVALUE
 
 
 async def async_setup_entry(
@@ -26,7 +26,7 @@ async def async_setup_entry(
 
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
-        "set_value",
+        SERVICE_SETVALUE,
         {
             vol.Required("value"): vol.Coerce(str),
         },
