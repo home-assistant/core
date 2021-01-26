@@ -1,21 +1,22 @@
 """Support for Genius Hub switch/outlet devices."""
 from datetime import timedelta
+from typing import Optional
 
 import voluptuous as vol
 
 from homeassistant.components.switch import DEVICE_CLASS_OUTLET, SwitchEntity
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-import voluptuous as vol
 from homeassistant.helpers import config_validation as cv
-from datetime import timedelta
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send,
-)
-from typing import Optional
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import ATTR_DURATION, DOMAIN, GeniusZone
+from . import (
+    ATTR_DURATION,
+    DOMAIN,
+    SET_SWITCH_OVERRIDE_SCHEMA,
+    SVC_SET_SWITCH_OVERRIDE,
+    GeniusZone,
+)
 
 GH_ON_OFF_ZONE = "on / off"
 
