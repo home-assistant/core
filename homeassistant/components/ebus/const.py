@@ -1,4 +1,6 @@
 """Constants for EBUS integration."""
+from datetime import timedelta
+
 DOMAIN = "ebus"
 API = "api"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
@@ -18,12 +20,16 @@ UNIT_DEVICE_CLASS_MAP = {
 TTL = 30000
 CHECKINTERVAL = 60
 TIMEOUT = 5
+PRIO_TIMEDELTAS = [timedelta(hours=1), timedelta(hours=4), timedelta(days=1)]
+SCAN = "scan"
 
-CONF_MSGDEFCODES = "msgdefcodes"
+CONF_CIRCUITINFOS = "circuitinfos"
 CONF_CIRCUITMAP = "circuitmap"
+CONF_MSGDEFCODES = "msgdefcodes"
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = "8888"
+DEFAULT_PRIO = 4
 DEFAULT_CIRCUITMAP = {
     "broadcast": "",
     "ui": "UI",
@@ -35,3 +41,8 @@ DEFAULT_CIRCUITMAP = {
     "cc": "Circulation",
     "sc": "Solar",
 }
+
+SERVICE_SETVALUE = "set_value"
+SERVICES = [
+    SERVICE_SETVALUE,
+]
