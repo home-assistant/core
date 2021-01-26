@@ -85,4 +85,5 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
 
     unsub = async_call_later(hass, INITIAL_REPORT_DELAY, inital_report)
 
+    # pylint: disable=unnecessary-lambda
     return lambda: unsub()
