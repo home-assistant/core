@@ -27,13 +27,13 @@ async def async_check_significant_change(
 
     if device_class == DEVICE_CLASS_TEMPERATURE:
         if new_attrs.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_FAHRENHEIT:
-            diff = 0.03
+            change = 0.03
         else:
-            diff = 0.05
+            change = 0.05
 
         old_value = float(old_state)
         new_value = float(new_state)
-        return abs(1 - old_value / new_value) > diff
+        return abs(1 - old_value / new_value) > change
 
     if device_class in (DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY):
         old_value = float(old_state)

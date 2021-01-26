@@ -11,7 +11,7 @@ from homeassistant.setup import async_setup_component
 @pytest.fixture(name="checker")
 async def checker_fixture(hass):
     """Checker fixture."""
-    checker = await significant_change.create_checker(hass)
+    checker = await significant_change.create_checker(hass, "test")
 
     def async_check_significant_change(
         _hass, old_state, _old_attrs, new_state, _new_attrs, **kwargs

@@ -48,8 +48,10 @@ CHECK_TYPE_FUNC = Callable[
 ]
 
 
-async def create_checker(hass: HomeAssistant) -> "SignificantlyChangedChecker":
-    """Create a significantly changed checker."""
+async def create_checker(
+    hass: HomeAssistant, _domain: str
+) -> "SignificantlyChangedChecker":
+    """Create a significantly changed checker for a domain."""
     await _initialize(hass)
     return SignificantlyChangedChecker(hass)
 
