@@ -86,8 +86,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
         """Return the list of supported features."""
         if self.thermostat.supports_humidifier:
             return SUPPORT_FLAGS_THERMOSTAT | SUPPORT_TARGET_HUMIDITY
-        else:
-            return SUPPORT_FLAGS_THERMOSTAT
+        return SUPPORT_FLAGS_THERMOSTAT
 
     @property
     def current_temperature(self):
@@ -104,8 +103,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
         """Return the humidity we try to reach."""
         if self.thermostat.supports_humidifier:
             return self.thermostat.dehumidifier_set_point
-        else:
-            return None
+        return None
 
     @property
     def target_temperature(self):
@@ -114,24 +112,21 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
             return self.thermostat.cool_set_point
         elif self.hvac_mode == HVAC_MODE_HEAT:
             return self.thermostat.heat_set_point
-        else:
-            return None
+        return None
 
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_AUTO:
             return self.thermostat.heat_set_point
-        else:
-            return None
+        return None
 
     @property
     def target_temperature_high(self):
         """Return the higher bound temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_AUTO:
             return self.thermostat.cool_set_point
-        else:
-            return None
+        return None
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
