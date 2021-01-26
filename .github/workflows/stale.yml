@@ -11,17 +11,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # The 90 day stale policy
-      # Used for: Everything (unless 30 day policy below beats it)
-      - name: 90 days stale policy
+      # Used for:
+      # - Issues & PRs
+      # - No PRs marked as no-stale
+      # - No issues marked as no-stale or help-wanted
+      - name: 90 days stale issues & PRs policy
         uses: actions/stale@v3.0.15
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 90
           days-before-close: 7
-          operations-per-run: 250
+          operations-per-run: 150
           remove-stale-when-updated: true
           stale-issue-label: "stale"
-          exempt-issue-labels: "no-stale,Help%20wanted,help-wanted"
+          exempt-issue-labels: "no-stale,help-wanted"
           stale-issue-message: >
             There hasn't been any activity on this issue recently. Due to the
             high number of incoming GitHub notifications, we have to clean some
@@ -44,22 +47,48 @@ jobs:
 
             Thank you for your contributions.
 
-      # The 30 day stale policy
+      # The 30 day stale policy for PRS
       # Used for:
-      # - Issues that are pending more information (incomplete issues)
-      # - PRs that are not marked as new-integration
-      - name: 30 days stale policy
+      # - PRs
+      # - No PRs marked as no-stale or new-integrations
+      # - No issues (-1)
+      - name: 30 days stale PRs policy
         uses: actions/stale@v3.0.15
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          # PRs have a CLA signed label, we can misuse it to apply this policy
-          only-labels: "cla-signed,needs-more-information"
           days-before-stale: 30
           days-before-close: 7
-          operations-per-run: 250
+          days-before-issue-close: -1
+          operations-per-run: 50
+          remove-stale-when-updated: true
+          stale-pr-label: "stale"
+          # Exempt new integrations, these often take more time.
+          # They will automatically be handled by the 90 day version above.
+          exempt-pr-labels: "no-stale,new-integration"
+          stale-pr-message: >
+            There hasn't been any activity on this pull request recently. This
+            pull request has been automatically marked as stale because of that
+            and will be closed if no further activity occurs within 7 days.
+
+            Thank you for your contributions.
+
+      # The 30 day stale policy for issues
+      # Used for:
+      # - Issues that are pending more information (incomplete issues)
+      # - No Issues marked as no-stale or help-wanted
+      # - No PRs (-1)
+      - name: Needs more information stale issues policy
+        uses: actions/stale@v3.0.15
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          only-labels: "needs-more-information"
+          days-before-stale: 14
+          days-before-close: 7
+          days-before-pr-close: -1
+          operations-per-run: 50
           remove-stale-when-updated: true
           stale-issue-label: "stale"
-          exempt-issue-labels: "no-stale,Help%20wanted,help-wanted"
+          exempt-issue-labels: "no-stale,help-wanted"
           stale-issue-message: >
             There hasn't been any activity on this issue recently. Due to the
             high number of incoming GitHub notifications, we have to clean some
@@ -72,14 +101,3 @@ jobs:
 
             This issue has now been marked as stale and will be closed if no
             further activity occurs. Thank you for your contributions.
-
-          stale-pr-label: "stale"
-          # Exempt new integrations, these often take more time.
-          # They will automatically be handled by the 90 day version above.
-          exempt-pr-labels: "no-stale,new-integration"
-          stale-pr-message: >
-            There hasn't been any activity on this pull request recently. This
-            pull request has been automatically marked as stale because of that
-            and will be closed if no further activity occurs within 7 days.
-
-            Thank you for your contributions.
