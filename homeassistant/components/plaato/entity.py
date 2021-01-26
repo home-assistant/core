@@ -25,7 +25,7 @@ class PlaatoEntity(entity.Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name}".title()
+        return f"{DOMAIN} {self._device_type} {self._device_name} {self._name}".title()
 
     @property
     def unique_id(self):
