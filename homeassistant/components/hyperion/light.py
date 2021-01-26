@@ -29,7 +29,10 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_config_entry,
+    async_get_registry,
+)
 from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
@@ -235,33 +238,38 @@ async def async_setup_entry(
     async def async_instances_to_entities_raw(instances: List[Dict[str, Any]]) -> None:
         registry = await async_get_registry(hass)
         entities_to_add: List[HyperionLight] = []
-        desired_unique_ids: Set[str] = set()
+        running_unique_ids: Set[str] = set()
+        stopped_unique_ids: Set[str] = set()
         server_id = cast(str, config_entry.unique_id)
 
         # In practice, an instance can be in 3 states as seen by this function:
         #
-        #    * Exists, and is running: Add it to hass.
-        #    * Exists, but is not running: Cannot add yet, but should not delete it either.
-        #      It will show up as "unavailable".
-        #    * No longer exists: Delete it from hass.
+        #    * Exists, and is running: Should be present in HASS/registry.
+        #    * Exists, but is not running: Cannot add it yet, but entity may have be
+        #      registered from a previous time it was running.
+        #    * No longer exists at all: Should not be present in HASS/registry.
 
         # Add instances that are missing.
         for instance in instances:
             instance_id = instance.get(const.KEY_INSTANCE)
-            if instance_id is None or not instance.get(const.KEY_RUNNING, False):
+            if instance_id is None:
                 continue
             unique_id = get_hyperion_unique_id(
                 server_id, instance_id, TYPE_HYPERION_LIGHT
             )
-            desired_unique_ids.add(unique_id)
-            if unique_id in current_entities:
+            if not instance.get(const.KEY_RUNNING, False):
+                stopped_unique_ids.add(unique_id)
+                continue
+            running_unique_ids.add(unique_id)
+
+            if unique_id in live_entities:
                 continue
             hyperion_client = await async_create_connect_hyperion_client(
                 host, port, instance=instance_id, token=token
             )
             if not hyperion_client:
                 continue
-            current_entities.add(unique_id)
+            live_entities.add(unique_id)
             entities_to_add.append(
                 HyperionLight(
                     unique_id,
@@ -271,19 +279,21 @@ async def async_setup_entry(
                 )
             )
 
-        # Delete instances that are no longer present on this server.
-        for unique_id in current_entities - desired_unique_ids:
-            current_entities.remove(unique_id)
+        # Remove entities that are are not running instances on Hyperion:
+        for unique_id in live_entities - running_unique_ids:
+            live_entities.remove(unique_id)
             async_dispatcher_send(hass, SIGNAL_INSTANCE_REMOVED.format(unique_id))
-            entity_id = registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, unique_id)
-            if entity_id:
-                registry.async_remove(entity_id)
+
+        # Deregister instances that are no longer present on this server.
+        for entry in async_entries_for_config_entry(registry, config_entry.entry_id):
+            if entry.unique_id not in running_unique_ids.union(stopped_unique_ids):
+                registry.async_remove(entry.entity_id)
 
         async_add_entities(entities_to_add)
 
     # Readability note: This variable is kept alive in the context of the callback to
     # async_instances_to_entities below.
-    current_entities: Set[str] = set()
+    live_entities: Set[str] = set()
 
     await async_instances_to_entities_raw(
         hass.data[DOMAIN][config_entry.entry_id][CONF_ROOT_CLIENT].instances,
