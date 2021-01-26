@@ -217,6 +217,9 @@ class DHCPWatcher(WatcherBase):
                 )
             return
 
+        # Enable scapy filtering to improve performance
+        conf.layers.filter([Ether])
+
         self._sniffer = AsyncSniffer(
             filter=FILTER,
             started_callback=self._started.set,
