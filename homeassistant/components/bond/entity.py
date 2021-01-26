@@ -5,6 +5,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from aiohttp import ClientError
+from bond_api import BPUPSubscriptions
 
 from homeassistant.const import ATTR_NAME
 from homeassistant.helpers.entity import Entity
@@ -19,13 +20,18 @@ class BondEntity(Entity):
     """Generic Bond entity encapsulating common features of any Bond controlled device."""
 
     def __init__(
-        self, hub: BondHub, device: BondDevice, sub_device: Optional[str] = None
+        self,
+        hub: BondHub,
+        device: BondDevice,
+        bpup_subs: BPUPSubscriptions,
+        sub_device: Optional[str] = None,
     ):
         """Initialize entity with API and device info."""
         self._hub = hub
         self._device = device
         self._sub_device = sub_device
         self._available = True
+        self._bpup_subs = bpup_subs
 
     @property
     def unique_id(self) -> Optional[str]:
@@ -61,6 +67,9 @@ class BondEntity(Entity):
 
     async def async_update(self):
         """Fetch assumed state of the cover from the hub using API."""
+        if self._bpup_subs.alive:
+            return
+
         try:
             state: dict = await self._hub.bond.device_state(self._device.device_id)
         except (ClientError, AsyncIOTimeoutError, OSError) as error:
@@ -79,3 +88,19 @@ class BondEntity(Entity):
     @abstractmethod
     def _apply_state(self, state: dict):
         raise NotImplementedError
+
+    def _bpup_callback(self, state):
+        """Process a BPUP state change."""
+        self._available = True
+        self._apply_state(state)
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self):
+        """Subscribe to BPUP."""
+        await super().async_added_to_hass()
+        self._bpup_subs.subscribe(self._device.device_id, self._bpup_callback)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from BPUP data on remove."""
+        await super().async_will_remove_from_hass()
+        self._bpup_subs.unsubscribe(self._device.device_id, self._bpup_callback)
