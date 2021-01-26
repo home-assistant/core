@@ -111,7 +111,7 @@ DISCOVERY_SCHEMAS = [
         platform="light",
         device_class_generic={"Multilevel Switch", "Remote Switch"},
         device_class_specific={
-            "Multilevel Tunable Color Light",
+            "Tunable Color Light",
             "Binary Tunable Color Light",
             "Multilevel Remote Switch",
             "Multilevel Power Switch",
