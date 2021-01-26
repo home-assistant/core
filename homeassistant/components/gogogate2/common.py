@@ -67,7 +67,7 @@ def get_data_update_coordinator(
     config_entry_data = hass.data[DOMAIN][config_entry.entry_id]
 
     if DATA_UPDATE_COORDINATOR not in config_entry_data:
-        api = get_api(config_entry.data)
+        api = get_api(hass, config_entry.data)
 
         async def async_update_data():
             try:
@@ -96,7 +96,7 @@ def cover_unique_id(config_entry: ConfigEntry, door: AbstractDoor) -> str:
     return f"{config_entry.unique_id}_{door.door_id}"
 
 
-def get_api(config_data: dict) -> AbstractGateApi:
+def get_api(hass: HomeAssistant, config_data: dict) -> AbstractGateApi:
     """Get an api object for config data."""
     gate_class = GogoGate2Api
 
@@ -107,5 +107,5 @@ def get_api(config_data: dict) -> AbstractGateApi:
         config_data[CONF_IP_ADDRESS],
         config_data[CONF_USERNAME],
         config_data[CONF_PASSWORD],
-        httpx_async_client=get_async_client(),
+        httpx_async_client=get_async_client(hass),
     )
