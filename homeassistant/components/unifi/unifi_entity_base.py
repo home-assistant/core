@@ -63,7 +63,7 @@ class UniFiBase(Entity):
         self.async_update_callback()
 
     @callback
-    def async_update_callback(self, **kwargs) -> None:
+    def async_update_callback(self) -> None:
         """Update the entity's state."""
         _LOGGER.debug(
             "Updating %s entity %s (%s)",
