@@ -35,33 +35,6 @@ async def async_setup_platform(
         ]
     )
 
-    async def set_switch_override(call) -> None:
-        """Set the system mode."""
-        entity_id = call.data[ATTR_ENTITY_ID]
-
-        registry = await hass.helpers.entity_registry.async_get_registry()
-        registry_entry = registry.async_get(entity_id)
-
-        if registry_entry is None or registry_entry.platform != DOMAIN:
-            raise ValueError(f"'{entity_id}' is not a known {DOMAIN} entity")
-
-        if registry_entry.domain != "switch":
-            raise ValueError(f"'{entity_id}' is not an {DOMAIN} zone")
-
-        payload = {
-            "unique_id": registry_entry.unique_id,
-            "service": call.service,
-            "data": call.data,
-        }
-        async_dispatcher_send(hass, DOMAIN, payload)
-
-    hass.services.async_register(
-        DOMAIN,
-        SVC_SET_SWITCH_OVERRIDE,
-        set_switch_override,
-        schema=SET_SWITCH_OVERRIDE_SCHEMA,
-    )
-
 
 class GeniusSwitch(GeniusZone, SwitchEntity):
     """Representation of a Genius Hub switch."""

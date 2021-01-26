@@ -29,7 +29,7 @@ set_zone_override:
 
 set_switch_override:
   description: >-
-    Override switche for a given duration.
+    Override switch for a given duration.
   fields:
     entity_id:
       description: The zone's entity_id.
