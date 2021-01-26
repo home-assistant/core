@@ -704,6 +704,52 @@ MOCK_DEVICE_SENSORS = {
             },
         ],
     },
+    "7E.111111111111": {
+        "inject_reads": [
+            b"EDS",  # read type
+            b"EDS0068",  # read device_type - note EDS specific
+        ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "7E.111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "EDS",
+            "name": "7E.111111111111",
+        },
+        SENSOR_DOMAIN: [
+            {
+                "entity_id": "sensor.7e_111111111111_temperature",
+                "unique_id": "/7E.111111111111/EDS0068/temperature",
+                "injected_value": b"    13.9375",
+                "result": "13.9",
+                "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
+            },
+            {
+                "entity_id": "sensor.7e_111111111111_pressure",
+                "unique_id": "/7E.111111111111/EDS0068/pressure",
+                "injected_value": b"  1012.21",
+                "result": "1012.2",
+                "unit": PRESSURE_MBAR,
+                "class": DEVICE_CLASS_PRESSURE,
+            },
+            {
+                "entity_id": "sensor.7e_111111111111_illuminance",
+                "unique_id": "/7E.111111111111/EDS0068/light",
+                "injected_value": b"  65.8839",
+                "result": "65.9",
+                "unit": LIGHT_LUX,
+                "class": DEVICE_CLASS_ILLUMINANCE,
+            },
+            {
+                "entity_id": "sensor.7e_111111111111_humidity",
+                "unique_id": "/7E.111111111111/EDS0068/humidity",
+                "injected_value": b"    41.375",
+                "result": "41.4",
+                "unit": PERCENTAGE,
+                "class": DEVICE_CLASS_HUMIDITY,
+            },
+        ],
+    },
 }
 
 
