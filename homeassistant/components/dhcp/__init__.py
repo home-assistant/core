@@ -219,7 +219,7 @@ class DHCPWatcher(WatcherBase):
             return
 
         # Enable scapy filtering to improve performance
-        conf.layers.filter([UDP])
+        # conf.layers.filter([UDP])
 
         self._sniffer = AsyncSniffer(
             filter=FILTER,
