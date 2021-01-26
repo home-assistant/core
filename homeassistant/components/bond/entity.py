@@ -1,6 +1,7 @@
 """An abstract class common to all Bond entities."""
 from abc import abstractmethod
 from asyncio import TimeoutError as AsyncIOTimeoutError
+from datetime import timedelta
 import logging
 from typing import Any, Dict, Optional
 
@@ -9,11 +10,14 @@ from bond_api import BPUPSubscriptions
 
 from homeassistant.const import ATTR_NAME
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN
 from .utils import BondDevice, BondHub
 
 _LOGGER = logging.getLogger(__name__)
+
+_FALLBACK_SCAN_INTERVAL = timedelta(seconds=10)
 
 
 class BondEntity(Entity):
@@ -32,6 +36,7 @@ class BondEntity(Entity):
         self._sub_device = sub_device
         self._available = True
         self._bpup_subs = bpup_subs
+        self._cancel_updates = None
 
     @property
     def unique_id(self) -> Optional[str]:
@@ -45,6 +50,11 @@ class BondEntity(Entity):
     def name(self) -> Optional[str]:
         """Get entity name."""
         return self._device.name
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
 
     @property
     def device_info(self) -> Optional[Dict[str, Any]]:
@@ -67,9 +77,17 @@ class BondEntity(Entity):
 
     async def async_update(self):
         """Fetch assumed state of the cover from the hub using API."""
+        await self._async_update_from_api()
+
+    async def _async_update_if_bpup_not_alive(self, now):
+        """Fetch via the API if BPUP is not alive."""
         if self._bpup_subs.alive:
             return
+        await self._async_update_from_api()
+        self.async_write_ha_state()
 
+    async def _async_update_from_api(self):
+        """Fetch via the API."""
         try:
             state: dict = await self._hub.bond.device_state(self._device.device_id)
         except (ClientError, AsyncIOTimeoutError, OSError) as error:
@@ -99,8 +117,14 @@ class BondEntity(Entity):
         """Subscribe to BPUP."""
         await super().async_added_to_hass()
         self._bpup_subs.subscribe(self._device.device_id, self._bpup_callback)
+        self._cancel_updates = async_track_time_interval(
+            self.hass, self._async_update_if_bpup_not_alive, _FALLBACK_SCAN_INTERVAL
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from BPUP data on remove."""
         await super().async_will_remove_from_hass()
         self._bpup_subs.unsubscribe(self._device.device_id, self._bpup_callback)
+        if self._cancel_updates:
+            self._cancel_updates()
+            self._cancel_updates = None
