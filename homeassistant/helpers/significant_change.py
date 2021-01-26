@@ -73,6 +73,32 @@ async def _initialize(hass: HomeAssistant) -> None:
     await async_process_integration_platforms(hass, PLATFORM, process_platform)
 
 
+def either_one_none(val1: Optional[Any], val2: Optional[Any]) -> bool:
+    """Test if exactly one value is None."""
+    return (val1 is None and val2 is not None) or (val1 is not None and val2 is None)
+
+
+def check_numeric_changed(
+    val1: Optional[Union[int, float]],
+    val2: Optional[Union[int, float]],
+    change: Union[int, float],
+) -> bool:
+    """Check if two numeric values have changed."""
+    if val1 is None and val2 is None:
+        return False
+
+    if either_one_none(val1, val2):
+        return True
+
+    assert val1 is not None
+    assert val2 is not None
+
+    if abs(val1 - val2) >= change:
+        return True
+
+    return False
+
+
 class SignificantlyChangedChecker:
     """Class to keep track of entities to see if they have significantly changed.
 

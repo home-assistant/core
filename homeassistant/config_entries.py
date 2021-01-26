@@ -2,7 +2,7 @@
 import asyncio
 import functools
 import logging
-from types import MappingProxyType
+from types import MappingProxyType, MethodType
 from typing import Any, Callable, Dict, List, Optional, Set, Union, cast
 import weakref
 
@@ -181,7 +181,9 @@ class ConfigEntry:
         self.supports_unload = False
 
         # Listeners to call on update
-        self.update_listeners: List[weakref.ReferenceType[UpdateListenerType]] = []
+        self.update_listeners: List[
+            Union[weakref.ReferenceType[UpdateListenerType], weakref.WeakMethod]
+        ] = []
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Optional[Callable[[], Any]] = None
@@ -414,7 +416,12 @@ class ConfigEntry:
 
         Returns function to unlisten.
         """
-        weak_listener = weakref.ref(listener)
+        weak_listener: Any
+        # weakref.ref is not applicable to a bound method, e.g. method of a class instance, as reference will die immediately
+        if hasattr(listener, "__self__"):
+            weak_listener = weakref.WeakMethod(cast(MethodType, listener))
+        else:
+            weak_listener = weakref.ref(listener)
         self.update_listeners.append(weak_listener)
 
         return lambda: self.update_listeners.remove(weak_listener)
