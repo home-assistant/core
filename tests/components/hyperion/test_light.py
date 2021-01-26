@@ -43,6 +43,7 @@ from . import (
     TEST_ENTITY_ID_2,
     TEST_ENTITY_ID_3,
     TEST_HOST,
+    TEST_ID,
     TEST_INSTANCE_1,
     TEST_INSTANCE_2,
     TEST_INSTANCE_3,
@@ -387,6 +388,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
     brightness = 128
     client.async_send_set_color = AsyncMock(return_value=True)
     client.async_send_set_adjustment = AsyncMock(return_value=True)
+    client.adjustment = [{const.KEY_ID: TEST_ID}]
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -395,7 +397,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
     )
 
     assert client.async_send_set_adjustment.call_args == call(
-        **{const.KEY_ADJUSTMENT: {const.KEY_BRIGHTNESS: 50}}
+        **{const.KEY_ADJUSTMENT: {const.KEY_BRIGHTNESS: 50, const.KEY_ID: TEST_ID}}
     )
     assert client.async_send_set_color.call_args == call(
         **{
@@ -403,6 +405,16 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
             const.KEY_COLOR: [255, 255, 255],
             const.KEY_ORIGIN: hyperion_light.DEFAULT_ORIGIN,
         }
+    )
+
+    # Simulate a false return of async_send_set_adjustment
+    client.async_send_set_adjustment = AsyncMock(return_value=False)
+    client.adjustment = [{const.KEY_ID: TEST_ID}]
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_BRIGHTNESS: brightness},
+        blocking=True,
     )
 
     # Simulate a state callback from Hyperion.
@@ -447,6 +459,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
     brightness = 255
     client.async_send_set_color = AsyncMock(return_value=True)
     client.async_send_set_adjustment = AsyncMock(return_value=True)
+    client.adjustment = [{const.KEY_ID: TEST_ID}]
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -456,7 +469,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
     )
 
     assert client.async_send_set_adjustment.call_args == call(
-        **{const.KEY_ADJUSTMENT: {const.KEY_BRIGHTNESS: 100}}
+        **{const.KEY_ADJUSTMENT: {const.KEY_BRIGHTNESS: 100, const.KEY_ID: TEST_ID}}
     )
     assert client.async_send_set_color.call_args == call(
         **{
