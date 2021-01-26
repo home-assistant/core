@@ -10,6 +10,7 @@ from homeassistant.const import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
+    SERVICE_STOP_COVER,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
@@ -115,4 +116,16 @@ async def test_open_close_cover_state(
     state = hass.states.get("cover.wl000000000099_1")
     assert state
     assert state.state == STATE_OPEN
-    assert state.attributes.get(ATTR_POSITION) == 50
+
+    # Stop
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: "cover.wl000000000099_1"},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("cover.wl000000000099_1")
+    assert state
+    assert state.state == STATE_CLOSING
