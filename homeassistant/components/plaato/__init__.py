@@ -177,30 +177,22 @@ async def async_unload_webhook(hass: HomeAssistant, entry: ConfigEntry):
     """Unload webhook based entry."""
     if entry.data[CONF_WEBHOOK_ID] is not None:
         hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
-
-    unloaded = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
-    if unloaded:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unloaded
+    return await async_unload_platforms(hass, entry, PLATFORMS)
 
 
 async def async_unload_coordinator(hass: HomeAssistant, entry: ConfigEntry):
     """Unload auth token based entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
+    return await async_unload_platforms(hass, entry, coordinator.platforms)
+
+
+async def async_unload_platforms(hass: HomeAssistant, entry: ConfigEntry, platforms):
+    """Unload platforms."""
     unloaded = all(
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-                if platform in coordinator.platforms
+                for platform in platforms
             ]
         )
     )

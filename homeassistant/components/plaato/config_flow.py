@@ -105,9 +105,9 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        return await self._async_step_create_entry()
+        return await self._async_create_entry()
 
-    async def _async_step_create_entry(self):
+    async def _async_create_entry(self):
         """Create the entry step."""
 
         webhook_id = self._init_info.get(CONF_WEBHOOK_ID, None)
@@ -160,11 +160,9 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def _get_error(device_type: PlaatoDeviceType):
-        return (
-            "no_api_method"
-            if device_type == PlaatoDeviceType.Airlock
-            else "no_auth_token"
-        )
+        if device_type == PlaatoDeviceType.Airlock:
+            return "no_api_method"
+        return "no_auth_token"
 
     @staticmethod
     @callback

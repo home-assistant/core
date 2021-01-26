@@ -16,17 +16,14 @@ from .entity import PlaatoEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Plaato from a config entry."""
 
     if config_entry.data.get(CONF_USE_WEBHOOK, False):
         return False
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
-    if coordinator.data is None:
-        return False
-
-    async_add_devices(
+    async_add_entities(
         PlaatoBinarySensor(
             hass.data[DOMAIN][config_entry.entry_id],
             sensor_type,

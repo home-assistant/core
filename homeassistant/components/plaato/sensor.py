@@ -23,7 +23,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the Plaato sensor."""
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Plaato from a config entry."""
     devices = {}
 
@@ -40,7 +40,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
                 for sensor_type in sensor_data.sensors.keys()
             ]
             devices[entry.entry_id] = entities
-            async_add_devices(entities)
+            async_add_entities(entities)
         else:
             for entity in devices[entry.entry_id]:
                 async_dispatcher_send(hass, f"{DOMAIN}_{entity.unique_id}")
@@ -49,13 +49,10 @@ async def async_setup_entry(hass, entry, async_add_devices):
         async_dispatcher_connect(hass, SENSOR_UPDATE, _update_sensor)
     else:
         coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
-        if coordinator.data is not None:
-            async_add_devices(
-                PlaatoSensor(
-                    hass.data[DOMAIN][entry.entry_id], sensor_type, coordinator
-                )
-                for sensor_type in coordinator.data.sensors.keys()
-            )
+        async_add_entities(
+            PlaatoSensor(hass.data[DOMAIN][entry.entry_id], sensor_type, coordinator)
+            for sensor_type in coordinator.data.sensors.keys()
+        )
 
     return True
 

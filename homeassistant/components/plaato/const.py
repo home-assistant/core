@@ -1,4 +1,4 @@
-"""Const for GPSLogger."""
+"""Const for Plaato."""
 from datetime import timedelta
 
 DOMAIN = "plaato"
