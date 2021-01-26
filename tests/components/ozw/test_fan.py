@@ -1,4 +1,6 @@
-"""Test Z-Wave Lights."""
+"""Test Z-Wave Fans."""
+import pytest
+
 from .common import setup_ozw
 
 
@@ -120,12 +122,10 @@ async def test_fan(hass, fan_data, fan_msg, sent_messages, caplog):
 
     # Test invalid speed
     new_speed = "invalid"
-    await hass.services.async_call(
-        "fan",
-        "set_speed",
-        {"entity_id": "fan.in_wall_smart_fan_control_level", "speed": new_speed},
-        blocking=True,
-    )
-
-    assert len(sent_messages) == 4
-    assert "Invalid speed received: invalid" in caplog.text
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            "fan",
+            "set_speed",
+            {"entity_id": "fan.in_wall_smart_fan_control_level", "speed": new_speed},
+            blocking=True,
+        )
