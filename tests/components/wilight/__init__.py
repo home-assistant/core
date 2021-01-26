@@ -1,4 +1,7 @@
 """Tests for the WiLight component."""
+
+from pywilight.const import DOMAIN
+
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_MANUFACTURER,
@@ -10,7 +13,6 @@ from homeassistant.components.wilight.config_flow import (
     CONF_MODEL_NAME,
     CONF_SERIAL_NUMBER,
 )
-from homeassistant.components.wilight.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.typing import HomeAssistantType
 
