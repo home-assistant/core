@@ -581,6 +581,30 @@ async def test_addon_running_failures(
 
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+async def test_addon_running_already_configured(
+    hass, supervisor, addon_running, get_addon_discovery_info
+):
+    """Test that only one unique instance is allowed when add-on is running."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, title=TITLE, unique_id=1234)
+    entry.add_to_hass(hass)
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "on_supervisor"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_addon_installed(
     hass,
     supervisor,
@@ -729,6 +753,43 @@ async def test_addon_installed_failures(
 
     assert result["type"] == "abort"
     assert result["reason"] == abort_reason
+
+
+@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+async def test_addon_installed_already_configured(
+    hass,
+    supervisor,
+    addon_installed,
+    addon_options,
+    set_addon_options,
+    start_addon,
+    get_addon_discovery_info,
+):
+    """Test that only one unique instance is allowed when add-on is installed."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, title=TITLE, unique_id=1234)
+    entry.add_to_hass(hass)
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "on_supervisor"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "start_addon"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"usb_path": "/test", "network_key": "abc123"}
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
