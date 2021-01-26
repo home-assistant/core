@@ -274,3 +274,4 @@ class GeniusHeatingZone(GeniusZone):
     def supported_features(self) -> int:
         """Return the bitmask of supported features."""
         return self._supported_features
+
