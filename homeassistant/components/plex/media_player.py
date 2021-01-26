@@ -22,6 +22,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -500,9 +501,10 @@ class PlexMediaPlayer(MediaPlayerEntity):
         if playqueue_id:
             try:
                 playqueue = self.plex_server.get_playqueue(playqueue_id)
-            except plexapi.exceptions.NotFound:
-                _LOGGER.error("PlayQueue '%s' could not be found", playqueue_id)
-                return
+            except plexapi.exceptions.NotFound as err:
+                raise HomeAssistantError(
+                    f"PlayQueue '{playqueue_id}' could not be found"
+                ) from err
         else:
             shuffle = src.pop("shuffle", 0)
             media = self.plex_server.lookup_media(media_type, **src)
