@@ -128,4 +128,4 @@ async def test_open_close_cover_state(
     await hass.async_block_till_done()
     state = hass.states.get("cover.wl000000000099_1")
     assert state
-    assert state.state == STATE_CLOSING
+    assert state.state == STATE_OPEN
