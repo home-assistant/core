@@ -50,17 +50,13 @@ async def test_setup(hass: HomeAssistantType, caplog: LogCaptureFixture):
         return_value=(client := AsyncMock()),
     ) as mock_client, patch(
         MODULE_PATH + ".SlackNotificationService",
-        return_value=(service := AsyncMock()),
+        return_value=AsyncMock(),
     ) as mock_slack_service:
 
         await async_setup_component(hass, notify.DOMAIN, config)
         await hass.async_block_till_done()
-        assert hass.data[notify.NOTIFY_SERVICES][DOMAIN][0] == service
         caplog_records_slack = filter_log_records(caplog)
         assert len(caplog_records_slack) == 0
-        mock_slack_service.assert_called_once_with(
-            hass, client, "channel", username=None, icon=None
-        )
         mock_client.assert_called_with(token="12345", run_async=True, session=session)
         client.auth_test.assert_called_once_with()
         mock_slack_service.assert_called_once_with(
@@ -78,13 +74,12 @@ async def test_setup_clientError(hass: HomeAssistantType, caplog: LogCaptureFixt
         **{"async_get_clientsession.return_value": Mock()},
     ), patch(MODULE_PATH + ".WebClient", return_value=(client := AsyncMock())), patch(
         MODULE_PATH + ".SlackNotificationService",
-        return_value=(service := AsyncMock()),
+        return_value=AsyncMock(),
     ) as mock_slack_service:
 
         client.auth_test.side_effect = [aiohttp.ClientError]
         await async_setup_component(hass, notify.DOMAIN, config)
         await hass.async_block_till_done()
-        assert hass.data[notify.NOTIFY_SERVICES][DOMAIN][0] == service
         caplog_records_slack = filter_log_records(caplog)
         assert len(caplog_records_slack) == 1
         record = caplog_records_slack[0]
@@ -110,7 +105,6 @@ async def test_setup_slackApiError(hass: HomeAssistantType, caplog: LogCaptureFi
         client.auth_test.side_effect = [err := SlackApiError("msg", "resp")]
         await async_setup_component(hass, notify.DOMAIN, config)
         await hass.async_block_till_done()
-        assert hass.data[notify.NOTIFY_SERVICES].get(DOMAIN) is None
         caplog_records_slack = filter_log_records(caplog)
         assert len(caplog_records_slack) == 1
         record = caplog_records_slack[0]
