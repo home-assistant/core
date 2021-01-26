@@ -10,6 +10,7 @@ import threading
 from scapy.config import conf
 from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
+from scapy.layers.inet import UDP
 from scapy.layers.l2 import Ether
 from scapy.sendrecv import AsyncSniffer
 
@@ -218,7 +219,7 @@ class DHCPWatcher(WatcherBase):
             return
 
         # Enable scapy filtering to improve performance
-        conf.layers.filter([Ether])
+        conf.layers.filter([UDP])
 
         self._sniffer = AsyncSniffer(
             filter=FILTER,
