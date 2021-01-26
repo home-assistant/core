@@ -11,7 +11,8 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     STATE_CLOSED,
-    STATE_OPEN,
+    STATE_CLOSING,
+    STATE_OPENING,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -86,7 +87,7 @@ async def test_open_close_cover_state(
     await hass.async_block_till_done()
     state = hass.states.get("cover.wl000000000099_1")
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == STATE_OPENING
 
     # Close
     await hass.services.async_call(
@@ -99,7 +100,7 @@ async def test_open_close_cover_state(
     await hass.async_block_till_done()
     state = hass.states.get("cover.wl000000000099_1")
     assert state
-    assert state.state == STATE_CLOSED
+    assert state.state == STATE_CLOSING
 
     # Set position
     await hass.services.async_call(
