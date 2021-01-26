@@ -217,7 +217,6 @@ class DHCPWatcher(WatcherBase):
                 )
             return
 
-        conf.layers.filter([DHCP])
         self._sniffer = AsyncSniffer(
             filter=FILTER,
             started_callback=self._started.set,
@@ -229,7 +228,6 @@ class DHCPWatcher(WatcherBase):
     def handle_dhcp_packet(self, packet):
         """Process a dhcp packet."""
         if DHCP not in packet:
-            _LOGGER.debug("Got an unexpected packet: %s", packet)
             return
 
         options = packet[DHCP].options
