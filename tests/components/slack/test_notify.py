@@ -14,16 +14,24 @@ from homeassistant.components.slack.notify import (
     CONF_DEFAULT_CHANNEL,
     SlackNotificationService,
 )
-from homeassistant.const import CONF_API_KEY, CONF_ICON, CONF_PLATFORM, CONF_USERNAME
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_ICON,
+    CONF_NAME,
+    CONF_PLATFORM,
+    CONF_USERNAME,
+)
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
 MODULE_PATH = "homeassistant.components.slack.notify"
+SERVICE_NAME = f"notify_{DOMAIN}"
 
 DEFAULT_CONFIG = {
     notify.DOMAIN: [
         {
             CONF_PLATFORM: DOMAIN,
+            CONF_NAME: SERVICE_NAME,
             CONF_API_KEY: "12345",
             CONF_DEFAULT_CHANNEL: "channel",
         }
@@ -48,20 +56,15 @@ async def test_setup(hass: HomeAssistantType, caplog: LogCaptureFixture):
     ), patch(
         MODULE_PATH + ".WebClient",
         return_value=(client := AsyncMock()),
-    ) as mock_client, patch(
-        MODULE_PATH + ".SlackNotificationService",
-        return_value=AsyncMock(),
-    ) as mock_slack_service:
+    ) as mock_client:
 
         await async_setup_component(hass, notify.DOMAIN, config)
         await hass.async_block_till_done()
+        assert hass.services.has_service(notify.DOMAIN, SERVICE_NAME)
         caplog_records_slack = filter_log_records(caplog)
         assert len(caplog_records_slack) == 0
         mock_client.assert_called_with(token="12345", run_async=True, session=session)
         client.auth_test.assert_called_once_with()
-        mock_slack_service.assert_called_once_with(
-            hass, client, "channel", username=None, icon=None
-        )
 
 
 async def test_setup_clientError(hass: HomeAssistantType, caplog: LogCaptureFixture):
@@ -72,22 +75,17 @@ async def test_setup_clientError(hass: HomeAssistantType, caplog: LogCaptureFixt
     with patch(
         MODULE_PATH + ".aiohttp_client",
         **{"async_get_clientsession.return_value": Mock()},
-    ), patch(MODULE_PATH + ".WebClient", return_value=(client := AsyncMock())), patch(
-        MODULE_PATH + ".SlackNotificationService",
-        return_value=AsyncMock(),
-    ) as mock_slack_service:
+    ), patch(MODULE_PATH + ".WebClient", return_value=(client := AsyncMock())):
 
         client.auth_test.side_effect = [aiohttp.ClientError]
         await async_setup_component(hass, notify.DOMAIN, config)
         await hass.async_block_till_done()
+        assert hass.services.has_service(notify.DOMAIN, SERVICE_NAME)
         caplog_records_slack = filter_log_records(caplog)
         assert len(caplog_records_slack) == 1
         record = caplog_records_slack[0]
         assert record.levelno == logging.WARNING
         assert aiohttp.ClientError.__qualname__ in record.message
-        mock_slack_service.assert_called_once_with(
-            hass, client, "channel", username="user", icon="icon"
-        )
 
 
 async def test_setup_slackApiError(hass: HomeAssistantType, caplog: LogCaptureFixture):
@@ -97,20 +95,17 @@ async def test_setup_slackApiError(hass: HomeAssistantType, caplog: LogCaptureFi
     with patch(
         MODULE_PATH + ".aiohttp_client",
         **{"async_get_clientsession.return_value": Mock()},
-    ), patch(MODULE_PATH + ".WebClient", return_value=(client := AsyncMock())), patch(
-        MODULE_PATH + ".SlackNotificationService",
-        return_value=AsyncMock(),
-    ) as mock_slack_service:
+    ), patch(MODULE_PATH + ".WebClient", return_value=(client := AsyncMock())):
 
         client.auth_test.side_effect = [err := SlackApiError("msg", "resp")]
         await async_setup_component(hass, notify.DOMAIN, config)
         await hass.async_block_till_done()
+        assert hass.services.has_service(notify.DOMAIN, SERVICE_NAME) is False
         caplog_records_slack = filter_log_records(caplog)
         assert len(caplog_records_slack) == 1
         record = caplog_records_slack[0]
         assert record.levelno == logging.ERROR
         assert err.__class__.__qualname__ in record.message
-        mock_slack_service.assert_not_called()
 
 
 async def test_message_includes_default_emoji():
