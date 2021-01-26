@@ -30,6 +30,15 @@ def get_measures(station_data):
     return station_data["measures"]
 
 
+def get_stage_scale(station_data):
+    """Force stageStake key to always be a list"""
+    if "stageScale" not in station_data:
+        return []
+    if isinstance(station_data["stageScale"], dict):
+        return [station_data["stageScale"]]
+    return station_data["stageScale"]
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up UK Flood Monitoring Sensors."""
     station_key = config_entry.data["station"]
@@ -43,6 +52,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             data = await get_station(session, station_key)
 
         measures = get_measures(data)
+        stage_scales = get_stage_scale(data)
         entities = []
 
         # Look to see if payload contains new measures
@@ -62,6 +72,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         # Turn data.measures into a dict rather than a list so easier for entities to
         # find themselves.
         data["measures"] = {measure["@id"]: measure for measure in measures}
+
+        data["stageScale"] = {
+            0: stage_scale for stage_scale in stage_scales
+        }
+
+
+        _LOGGER.error(data["stageScale"][0])
 
         return data
 
@@ -158,7 +175,17 @@ class Measurement(CoordinatorEntity):
     @property
     def device_state_attributes(self):
         """Return the sensor specific state attributes."""
-        return {ATTR_ATTRIBUTION: self.attribution}
+        return {
+            "typical_range_high": self.coordinator.data["stageScale"][0]["typicalRangeHigh"],
+            "typical_range_low": self.coordinator.data["stageScale"][0]["typicalRangeLow"],
+            "highest_recent": self.coordinator.data["stageScale"][0]["highestRecent"]["value"],
+            "highest_recent_date": self.coordinator.data["stageScale"][0]["highestRecent"]["dateTime"],
+            "maximum_on_record": self.coordinator.data["stageScale"][0]["maxOnRecord"]["value"],
+            "maximim_on_record_date": self.coordinator.data["stageScale"][0]["maxOnRecord"]["dateTime"],
+            "minimum_on_record": self.coordinator.data["stageScale"][0]["minOnRecord"]["value"],
+            "minimum_on_record_date": self.coordinator.data["stageScale"][0]["minOnRecord"]["dateTime"],
+            ATTR_ATTRIBUTION: self.attribution,
+        }
 
     @property
     def state(self):
