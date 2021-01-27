@@ -2,6 +2,7 @@
 import logging
 from typing import Dict, Optional
 
+from packaging.version import Version, parse as parse_version
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -52,12 +53,7 @@ def _get_schema_common() -> dict:
 def _validate_version(version: str) -> Dict[str, str]:
     """Validate a version string from the user."""
     errors = {CONF_VERSION: "invalid_version"}
-    version_parts = version.split(".")
-    if len(version_parts) != 2:
-        return errors
-    try:
-        [int(x) for x in version_parts]
-    except ValueError:
+    if not isinstance(parse_version(version), Version):
         return errors
     return {}
 
