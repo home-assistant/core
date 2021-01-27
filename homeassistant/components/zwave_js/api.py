@@ -301,9 +301,7 @@ class DumpView(HomeAssistantView):
 
         entry = hass.config_entries.async_get_entry(config_entry_id)
 
-        msgs = await dump.dump_msgs(
-            entry.data[CONF_URL], async_get_clientsession(hass), wait_nodes_ready=False
-        )
+        msgs = await dump.dump_msgs(entry.data[CONF_URL], async_get_clientsession(hass))
 
         return web.Response(
             body="\n".join(json.dumps(msg) for msg in msgs) + "\n",
