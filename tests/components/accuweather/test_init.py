@@ -67,7 +67,9 @@ async def test_unload_entry(hass):
 
 async def test_update_interval(hass):
     """Test correct update interval."""
-    await init_integration(hass)
+    entry = await init_integration(hass)
+
+    assert entry.state == ENTRY_STATE_LOADED
 
     current = json.loads(load_fixture("accuweather/current_conditions_data.json"))
     future = utcnow() + timedelta(minutes=40)
@@ -87,7 +89,9 @@ async def test_update_interval(hass):
 
 async def test_update_interval_forecast(hass):
     """Test correct update interval when forecast is True."""
-    await init_integration(hass, forecast=True)
+    entry = await init_integration(hass, forecast=True)
+
+    assert entry.state == ENTRY_STATE_LOADED
 
     current = json.loads(load_fixture("accuweather/current_conditions_data.json"))
     forecast = json.loads(load_fixture("accuweather/forecast_data.json"))
