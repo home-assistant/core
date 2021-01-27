@@ -121,7 +121,10 @@ class AuthProvider:
     def async_validate_refresh_token(
         self, refresh_token: RefreshToken, remote_ip: Optional[str] = None
     ) -> None:
-        """Optional hook for an auth provider to verify validity of a refresh token."""
+        """Verify a refresh token is still valid.
+
+        Optional hook for an auth provider to verify validity of a refresh token.
+        """
 
 
 async def auth_provider_from_config(
