@@ -75,7 +75,20 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
         """Flag supported features. Speed Only."""
         return SUPPORT_SET_SPEED
 
-    async def async_turn_on(self, speed: str = None, **kwargs):
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    async def async_turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ):
         """Turn the fan on."""
         if speed is None:
             speed = SPEED_MEDIUM

@@ -130,9 +130,17 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             {CharacteristicsTypes.SWING_MODE: 1 if oscillating else 0}
         )
 
-    async def async_turn_on(self, speed=None, **kwargs):
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    async def async_turn_on(
+        self, speed=None, percentage=None, preset_mode=None, **kwargs
+    ):
         """Turn the specified fan on."""
-
         characteristics = {}
 
         if not self.is_on:
