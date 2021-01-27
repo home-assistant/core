@@ -182,7 +182,7 @@ def test_object_selector_schema(schema):
 
 @pytest.mark.parametrize(
     "schema",
-    ({},),
+    ({}, {"multiline": True}, {"multiline": False}),
 )
 def test_text_selector_schema(schema):
     """Test text selector."""

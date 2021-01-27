@@ -175,4 +175,4 @@ class ObjectSelector(Selector):
 class StringSelector(Selector):
     """Selector for a multi-line text string."""
 
-    CONFIG_SCHEMA = vol.Schema({})
+    CONFIG_SCHEMA = vol.Schema({vol.Optional("multiline", default=False): bool})
