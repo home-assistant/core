@@ -96,6 +96,7 @@ class VeluxCover(CoverEntity):
         """Return the current position of the cover."""
         if isinstance(self.node, Blind):
             return 100 - self.node.orientation.position_percent
+        return None
 
     @property
     def device_class(self):
@@ -160,3 +161,4 @@ class VeluxCover(CoverEntity):
             await self.node.set_orientation(
                 orientation=orientation, wait_for_completion=False
             )
+        return None
