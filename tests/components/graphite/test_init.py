@@ -45,9 +45,21 @@ class TestGraphite(unittest.TestCase):
 
         assert setup_component(self.hass, graphite.DOMAIN, config)
         assert mock_gf.call_count == 1
-        assert mock_gf.call_args == mock.call(self.hass, "foo", 123, "me")
+        assert mock_gf.call_args == mock.call(self.hass, "foo", 123, "tcp", "me")
         assert mock_socket.call_count == 1
         assert mock_socket.call_args == mock.call(socket.AF_INET, socket.SOCK_STREAM)
+
+    @patch("socket.socket")
+    @patch("homeassistant.components.graphite.GraphiteFeeder")
+    def test_full_udp_config(self, mock_gf, mock_socket):
+        """Test setup with full configuration and UDP protocol."""
+        config = {"graphite": {"host": "foo", "port": 123, "protocol": "udp", "prefix": "me"}}
+
+        assert setup_component(self.hass, graphite.DOMAIN, config)
+        assert mock_gf.call_count == 1
+        assert mock_gf.call_args == mock.call(self.hass, "foo", 123, "udp", "me")
+        assert mock_socket.call_count == 1
+        assert mock_socket.call_args == mock.call(socket.AF_INET, socket.SOCK_DGRAM)
 
     @patch("socket.socket")
     @patch("homeassistant.components.graphite.GraphiteFeeder")
