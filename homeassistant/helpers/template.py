@@ -1363,10 +1363,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
             def unsupported(name):
                 def warn_unsupported(*args, **kwargs):
-                    _LOGGER.warning(
-                        "Use of '%s' is not supported in limited templates", name
+                    raise TemplateError(
+                        f"Use of '{name}' is not supported in limited templates"
                     )
-                    return ""
 
                 return warn_unsupported
 
