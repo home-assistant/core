@@ -206,7 +206,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._target_temp = target_temp
         self._unit = unit
 
-        self._presets = collections.OrderedDict()
+        self._presets = {}
 
         if presets:
             self._presets = presets
