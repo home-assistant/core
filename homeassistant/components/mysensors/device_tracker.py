@@ -14,7 +14,6 @@ async def async_setup_scanner(
     """Set up the MySensors device scanner."""
     new_devices = mysensors.setup_mysensors_platform(
         hass,
-        discovery_info[ATTR_GATEWAY_ID],
         DOMAIN,
         discovery_info,
         MySensorsDeviceScanner,

@@ -181,7 +181,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
             self.gateway.set_child_value(
                 self.node_id, self.child_id, value_type, value, ack=1
             )
-            if self.om:
+            if self.assumed_state:
                 # Optimistically assume that device has changed state
                 self._values[value_type] = value
                 self.async_write_ha_state()

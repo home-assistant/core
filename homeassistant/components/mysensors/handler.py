@@ -36,7 +36,7 @@ async def handle_internal(hass, hass_config: ConfigEntry, msg: Message) -> None:
 @HANDLERS.register("I_BATTERY_LEVEL")
 async def handle_battery_level(hass, hass_config: ConfigEntry, msg: Message) -> None:
     """Handle an internal battery level message."""
-    _handle_node_update(hass, msg)
+    _handle_node_update(hass, hass_config, msg)
 
 
 @HANDLERS.register("I_HEARTBEAT_RESPONSE")

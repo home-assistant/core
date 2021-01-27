@@ -138,7 +138,9 @@ class MySensorsDevice:
             ATTR_DESCRIPTION: child.description,
             ATTR_NODE_ID: self.node_id,
         }
+        # This works when we are actually an Entity (i.e. all platforms except device_tracker)
         if hasattr(self, "platform"):
+            # pylint: disable=no-member
             attr[ATTR_DEVICE] = self.platform.config_entry.data[CONF_DEVICE]
 
         set_req = self.gateway.const.SetReq
