@@ -80,7 +80,7 @@ def player(hass):
 async def test_volume_up(player):
     """Test the volume_up helper function."""
     assert player.volume_level == 0
-    player.set_volume_level(0.5)
+    await player.async_set_volume_level(0.5)
     assert player.volume_level == 0.5
     await player.async_volume_up()
     assert player.volume_level == 0.7
@@ -89,7 +89,7 @@ async def test_volume_up(player):
 async def test_volume_down(player):
     """Test the volume_down helper function."""
     assert player.volume_level == 0
-    player.set_volume_level(0.5)
+    await player.async_set_volume_level(0.5)
     assert player.volume_level == 0.5
     await player.async_volume_down()
     assert player.volume_level == 0.3
