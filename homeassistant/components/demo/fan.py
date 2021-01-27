@@ -217,7 +217,7 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
         if preset_mode in self.preset_modes:
             self._preset_mode = preset_mode
             self._percentage = None
-            self.async_write_ha_state()
+            self.schedule_update_ha_state()
         else:
             raise ValueError(f"Invalid preset mode: {preset_mode}")
 
