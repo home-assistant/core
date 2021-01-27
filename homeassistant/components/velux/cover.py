@@ -155,10 +155,8 @@ class VeluxCover(CoverEntity):
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move cover tilt to a specific position."""
-        if ATTR_TILT_POSITION in kwargs:
-            position_percent = 100 - kwargs[ATTR_TILT_POSITION]
-            orientation = Position(position_percent=position_percent)
-            await self.node.set_orientation(
-                orientation=orientation, wait_for_completion=False
-            )
-        return None
+        position_percent = 100 - kwargs[ATTR_TILT_POSITION]
+        orientation = Position(position_percent=position_percent)
+        await self.node.set_orientation(
+            orientation=orientation, wait_for_completion=False
+        )
