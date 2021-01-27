@@ -1,26 +1,19 @@
 """Support for ESPHome fans."""
-from typing import List, Optional
+from typing import Optional
 
 from aioesphomeapi import FanInfo, FanSpeed, FanState
 
-from homeassistant.components.fan import (
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
-    SUPPORT_OSCILLATE,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
-
-from . import (
-    EsphomeEntity,
-    esphome_map_enum,
-    esphome_state_property,
-    platform_async_setup_entry,
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
 )
+
+from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+
+ORDERED_NAMED_FAN_SPEEDS = [FanSpeed.LOW, FanSpeed.MEDIUM, FanSpeed.HIGH]
 
 
 async def async_setup_entry(
@@ -38,15 +31,6 @@ async def async_setup_entry(
     )
 
 
-@esphome_map_enum
-def _fan_speeds():
-    return {
-        FanSpeed.LOW: SPEED_LOW,
-        FanSpeed.MEDIUM: SPEED_MEDIUM,
-        FanSpeed.HIGH: SPEED_HIGH,
-    }
-
-
 class EsphomeFan(EsphomeEntity, FanEntity):
     """A fan implementation for ESPHome."""
 
@@ -58,23 +42,20 @@ class EsphomeFan(EsphomeEntity, FanEntity):
     def _state(self) -> Optional[FanState]:
         return super()._state
 
-    async def async_set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
-        if speed == SPEED_OFF:
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the speed percentage of the fan."""
+        if percentage == 0:
             await self.async_turn_off()
             return
 
-        await self._client.fan_command(
-            self._static_info.key, speed=_fan_speeds.from_hass(speed)
-        )
+        data = {"key": self._static_info.key, "state": True}
+        if percentage is not None:
+            named_speed = percentage_to_ordered_list_item(
+                ORDERED_NAMED_FAN_SPEEDS, percentage
+            )
+            data["speed"] = named_speed
+        await self._client.fan_command(**data)
 
-    #
-    # The fan entity model has changed to use percentages and preset_modes
-    # instead of speeds.
-    #
-    # Please review
-    # https://developers.home-assistant.io/docs/core/entity/fan/
-    #
     async def async_turn_on(
         self,
         speed: Optional[str] = None,
@@ -83,13 +64,7 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         **kwargs,
     ) -> None:
         """Turn on the fan."""
-        if speed == SPEED_OFF:
-            await self.async_turn_off()
-            return
-        data = {"key": self._static_info.key, "state": True}
-        if speed is not None:
-            data["speed"] = _fan_speeds.from_hass(speed)
-        await self._client.fan_command(**data)
+        await self.async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off the fan."""
@@ -110,11 +85,13 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         return self._state.state
 
     @esphome_state_property
-    def speed(self) -> Optional[str]:
-        """Return the current speed."""
+    def percentage(self) -> Optional[str]:
+        """Return the current speed percentage."""
         if not self._static_info.supports_speed:
             return None
-        return _fan_speeds.from_esphome(self._state.speed)
+        return ordered_list_item_to_percentage(
+            ORDERED_NAMED_FAN_SPEEDS, self._state.speed
+        )
 
     @esphome_state_property
     def oscillating(self) -> None:
@@ -122,13 +99,6 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         if not self._static_info.supports_oscillation:
             return None
         return self._state.oscillating
-
-    @property
-    def speed_list(self) -> Optional[List[str]]:
-        """Get the list of available speeds."""
-        if not self._static_info.supports_speed:
-            return None
-        return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
     @property
     def supported_features(self) -> int:
