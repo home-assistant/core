@@ -151,9 +151,7 @@ class RakoRoomLight(RakoLight):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        brightness = 255
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
+        brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
 
         try:
             scene = convert_to_scene(brightness)
@@ -190,9 +188,7 @@ class RakoChannelLight(RakoLight):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        brightness = 255
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
+        brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
 
         try:
             await asyncio.wait_for(

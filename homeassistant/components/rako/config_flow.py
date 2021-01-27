@@ -34,8 +34,7 @@ class RakoConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if host:
                 return self._show_setup_form(host)
-            else:
-                return self._show_setup_form(errors={CONF_BASE: "no_devices_found"})
+            return self._show_setup_form(errors={CONF_BASE: "no_devices_found"})
 
         try:
             bridge_info = await self._get_bridge_info(
