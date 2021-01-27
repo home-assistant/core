@@ -23,7 +23,7 @@ async def test_form(hass):
         "homeassistant.components.ai_speaker.async_setup_entry",
         return_value=True,
     ) as mock_gate_info, patch(
-        "homeassistant.components.ai_speaker.config_flow.AisDevice.get_gate_info",
+        "homeassistant.components.ai_speaker.config_flow.AisWebService.get_gate_info",
         return_value={"Product": "AIS DEV1", "ais_id": "dom-123"},
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -47,7 +47,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.ai_speaker.config_flow.AisDevice.get_gate_info",
+        "homeassistant.components.ai_speaker.config_flow.AisWebService.get_gate_info",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -65,7 +65,7 @@ async def test_form_timeout(hass):
     )
 
     with patch(
-        "homeassistant.components.ai_speaker.config_flow.AisDevice.get_gate_info",
+        "homeassistant.components.ai_speaker.config_flow.AisWebService.get_gate_info",
         side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -84,7 +84,7 @@ async def test_form_unexpected_exception(hass):
     )
 
     with patch(
-        "homeassistant.components.ai_speaker.config_flow.AisDevice.get_gate_info",
+        "homeassistant.components.ai_speaker.config_flow.AisWebService.get_gate_info",
         side_effect=ValueError("message"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -110,7 +110,7 @@ async def test_already_configured(hass):
     )
 
     with patch(
-        "homeassistant.components.ai_speaker.config_flow.AisDevice.get_gate_info",
+        "homeassistant.components.ai_speaker.config_flow.AisWebService.get_gate_info",
         return_value={"Product": "AIS DEV1", "ais_id": "dom-123"},
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
