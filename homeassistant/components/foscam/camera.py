@@ -57,6 +57,7 @@ ATTR_PRESET_NAME = "preset_name"
 
 PTZ_GOTO_PRESET_COMMAND = "ptz_goto_preset"
 
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a Foscam IP Camera."""
     LOGGER.warning(
@@ -101,7 +102,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         },
         "async_perform_ptz",
     )
-    
+
     platform.async_register_entity_service(
         SERVICE_PTZ_PRESET,
         {
