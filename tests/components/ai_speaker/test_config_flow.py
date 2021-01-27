@@ -32,6 +32,7 @@ async def test_form(hass):
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "AI-Speaker AIS DEV1"
+    assert result2["data"] == {"host": "1.1.1.1"}
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_gate_info.mock_calls) == 1
@@ -55,8 +56,27 @@ async def test_form_cannot_connect(hass):
     assert result2["type"] == "abort"
 
 
+async def test_form_timeout(hass):
+    """Test we handle a connection timeout."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.ai_speaker.config_flow.AisDevice.get_gate_info",
+        side_effect=TimeoutError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
+
+
 async def test_form_unexpected_exception(hass):
-    """Test we handle cannot connect error."""
+    """Test we handle unexpected exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
