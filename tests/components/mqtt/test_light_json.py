@@ -322,13 +322,6 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     light_state = hass.states.get("light.test")
     assert light_state.attributes.get("white_value") == 155
 
-    async_fire_mqtt_message(
-        hass, "test_light_rgb", '{"state":"ON", "white_value":null}'
-    )
-
-    light_state = hass.states.get("light.test")
-    assert "white_value" not in light_state.attributes
-
 
 async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     """Test the sending of command in optimistic mode."""
