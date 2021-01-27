@@ -124,6 +124,7 @@ class AuthProvider:
         """Verify a refresh token is still valid.
 
         Optional hook for an auth provider to verify validity of a refresh token.
+        Should raise InvalidAuthError on errors.
         """
 
 

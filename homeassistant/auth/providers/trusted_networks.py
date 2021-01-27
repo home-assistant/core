@@ -20,6 +20,7 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
+from .. import InvalidAuthError
 from ..models import Credentials, RefreshToken, UserMeta
 
 IPAddress = Union[IPv4Address, IPv6Address]
@@ -51,10 +52,6 @@ CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     },
     extra=vol.PREVENT_EXTRA,
 )
-
-
-class InvalidAuthError(HomeAssistantError):
-    """Raised when try to access from untrusted networks."""
 
 
 class InvalidUserError(HomeAssistantError):

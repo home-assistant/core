@@ -24,6 +24,10 @@ _ProviderKey = Tuple[str, Optional[str]]
 _ProviderDict = Dict[_ProviderKey, AuthProvider]
 
 
+class InvalidAuthError(Exception):
+    """Raised when a authentication error occurs."""
+
+
 class InvalidProvider(Exception):
     """Authentication provider not found."""
 
@@ -488,7 +492,10 @@ class AuthManager:
     def async_validate_refresh_token(
         self, refresh_token: models.RefreshToken, remote_ip: Optional[str] = None
     ) -> None:
-        """Validate that a refresh token is usable."""
+        """Validate that a refresh token is usable.
+
+        Will raise InvalidAuthError on errors.
+        """
         provider = self._async_resolve_provider(refresh_token)
         if provider:
             provider.async_validate_refresh_token(refresh_token, remote_ip)

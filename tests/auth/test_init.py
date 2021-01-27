@@ -7,7 +7,12 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import auth, data_entry_flow
-from homeassistant.auth import auth_store, const as auth_const, models as auth_models
+from homeassistant.auth import (
+    InvalidAuthError,
+    auth_store,
+    const as auth_const,
+    models as auth_models,
+)
 from homeassistant.auth.const import MFA_SESSION_EXPIRATION
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
@@ -495,9 +500,9 @@ async def test_refresh_token_provider_validation(mock_hass):
 
     with patch(
         "homeassistant.auth.providers.insecure_example.ExampleAuthProvider.async_validate_refresh_token",
-        side_effect=Exception("Invalid access"),
+        side_effect=InvalidAuthError("Invalid access"),
     ) as call:
-        with pytest.raises(Exception):
+        with pytest.raises(InvalidAuthError):
             manager.async_create_access_token(refresh_token, ip)
 
     call.assert_called_with(refresh_token, ip)

@@ -121,6 +121,7 @@ import uuid
 from aiohttp import web
 import voluptuous as vol
 
+from homeassistant.auth import InvalidAuthError
 from homeassistant.auth.models import (
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
     Credentials,
@@ -315,7 +316,15 @@ class TokenView(HomeAssistantView):
         refresh_token = await hass.auth.async_create_refresh_token(
             user, client_id, credential=credential
         )
-        access_token = hass.auth.async_create_access_token(refresh_token, remote_addr)
+        try:
+            access_token = hass.auth.async_create_access_token(
+                refresh_token, remote_addr
+            )
+        except InvalidAuthError as exc:
+            return self.json(
+                {"error": "access_denied", "error_description": str(exc)},
+                status_code=HTTP_FORBIDDEN,
+            )
 
         return self.json(
             {
@@ -350,7 +359,15 @@ class TokenView(HomeAssistantView):
         if refresh_token.client_id != client_id:
             return self.json({"error": "invalid_request"}, status_code=HTTP_BAD_REQUEST)
 
-        access_token = hass.auth.async_create_access_token(refresh_token, remote_addr)
+        try:
+            access_token = hass.auth.async_create_access_token(
+                refresh_token, remote_addr
+            )
+        except InvalidAuthError as exc:
+            return self.json(
+                {"error": "access_denied", "error_description": str(exc)},
+                status_code=HTTP_FORBIDDEN,
+            )
 
         return self.json(
             {
@@ -486,7 +503,12 @@ async def websocket_create_long_lived_access_token(
         access_token_expiration=timedelta(days=msg["lifespan"]),
     )
 
-    access_token = hass.auth.async_create_access_token(refresh_token)
+    try:
+        access_token = hass.auth.async_create_access_token(refresh_token)
+    except InvalidAuthError as exc:
+        return websocket_api.error_message(
+            msg["id"], websocket_api.const.ERR_UNAUTHORIZED, str(exc)
+        )
 
     connection.send_message(websocket_api.result_message(msg["id"], access_token))
 
