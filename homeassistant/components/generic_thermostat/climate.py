@@ -362,7 +362,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     @property
     def preset_modes(self):
         """Return a list of available preset modes or PRESET_NONE if _presets is undefined."""
-        return list(self._presets.keys()) if self._presets else PRESET_NONE
+        return list(self._presets) if self._presets else None
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set hvac mode."""
