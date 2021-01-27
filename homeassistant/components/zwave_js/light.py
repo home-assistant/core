@@ -240,9 +240,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             # Zwave multilevel switches use a range of [0, 99] to control brightness.
             zwave_brightness = byte_to_zwave_brightness(brightness)
 
-        if self.info.primary_value.value == zwave_brightness:
-            # no point in setting same brightness
-            return
         # set transition value before sending new brightness
         await self._async_set_transition_duration(transition)
         # setting a value requires setting targetValue
