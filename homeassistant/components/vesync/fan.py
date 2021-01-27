@@ -107,7 +107,20 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         self.smartfan.manual_mode()
         self.smartfan.change_fan_speed(FAN_SPEEDS.index(speed))
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    def turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
         """Turn the device on."""
         self.smartfan.turn_on()
         self.set_speed(speed)

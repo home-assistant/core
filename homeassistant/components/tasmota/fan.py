@@ -79,7 +79,16 @@ class TasmotaFan(
         else:
             self._tasmota_entity.set_speed(HA_TO_TASMOTA_SPEED_MAP[speed])
 
-    async def async_turn_on(self, speed=None, **kwargs):
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    async def async_turn_on(
+        self, speed=None, percentage=None, preset_mode=None, **kwargs
+    ):
         """Turn the fan on."""
         # Tasmota does not support turning a fan on with implicit speed
         await self.async_set_speed(speed or fan.SPEED_MEDIUM)

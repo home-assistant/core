@@ -72,7 +72,20 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         target_value = self.get_zwave_value("targetValue")
         await self.info.node.async_set_value(target_value, SPEED_TO_VALUE[speed])
 
-    async def async_turn_on(self, speed: Optional[str] = None, **kwargs: Any) -> None:
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    async def async_turn_on(
+        self,
+        speed: Optional[str] = None,
+        percentage: Optional[int] = None,
+        preset_mode: Optional[str] = None,
+        **kwargs: Any,
+    ) -> None:
         """Turn the device on."""
         if speed is None:
             # Value 255 tells device to return to previous value

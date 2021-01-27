@@ -94,7 +94,20 @@ class WiLightFan(WiLightDevice, FanEntity):
                 self._direction = self._status["direction"]
         return self._direction
 
-    async def async_turn_on(self, speed: str = None, **kwargs):
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    async def async_turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
         """Turn on the fan."""
         if speed is None:
             await self._client.set_fan_direction(self._index, self._direction)

@@ -86,7 +86,14 @@ class SmartyFan(FanEntity):
             self._speed = speed
             self._state = True
 
-    def turn_on(self, speed=None, **kwargs):
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    def turn_on(self, speed=None, percentage=None, preset_mode=None, **kwargs):
         """Turn on the fan."""
         _LOGGER.debug("Turning on fan. Speed is %s", speed)
         if speed is None:

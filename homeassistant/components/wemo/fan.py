@@ -185,7 +185,20 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
             self._available = False
             self.wemo.reconnect_with_device()
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    def turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
         """Turn the switch on."""
         if speed is None:
             try:
