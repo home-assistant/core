@@ -1,4 +1,6 @@
 """Tests for the devolo Home Control integration."""
+from unittest.mock import patch
+
 from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
 import pytest
 
@@ -10,7 +12,6 @@ from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from tests.async_mock import patch
 from tests.components.devolo_home_control import configure_integration
 
 
