@@ -1,5 +1,6 @@
 """The tests for the automation component."""
 import asyncio
+import logging
 from unittest.mock import Mock, patch
 
 import pytest
@@ -946,7 +947,8 @@ async def test_automation_with_error_in_script(hass, caplog):
 
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
-    assert "Service not found" in caplog.text
+    assert len([rec for rec in caplog.records if rec.levelno == logging.ERROR]) == 1
+    assert "Unable to find service" in caplog.text
     assert "Traceback" not in caplog.text
 
 

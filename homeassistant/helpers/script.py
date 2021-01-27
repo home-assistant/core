@@ -274,6 +274,9 @@ class _ScriptRun:
         await self._stopped.wait()
 
     def _log_exception(self, exception):
+        if self._script.domain == "automation":  # don't use const: circular import
+            return
+
         action_type = cv.determine_script_action(self._action)
 
         error = str(exception)
