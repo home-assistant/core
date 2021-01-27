@@ -488,7 +488,7 @@ millheater==0.4.0
 minio==4.0.9
 
 # homeassistant.components.motion_blinds
-motionblinds==0.4.7
+motionblinds==0.4.8
 
 # homeassistant.components.tts
 mutagen==1.45.1
