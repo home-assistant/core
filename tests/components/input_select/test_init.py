@@ -9,6 +9,8 @@ from homeassistant.components.input_select import (
     ATTR_OPTIONS,
     CONF_INITIAL,
     DOMAIN,
+    SERVICE_SELECT_FIRST,
+    SERVICE_SELECT_LAST,
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
@@ -100,6 +102,32 @@ def select_previous(hass, entity_id):
     hass.async_create_task(
         hass.services.async_call(
             DOMAIN, SERVICE_SELECT_PREVIOUS, {ATTR_ENTITY_ID: entity_id}
+        )
+    )
+
+
+@bind_hass
+def select_first(hass, entity_id):
+    """Set first value of input_select.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.async_create_task(
+        hass.services.async_call(
+            DOMAIN, SERVICE_SELECT_FIRST, {ATTR_ENTITY_ID: entity_id}
+        )
+    )
+
+
+@bind_hass
+def select_last(hass, entity_id):
+    """Set last value of input_select.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.async_create_task(
+        hass.services.async_call(
+            DOMAIN, SERVICE_SELECT_LAST, {ATTR_ENTITY_ID: entity_id}
         )
     )
 
@@ -201,6 +229,38 @@ async def test_select_previous(hass):
     assert "first option" == state.state
 
     select_previous(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert "last option" == state.state
+
+
+async def test_select_first_last(hass):
+    """Test select_first and _last methods."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test_1": {
+                    "options": ["first option", "middle option", "last option"],
+                    "initial": "middle option",
+                }
+            }
+        },
+    )
+    entity_id = "input_select.test_1"
+
+    state = hass.states.get(entity_id)
+    assert "middle option" == state.state
+
+    select_first(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert "first option" == state.state
+
+    select_last(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
