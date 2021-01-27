@@ -93,9 +93,6 @@ class NotionBinarySensor(NotionEntity, BinarySensorEntity):
         """Return whether the sensor is on or off."""
         task = self.coordinator.data["tasks"][self.task_id]
 
-        if not self._state:
-            return False
-
         if task["task_type"] == SENSOR_BATTERY:
             return self._state == "critical"
         if task["task_type"] in (
