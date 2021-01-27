@@ -60,8 +60,7 @@ class TestGraphite(unittest.TestCase):
         assert setup_component(self.hass, graphite.DOMAIN, config)
         assert mock_gf.call_count == 1
         assert mock_gf.call_args == mock.call(self.hass, "foo", 123, "udp", "me")
-        assert mock_socket.call_count == 1
-        assert mock_socket.call_args == mock.call(socket.AF_INET, socket.SOCK_DGRAM)
+        assert mock_socket.call_count == 0
 
     @patch("socket.socket")
     @patch("homeassistant.components.graphite.GraphiteFeeder")
