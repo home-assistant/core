@@ -2,6 +2,7 @@
 import logging
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Set, Union, cast
 
+from jinja2 import ChainableUndefined  # type: ignore
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -465,11 +466,28 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         def log_cb(level, msg, **kwargs):
             self._logger.log(level, "%s %s", msg, self._name, **kwargs)
 
+        class DummyTrigger(ChainableUndefined):  # type: ignore
+            """Dummy trigger variable to handle the case when a variable reference the trigger."""
+
+            def _dummy(self, *args, **kwargs):
+                return 0
+
+            __add__ = __radd__ = __sub__ = __rsub__ = _dummy
+            __mul__ = __rmul__ = __div__ = __rdiv__ = _dummy
+            __truediv__ = __rtruediv__ = _dummy
+            __floordiv__ = __rfloordiv__ = _dummy
+            __mod__ = __rmod__ = _dummy
+            __pos__ = __neg__ = _dummy
+            __call__ = __getitem__ = _dummy
+            __lt__ = __le__ = __gt__ = __ge__ = _dummy
+            __int__ = __float__ = __complex__ = _dummy
+            __pow__ = __rpow__ = _dummy
+
         variables = None
         if self._variables:
             try:
                 variables = self._variables.async_render(
-                    cast(HomeAssistant, self.hass), None
+                    cast(HomeAssistant, self.hass), {"trigger": DummyTrigger()}
                 )
             except template.TemplateError as err:
                 self._logger.error("Error rendering variables: %s", err)
