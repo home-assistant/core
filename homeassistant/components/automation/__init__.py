@@ -465,6 +465,16 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         def log_cb(level, msg, **kwargs):
             self._logger.log(level, "%s %s", msg, self._name, **kwargs)
 
+        variables = None
+        if self._variables:
+            try:
+                variables = self._variables.async_render(
+                    cast(HomeAssistant, self.hass), None
+                )
+            except template.TemplateError as err:
+                self._logger.error("Error rendering variables: %s", err)
+                return None
+
         return await async_initialize_triggers(
             cast(HomeAssistant, self.hass),
             self._trigger_config,
@@ -473,6 +483,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             self._name,
             log_cb,
             home_assistant_start,
+            variables,
         )
 
     @property
