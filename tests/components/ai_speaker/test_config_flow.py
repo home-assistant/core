@@ -8,7 +8,7 @@ from homeassistant.components.ai_speaker.const import DOMAIN
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "ai_speaker", {})
+    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -20,6 +20,9 @@ async def test_form(hass):
     ) as mock_setup, patch(
         "homeassistant.components.ai_speaker.async_setup_entry",
         return_value=True,
+    ) as mock_gate_info, patch(
+        "homeassistant.components.ai_speaker.config_flow.AisWebService.get_gate_info",
+        return_value={"Product": "AIS DEV1", "ais_id": "dom-123"},
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -27,9 +30,11 @@ async def test_form(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
-    assert len(mock_setup.mock_calls) == 0
-    assert len(mock_setup_entry.mock_calls) == 0
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "AI-Speaker AIS DEV1"
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_gate_info.mock_calls) == 1
 
 
 async def test_form_cannot_connect(hass):
@@ -48,3 +53,22 @@ async def test_form_cannot_connect(hass):
         )
 
     assert result2["type"] == "abort"
+
+
+async def test_form_unexpected_exception(hass):
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.ai_speaker.config_flow.AisDevice.get_gate_info",
+        side_effect=ValueError("message"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
