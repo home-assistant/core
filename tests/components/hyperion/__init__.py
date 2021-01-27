@@ -113,6 +113,7 @@ def create_mock_client() -> Mock:
         }
     )
 
+    mock_client.priorities = []
     mock_client.adjustment = None
     mock_client.effects = None
     mock_client.instances = [

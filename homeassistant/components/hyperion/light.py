@@ -29,10 +29,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_config_entry,
-    async_get_registry,
-)
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,

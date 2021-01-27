@@ -711,7 +711,7 @@ async def test_light_async_turn_off(hass: HomeAssistantType) -> None:
         }
     )
 
-    _call_registered_callback(client, "components-update")
+    call_registered_callback(client, "components-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.attributes["icon"] == hyperion_light.ICON_LIGHTBULB
