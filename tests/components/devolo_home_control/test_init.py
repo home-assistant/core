@@ -6,7 +6,10 @@ import pytest
 
 from homeassistant.components.devolo_home_control import async_unload_entry
 from homeassistant.components.devolo_home_control.const import DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+from homeassistant.config_entries import (
+    ENTRY_STATE_SETUP_ERROR,
+    ENTRY_STATE_SETUP_RETRY,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.components.devolo_home_control import configure_integration
@@ -24,8 +27,8 @@ async def test_setup_entry(hass: HomeAssistant):
 async def test_setup_entry_credentials_invalid(hass: HomeAssistant):
     """Test setup entry fails if credentials are invalid."""
     entry = configure_integration(hass)
-    assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert not hass.data[DOMAIN]
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state == ENTRY_STATE_SETUP_ERROR
 
 
 @pytest.mark.maintenance
