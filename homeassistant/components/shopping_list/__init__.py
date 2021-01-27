@@ -25,9 +25,9 @@ PERSISTENCE = ".shopping_list.json"
 
 SERVICE_ADD_ITEM = "add_item"
 SERVICE_COMPLETE_ITEM = "complete_item"
-SERVICE_RESTORE_ITEM = "restore_item"
-SERVICE_COMPLETE_LIST = "complete_list"
-SERVICE_RESTORE_LIST = "restore_list"
+SERVICE_UNCOMPLETE_ITEM = "uncomplete_item"
+SERVICE_COMPLETE_ALL = "complete_all"
+SERVICE_UNCOMPLETE_ALL = "uncomplete_all"
 SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): vol.Any(None, cv.string)})
 SERVICE_LIST_SCHEMA = vol.Schema({})
 
@@ -96,7 +96,7 @@ async def async_setup_entry(hass, config_entry):
         else:
             await data.async_update(item["id"], {"name": name, "complete": True})
 
-    async def restore_item_service(call):
+    async def uncomplete_item_service(call):
         """Mark the item provided via `name` as incomplete."""
         data = hass.data[DOMAIN]
         name = call.data.get(ATTR_NAME)
@@ -109,11 +109,11 @@ async def async_setup_entry(hass, config_entry):
         else:
             await data.async_update(item["id"], {"name": name, "complete": False})
 
-    async def complete_list_service(call):
+    async def complete_all_service(call):
         """Mark all items in the list as complete."""
         await data.async_update_list({"complete": True})
 
-    async def restore_list_service(call):
+    async def uncomplete_all_service(call):
         """Mark all items in the list as incomplete."""
         await data.async_update_list({"complete": False})
 
@@ -128,20 +128,20 @@ async def async_setup_entry(hass, config_entry):
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_RESTORE_ITEM,
-        restore_item_service,
+        SERVICE_UNCOMPLETE_ITEM,
+        uncomplete_item_service,
         schema=SERVICE_ITEM_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_COMPLETE_LIST,
-        complete_list_service,
+        SERVICE_COMPLETE_ALL,
+        complete_all_service,
         schema=SERVICE_LIST_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_RESTORE_LIST,
-        restore_list_service,
+        SERVICE_UNCOMPLETE_ALL,
+        uncomplete_all_service,
         schema=SERVICE_LIST_SCHEMA,
     )
 
