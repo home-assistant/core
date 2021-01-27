@@ -15,7 +15,7 @@ from homeassistant.components.rako import (
     RakoBridge,
 )
 
-from tests.components.rako import MOCK_ENTITY_ID, MOCK_HOST, MOCK_MAC
+from . import MOCK_ENTITY_ID, MOCK_HOST, MOCK_MAC
 
 
 @pytest.fixture
