@@ -22,7 +22,7 @@ TEST_CONFIG = {
         tcp.CONF_TIMEOUT: tcp.DEFAULT_TIMEOUT + 1,
         tcp.CONF_PAYLOAD: "test_payload",
         tcp.CONF_UNIT_OF_MEASUREMENT: "test_unit",
-        tcp.CONF_VALUE_TEMPLATE: Template("test_template"),
+        tcp.CONF_VALUE_TEMPLATE: "{{ 'test_' + value }}",
         tcp.CONF_VALUE_ON: "test_on",
         tcp.CONF_BUFFER_SIZE: tcp.DEFAULT_BUFFER_SIZE + 1,
     }
