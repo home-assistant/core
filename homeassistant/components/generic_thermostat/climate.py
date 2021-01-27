@@ -277,6 +277,13 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         return super().precision
 
     @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
+        # Since this integration does not yet have a step size parameter
+        # we have to re-use the precision as the step size for now.
+        return self.precision
+
+    @property
     def temperature_unit(self):
         """Return the unit of measurement."""
         return self._unit
