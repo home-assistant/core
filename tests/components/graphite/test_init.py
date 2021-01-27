@@ -24,7 +24,7 @@ class TestGraphite(unittest.TestCase):
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.gf = graphite.GraphiteFeeder(self.hass, "foo", 123, "ha")
+        self.gf = graphite.GraphiteFeeder(self.hass, "foo", 123, "tcp", "ha")
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -63,7 +63,7 @@ class TestGraphite(unittest.TestCase):
     def test_subscribe(self):
         """Test the subscription."""
         fake_hass = mock.MagicMock()
-        gf = graphite.GraphiteFeeder(fake_hass, "foo", 123, "ha")
+        gf = graphite.GraphiteFeeder(fake_hass, "foo", 123, "tcp", "ha")
         fake_hass.bus.listen_once.has_calls(
             [
                 mock.call(EVENT_HOMEASSISTANT_START, gf.start_listen),
