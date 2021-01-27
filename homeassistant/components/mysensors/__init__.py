@@ -140,6 +140,7 @@ async def async_setup(hass, config: ConfigType) -> bool:
             CONF_TOPIC_IN_PREFIX: gw.get(CONF_TOPIC_IN_PREFIX),
             CONF_RETAIN: config[CONF_RETAIN],
             CONF_VERSION: config[CONF_VERSION],
+            CONF_PERSISTENCE_FILE: gw.get(CONF_PERSISTENCE_FILE)
             # nodes config ignored at this time. renaming nodes can now be done from the frontend.
         }
         for gw in config[CONF_GATEWAYS]
