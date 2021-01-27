@@ -71,34 +71,33 @@ async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bo
         )
         if gateway is None:
             return False
-        else:
-            gateway_ready = asyncio.Future()
+        gateway_ready = asyncio.Future()
 
-            def gateway_ready_callback(msg):
-                msg_type = msg.gateway.const.MessageType(msg.type)
-                _LOGGER.debug("Received MySensors msg type %s: %s", msg_type.name, msg)
-                if msg_type.name != "internal":
-                    return
-                internal = msg.gateway.const.Internal(msg.sub_type)
-                if internal.name != "I_GATEWAY_READY":
-                    return
-                _LOGGER.debug("Received gateway ready")
-                gateway_ready.set_result(True)
+        def gateway_ready_callback(msg):
+            msg_type = msg.gateway.const.MessageType(msg.type)
+            _LOGGER.debug("Received MySensors msg type %s: %s", msg_type.name, msg)
+            if msg_type.name != "internal":
+                return
+            internal = msg.gateway.const.Internal(msg.sub_type)
+            if internal.name != "I_GATEWAY_READY":
+                return
+            _LOGGER.debug("Received gateway ready")
+            gateway_ready.set_result(True)
 
-            gateway.event_callback = gateway_ready_callback
-            connect_task = None
-            try:
-                connect_task = asyncio.create_task(gateway.start())
-                with async_timeout.timeout(5):
-                    await gateway_ready
-                    return True
-            except asyncio.TimeoutError:
-                _LOGGER.info("Try gateway connect failed with timeout")
-                return False
-            finally:
-                if connect_task is not None and not connect_task.done():
-                    connect_task.cancel()
-                asyncio.create_task(gateway.stop())
+        gateway.event_callback = gateway_ready_callback
+        connect_task = None
+        try:
+            connect_task = asyncio.create_task(gateway.start())
+            with async_timeout.timeout(5):
+                await gateway_ready
+                return True
+        except asyncio.TimeoutError:
+            _LOGGER.info("Try gateway connect failed with timeout")
+            return False
+        finally:
+            if connect_task is not None and not connect_task.done():
+                connect_task.cancel()
+            asyncio.create_task(gateway.stop())
     except OSError as err:
         _LOGGER.info("Try gateway connect failed with exception", exc_info=err)
         return False
@@ -144,12 +143,12 @@ async def _get_gateway(
     persistence_file = data.get(CONF_PERSISTENCE_FILE, f"mysensors_{unique_id}.json")
     # interpret relative paths to be in hass config folder. absolute paths will be left as they are
     persistence_file = hass.config.path(persistence_file)
-    version = data.get(CONF_VERSION)
-    device = data.get(CONF_DEVICE)
-    baud_rate = data.get(CONF_BAUD_RATE)
-    tcp_port = data.get(CONF_TCP_PORT)
-    in_prefix = data.get(CONF_TOPIC_IN_PREFIX, "")
-    out_prefix = data.get(CONF_TOPIC_OUT_PREFIX, "")
+    version: str = data[CONF_VERSION]
+    device: str = data[CONF_DEVICE]
+    baud_rate: Optional[int] = data.get(CONF_BAUD_RATE)
+    tcp_port: Optional[int] = data.get(CONF_TCP_PORT)
+    in_prefix: str = data.get(CONF_TOPIC_IN_PREFIX, "")
+    out_prefix: str = data.get(CONF_TOPIC_OUT_PREFIX, "")
 
     if device == MQTT_COMPONENT:
         # what is the purpose of this?

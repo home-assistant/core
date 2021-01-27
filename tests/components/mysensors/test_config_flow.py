@@ -14,7 +14,6 @@ from homeassistant.components.mysensors.const import (
     CONF_GATEWAY_TYPE_MQTT,
     CONF_GATEWAY_TYPE_SERIAL,
     CONF_GATEWAY_TYPE_TCP,
-    CONF_GATEWAY_TYPE_TYPE,
     CONF_GATEWAYS,
     CONF_PERSISTENCE,
     CONF_PERSISTENCE_FILE,
@@ -24,13 +23,14 @@ from homeassistant.components.mysensors.const import (
     CONF_TOPIC_OUT_PREFIX,
     CONF_VERSION,
     DOMAIN,
+    ConfGatewayType,
 )
 from homeassistant.components.mysensors.gateway import is_serial_port
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 
 async def get_form(
-    hass: HomeAssistantType, gatway_type: CONF_GATEWAY_TYPE_TYPE, expected_step_id: str
+    hass: HomeAssistantType, gatway_type: ConfGatewayType, expected_step_id: str
 ):
     """Get a form for the given gateway type."""
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -220,7 +220,7 @@ async def test_fail_to_connect(hass: HomeAssistantType):
 
 async def config_invalid(
     hass: HomeAssistantType,
-    gatway_type: CONF_GATEWAY_TYPE_TYPE,
+    gatway_type: ConfGatewayType,
     expected_step_id: str,
     user_input: Dict[str, any],
     err_field,

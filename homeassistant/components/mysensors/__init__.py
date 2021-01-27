@@ -194,12 +194,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Remove an instance of the MySensors integration."""
-    _LOGGER.debug("Unload entry: %s (id: %s)", entry.title, entry.entry_id)
 
     gateway = get_mysensors_gateway(hass, entry.entry_id)
-    if not gateway:
-        _LOGGER.error("Can't unload configentry %s, no gateway found", entry.entry_id)
-        return False
 
     unload_ok = all(
         await asyncio.gather(

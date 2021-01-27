@@ -4,6 +4,8 @@ from typing import Dict, Optional
 
 import voluptuous as vol
 
+from homeassistant import config_entries
+from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
 from homeassistant.components.mysensors import (
     CONF_DEVICE,
     DEFAULT_BAUD_RATE,
@@ -13,8 +15,8 @@ from homeassistant.components.mysensors import (
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_RETAIN, CONF_VERSION, DEFAULT_VERSION
-from ... import config_entries
-from ..mqtt import valid_publish_topic, valid_subscribe_topic
+
+# pylint: disable=unused-import
 from .const import (
     CONF_BAUD_RATE,
     CONF_GATEWAY_TYPE,
@@ -22,12 +24,12 @@ from .const import (
     CONF_GATEWAY_TYPE_MQTT,
     CONF_GATEWAY_TYPE_SERIAL,
     CONF_GATEWAY_TYPE_TCP,
-    CONF_GATEWAY_TYPE_TYPE,
     CONF_PERSISTENCE_FILE,
     CONF_TCP_PORT,
     CONF_TOPIC_IN_PREFIX,
     CONF_TOPIC_OUT_PREFIX,
     DOMAIN,
+    ConfGatewayType,
 )
 from .gateway import MQTT_COMPONENT, is_serial_port, is_socket_address, try_connect
 
@@ -71,7 +73,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         entered from the frontend.
         Therefore we process it as though it came from the frontend.
         """
-        if user_input.get(CONF_DEVICE) == MQTT_COMPONENT:
+        if user_input[CONF_DEVICE] == MQTT_COMPONENT:
             user_input[CONF_GATEWAY_TYPE] = CONF_GATEWAY_TYPE_MQTT
         else:
             try:
@@ -87,18 +89,17 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input: Optional[Dict[str, str]] = None):
         """Create a config entry from frontend user input."""
-        schema = dict()
-        schema[vol.Required(CONF_GATEWAY_TYPE)] = vol.In(CONF_GATEWAY_TYPE_ALL)
+        schema = {vol.Required(CONF_GATEWAY_TYPE): vol.In(CONF_GATEWAY_TYPE_ALL)}
         schema = vol.Schema(schema)
 
-        if user_input is not None and CONF_GATEWAY_TYPE in user_input:
+        if user_input is not None:
             gw_type = user_input[CONF_GATEWAY_TYPE]
             input_pass = user_input if CONF_DEVICE in user_input else None
             if gw_type == CONF_GATEWAY_TYPE_MQTT:
                 return await self.async_step_gw_mqtt(input_pass)
-            elif gw_type == CONF_GATEWAY_TYPE_TCP:
+            if gw_type == CONF_GATEWAY_TYPE_TCP:
                 return await self.async_step_gw_tcp(input_pass)
-            elif gw_type == CONF_GATEWAY_TYPE_SERIAL:
+            if gw_type == CONF_GATEWAY_TYPE_SERIAL:
                 return await self.async_step_gw_serial(input_pass)
 
         return self.async_show_form(step_id="user", data_schema=schema)
@@ -189,7 +190,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def validate_common(
         self,
-        gw_type: CONF_GATEWAY_TYPE_TYPE,
+        gw_type: ConfGatewayType,
         user_input: Optional[Dict[str, str]] = None,
         errors: Optional[Dict[str, str]] = None,
     ) -> Dict[str, str]:
