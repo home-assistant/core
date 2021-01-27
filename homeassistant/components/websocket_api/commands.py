@@ -156,6 +156,10 @@ async def handle_call_service(hass, connection, msg):
                     msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err)
                 )
             )
+    except vol.Invalid as err:
+        connection.send_message(
+            messages.error_message(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+        )
     except HomeAssistantError as err:
         connection.logger.exception(err)
         connection.send_message(
