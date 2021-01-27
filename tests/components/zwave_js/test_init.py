@@ -5,8 +5,10 @@ from unittest.mock import patch
 import pytest
 from zwave_js_server.model.node import Node
 
+from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.config_entries import (
+    CONN_CLASS_LOCAL_PUSH,
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_RETRY,
@@ -23,6 +25,22 @@ def connect_timeout_fixture():
     """Mock the connect timeout."""
     with patch("homeassistant.components.zwave_js.CONNECT_TIMEOUT", new=0) as timeout:
         yield timeout
+
+
+@pytest.fixture(name="stop_addon")
+def stop_addon_fixture():
+    """Mock stop add-on."""
+    with patch("homeassistant.components.hassio.async_stop_addon") as stop_addon:
+        yield stop_addon
+
+
+@pytest.fixture(name="uninstall_addon")
+def uninstall_addon_fixture():
+    """Mock uninstall add-on."""
+    with patch(
+        "homeassistant.components.hassio.async_uninstall_addon"
+    ) as uninstall_addon:
+        yield uninstall_addon
 
 
 async def test_entry_setup_unload(hass, client, integration):
@@ -205,3 +223,70 @@ async def test_existing_node_not_ready(hass, client, multisensor_6, device_regis
     assert device_registry.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id)}
     )
+
+
+async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
+    """Test remove the config entry."""
+    # test successful remove without created add-on
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Z-Wave JS",
+        connection_class=CONN_CLASS_LOCAL_PUSH,
+        data={"integration_created_addon": False},
+    )
+    entry.add_to_hass(hass)
+    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    await hass.config_entries.async_remove(entry.entry_id)
+
+    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+    # test successful remove with created add-on
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Z-Wave JS",
+        connection_class=CONN_CLASS_LOCAL_PUSH,
+        data={"integration_created_addon": True},
+    )
+    entry.add_to_hass(hass)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    await hass.config_entries.async_remove(entry.entry_id)
+
+    assert stop_addon.call_count == 1
+    assert uninstall_addon.call_count == 1
+    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+    stop_addon.reset_mock()
+    uninstall_addon.reset_mock()
+
+    # test add-on stop failure
+    entry.add_to_hass(hass)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    stop_addon.side_effect = HassioAPIError()
+
+    await hass.config_entries.async_remove(entry.entry_id)
+
+    assert stop_addon.call_count == 1
+    assert uninstall_addon.call_count == 0
+    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+    assert "Failed to stop the Z-Wave JS add-on" in caplog.text
+    stop_addon.side_effect = None
+    stop_addon.reset_mock()
+    uninstall_addon.reset_mock()
+
+    # test add-on uninstall failure
+    entry.add_to_hass(hass)
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    uninstall_addon.side_effect = HassioAPIError()
+
+    await hass.config_entries.async_remove(entry.entry_id)
+
+    assert stop_addon.call_count == 1
+    assert uninstall_addon.call_count == 1
+    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+    assert "Failed to uninstall the Z-Wave JS add-on" in caplog.text
