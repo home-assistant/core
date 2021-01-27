@@ -141,7 +141,7 @@ async def _get_gateway(
         raise ValueError(
             "no unique id! either give configEntry for auto-extraction or explicitly give one"
         )
-    persistence_file = data.get(CONF_PERSISTENCE_FILE, f"mysensors_{unique_id}.pickle")
+    persistence_file = data.get(CONF_PERSISTENCE_FILE, f"mysensors_{unique_id}.json")
     # interpret relative paths to be in hass config folder. absolute paths will be left as they are
     persistence_file = hass.config.path(persistence_file)
     version = data.get(CONF_VERSION)
