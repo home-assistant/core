@@ -51,7 +51,7 @@ class AisSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"AI-Speaker {self._ais_product} status"
+        return f"AI-Speaker {self._ais_product} network connection speed."
 
     @property
     def state(self):
