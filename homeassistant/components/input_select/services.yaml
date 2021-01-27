@@ -4,6 +4,9 @@ select_next:
     entity_id:
       description: Entity id of the input select to select the next value for.
       example: input_select.my_select
+    cycle:
+      description: If the option should cycle from the last to the first (defaults to true).
+      example: true
 select_option:
   description: Select an option of an input select entity.
   fields:
@@ -18,6 +21,21 @@ select_previous:
   fields:
     entity_id:
       description: Entity id of the input select to select the previous value for.
+      example: input_select.my_select
+    cycle:
+      description: If the option should cycle from the first to the last (defaults to true).
+      example: true
+select_first:
+  description: Select the first option of an input select entity.
+  fields:
+    entity_id:
+      description: Entity id of the input select to select the first value for.
+      example: input_select.my_select
+select_last:
+  description: Select the last option of an input select entity.
+  fields:
+    entity_id:
+      description: Entity id of the input select to select the last value for.
       example: input_select.my_select
 set_options:
   description: Set the options of an input select entity.
