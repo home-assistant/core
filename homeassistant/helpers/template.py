@@ -279,6 +279,7 @@ class Template:
         "is_static",
         "_compiled_code",
         "_compiled",
+        "_limited",
     )
 
     def __init__(self, template, hass=None):
@@ -291,10 +292,11 @@ class Template:
         self._compiled: Optional[Template] = None
         self.hass = hass
         self.is_static = not is_template_string(template)
+        self._limited = None
 
     @property
     def _env(self) -> "TemplateEnvironment":
-        if self.hass is None:
+        if self.hass is None or self._limited:
             return _NO_HASS_ENV
         ret: Optional[TemplateEnvironment] = self.hass.data.get(_ENVIRONMENT)
         if ret is None:
@@ -315,6 +317,7 @@ class Template:
         self,
         variables: TemplateVarsType = None,
         parse_result: bool = True,
+        limited: bool = False,
         **kwargs: Any,
     ) -> Any:
         """Render given template."""
@@ -325,7 +328,7 @@ class Template:
 
         return run_callback_threadsafe(
             self.hass.loop,
-            partial(self.async_render, variables, parse_result, **kwargs),
+            partial(self.async_render, variables, parse_result, limited, **kwargs),
         ).result()
 
     @callback
@@ -333,6 +336,7 @@ class Template:
         self,
         variables: TemplateVarsType = None,
         parse_result: bool = True,
+        limited: bool = False,
         **kwargs: Any,
     ) -> Any:
         """Render given template.
@@ -344,7 +348,7 @@ class Template:
                 return self.template
             return self._parse_result(self.template)
 
-        compiled = self._compiled or self._ensure_compiled()
+        compiled = self._compiled or self._ensure_compiled(limited)
 
         if variables is not None:
             kwargs.update(variables)
@@ -519,12 +523,16 @@ class Template:
                 )
             return value if error_value is _SENTINEL else error_value
 
-    def _ensure_compiled(self) -> "Template":
+    def _ensure_compiled(self, limited: bool = False) -> "Template":
         """Bind a template to a specific hass instance."""
         self.ensure_valid()
 
         assert self.hass is not None, "hass variable not set on template"
+        assert (
+            self._limited is None or self._limited == limited
+        ), "can't change between limited and non limited template"
 
+        self._limited = limited
         env = self._env
 
         self._compiled = cast(
@@ -1352,6 +1360,32 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
         if hass is None:
+
+            def unsupported(name):
+                def warn_unsupported(*args, **kwargs):
+                    _LOGGER.warning(
+                        "Use of '%s' is not supported in limited templates", name
+                    )
+                    return ""
+
+                return warn_unsupported
+
+            hass_globals = [
+                "closest",
+                "distance",
+                "expand",
+                "is_state",
+                "is_state_attr",
+                "state_attr",
+                "states",
+                "utcnow",
+                "now",
+            ]
+            hass_filters = ["closest", "expand"]
+            for g in hass_globals:
+                self.globals[g] = unsupported(g)
+            for f in hass_filters:
+                self.filters[f] = unsupported(f)
             return
 
         # We mark these as a context functions to ensure they get
