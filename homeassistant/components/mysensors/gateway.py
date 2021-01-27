@@ -2,6 +2,7 @@
 import asyncio
 from collections import defaultdict
 import logging
+from random import randint
 import socket
 import sys
 from typing import Any, Callable, Coroutine, Dict, Optional, Union
@@ -57,6 +58,50 @@ def is_socket_address(value):
         return value
     except OSError as err:
         raise vol.Invalid("Device is not a valid domain name or ip address") from err
+
+
+async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bool:
+    """Try to connect to a gateway and report if it worked."""
+    if user_input[CONF_DEVICE] == MQTT_COMPONENT:
+        return True  # dont validate mqtt. mqtt gateways dont send ready messages :(
+    user_input_copy = user_input.copy()
+    try:
+        gateway: Optional[BaseAsyncGateway] = await _get_gateway(
+            hass, user_input_copy, str(randint(0, 10 ** 6)), persistence=False
+        )
+        if gateway is None:
+            return False
+        else:
+            gateway_ready = asyncio.Future()
+
+            def gateway_ready_callback(msg):
+                msg_type = msg.gateway.const.MessageType(msg.type)
+                _LOGGER.debug("Received MySensors msg type %s: %s", msg_type.name, msg)
+                if msg_type.name != "internal":
+                    return
+                internal = msg.gateway.const.Internal(msg.sub_type)
+                if internal.name != "I_GATEWAY_READY":
+                    return
+                _LOGGER.debug("Received gateway ready")
+                gateway_ready.set_result(True)
+
+            gateway.event_callback = gateway_ready_callback
+            connect_task = None
+            try:
+                connect_task = asyncio.create_task(gateway.start())
+                with async_timeout.timeout(5):
+                    await gateway_ready
+                    return True
+            except asyncio.TimeoutError:
+                _LOGGER.info("Try gateway connect failed with timeout")
+                return False
+            finally:
+                if connect_task is not None and not connect_task.done():
+                    connect_task.cancel()
+                asyncio.create_task(gateway.stop())
+    except OSError as err:
+        _LOGGER.info("Try gateway connect failed with exception", exc_info=err)
+        return False
 
 
 def get_mysensors_gateway(
