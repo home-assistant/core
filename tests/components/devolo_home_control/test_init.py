@@ -4,13 +4,10 @@ from unittest.mock import patch
 from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
 import pytest
 
-from homeassistant.components.devolo_home_control import (
-    async_setup_entry,
-    async_unload_entry,
-)
+from homeassistant.components.devolo_home_control import async_unload_entry
 from homeassistant.components.devolo_home_control.const import DOMAIN
+from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.components.devolo_home_control import configure_integration
 
@@ -35,8 +32,8 @@ async def test_setup_entry_credentials_invalid(hass: HomeAssistant):
 async def test_setup_entry_maintenance(hass: HomeAssistant):
     """Test setup entry fails if mydevolo is in maintenance mode."""
     entry = configure_integration(hass)
-    with pytest.raises(ConfigEntryNotReady):
-        await async_setup_entry(hass, entry)
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state == ENTRY_STATE_SETUP_RETRY
 
 
 async def test_setup_connection_error(hass: HomeAssistant):
@@ -45,8 +42,9 @@ async def test_setup_connection_error(hass: HomeAssistant):
     with patch(
         "devolo_home_control_api.homecontrol.HomeControl.__init__",
         side_effect=ConnectionError,
-    ), pytest.raises(ConfigEntryNotReady):
-        await async_setup_entry(hass, entry)
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state == ENTRY_STATE_SETUP_RETRY
 
 
 async def test_setup_gateway_offline(hass: HomeAssistant):
@@ -55,8 +53,9 @@ async def test_setup_gateway_offline(hass: HomeAssistant):
     with patch(
         "devolo_home_control_api.homecontrol.HomeControl.__init__",
         side_effect=GatewayOfflineError,
-    ), pytest.raises(ConfigEntryNotReady):
-        await async_setup_entry(hass, entry)
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state == ENTRY_STATE_SETUP_RETRY
 
 
 async def test_unload_entry(hass: HomeAssistant):
