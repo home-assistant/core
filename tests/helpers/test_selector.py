@@ -169,3 +169,21 @@ def test_target_selector_schema(schema):
 def test_action_selector_schema(schema):
     """Test action sequence selector."""
     selector.validate_selector({"action": schema})
+
+
+@pytest.mark.parametrize(
+    "schema",
+    ({},),
+)
+def test_object_selector_schema(schema):
+    """Test object selector."""
+    selector.validate_selector({"object": schema})
+
+
+@pytest.mark.parametrize(
+    "schema",
+    ({}, {"multiline": True}, {"multiline": False}),
+)
+def test_text_selector_schema(schema):
+    """Test text selector."""
+    selector.validate_selector({"text": schema})
