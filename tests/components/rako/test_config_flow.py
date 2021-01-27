@@ -1,5 +1,6 @@
 """Test the Rako config flow."""
 from types import SimpleNamespace
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from python_rako import RAKO_BRIDGE_DEFAULT_PORT
@@ -8,7 +9,6 @@ from homeassistant import data_entry_flow
 from homeassistant.components.rako import CONF_MAC_ADDRESS, config_flow
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PORT, CONF_UNIQUE_ID
 
-from tests.async_mock import AsyncMock, patch
 from tests.components.rako import MOCK_HOST, MOCK_MAC
 
 

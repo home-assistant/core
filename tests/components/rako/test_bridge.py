@@ -2,6 +2,7 @@
 import asyncio
 from asyncio.tasks import Task
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 from python_rako import RAKO_BRIDGE_DEFAULT_PORT
@@ -14,7 +15,6 @@ from homeassistant.components.rako import (
     RakoBridge,
 )
 
-from tests.async_mock import patch
 from tests.components.rako import MOCK_ENTITY_ID, MOCK_HOST, MOCK_MAC
 
 
