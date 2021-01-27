@@ -144,7 +144,7 @@ omit =
     homeassistant/components/co2signal/*
     homeassistant/components/coinbase/*
     homeassistant/components/comed_hourly_pricing/sensor.py
-    homeassistant/components/comfoconnect/*
+    homeassistant/components/comfoconnect/fan.py
     homeassistant/components/concord232/alarm_control_panel.py
     homeassistant/components/concord232/binary_sensor.py
     homeassistant/components/control4/__init__.py
@@ -324,6 +324,9 @@ omit =
     homeassistant/components/freebox/sensor.py
     homeassistant/components/freebox/switch.py
     homeassistant/components/fritz/device_tracker.py
+    homeassistant/components/fritzbox_callmonitor/__init__.py
+    homeassistant/components/fritzbox_callmonitor/const.py
+    homeassistant/components/fritzbox_callmonitor/base.py
     homeassistant/components/fritzbox_callmonitor/sensor.py
     homeassistant/components/fritzbox_netmonitor/sensor.py
     homeassistant/components/fronius/sensor.py

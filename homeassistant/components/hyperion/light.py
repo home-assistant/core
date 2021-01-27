@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import re
 from types import MappingProxyType
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, cast
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from hyperion import client, const
 import voluptuous as vol
@@ -22,17 +22,15 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_config_entry,
-    async_get_registry,
-)
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
@@ -41,23 +39,26 @@ from homeassistant.helpers.typing import (
 import homeassistant.util.color as color_util
 
 from . import (
-    async_create_connect_hyperion_client,
     create_hyperion_client,
     get_hyperion_unique_id,
+    listen_for_instance_updates,
 )
 from .const import (
-    CONF_ON_UNLOAD,
+    CONF_INSTANCE_CLIENTS,
     CONF_PRIORITY,
-    CONF_ROOT_CLIENT,
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
     DOMAIN,
-    SIGNAL_INSTANCE_REMOVED,
-    SIGNAL_INSTANCES_UPDATED,
+    NAME_SUFFIX_HYPERION_LIGHT,
+    NAME_SUFFIX_HYPERION_PRIORITY_LIGHT,
+    SIGNAL_ENTITY_REMOVE,
     TYPE_HYPERION_LIGHT,
+    TYPE_HYPERION_PRIORITY_LIGHT,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+COLOR_BLACK = color_util.COLORS["black"]
 
 CONF_DEFAULT_COLOR = "default_color"
 CONF_HDMI_PRIORITY = "hdmi_priority"
@@ -226,90 +227,53 @@ async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
 ) -> bool:
     """Set up a Hyperion platform from config entry."""
-    host = config_entry.data[CONF_HOST]
-    port = config_entry.data[CONF_PORT]
-    token = config_entry.data.get(CONF_TOKEN)
 
-    async def async_instances_to_entities(response: Dict[str, Any]) -> None:
-        if not response or const.KEY_DATA not in response:
-            return
-        await async_instances_to_entities_raw(response[const.KEY_DATA])
+    entry_data = hass.data[DOMAIN][config_entry.entry_id]
+    server_id = config_entry.unique_id
 
-    async def async_instances_to_entities_raw(instances: List[Dict[str, Any]]) -> None:
-        registry = await async_get_registry(hass)
-        entities_to_add: List[HyperionLight] = []
-        running_unique_ids: Set[str] = set()
-        stopped_unique_ids: Set[str] = set()
-        server_id = cast(str, config_entry.unique_id)
-
-        # In practice, an instance can be in 3 states as seen by this function:
-        #
-        #    * Exists, and is running: Should be present in HASS/registry.
-        #    * Exists, but is not running: Cannot add it yet, but entity may have be
-        #      registered from a previous time it was running.
-        #    * No longer exists at all: Should not be present in HASS/registry.
-
-        # Add instances that are missing.
-        for instance in instances:
-            instance_id = instance.get(const.KEY_INSTANCE)
-            if instance_id is None:
-                continue
-            unique_id = get_hyperion_unique_id(
-                server_id, instance_id, TYPE_HYPERION_LIGHT
-            )
-            if not instance.get(const.KEY_RUNNING, False):
-                stopped_unique_ids.add(unique_id)
-                continue
-            running_unique_ids.add(unique_id)
-
-            if unique_id in live_entities:
-                continue
-            hyperion_client = await async_create_connect_hyperion_client(
-                host, port, instance=instance_id, token=token
-            )
-            if not hyperion_client:
-                continue
-            live_entities.add(unique_id)
-            entities_to_add.append(
+    @callback
+    def instance_add(instance_num: int, instance_name: str) -> None:
+        """Add entities for a new Hyperion instance."""
+        assert server_id
+        async_add_entities(
+            [
                 HyperionLight(
-                    unique_id,
-                    instance.get(const.KEY_FRIENDLY_NAME, DEFAULT_NAME),
+                    get_hyperion_unique_id(
+                        server_id, instance_num, TYPE_HYPERION_LIGHT
+                    ),
+                    f"{instance_name} {NAME_SUFFIX_HYPERION_LIGHT}",
                     config_entry.options,
-                    hyperion_client,
-                )
+                    entry_data[CONF_INSTANCE_CLIENTS][instance_num],
+                ),
+                HyperionPriorityLight(
+                    get_hyperion_unique_id(
+                        server_id, instance_num, TYPE_HYPERION_PRIORITY_LIGHT
+                    ),
+                    f"{instance_name} {NAME_SUFFIX_HYPERION_PRIORITY_LIGHT}",
+                    config_entry.options,
+                    entry_data[CONF_INSTANCE_CLIENTS][instance_num],
+                ),
+            ]
+        )
+
+    @callback
+    def instance_remove(instance_num: int) -> None:
+        """Remove entities for an old Hyperion instance."""
+        assert server_id
+        for light_type in LIGHT_TYPES:
+            async_dispatcher_send(
+                hass,
+                SIGNAL_ENTITY_REMOVE.format(
+                    get_hyperion_unique_id(server_id, instance_num, light_type)
+                ),
             )
 
-        # Remove entities that are are not running instances on Hyperion:
-        for unique_id in live_entities - running_unique_ids:
-            live_entities.remove(unique_id)
-            async_dispatcher_send(hass, SIGNAL_INSTANCE_REMOVED.format(unique_id))
-
-        # Deregister instances that are no longer present on this server.
-        for entry in async_entries_for_config_entry(registry, config_entry.entry_id):
-            if entry.unique_id not in running_unique_ids.union(stopped_unique_ids):
-                registry.async_remove(entry.entity_id)
-
-        async_add_entities(entities_to_add)
-
-    # Readability note: This variable is kept alive in the context of the callback to
-    # async_instances_to_entities below.
-    live_entities: Set[str] = set()
-
-    await async_instances_to_entities_raw(
-        hass.data[DOMAIN][config_entry.entry_id][CONF_ROOT_CLIENT].instances,
-    )
-    hass.data[DOMAIN][config_entry.entry_id][CONF_ON_UNLOAD].append(
-        async_dispatcher_connect(
-            hass,
-            SIGNAL_INSTANCES_UPDATED.format(config_entry.entry_id),
-            async_instances_to_entities,
-        )
-    )
+    listen_for_instance_updates(hass, config_entry, instance_add, instance_remove)
     return True
 
 
-class HyperionLight(LightEntity):
-    """Representation of a Hyperion remote."""
+class HyperionBaseLight(LightEntity):
+    """A Hyperion light base class."""
 
     def __init__(
         self,
@@ -329,7 +293,23 @@ class HyperionLight(LightEntity):
         self._rgb_color: Sequence[int] = DEFAULT_COLOR
         self._effect: str = KEY_EFFECT_SOLID
 
-        self._effect_list: List[str] = []
+        self._static_effect_list: List[str] = [KEY_EFFECT_SOLID]
+        if self._support_external_effects:
+            self._static_effect_list += list(const.KEY_COMPONENTID_EXTERNAL_SOURCES)
+        self._effect_list: List[str] = self._static_effect_list[:]
+
+        self._client_callbacks = {
+            f"{const.KEY_ADJUSTMENT}-{const.KEY_UPDATE}": self._update_adjustment,
+            f"{const.KEY_COMPONENTS}-{const.KEY_UPDATE}": self._update_components,
+            f"{const.KEY_EFFECTS}-{const.KEY_UPDATE}": self._update_effect_list,
+            f"{const.KEY_PRIORITIES}-{const.KEY_UPDATE}": self._update_priorities,
+            f"{const.KEY_CLIENT}-{const.KEY_UPDATE}": self._update_client,
+        }
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Whether or not the entity is enabled by default."""
+        return True
 
     @property
     def should_poll(self) -> bool:
@@ -352,11 +332,6 @@ class HyperionLight(LightEntity):
         return color_util.color_RGB_to_hs(*self._rgb_color)
 
     @property
-    def is_on(self) -> bool:
-        """Return true if not black."""
-        return bool(self._client.is_on()) and self._client.visible_priority is not None
-
-    @property
     def icon(self) -> str:
         """Return state specific icon."""
         if self.is_on:
@@ -374,11 +349,7 @@ class HyperionLight(LightEntity):
     @property
     def effect_list(self) -> List[str]:
         """Return the list of supported effects."""
-        return (
-            self._effect_list
-            + list(const.KEY_COMPONENTID_EXTERNAL_SOURCES)
-            + [KEY_EFFECT_SOLID]
-        )
+        return self._effect_list
 
     @property
     def supported_features(self) -> int:
@@ -401,33 +372,7 @@ class HyperionLight(LightEntity):
         return self._options.get(key, defaults[key])
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the lights on."""
-        # == Turn device on ==
-        # Turn on both ALL (Hyperion itself) and LEDDEVICE. It would be
-        # preferable to enable LEDDEVICE after the settings (e.g. brightness,
-        # color, effect), but this is not possible due to:
-        # https://github.com/hyperion-project/hyperion.ng/issues/967
-        if not self.is_on:
-            if not await self._client.async_send_set_component(
-                **{
-                    const.KEY_COMPONENTSTATE: {
-                        const.KEY_COMPONENT: const.KEY_COMPONENTID_ALL,
-                        const.KEY_STATE: True,
-                    }
-                }
-            ):
-                return
-
-            if not await self._client.async_send_set_component(
-                **{
-                    const.KEY_COMPONENTSTATE: {
-                        const.KEY_COMPONENT: const.KEY_COMPONENTID_LEDDEVICE,
-                        const.KEY_STATE: True,
-                    }
-                }
-            ):
-                return
-
+        """Turn on the light."""
         # == Get key parameters ==
         if ATTR_EFFECT not in kwargs and ATTR_HS_COLOR in kwargs:
             effect = KEY_EFFECT_SOLID
@@ -457,7 +402,11 @@ class HyperionLight(LightEntity):
                         return
 
         # == Set an external source
-        if effect and effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+        if (
+            effect
+            and self._support_external_effects
+            and effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES
+        ):
 
             # Clear any color/effect.
             if not await self._client.async_send_clear(
@@ -505,18 +454,6 @@ class HyperionLight(LightEntity):
             ):
                 return
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Disable the LED output component."""
-        if not await self._client.async_send_set_component(
-            **{
-                const.KEY_COMPONENTSTATE: {
-                    const.KEY_COMPONENT: const.KEY_COMPONENTID_LEDDEVICE,
-                    const.KEY_STATE: False,
-                }
-            }
-        ):
-            return
-
     def _set_internal_state(
         self,
         brightness: Optional[int] = None,
@@ -531,10 +468,12 @@ class HyperionLight(LightEntity):
         if effect is not None:
             self._effect = effect
 
+    @callback
     def _update_components(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion components."""
         self.async_write_ha_state()
 
+    @callback
     def _update_adjustment(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion adjustments."""
         if self._client.adjustment:
@@ -548,26 +487,31 @@ class HyperionLight(LightEntity):
             )
             self.async_write_ha_state()
 
+    @callback
     def _update_priorities(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion priorities."""
-        visible_priority = self._client.visible_priority
-        if visible_priority:
-            componentid = visible_priority.get(const.KEY_COMPONENTID)
-            if componentid in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+        priority = self._get_priority_entry_that_dictates_state()
+        if priority and self._allow_priority_update(priority):
+            componentid = priority.get(const.KEY_COMPONENTID)
+            if (
+                self._support_external_effects
+                and componentid in const.KEY_COMPONENTID_EXTERNAL_SOURCES
+            ):
                 self._set_internal_state(rgb_color=DEFAULT_COLOR, effect=componentid)
             elif componentid == const.KEY_COMPONENTID_EFFECT:
                 # Owner is the effect name.
                 # See: https://docs.hyperion-project.org/en/json/ServerInfo.html#priorities
                 self._set_internal_state(
-                    rgb_color=DEFAULT_COLOR, effect=visible_priority[const.KEY_OWNER]
+                    rgb_color=DEFAULT_COLOR, effect=priority[const.KEY_OWNER]
                 )
             elif componentid == const.KEY_COMPONENTID_COLOR:
                 self._set_internal_state(
-                    rgb_color=visible_priority[const.KEY_VALUE][const.KEY_RGB],
+                    rgb_color=priority[const.KEY_VALUE][const.KEY_RGB],
                     effect=KEY_EFFECT_SOLID,
                 )
         self.async_write_ha_state()
 
+    @callback
     def _update_effect_list(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion effects."""
         if not self._client.effects:
@@ -577,9 +521,10 @@ class HyperionLight(LightEntity):
             if const.KEY_NAME in effect:
                 effect_list.append(effect[const.KEY_NAME])
         if effect_list:
-            self._effect_list = effect_list
+            self._effect_list = self._static_effect_list + effect_list
             self.async_write_ha_state()
 
+    @callback
     def _update_full_state(self) -> None:
         """Update full Hyperion state."""
         self._update_adjustment()
@@ -596,6 +541,7 @@ class HyperionLight(LightEntity):
             self._rgb_color,
         )
 
+    @callback
     def _update_client(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update client connection state."""
         self.async_write_ha_state()
@@ -606,24 +552,160 @@ class HyperionLight(LightEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_INSTANCE_REMOVED.format(self._unique_id),
+                SIGNAL_ENTITY_REMOVE.format(self._unique_id),
                 self.async_remove,
             )
         )
 
-        self._client.set_callbacks(
-            {
-                f"{const.KEY_ADJUSTMENT}-{const.KEY_UPDATE}": self._update_adjustment,
-                f"{const.KEY_COMPONENTS}-{const.KEY_UPDATE}": self._update_components,
-                f"{const.KEY_EFFECTS}-{const.KEY_UPDATE}": self._update_effect_list,
-                f"{const.KEY_PRIORITIES}-{const.KEY_UPDATE}": self._update_priorities,
-                f"{const.KEY_CLIENT}-{const.KEY_UPDATE}": self._update_client,
-            }
-        )
+        self._client.add_callbacks(self._client_callbacks)
 
         # Load initial state.
         self._update_full_state()
 
     async def async_will_remove_from_hass(self) -> None:
-        """Disconnect from server."""
-        await self._client.async_client_disconnect()
+        """Cleanup prior to hass removal."""
+        self._client.remove_callbacks(self._client_callbacks)
+
+    @property
+    def _support_external_effects(self) -> bool:
+        """Whether or not to support setting external effects from the light entity."""
+        return True
+
+    def _get_priority_entry_that_dictates_state(self) -> Optional[Dict[str, Any]]:
+        """Get the relevant Hyperion priority entry to consider."""
+        # Return the visible priority (whether or not it is the HA priority).
+        return self._client.visible_priority  # type: ignore[no-any-return]
+
+    # pylint: disable=no-self-use
+    def _allow_priority_update(self, priority: Optional[Dict[str, Any]] = None) -> bool:
+        """Determine whether to allow a priority to update internal state."""
+        return True
+
+
+class HyperionLight(HyperionBaseLight):
+    """A Hyperion light that acts in absolute (vs priority) manner.
+
+    Light state is the absolute Hyperion component state (e.g. LED device on/off) rather
+    than color based at a particular priority, and the 'winning' priority determines
+    shown state rather than exclusively the HA priority.
+    """
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if light is on."""
+        return (
+            bool(self._client.is_on())
+            and self._get_priority_entry_that_dictates_state() is not None
+        )
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the light."""
+        # == Turn device on ==
+        # Turn on both ALL (Hyperion itself) and LEDDEVICE. It would be
+        # preferable to enable LEDDEVICE after the settings (e.g. brightness,
+        # color, effect), but this is not possible due to:
+        # https://github.com/hyperion-project/hyperion.ng/issues/967
+        if not bool(self._client.is_on()):
+            for component in [
+                const.KEY_COMPONENTID_ALL,
+                const.KEY_COMPONENTID_LEDDEVICE,
+            ]:
+                if not await self._client.async_send_set_component(
+                    **{
+                        const.KEY_COMPONENTSTATE: {
+                            const.KEY_COMPONENT: component,
+                            const.KEY_STATE: True,
+                        }
+                    }
+                ):
+                    return
+
+        # Turn on the relevant Hyperion priority as usual.
+        await super().async_turn_on(**kwargs)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the light."""
+        if not await self._client.async_send_set_component(
+            **{
+                const.KEY_COMPONENTSTATE: {
+                    const.KEY_COMPONENT: const.KEY_COMPONENTID_LEDDEVICE,
+                    const.KEY_STATE: False,
+                }
+            }
+        ):
+            return
+
+
+class HyperionPriorityLight(HyperionBaseLight):
+    """A Hyperion light that only acts on a single Hyperion priority."""
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Whether or not the entity is enabled by default."""
+        return False
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if light is on."""
+        priority = self._get_priority_entry_that_dictates_state()
+        return (
+            priority is not None
+            and not HyperionPriorityLight._is_priority_entry_black(priority)
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the light."""
+        if not await self._client.async_send_clear(
+            **{const.KEY_PRIORITY: self._get_option(CONF_PRIORITY)}
+        ):
+            return
+        await self._client.async_send_set_color(
+            **{
+                const.KEY_PRIORITY: self._get_option(CONF_PRIORITY),
+                const.KEY_COLOR: COLOR_BLACK,
+                const.KEY_ORIGIN: DEFAULT_ORIGIN,
+            }
+        )
+
+    @property
+    def _support_external_effects(self) -> bool:
+        """Whether or not to support setting external effects from the light entity."""
+        return False
+
+    def _get_priority_entry_that_dictates_state(self) -> Optional[Dict[str, Any]]:
+        """Get the relevant Hyperion priority entry to consider."""
+        # Return the active priority (if any) at the configured HA priority.
+        for candidate in self._client.priorities or []:
+            if const.KEY_PRIORITY not in candidate:
+                continue
+            if candidate[const.KEY_PRIORITY] == self._get_option(
+                CONF_PRIORITY
+            ) and candidate.get(const.KEY_ACTIVE, False):
+                return candidate  # type: ignore[no-any-return]
+        return None
+
+    @classmethod
+    def _is_priority_entry_black(cls, priority: Optional[Dict[str, Any]]) -> bool:
+        """Determine if a given priority entry is the color black."""
+        if not priority:
+            return False
+        if priority.get(const.KEY_COMPONENTID) == const.KEY_COMPONENTID_COLOR:
+            rgb_color = priority.get(const.KEY_VALUE, {}).get(const.KEY_RGB)
+            if rgb_color is not None and tuple(rgb_color) == COLOR_BLACK:
+                return True
+        return False
+
+    # pylint: disable=no-self-use
+    def _allow_priority_update(self, priority: Optional[Dict[str, Any]] = None) -> bool:
+        """Determine whether to allow a Hyperion priority to update entity attributes."""
+        # Black is treated as 'off' (and Home Assistant does not support selecting black
+        # from the color selector). Do not set our internal attributes if the priority is
+        # 'off' (i.e. if black is active). Do this to ensure it seamlessly turns back on
+        # at the correct prior color on the next 'on' call.
+        return not HyperionPriorityLight._is_priority_entry_black(priority)
+
+
+LIGHT_TYPES = {
+    TYPE_HYPERION_LIGHT: HyperionLight,
+    TYPE_HYPERION_PRIORITY_LIGHT: HyperionPriorityLight,
+}
