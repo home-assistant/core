@@ -535,7 +535,7 @@ class MqttCover(MqttEntity, CoverEntity):
     async def async_toggle(self, **kwargs):
         """Toggle the entity."""
         if SUPPORT_STOP | self.supported_features and (
-                self.is_closing or self.is_opening
+            self.is_closing or self.is_opening
         ):
             await self.async_stop_cover(**kwargs)
         elif self.is_closed:
