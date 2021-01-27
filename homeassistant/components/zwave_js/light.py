@@ -164,15 +164,14 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             await self._async_set_color("Red", red)
             await self._async_set_color("Green", green)
             await self._async_set_color("Blue", blue)
-        else:
-            # turn off rgb when setting white values
-            await self._async_set_color("Red", 0)
-            await self._async_set_color("Green", 0)
-            await self._async_set_color("Blue", 0)
 
         # Color temperature
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
         if color_temp is not None and self._supports_color_temp:
+            # turn off rgb when setting white values
+            await self._async_set_color("Red", 0)
+            await self._async_set_color("Green", 0)
+            await self._async_set_color("Blue", 0)
             # Limit color temp to min/max values
             cold = max(
                 0,
@@ -192,6 +191,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # White value
         white_value = kwargs.get(ATTR_WHITE_VALUE)
         if white_value is not None and self._supports_white_value:
+            # turn off rgb when setting white values
+            await self._async_set_color("Red", 0)
+            await self._async_set_color("Green", 0)
+            await self._async_set_color("Blue", 0)
             await self._async_set_color("Warm White", white_value)
 
         # set brightness
