@@ -71,7 +71,20 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         """Send the set speed command to the ISY994 fan device."""
         self._node.turn_on(val=STATE_TO_VALUE.get(speed, 255))
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    def turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
         """Send the turn on command to the ISY994 fan device."""
         self.set_speed(speed)
 
@@ -108,7 +121,20 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
         if not self._actions.run_then():
             _LOGGER.error("Unable to turn off the fan")
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    def turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
         """Send the turn off command to ISY994 fan program."""
         if not self._actions.run_else():
             _LOGGER.error("Unable to turn on the fan")

@@ -50,7 +50,20 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         # the entity state ahead of receiving the confirming push updates
         self.async_write_ha_state()
 
-    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    async def async_turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
         """Turn the fan on."""
         if speed is not None:
             value = SPEED_TO_VALUE[speed]
