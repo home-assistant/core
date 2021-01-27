@@ -1,0 +1,14 @@
+{
+  "domain": "rako",
+  "name": "Rako",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/rako",
+  "requirements": ["python_rako==0.0.4"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@marengaz"
+  ]
+}

@@ -167,6 +167,7 @@ FLOWS = [
     "pvpc_hourly_pricing",
     "rachio",
     "rainmachine",
+    "rako",
     "recollect_waste",
     "rfxtrx",
     "ring",
