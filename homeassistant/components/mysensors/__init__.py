@@ -92,15 +92,22 @@ def deprecated(key):
 
 NODE_SCHEMA = vol.Schema({cv.positive_int: {vol.Required(CONF_NODE_NAME): cv.string}})
 
-GATEWAY_SCHEMA = {
-    vol.Required(CONF_DEVICE): cv.string,
-    vol.Optional(CONF_PERSISTENCE_FILE): vol.All(cv.string, is_persistence_file),
-    vol.Optional(CONF_BAUD_RATE, default=DEFAULT_BAUD_RATE): cv.positive_int,
-    vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT): cv.port,
-    vol.Optional(CONF_TOPIC_IN_PREFIX): valid_subscribe_topic,
-    vol.Optional(CONF_TOPIC_OUT_PREFIX): valid_publish_topic,
-    vol.Optional(CONF_NODES, default={}): NODE_SCHEMA,
-}
+GATEWAY_SCHEMA = vol.Schema(
+    vol.All(
+        deprecated(CONF_NODES),
+        {
+            vol.Required(CONF_DEVICE): cv.string,
+            vol.Optional(CONF_PERSISTENCE_FILE): vol.All(
+                cv.string, is_persistence_file
+            ),
+            vol.Optional(CONF_BAUD_RATE, default=DEFAULT_BAUD_RATE): cv.positive_int,
+            vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT): cv.port,
+            vol.Optional(CONF_TOPIC_IN_PREFIX): valid_subscribe_topic,
+            vol.Optional(CONF_TOPIC_OUT_PREFIX): valid_publish_topic,
+            vol.Optional(CONF_NODES, default={}): NODE_SCHEMA,
+        },
+    )
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
