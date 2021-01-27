@@ -489,15 +489,18 @@ async def test_refresh_token_provider_validation(mock_hass):
     refresh_token = await manager.async_create_refresh_token(
         user, CLIENT_ID, credential=credential
     )
+    ip = "127.0.0.1"
 
-    assert manager.async_create_access_token(refresh_token) is not None
+    assert manager.async_create_access_token(refresh_token, ip) is not None
 
     with patch(
         "homeassistant.auth.providers.insecure_example.ExampleAuthProvider.async_validate_refresh_token",
         side_effect=Exception("Invalid access"),
-    ):
+    ) as call:
         with pytest.raises(Exception):
-            manager.async_create_access_token(refresh_token)
+            manager.async_create_access_token(refresh_token, ip)
+
+    call.assert_called_with(refresh_token, ip)
 
 
 async def test_cannot_deactive_owner(mock_hass):

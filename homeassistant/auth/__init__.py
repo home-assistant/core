@@ -491,7 +491,7 @@ class AuthManager:
         """Validate that a refresh token is usable."""
         provider = self._async_resolve_provider(refresh_token)
         if provider:
-            provider.async_validate_refresh_token(refresh_token)
+            provider.async_validate_refresh_token(refresh_token, remote_ip)
 
     async def async_validate_access_token(
         self, token: str
