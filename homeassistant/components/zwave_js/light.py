@@ -213,9 +213,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # guard for unsupported command
         if cur_zwave_value is None:
             return
-        # no need to send same value
-        if cur_zwave_value.value == new_value:
-            return
         # actually set the new color value
         target_zwave_value = self.get_zwave_value(
             "targetColor",
