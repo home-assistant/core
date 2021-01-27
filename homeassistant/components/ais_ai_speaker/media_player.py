@@ -116,8 +116,8 @@ class AisPlayerDevice(MediaPlayerEntity):
             return
         self._ais_id = ais_info["ais_id"]
         self._ais_product = ais_info.get("Product", "Player")
-        self._ais_manufacturer = ais_info["Manufacturer"]
-        self._ais_model = ais_info["Model"]
+        self._ais_manufacturer = ais_info.get("Manufacturer", "AIS")
+        self._ais_model = ais_info.get("Model", "Speaker")
 
         audio_status = await self._ais_gate.get_audio_status()
         if audio_status is not None:
