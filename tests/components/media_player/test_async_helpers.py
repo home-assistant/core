@@ -63,6 +63,14 @@ class MediaPlayer(mp.MediaPlayerEntity):
         else:
             self._state = STATE_PLAYING
 
+    def turn_on(self):
+        """Turn on state."""
+        self._state = STATE_ON
+
+    def turn_off(self):
+        """Turn off state."""
+        self._state = STATE_OFF
+
     def toggle(self):
         """Toggle the power on the media player."""
         if self._state in [STATE_OFF, STATE_IDLE]:
@@ -102,6 +110,15 @@ async def test_media_play_pause(player):
     assert player.state == STATE_PLAYING
     await player.async_media_play_pause()
     assert player.state == STATE_PAUSED
+
+
+async def test_turn_on_off(player):
+    """Test the turn on and turn off methods."""
+    assert player.state == STATE_OFF
+    await player.async_turn_on()
+    assert player.state == STATE_ON
+    await player.async_turn_off()
+    assert player.state == STATE_OFF
 
 
 async def test_toggle(player):
