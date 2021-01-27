@@ -1,11 +1,14 @@
 """Support for Genius Hub switch/outlet devices."""
 from datetime import timedelta
-from typing import Optional
+
+import voluptuous as vol
 
 from homeassistant.components.switch import DEVICE_CLASS_OUTLET, SwitchEntity
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import ATTR_DURATION, DOMAIN, SVC_SET_SWITCH_OVERRIDE, GeniusZone
+from . import ATTR_DURATION, DOMAIN, GeniusZone
 
 GH_ON_OFF_ZONE = "on / off"
 
@@ -56,23 +59,6 @@ class GeniusSwitch(GeniusZone, SwitchEntity):
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_OUTLET
-
-    async def _refresh(self, payload: Optional[dict] = None) -> None:
-        """Process any signals."""
-        if payload is None:
-            self.async_schedule_update_ha_state(force_refresh=True)
-            return
-
-        if payload["unique_id"] != self._unique_id:
-            return
-
-        if payload["service"] == SVC_SET_SWITCH_OVERRIDE:
-            duration = payload["data"].get(ATTR_DURATION, timedelta(hours=1))
-
-            await self._zone.set_override(1, int(duration.total_seconds()))
-            return
-
-        raise TypeError(f"'{self.entity_id}' is not a geniushub switch")
 
     @property
     def is_on(self) -> bool:
