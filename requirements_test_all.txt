@@ -921,7 +921,7 @@ python-velbus==2.1.2
 python_awair==0.2.1
 
 # homeassistant.components.tile
-pytile==4.0.0
+pytile==5.1.0
 
 # homeassistant.components.traccar
 pytraccar==0.9.0
