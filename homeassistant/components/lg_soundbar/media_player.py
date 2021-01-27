@@ -31,7 +31,7 @@ class LGDevice(MediaPlayerEntity):
         """Initialize the LG speakers."""
         self._host = discovery_info.get("host")
         self._port = discovery_info.get("port")
-        self._hostname = discovery_info.get("hostname")
+        self._hostname = discovery_info["hostname"]
 
         self._name = self._hostname.split(".")[0]
         self._volume = 0
