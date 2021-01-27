@@ -23,7 +23,10 @@ from homeassistant.components.remote import (
     ATTR_DEVICE,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
+    DOMAIN as RM_DOMAIN,
     PLATFORM_SCHEMA,
+    SERVICE_DELETE_COMMAND,
+    SUPPORT_DELETE_COMMAND,
     SUPPORT_LEARN_COMMAND,
     RemoteEntity,
 )
@@ -48,6 +51,8 @@ COMMAND_TYPES = [COMMAND_TYPE_IR, COMMAND_TYPE_RF]
 
 CODE_STORAGE_VERSION = 1
 FLAG_STORAGE_VERSION = 1
+
+CODE_SAVE_DELAY = 15
 FLAG_SAVE_DELAY = 15
 
 COMMAND_SCHEMA = vol.Schema(
@@ -153,7 +158,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_LEARN_COMMAND
+        return SUPPORT_LEARN_COMMAND | SUPPORT_DELETE_COMMAND
 
     @property
     def device_info(self):
@@ -199,6 +204,11 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
             return data_packet(code), is_toggle_cmd
         except ValueError as err:
             raise ValueError("Invalid code") from err
+
+    @callback
+    def get_codes(self):
+        """Return a dictionary of codes."""
+        return self._codes
 
     @callback
     def get_flags(self):
@@ -444,36 +454,46 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
         kwargs = SERVICE_DELETE_SCHEMA(kwargs)
         commands = kwargs[ATTR_COMMAND]
         device = kwargs[ATTR_DEVICE]
+        service = f"{RM_DOMAIN}.{SERVICE_DELETE_COMMAND}"
 
         if not self._state:
             _LOGGER.warning(
-                "remote.delete_command canceled: %s entity is turned off",
+                "%s canceled: %s entity is turned off",
+                service,
                 self.entity_id,
             )
             return
 
         try:
             codes = self._codes[device]
-        except KeyError:
-            _LOGGER.error("Failed to delete command. Device not found: %s", device)
-            return
+        except KeyError as err:
+            err_msg = f"Device not found: {repr(device)}"
+            _LOGGER.error("Failed to call %s. %s", service, err_msg)
+            raise ValueError(err_msg) from err
 
-        should_store = False
-
+        cmds_not_found = []
         for command in commands:
             try:
                 del codes[command]
             except KeyError:
-                _LOGGER.error(
-                    "Failed to delete command. Command not found: %s", command
-                )
-            else:
-                should_store = True
+                cmds_not_found.append(command)
 
+        if cmds_not_found:
+            if len(cmds_not_found) == 1:
+                err_msg = f"Command not found: {repr(cmds_not_found[0])}"
+            else:
+                err_msg = f"Commands not found: {repr(cmds_not_found)}"
+
+            if len(cmds_not_found) == len(commands):
+                _LOGGER.error("Failed to call %s. %s", service, err_msg)
+                raise ValueError(err_msg)
+
+            _LOGGER.error("Error during %s. %s", service, err_msg)
+
+        # Clean up
         if not codes:
             del self._codes[device]
             if self._flags.pop(device, None) is not None:
-                await self._flag_storage.async_save(self._flags)
+                self._flag_storage.async_delay_save(self.get_flags, FLAG_SAVE_DELAY)
 
-        if should_store:
-            await self._code_storage.async_save(self._codes)
+        self._code_storage.async_delay_save(self.get_codes, CODE_SAVE_DELAY)
