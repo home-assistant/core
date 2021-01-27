@@ -10,3 +10,13 @@ complete_item:
     name:
       description: The name of the item to mark as completed.
       example: Beer
+restore_item:
+  description: Marks an item as incomplete in the shopping list.
+  fields:
+    name:
+      description: The name of the item to mark as incomplete.
+      example: Beer
+complete_list:
+  description: Marks all items as completed in the shopping list. It does not remove the items.
+restore_list:
+  description: Marks all items as incomplete in the shopping list.

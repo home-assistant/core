@@ -15,17 +15,21 @@ from homeassistant.util.json import load_json, save_json
 from .const import DOMAIN
 
 ATTR_NAME = "name"
+ATTR_COMPLETE = "complete"
 
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
 EVENT = "shopping_list_updated"
-ITEM_UPDATE_SCHEMA = vol.Schema({"complete": bool, ATTR_NAME: str})
+ITEM_UPDATE_SCHEMA = vol.Schema({ATTR_COMPLETE: bool, ATTR_NAME: str})
 PERSISTENCE = ".shopping_list.json"
 
 SERVICE_ADD_ITEM = "add_item"
 SERVICE_COMPLETE_ITEM = "complete_item"
-
+SERVICE_RESTORE_ITEM = "restore_item"
+SERVICE_COMPLETE_LIST = "complete_list"
+SERVICE_RESTORE_LIST = "restore_list"
 SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): vol.Any(None, cv.string)})
+SERVICE_LIST_SCHEMA = vol.Schema({})
 
 WS_TYPE_SHOPPING_LIST_ITEMS = "shopping_list/items"
 WS_TYPE_SHOPPING_LIST_ADD_ITEM = "shopping_list/items/add"
@@ -92,6 +96,27 @@ async def async_setup_entry(hass, config_entry):
         else:
             await data.async_update(item["id"], {"name": name, "complete": True})
 
+    async def restore_item_service(call):
+        """Mark the item provided via `name` as incomplete."""
+        data = hass.data[DOMAIN]
+        name = call.data.get(ATTR_NAME)
+        if name is None:
+            return
+        try:
+            item = [item for item in data.items if item["name"] == name][0]
+        except IndexError:
+            _LOGGER.error("Restoring of item failed: %s cannot be found", name)
+        else:
+            await data.async_update(item["id"], {"name": name, "complete": False})
+
+    async def complete_list_service(call):
+        """Mark all items in the list as complete."""
+        await data.async_update_list({"complete": True})
+
+    async def restore_list_service(call):
+        """Mark all items in the list as incomplete."""
+        await data.async_update_list({"complete": False})
+
     data = hass.data[DOMAIN] = ShoppingData(hass)
     await data.async_load()
 
@@ -100,6 +125,24 @@ async def async_setup_entry(hass, config_entry):
     )
     hass.services.async_register(
         DOMAIN, SERVICE_COMPLETE_ITEM, complete_item_service, schema=SERVICE_ITEM_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RESTORE_ITEM,
+        restore_item_service,
+        schema=SERVICE_ITEM_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_COMPLETE_LIST,
+        complete_list_service,
+        schema=SERVICE_LIST_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RESTORE_LIST,
+        restore_list_service,
+        schema=SERVICE_LIST_SCHEMA,
     )
 
     hass.http.register_view(ShoppingListView)
@@ -164,6 +207,13 @@ class ShoppingData:
         """Clear completed items."""
         self.items = [itm for itm in self.items if not itm["complete"]]
         await self.hass.async_add_executor_job(self.save)
+
+    async def async_update_list(self, info):
+        """Update all items in the list."""
+        for item in self.items:
+            item.update(info)
+        await self.hass.async_add_executor_job(self.save)
+        return self.items
 
     @callback
     def async_reorder(self, item_ids):
