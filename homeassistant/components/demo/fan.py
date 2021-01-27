@@ -219,7 +219,7 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
             self._percentage = None
             self.async_write_ha_state()
         else:
-            raise ValueError
+            raise ValueError(f"Invalid preset mode: {preset_mode}")
 
     def turn_on(
         self,
