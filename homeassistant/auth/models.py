@@ -6,6 +6,7 @@ import uuid
 
 import attr
 
+from homeassistant.const import __version__
 from homeassistant.util import dt as dt_util
 
 from . import permissions as perm_mdl
@@ -108,7 +109,7 @@ class RefreshToken:
 
     credential: Optional["Credentials"] = attr.ib(default=None)
 
-    version: Optional[str] = attr.ib(default=None)
+    version: Optional[str] = attr.ib(default=__version__)
 
 
 @attr.s(slots=True)

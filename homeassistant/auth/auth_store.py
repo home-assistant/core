@@ -7,7 +7,6 @@ from logging import getLogger
 from typing import Any, Dict, List, Optional
 
 from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
-from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
@@ -223,8 +222,6 @@ class AuthStore:
             kwargs["client_name"] = client_name
         if client_icon:
             kwargs["client_icon"] = client_icon
-
-        kwargs["version"] = __version__
 
         refresh_token = models.RefreshToken(**kwargs)
         user.refresh_tokens[refresh_token.id] = refresh_token
