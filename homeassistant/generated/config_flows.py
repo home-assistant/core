@@ -57,6 +57,7 @@ FLOWS = [
     "econet",
     "elgato",
     "elkm1",
+    "elv_usb_wde",
     "emulated_roku",
     "enocean",
     "epson",

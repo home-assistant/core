@@ -2241,6 +2241,9 @@ upcloud-api==0.4.5
 # homeassistant.components.syncthru
 url-normalize==1.4.1
 
+# homeassistant.components.elv_usb_wde
+usbwde_mccrab==2021.01.1
+
 # homeassistant.components.uscis
 uscisstatus==0.1.1
 

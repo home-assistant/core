@@ -1,0 +1,16 @@
+{
+  "domain": "elv_usb_wde",
+  "name": "ELV USB-WDE1",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/elv_usb_wde",
+  "requirements": [
+    "usbwde_mccrab==2021.01.1"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@mccrab"
+  ]
+}

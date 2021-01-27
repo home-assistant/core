@@ -128,6 +128,7 @@ homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/elgato/* @frenck
 homeassistant/components/elkm1/* @gwww @bdraco
 homeassistant/components/elv/* @majuss
+homeassistant/components/elv_usb_wde/* @mccrab
 homeassistant/components/emby/* @mezz64
 homeassistant/components/emoncms/* @borpin
 homeassistant/components/emulated_kasa/* @kbickar
