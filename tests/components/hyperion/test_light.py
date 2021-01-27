@@ -819,12 +819,11 @@ async def test_light_async_updates_from_hyperion_client(
     call_registered_callback(client, "effects-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
-    assert (
-        entity_state.attributes["effect_list"]
-        == [effect[const.KEY_NAME] for effect in effects]
-        + [hyperion_light.KEY_EFFECT_SOLID]
-        + const.KEY_COMPONENTID_EXTERNAL_SOURCES
-    )
+    assert entity_state.attributes["effect_list"] == [
+        hyperion_light.KEY_EFFECT_SOLID
+    ] + const.KEY_COMPONENTID_EXTERNAL_SOURCES + [
+        effect[const.KEY_NAME] for effect in effects
+    ]
 
     # Update connection status (e.g. disconnection).
 

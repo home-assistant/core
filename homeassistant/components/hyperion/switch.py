@@ -23,6 +23,7 @@ from hyperion.const import (
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -80,6 +81,7 @@ async def async_setup_entry(
             f"{COMPONENT_TO_NAME.get(component, component.capitalize())}"
         )
 
+    @callback
     def instance_add(instance_num: int, instance_name: str) -> None:
         """Add entities for a new Hyperion instance."""
         assert server_id
@@ -95,6 +97,7 @@ async def async_setup_entry(
             )
         async_add_entities(switches)
 
+    @callback
     def instance_remove(instance_num: int) -> None:
         """Remove entities for an old Hyperion instance."""
         assert server_id
@@ -184,6 +187,7 @@ class HyperionComponentSwitch(SwitchEntity):
         """Turn off the switch."""
         await self._async_send_set_component(False)
 
+    @callback
     def _update_components(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion components."""
         self.async_write_ha_state()

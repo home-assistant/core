@@ -11,7 +11,7 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE, CONF_TOKEN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -118,6 +118,7 @@ async def _create_reauth_flow(
     )
 
 
+@callback
 def listen_for_instance_updates(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -266,8 +267,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             data = split_hyperion_unique_id(entry.unique_id)
             if not data:
                 continue
-            if data[0] == server_id and data[1] not in running_instances.union(
-                stopped_instances
+            if data[0] == server_id and (
+                data[1] not in running_instances and data[1] not in stopped_instances
             ):
                 registry.async_remove(entry.entity_id)
 
@@ -323,9 +324,14 @@ async def async_unload_entry(
             func()
 
         # Disconnect the shared instance clients.
-        for instance_num in list(config_data[CONF_INSTANCE_CLIENTS]):
-            instance_client = config_data[CONF_INSTANCE_CLIENTS][instance_num]
-            await instance_client.async_client_disconnect()
+        await asyncio.gather(
+            *[
+                config_data[CONF_INSTANCE_CLIENTS][
+                    instance_num
+                ].async_client_disconnect()
+                for instance_num in list(config_data[CONF_INSTANCE_CLIENTS])
+            ]
+        )
 
         # Disconnect the root client.
         root_client = config_data[CONF_ROOT_CLIENT]

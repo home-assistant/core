@@ -23,6 +23,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -230,6 +231,7 @@ async def async_setup_entry(
     entry_data = hass.data[DOMAIN][config_entry.entry_id]
     server_id = config_entry.unique_id
 
+    @callback
     def instance_add(instance_num: int, instance_name: str) -> None:
         """Add entities for a new Hyperion instance."""
         assert server_id
@@ -254,6 +256,7 @@ async def async_setup_entry(
             ]
         )
 
+    @callback
     def instance_remove(instance_num: int) -> None:
         """Remove entities for an old Hyperion instance."""
         assert server_id
@@ -290,7 +293,10 @@ class HyperionBaseLight(LightEntity):
         self._rgb_color: Sequence[int] = DEFAULT_COLOR
         self._effect: str = KEY_EFFECT_SOLID
 
-        self._effect_list: List[str] = []
+        self._static_effect_list: List[str] = [KEY_EFFECT_SOLID]
+        if self._support_external_effects:
+            self._static_effect_list += list(const.KEY_COMPONENTID_EXTERNAL_SOURCES)
+        self._effect_list: List[str] = self._static_effect_list[:]
 
         self._client_callbacks = {
             f"{const.KEY_ADJUSTMENT}-{const.KEY_UPDATE}": self._update_adjustment,
@@ -343,10 +349,7 @@ class HyperionBaseLight(LightEntity):
     @property
     def effect_list(self) -> List[str]:
         """Return the list of supported effects."""
-        effects = self._effect_list + [KEY_EFFECT_SOLID]
-        if self._support_external_effects:
-            effects += list(const.KEY_COMPONENTID_EXTERNAL_SOURCES)
-        return effects
+        return self._effect_list
 
     @property
     def supported_features(self) -> int:
@@ -465,10 +468,12 @@ class HyperionBaseLight(LightEntity):
         if effect is not None:
             self._effect = effect
 
+    @callback
     def _update_components(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion components."""
         self.async_write_ha_state()
 
+    @callback
     def _update_adjustment(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion adjustments."""
         if self._client.adjustment:
@@ -482,6 +487,7 @@ class HyperionBaseLight(LightEntity):
             )
             self.async_write_ha_state()
 
+    @callback
     def _update_priorities(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion priorities."""
         priority = self._get_priority_entry_that_dictates_state()
@@ -505,6 +511,7 @@ class HyperionBaseLight(LightEntity):
                 )
         self.async_write_ha_state()
 
+    @callback
     def _update_effect_list(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update Hyperion effects."""
         if not self._client.effects:
@@ -514,9 +521,10 @@ class HyperionBaseLight(LightEntity):
             if const.KEY_NAME in effect:
                 effect_list.append(effect[const.KEY_NAME])
         if effect_list:
-            self._effect_list = effect_list
+            self._effect_list = self._static_effect_list + effect_list
             self.async_write_ha_state()
 
+    @callback
     def _update_full_state(self) -> None:
         """Update full Hyperion state."""
         self._update_adjustment()
@@ -533,6 +541,7 @@ class HyperionBaseLight(LightEntity):
             self._rgb_color,
         )
 
+    @callback
     def _update_client(self, _: Optional[Dict[str, Any]] = None) -> None:
         """Update client connection state."""
         self.async_write_ha_state()
