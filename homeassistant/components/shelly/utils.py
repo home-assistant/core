@@ -172,6 +172,9 @@ def get_input_triggers(
 
 def get_device_wrapper(hass: HomeAssistant, device_id: str):
     """Get a Shelly device wrapper for the given device id."""
+    if not hass.data.get(DOMAIN):
+        return None
+
     for config_entry in hass.data[DOMAIN][DATA_CONFIG_ENTRY]:
         wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry][COAP]
 
