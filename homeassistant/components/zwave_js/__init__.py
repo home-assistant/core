@@ -6,6 +6,7 @@ from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.node import Node as ZwaveNode
 
+from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -16,6 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .api import async_register_api
 from .const import (
+    CONF_INTEGRATION_CREATED_ADDON,
     DATA_CLIENT,
     DATA_UNSUBSCRIBE,
     DOMAIN,
@@ -196,3 +198,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await info[DATA_CLIENT].disconnect()
 
     return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    if not entry.data.get(CONF_INTEGRATION_CREATED_ADDON):
+        return
+
+    try:
+        await hass.components.hassio.async_stop_addon("core_zwave_js")
+    except HassioAPIError as err:
+        LOGGER.error("Failed to stop the Z-Wave JS add-on: %s", err)
+        return
+    try:
+        await hass.components.hassio.async_uninstall_addon("core_zwave_js")
+    except HassioAPIError as err:
+        LOGGER.error("Failed to uninstall the Z-Wave JS add-on: %s", err)

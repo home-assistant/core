@@ -1,8 +1,7 @@
 """Constants for the Z-Wave JS integration."""
-
-
+CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
+CONF_USE_ADDON = "use_addon"
 DOMAIN = "zwave_js"
-NAME = "Z-Wave JS"
 PLATFORMS = [
     "binary_sensor",
     "climate",
