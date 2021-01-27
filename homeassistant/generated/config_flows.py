@@ -70,6 +70,7 @@ FLOWS = [
     "foscam",
     "freebox",
     "fritzbox",
+    "fritzbox_callmonitor",
     "garmin_connect",
     "gdacs",
     "geofency",

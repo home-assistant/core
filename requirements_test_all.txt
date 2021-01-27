@@ -310,6 +310,11 @@ fnvhash==0.1.0
 # homeassistant.components.foobot
 foobot_async==1.0.0
 
+# homeassistant.components.fritz
+# homeassistant.components.fritzbox_callmonitor
+# homeassistant.components.fritzbox_netmonitor
+fritzconnection==1.4.0
+
 # homeassistant.components.google_translate
 gTTS==2.2.1
 
