@@ -144,7 +144,7 @@ omit =
     homeassistant/components/co2signal/*
     homeassistant/components/coinbase/*
     homeassistant/components/comed_hourly_pricing/sensor.py
-    homeassistant/components/comfoconnect/*
+    homeassistant/components/comfoconnect/fan.py
     homeassistant/components/concord232/alarm_control_panel.py
     homeassistant/components/concord232/binary_sensor.py
     homeassistant/components/control4/__init__.py
