@@ -2,7 +2,7 @@
 
 import logging
 from typing import Any, Dict, Optional
-from unittest.mock import AsyncMock, patch  # type: ignore[attr-defined]
+from unittest.mock import AsyncMock, patch
 
 from hyperion import const
 
@@ -689,6 +689,7 @@ async def test_options(hass: HomeAssistantType) -> None:
             {ATTR_ENTITY_ID: TEST_ENTITY_ID_1},
             blocking=True,
         )
+        # pylint: disable=unsubscriptable-object
         assert client.async_send_set_color.call_args[1][CONF_PRIORITY] == new_priority
 
 
