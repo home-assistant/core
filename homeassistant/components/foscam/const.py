@@ -8,3 +8,4 @@ DOMAIN = "foscam"
 CONF_STREAM = "stream"
 
 SERVICE_PTZ = "ptz"
+SERVICE_PTZ_PRESET = "ptz_preset"
