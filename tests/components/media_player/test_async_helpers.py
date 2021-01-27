@@ -86,7 +86,7 @@ def player(hass):
 
 
 async def test_volume_up(player):
-    """Test the volume_up helper function."""
+    """Test the volume_up and set volume methods."""
     assert player.volume_level == 0
     await player.async_set_volume_level(0.5)
     assert player.volume_level == 0.5
@@ -95,7 +95,7 @@ async def test_volume_up(player):
 
 
 async def test_volume_down(player):
-    """Test the volume_down helper function."""
+    """Test the volume_down and set volume methods."""
     assert player.volume_level == 0
     await player.async_set_volume_level(0.5)
     assert player.volume_level == 0.5
@@ -104,7 +104,7 @@ async def test_volume_down(player):
 
 
 async def test_media_play_pause(player):
-    """Test the media_play_pause helper function."""
+    """Test the media_play_pause method."""
     assert player.state == STATE_OFF
     await player.async_media_play_pause()
     assert player.state == STATE_PLAYING
@@ -122,7 +122,7 @@ async def test_turn_on_off(player):
 
 
 async def test_toggle(player):
-    """Test the toggle helper function."""
+    """Test the toggle method."""
     assert player.state == STATE_OFF
     await player.async_toggle()
     assert player.state == STATE_ON
