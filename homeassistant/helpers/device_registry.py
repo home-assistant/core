@@ -1,6 +1,7 @@
 """Provide a way to connect entities belonging to one device."""
 from collections import OrderedDict
 import logging
+import time
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import attr
@@ -38,6 +39,8 @@ DELETED_DEVICE = "deleted"
 
 DISABLED_INTEGRATION = "integration"
 DISABLED_USER = "user"
+
+ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 
 
 @attr.s(slots=True, frozen=True)
@@ -83,6 +86,7 @@ class DeletedDeviceEntry:
     connections: Set[Tuple[str, str]] = attr.ib()
     identifiers: Set[Tuple[str, str]] = attr.ib()
     id: str = attr.ib()
+    orphaned_timestamp: Optional[float] = attr.ib()
 
     def to_device_entry(
         self,
@@ -440,6 +444,7 @@ class DeviceRegistry:
                 connections=device.connections,
                 identifiers=device.identifiers,
                 id=device.id,
+                orphaned_timestamp=None,
             )
         )
         self.hass.bus.async_fire(
@@ -489,6 +494,8 @@ class DeviceRegistry:
                     connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
                     identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
                     id=device["id"],
+                    # Introduced in 2021.2
+                    orphaned_timestamp=device.get("orphaned_timestamp"),
                 )
 
         self.devices = devices
@@ -529,6 +536,7 @@ class DeviceRegistry:
                 "connections": list(entry.connections),
                 "identifiers": list(entry.identifiers),
                 "id": entry.id,
+                "orphaned_timestamp": entry.orphaned_timestamp,
             }
             for entry in self.deleted_devices.values()
         ]
@@ -538,6 +546,7 @@ class DeviceRegistry:
     @callback
     def async_clear_config_entry(self, config_entry_id: str) -> None:
         """Clear config entry from registry entries."""
+        now_time = time.time()
         for device in list(self.devices.values()):
             self._async_update_device(device.id, remove_config_entry_id=config_entry_id)
         for deleted_device in list(self.deleted_devices.values()):
@@ -545,8 +554,10 @@ class DeviceRegistry:
             if config_entry_id not in config_entries:
                 continue
             if config_entries == {config_entry_id}:
-                # Permanently remove the device from the device registry.
-                self._remove_device(deleted_device)
+                # Add a time stamp when the deleted device became orphaned
+                self.deleted_devices[deleted_device.id] = attr.evolve(
+                    deleted_device, orphaned_timestamp=now_time, config_entries=set()
+                )
             else:
                 config_entries = config_entries - {config_entry_id}
                 # No need to reindex here since we currently
@@ -555,6 +566,24 @@ class DeviceRegistry:
                     deleted_device, config_entries=config_entries
                 )
             self.async_schedule_save()
+
+    @callback
+    def async_purge_expired_orphaned_devices(self) -> None:
+        """Purge expired orphaned devices from the registry.
+
+        We need to purge these periodically to avoid the database
+        growing without bound.
+        """
+        now_time = time.time()
+        for deleted_device in list(self.deleted_devices.values()):
+            if deleted_device.orphaned_timestamp is None:
+                continue
+
+            if (
+                deleted_device.orphaned_timestamp + ORPHANED_DEVICE_KEEP_SECONDS
+                < now_time
+            ):
+                self._remove_device(deleted_device)
 
     @callback
     def async_clear_area_id(self, area_id: str) -> None:
@@ -622,6 +651,10 @@ def async_cleanup(
                 dev_reg.async_update_device(
                     device.id, remove_config_entry_id=config_entry_id
                 )
+
+    # Periodic purge of orphaned devices to avoid the registry
+    # growing without bounds when there are lots of deleted devices
+    dev_reg.async_purge_expired_orphaned_devices()
 
 
 @callback
