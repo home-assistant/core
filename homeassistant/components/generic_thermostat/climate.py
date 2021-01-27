@@ -88,21 +88,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             [HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF]
         ),
         vol.Optional(CONF_AWAY_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_PRESETS): vol.All(
-            dict,
-            vol.Schema(
-                {
-                    PRESET_AWAY: vol.Coerce(float),
-                    PRESET_COMFORT: vol.Coerce(float),
-                    PRESET_ECO: vol.Coerce(float),
-                    PRESET_HOME: vol.Coerce(float),
-                    PRESET_SLEEP: vol.Coerce(float),
-                }
-            ),
-            cv.has_at_least_one_key(
-                PRESET_AWAY, PRESET_COMFORT, PRESET_ECO, PRESET_HOME, PRESET_SLEEP
-            ),
-        ),
+        vol.Optional(CONF_PRESETS): {str: vol.Coerce(float)},
         vol.Optional(CONF_DEFAULT_PRESET, default=PRESET_NONE): cv.string,
         vol.Optional(CONF_PRECISION): vol.In(
             [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
