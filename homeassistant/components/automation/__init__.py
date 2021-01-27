@@ -31,7 +31,12 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotFound,
+    TemplateError,
+    Unauthorized,
+)
 from homeassistant.helpers import condition, extract_domain_configs, template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
@@ -403,6 +408,12 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         try:
             await self.action_script.async_run(
                 variables, trigger_context, started_action
+            )
+        except (vol.Invalid, TemplateError, Unauthorized, ServiceNotFound) as err:
+            self._logger.error(
+                "Error while executing automation %s: %s",
+                self.entity_id,
+                err,
             )
         except Exception:  # pylint: disable=broad-except
             self._logger.exception("While executing automation %s", self.entity_id)
