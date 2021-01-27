@@ -1,5 +1,7 @@
 """Tests for 1-Wire integration."""
 
+from unittest.mock import patch
+
 from homeassistant.components.onewire.const import (
     CONF_MOUNT_DIR,
     CONF_NAMES,
@@ -11,7 +13,6 @@ from homeassistant.components.onewire.const import (
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -48,9 +49,8 @@ async def setup_onewire_owserver_integration(hass):
         data={
             CONF_TYPE: CONF_TYPE_OWSERVER,
             CONF_HOST: "1.2.3.4",
-            CONF_PORT: "1234",
+            CONF_PORT: 1234,
         },
-        unique_id=f"{CONF_TYPE_OWSERVER}:1.2.3.4:1234",
         connection_class=CONN_CLASS_LOCAL_POLL,
         options={},
         entry_id="2",
@@ -74,12 +74,11 @@ async def setup_onewire_patched_owserver_integration(hass):
         data={
             CONF_TYPE: CONF_TYPE_OWSERVER,
             CONF_HOST: "1.2.3.4",
-            CONF_PORT: "1234",
+            CONF_PORT: 1234,
             CONF_NAMES: {
                 "10.111111111111": "My DS18B20",
             },
         },
-        unique_id=f"{CONF_TYPE_OWSERVER}:1.2.3.4:1234",
         connection_class=CONN_CLASS_LOCAL_POLL,
         options={},
         entry_id="2",

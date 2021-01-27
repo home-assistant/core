@@ -9,7 +9,13 @@ import urllib.parse
 import async_timeout
 import pysonos
 from pysonos import alarms
-from pysonos.core import PLAY_MODE_BY_MEANING, PLAY_MODES
+from pysonos.core import (
+    PLAY_MODE_BY_MEANING,
+    PLAY_MODES,
+    PLAYING_LINE_IN,
+    PLAYING_RADIO,
+    PLAYING_TV,
+)
 from pysonos.exceptions import SoCoException, SoCoUPnPException
 import pysonos.music_library
 import pysonos.snapshot
@@ -53,6 +59,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.plex.const import PLEX_URI_SCHEME
+from homeassistant.components.plex.services import play_on_sonos
 from homeassistant.const import (
     ATTR_TIME,
     EVENT_HOMEASSISTANT_STOP,
@@ -724,8 +732,13 @@ class SonosEntity(MediaPlayerEntity):
 
     def update_media(self, event=None):
         """Update information about currently playing media."""
-        transport_info = self.soco.get_current_transport_info()
-        new_status = transport_info.get("current_transport_state")
+        variables = event and event.variables
+
+        if variables:
+            new_status = variables["transport_state"]
+        else:
+            transport_info = self.soco.get_current_transport_info()
+            new_status = transport_info["current_transport_state"]
 
         # Ignore transitions, we should get the target state soon
         if new_status == "TRANSITIONING":
@@ -745,9 +758,12 @@ class SonosEntity(MediaPlayerEntity):
         update_position = new_status != self._status
         self._status = new_status
 
-        if self.soco.is_playing_tv:
+        track_uri = variables["current_track_uri"] if variables else None
+        whats_playing = self.soco.whats_playing(track_uri)
+
+        if whats_playing == PLAYING_TV:
             self.update_media_linein(SOURCE_TV)
-        elif self.soco.is_playing_line_in:
+        elif whats_playing == PLAYING_LINE_IN:
             self.update_media_linein(SOURCE_LINEIN)
         else:
             track_info = self.soco.get_current_track_info()
@@ -759,8 +775,7 @@ class SonosEntity(MediaPlayerEntity):
                 self._media_album_name = track_info.get("album")
                 self._media_title = track_info.get("title")
 
-                if self.soco.is_radio_uri(track_info["uri"]):
-                    variables = event and event.variables
+                if whats_playing == PLAYING_RADIO:
                     self.update_media_radio(variables, track_info)
                 else:
                     self.update_media_music(update_position, track_info)
@@ -1173,12 +1188,17 @@ class SonosEntity(MediaPlayerEntity):
         """
         Send the play_media command to the media player.
 
+        If media_id is a Plex payload, attempt Plex->Sonos playback.
+
         If media_type is "playlist", media_id should be a Sonos
         Playlist name.  Otherwise, media_id should be a URI.
 
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
-        if media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
+        if media_id and media_id.startswith(PLEX_URI_SCHEME):
+            media_id = media_id[len(PLEX_URI_SCHEME) :]
+            play_on_sonos(self.hass, media_type, media_id, self.name)
+        elif media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 try:
                     if self.soco.is_spotify_uri(media_id):

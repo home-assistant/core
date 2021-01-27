@@ -1,5 +1,6 @@
 """Tests for the Google Assistant traits."""
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -53,7 +54,6 @@ from homeassistant.util import color
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.async_mock import patch
 from tests.common import async_mock_service
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
@@ -382,6 +382,69 @@ async def test_startstop_vacuum(hass):
     await trt.execute(trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {"pause": False}, {})
     assert len(unpause_calls) == 1
     assert unpause_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
+
+
+async def test_startstop_cover(hass):
+    """Test startStop trait support for cover domain."""
+    assert helpers.get_google_type(cover.DOMAIN, None) is not None
+    assert trait.StartStopTrait.supported(cover.DOMAIN, cover.SUPPORT_STOP, None)
+
+    state = State(
+        "cover.bla",
+        cover.STATE_CLOSED,
+        {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_STOP},
+    )
+
+    trt = trait.StartStopTrait(
+        hass,
+        state,
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {}
+
+    for state_value in (cover.STATE_CLOSING, cover.STATE_OPENING):
+        state.state = state_value
+        assert trt.query_attributes() == {"isRunning": True}
+
+    stop_calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_STOP_COVER)
+    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
+    assert len(stop_calls) == 1
+    assert stop_calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+
+    for state_value in (cover.STATE_CLOSED, cover.STATE_OPEN):
+        state.state = state_value
+        assert trt.query_attributes() == {"isRunning": False}
+
+    with pytest.raises(SmartHomeError, match="Cover is already stopped"):
+        await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
+
+    with pytest.raises(SmartHomeError, match="Starting a cover is not supported"):
+        await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": True}, {})
+
+    with pytest.raises(
+        SmartHomeError,
+        match="Command action.devices.commands.PauseUnpause is not supported",
+    ):
+        await trt.execute(trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {"start": True}, {})
+
+
+async def test_startstop_cover_assumed(hass):
+    """Test startStop trait support for cover domain of assumed state."""
+    trt = trait.StartStopTrait(
+        hass,
+        State(
+            "cover.bla",
+            cover.STATE_CLOSED,
+            {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_STOP, ATTR_ASSUMED_STATE: True},
+        ),
+        BASIC_CONFIG,
+    )
+
+    stop_calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_STOP_COVER)
+    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
+    assert len(stop_calls) == 1
+    assert stop_calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
 
 
 async def test_color_setting_color_light(hass):

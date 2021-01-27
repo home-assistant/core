@@ -18,7 +18,8 @@
             "user_gateway": {
                 "data": {
                     "port": "Port"
-                }
+                },
+                "description": "Bitte eingeben"
             }
         }
     },

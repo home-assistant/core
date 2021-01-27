@@ -4,7 +4,8 @@
             "already_configured": "TelldusLive ya est\u00e1 configurado",
             "authorize_url_fail": "Error desconocido generando la url de autorizaci\u00f3n",
             "authorize_url_timeout": "Tiempo de espera agotado generando la url de autorizaci\u00f3n",
-            "unknown": "Se produjo un error desconocido"
+            "unknown": "Se produjo un error desconocido",
+            "unknown_authorize_url_generation": "Error desconocido al generar una URL de autorizaci\u00f3n."
         },
         "error": {
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"

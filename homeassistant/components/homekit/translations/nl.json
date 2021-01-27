@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "port_name_in_use": "Er is al een bridge met dezelfde naam of poort geconfigureerd."
+            "port_name_in_use": "Er is al een bridge of apparaat met dezelfde naam of poort geconfigureerd."
         },
         "step": {
             "pairing": {
@@ -34,6 +34,11 @@
                 },
                 "description": "Controleer alle camera's die native H.264-streams ondersteunen. Als de camera geen H.264-stream uitvoert, transcodeert het systeem de video naar H.264 voor HomeKit. Transcodering vereist een performante CPU en het is onwaarschijnlijk dat dit werkt op computers met \u00e9\u00e9n bord.",
                 "title": "Selecteer de videocodec van de camera."
+            },
+            "include_exclude": {
+                "data": {
+                    "entities": "Entiteiten"
+                }
             },
             "init": {
                 "data": {

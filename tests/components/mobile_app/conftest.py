@@ -41,6 +41,26 @@ async def create_registrations(hass, authed_api_client):
 
 
 @pytest.fixture
+async def push_registration(hass, authed_api_client):
+    """Return registration with push notifications enabled."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    enc_reg = await authed_api_client.post(
+        "/api/mobile_app/registrations",
+        json={
+            **REGISTER,
+            "app_data": {
+                "push_url": "http://localhost/mock-push",
+                "push_token": "abcd",
+            },
+        },
+    )
+
+    assert enc_reg.status == 201
+    return await enc_reg.json()
+
+
+@pytest.fixture
 async def webhook_client(hass, authed_api_client, aiohttp_client):
     """mobile_app mock client."""
     # We pass in the authed_api_client server instance because

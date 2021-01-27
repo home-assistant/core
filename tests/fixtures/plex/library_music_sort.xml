@@ -1,0 +1,7 @@
+<MediaContainer size="5" allowSync="0" art="/:/resources/artist-fanart.jpg" content="secondary" identifier="com.plexapp.plugins.library" mediaTagPrefix="/system/bundle/media/flags/" mediaTagVersion="1603922053" nocache="1" thumb="/:/resources/artist.png" title1="Music" viewGroup="secondary" viewMode="65592">
+<Directory default="asc" defaultDirection="asc" descKey="titleSort:desc" firstCharacterKey="/library/sections/3/firstCharacter" key="titleSort" title="Title" />
+<Directory defaultDirection="desc" descKey="userRating:desc" key="userRating" title="Rating" />
+<Directory defaultDirection="desc" descKey="addedAt:desc" key="addedAt" title="Date Added" />
+<Directory defaultDirection="desc" descKey="lastViewedAt:desc" key="lastViewedAt" title="Date Played" />
+<Directory defaultDirection="desc" descKey="viewCount:desc" key="viewCount" title="Plays" />
+</MediaContainer>

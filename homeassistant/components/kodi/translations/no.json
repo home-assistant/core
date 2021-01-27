@@ -4,6 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert",
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
+            "no_uuid": "Kodi-forekomsten har ikke en unik id. Dette skyldes mest sannsynlig en gammel Kodi-versjon (17.x eller under). Du kan konfigurere integreringen manuelt eller oppgradere til en nyere Kodi-versjon.",
             "unknown": "Uventet feil"
         },
         "error": {

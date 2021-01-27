@@ -1,11 +1,11 @@
 """Test the Vilfo Router config flow."""
+from unittest.mock import Mock, patch
+
 import vilfo
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.vilfo.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_MAC
-
-from tests.async_mock import Mock, patch
 
 
 async def test_form(hass):

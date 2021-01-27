@@ -1,8 +1,9 @@
 """Test the Profiler config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries, setup
 from homeassistant.components.profiler.const import DOMAIN
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

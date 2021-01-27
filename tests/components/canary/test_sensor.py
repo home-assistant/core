@@ -1,5 +1,6 @@
 """The tests for the Canary sensor platform."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.components.canary.const import DOMAIN, MANUFACTURER
 from homeassistant.components.canary.sensor import (
@@ -23,7 +24,6 @@ from homeassistant.util.dt import utcnow
 
 from . import mock_device, mock_location, mock_reading
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, mock_device_registry, mock_registry
 
 
@@ -88,7 +88,7 @@ async def test_sensors_pro(hass, canary) -> None:
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
         assert state.state == data[1]
 
-    device = device_registry.async_get_device({(DOMAIN, "20")}, set())
+    device = device_registry.async_get_device({(DOMAIN, "20")})
     assert device
     assert device.manufacturer == MANUFACTURER
     assert device.name == "Dining Room"
@@ -206,7 +206,7 @@ async def test_sensors_flex(hass, canary) -> None:
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
         assert state.state == data[1]
 
-    device = device_registry.async_get_device({(DOMAIN, "20")}, set())
+    device = device_registry.async_get_device({(DOMAIN, "20")})
     assert device
     assert device.manufacturer == MANUFACTURER
     assert device.name == "Dining Room"

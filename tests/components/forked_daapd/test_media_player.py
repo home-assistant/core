@@ -1,5 +1,7 @@
 """The media player tests for the forked_daapd media player platform."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.forked_daapd.const import (
@@ -65,7 +67,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_mock_signal
 
 TEST_MASTER_ENTITY_NAME = "media_player.forked_daapd_server"

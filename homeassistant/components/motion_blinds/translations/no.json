@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "connection_error": "Tilkobling mislyktes"
+        },
+        "flow_title": "Motion Blinds",
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "host": "IP adresse"
+                },
+                "description": "Du trenger API-n\u00f8kkelen med 16 tegn, se https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key for instruksjoner",
+                "title": "Motion Blinds"
+            }
+        }
+    }
+}

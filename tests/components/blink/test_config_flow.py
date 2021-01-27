@@ -1,11 +1,12 @@
 """Test the Blink config flow."""
+from unittest.mock import Mock, patch
+
 from blinkpy.auth import LoginError
 from blinkpy.blinkpy import BlinkSetupError
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.blink import DOMAIN
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 

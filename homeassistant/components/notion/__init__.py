@@ -30,7 +30,7 @@ ATTR_SYSTEM_NAME = "system_name"
 DEFAULT_ATTRIBUTION = "Data provided by Notion"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.119")
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -160,14 +160,18 @@ class NotionEntity(CoordinatorEntity):
         self._sensor_id = sensor_id
         self._state = None
         self._system_id = system_id
-        self._task_id = task_id
+        self._unique_id = (
+            f'{sensor_id}_{self.coordinator.data["tasks"][task_id]["task_type"]}'
+        )
+        self.task_id = task_id
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
             self.coordinator.last_update_success
-            and self._task_id in self.coordinator.data["tasks"]
+            and self.task_id in self.coordinator.data["tasks"]
+            and self._state
         )
 
     @property
@@ -204,8 +208,7 @@ class NotionEntity(CoordinatorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique, unchanging string that represents this entity."""
-        task = self.coordinator.data["tasks"][self._task_id]
-        return f'{self._sensor_id}_{task["task_type"]}'
+        return self._unique_id
 
     async def _async_update_bridge_id(self) -> None:
         """Update the entity's bridge ID if it has changed.
@@ -228,10 +231,10 @@ class NotionEntity(CoordinatorEntity):
         device_registry = await dr.async_get_registry(self.hass)
         bridge = self.coordinator.data["bridges"][self._bridge_id]
         bridge_device = device_registry.async_get_device(
-            {DOMAIN: bridge["hardware_id"]}, set()
+            {(DOMAIN, bridge["hardware_id"])}
         )
         this_device = device_registry.async_get_device(
-            {DOMAIN: sensor["hardware_id"]}, set()
+            {(DOMAIN, sensor["hardware_id"])}
         )
 
         device_registry.async_update_device(
@@ -246,8 +249,10 @@ class NotionEntity(CoordinatorEntity):
     @callback
     def _handle_coordinator_update(self):
         """Respond to a DataUpdateCoordinator update."""
-        self.hass.async_create_task(self._async_update_bridge_id())
-        self._async_update_from_latest_data()
+        if self.task_id in self.coordinator.data["tasks"]:
+            self.hass.async_create_task(self._async_update_bridge_id())
+            self._async_update_from_latest_data()
+
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):

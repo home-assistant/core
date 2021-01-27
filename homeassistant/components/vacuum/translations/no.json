@@ -9,7 +9,7 @@
             "is_docked": "{entity_name} er dokket"
         },
         "trigger_type": {
-            "cleaning": "{entity_name} startet rengj\u00f8ringen",
+            "cleaning": "{entity_name} startet rengj\u00f8ring",
             "docked": "{entity_name} dokket"
         }
     },

@@ -7,7 +7,8 @@
         },
         "error": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "already_in_progress": "Der Konfigurationsablauf f\u00fcr das Ger\u00e4t wird bereits ausgef\u00fchrt."
+            "already_in_progress": "Der Konfigurationsablauf f\u00fcr das Ger\u00e4t wird bereits ausgef\u00fchrt.",
+            "cannot_connect": "Verbindungsfehler"
         },
         "flow_title": "Achsenger\u00e4t: {name} ({host})",
         "step": {

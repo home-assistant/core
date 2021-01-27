@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "password": "Passord",
-                    "pin": "PIN-kode",
+                    "pin": "PIN kode",
                     "username": "Brukernavn"
                 }
             }
@@ -32,8 +32,8 @@
             },
             "init": {
                 "data": {
-                    "code_arm_required": "Krev PIN-kode for \u00e5 tilkoble",
-                    "code_disarm_required": "Krev PIN-kode for \u00e5 frakoble",
+                    "code_arm_required": "Krev PIN kode for \u00e5 tilkoble",
+                    "code_disarm_required": "Krev PIN kode for \u00e5 frakoble",
                     "scan_interval": "Hvor ofte skal man unders\u00f8ke Risco (i l\u00f8pet av sekunder)"
                 },
                 "title": "Konfigurer alternativer"

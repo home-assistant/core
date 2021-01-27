@@ -4,7 +4,8 @@
             "already_configured": "Teenus on juba seadistatud",
             "authorize_url_fail": "Tundmatu viga tuvastamise URL-i loomisel.",
             "authorize_url_timeout": "Kinnitus-URLi loomise ajal\u00f5pp.",
-            "unknown": "Tundmatu viga"
+            "unknown": "Tundmatu viga",
+            "unknown_authorize_url_generation": "Tundmatu viga tuvastamise URL-i loomisel."
         },
         "error": {
             "invalid_auth": "Tuvastamise viga"

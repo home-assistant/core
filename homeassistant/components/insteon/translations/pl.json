@@ -76,7 +76,7 @@
                     "port": "Port",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Zmie\u0144 informacje o po\u0142\u0105czeniu Huba Insteon. Po wprowadzeniu tej zmiany musisz ponownie uruchomi\u0107 Home Assistant. Nie zmienia to konfiguracji samego Huba. Aby zmieni\u0107 jego konfiguracj\u0119, u\u017cyj aplikacji Hub.",
+                "description": "Zmie\u0144 informacje o po\u0142\u0105czeniu Huba Insteon. Po wprowadzeniu tej zmiany musisz ponownie uruchomi\u0107 Home Assistanta. Nie zmienia to konfiguracji samego Huba. Aby zmieni\u0107 jego konfiguracj\u0119, u\u017cyj aplikacji Hub.",
                 "title": "Insteon"
             },
             "init": {

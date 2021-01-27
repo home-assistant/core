@@ -2,6 +2,7 @@
 
 import re
 from unittest import mock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import zigpy.profiles.zha
@@ -29,8 +30,6 @@ import homeassistant.helpers.entity_registry
 
 from .common import get_zha_gateway
 from .zha_devices_list import DEVICES
-
-from tests.async_mock import AsyncMock, patch
 
 NO_TAIL_ID = re.compile("_\\d$")
 

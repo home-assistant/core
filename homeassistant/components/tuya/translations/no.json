@@ -23,6 +23,9 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
         "error": {
             "dev_multi_type": "Flere valgte enheter som skal konfigureres, m\u00e5 v\u00e6re av samme type",
             "dev_not_config": "Enhetstype kan ikke konfigureres",

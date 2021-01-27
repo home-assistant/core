@@ -1,5 +1,7 @@
 """The tests for the ASUSWRT device tracker platform."""
 
+from unittest.mock import AsyncMock, patch
+
 from homeassistant.components.asuswrt import (
     CONF_DNSMASQ,
     CONF_INTERFACE,
@@ -8,8 +10,6 @@ from homeassistant.components.asuswrt import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import AsyncMock, patch
 
 
 async def test_password_or_pub_key_required(hass):

@@ -285,3 +285,76 @@ async def test_update_system_generated(hass, hass_ws_client):
     assert not result["success"], result
     assert result["error"]["code"] == "cannot_modify_system_generated"
     assert user.name == "Test user"
+
+
+async def test_deactivate(hass, hass_ws_client):
+    """Test deactivation and reactivation of regular user."""
+    client = await hass_ws_client(hass)
+
+    user = await hass.auth.async_create_user("Test user")
+    assert user.is_active is True
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth/update",
+            "user_id": user.id,
+            "name": "Updated name",
+            "is_active": False,
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["success"], result
+    data_user = result["result"]["user"]
+    assert data_user["is_active"] is False
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "config/auth/update",
+            "user_id": user.id,
+            "name": "Updated name",
+            "is_active": True,
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["success"], result
+    data_user = result["result"]["user"]
+    assert data_user["is_active"] is True
+
+
+async def test_deactivate_owner(hass, hass_ws_client):
+    """Test that owner cannot be deactivated."""
+    user = MockUser(id="abc", name="Test Owner", is_owner=True).add_to_hass(hass)
+
+    assert user.is_active is True
+    assert user.is_owner is True
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 5, "type": "config/auth/update", "user_id": user.id, "is_active": False}
+    )
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "cannot_deactivate_owner"
+
+
+async def test_deactivate_system_generated(hass, hass_ws_client):
+    """Test that owner cannot be deactivated."""
+    client = await hass_ws_client(hass)
+
+    user = await hass.auth.async_create_system_user("Test user")
+    assert user.is_active is True
+    assert user.system_generated is True
+    assert user.is_owner is False
+
+    await client.send_json(
+        {"id": 5, "type": "config/auth/update", "user_id": user.id, "is_active": False}
+    )
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "cannot_modify_system_generated"

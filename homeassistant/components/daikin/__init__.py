@@ -30,7 +30,7 @@ COMPONENT_TYPES = ["climate", "sensor", "switch"]
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        cv.deprecated(DOMAIN, invalidation_version="0.113.0"),
+        cv.deprecated(DOMAIN),
         {
             DOMAIN: vol.Schema(
                 {

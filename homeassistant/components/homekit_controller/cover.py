@@ -248,4 +248,5 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
 ENTITY_TYPES = {
     ServicesTypes.GARAGE_DOOR_OPENER: HomeKitGarageDoorCover,
     ServicesTypes.WINDOW_COVERING: HomeKitWindowCover,
+    ServicesTypes.WINDOW: HomeKitWindowCover,
 }

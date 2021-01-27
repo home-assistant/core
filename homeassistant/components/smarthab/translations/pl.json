@@ -11,7 +11,7 @@
                     "email": "Adres e-mail",
                     "password": "Has\u0142o"
                 },
-                "description": "Ze wzgl\u0119d\u00f3w technicznych, nale\u017cy u\u017cy\u0107 dodatkowego konta, specjalnie na u\u017cytek dla Home Assistant. Mo\u017cesz je utworzy\u0107 z poziomu aplikacji SmartHab.",
+                "description": "Ze wzgl\u0119d\u00f3w technicznych, nale\u017cy u\u017cy\u0107 dodatkowego konta, specjalnie na u\u017cytek dla Home Assistanta. Mo\u017cesz je utworzy\u0107 z poziomu aplikacji SmartHab.",
                 "title": "Konfiguracja SmartHab"
             }
         }

@@ -1,5 +1,6 @@
 """Define tests for the AccuWeather config flow."""
 import json
+from unittest.mock import patch
 
 from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
 
@@ -8,7 +9,6 @@ from homeassistant.components.accuweather.const import CONF_FORECAST, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 VALID_CONFIG = {
