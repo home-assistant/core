@@ -121,11 +121,6 @@ class LGDevice(MediaPlayerEntity):
         self._device.get_settings()
         self._device.get_product_info()
 
-        # Temporary fix until handling of unknown equaliser settings is integrated in the temescal library
-        for equaliser in self._equalisers:
-            if equaliser >= len(temescal.equalisers):
-                temescal.equalisers.append("unknown " + str(equaliser))
-
     @property
     def unique_id(self):
         """Return the device's unique ID."""
@@ -171,7 +166,7 @@ class LGDevice(MediaPlayerEntity):
     @property
     def source(self):
         """Return the current input source."""
-        if self._function == -1:
+        if self._function == -1 or self._function >= len(temescal.functions):
             return None
         return temescal.functions[self._function]
 
