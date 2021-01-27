@@ -31,7 +31,7 @@ async def async_setup_entry(
 
     await on_unload(
         hass,
-        config_entry,
+        config_entry.entry_id,
         async_dispatcher_connect(
             hass,
             MYSENSORS_DISCOVERY.format(config_entry.entry_id, DOMAIN),
@@ -46,7 +46,7 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):
     @property
     def assumed_state(self):
         """Return True if unable to access real state of entity."""
-        return self.gateway.optimistic
+        return False
 
     @property
     def is_closed(self):
@@ -71,7 +71,7 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_UP, 1, ack=1
         )
-        if self.gateway.optimistic:
+        if self.assumed_state:
             # Optimistically assume that cover has changed state.
             if set_req.V_DIMMER in self._values:
                 self._values[set_req.V_DIMMER] = 100
@@ -85,7 +85,7 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_DOWN, 1, ack=1
         )
-        if self.gateway.optimistic:
+        if self.assumed_state:
             # Optimistically assume that cover has changed state.
             if set_req.V_DIMMER in self._values:
                 self._values[set_req.V_DIMMER] = 0
@@ -100,7 +100,7 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_DIMMER, position, ack=1
         )
-        if self.gateway.optimistic:
+        if self.assumed_state:
             # Optimistically assume that cover has changed state.
             self._values[set_req.V_DIMMER] = position
             self.async_write_ha_state()

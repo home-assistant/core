@@ -87,12 +87,12 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
     @property
     def assumed_state(self):
         """Return True if unable to access real state of entity."""
-        return self.gateway.optimistic
+        return False
 
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS if self.gateway.metric else TEMP_FAHRENHEIT
+        return TEMP_CELSIUS if self.hass.config.units.is_metric else TEMP_FAHRENHEIT
 
     @property
     def current_temperature(self):
@@ -181,7 +181,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
             self.gateway.set_child_value(
                 self.node_id, self.child_id, value_type, value, ack=1
             )
-            if self.gateway.optimistic:
+            if self.om:
                 # Optimistically assume that device has changed state
                 self._values[value_type] = value
                 self.async_write_ha_state()
@@ -192,7 +192,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_HVAC_SPEED, fan_mode, ack=1
         )
-        if self.gateway.optimistic:
+        if self.assumed_state:
             # Optimistically assume that device has changed state
             self._values[set_req.V_HVAC_SPEED] = fan_mode
             self.async_write_ha_state()
@@ -206,7 +206,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
             DICT_HA_TO_MYS[hvac_mode],
             ack=1,
         )
-        if self.gateway.optimistic:
+        if self.assumed_state:
             # Optimistically assume that device has changed state
             self._values[self.value_type] = hvac_mode
             self.async_write_ha_state()

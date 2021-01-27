@@ -3,11 +3,12 @@ from typing import Dict, List
 
 from mysensors import Message
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import decorator
 
-from ...config_entries import ConfigEntry
 from .const import CHILD_CALLBACK, MYSENSORS_GATEWAY_READY, NODE_CALLBACK, DevId
 from .device import get_mysensors_devices
 from .helpers import discover_mysensors_platform, validate_set_msg
@@ -18,7 +19,7 @@ HANDLERS = decorator.Registry()
 @HANDLERS.register("set")
 async def handle_set(hass, hass_config: ConfigEntry, msg: Message) -> None:
     """Handle a mysensors set message."""
-    validated = validate_set_msg(msg)
+    validated = validate_set_msg(hass_config, msg)
     _handle_child_update(hass, hass_config, validated)
 
 
@@ -41,19 +42,19 @@ async def handle_battery_level(hass, hass_config: ConfigEntry, msg: Message) -> 
 @HANDLERS.register("I_HEARTBEAT_RESPONSE")
 async def handle_heartbeat(hass, hass_config: ConfigEntry, msg: Message) -> None:
     """Handle an heartbeat."""
-    _handle_node_update(hass, msg)
+    _handle_node_update(hass, hass_config, msg)
 
 
 @HANDLERS.register("I_SKETCH_NAME")
 async def handle_sketch_name(hass, hass_config: ConfigEntry, msg: Message) -> None:
     """Handle an internal sketch name message."""
-    _handle_node_update(hass, msg)
+    _handle_node_update(hass, hass_config, msg)
 
 
 @HANDLERS.register("I_SKETCH_VERSION")
 async def handle_sketch_version(hass, hass_config: ConfigEntry, msg: Message) -> None:
     """Handle an internal sketch version message."""
-    _handle_node_update(hass, msg)
+    _handle_node_update(hass, hass_config, msg)
 
 
 @HANDLERS.register("I_GATEWAY_READY")
@@ -62,7 +63,7 @@ async def handle_gateway_ready(hass, hass_config: ConfigEntry, msg: Message) -> 
 
     Set asyncio future result if gateway is ready.
     """
-    gateway_ready = hass.data.get(MYSENSORS_GATEWAY_READY.format(msg.gateway.entry_id))
+    gateway_ready = hass.data.get(MYSENSORS_GATEWAY_READY.format(hass_config.entry_id))
     if gateway_ready is None or gateway_ready.cancelled():
         return
     gateway_ready.set_result(True)
@@ -94,7 +95,9 @@ def _handle_child_update(
 
 
 @callback
-def _handle_node_update(hass, msg):
+def _handle_node_update(
+    hass: HomeAssistantType, hass_config: ConfigEntry, msg: Message
+):
     """Handle a node update."""
-    signal = NODE_CALLBACK.format(msg.gateway.entry_id, msg.node_id)
+    signal = NODE_CALLBACK.format(hass_config.entry_id, msg.node_id)
     async_dispatcher_send(hass, signal)

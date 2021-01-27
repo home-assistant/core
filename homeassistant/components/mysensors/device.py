@@ -13,11 +13,13 @@ from homeassistant.helpers.entity import Entity
 
 from .const import (
     CHILD_CALLBACK,
+    CONF_DEVICE,
     DOMAIN,
     NODE_CALLBACK,
     PLATFORM_TYPES,
     UPDATE_DELAY,
     DevId,
+    GatewayId,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,8 +35,16 @@ MYSENSORS_PLATFORM_DEVICES = "mysensors_devices_{}"
 class MySensorsDevice:
     """Representation of a MySensors device."""
 
-    def __init__(self, gateway, node_id, child_id, value_type):
+    def __init__(
+        self,
+        gateway_id: GatewayId,
+        gateway: BaseAsyncGateway,
+        node_id: int,
+        child_id: int,
+        value_type: int,
+    ):
         """Set up the MySensors device."""
+        self.gateway_id: GatewayId = gateway_id
         self.gateway: BaseAsyncGateway = gateway
         self.node_id: int = node_id
         self.child_id: int = child_id
@@ -71,11 +81,6 @@ class MySensorsDevice:
                     self._logger.debug(
                         "deleted %s from platform %s", self.dev_id, platform
                     )
-
-    @property
-    def gateway_id(self) -> str:
-        """Return the id of the gateway that this device belongs to."""
-        return self.gateway.entry_id
 
     @property
     def _mysensors_sensor(self) -> Sensor:
@@ -131,9 +136,10 @@ class MySensorsDevice:
             ATTR_HEARTBEAT: node.heartbeat,
             ATTR_CHILD_ID: self.child_id,
             ATTR_DESCRIPTION: child.description,
-            ATTR_DEVICE: self.gateway.device,
             ATTR_NODE_ID: self.node_id,
         }
+        if hasattr(self, "platform"):
+            attr[ATTR_DEVICE] = self.platform.config_entry.data[CONF_DEVICE]
 
         set_req = self.gateway.const.SetReq
 

@@ -127,7 +127,7 @@ class MySensorsSensor(mysensors.device.MySensorsEntity):
         pres = self.gateway.const.Presentation
         set_req = self.gateway.const.SetReq
         SENSORS[set_req.V_TEMP.name][0] = (
-            TEMP_CELSIUS if self.gateway.metric else TEMP_FAHRENHEIT
+            TEMP_CELSIUS if self.hass.config.units.is_metric else TEMP_FAHRENHEIT
         )
         sensor_type = SENSORS.get(set_req(self.value_type).name, [None, None])
         if isinstance(sensor_type, dict):

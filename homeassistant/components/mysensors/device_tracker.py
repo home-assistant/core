@@ -2,7 +2,7 @@
 from homeassistant.components import mysensors
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.mysensors import DevId, on_unload
-from homeassistant.components.mysensors.const import GatewayId
+from homeassistant.components.mysensors.const import ATTR_GATEWAY_ID, GatewayId
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
@@ -14,6 +14,7 @@ async def async_setup_scanner(
     """Set up the MySensors device scanner."""
     new_devices = mysensors.setup_mysensors_platform(
         hass,
+        discovery_info[ATTR_GATEWAY_ID],
         DOMAIN,
         discovery_info,
         MySensorsDeviceScanner,
@@ -23,7 +24,7 @@ async def async_setup_scanner(
         return False
 
     for device in new_devices:
-        gateway_id: GatewayId = device.gateway.entry_id
+        gateway_id: GatewayId = discovery_info[ATTR_GATEWAY_ID]
         dev_id: DevId = (gateway_id, device.node_id, device.child_id, device.value_type)
         await on_unload(
             hass,

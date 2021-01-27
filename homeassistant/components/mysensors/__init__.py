@@ -168,7 +168,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     Every instance has a connection to exactly one Gateway.
     """
-    _LOGGER.debug("async_setup_entry: %s (id: %s)", entry.title, entry.entry_id)
     gateway = await setup_gateway(hass, entry)
 
     if not gateway:
@@ -283,7 +282,7 @@ def setup_mysensors_platform(
             s_type = gateway.const.Presentation(child.type).name
             device_class_copy = device_class[s_type]
 
-        args_copy = (*device_args, gateway, node_id, child_id, value_type)
+        args_copy = (*device_args, gateway_id, gateway, node_id, child_id, value_type)
         devices[dev_id] = device_class_copy(*args_copy)
         new_devices.append(devices[dev_id])
     if new_devices:

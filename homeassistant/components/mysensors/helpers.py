@@ -17,6 +17,7 @@ from ...config_entries import ConfigEntry
 from ...helpers.dispatcher import async_dispatcher_send
 from .const import (
     ATTR_DEVICES,
+    ATTR_GATEWAY_ID,
     DOMAIN,
     FLAT_PLATFORM_TYPES,
     MYSENSORS_DISCOVERY,
@@ -39,7 +40,11 @@ def discover_mysensors_platform(
     async_dispatcher_send(
         hass,
         MYSENSORS_DISCOVERY.format(hass_config.entry_id, platform),
-        {ATTR_DEVICES: new_devices, CONF_NAME: DOMAIN},
+        {
+            ATTR_DEVICES: new_devices,
+            CONF_NAME: DOMAIN,
+            ATTR_GATEWAY_ID: hass_config.entry_id,
+        },
     )
 
 
@@ -125,12 +130,12 @@ def invalid_msg(
     )
 
 
-def validate_set_msg(msg: Message) -> Dict[str, List[DevId]]:
+def validate_set_msg(hass_config: ConfigEntry, msg: Message) -> Dict[str, List[DevId]]:
     """Validate a set message."""
     if not validate_node(msg.gateway, msg.node_id):
         return {}
     child = msg.gateway.sensors[msg.node_id].children[msg.child_id]
-    return validate_child(msg.gateway, msg.node_id, child, msg.sub_type)
+    return validate_child(hass_config, msg.gateway, msg.node_id, child, msg.sub_type)
 
 
 def validate_node(gateway: BaseAsyncGateway, node_id: int) -> bool:
@@ -142,6 +147,7 @@ def validate_node(gateway: BaseAsyncGateway, node_id: int) -> bool:
 
 
 def validate_child(
+    hass_config: ConfigEntry,
     gateway: BaseAsyncGateway,
     node_id: int,
     child: ChildSensor,
@@ -188,7 +194,12 @@ def validate_child(
                     exc,
                 )
                 continue
-            dev_id: DevId = (gateway.entry_id, node_id, child.id, set_req[v_name].value)
+            dev_id: DevId = (
+                hass_config.entry_id,
+                node_id,
+                child.id,
+                set_req[v_name].value,
+            )
             validated[platform].append(dev_id)
 
     return validated

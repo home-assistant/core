@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import Dict, List, Literal, Set, Tuple
 
 ATTR_DEVICES: str = "devices"
+ATTR_GATEWAY_ID: str = "gateway_id"
 
 CONF_BAUD_RATE: str = "baud_rate"
 CONF_DEVICE: str = "device"

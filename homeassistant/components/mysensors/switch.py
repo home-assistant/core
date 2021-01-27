@@ -99,7 +99,7 @@ class MySensorsSwitch(mysensors.device.MySensorsEntity, SwitchEntity):
     @property
     def assumed_state(self):
         """Return True if unable to access real state of entity."""
-        return self.gateway.optimistic
+        return False
 
     @property
     def current_power_w(self):
@@ -117,7 +117,7 @@ class MySensorsSwitch(mysensors.device.MySensorsEntity, SwitchEntity):
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 1, ack=1
         )
-        if self.gateway.optimistic:
+        if self.assumed_state:
             # Optimistically assume that switch has changed state
             self._values[self.value_type] = STATE_ON
             self.async_write_ha_state()
@@ -127,7 +127,7 @@ class MySensorsSwitch(mysensors.device.MySensorsEntity, SwitchEntity):
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 0, ack=1
         )
-        if self.gateway.optimistic:
+        if self.assumed_state:
             # Optimistically assume that switch has changed state
             self._values[self.value_type] = STATE_OFF
             self.async_write_ha_state()
@@ -158,7 +158,7 @@ class MySensorsIRSwitch(MySensorsSwitch):
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_LIGHT, 1, ack=1
         )
-        if self.gateway.optimistic:
+        if self.assumed_state:
             # Optimistically assume that switch has changed state
             self._values[self.value_type] = self._ir_code
             self._values[set_req.V_LIGHT] = STATE_ON
@@ -172,7 +172,7 @@ class MySensorsIRSwitch(MySensorsSwitch):
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_LIGHT, 0, ack=1
         )
-        if self.gateway.optimistic:
+        if self.assumed_state:
             # Optimistically assume that switch has changed state
             self._values[set_req.V_LIGHT] = STATE_OFF
             self.async_write_ha_state()

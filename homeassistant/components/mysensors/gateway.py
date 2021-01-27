@@ -211,11 +211,6 @@ async def _get_gateway(
             except vol.Invalid:
                 # invalid ip address
                 return None
-    # this adds extra properties to the pymysensors objects
-    gateway.metric = hass.config.units.is_metric
-    gateway.optimistic = False  # old optimistic option has been deprecated, we use echos to hopefully not need it
-    gateway.device = device
-    gateway.entry_id = unique_id
     gateway.event_callback = _gw_callback_factory(hass, entry)
     if persistence:
         await gateway.start_persistence()
@@ -230,7 +225,7 @@ async def finish_setup(
     discover_tasks = []
     start_tasks = []
     discover_tasks.append(_discover_persistent_devices(hass, hass_config, gateway))
-    start_tasks.append(_gw_start(hass, gateway))
+    start_tasks.append(_gw_start(hass, hass_config, gateway))
     if discover_tasks:
         # Make sure all devices and platforms are loaded before gateway start.
         await asyncio.wait(discover_tasks)
@@ -249,7 +244,7 @@ async def _discover_persistent_devices(
             continue
         node: Sensor = gateway.sensors[node_id]
         for child in node.children.values():  # child is of type ChildSensor
-            validated = validate_child(gateway, node_id, child)
+            validated = validate_child(hass_config, gateway, node_id, child)
             for platform, dev_ids in validated.items():
                 new_devices[platform].extend(dev_ids)
     _LOGGER.debug("discovering persistent devices: %s", new_devices)
@@ -259,35 +254,36 @@ async def _discover_persistent_devices(
         await asyncio.wait(tasks)
 
 
-async def gw_stop(hass, gateway: BaseAsyncGateway):
+async def gw_stop(hass, hass_config: ConfigEntry, gateway: BaseAsyncGateway):
     """Stop the gateway."""
-    _LOGGER.info("stopping gateway %s", gateway.entry_id)
     connect_task = hass.data[DOMAIN].get(
-        MYSENSORS_GATEWAY_START_TASK.format(gateway.entry_id), None
+        MYSENSORS_GATEWAY_START_TASK.format(hass_config.entry_id), None
     )
     if connect_task is not None and not connect_task.done():
         connect_task.cancel()
     await gateway.stop()
 
 
-async def _gw_start(hass: HomeAssistantType, gateway: BaseAsyncGateway):
+async def _gw_start(
+    hass: HomeAssistantType, hass_config: ConfigEntry, gateway: BaseAsyncGateway
+):
     """Start the gateway."""
     # Don't use hass.async_create_task to avoid holding up setup indefinitely.
     hass.data[DOMAIN][
-        MYSENSORS_GATEWAY_START_TASK.format(gateway.entry_id)
+        MYSENSORS_GATEWAY_START_TASK.format(hass_config.entry_id)
     ] = asyncio.create_task(
         gateway.start()
     )  # store the connect task so it can be cancelled in gw_stop
 
     async def stop_this_gw(_: Event):
-        await gw_stop(hass, gateway)
+        await gw_stop(hass, hass_config, gateway)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_this_gw)
-    if gateway.device == "mqtt":
+    if hass_config.data[CONF_DEVICE] == MQTT_COMPONENT:
         # Gatways connected via mqtt doesn't send gateway ready message.
         return
     gateway_ready = asyncio.Future()
-    gateway_ready_key = MYSENSORS_GATEWAY_READY.format(gateway.entry_id)
+    gateway_ready_key = MYSENSORS_GATEWAY_READY.format(hass_config.entry_id)
     hass.data[DOMAIN][gateway_ready_key] = gateway_ready
 
     try:
@@ -296,7 +292,7 @@ async def _gw_start(hass: HomeAssistantType, gateway: BaseAsyncGateway):
     except asyncio.TimeoutError:
         _LOGGER.warning(
             "Gateway %s not ready after %s secs so continuing with setup",
-            gateway.device,
+            hass_config.data[CONF_DEVICE],
             GATEWAY_READY_TIMEOUT,
         )
     finally:

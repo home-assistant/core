@@ -85,7 +85,7 @@ class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
     @property
     def assumed_state(self):
         """Return true if unable to access real state of entity."""
-        return self.gateway.optimistic
+        return False
 
     @property
     def is_on(self):
@@ -102,7 +102,7 @@ class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
             self.node_id, self.child_id, set_req.V_LIGHT, 1, ack=1
         )
 
-        if self.gateway.optimistic:
+        if self.assumed_state:
             # optimistically assume that light has changed state
             self._state = True
             self._values[set_req.V_LIGHT] = STATE_ON
@@ -124,7 +124,7 @@ class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
             self.node_id, self.child_id, set_req.V_DIMMER, percent, ack=1
         )
 
-        if self.gateway.optimistic:
+        if self.assumed_state:
             # optimistically assume that light has changed state
             self._brightness = brightness
             self._values[set_req.V_DIMMER] = percent
@@ -157,7 +157,7 @@ class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
             self.node_id, self.child_id, self.value_type, hex_color, ack=1
         )
 
-        if self.gateway.optimistic:
+        if self.assumed_state:
             # optimistically assume that light has changed state
             self._hs = color_util.color_RGB_to_hs(*rgb)
             self._white = white
@@ -167,7 +167,7 @@ class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
         """Turn the device off."""
         value_type = self.gateway.const.SetReq.V_LIGHT
         self.gateway.set_child_value(self.node_id, self.child_id, value_type, 0, ack=1)
-        if self.gateway.optimistic:
+        if self.assumed_state:
             # optimistically assume that light has changed state
             self._state = False
             self._values[value_type] = STATE_OFF
@@ -210,7 +210,7 @@ class MySensorsLightDimmer(MySensorsLight):
         """Turn the device on."""
         self._turn_on_light()
         self._turn_on_dimmer(**kwargs)
-        if self.gateway.optimistic:
+        if self.assumed_state:
             self.async_write_ha_state()
 
     async def async_update(self):
@@ -236,7 +236,7 @@ class MySensorsLightRGB(MySensorsLight):
         self._turn_on_light()
         self._turn_on_dimmer(**kwargs)
         self._turn_on_rgb_and_w("%02x%02x%02x", **kwargs)
-        if self.gateway.optimistic:
+        if self.assumed_state:
             self.async_write_ha_state()
 
     async def async_update(self):
@@ -263,5 +263,5 @@ class MySensorsLightRGBW(MySensorsLightRGB):
         self._turn_on_light()
         self._turn_on_dimmer(**kwargs)
         self._turn_on_rgb_and_w("%02x%02x%02x%02x", **kwargs)
-        if self.gateway.optimistic:
+        if self.assumed_state:
             self.async_write_ha_state()
