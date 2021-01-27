@@ -24,35 +24,56 @@ async def test_humanifying_deconz_event(hass):
             "state": {"buttonevent": 1000},
             "config": {},
             "uniqueid": "00:00:00:00:00:00:00:01-00",
-        }
+        },
+        "1": {
+            "id": "Hue remote id",
+            "name": "Hue remote",
+            "type": "ZHASwitch",
+            "modelid": "RWL021",
+            "state": {"buttonevent": 1000},
+            "config": {},
+            "uniqueid": "00:00:00:00:00:00:00:02-00",
+        },
     }
     config_entry = await setup_deconz_integration(hass, get_state_response=data)
     gateway = get_gateway_from_config_entry(hass, config_entry)
-    event = gateway.events[0]
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
     entity_attr_cache = logbook.EntityAttributeCache(hass)
 
-    event1 = list(
+    events = list(
         logbook.humanify(
             hass,
             [
                 MockLazyEventPartialState(
                     CONF_DECONZ_EVENT,
                     {
-                        CONF_DEVICE_ID: event.device_id,
+                        CONF_DEVICE_ID: gateway.events[0].device_id,
                         CONF_EVENT: 2000,
-                        CONF_ID: event.event_id,
-                        CONF_UNIQUE_ID: event.serial,
+                        CONF_ID: gateway.events[0].event_id,
+                        CONF_UNIQUE_ID: gateway.events[0].serial,
+                    },
+                ),
+                MockLazyEventPartialState(
+                    CONF_DECONZ_EVENT,
+                    {
+                        CONF_DEVICE_ID: gateway.events[1].device_id,
+                        CONF_EVENT: 2001,
+                        CONF_ID: gateway.events[1].event_id,
+                        CONF_UNIQUE_ID: gateway.events[1].serial,
                     },
                 ),
             ],
             entity_attr_cache,
             {},
         )
-    )[0]
+    )
 
-    assert event1["name"] == "Switch 1"
-    assert event1["domain"] == "deconz"
-    assert event1["message"] == "fired event '2000'."
+    assert events[0]["name"] == "Switch 1"
+    assert events[0]["domain"] == "deconz"
+    assert events[0]["message"] == "fired event '2000'."
+
+    assert events[1]["name"] == "Hue remote"
+    assert events[1]["domain"] == "deconz"
+    assert events[1]["message"] == "'Long press' event for 'Dim up' was fired."

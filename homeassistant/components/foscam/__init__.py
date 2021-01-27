@@ -4,7 +4,7 @@ import asyncio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, SERVICE_PTZ
+from .const import DOMAIN, SERVICE_PTZ, SERVICE_PTZ_PRESET
 
 PLATFORMS = ["camera"]
 
@@ -43,5 +43,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         if not hass.data[DOMAIN]:
             hass.services.async_remove(domain=DOMAIN, service=SERVICE_PTZ)
+            hass.services.async_remove(domain=DOMAIN, service=SERVICE_PTZ_PRESET)
 
     return unload_ok
