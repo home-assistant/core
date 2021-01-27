@@ -16,7 +16,7 @@ from tests.common import async_setup_component
 async def device(hass: HomeAssistant, request) -> DysonDevice:
     """Fixture to provide Dyson 360 Eye device."""
     platform = request.module.PLATFORM_DOMAIN
-    get_device = request.module.get_device
+    get_device = request.module.async_get_device
     if hasattr(request, "param"):
         if isinstance(request.param, list):
             device = get_device(*request.param)

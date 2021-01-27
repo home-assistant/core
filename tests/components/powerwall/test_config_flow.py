@@ -47,34 +47,6 @@ async def test_form_source_user(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_source_import(hass):
-    """Test we setup the config entry via import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    mock_powerwall = await _mock_powerwall_site_name(hass, "Imported site")
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.powerwall.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_IP_ADDRESS: "1.2.3.4"},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "Imported site"
-    assert result["data"] == {CONF_IP_ADDRESS: "1.2.3.4"}
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(

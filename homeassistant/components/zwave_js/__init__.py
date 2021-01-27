@@ -6,6 +6,7 @@ from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.node import Node as ZwaveNode
 
+from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -14,7 +15,9 @@ from homeassistant.helpers import device_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
+from .api import async_register_api
 from .const import (
+    CONF_INTEGRATION_CREATED_ADDON,
     DATA_CLIENT,
     DATA_UNSUBSCRIBE,
     DOMAIN,
@@ -22,7 +25,6 @@ from .const import (
     PLATFORMS,
 )
 from .discovery import async_discover_values
-from .websocket_api import async_register_api
 
 LOGGER = logging.getLogger(__name__)
 CONNECT_TIMEOUT = 10
@@ -58,25 +60,30 @@ def register_node_in_dev_reg(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Z-Wave JS from a config entry."""
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
+    connected = asyncio.Event()
     initialized = asyncio.Event()
     dev_reg = await device_registry.async_get_registry(hass)
 
     async def async_on_connect() -> None:
         """Handle websocket is (re)connected."""
         LOGGER.info("Connected to Zwave JS Server")
-        if initialized.is_set():
-            # update entity availability
-            async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
+        connected.set()
 
     async def async_on_disconnect() -> None:
         """Handle websocket is disconnected."""
         LOGGER.info("Disconnected from Zwave JS Server")
-        async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
+        connected.clear()
+        if initialized.is_set():
+            initialized.clear()
+            # update entity availability
+            async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
 
     async def async_on_initialized() -> None:
         """Handle initial full state received."""
         LOGGER.info("Connection to Zwave JS Server initialized.")
         initialized.set()
+        # update entity availability
+        async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
 
     @callback
     def async_on_node_ready(node: ZwaveNode) -> None:
@@ -127,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     asyncio.create_task(client.connect())
     try:
         async with timeout(CONNECT_TIMEOUT):
-            await initialized.wait()
+            await connected.wait()
     except asyncio.TimeoutError as err:
         for unsub in unsubs:
             unsub()
@@ -151,6 +158,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 for component in PLATFORMS
             ]
         )
+
+        # Wait till we're initialized
+        LOGGER.info("Waiting for Z-Wave to be fully initialized")
+        await initialized.wait()
 
         # run discovery on all ready nodes
         for node in client.driver.controller.nodes.values():
@@ -187,3 +198,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await info[DATA_CLIENT].disconnect()
 
     return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    if not entry.data.get(CONF_INTEGRATION_CREATED_ADDON):
+        return
+
+    try:
+        await hass.components.hassio.async_stop_addon("core_zwave_js")
+    except HassioAPIError as err:
+        LOGGER.error("Failed to stop the Z-Wave JS add-on: %s", err)
+        return
+    try:
+        await hass.components.hassio.async_uninstall_addon("core_zwave_js")
+    except HassioAPIError as err:
+        LOGGER.error("Failed to uninstall the Z-Wave JS add-on: %s", err)

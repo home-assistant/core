@@ -117,6 +117,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         super().__init__(config_entry, client, info)
         self._hvac_modes: Dict[str, Optional[int]] = {}
         self._hvac_presets: Dict[str, Optional[int]] = {}
+        self._unit_value: ZwaveValue = None
 
         self._current_mode = self.info.primary_value
         self._setpoint_values: Dict[ThermostatSetpointType, ZwaveValue] = {}
@@ -127,6 +128,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
                 value_property_key_name=enum.value,
                 add_to_watched_value_ids=True,
             )
+            # Use the first found setpoint value to always determine the temperature unit
+            if self._setpoint_values[enum] and not self._unit_value:
+                self._unit_value = self._setpoint_values[enum]
         self._operating_state = self.get_zwave_value(
             THERMOSTAT_OPERATING_STATE_PROPERTY,
             command_class=CommandClass.THERMOSTAT_OPERATING_STATE,
@@ -178,10 +182,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
-        temp: Optional[ZwaveValue] = None
-        if self._current_mode_setpoint_enums:
-            temp = self._setpoint_value(self._current_mode_setpoint_enums[0])
-        if temp is not None and temp.metadata.unit == "°F":
+        if "f" in self._unit_value.metadata.unit.lower():
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
 

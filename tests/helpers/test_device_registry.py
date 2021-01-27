@@ -1,5 +1,6 @@
 """Tests for the Device Registry."""
 import asyncio
+import time
 from unittest.mock import patch
 
 import pytest
@@ -301,26 +302,41 @@ async def test_deleted_device_removing_config_entries(hass, registry, update_eve
 
     registry.async_clear_config_entry("123")
     assert len(registry.devices) == 0
-    assert len(registry.deleted_devices) == 1
+    assert len(registry.deleted_devices) == 2
 
     registry.async_clear_config_entry("456")
     assert len(registry.devices) == 0
-    assert len(registry.deleted_devices) == 0
+    assert len(registry.deleted_devices) == 2
 
     # No event when a deleted device is purged
     await hass.async_block_till_done()
     assert len(update_events) == 5
 
-    # Re-add, expect new device id
+    # Re-add, expect to keep the device id
     entry2 = registry.async_get_or_create(
-        config_entry_id="123",
+        config_entry_id="456",
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
     )
 
-    assert entry.id != entry2.id
+    assert entry.id == entry2.id
+
+    future_time = time.time() + device_registry.ORPHANED_DEVICE_KEEP_SECONDS + 1
+
+    with patch("time.time", return_value=future_time):
+        registry.async_purge_expired_orphaned_devices()
+
+    # Re-add, expect to get a new device id after the purge
+    entry4 = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert entry3.id != entry4.id
 
 
 async def test_removing_area_id(registry):
@@ -732,6 +748,40 @@ async def test_cleanup_device_registry(hass, registry):
     assert registry.async_get_device({("hue", "d2")}) is not None
     assert registry.async_get_device({("hue", "d3")}) is not None
     assert registry.async_get_device({("something", "d4")}) is None
+
+
+async def test_cleanup_device_registry_removes_expired_orphaned_devices(hass, registry):
+    """Test cleanup removes expired orphaned devices."""
+    config_entry = MockConfigEntry(domain="hue")
+    config_entry.add_to_hass(hass)
+
+    registry.async_get_or_create(
+        identifiers={("hue", "d1")}, config_entry_id=config_entry.entry_id
+    )
+    registry.async_get_or_create(
+        identifiers={("hue", "d2")}, config_entry_id=config_entry.entry_id
+    )
+    registry.async_get_or_create(
+        identifiers={("hue", "d3")}, config_entry_id=config_entry.entry_id
+    )
+
+    registry.async_clear_config_entry(config_entry.entry_id)
+    assert len(registry.devices) == 0
+    assert len(registry.deleted_devices) == 3
+
+    ent_reg = await entity_registry.async_get_registry(hass)
+    device_registry.async_cleanup(hass, registry, ent_reg)
+
+    assert len(registry.devices) == 0
+    assert len(registry.deleted_devices) == 3
+
+    future_time = time.time() + device_registry.ORPHANED_DEVICE_KEEP_SECONDS + 1
+
+    with patch("time.time", return_value=future_time):
+        device_registry.async_cleanup(hass, registry, ent_reg)
+
+    assert len(registry.devices) == 0
+    assert len(registry.deleted_devices) == 0
 
 
 async def test_cleanup_startup(hass):
