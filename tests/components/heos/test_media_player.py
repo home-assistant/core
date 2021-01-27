@@ -120,6 +120,7 @@ async def test_updates_from_signals(hass, config_entry, config, controller, favo
         const.SIGNAL_PLAYER_EVENT, player.player_id, const.EVENT_PLAYER_STATE_CHANGED
     )
     await hass.async_block_till_done()
+
     state = hass.states.get("media_player.test_player")
     assert state.state == STATE_PLAYING
 
@@ -227,6 +228,7 @@ async def test_updates_from_players_changed(
         const.SIGNAL_CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED, change_data
     )
     await event.wait()
+    await hass.async_block_till_done()
     assert hass.states.get("media_player.test_player").state == STATE_PLAYING
 
 
@@ -241,7 +243,7 @@ async def test_updates_from_players_changed_new_ids(
     event = asyncio.Event()
 
     # Assert device registry matches current id
-    assert device_registry.async_get_device({(DOMAIN, 1)}, [])
+    assert device_registry.async_get_device({(DOMAIN, 1)})
     # Assert entity registry matches current id
     assert (
         entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "1")
@@ -262,7 +264,7 @@ async def test_updates_from_players_changed_new_ids(
 
     # Assert device registry identifiers were updated
     assert len(device_registry.devices) == 1
-    assert device_registry.async_get_device({(DOMAIN, 101)}, [])
+    assert device_registry.async_get_device({(DOMAIN, 101)})
     # Assert entity registry unique id was updated
     assert len(entity_registry.entities) == 1
     assert (
@@ -694,7 +696,7 @@ async def test_play_media_playlist(
     await setup_platform(hass, config_entry, config)
     player = controller.players[1]
     playlist = playlists[0]
-    # Play without enqueing
+    # Play without enqueuing
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
@@ -708,7 +710,7 @@ async def test_play_media_playlist(
     player.add_to_queue.assert_called_once_with(
         playlist, const.ADD_QUEUE_REPLACE_AND_PLAY
     )
-    # Play with enqueing
+    # Play with enqueuing
     player.add_to_queue.reset_mock()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,

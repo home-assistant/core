@@ -1,11 +1,12 @@
 """Common methods used across tests for TotalConnect."""
+from unittest.mock import patch
+
 from total_connect_client import TotalConnectClient
 
 from homeassistant.components.totalconnect import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 LOCATION_INFO_BASIC_NORMAL = {

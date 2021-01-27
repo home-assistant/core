@@ -4,7 +4,6 @@
             "already_configured": "Ezen koordin\u00e1t\u00e1k Airly integr\u00e1ci\u00f3ja m\u00e1r konfigur\u00e1lva van."
         },
         "error": {
-            "auth": "Az API kulcs nem megfelel\u0151.",
             "wrong_location": "Ezen a ter\u00fcleten nincs Airly m\u00e9r\u0151\u00e1llom\u00e1s."
         },
         "step": {

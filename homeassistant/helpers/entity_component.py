@@ -106,11 +106,7 @@ class EntityComponent:
 
         This doesn't block the executor to protect from deadlocks.
         """
-        self.hass.add_job(
-            self.async_setup(  # type: ignore
-                config
-            )
-        )
+        self.hass.add_job(self.async_setup(config))  # type: ignore
 
     async def async_setup(self, config: ConfigType) -> None:
         """Set up a full entity component.
@@ -164,7 +160,7 @@ class EntityComponent:
             scan_interval=getattr(platform, "SCAN_INTERVAL", None),
         )
 
-        return await self._platforms[key].async_setup_entry(config_entry)  # type: ignore
+        return await self._platforms[key].async_setup_entry(config_entry)
 
     async def async_unload_entry(self, config_entry: ConfigEntry) -> bool:
         """Unload a config entry."""
@@ -196,7 +192,7 @@ class EntityComponent:
         self,
         name: str,
         schema: Union[Dict[str, Any], vol.Schema],
-        func: str,
+        func: Union[str, Callable[..., Any]],
         required_features: Optional[List[int]] = None,
     ) -> None:
         """Register an entity service."""

@@ -1,5 +1,7 @@
 """Tests for the Awair sensor platform."""
 
+from unittest.mock import patch
+
 from homeassistant.components.awair.const import (
     API_CO2,
     API_HUMID,
@@ -20,9 +22,10 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
+    PERCENTAGE,
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 
 from .const import (
@@ -39,7 +42,6 @@ from .const import (
     USER_FIXTURE,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -98,7 +100,7 @@ async def test_awair_gen1_sensors(hass):
         "sensor.living_room_humidity",
         f"{AWAIR_UUID}_{SENSOR_TYPES[API_HUMID][ATTR_UNIQUE_ID]}",
         "41.59",
-        {ATTR_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE, "awair_index": 0.0},
+        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, "awair_index": 0.0},
     )
 
     assert_expected_properties(
@@ -232,7 +234,7 @@ async def test_awair_mint_sensors(hass):
         "sensor.living_room_illuminance",
         f"{AWAIR_UUID}_{SENSOR_TYPES[API_LUX][ATTR_UNIQUE_ID]}",
         "441.7",
-        {ATTR_UNIT_OF_MEASUREMENT: "lx"},
+        {ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX},
     )
 
     # The Mint does not have a CO2 sensor.
@@ -290,7 +292,7 @@ async def test_awair_omni_sensors(hass):
         "sensor.living_room_illuminance",
         f"{AWAIR_UUID}_{SENSOR_TYPES[API_LUX][ATTR_UNIQUE_ID]}",
         "804.9",
-        {ATTR_UNIT_OF_MEASUREMENT: "lx"},
+        {ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX},
     )
 
 

@@ -1,5 +1,4 @@
 """Support for AdGuard Home."""
-from distutils.version import LooseVersion
 import logging
 from typing import Any, Dict
 
@@ -11,7 +10,6 @@ from homeassistant.components.adguard.const import (
     DATA_ADGUARD_CLIENT,
     DATA_ADGUARD_VERION,
     DOMAIN,
-    MIN_ADGUARD_HOME_VERSION,
     SERVICE_ADD_URL,
     SERVICE_DISABLE_URL,
     SERVICE_ENABLE_URL,
@@ -67,15 +65,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     hass.data.setdefault(DOMAIN, {})[DATA_ADGUARD_CLIENT] = adguard
 
     try:
-        version = await adguard.version()
+        await adguard.version()
     except AdGuardHomeConnectionError as exception:
         raise ConfigEntryNotReady from exception
-
-    if version and LooseVersion(MIN_ADGUARD_HOME_VERSION) > LooseVersion(version):
-        _LOGGER.error(
-            "This integration requires AdGuard Home v0.99.0 or higher to work correctly"
-        )
-        raise ConfigEntryNotReady
 
     for component in "sensor", "switch":
         hass.async_create_task(

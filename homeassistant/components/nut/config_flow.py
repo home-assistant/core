@@ -136,22 +136,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_user()
 
-    async def async_step_import(self, user_input=None):
-        """Handle the import."""
-        errors = {}
-        if user_input is not None:
-            if self._host_port_alias_already_configured(user_input):
-                return self.async_abort(reason="already_configured")
-            _, errors = await self._async_validate_or_error(user_input)
-
-            if not errors:
-                title = _format_host_port_alias(user_input)
-                return self.async_create_entry(title=title, data=user_input)
-
-        return self.async_show_form(
-            step_id="user", data_schema=_base_schema({}), errors=errors
-        )
-
     async def async_step_user(self, user_input=None):
         """Handle the user input."""
         errors = {}
@@ -194,7 +178,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_resources()
 
         return self.async_show_form(
-            step_id="ups", data_schema=_ups_schema(self.ups_list), errors=errors,
+            step_id="ups",
+            data_schema=_ups_schema(self.ups_list),
+            errors=errors,
         )
 
     async def async_step_resources(self, user_input=None):
@@ -216,6 +202,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         existing_host_port_aliases = {
             _format_host_port_alias(entry.data)
             for entry in self._async_current_entries()
+            if CONF_HOST in entry.data
         }
         return _format_host_port_alias(user_input) in existing_host_port_aliases
 
@@ -263,7 +250,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         ] = cv.positive_int
 
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(base_schema),
+            step_id="init",
+            data_schema=vol.Schema(base_schema),
         )
 
 

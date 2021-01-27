@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+from unittest.mock import patch
 
 import pytest
 
@@ -12,10 +13,7 @@ from homeassistant.components.device_tracker.legacy import (
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
-
-_LOGGER = logging.getLogger(__name__)
 
 LOCATION_MESSAGE = {
     "longitude": 1.0,

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Er is al een BleBox-apparaat geconfigureerd op {address} .",
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden",
+            "unknown": "Onverwachte fout",
+            "unsupported_version": "BleBox-apparaat heeft verouderde firmware. Upgrade het eerst."
+        },
+        "flow_title": "BleBox-apparaat: {name} ( {host} )",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP-adres",
+                    "port": "Poort"
+                },
+                "description": "Stel uw BleBox in om te integreren met Home Assistant.",
+                "title": "Stel uw BleBox-apparaat in"
+            }
+        }
+    }
+}

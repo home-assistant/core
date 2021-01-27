@@ -18,7 +18,7 @@ from homeassistant.const import CONTENT_TYPE_JSON, HTTP_OK, HTTP_SERVICE_UNAVAIL
 from homeassistant.core import Context, is_callback
 from homeassistant.helpers.json import JSONEncoder
 
-from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_REAL_IP
+from .const import KEY_AUTHENTICATED, KEY_HASS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,16 +43,16 @@ class HomeAssistantView:
 
     @staticmethod
     def json(
-        result: Any, status_code: int = HTTP_OK, headers: Optional[LooseHeaders] = None,
+        result: Any,
+        status_code: int = HTTP_OK,
+        headers: Optional[LooseHeaders] = None,
     ) -> web.Response:
         """Return a JSON response."""
         try:
-            msg = json.dumps(
-                result, sort_keys=True, cls=JSONEncoder, allow_nan=False
-            ).encode("UTF-8")
+            msg = json.dumps(result, cls=JSONEncoder, allow_nan=False).encode("UTF-8")
         except (ValueError, TypeError) as err:
             _LOGGER.error("Unable to serialize to JSON: %s\n%s", err, result)
-            raise HTTPInternalServerError
+            raise HTTPInternalServerError from err
         response = web.Response(
             body=msg,
             content_type=CONTENT_TYPE_JSON,
@@ -118,7 +118,7 @@ def request_handler_factory(view: HomeAssistantView, handler: Callable) -> Calla
         _LOGGER.debug(
             "Serving %s to %s (auth: %s)",
             request.path,
-            request.get(KEY_REAL_IP),
+            request.remote,
             authenticated,
         )
 
@@ -127,12 +127,12 @@ def request_handler_factory(view: HomeAssistantView, handler: Callable) -> Calla
 
             if asyncio.iscoroutine(result):
                 result = await result
-        except vol.Invalid:
-            raise HTTPBadRequest()
-        except exceptions.ServiceNotFound:
-            raise HTTPInternalServerError()
-        except exceptions.Unauthorized:
-            raise HTTPUnauthorized()
+        except vol.Invalid as err:
+            raise HTTPBadRequest() from err
+        except exceptions.ServiceNotFound as err:
+            raise HTTPInternalServerError() from err
+        except exceptions.Unauthorized as err:
+            raise HTTPUnauthorized() from err
 
         if isinstance(result, web.StreamResponse):
             # The method handler returned a ready-made Response, how nice of it

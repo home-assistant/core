@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_api_key": "Neplatn\u00fd kl\u00ed\u010d API",
+            "requests_exceeded": "Byl p\u0159ekro\u010den povolen\u00fd po\u010det po\u017eadavk\u016f pro API Accuweather. Mus\u00edte po\u010dkat nebo zm\u011bnit API kl\u00ed\u010d."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kl\u00ed\u010d API",
+                    "latitude": "Zem\u011bpisn\u00e1 \u0161\u00ed\u0159ka",
+                    "longitude": "Zem\u011bpisn\u00e1 d\u00e9lka",
+                    "name": "Jm\u00e9no"
+                },
+                "description": "Pokud pot\u0159ebujete pomoc s nastaven\u00ed, pod\u00edvejte se na: https://www.home-assistant.io/integrations/accuweather/\n\nN\u011bkter\u00e9 senzory nejsou ve v\u00fdchoz\u00edm nastaven\u00ed povoleny. M\u016f\u017eete je povolit  po nastaven\u00ed integrace v registru entit.\nP\u0159edpov\u011b\u010f po\u010das\u00ed nen\u00ed ve v\u00fdchoz\u00edm nastaven\u00ed povolena. M\u016f\u017eete ji povolit v mo\u017enostech integrace.",
+                "title": "AccuWeather"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "forecast": "P\u0159edpov\u011b\u010f po\u010das\u00ed"
+                },
+                "description": "Kdy\u017e povol\u00edte p\u0159edpov\u011b\u010f po\u010das\u00ed, budou aktualizace dat prov\u00e1d\u011bny ka\u017ed\u00fdch 64 minut nam\u00edsto 32 minut z d\u016fvodu omezen\u00ed bezplatn\u00e9 verze AccuWeather.",
+                "title": "Mo\u017enosti AccuWeather"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Lze kontaktovat AccuWeather server",
+            "remaining_requests": "Zb\u00fdvaj\u00edc\u00ed povolen\u00e9 \u017e\u00e1dosti"
+        }
+    }
+}

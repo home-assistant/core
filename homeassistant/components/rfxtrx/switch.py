@@ -4,40 +4,44 @@ import logging
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_DEVICES
+from homeassistant.const import CONF_DEVICES, STATE_ON
 from homeassistant.core import callback
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
-    CONF_AUTOMATIC_ADD,
+    CONF_DATA_BITS,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     DOMAIN,
-    SIGNAL_EVENT,
-    RfxtrxDevice,
+    RfxtrxCommandEntity,
+    connect_auto_add,
     get_device_id,
     get_rfx_object,
 )
-from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST, DATA_RFXTRX_CONFIG
+from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 
 DATA_SWITCH = f"{DOMAIN}_switch"
 
 _LOGGER = logging.getLogger(__name__)
 
 
+def supported(event):
+    """Return whether an event supports switch."""
+    return (
+        isinstance(event.device, rfxtrxmod.LightingDevice)
+        and not event.device.known_to_be_dimmable
+        and not event.device.known_to_be_rollershutter
+        or isinstance(event.device, rfxtrxmod.RfyDevice)
+    )
+
+
 async def async_setup_entry(
-    hass, config_entry, async_add_entities,
+    hass,
+    config_entry,
+    async_add_entities,
 ):
     """Set up config entry."""
-    discovery_info = hass.data[DATA_RFXTRX_CONFIG]
+    discovery_info = config_entry.data
     device_ids = set()
-
-    def supported(event):
-        return (
-            isinstance(event.device, rfxtrxmod.LightingDevice)
-            and not event.device.known_to_be_dimmable
-            and not event.device.known_to_be_rollershutter
-        )
 
     # Add switch from config file
     entities = []
@@ -49,7 +53,9 @@ async def async_setup_entry(
         if not supported(event):
             continue
 
-        device_id = get_device_id(event.device)
+        device_id = get_device_id(
+            event.device, data_bits=entity_info.get(CONF_DATA_BITS)
+        )
         if device_id in device_ids:
             continue
         device_ids.add(device_id)
@@ -85,22 +91,20 @@ async def async_setup_entry(
         async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
-    if discovery_info[CONF_AUTOMATIC_ADD]:
-        hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, switch_update)
+    connect_auto_add(hass, discovery_info, switch_update)
 
 
-class RfxtrxSwitch(RfxtrxDevice, SwitchEntity, RestoreEntity):
+class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
     """Representation of a RFXtrx switch."""
 
     async def async_added_to_hass(self):
-        """Restore RFXtrx switch device state (ON/OFF)."""
+        """Restore device state."""
         await super().async_added_to_hass()
 
-        self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_EVENT, self._handle_event
-            )
-        )
+        if self._event is None:
+            old_state = await self.async_get_last_state()
+            if old_state is not None:
+                self._state = old_state.state == STATE_ON
 
     def _apply_event(self, event):
         """Apply command from rfxtrx."""
@@ -120,12 +124,19 @@ class RfxtrxSwitch(RfxtrxDevice, SwitchEntity, RestoreEntity):
 
         self.async_write_ha_state()
 
-    def turn_on(self, **kwargs):
-        """Turn the device on."""
-        self._send_command("turn_on")
-        self.schedule_update_ha_state()
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self._state
 
-    def turn_off(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
+        """Turn the device on."""
+        await self._async_send(self._device.send_on)
+        self._state = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        self._send_command("turn_off")
-        self.schedule_update_ha_state()
+        await self._async_send(self._device.send_off)
+        self._state = False
+        self.async_write_ha_state()

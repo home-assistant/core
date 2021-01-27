@@ -1,5 +1,5 @@
 """Tests for the Synology DSM config flow."""
-import logging
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from synology_dsm.exceptions import (
@@ -18,7 +18,9 @@ from homeassistant.components.synology_dsm.const import (
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_SSL,
+    DEFAULT_TIMEOUT,
+    DEFAULT_USE_SSL,
+    DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
@@ -30,27 +32,27 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SSL,
+    CONF_TIMEOUT,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import MagicMock, Mock, patch
+from .consts import (
+    DEVICE_TOKEN,
+    HOST,
+    HOST_2,
+    MACS,
+    PASSWORD,
+    PORT,
+    SERIAL,
+    SERIAL_2,
+    USE_SSL,
+    USERNAME,
+    VERIFY_SSL,
+)
+
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
-
-
-HOST = "nas.meontheinternet.com"
-SERIAL = "mySerial"
-HOST_2 = "nas.worldwide.me"
-SERIAL_2 = "mySerial2"
-PORT = 1234
-SSL = True
-USERNAME = "Home_Assistant"
-PASSWORD = "password"
-DEVICE_TOKEN = "Dév!cè_T0k€ñ"
-
-MACS = ["00-11-32-XX-XX-59", "00-11-32-XX-XX-5A"]
 
 
 @pytest.fixture(name="service")
@@ -79,6 +81,20 @@ def mock_controller_service_2sa():
         service_mock.return_value.information.serial = SERIAL
         service_mock.return_value.utilisation.cpu_user_load = 1
         service_mock.return_value.storage.disks_ids = ["sda", "sdb", "sdc"]
+        service_mock.return_value.storage.volumes_ids = ["volume_1"]
+        service_mock.return_value.network.macs = MACS
+        yield service_mock
+
+
+@pytest.fixture(name="service_vdsm")
+def mock_controller_service_vdsm():
+    """Mock a successful service."""
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM"
+    ) as service_mock:
+        service_mock.return_value.information.serial = SERIAL
+        service_mock.return_value.utilisation.cpu_user_load = 1
+        service_mock.return_value.storage.disks_ids = []
         service_mock.return_value.storage.volumes_ids = ["volume_1"]
         service_mock.return_value.network.macs = MACS
         yield service_mock
@@ -113,7 +129,8 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
         data={
             CONF_HOST: HOST,
             CONF_PORT: PORT,
-            CONF_SSL: SSL,
+            CONF_SSL: USE_SSL,
+            CONF_VERIFY_SSL: VERIFY_SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
         },
@@ -123,7 +140,8 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["title"] == HOST
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
-    assert result["data"][CONF_SSL] == SSL
+    assert result["data"][CONF_SSL] == USE_SSL
+    assert result["data"][CONF_VERIFY_SSL] == VERIFY_SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_MAC] == MACS
@@ -139,6 +157,7 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
         data={
             CONF_HOST: HOST,
             CONF_SSL: False,
+            CONF_VERIFY_SSL: VERIFY_SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
         },
@@ -149,6 +168,7 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == DEFAULT_PORT
     assert not result["data"][CONF_SSL]
+    assert result["data"][CONF_VERIFY_SSL] == VERIFY_SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_MAC] == MACS
@@ -190,11 +210,48 @@ async def test_user_2sa(hass: HomeAssistantType, service_2sa: MagicMock):
     assert result["title"] == HOST
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == DEFAULT_PORT_SSL
-    assert result["data"][CONF_SSL] == DEFAULT_SSL
+    assert result["data"][CONF_SSL] == DEFAULT_USE_SSL
+    assert result["data"][CONF_VERIFY_SSL] == DEFAULT_VERIFY_SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_MAC] == MACS
     assert result["data"].get("device_token") == DEVICE_TOKEN
+    assert result["data"].get(CONF_DISKS) is None
+    assert result["data"].get(CONF_VOLUMES) is None
+
+
+async def test_user_vdsm(hass: HomeAssistantType, service_vdsm: MagicMock):
+    """Test user config."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=None
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    # test with all provided
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_SSL: USE_SSL,
+            CONF_VERIFY_SSL: VERIFY_SSL,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["result"].unique_id == SERIAL
+    assert result["title"] == HOST
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_PORT] == PORT
+    assert result["data"][CONF_SSL] == USE_SSL
+    assert result["data"][CONF_VERIFY_SSL] == VERIFY_SSL
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_MAC] == MACS
+    assert result["data"].get("device_token") is None
     assert result["data"].get(CONF_DISKS) is None
     assert result["data"].get(CONF_VOLUMES) is None
 
@@ -212,7 +269,8 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["title"] == HOST
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == DEFAULT_PORT_SSL
-    assert result["data"][CONF_SSL] == DEFAULT_SSL
+    assert result["data"][CONF_SSL] == DEFAULT_USE_SSL
+    assert result["data"][CONF_VERIFY_SSL] == DEFAULT_VERIFY_SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_MAC] == MACS
@@ -228,7 +286,8 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
         data={
             CONF_HOST: HOST_2,
             CONF_PORT: PORT,
-            CONF_SSL: SSL,
+            CONF_SSL: USE_SSL,
+            CONF_VERIFY_SSL: VERIFY_SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
             CONF_DISKS: ["sda", "sdb", "sdc"],
@@ -240,7 +299,8 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["title"] == HOST_2
     assert result["data"][CONF_HOST] == HOST_2
     assert result["data"][CONF_PORT] == PORT
-    assert result["data"][CONF_SSL] == SSL
+    assert result["data"][CONF_SSL] == USE_SSL
+    assert result["data"][CONF_VERIFY_SSL] == VERIFY_SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_MAC] == MACS
@@ -288,7 +348,7 @@ async def test_login_failed(hass: HomeAssistantType, service: MagicMock):
         data={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_USERNAME: "login"}
+    assert result["errors"] == {CONF_USERNAME: "invalid_auth"}
 
 
 async def test_connection_failed(hass: HomeAssistantType, service: MagicMock):
@@ -304,7 +364,7 @@ async def test_connection_failed(hass: HomeAssistantType, service: MagicMock):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_HOST: "connection"}
+    assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
 
 async def test_unknown_failed(hass: HomeAssistantType, service: MagicMock):
@@ -389,7 +449,8 @@ async def test_form_ssdp(hass: HomeAssistantType, service: MagicMock):
     assert result["title"] == "192.168.1.5"
     assert result["data"][CONF_HOST] == "192.168.1.5"
     assert result["data"][CONF_PORT] == 5001
-    assert result["data"][CONF_SSL] == DEFAULT_SSL
+    assert result["data"][CONF_SSL] == DEFAULT_USE_SSL
+    assert result["data"][CONF_VERIFY_SSL] == DEFAULT_VERIFY_SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_MAC] == MACS
@@ -421,15 +482,19 @@ async def test_options_flow(hass: HomeAssistantType, service: MagicMock):
     # Scan interval
     # Default
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={},
+        result["flow_id"],
+        user_input={},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
+    assert config_entry.options[CONF_TIMEOUT] == DEFAULT_TIMEOUT
 
     # Manual
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 2},
+        result["flow_id"],
+        user_input={CONF_SCAN_INTERVAL: 2, CONF_TIMEOUT: 30},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options[CONF_SCAN_INTERVAL] == 2
+    assert config_entry.options[CONF_TIMEOUT] == 30

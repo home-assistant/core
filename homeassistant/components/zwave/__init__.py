@@ -28,6 +28,7 @@ from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import (
+    async_entries_for_config_entry,
     async_get_registry as async_get_entity_registry,
 )
 from homeassistant.helpers.entity_values import EntityValues
@@ -80,6 +81,8 @@ CONF_REFRESH_DELAY = "delay"
 CONF_DEVICE_CONFIG = "device_config"
 CONF_DEVICE_CONFIG_GLOB = "device_config_glob"
 CONF_DEVICE_CONFIG_DOMAIN = "device_config_domain"
+
+DATA_ZWAVE_CONFIG_YAML_PRESENT = "zwave_config_yaml_present"
 
 DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
@@ -250,6 +253,64 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+async def async_get_ozw_migration_data(hass):
+    """Return dict with info for migration to ozw integration."""
+    data_to_migrate = {}
+
+    zwave_config_entries = hass.config_entries.async_entries(DOMAIN)
+    if not zwave_config_entries:
+        _LOGGER.error("Config entry not set up")
+        return data_to_migrate
+
+    if hass.data.get(DATA_ZWAVE_CONFIG_YAML_PRESENT):
+        _LOGGER.warning(
+            "Remove %s from configuration.yaml "
+            "to avoid setting up this integration on restart "
+            "after completing migration to ozw",
+            DOMAIN,
+        )
+
+    config_entry = zwave_config_entries[0]  # zwave only has a single config entry
+    ent_reg = await async_get_entity_registry(hass)
+    entity_entries = async_entries_for_config_entry(ent_reg, config_entry.entry_id)
+    unique_entries = {entry.unique_id: entry for entry in entity_entries}
+    dev_reg = await async_get_device_registry(hass)
+
+    for entity_values in hass.data[DATA_ENTITY_VALUES]:
+        node = entity_values.primary.node
+        unique_id = compute_value_unique_id(node, entity_values.primary)
+        if unique_id not in unique_entries:
+            continue
+        device_identifier, _ = node_device_id_and_name(
+            node, entity_values.primary.instance
+        )
+        device_entry = dev_reg.async_get_device({device_identifier}, set())
+        data_to_migrate[unique_id] = {
+            "node_id": node.node_id,
+            "node_instance": entity_values.primary.instance,
+            "device_id": device_entry.id,
+            "command_class": entity_values.primary.command_class,
+            "command_class_label": entity_values.primary.label,
+            "value_index": entity_values.primary.index,
+            "unique_id": unique_id,
+            "entity_entry": unique_entries[unique_id],
+        }
+
+    return data_to_migrate
+
+
+@callback
+def async_is_ozw_migrated(hass):
+    """Return True if migration to ozw is done."""
+    ozw_config_entries = hass.config_entries.async_entries("ozw")
+    if not ozw_config_entries:
+        return False
+
+    ozw_config_entry = ozw_config_entries[0]  # only one ozw entry is allowed
+    migrated = bool(ozw_config_entry.data.get("migrated"))
+    return migrated
+
+
 def _obj_to_dict(obj):
     """Convert an object into a hash for debug."""
     return {
@@ -312,6 +373,7 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
     hass.data[DATA_ZWAVE_CONFIG] = conf
+    hass.data[DATA_ZWAVE_CONFIG_YAML_PRESENT] = True
 
     if not hass.config_entries.async_entries(DOMAIN):
         hass.async_create_task(
@@ -335,12 +397,19 @@ async def async_setup_entry(hass, config_entry):
 
     Will automatically load components to support devices found on the network.
     """
+    # pylint: disable=import-error
+    from openzwave.group import ZWaveGroup
+    from openzwave.network import ZWaveNetwork
+    from openzwave.option import ZWaveOption
+
+    # pylint: enable=import-error
     from pydispatch import dispatcher
 
-    # pylint: disable=import-error
-    from openzwave.option import ZWaveOption
-    from openzwave.network import ZWaveNetwork
-    from openzwave.group import ZWaveGroup
+    if async_is_ozw_migrated(hass):
+        _LOGGER.error(
+            "Migration to ozw has been done. Please remove the zwave integration"
+        )
+        return False
 
     # Merge config entry and yaml config
     config = config_entry.data
@@ -504,7 +573,7 @@ async def async_setup_entry(hass, config_entry):
     async def _remove_device(node):
         dev_reg = await async_get_device_registry(hass)
         identifier, name = node_device_id_and_name(node)
-        device = dev_reg.async_get_device(identifiers={identifier}, connections=set())
+        device = dev_reg.async_get_device(identifiers={identifier})
         if device is not None:
             _LOGGER.debug("Removing Device - %s - %s", device.id, name)
             dev_reg.async_remove_device(device.id)
@@ -593,7 +662,7 @@ async def async_setup_entry(hass, config_entry):
     async def rename_node(service):
         """Rename a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         name = service.data.get(const.ATTR_NAME)
         node.name = name
         _LOGGER.info("Renamed Z-Wave node %d to %s", node_id, name)
@@ -613,7 +682,7 @@ async def async_setup_entry(hass, config_entry):
         """Rename a node value."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         value_id = service.data.get(const.ATTR_VALUE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         value = node.values[value_id]
         name = service.data.get(const.ATTR_NAME)
         value.label = name
@@ -629,7 +698,7 @@ async def async_setup_entry(hass, config_entry):
         """Set the polling intensity of a node value."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         value_id = service.data.get(const.ATTR_VALUE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         value = node.values[value_id]
         intensity = service.data.get(const.ATTR_POLL_INTENSITY)
         if intensity == 0:
@@ -667,7 +736,7 @@ async def async_setup_entry(hass, config_entry):
     def set_config_parameter(service):
         """Set a config parameter to a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         param = service.data.get(const.ATTR_CONFIG_PARAMETER)
         selection = service.data.get(const.ATTR_CONFIG_VALUE)
         size = service.data.get(const.ATTR_CONFIG_SIZE)
@@ -725,7 +794,7 @@ async def async_setup_entry(hass, config_entry):
         """Refresh the specified value from a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         value_id = service.data.get(const.ATTR_VALUE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         node.values[value_id].refresh()
         _LOGGER.info("Node %s value %s refreshed", node_id, value_id)
 
@@ -734,14 +803,14 @@ async def async_setup_entry(hass, config_entry):
         node_id = service.data.get(const.ATTR_NODE_ID)
         value_id = service.data.get(const.ATTR_VALUE_ID)
         value = service.data.get(const.ATTR_CONFIG_VALUE)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         node.values[value_id].data = value
         _LOGGER.info("Node %s value %s set to %s", node_id, value_id, value)
 
     def print_config_parameter(service):
         """Print a config parameter from a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         param = service.data.get(const.ATTR_CONFIG_PARAMETER)
         _LOGGER.info(
             "Config parameter %s on Node %s: %s",
@@ -753,13 +822,13 @@ async def async_setup_entry(hass, config_entry):
     def print_node(service):
         """Print all information about z-wave node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         nice_print_node(node)
 
     def set_wakeup(service):
         """Set wake-up interval of a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         value = service.data.get(const.ATTR_CONFIG_VALUE)
         if node.can_wake_up():
             for value_id in node.get_values(class_id=const.COMMAND_CLASS_WAKE_UP):
@@ -806,14 +875,14 @@ async def async_setup_entry(hass, config_entry):
     def refresh_node(service):
         """Refresh all node info."""
         node_id = service.data.get(const.ATTR_NODE_ID)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         node.refresh_info()
 
     def reset_node_meters(service):
         """Reset meter counters of a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         instance = service.data.get(const.ATTR_INSTANCE)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         for value in node.get_values(class_id=const.COMMAND_CLASS_METER).values():
             if value.index != const.INDEX_METER_RESET:
                 continue
@@ -833,7 +902,7 @@ async def async_setup_entry(hass, config_entry):
         """Heal a node on the network."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         update_return_routes = service.data.get(const.ATTR_RETURN_ROUTES)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         _LOGGER.info("Z-Wave node heal running for node %s", node_id)
         node.heal(update_return_routes)
 
@@ -841,7 +910,7 @@ async def async_setup_entry(hass, config_entry):
         """Send test messages to a node on the network."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         messages = service.data.get(const.ATTR_MESSAGES)
-        node = network.nodes[node_id]
+        node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         _LOGGER.info("Sending %s test-messages to node %s", messages, node_id)
         node.test(messages)
 

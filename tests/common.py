@@ -9,9 +9,10 @@ from io import StringIO
 import json
 import logging
 import os
-import sys
+import pathlib
 import threading
 import time
+from unittest.mock import AsyncMock, Mock, patch
 import uuid
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa
@@ -54,13 +55,11 @@ from homeassistant.helpers import (
     storage,
 )
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as date_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.yaml.loader as yaml_loader
-
-from tests.async_mock import AsyncMock, Mock, patch
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
@@ -109,24 +108,21 @@ def get_test_config_dir(*add_path):
 
 def get_test_home_assistant():
     """Return a Home Assistant object pointing at test config directory."""
-    if sys.platform == "win32":
-        loop = asyncio.ProactorEventLoop()
-    else:
-        loop = asyncio.new_event_loop()
-
+    loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     hass = loop.run_until_complete(async_test_home_assistant(loop))
 
-    stop_event = threading.Event()
+    loop_stop_event = threading.Event()
 
     def run_loop():
         """Run event loop."""
         # pylint: disable=protected-access
         loop._thread_ident = threading.get_ident()
         loop.run_forever()
-        stop_event.set()
+        loop_stop_event.set()
 
     orig_stop = hass.stop
+    hass._stopped = Mock(set=loop.stop)
 
     def start_hass(*mocks):
         """Start hass."""
@@ -135,7 +131,7 @@ def get_test_home_assistant():
     def stop_hass():
         """Stop hass."""
         orig_stop()
-        stop_event.wait()
+        loop_stop_event.wait()
         loop.close()
 
     hass.start = start_hass
@@ -198,6 +194,8 @@ async def async_test_home_assistant(loop):
     hass.async_add_executor_job = async_add_executor_job
     hass.async_create_task = async_create_task
 
+    hass.data[loader.DATA_CUSTOM_COMPONENTS] = {}
+
     hass.config.location_name = "test home"
     hass.config.config_dir = get_test_config_dir()
     hass.config.latitude = 32.87336
@@ -205,6 +203,7 @@ async def async_test_home_assistant(loop):
     hass.config.elevation = 0
     hass.config.time_zone = date_util.get_time_zone("US/Pacific")
     hass.config.units = METRIC_SYSTEM
+    hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
 
     hass.config_entries = config_entries.ConfigEntries(hass, {})
@@ -261,8 +260,7 @@ def async_mock_intent(hass, intent_typ):
     class MockIntentHandler(intent.IntentHandler):
         intent_type = intent_typ
 
-        @asyncio.coroutine
-        def async_handle(self, intent):
+        async def async_handle(self, intent):
             """Handle the intent."""
             intents.append(intent)
             return intent.create_response()
@@ -285,7 +283,7 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 
 
 @ha.callback
-def async_fire_time_changed(hass, datetime_):
+def async_fire_time_changed(hass, datetime_, fire_all=False):
     """Fire a time changes event."""
     hass.bus.async_fire(EVENT_TIME_CHANGED, {"now": date_util.as_utc(datetime_)})
 
@@ -295,12 +293,16 @@ def async_fire_time_changed(hass, datetime_):
         if task.cancelled():
             continue
 
-        future_seconds = task.when() - hass.loop.time()
         mock_seconds_into_future = datetime_.timestamp() - time.time()
+        future_seconds = task.when() - hass.loop.time()
 
-        if mock_seconds_into_future >= future_seconds:
-            task._run()
-            task.cancel()
+        if fire_all or mock_seconds_into_future >= future_seconds:
+            with patch(
+                "homeassistant.helpers.event.time_tracker_utcnow",
+                return_value=date_util.as_utc(datetime_),
+            ):
+                task._run()
+                task.cancel()
 
 
 fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
@@ -351,6 +353,7 @@ def mock_registry(hass, mock_entries=None):
     """Mock the Entity Registry."""
     registry = entity_registry.EntityRegistry(hass)
     registry.entities = mock_entries or OrderedDict()
+    registry._rebuild_index()
 
     hass.data[entity_registry.DATA_REGISTRY] = registry
     return registry
@@ -370,6 +373,7 @@ def mock_device_registry(hass, mock_entries=None, mock_deleted_entries=None):
     registry = device_registry.DeviceRegistry(hass)
     registry.devices = mock_entries or OrderedDict()
     registry.deleted_devices = mock_deleted_entries or OrderedDict()
+    registry._rebuild_index()
 
     hass.data[device_registry.DATA_REGISTRY] = registry
     return registry
@@ -702,6 +706,9 @@ def patch_yaml_files(files_dict, endswith=True):
     def mock_open_f(fname, **_):
         """Mock open() in the yaml module, used by load_yaml."""
         # Return the mocked file on full match
+        if isinstance(fname, pathlib.Path):
+            fname = str(fname)
+
         if fname in files_dict:
             _LOGGER.debug("patch_yaml_files match %s", fname)
             res = StringIO(files_dict[fname])
@@ -793,6 +800,19 @@ def init_recorder_component(hass, add_config=None):
     _LOGGER.info("In-memory recorder successfully started")
 
 
+async def async_init_recorder_component(hass, add_config=None):
+    """Initialize the recorder asynchronously."""
+    config = dict(add_config) if add_config else {}
+    config[recorder.CONF_DB_URL] = "sqlite://"
+
+    with patch("homeassistant.components.recorder.migration.migrate_schema"):
+        assert await async_setup_component(
+            hass, recorder.DOMAIN, {recorder.DOMAIN: config}
+        )
+        assert recorder.DOMAIN in hass.config.components
+    _LOGGER.info("In-memory recorder successfully started")
+
+
 def mock_restore_cache(hass, states):
     """Mock the DATA_RESTORE_CACHE."""
     key = restore_state.DATA_RESTORE_STATE_TASK
@@ -812,11 +832,7 @@ def mock_restore_cache(hass, states):
     _LOGGER.debug("Restore cache: %s", data.last_states)
     assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
-    async def get_restore_state_data() -> restore_state.RestoreStateData:
-        return data
-
-    # Patch the singleton task in hass.data to return our new RestoreStateData
-    hass.data[key] = hass.async_create_task(get_restore_state_data())
+    hass.data[key] = data
 
 
 class MockEntity(entity.Entity):
@@ -962,7 +978,7 @@ async def flush_store(store):
 
 async def get_system_health_info(hass, domain):
     """Get system health info."""
-    return await hass.data["system_health"]["info"][domain](hass)
+    return await hass.data["system_health"][domain].info_callback(hass)
 
 
 def mock_integration(hass, module):
@@ -970,6 +986,14 @@ def mock_integration(hass, module):
     integration = loader.Integration(
         hass, f"homeassistant.components.{module.DOMAIN}", None, module.mock_manifest()
     )
+
+    def mock_import_platform(platform_name):
+        raise ImportError(
+            f"Mocked unable to import platform '{platform_name}'",
+            name=f"{integration.pkg_path}.{platform_name}",
+        )
+
+    integration._import_platform = mock_import_platform
 
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
     hass.data.setdefault(loader.DATA_INTEGRATIONS, {})[module.DOMAIN] = integration

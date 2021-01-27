@@ -27,6 +27,7 @@ class Config:
     specific_integrations: Optional[pathlib.Path] = attr.ib()
     root: pathlib.Path = attr.ib()
     action: str = attr.ib()
+    requirements: bool = attr.ib()
     errors: List[Error] = attr.ib(factory=list)
     cache: Dict[str, Any] = attr.ib(factory=dict)
 
@@ -72,6 +73,16 @@ class Integration:
     def domain(self) -> str:
         """Integration domain."""
         return self.path.name
+
+    @property
+    def core(self) -> bool:
+        """Core integration."""
+        return self.path.as_posix().startswith("homeassistant/components")
+
+    @property
+    def disabled(self) -> Optional[str]:
+        """List of disabled."""
+        return self.manifest.get("disabled")
 
     @property
     def requirements(self) -> List[str]:

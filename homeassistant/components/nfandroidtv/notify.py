@@ -14,7 +14,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_HOST, CONF_TIMEOUT, HTTP_OK, UNIT_PERCENTAGE
+from homeassistant.const import CONF_HOST, CONF_TIMEOUT, HTTP_OK, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,11 +68,11 @@ POSITIONS = {
 
 TRANSPARENCIES = {
     "default": 0,
-    f"0{UNIT_PERCENTAGE}": 1,
-    f"25{UNIT_PERCENTAGE}": 2,
-    f"50{UNIT_PERCENTAGE}": 3,
-    f"75{UNIT_PERCENTAGE}": 4,
-    f"100{UNIT_PERCENTAGE}": 5,
+    f"0{PERCENTAGE}": 1,
+    f"25{PERCENTAGE}": 2,
+    f"50{PERCENTAGE}": 3,
+    f"75{PERCENTAGE}": 4,
+    f"100{PERCENTAGE}": 5,
 }
 
 COLORS = {
@@ -158,26 +158,26 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         """Send a message to a Android TV device."""
         _LOGGER.debug("Sending notification to: %s", self._target)
 
-        payload = dict(
-            filename=(
+        payload = {
+            "filename": (
                 "icon.png",
                 self._icon_file,
                 "application/octet-stream",
                 {"Expires": "0"},
             ),
-            type="0",
-            title=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
-            msg=message,
-            duration="%i" % self._default_duration,
-            fontsize="%i" % FONTSIZES.get(self._default_fontsize),
-            position="%i" % POSITIONS.get(self._default_position),
-            bkgcolor="%s" % COLORS.get(self._default_color),
-            transparency="%i" % TRANSPARENCIES.get(self._default_transparency),
-            offset="0",
-            app=ATTR_TITLE_DEFAULT,
-            force="true",
-            interrupt="%i" % self._default_interrupt,
-        )
+            "type": "0",
+            "title": kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
+            "msg": message,
+            "duration": "%i" % self._default_duration,
+            "fontsize": "%i" % FONTSIZES.get(self._default_fontsize),
+            "position": "%i" % POSITIONS.get(self._default_position),
+            "bkgcolor": "%s" % COLORS.get(self._default_color),
+            "transparency": "%i" % TRANSPARENCIES.get(self._default_transparency),
+            "offset": "0",
+            "app": ATTR_TITLE_DEFAULT,
+            "force": "true",
+            "interrupt": "%i" % self._default_interrupt,
+        }
 
         data = kwargs.get(ATTR_DATA)
         if data:

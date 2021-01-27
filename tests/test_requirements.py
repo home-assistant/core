@@ -1,20 +1,17 @@
 """Test requirements module."""
 import os
-from pathlib import Path
+from unittest.mock import call, patch
 
 import pytest
 
 from homeassistant import loader, setup
 from homeassistant.requirements import (
     CONSTRAINT_FILE,
-    PROGRESS_FILE,
     RequirementsNotFound,
-    _install,
     async_get_integration_with_requirements,
     async_process_requirements,
 )
 
-from tests.async_mock import call, patch
 from tests.common import MockModule, mock_integration
 
 
@@ -190,22 +187,21 @@ async def test_install_on_docker(hass):
         )
 
 
-async def test_progress_lock(hass):
-    """Test an install attempt on an existing package."""
-    progress_path = Path(hass.config.path(PROGRESS_FILE))
-    kwargs = {"hello": "world"}
+async def test_discovery_requirements_mqtt(hass):
+    """Test that we load discovery requirements."""
+    hass.config.skip_pip = False
+    mqtt = await loader.async_get_integration(hass, "mqtt")
 
-    def assert_env(req, **passed_kwargs):
-        """Assert the env."""
-        assert progress_path.exists()
-        assert req == "hello"
-        assert passed_kwargs == kwargs
-        return True
+    mock_integration(
+        hass, MockModule("mqtt_comp", partial_manifest={"mqtt": ["foo/discovery"]})
+    )
+    with patch(
+        "homeassistant.requirements.async_process_requirements",
+    ) as mock_process:
+        await async_get_integration_with_requirements(hass, "mqtt_comp")
 
-    with patch("homeassistant.util.package.install_package", side_effect=assert_env):
-        _install(hass, "hello", kwargs)
-
-    assert not progress_path.exists()
+    assert len(mock_process.mock_calls) == 2  # mqtt also depends on http
+    assert mock_process.mock_calls[0][1][2] == mqtt.requirements
 
 
 async def test_discovery_requirements_ssdp(hass):
@@ -237,7 +233,8 @@ async def test_discovery_requirements_zeroconf(hass, partial_manifest):
     zeroconf = await loader.async_get_integration(hass, "zeroconf")
 
     mock_integration(
-        hass, MockModule("comp", partial_manifest=partial_manifest),
+        hass,
+        MockModule("comp", partial_manifest=partial_manifest),
     )
 
     with patch(
@@ -247,3 +244,26 @@ async def test_discovery_requirements_zeroconf(hass, partial_manifest):
 
     assert len(mock_process.mock_calls) == 2  # zeroconf also depends on http
     assert mock_process.mock_calls[0][1][2] == zeroconf.requirements
+
+
+async def test_discovery_requirements_dhcp(hass):
+    """Test that we load dhcp discovery requirements."""
+    hass.config.skip_pip = False
+    dhcp = await loader.async_get_integration(hass, "dhcp")
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            partial_manifest={
+                "dhcp": [{"hostname": "somfy_*", "macaddress": "B8B7F1*"}]
+            },
+        ),
+    )
+    with patch(
+        "homeassistant.requirements.async_process_requirements",
+    ) as mock_process:
+        await async_get_integration_with_requirements(hass, "comp")
+
+    assert len(mock_process.mock_calls) == 1  # dhcp does not depend on http
+    assert mock_process.mock_calls[0][1][2] == dhcp.requirements

@@ -17,7 +17,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from . import DYSON_DEVICES
+from . import DYSON_DEVICES, DysonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,35 +54,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class Dyson360EyeDevice(VacuumEntity):
+class Dyson360EyeDevice(DysonEntity, VacuumEntity):
     """Dyson 360 Eye robot vacuum device."""
 
     def __init__(self, device):
         """Dyson 360 Eye robot vacuum device."""
-        _LOGGER.debug("Creating device %s", device.name)
-        self._device = device
-
-    async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
-        self.hass.async_add_job(self._device.add_message_listener, self.on_message)
-
-    def on_message(self, message):
-        """Handle a new messages that was received from the vacuum."""
-        _LOGGER.debug("Message received for %s device: %s", self.name, message)
-        self.schedule_update_ha_state()
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._device.name
+        super().__init__(device, None)
 
     @property
     def status(self):

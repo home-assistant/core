@@ -1,10 +1,10 @@
 """Test the zerproc config flow."""
+from unittest.mock import patch
+
 import pyzerproc
 
 from homeassistant import config_entries, setup
 from homeassistant.components.zerproc.config_flow import DOMAIN
-
-from tests.async_mock import patch
 
 
 async def test_flow_success(hass):
@@ -22,15 +22,19 @@ async def test_flow_success(hass):
     ), patch(
         "homeassistant.components.zerproc.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zerproc.async_setup_entry", return_value=True,
+        "homeassistant.components.zerproc.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Zerproc"
     assert result2["data"] == {}
 
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -50,9 +54,13 @@ async def test_flow_no_devices_found(hass):
     ), patch(
         "homeassistant.components.zerproc.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zerproc.async_setup_entry", return_value=True,
+        "homeassistant.components.zerproc.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "no_devices_found"
@@ -76,9 +84,13 @@ async def test_flow_exceptions_caught(hass):
     ), patch(
         "homeassistant.components.zerproc.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.zerproc.async_setup_entry", return_value=True,
+        "homeassistant.components.zerproc.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {},)
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "no_devices_found"

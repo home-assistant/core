@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hub = Pencompy(host, port, boards=boards)
     except OSError as error:
         _LOGGER.error("Could not connect to pencompy: %s", error)
-        raise PlatformNotReady
+        raise PlatformNotReady from error
 
     # Add devices.
     devs = []

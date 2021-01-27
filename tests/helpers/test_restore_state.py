@@ -1,5 +1,6 @@
 """The tests for the Restore component."""
 from datetime import datetime
+from unittest.mock import patch
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import CoreState, State
@@ -14,8 +15,6 @@ from homeassistant.helpers.restore_state import (
 )
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
-
 
 async def test_caching_data(hass):
     """Test that we cache data."""
@@ -27,6 +26,7 @@ async def test_caching_data(hass):
     ]
 
     data = await RestoreStateData.async_get_instance(hass)
+    await hass.async_block_till_done()
     await data.store.async_save([state.as_dict() for state in stored_states])
 
     # Emulate a fresh load
@@ -41,6 +41,7 @@ async def test_caching_data(hass):
         "homeassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data:
         state = await entity.async_get_last_state()
+        await hass.async_block_till_done()
 
     assert state is not None
     assert state.entity_id == "input_boolean.b1"
@@ -61,6 +62,7 @@ async def test_hass_starting(hass):
     ]
 
     data = await RestoreStateData.async_get_instance(hass)
+    await hass.async_block_till_done()
     await data.store.async_save([state.as_dict() for state in stored_states])
 
     # Emulate a fresh load
@@ -76,6 +78,7 @@ async def test_hass_starting(hass):
         "homeassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data, patch.object(hass.states, "async_all", return_value=states):
         state = await entity.async_get_last_state()
+        await hass.async_block_till_done()
 
     assert state is not None
     assert state.entity_id == "input_boolean.b1"

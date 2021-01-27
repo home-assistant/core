@@ -1,5 +1,6 @@
 """The tests for the Sun component."""
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
 from pytest import mark
 
@@ -8,8 +9,6 @@ from homeassistant.const import EVENT_STATE_CHANGED
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-
-from tests.async_mock import patch
 
 
 async def test_setting_rising(hass, legacy_patchable_time):
@@ -120,11 +119,12 @@ async def test_state_change(hass, legacy_patchable_time):
 
     assert sun.STATE_BELOW_HORIZON == hass.states.get(sun.ENTITY_ID).state
 
-    hass.bus.async_fire(
-        ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: test_time + timedelta(seconds=5)}
-    )
-
-    await hass.async_block_till_done()
+    patched_time = test_time + timedelta(seconds=5)
+    with patch(
+        "homeassistant.helpers.condition.dt_util.utcnow", return_value=patched_time
+    ):
+        hass.bus.async_fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: patched_time})
+        await hass.async_block_till_done()
 
     assert sun.STATE_ABOVE_HORIZON == hass.states.get(sun.ENTITY_ID).state
 

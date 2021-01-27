@@ -1,5 +1,6 @@
 """Test different accessory types: Camera."""
 
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from uuid import UUID
 
 from pyhap.accessory_driver import AccessoryDriver
@@ -10,13 +11,18 @@ from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     AUDIO_CODEC_COPY,
     CHAR_MOTION_DETECTED,
+    CHAR_PROGRAMMABLE_SWITCH_EVENT,
     CONF_AUDIO_CODEC,
+    CONF_LINKED_DOORBELL_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
     CONF_VIDEO_CODEC,
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OCCUPANCY,
+    SERV_DOORBELL,
     SERV_MOTION_SENSOR,
+    SERV_STATELESS_PROGRAMMABLE_SWITCH,
     VIDEO_CODEC_COPY,
     VIDEO_CODEC_H264_OMX,
 )
@@ -28,8 +34,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .common import mock_turbo_jpeg
-
-from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
 
 MOCK_START_STREAM_TLV = "ARUCAQEBEDMD1QMXzEaatnKSQ2pxovYCNAEBAAIJAQECAgECAwEAAwsBAgAFAgLQAgMBHgQXAQFjAgQ768/RAwIrAQQEAAAAPwUCYgUDLAEBAwIMAQEBAgEAAwECBAEUAxYBAW4CBCzq28sDAhgABAQAAKBABgENBAEA"
 MOCK_END_POINTS_TLV = "ARAzA9UDF8xGmrZykkNqcaL2AgEAAxoBAQACDTE5Mi4xNjguMjA4LjUDAi7IBAKkxwQlAQEAAhDN0+Y0tZ4jzoO0ske9UsjpAw6D76oVXnoi7DbawIG4CwUlAQEAAhCyGcROB8P7vFRDzNF2xrK1Aw6NdcLugju9yCfkWVSaVAYEDoAsAAcEpxV8AA=="
@@ -137,7 +141,14 @@ async def test_camera_stream_source_configured(hass, run_driver, events):
         2,
         {CONF_STREAM_SOURCE: "/dev/null", CONF_SUPPORT_AUDIO: True},
     )
-    not_camera_acc = Switch(hass, run_driver, "Switch", entity_id, 4, {},)
+    not_camera_acc = Switch(
+        hass,
+        run_driver,
+        "Switch",
+        entity_id,
+        4,
+        {},
+    )
     bridge = HomeBridge("hass", run_driver, "Test Bridge")
     bridge.add_accessory(acc)
     bridge.add_accessory(not_camera_acc)
@@ -242,7 +253,14 @@ async def test_camera_stream_source_configured_with_failing_ffmpeg(
         2,
         {CONF_STREAM_SOURCE: "/dev/null", CONF_SUPPORT_AUDIO: True},
     )
-    not_camera_acc = Switch(hass, run_driver, "Switch", entity_id, 4, {},)
+    not_camera_acc = Switch(
+        hass,
+        run_driver,
+        "Switch",
+        entity_id,
+        4,
+        {},
+    )
     bridge = HomeBridge("hass", run_driver, "Test Bridge")
     bridge.add_accessory(acc)
     bridge.add_accessory(not_camera_acc)
@@ -279,7 +297,14 @@ async def test_camera_stream_source_found(hass, run_driver, events):
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = Camera(hass, run_driver, "Camera", entity_id, 2, {},)
+    acc = Camera(
+        hass,
+        run_driver,
+        "Camera",
+        entity_id,
+        2,
+        {},
+    )
     await acc.run_handler()
 
     assert acc.aid == 2
@@ -322,7 +347,14 @@ async def test_camera_stream_source_fails(hass, run_driver, events):
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = Camera(hass, run_driver, "Camera", entity_id, 2, {},)
+    acc = Camera(
+        hass,
+        run_driver,
+        "Camera",
+        entity_id,
+        2,
+        {},
+    )
     await acc.run_handler()
 
     assert acc.aid == 2
@@ -350,7 +382,14 @@ async def test_camera_with_no_stream(hass, run_driver, events):
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = Camera(hass, run_driver, "Camera", entity_id, 2, {},)
+    acc = Camera(
+        hass,
+        run_driver,
+        "Camera",
+        entity_id,
+        2,
+        {},
+    )
     await acc.run_handler()
 
     assert acc.aid == 2
@@ -601,3 +640,113 @@ async def test_camera_with_a_missing_linked_motion_sensor(hass, run_driver, even
     assert acc.category == 17  # Camera
 
     assert not acc.get_service(SERV_MOTION_SENSOR)
+
+
+async def test_camera_with_linked_doorbell_sensor(hass, run_driver, events):
+    """Test a camera with a linked doorbell sensor can update."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    await async_setup_component(
+        hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+    doorbell_entity_id = "binary_sensor.doorbell"
+
+    hass.states.async_set(
+        doorbell_entity_id, STATE_ON, {ATTR_DEVICE_CLASS: DEVICE_CLASS_OCCUPANCY}
+    )
+    await hass.async_block_till_done()
+    entity_id = "camera.demo_camera"
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = Camera(
+        hass,
+        run_driver,
+        "Camera",
+        entity_id,
+        2,
+        {
+            CONF_STREAM_SOURCE: "/dev/null",
+            CONF_SUPPORT_AUDIO: True,
+            CONF_VIDEO_CODEC: VIDEO_CODEC_H264_OMX,
+            CONF_AUDIO_CODEC: AUDIO_CODEC_COPY,
+            CONF_LINKED_DOORBELL_SENSOR: doorbell_entity_id,
+        },
+    )
+    bridge = HomeBridge("hass", run_driver, "Test Bridge")
+    bridge.add_accessory(acc)
+
+    await acc.run_handler()
+
+    assert acc.aid == 2
+    assert acc.category == 17  # Camera
+
+    service = acc.get_service(SERV_DOORBELL)
+    assert service
+    char = service.get_characteristic(CHAR_PROGRAMMABLE_SWITCH_EVENT)
+    assert char
+
+    assert char.value == 0
+
+    service2 = acc.get_service(SERV_STATELESS_PROGRAMMABLE_SWITCH)
+    assert service2
+    char2 = service.get_characteristic(CHAR_PROGRAMMABLE_SWITCH_EVENT)
+    assert char2
+
+    assert char2.value == 0
+
+    hass.states.async_set(
+        doorbell_entity_id, STATE_OFF, {ATTR_DEVICE_CLASS: DEVICE_CLASS_OCCUPANCY}
+    )
+    await hass.async_block_till_done()
+    assert char.value == 0
+    assert char2.value == 0
+
+    char.set_value(True)
+    char2.set_value(True)
+    hass.states.async_set(
+        doorbell_entity_id, STATE_ON, {ATTR_DEVICE_CLASS: DEVICE_CLASS_OCCUPANCY}
+    )
+    await hass.async_block_till_done()
+    assert char.value == 0
+    assert char2.value == 0
+
+    # Ensure we do not throw when the linked
+    # doorbell sensor is removed
+    hass.states.async_remove(doorbell_entity_id)
+    await hass.async_block_till_done()
+    await acc.run_handler()
+    await hass.async_block_till_done()
+    assert char.value == 0
+    assert char2.value == 0
+
+
+async def test_camera_with_a_missing_linked_doorbell_sensor(hass, run_driver, events):
+    """Test a camera with a configured linked doorbell sensor that is missing."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    await async_setup_component(
+        hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+    doorbell_entity_id = "binary_sensor.doorbell"
+    entity_id = "camera.demo_camera"
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = Camera(
+        hass,
+        run_driver,
+        "Camera",
+        entity_id,
+        2,
+        {CONF_LINKED_DOORBELL_SENSOR: doorbell_entity_id},
+    )
+    bridge = HomeBridge("hass", run_driver, "Test Bridge")
+    bridge.add_accessory(acc)
+
+    await acc.run_handler()
+
+    assert acc.aid == 2
+    assert acc.category == 17  # Camera
+
+    assert not acc.get_service(SERV_DOORBELL)
+    assert not acc.get_service(SERV_STATELESS_PROGRAMMABLE_SWITCH)

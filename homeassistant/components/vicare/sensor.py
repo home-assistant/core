@@ -8,12 +8,10 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -81,7 +79,7 @@ SENSOR_TYPES = {
     SENSOR_BURNER_MODULATION: {
         CONF_NAME: "Burner modulation",
         CONF_ICON: "mdi:percent",
-        CONF_UNIT_OF_MEASUREMENT: UNIT_PERCENTAGE,
+        CONF_UNIT_OF_MEASUREMENT: PERCENTAGE,
         CONF_GETTER: lambda api: api.getBurnerModulation(),
         CONF_DEVICE_CLASS: None,
     },
@@ -155,13 +153,6 @@ SENSOR_TYPES = {
         CONF_GETTER: lambda api: api.getBurnerHours(),
         CONF_DEVICE_CLASS: None,
     },
-    SENSOR_BURNER_POWER: {
-        CONF_NAME: "Burner Current Power",
-        CONF_ICON: None,
-        CONF_UNIT_OF_MEASUREMENT: POWER_WATT,
-        CONF_GETTER: lambda api: api.getCurrentPower(),
-        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
-    },
     # heatpump sensors
     SENSOR_COMPRESSOR_STARTS: {
         CONF_NAME: "Compressor Starts",
@@ -194,7 +185,6 @@ SENSORS_BY_HEATINGTYPE = {
         SENSOR_BURNER_HOURS,
         SENSOR_BURNER_MODULATION,
         SENSOR_BURNER_STARTS,
-        SENSOR_BURNER_POWER,
         SENSOR_DHW_GAS_CONSUMPTION_TODAY,
         SENSOR_DHW_GAS_CONSUMPTION_THIS_WEEK,
         SENSOR_DHW_GAS_CONSUMPTION_THIS_MONTH,

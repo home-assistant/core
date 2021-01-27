@@ -6,7 +6,8 @@
             "open": "Open {entity_name}",
             "open_tilt": "Open {entity_name} tilt",
             "set_position": "Set {entity_name} position",
-            "set_tilt_position": "Set {entity_name} tilt position"
+            "set_tilt_position": "Set {entity_name} tilt position",
+            "stop": "Stop {entity_name}"
         },
         "condition_type": {
             "is_closed": "{entity_name} is closed",

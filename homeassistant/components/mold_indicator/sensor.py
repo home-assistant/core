@@ -10,10 +10,10 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     EVENT_HOMEASSISTANT_START,
+    PERCENTAGE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -247,7 +247,7 @@ class MoldIndicator(Entity):
             )
             return None
 
-        if unit != UNIT_PERCENTAGE:
+        if unit != PERCENTAGE:
             _LOGGER.error(
                 "Humidity sensor %s has unsupported unit: %s %s",
                 state.entity_id,
@@ -362,7 +362,7 @@ class MoldIndicator(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     @property
     def state(self):
@@ -378,7 +378,10 @@ class MoldIndicator(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._is_metric:
-            return {ATTR_DEWPOINT: self._dewpoint, ATTR_CRITICAL_TEMP: self._crit_temp}
+            return {
+                ATTR_DEWPOINT: round(self._dewpoint, 2),
+                ATTR_CRITICAL_TEMP: round(self._crit_temp, 2),
+            }
 
         dewpoint = (
             util.temperature.celsius_to_fahrenheit(self._dewpoint)
@@ -392,4 +395,7 @@ class MoldIndicator(Entity):
             else None
         )
 
-        return {ATTR_DEWPOINT: dewpoint, ATTR_CRITICAL_TEMP: crit_temp}
+        return {
+            ATTR_DEWPOINT: round(dewpoint, 2),
+            ATTR_CRITICAL_TEMP: round(crit_temp, 2),
+        }

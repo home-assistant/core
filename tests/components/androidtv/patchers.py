@@ -1,6 +1,6 @@
 """Define patches used for androidtv tests."""
 
-from tests.async_mock import mock_open, patch
+from unittest.mock import mock_open, patch
 
 KEY_PYTHON = "python"
 KEY_SERVER = "server"
@@ -111,7 +111,7 @@ def patch_shell(response=None, error=False):
     async def shell_fail_python(self, cmd, *args, **kwargs):
         """Mock the `AdbDeviceTcpAsyncFake.shell` method when it fails."""
         self.shell_cmd = cmd
-        raise AttributeError
+        raise ValueError
 
     async def shell_fail_server(self, cmd):
         """Mock the `DeviceAsyncFake.shell` method when it fails."""
@@ -141,7 +141,7 @@ PATCH_ANDROIDTV_OPEN = patch(
 )
 PATCH_KEYGEN = patch("homeassistant.components.androidtv.media_player.keygen")
 PATCH_SIGNER = patch(
-    "homeassistant.components.androidtv.media_player.PythonRSASigner",
+    "homeassistant.components.androidtv.media_player.ADBPythonSync.load_adbkey",
     return_value="signer for testing",
 )
 
@@ -155,16 +155,16 @@ PATCH_ISFILE = patch("os.path.isfile", isfile)
 PATCH_ACCESS = patch("os.access", return_value=True)
 
 
-def patch_firetv_update(state, current_app, running_apps):
+def patch_firetv_update(state, current_app, running_apps, hdmi_input):
     """Patch the `FireTV.update()` method."""
     return patch(
         "androidtv.firetv.firetv_async.FireTVAsync.update",
-        return_value=(state, current_app, running_apps),
+        return_value=(state, current_app, running_apps, hdmi_input),
     )
 
 
 def patch_androidtv_update(
-    state, current_app, running_apps, device, is_volume_muted, volume_level
+    state, current_app, running_apps, device, is_volume_muted, volume_level, hdmi_input
 ):
     """Patch the `AndroidTV.update()` method."""
     return patch(
@@ -176,9 +176,16 @@ def patch_androidtv_update(
             device,
             is_volume_muted,
             volume_level,
+            hdmi_input,
         ),
     )
 
 
 PATCH_LAUNCH_APP = patch("androidtv.basetv.basetv_async.BaseTVAsync.launch_app")
 PATCH_STOP_APP = patch("androidtv.basetv.basetv_async.BaseTVAsync.stop_app")
+
+# Cause the update to raise an unexpected type of exception
+PATCH_ANDROIDTV_UPDATE_EXCEPTION = patch(
+    "androidtv.androidtv.androidtv_async.AndroidTVAsync.update",
+    side_effect=ZeroDivisionError,
+)

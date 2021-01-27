@@ -1,10 +1,13 @@
 """The tests for the generic_thermostat."""
 import datetime
+from os import path
+from unittest.mock import patch
 
 import pytest
 import pytz
 import voluptuous as vol
 
+from homeassistant import config as hass_config
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.climate.const import (
     ATTR_PRESET_MODE,
@@ -15,8 +18,12 @@ from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_NONE,
 )
+from homeassistant.components.generic_thermostat import (
+    DOMAIN as GENERIC_THERMOSTAT_DOMAIN,
+)
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    SERVICE_RELOAD,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -31,7 +38,6 @@ from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.async_mock import patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
@@ -201,6 +207,30 @@ async def test_setup_defaults_to_unknown(hass):
     )
     await hass.async_block_till_done()
     assert HVAC_MODE_OFF == hass.states.get(ENTITY).state
+
+
+async def test_setup_gets_current_temp_from_sensor(hass):
+    """Test that current temperature is updated on entity addition."""
+    hass.config.units = METRIC_SYSTEM
+    _setup_sensor(hass, 18)
+    await hass.async_block_till_done()
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 2,
+                "hot_tolerance": 4,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "away_temp": 16,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY).attributes["current_temperature"] == 18
 
 
 async def test_default_setup_params(hass, setup_comp_2):
@@ -1246,3 +1276,46 @@ def _mock_restore_cache(hass, temperature=20, hvac_mode=HVAC_MODE_OFF):
             ),
         ),
     )
+
+
+async def test_reload(hass):
+    """Test we can reload."""
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "heater": "switch.any",
+                "target_sensor": "sensor.any",
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("climate.test") is not None
+
+    yaml_path = path.join(
+        _get_fixtures_base_path(),
+        "fixtures",
+        "generic_thermostat/configuration.yaml",
+    )
+    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            GENERIC_THERMOSTAT_DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("climate.test") is None
+    assert hass.states.get("climate.reload")
+
+
+def _get_fixtures_base_path():
+    return path.dirname(path.dirname(path.dirname(__file__)))

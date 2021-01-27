@@ -1,5 +1,6 @@
 """Test config flow."""
 from collections import namedtuple
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -11,7 +12,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from tests.async_mock import AsyncMock, MagicMock, patch
 from tests.common import MockConfigEntry
 
 MockDeviceInfo = namedtuple("DeviceInfo", ["uses_password", "name"])
@@ -22,11 +22,12 @@ def mock_client():
     """Mock APIClient."""
     with patch("homeassistant.components.esphome.config_flow.APIClient") as mock_client:
 
-        def mock_constructor(loop, host, port, password):
+        def mock_constructor(loop, host, port, password, zeroconf_instance=None):
             """Fake the client constructor."""
             mock_client.host = host
             mock_client.port = port
             mock_client.password = password
+            mock_client.zeroconf_instance = zeroconf_instance
             return mock_client
 
         mock_client.side_effect = mock_constructor
@@ -49,7 +50,9 @@ def mock_api_connection_error():
 async def test_user_connection_works(hass, mock_client):
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
-        "esphome", context={"source": "user"}, data=None,
+        "esphome",
+        context={"source": "user"},
+        data=None,
     )
 
     assert result["type"] == RESULT_TYPE_FORM
@@ -171,7 +174,7 @@ async def test_user_invalid_password(hass, mock_api_connection_error, mock_clien
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "authenticate"
-    assert result["errors"] == {"base": "invalid_password"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_discovery_initiation(hass, mock_client):

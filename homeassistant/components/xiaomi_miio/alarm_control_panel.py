@@ -123,8 +123,10 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         try:
             state = await self.hass.async_add_executor_job(self._gateway.alarm.status)
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
+
             return
 
         _LOGGER.debug("Got new state: %s", state)

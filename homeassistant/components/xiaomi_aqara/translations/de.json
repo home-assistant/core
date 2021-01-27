@@ -1,0 +1,16 @@
+{
+    "config": {
+        "flow_title": "Xiaomi Aqara Gateway: {name}",
+        "step": {
+            "select": {
+                "data": {
+                    "select_ip": "IP-Adresse"
+                }
+            },
+            "user": {
+                "description": "Stellen Sie eine Verbindung zu Ihrem Xiaomi Aqara Gateway her. Wenn die IP- und Mac-Adressen leer bleiben, wird die automatische Erkennung verwendet",
+                "title": "Xiaomi Aqara Gateway"
+            }
+        }
+    }
+}

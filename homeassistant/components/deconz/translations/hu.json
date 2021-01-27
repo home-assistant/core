@@ -5,7 +5,6 @@
             "already_in_progress": "Az \u00e1tj\u00e1r\u00f3 konfigur\u00e1ci\u00f3s folyamata m\u00e1r folyamatban van.",
             "no_bridges": "Nem tal\u00e1ltam deCONZ bridget",
             "not_deconz_bridge": "Nem egy deCONZ \u00e1tj\u00e1r\u00f3",
-            "one_instance_only": "Ez a komponens csak egy deCONZ egys\u00e9get t\u00e1mogat",
             "updated_instance": "A deCONZ-p\u00e9ld\u00e1ny \u00faj \u00e1llom\u00e1sc\u00edmmel friss\u00edtve"
         },
         "error": {

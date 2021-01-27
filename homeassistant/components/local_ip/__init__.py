@@ -11,7 +11,7 @@ from .const import DOMAIN, PLATFORM
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.deprecated(CONF_NAME, invalidation_version="0.110"),
+            cv.deprecated(CONF_NAME),
             vol.Schema({vol.Optional(CONF_NAME, default=DOMAIN): cv.string}),
         )
     },

@@ -86,3 +86,4 @@ async def test_scenes(hass, generic_data, sent_messages):
     assert events[1].data["scene_id"] == 1
     assert events[1].data["scene_label"] == "Scene 1"
     assert events[1].data["scene_value_label"] == "Pressed 1 Time"
+    assert events[1].data["instance_id"] == 1

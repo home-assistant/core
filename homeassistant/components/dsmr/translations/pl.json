@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "few": "kilka",
+            "many": "wiele",
+            "one": "jeden",
+            "other": "inne"
+        },
+        "step": {
+            "few": "kilka",
+            "many": "wiele",
+            "one": "jeden",
+            "other": "inne"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Minimalny czas mi\u0119dzy aktualizacjami encji [s]"
+                },
+                "title": "Opcje DSMR"
+            }
+        }
+    }
+}

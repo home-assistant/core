@@ -1,5 +1,6 @@
 """The tests for the Netgear Arlo sensors."""
 from collections import namedtuple
+from unittest.mock import patch
 
 import pytest
 
@@ -8,10 +9,8 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
-
-from tests.async_mock import patch
 
 
 def _get_named_tuple(input_dict):
@@ -170,7 +169,7 @@ def test_sensor_icon(temperature_sensor):
 def test_unit_of_measure(default_sensor, battery_sensor):
     """Test the unit_of_measurement property."""
     assert default_sensor.unit_of_measurement is None
-    assert battery_sensor.unit_of_measurement == UNIT_PERCENTAGE
+    assert battery_sensor.unit_of_measurement == PERCENTAGE
 
 
 def test_device_class(default_sensor, temperature_sensor, humidity_sensor):

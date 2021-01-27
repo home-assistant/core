@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "auth_new_token_not_granted_error": "Newly created token was not approved on Hyperion UI",
+            "auth_new_token_not_work_error": "Failed to authenticate using newly created token",
+            "auth_required_error": "Failed to determine if authorization is required",
+            "cannot_connect": "Failed to connect",
+            "no_id": "The Hyperion Ambilight instance did not report its id",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_access_token": "Invalid access token"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "create_token": "Automatically create new token",
+                    "token": "Or provide pre-existing token"
+                },
+                "description": "Configure authorization to your Hyperion Ambilight server"
+            },
+            "confirm": {
+                "description": "Do you want to add this Hyperion Ambilight to Home Assistant?\n\n**Host:** {host}\n**Port:** {port}\n**ID**: {id}",
+                "title": "Confirm addition of Hyperion Ambilight service"
+            },
+            "create_token": {
+                "description": "Choose **Submit** below to request a new authentication token. You will be redirected to the Hyperion UI to approve the request. Please verify the shown id is \"{auth_id}\"",
+                "title": "Automatically create new authentication token"
+            },
+            "create_token_external": {
+                "title": "Accept new token in Hyperion UI"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "priority": "Hyperion priority to use for colors and effects"
+                }
+            }
+        }
+    }
+}

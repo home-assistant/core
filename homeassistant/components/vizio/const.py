@@ -1,5 +1,4 @@
 """Constants used by vizio component."""
-from pyvizio import VizioAsync
 from pyvizio.const import (
     DEVICE_CLASS_SPEAKER as VIZIO_DEVICE_CLASS_SPEAKER,
     DEVICE_CLASS_TV as VIZIO_DEVICE_CLASS_TV,
@@ -26,6 +25,18 @@ from homeassistant.const import (
     CONF_NAME,
 )
 import homeassistant.helpers.config_validation as cv
+
+SERVICE_UPDATE_SETTING = "update_setting"
+
+ATTR_SETTING_TYPE = "setting_type"
+ATTR_SETTING_NAME = "setting_name"
+ATTR_NEW_VALUE = "new_value"
+
+UPDATE_SETTING_SCHEMA = {
+    vol.Required(ATTR_SETTING_TYPE): vol.All(cv.string, vol.Lower, cv.slugify),
+    vol.Required(ATTR_SETTING_NAME): vol.All(cv.string, vol.Lower, cv.slugify),
+    vol.Required(ATTR_NEW_VALUE): vol.Any(vol.Coerce(int), cv.string),
+}
 
 CONF_ADDITIONAL_CONFIGS = "additional_configs"
 CONF_APP_ID = "APP_ID"
@@ -66,6 +77,8 @@ SUPPORTED_COMMANDS = {
 VIZIO_SOUND_MODE = "eq"
 VIZIO_AUDIO_SETTINGS = "audio"
 VIZIO_MUTE_ON = "on"
+VIZIO_VOLUME = "volume"
+VIZIO_MUTE = "mute"
 
 # Since Vizio component relies on device class, this dict will ensure that changes to
 # the values of DEVICE_CLASS_SPEAKER or DEVICE_CLASS_TV don't require changes to pyvizio.
@@ -87,10 +100,10 @@ VIZIO_SCHEMA = {
     vol.Optional(CONF_APPS): vol.All(
         {
             vol.Exclusive(CONF_INCLUDE, "apps_filter"): vol.All(
-                cv.ensure_list, [vol.All(cv.string, vol.In(VizioAsync.get_apps_list()))]
+                cv.ensure_list, [cv.string]
             ),
             vol.Exclusive(CONF_EXCLUDE, "apps_filter"): vol.All(
-                cv.ensure_list, [vol.All(cv.string, vol.In(VizioAsync.get_apps_list()))]
+                cv.ensure_list, [cv.string]
             ),
             vol.Optional(CONF_ADDITIONAL_CONFIGS): vol.All(
                 cv.ensure_list,

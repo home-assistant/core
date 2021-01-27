@@ -1,4 +1,7 @@
 """The tests for the Geofency device tracker platform."""
+# pylint: disable=redefined-outer-name
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant import data_entry_flow
@@ -6,6 +9,8 @@ from homeassistant.components import zone
 from homeassistant.components.geofency import CONF_MOBILE_BEACONS, DOMAIN
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     HTTP_OK,
     HTTP_UNPROCESSABLE_ENTITY,
     STATE_HOME,
@@ -13,9 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
-
-# pylint: disable=redefined-outer-name
-from tests.async_mock import patch
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
@@ -150,7 +152,8 @@ async def setup_zones(loop, hass):
 async def webhook_id(hass, geofency_client):
     """Initialize the Geofency component and get the webhook_id."""
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -315,5 +318,5 @@ async def test_load_unload_entry(hass, geofency_client, webhook_id):
     assert state_1 is not state_2
 
     assert STATE_HOME == state_2.state
-    assert state_2.attributes["latitude"] == HOME_LATITUDE
-    assert state_2.attributes["longitude"] == HOME_LONGITUDE
+    assert state_2.attributes[ATTR_LATITUDE] == HOME_LATITUDE
+    assert state_2.attributes[ATTR_LONGITUDE] == HOME_LONGITUDE

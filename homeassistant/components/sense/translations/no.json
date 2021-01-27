@@ -4,17 +4,17 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
         "step": {
             "user": {
                 "data": {
-                    "email": "E-postadresse",
+                    "email": "E-post",
                     "password": "Passord"
                 },
-                "title": "Koble til din Sense Energi Monitor"
+                "title": "Koble til din Sense Energy Monitor"
             }
         }
     }

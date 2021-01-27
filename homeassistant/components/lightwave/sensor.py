@@ -1,5 +1,5 @@
 """Support for LightwaveRF TRV - Associated Battery."""
-from homeassistant.const import CONF_NAME, DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE
+from homeassistant.const import CONF_NAME, DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.helpers.entity import Entity
 
 from . import CONF_SERIAL, LIGHTWAVE_LINK
@@ -50,7 +50,7 @@ class LightwaveBattery(Entity):
     @property
     def unit_of_measurement(self):
         """Return the state of the sensor."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     def update(self):
         """Communicate with a Lightwave RTF Proxy to get state."""

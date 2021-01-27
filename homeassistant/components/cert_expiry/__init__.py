@@ -1,6 +1,7 @@
 """The cert_expiry component."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
+from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -50,7 +51,7 @@ async def async_unload_entry(hass, entry):
     return await hass.config_entries.async_forward_entry_unload(entry, "sensor")
 
 
-class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator):
+class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime]):
     """Class to manage fetching Cert Expiry data from single endpoint."""
 
     def __init__(self, hass, host, port):
@@ -64,15 +65,18 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator):
         name = f"{self.host}{display_port}"
 
         super().__init__(
-            hass, _LOGGER, name=name, update_interval=SCAN_INTERVAL,
+            hass,
+            _LOGGER,
+            name=name,
+            update_interval=SCAN_INTERVAL,
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> Optional[datetime]:
         """Fetch certificate."""
         try:
             timestamp = await get_cert_expiry_timestamp(self.hass, self.host, self.port)
         except TemporaryFailure as err:
-            raise UpdateFailed(err.args[0])
+            raise UpdateFailed(err.args[0]) from err
         except ValidationFailure as err:
             self.cert_error = err
             self.is_cert_valid = False

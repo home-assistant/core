@@ -89,7 +89,7 @@ class DateTimeJSONEncoder(json.JSONEncoder):
     Additionally add encoding for datetime objects as isoformat.
     """
 
-    def default(self, o):  # pylint: disable=method-hidden
+    def default(self, o):
         """Implement encoding logic."""
         if isinstance(o, datetime.datetime):
             return o.isoformat()

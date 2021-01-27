@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_api_key": "Nieprawid\u0142owy klucz API",
+            "requests_exceeded": "Dozwolona liczba zapyta\u0144 do interfejsu API AccuWeather zosta\u0142a przekroczona. Musisz poczeka\u0107 lub zmieni\u0107 klucz API."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna",
+                    "name": "Nazwa"
+                },
+                "description": "Je\u015bli potrzebujesz pomocy z konfiguracj\u0105, przejd\u017a na stron\u0119: https://www.home-assistant.io/integrations/accuweather/ \n\nCz\u0119\u015b\u0107 sensor\u00f3w nie jest w\u0142\u0105czona domy\u015blnie. Mo\u017cesz je w\u0142\u0105czy\u0107 w rejestrze encji po konfiguracji integracji.\nPrognoza pogody nie jest domy\u015blnie w\u0142\u0105czona. Mo\u017cesz j\u0105 w\u0142\u0105czy\u0107 w opcjach integracji.",
+                "title": "AccuWeather"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "forecast": "Prognoza pogody"
+                },
+                "description": "Ze wzgl\u0119du na ograniczenia darmowej wersji klucza API AccuWeather po w\u0142\u0105czeniu prognozy pogody aktualizacje danych b\u0119d\u0105 wykonywane co 64 minuty zamiast co 32 minuty.",
+                "title": "Opcje AccuWeather"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Dost\u0119p do serwera AccuWeather",
+            "remaining_requests": "Pozosta\u0142o dozwolonych \u017c\u0105da\u0144"
+        }
+    }
+}

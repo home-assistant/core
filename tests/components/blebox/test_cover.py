@@ -1,6 +1,7 @@
 """BleBox cover entities tests."""
 
 import logging
+from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
 import pytest
@@ -31,8 +32,6 @@ from homeassistant.const import (
 )
 
 from .conftest import async_setup_entity, mock_feature
-
-from tests.async_mock import AsyncMock, PropertyMock
 
 ALL_COVER_FIXTURES = ["gatecontroller", "shutterbox", "gatebox"]
 FIXTURES_SUPPORTING_STOP = ["gatecontroller", "shutterbox"]
@@ -210,7 +209,10 @@ async def test_open(feature, hass, config):
 
     feature_mock.async_update = AsyncMock()
     await hass.services.async_call(
-        "cover", SERVICE_OPEN_COVER, {"entity_id": entity_id}, blocking=True,
+        "cover",
+        SERVICE_OPEN_COVER,
+        {"entity_id": entity_id},
+        blocking=True,
     )
     assert hass.states.get(entity_id).state == STATE_OPENING
 

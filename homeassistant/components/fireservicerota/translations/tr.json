@@ -1,0 +1,19 @@
+{
+    "config": {
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "\u015eifre"
+                },
+                "description": "Kimlik do\u011frulama jetonlar\u0131 ge\u00e7ersiz, yeniden olu\u015fturmak i\u00e7in oturum a\u00e7\u0131n."
+            },
+            "user": {
+                "data": {
+                    "password": "\u015eifre",
+                    "url": "Web sitesi",
+                    "username": "Kullan\u0131c\u0131 ad\u0131"
+                }
+            }
+        }
+    }
+}

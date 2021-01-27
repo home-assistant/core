@@ -23,6 +23,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 
 @pytest.fixture
@@ -133,6 +134,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
         device_id=device_entry.id,
     )
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_capabilities = {
         "arm_away": {"extra_fields": []},
@@ -170,6 +172,7 @@ async def test_get_action_capabilities_arm_code(hass, device_reg, entity_reg):
         device_id=device_entry.id,
     )
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_capabilities = {
         "arm_away": {
@@ -267,6 +270,8 @@ async def test_action(hass):
         },
     )
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
     assert (
         hass.states.get("alarm_control_panel.alarm_no_arm_code").state == STATE_UNKNOWN
     )

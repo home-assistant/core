@@ -27,6 +27,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Clientes con acceso controlado a la red",
+                    "dpi_restrictions": "Permitir el control de los grupos de restricci\u00f3n de DPI",
                     "poe_clients": "Permitir control PoE de clientes"
                 },
                 "description": "Configurar controles de cliente\n\nCrea conmutadores para los n\u00fameros de serie para los que deseas controlar el acceso a la red.",
@@ -44,12 +45,6 @@
                 "description": "Configurar dispositivo de seguimiento",
                 "title": "Opciones UniFi 1/3"
             },
-            "init": {
-                "data": {
-                    "one": "vac\u00edo",
-                    "other": "vac\u00edo"
-                }
-            },
             "simple_options": {
                 "data": {
                     "block_client": "Acceso controlado a la red de los clientes",
@@ -60,7 +55,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Sensores de uso de ancho de banda para los clientes de la red"
+                    "allow_bandwidth_sensors": "Sensores de uso de ancho de banda para los clientes de la red",
+                    "allow_uptime_sensors": "Sensores de tiempo de actividad para clientes de la red"
                 },
                 "description": "Configurar estad\u00edsticas de los sensores",
                 "title": "Opciones UniFi 3/3"

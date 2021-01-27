@@ -1,45 +1,44 @@
 """The test for the Random binary sensor platform."""
-import unittest
+from unittest.mock import patch
 
-from homeassistant.setup import setup_component
-
-from tests.async_mock import patch
-from tests.common import get_test_home_assistant
+from homeassistant.setup import async_setup_component
 
 
-class TestRandomSensor(unittest.TestCase):
+async def test_random_binary_sensor_on(hass):
     """Test the Random binary sensor."""
+    config = {"binary_sensor": {"platform": "random", "name": "test"}}
 
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+    with patch(
+        "homeassistant.components.random.binary_sensor.getrandbits",
+        return_value=1,
+    ):
+        assert await async_setup_component(
+            hass,
+            "binary_sensor",
+            config,
+        )
+        await hass.async_block_till_done()
 
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
+    state = hass.states.get("binary_sensor.test")
 
-    @patch("homeassistant.components.random.binary_sensor.getrandbits", return_value=1)
-    def test_random_binary_sensor_on(self, mocked):
-        """Test the Random binary sensor."""
-        config = {"binary_sensor": {"platform": "random", "name": "test"}}
+    assert state.state == "on"
 
-        assert setup_component(self.hass, "binary_sensor", config)
-        self.hass.block_till_done()
 
-        state = self.hass.states.get("binary_sensor.test")
+async def test_random_binary_sensor_off(hass):
+    """Test the Random binary sensor."""
+    config = {"binary_sensor": {"platform": "random", "name": "test"}}
 
-        assert state.state == "on"
+    with patch(
+        "homeassistant.components.random.binary_sensor.getrandbits",
+        return_value=False,
+    ):
+        assert await async_setup_component(
+            hass,
+            "binary_sensor",
+            config,
+        )
+        await hass.async_block_till_done()
 
-    @patch(
-        "homeassistant.components.random.binary_sensor.getrandbits", return_value=False
-    )
-    def test_random_binary_sensor_off(self, mocked):
-        """Test the Random binary sensor."""
-        config = {"binary_sensor": {"platform": "random", "name": "test"}}
+    state = hass.states.get("binary_sensor.test")
 
-        assert setup_component(self.hass, "binary_sensor", config)
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("binary_sensor.test")
-
-        assert state.state == "off"
+    assert state.state == "off"

@@ -1,6 +1,7 @@
 """Common data for for the withings component tests."""
 from dataclasses import dataclass
 from typing import List, Optional, Tuple, Union
+from unittest.mock import MagicMock
 from urllib.parse import urlparse
 
 from aiohttp.test_utils import TestClient
@@ -39,7 +40,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import AUTH_CALLBACK_PATH
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -197,7 +197,11 @@ class ComponentFactory:
         assert result
         # pylint: disable=protected-access
         state = config_entry_oauth2_flow._encode_jwt(
-            self._hass, {"flow_id": result["flow_id"]}
+            self._hass,
+            {
+                "flow_id": result["flow_id"],
+                "redirect_uri": "http://127.0.0.1:8080/auth/external/callback",
+            },
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
         assert result["url"] == (
@@ -252,7 +256,8 @@ class ComponentFactory:
         data_manager = get_data_manager_by_user_id(self._hass, user_id)
         self._aioclient_mock.clear_requests()
         self._aioclient_mock.request(
-            "HEAD", data_manager.webhook_config.url,
+            "HEAD",
+            data_manager.webhook_config.url,
         )
 
         return self._api_class_mock.return_value

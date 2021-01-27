@@ -1,0 +1,9 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Hareket alg\u0131land\u0131",
+            "camera_person": "Ki\u015fi alg\u0131land\u0131",
+            "camera_sound": "Ses alg\u0131land\u0131"
+        }
+    }
+}

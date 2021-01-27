@@ -1,4 +1,6 @@
 """Tests for the Remote Python Debugger integration."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.debugpy import (
@@ -11,8 +13,6 @@ from homeassistant.components.debugpy import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 @pytest.fixture
@@ -53,7 +53,9 @@ async def test_on_demand(hass: HomeAssistant, mock_debugpy) -> None:
     assert len(mock_debugpy.method_calls) == 0
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, blocking=True,
+        DOMAIN,
+        SERVICE_START,
+        blocking=True,
     )
 
     mock_debugpy.listen.assert_called_once_with(("127.0.0.1", 80))

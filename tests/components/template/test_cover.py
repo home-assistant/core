@@ -1,6 +1,4 @@
 """The tests the cover command line platform."""
-import logging
-
 import pytest
 
 from homeassistant import setup
@@ -24,8 +22,6 @@ from homeassistant.const import (
 )
 
 from tests.common import assert_setup_component, async_mock_service
-
-_LOGGER = logging.getLogger(__name__)
 
 ENTITY_COVER = "cover.test_template_cover"
 
@@ -115,6 +111,7 @@ async def test_template_state_boolean(hass, calls):
 
 async def test_template_position(hass, calls):
     """Test the position_template attribute."""
+    hass.states.async_set("cover.test", STATE_OPEN)
     with assert_setup_component(1, "cover"):
         assert await setup.async_setup_component(
             hass,
@@ -1034,3 +1031,134 @@ async def test_invalid_device_class(hass, calls):
 
     state = hass.states.get("cover.test_template_cover")
     assert not state
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one cover per id."""
+    await setup.async_setup_component(
+        hass,
+        "cover",
+        {
+            "cover": {
+                "platform": "template",
+                "covers": {
+                    "test_template_cover_01": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ true }}",
+                        "open_cover": {
+                            "service": "cover.open_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                        "close_cover": {
+                            "service": "cover.close_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                    },
+                    "test_template_cover_02": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ false }}",
+                        "open_cover": {
+                            "service": "cover.open_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                        "close_cover": {
+                            "service": "cover.close_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+
+async def test_state_gets_lowercased(hass):
+    """Test True/False is lowercased."""
+
+    hass.states.async_set("binary_sensor.garage_door_sensor", "off")
+
+    await setup.async_setup_component(
+        hass,
+        "cover",
+        {
+            "cover": {
+                "platform": "template",
+                "covers": {
+                    "garage_door": {
+                        "friendly_name": "Garage Door",
+                        "value_template": "{{ is_state('binary_sensor.garage_door_sensor', 'off') }}",
+                        "open_cover": {
+                            "service": "cover.open_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                        "close_cover": {
+                            "service": "cover.close_cover",
+                            "entity_id": "cover.test_state",
+                        },
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    assert hass.states.get("cover.garage_door").state == STATE_OPEN
+    hass.states.async_set("binary_sensor.garage_door_sensor", "on")
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.garage_door").state == STATE_CLOSED
+
+
+async def test_self_referencing_icon_with_no_template_is_not_a_loop(hass, caplog):
+    """Test a self referencing icon with no value template is not a loop."""
+
+    icon_template_str = """{% if is_state('cover.office', 'open') %}
+            mdi:window-shutter-open
+          {% else %}
+            mdi:window-shutter
+          {% endif %}"""
+
+    await setup.async_setup_component(
+        hass,
+        "cover",
+        {
+            "cover": {
+                "platform": "template",
+                "covers": {
+                    "office": {
+                        "icon_template": icon_template_str,
+                        "open_cover": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.office_blinds_up",
+                        },
+                        "close_cover": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.office_blinds_down",
+                        },
+                        "stop_cover": {
+                            "service": "switch.turn_on",
+                            "entity_id": "switch.office_blinds_up",
+                        },
+                    },
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    assert "Template loop detected" not in caplog.text

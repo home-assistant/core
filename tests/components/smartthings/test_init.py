@@ -1,4 +1,5 @@
 """Tests for the SmartThings component init module."""
+from unittest.mock import Mock, patch
 from uuid import uuid4
 
 from aiohttp import ClientConnectionError, ClientResponseError
@@ -22,7 +23,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -118,7 +118,8 @@ async def test_base_url_no_longer_https_does_not_load(
 ):
     """Test base_url no longer valid creates a new flow."""
     await async_process_ha_core_config(
-        hass, {"external_url": "http://example.local:8123"},
+        hass,
+        {"external_url": "http://example.local:8123"},
     )
     config_entry.add_to_hass(hass)
     smartthings_mock.app.return_value = app

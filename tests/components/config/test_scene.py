@@ -1,11 +1,10 @@
 """Test Automation config panel."""
 import json
+from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.util.yaml import dump
-
-from tests.async_mock import patch
 
 
 async def test_update_scene(hass, hass_client):

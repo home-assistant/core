@@ -1,10 +1,10 @@
 """The tests for the Command line sensor platform."""
 import unittest
+from unittest.mock import patch
 
 from homeassistant.components.command_line import sensor as command_line
 from homeassistant.helpers.template import Template
 
-from tests.async_mock import patch
 from tests.common import get_test_home_assistant
 
 
@@ -74,11 +74,13 @@ class TestCommandSensorSensor(unittest.TestCase):
         """Ensure command with templates and quotes get rendered properly."""
         self.hass.states.set("sensor.test_state", "Works 2")
         with patch(
-            "homeassistant.components.command_line.sensor.subprocess.check_output",
+            "homeassistant.components.command_line.subprocess.check_output",
             return_value=b"Works\n",
         ) as check_output:
             data = command_line.CommandSensorData(
-                self.hass, 'echo "{{ states.sensor.test_state.state }}" "3 4"', 15,
+                self.hass,
+                'echo "{{ states.sensor.test_state.state }}" "3 4"',
+                15,
             )
             data.update()
 

@@ -2,6 +2,7 @@
 import logging
 
 import boto3
+import botocore
 import voluptuous as vol
 
 from homeassistant.components.tts import PLATFORM_SCHEMA, Provider
@@ -41,6 +42,7 @@ CONF_SAMPLE_RATE = "sample_rate"
 CONF_TEXT_TYPE = "text_type"
 
 SUPPORTED_VOICES = [
+    "Olivia",  # Female, Australian, Neural
     "Zhiyu",  # Chinese
     "Mads",
     "Naja",  # Danish
@@ -94,8 +96,9 @@ SUPPORTED_VOICES = [
     "Conchita",
     "Lucia",  # Spanish European
     "Mia",  # Spanish Mexican
-    "Miguel",
+    "Miguel",  # Spanish US
     "Penelope",  # Spanish US
+    "Lupe",  # Spanish US
     "Astrid",  # Swedish
     "Filiz",  # Turkish
     "Gwyneth",  # Welsh
@@ -123,6 +126,10 @@ DEFAULT_OUTPUT_FORMAT = "mp3"
 DEFAULT_TEXT_TYPE = "text"
 
 DEFAULT_SAMPLE_RATES = {"mp3": "22050", "ogg_vorbis": "22050", "pcm": "16000"}
+
+AWS_CONF_CONNECT_TIMEOUT = 10
+AWS_CONF_READ_TIMEOUT = 5
+AWS_CONF_MAX_POOL_CONNECTIONS = 1
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -166,6 +173,11 @@ def get_engine(hass, config, discovery_info=None):
         CONF_REGION: config[CONF_REGION],
         CONF_ACCESS_KEY_ID: config.get(CONF_ACCESS_KEY_ID),
         CONF_SECRET_ACCESS_KEY: config.get(CONF_SECRET_ACCESS_KEY),
+        "config": botocore.config.Config(
+            connect_timeout=AWS_CONF_CONNECT_TIMEOUT,
+            read_timeout=AWS_CONF_READ_TIMEOUT,
+            max_pool_connections=AWS_CONF_MAX_POOL_CONNECTIONS,
+        ),
     }
 
     del config[CONF_REGION]
@@ -228,6 +240,7 @@ class AmazonPollyProvider(Provider):
             _LOGGER.error("%s does not support the %s language", voice_id, language)
             return None, None
 
+        _LOGGER.debug("Requesting TTS file for text: %s", message)
         resp = self.client.synthesize_speech(
             Engine=self.config[CONF_ENGINE],
             OutputFormat=self.config[CONF_OUTPUT_FORMAT],
@@ -237,6 +250,7 @@ class AmazonPollyProvider(Provider):
             VoiceId=voice_id,
         )
 
+        _LOGGER.debug("Reply received for TTS: %s", message)
         return (
             CONTENT_TYPE_EXTENSIONS[resp.get("ContentType")],
             resp.get("AudioStream").read(),

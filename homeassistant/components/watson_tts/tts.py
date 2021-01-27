@@ -1,14 +1,10 @@
 """Support for IBM Watson TTS integration."""
-import logging
-
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_watson import TextToSpeechV1
 import voluptuous as vol
 
 from homeassistant.components.tts import PLATFORM_SCHEMA, Provider
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_URL = "watson_url"
 CONF_APIKEY = "watson_apikey"
@@ -30,6 +26,8 @@ SUPPORTED_VOICES = [
     "de-DE_ErikaV3Voice",
     "en-GB_KateV3Voice",
     "en-GB_KateVoice",
+    "en-GB_CharlotteV3Voice",
+    "en-GB_JamesV3Voice",
     "en-US_AllisonV3Voice",
     "en-US_AllisonVoice",
     "en-US_EmilyV3Voice",

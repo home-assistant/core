@@ -5,7 +5,7 @@
             "unsupported_model": "Ce mod\u00e8le d'imprimante n'est pas pris en charge."
         },
         "error": {
-            "connection_error": "Erreur de connexion.",
+            "cannot_connect": "\u00c9chec de connexion",
             "snmp_error": "Serveur SNMP d\u00e9sactiv\u00e9 ou imprimante non prise en charge.",
             "wrong_host": "Nom d'h\u00f4te ou adresse IP invalide."
         },

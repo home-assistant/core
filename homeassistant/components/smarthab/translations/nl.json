@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "service": "Fout bij het bereiken van SmartHab. De service is mogelijk uitgevallen. Controleer uw verbinding.",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord"
+                }
+            }
+        }
+    }
+}

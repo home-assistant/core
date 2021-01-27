@@ -1,9 +1,10 @@
 """Support for MQTT fans."""
+import functools
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components import fan, mqtt
+from homeassistant.components import fan
 from homeassistant.components.fan import (
     ATTR_SPEED,
     SPEED_HIGH,
@@ -21,27 +22,31 @@ from homeassistant.const import (
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_STATE,
+    CONF_UNIQUE_ID,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
-    ATTR_DISCOVERY_HASH,
     CONF_COMMAND_TOPIC,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID,
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
+    DOMAIN,
+    PLATFORMS,
     subscription,
 )
+from .. import mqtt
 from .debug_info import log_messages
-from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
+from .mixins import (
+    MQTT_AVAILABILITY_SCHEMA,
+    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    MQTT_JSON_ATTRS_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,7 +78,7 @@ OSCILLATION = "oscillation"
 PLATFORM_SCHEMA = (
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
-            vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -102,8 +107,8 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
     )
-    .extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
+    .extend(MQTT_AVAILABILITY_SCHEMA.schema)
+    .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
 )
 
 
@@ -111,53 +116,35 @@ async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT fan through configuration.yaml."""
-    await _async_setup_entity(config, async_add_entities)
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await _async_setup_entity(hass, async_add_entities, config)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT fan dynamically through MQTT discovery."""
 
-    async def async_discover(discovery_payload):
-        """Discover and add a MQTT fan."""
-        discovery_data = discovery_payload.discovery_data
-        try:
-            config = PLATFORM_SCHEMA(discovery_payload)
-            await _async_setup_entity(
-                config, async_add_entities, config_entry, discovery_data
-            )
-        except Exception:
-            clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
-            raise
-
-    async_dispatcher_connect(
-        hass, MQTT_DISCOVERY_NEW.format(fan.DOMAIN, "mqtt"), async_discover
+    setup = functools.partial(
+        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
+    await async_setup_entry_helper(hass, fan.DOMAIN, setup, PLATFORM_SCHEMA)
 
 
 async def _async_setup_entity(
-    config, async_add_entities, config_entry=None, discovery_data=None
+    hass, async_add_entities, config, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT fan."""
-    async_add_entities([MqttFan(config, config_entry, discovery_data)])
+    async_add_entities([MqttFan(hass, config, config_entry, discovery_data)])
 
 
-class MqttFan(
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    FanEntity,
-):
+class MqttFan(MqttEntity, FanEntity):
     """A MQTT fan component."""
 
-    def __init__(self, config, config_entry, discovery_data):
+    def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT fan."""
-        self._unique_id = config.get(CONF_UNIQUE_ID)
         self._state = False
         self._speed = None
         self._oscillation = None
         self._supported_features = 0
-        self._sub_state = None
 
         self._topic = None
         self._payload = None
@@ -166,30 +153,12 @@ class MqttFan(
         self._optimistic_oscillation = None
         self._optimistic_speed = None
 
-        # Load config
-        self._setup_from_config(config)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
-        device_config = config.get(CONF_DEVICE)
-
-        MqttAttributes.__init__(self, config)
-        MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
-
-    async def async_added_to_hass(self):
-        """Subscribe to MQTT events."""
-        await super().async_added_to_hass()
-        await self._subscribe_topics()
-
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA(discovery_payload)
-        self._setup_from_config(config)
-        await self.attributes_discovery_update(config)
-        await self.availability_discovery_update(config)
-        await self.device_info_discovery_update(config)
-        await self._subscribe_topics()
-        self.async_write_ha_state()
+    @staticmethod
+    def config_schema():
+        """Return the config schema."""
+        return PLATFORM_SCHEMA
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -238,22 +207,22 @@ class MqttFan(
             self._topic[CONF_SPEED_COMMAND_TOPIC] is not None and SUPPORT_SET_SPEED
         )
 
+        for key, tpl in list(self._templates.items()):
+            if tpl is None:
+                self._templates[key] = lambda value: value
+            else:
+                tpl.hass = self.hass
+                self._templates[key] = tpl.async_render_with_possible_json_value
+
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
         topics = {}
-        templates = {}
-        for key, tpl in list(self._templates.items()):
-            if tpl is None:
-                templates[key] = lambda value: value
-            else:
-                tpl.hass = self.hass
-                templates[key] = tpl.async_render_with_possible_json_value
 
         @callback
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new received MQTT message."""
-            payload = templates[CONF_STATE](msg.payload)
+            payload = self._templates[CONF_STATE](msg.payload)
             if payload == self._payload["STATE_ON"]:
                 self._state = True
             elif payload == self._payload["STATE_OFF"]:
@@ -271,7 +240,7 @@ class MqttFan(
         @log_messages(self.hass, self.entity_id)
         def speed_received(msg):
             """Handle new received MQTT message for the speed."""
-            payload = templates[ATTR_SPEED](msg.payload)
+            payload = self._templates[ATTR_SPEED](msg.payload)
             if payload == self._payload["SPEED_LOW"]:
                 self._speed = SPEED_LOW
             elif payload == self._payload["SPEED_MEDIUM"]:
@@ -294,7 +263,7 @@ class MqttFan(
         @log_messages(self.hass, self.entity_id)
         def oscillation_received(msg):
             """Handle new received MQTT message for the oscillation."""
-            payload = templates[OSCILLATION](msg.payload)
+            payload = self._templates[OSCILLATION](msg.payload)
             if payload == self._payload["OSCILLATE_ON_PAYLOAD"]:
                 self._oscillation = True
             elif payload == self._payload["OSCILLATE_OFF_PAYLOAD"]:
@@ -312,20 +281,6 @@ class MqttFan(
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state, topics
         )
-
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
-            self.hass, self._sub_state
-        )
-        await MqttAttributes.async_will_remove_from_hass(self)
-        await MqttAvailability.async_will_remove_from_hass(self)
-        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
-
-    @property
-    def should_poll(self):
-        """No polling needed for a MQTT fan."""
-        return False
 
     @property
     def assumed_state(self):
@@ -410,7 +365,7 @@ class MqttFan(
         elif speed == SPEED_OFF:
             mqtt_payload = self._payload["SPEED_OFF"]
         else:
-            mqtt_payload = speed
+            raise ValueError(f"{speed} is not a valid fan speed")
 
         mqtt.async_publish(
             self.hass,
@@ -445,8 +400,3 @@ class MqttFan(
         if self._optimistic_oscillation:
             self._oscillation = oscillating
             self.async_write_ha_state()
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id

@@ -1,0 +1,8 @@
+{
+  "domain": "sharkiq",
+  "name": "Shark IQ",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/sharkiq",
+  "requirements": ["sharkiqpy==0.1.8"],
+  "codeowners": ["@ajmarks"]
+}

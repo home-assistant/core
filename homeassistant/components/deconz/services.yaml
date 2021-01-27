@@ -23,3 +23,10 @@ device_refresh:
     bridgeid:
       description: (Optional) Bridgeid is a string unique for each deCONZ hardware. It can be found as part of the integration name.
       example: "00212EFFFF012345"
+
+remove_orphaned_entries:
+  description: Clean up device and entity registry entries orphaned by deCONZ.
+  fields:
+    bridgeid:
+      description: (Optional) Bridgeid is a string unique for each deCONZ hardware. It can be found as part of the integration name.
+      example: "00212EFFFF012345"

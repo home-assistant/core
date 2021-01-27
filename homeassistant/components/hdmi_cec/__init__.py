@@ -4,9 +4,13 @@ from functools import reduce
 import logging
 import multiprocessing
 
-from pycec.cec import CecAdapter
-from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
-from pycec.const import (
+from pycec.cec import CecAdapter  # pylint: disable=import-error
+from pycec.commands import (  # pylint: disable=import-error
+    CecCommand,
+    KeyPressCommand,
+    KeyReleaseCommand,
+)
+from pycec.const import (  # pylint: disable=import-error
     ADDR_AUDIOSYSTEM,
     ADDR_BROADCAST,
     ADDR_UNREGISTERED,
@@ -21,8 +25,8 @@ from pycec.const import (
     STATUS_STILL,
     STATUS_STOP,
 )
-from pycec.network import HDMINetwork, PhysicalAddress
-from pycec.tcp import TcpAdapter
+from pycec.network import HDMINetwork, PhysicalAddress  # pylint: disable=import-error
+from pycec.tcp import TcpAdapter  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER
@@ -353,7 +357,7 @@ def setup(hass: HomeAssistant, base_config):
     return True
 
 
-class CecDevice(Entity):
+class CecEntity(Entity):
     """Representation of a HDMI CEC device entity."""
 
     def __init__(self, device, logical) -> None:
@@ -387,6 +391,15 @@ class CecDevice(Entity):
     def _update(self, device=None):
         """Device status changed, schedule an update."""
         self.schedule_update_ha_state(True)
+
+    @property
+    def should_poll(self):
+        """
+        Return false.
+
+        CecEntity.update() is called by the HDMI network when there is new data.
+        """
+        return False
 
     @property
     def name(self):

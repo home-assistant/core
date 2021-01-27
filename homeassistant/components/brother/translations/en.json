@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This printer is already configured.",
+            "already_configured": "Device is already configured",
             "unsupported_model": "This printer model is not supported."
         },
         "error": {
-            "connection_error": "Connection error.",
+            "cannot_connect": "Failed to connect",
             "snmp_error": "SNMP server turned off or printer not supported.",
             "wrong_host": "Invalid hostname or IP address."
         },

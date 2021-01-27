@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Apparaat is al geconfigureerd",
+            "already_configured_local_device": "Lokale apparaten zijn al geconfigureerd. Verwijder deze eerst voordat u een cloudapparaat configureert.",
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "step": {
+            "local": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Voer de host in om de lokale Smappee-integratie te starten"
+            }
+        }
+    }
+}

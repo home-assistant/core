@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "select": {
+                "data": {
+                    "select_host": "IP-Adresse des Empf\u00e4ngers"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "IP-Adresse"
+                }
+            }
+        }
+    }
+}

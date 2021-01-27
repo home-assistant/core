@@ -1,4 +1,5 @@
 """Deprecation helpers for Home Assistant."""
+import functools
 import inspect
 import logging
 from typing import Any, Callable, Dict, Optional
@@ -60,7 +61,7 @@ def get_deprecated(
         else:
             # If Python is unable to access the sources files, the call stack frame
             # will be missing information, so let's guard.
-            # https://github.com/home-assistant/home-assistant/issues/24982
+            # https://github.com/home-assistant/core/issues/24982
             module_name = __name__
 
         logger = logging.getLogger(module_name)
@@ -73,3 +74,25 @@ def get_deprecated(
         )
         return config.get(old_name)
     return config.get(new_name, default)
+
+
+def deprecated_function(replacement: str) -> Callable[..., Callable]:
+    """Mark function as deprecated and provide a replacement function to be used instead."""
+
+    def deprecated_decorator(func: Callable) -> Callable:
+        """Decorate function as deprecated."""
+
+        @functools.wraps(func)
+        def deprecated_func(*args: tuple, **kwargs: Dict[str, Any]) -> Any:
+            """Wrap for the original function."""
+            logger = logging.getLogger(func.__module__)
+            logger.warning(
+                "%s is a deprecated function. Use %s instead",
+                func.__name__,
+                replacement,
+            )
+            return func(*args, **kwargs)
+
+        return deprecated_func
+
+    return deprecated_decorator

@@ -1,4 +1,6 @@
 """The tests the for GPSLogger device tracker platform."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant import data_entry_flow
@@ -14,8 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
@@ -64,7 +64,8 @@ async def setup_zones(loop, hass):
 async def webhook_id(hass, gpslogger_client):
     """Initialize the GPSLogger component and get the webhook_id."""
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}

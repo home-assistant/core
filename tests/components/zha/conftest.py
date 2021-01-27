@@ -1,4 +1,5 @@
 """Test configuration for the ZHA component."""
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 import zigpy
@@ -14,8 +15,8 @@ from homeassistant.setup import async_setup_component
 
 from .common import FakeDevice, FakeEndpoint, get_zha_gateway
 
-from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
+from tests.components.light.conftest import mock_light_profiles  # noqa
 
 FIXTURE_GRP_ID = 0x1001
 FIXTURE_GRP_NAME = "fixture group"

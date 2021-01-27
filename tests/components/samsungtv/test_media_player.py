@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from unittest.mock import DEFAULT as DEFAULT_MOCK, Mock, PropertyMock, call, patch
 
 import pytest
 from samsungctl import exceptions
@@ -52,7 +53,6 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import DEFAULT as DEFAULT_MOCK, Mock, PropertyMock, call, patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake"
@@ -97,7 +97,7 @@ MOCK_CALLS_ENTRY_WS = {
     "host": "fake",
     "name": "HomeAssistant",
     "port": 8001,
-    "timeout": 1,
+    "timeout": 8,
     "token": "abcde",
 }
 
@@ -203,7 +203,9 @@ async def test_setup_websocket_2(hass, mock_now):
     entity_id = f"{DOMAIN}.fake"
 
     entry = MockConfigEntry(
-        domain=SAMSUNGTV_DOMAIN, data=MOCK_ENTRY_WS, unique_id=entity_id,
+        domain=SAMSUNGTV_DOMAIN,
+        data=MOCK_ENTRY_WS,
+        unique_id=entity_id,
     )
     entry.add_to_hass(hass)
 

@@ -1,6 +1,7 @@
 """Test state helpers."""
 import asyncio
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -21,7 +22,6 @@ import homeassistant.core as ha
 from homeassistant.helpers import state
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_mock_service
 
 
@@ -68,7 +68,9 @@ async def test_call_to_component(hass):
             context = "dummy_context"
 
             await state.async_reproduce_state(
-                hass, [state_media_player, state_climate], context=context,
+                hass,
+                [state_media_player, state_climate],
+                context=context,
             )
 
             media_player_fun.assert_called_once_with(

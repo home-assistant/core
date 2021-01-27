@@ -7,7 +7,7 @@ import homeconnect
 from homeconnect.api import HomeConnectError
 
 from homeassistant import config_entries, core
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, TIME_SECONDS, UNIT_PERCENTAGE
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP, PERCENTAGE, TIME_SECONDS
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.dispatcher import dispatcher_send
 
@@ -140,7 +140,7 @@ class DeviceWithPrograms(HomeConnectDevice):
         sensors = {
             "Remaining Program Time": (None, None, DEVICE_CLASS_TIMESTAMP, 1),
             "Duration": (TIME_SECONDS, "mdi:update", None, 1),
-            "Program Progress": (UNIT_PERCENTAGE, "mdi:progress-clock", None, 1),
+            "Program Progress": (PERCENTAGE, "mdi:progress-clock", None, 1),
         }
         return [
             {
@@ -165,6 +165,30 @@ class DeviceWithDoor(HomeConnectDevice):
             "device": self,
             "desc": "Door",
             "device_class": "door",
+        }
+
+
+class DeviceWithLight(HomeConnectDevice):
+    """Device that has lighting."""
+
+    def get_light_entity(self):
+        """Get a dictionary with info about the lighting."""
+        return {
+            "device": self,
+            "desc": "Light",
+            "ambient": None,
+        }
+
+
+class DeviceWithAmbientLight(HomeConnectDevice):
+    """Device that has ambient lighting."""
+
+    def get_ambientlight_entity(self):
+        """Get a dictionary with info about the ambient lighting."""
+        return {
+            "device": self,
+            "desc": "AmbientLight",
+            "ambient": True,
         }
 
 
@@ -202,7 +226,7 @@ class Dryer(DeviceWithDoor, DeviceWithPrograms):
         }
 
 
-class Dishwasher(DeviceWithDoor, DeviceWithPrograms):
+class Dishwasher(DeviceWithDoor, DeviceWithAmbientLight, DeviceWithPrograms):
     """Dishwasher class."""
 
     PROGRAMS = [
@@ -335,7 +359,7 @@ class CoffeeMaker(DeviceWithPrograms):
         return {"switch": program_switches, "sensor": program_sensors}
 
 
-class Hood(DeviceWithPrograms):
+class Hood(DeviceWithLight, DeviceWithAmbientLight, DeviceWithPrograms):
     """Hood class."""
 
     PROGRAMS = [
@@ -346,9 +370,15 @@ class Hood(DeviceWithPrograms):
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
+        light_entity = self.get_light_entity()
+        ambientlight_entity = self.get_ambientlight_entity()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
-        return {"switch": program_switches, "sensor": program_sensors}
+        return {
+            "switch": program_switches,
+            "sensor": program_sensors,
+            "light": [light_entity, ambientlight_entity],
+        }
 
 
 class FridgeFreezer(DeviceWithDoor):

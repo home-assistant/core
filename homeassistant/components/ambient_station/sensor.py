@@ -1,6 +1,4 @@
 """Support for Ambient Weather Station sensors."""
-import logging
-
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import callback
 
@@ -17,8 +15,6 @@ from .const import (
     DOMAIN,
     TYPE_SENSOR,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

@@ -1,10 +1,10 @@
 """The tests for mqtt camera component."""
 import json
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import camera, mqtt
-from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.components import camera
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -16,6 +16,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -150,25 +151,30 @@ async def test_discovery_removal_camera(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_camera(hass, mqtt_mock, caplog):
     """Test update of discovered camera."""
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", entry)
-
-    data1 = '{ "name": "Beer",' '  "topic": "test_topic"}'
-    data2 = '{ "name": "Milk",' '  "topic": "test_topic"}'
+    data1 = '{ "name": "Beer", "topic": "test_topic"}'
+    data2 = '{ "name": "Milk", "topic": "test_topic"}'
 
     await help_test_discovery_update(
         hass, mqtt_mock, caplog, camera.DOMAIN, data1, data2
     )
 
 
+async def test_discovery_update_unchanged_camera(hass, mqtt_mock, caplog):
+    """Test update of discovered camera."""
+    data1 = '{ "name": "Beer", "topic": "test_topic"}'
+    with patch(
+        "homeassistant.components.mqtt.camera.MqttCamera.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass, mqtt_mock, caplog, camera.DOMAIN, data1, discovery_update
+        )
+
+
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", entry)
-
     data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk",' '  "topic": "test_topic"}'
+    data2 = '{ "name": "Milk", "topic": "test_topic"}'
 
     await help_test_discovery_broken(
         hass, mqtt_mock, caplog, camera.DOMAIN, data1, data2

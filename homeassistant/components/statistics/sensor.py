@@ -23,7 +23,10 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_state_change_event,
 )
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.util import dt as dt_util
+
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,6 +69,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Statistics sensor."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     entity_id = config.get(CONF_ENTITY_ID)
     name = config.get(CONF_NAME)
     sampling_size = config.get(CONF_SAMPLING_SIZE)
@@ -124,8 +130,10 @@ class StatisticsSensor(Entity):
             """Add listener and get recorded state."""
             _LOGGER.debug("Startup for %s", self.entity_id)
 
-            async_track_state_change_event(
-                self.hass, [self._entity_id], async_stats_sensor_state_listener
+            self.async_on_remove(
+                async_track_state_change_event(
+                    self.hass, [self._entity_id], async_stats_sensor_state_listener
+                )
             )
 
             if "recorder" in self.hass.config.components:

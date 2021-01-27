@@ -14,7 +14,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
 from .const import (
+    ATTR_DEVICE_INFO,
     ATTR_REMOTE,
+    ATTR_UDN,
     CONF_APP_ID,
     CONF_ENCRYPTION_KEY,
     CONF_ON_ACTION,
@@ -74,7 +76,7 @@ async def async_setup_entry(hass, config_entry):
 
     on_action = config[CONF_ON_ACTION]
     if on_action is not None:
-        on_action = Script(hass, on_action)
+        on_action = Script(hass, on_action, config[CONF_NAME], DOMAIN)
 
     params = {}
     if CONF_APP_ID in config and CONF_ENCRYPTION_KEY in config:
@@ -85,6 +87,22 @@ async def async_setup_entry(hass, config_entry):
     await remote.async_create_remote_control(during_setup=True)
 
     panasonic_viera_data[config_entry.entry_id] = {ATTR_REMOTE: remote}
+
+    # Add device_info to older config entries
+    if ATTR_DEVICE_INFO not in config or config[ATTR_DEVICE_INFO] is None:
+        device_info = await remote.async_get_device_info()
+        unique_id = config_entry.unique_id
+        if device_info is None:
+            _LOGGER.error(
+                "Couldn't gather device info. Please restart Home Assistant with your TV turned on and connected to your network."
+            )
+        else:
+            unique_id = device_info[ATTR_UDN]
+        hass.config_entries.async_update_entry(
+            config_entry,
+            unique_id=unique_id,
+            data={**config, ATTR_DEVICE_INFO: device_info},
+        )
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -115,7 +133,13 @@ class Remote:
     """The Remote class. It stores the TV properties and the remote control connection itself."""
 
     def __init__(
-        self, hass, host, port, on_action=None, app_id=None, encryption_key=None,
+        self,
+        hass,
+        host,
+        port,
+        on_action=None,
+        app_id=None,
+        encryption_key=None,
     ):
         """Initialize the Remote class."""
         self._hass = hass
@@ -178,9 +202,6 @@ class Remote:
         self.muted = self._control.get_mute()
         self.volume = self._control.get_volume() / 100
 
-        self.state = STATE_ON
-        self.available = True
-
     async def async_send_key(self, key):
         """Send a key to the TV and handle exceptions."""
         try:
@@ -190,10 +211,10 @@ class Remote:
 
         await self._handle_errors(self._control.send_key, key)
 
-    async def async_turn_on(self):
+    async def async_turn_on(self, context):
         """Turn on the TV."""
         if self._on_action is not None:
-            await self._on_action.async_run()
+            await self._on_action.async_run(context=context)
             self.state = STATE_ON
         elif self.state != STATE_ON:
             await self.async_send_key(Keys.power)
@@ -219,6 +240,14 @@ class Remote:
         """Play media."""
         _LOGGER.debug("Play media: %s (%s)", media_id, media_type)
         await self._handle_errors(self._control.open_webpage, media_id)
+
+    async def async_get_device_info(self):
+        """Return device info."""
+        if self._control is None:
+            return None
+        device_info = await self._handle_errors(self._control.get_device_info)
+        _LOGGER.debug("Fetched device info: %s", str(device_info))
+        return device_info
 
     async def _handle_errors(self, func, *args):
         """Handle errors from func, set available and reconnect if needed."""

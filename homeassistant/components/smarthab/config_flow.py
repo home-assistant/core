@@ -16,6 +16,9 @@ _LOGGER = logging.getLogger(__name__)
 class SmartHabConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """SmartHab config flow."""
 
+    VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+
     def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
 
@@ -62,16 +65,16 @@ class SmartHabConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=username, data={CONF_EMAIL: username, CONF_PASSWORD: password}
                 )
 
-            errors["base"] = "wrong_login"
+            errors["base"] = "invalid_auth"
         except pysmarthab.RequestFailedException:
             _LOGGER.exception("Error while trying to reach SmartHab API")
             errors["base"] = "service"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error during login")
-            errors["base"] = "unknown_error"
+            errors["base"] = "unknown"
 
         return self._show_setup_form(user_input, errors)
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, import_info):
         """Handle import from legacy config."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_info)

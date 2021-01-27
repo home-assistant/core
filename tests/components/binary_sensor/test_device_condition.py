@@ -1,5 +1,6 @@
 """The test for binary_sensor device automation."""
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -11,7 +12,6 @@ from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import (
     MockConfigEntry,
     async_get_device_automation_capabilities,
@@ -20,6 +20,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 
 @pytest.fixture
@@ -60,6 +61,7 @@ async def test_get_conditions(hass, device_reg, entity_reg):
         )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_conditions = [
         {

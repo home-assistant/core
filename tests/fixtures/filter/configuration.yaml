@@ -1,0 +1,11 @@
+sensor:
+  - platform: filter
+    name: "filtered realistic humidity"
+    entity_id: sensor.realistic_humidity
+    filters:
+      - filter: outlier
+        window_size: 4
+        radius: 4.0
+      - filter: lowpass
+        time_constant: 10
+        precision: 2

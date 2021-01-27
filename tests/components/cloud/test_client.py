@@ -1,16 +1,22 @@
 """Test the cloud.iot module."""
+from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import aiohttp
 from aiohttp import web
 import pytest
 
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.client import CloudClient
 from homeassistant.components.cloud.const import PREF_ENABLE_ALEXA, PREF_ENABLE_GOOGLE
+from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import mock_cloud, mock_cloud_prefs
 
-from tests.async_mock import AsyncMock, MagicMock, patch
+from tests.common import async_fire_time_changed
 from tests.components.alexa import test_smart_home as test_alexa
 
 
@@ -175,7 +181,7 @@ async def test_webhook_msg(hass, caplog):
         {
             "cloudhook_id": "mock-cloud-id",
             "body": '{"hello": "world"}',
-            "headers": {"content-type": "application/json"},
+            "headers": {"content-type": CONTENT_TYPE_JSON},
             "method": "POST",
             "query": None,
         }
@@ -184,7 +190,7 @@ async def test_webhook_msg(hass, caplog):
     assert response == {
         "status": 200,
         "body": '{"from": "handler"}',
-        "headers": {"Content-Type": "application/json"},
+        "headers": {"Content-Type": CONTENT_TYPE_JSON},
     }
 
     assert len(received) == 1
@@ -197,7 +203,7 @@ async def test_webhook_msg(hass, caplog):
         {
             "cloudhook_id": "mock-nonexisting-id",
             "body": '{"nonexisting": "payload"}',
-            "headers": {"content-type": "application/json"},
+            "headers": {"content-type": CONTENT_TYPE_JSON},
             "method": "POST",
             "query": None,
         }
@@ -259,3 +265,25 @@ async def test_set_username(hass):
 
     assert len(prefs.async_set_username.mock_calls) == 1
     assert prefs.async_set_username.mock_calls[0][1][0] == "mock-username"
+
+
+async def test_login_recovers_bad_internet(hass, caplog):
+    """Test Alexa can recover bad auth."""
+    prefs = Mock(
+        alexa_enabled=True,
+        google_enabled=False,
+        async_set_username=AsyncMock(return_value=None),
+    )
+    client = CloudClient(hass, prefs, None, {}, {})
+    client.cloud = Mock()
+    client._alexa_config = Mock(
+        async_enable_proactive_mode=Mock(side_effect=aiohttp.ClientError)
+    )
+    await client.logged_in()
+    assert len(client._alexa_config.async_enable_proactive_mode.mock_calls) == 1
+    assert "Unable to activate Alexa Report State" in caplog.text
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    assert len(client._alexa_config.async_enable_proactive_mode.mock_calls) == 2

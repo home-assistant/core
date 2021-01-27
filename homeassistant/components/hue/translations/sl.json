@@ -47,5 +47,14 @@
             "remote_double_button_long_press": "Po dolgem pritisku sta obe \" {subtype} \" spro\u0161\u010deni",
             "remote_double_button_short_press": "Spro\u0161\u010dena oba \"{podvrsta}\""
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Dovoli skupine Hue"
+                }
+            }
+        }
     }
 }

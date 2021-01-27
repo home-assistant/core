@@ -1,7 +1,7 @@
 """Tests for the Google Assistant integration."""
-from homeassistant.components.google_assistant import helpers
+from unittest.mock import MagicMock
 
-from tests.async_mock import MagicMock
+from homeassistant.components.google_assistant import helpers
 
 
 def mock_google_config_store(agent_user_ids=None):
@@ -128,6 +128,7 @@ DEMO_DEVICES = [
             "action.devices.traits.OnOff",
             "action.devices.traits.Brightness",
             "action.devices.traits.ColorSetting",
+            "action.devices.traits.Modes",
         ],
         "type": "action.devices.types.LIGHT",
         "willReportState": False,
@@ -135,14 +136,29 @@ DEMO_DEVICES = [
     {
         "id": "cover.living_room_window",
         "name": {"name": "Living Room Window"},
-        "traits": ["action.devices.traits.OpenClose"],
+        "traits": [
+            "action.devices.traits.StartStop",
+            "action.devices.traits.OpenClose",
+        ],
+        "type": "action.devices.types.BLINDS",
+        "willReportState": False,
+    },
+    {
+        "id": "cover.pergola_roof",
+        "name": {"name": "Pergola Roof"},
+        "traits": [
+            "action.devices.traits.OpenClose",
+        ],
         "type": "action.devices.types.BLINDS",
         "willReportState": False,
     },
     {
         "id": "cover.hall_window",
         "name": {"name": "Hall Window"},
-        "traits": ["action.devices.traits.OpenClose"],
+        "traits": [
+            "action.devices.traits.StartStop",
+            "action.devices.traits.OpenClose",
+        ],
         "type": "action.devices.types.BLINDS",
         "willReportState": False,
     },
@@ -156,7 +172,10 @@ DEMO_DEVICES = [
     {
         "id": "cover.kitchen_window",
         "name": {"name": "Kitchen Window"},
-        "traits": ["action.devices.traits.OpenClose"],
+        "traits": [
+            "action.devices.traits.StartStop",
+            "action.devices.traits.OpenClose",
+        ],
         "type": "action.devices.types.BLINDS",
         "willReportState": False,
     },
@@ -190,6 +209,7 @@ DEMO_DEVICES = [
         "id": "media_player.lounge_room",
         "name": {"name": "Lounge room"},
         "traits": [
+            "action.devices.traits.InputSelector",
             "action.devices.traits.OnOff",
             "action.devices.traits.Modes",
             "action.devices.traits.TransportControl",
@@ -228,7 +248,10 @@ DEMO_DEVICES = [
     {
         "id": "climate.hvac",
         "name": {"name": "Hvac"},
-        "traits": ["action.devices.traits.TemperatureSetting"],
+        "traits": [
+            "action.devices.traits.TemperatureSetting",
+            "action.devices.traits.FanSpeed",
+        ],
         "type": "action.devices.types.THERMOSTAT",
         "willReportState": False,
         "attributes": {
@@ -246,7 +269,10 @@ DEMO_DEVICES = [
     {
         "id": "climate.ecobee",
         "name": {"name": "Ecobee"},
-        "traits": ["action.devices.traits.TemperatureSetting"],
+        "traits": [
+            "action.devices.traits.TemperatureSetting",
+            "action.devices.traits.FanSpeed",
+        ],
         "type": "action.devices.types.THERMOSTAT",
         "willReportState": False,
     },

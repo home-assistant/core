@@ -15,8 +15,8 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 
@@ -38,10 +38,6 @@ ATTR_POLLUTANT_SYMBOL = "pollutant_symbol"
 ATTR_POLLUTANT_UNIT = "pollutant_unit"
 ATTR_REGION = "region"
 
-MASS_PARTS_PER_MILLION = "ppm"
-MASS_PARTS_PER_BILLION = "ppb"
-VOLUME_MICROGRAMS_PER_CUBIC_METER = "µg/m3"
-
 SENSOR_KIND_LEVEL = "air_pollution_level"
 SENSOR_KIND_AQI = "air_quality_index"
 SENSOR_KIND_POLLUTANT = "main_pollutant"
@@ -57,28 +53,9 @@ GEOGRAPHY_SENSORS = [
 GEOGRAPHY_SENSOR_LOCALES = {"cn": "Chinese", "us": "U.S."}
 
 NODE_PRO_SENSORS = [
-    (SENSOR_KIND_BATTERY_LEVEL, "Battery", DEVICE_CLASS_BATTERY, UNIT_PERCENTAGE),
-    (SENSOR_KIND_HUMIDITY, "Humidity", DEVICE_CLASS_HUMIDITY, UNIT_PERCENTAGE),
+    (SENSOR_KIND_BATTERY_LEVEL, "Battery", DEVICE_CLASS_BATTERY, PERCENTAGE),
+    (SENSOR_KIND_HUMIDITY, "Humidity", DEVICE_CLASS_HUMIDITY, PERCENTAGE),
     (SENSOR_KIND_TEMPERATURE, "Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS),
-]
-
-POLLUTANT_LEVEL_MAPPING = [
-    {"label": "Good", "icon": "mdi:emoticon-excited", "minimum": 0, "maximum": 50},
-    {"label": "Moderate", "icon": "mdi:emoticon-happy", "minimum": 51, "maximum": 100},
-    {
-        "label": "Unhealthy for sensitive groups",
-        "icon": "mdi:emoticon-neutral",
-        "minimum": 101,
-        "maximum": 150,
-    },
-    {"label": "Unhealthy", "icon": "mdi:emoticon-sad", "minimum": 151, "maximum": 200},
-    {
-        "label": "Very Unhealthy",
-        "icon": "mdi:emoticon-dead",
-        "minimum": 201,
-        "maximum": 300,
-    },
-    {"label": "Hazardous", "icon": "mdi:biohazard", "minimum": 301, "maximum": 10000},
 ]
 
 POLLUTANT_MAPPING = {
@@ -91,6 +68,22 @@ POLLUTANT_MAPPING = {
 }
 
 
+@callback
+def async_get_pollutant_level_info(value):
+    """Return a verbal pollutant level (and associated icon) for a numeric value."""
+    if 0 <= value <= 50:
+        return ("Good", "mdi:emoticon-excited")
+    if 51 <= value <= 100:
+        return ("Moderate", "mdi:emoticon-happy")
+    if 101 <= value <= 150:
+        return ("Unhealthy for sensitive groups", "mdi:emoticon-neutral")
+    if 151 <= value <= 200:
+        return ("Unhealthy", "mdi:emoticon-sad")
+    if 201 <= value <= 300:
+        return ("Very Unhealthy", "mdi:emoticon-dead")
+    return ("Hazardous", "mdi:biohazard")
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AirVisual sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
@@ -98,7 +91,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
         sensors = [
             AirVisualGeographySensor(
-                coordinator, config_entry, kind, name, icon, unit, locale,
+                coordinator,
+                config_entry,
+                kind,
+                name,
+                icon,
+                unit,
+                locale,
             )
             for locale in GEOGRAPHY_SENSOR_LOCALES
             for kind, name, icon, unit in GEOGRAPHY_SENSORS
@@ -169,13 +168,7 @@ class AirVisualGeographySensor(AirVisualEntity):
 
         if self._kind == SENSOR_KIND_LEVEL:
             aqi = data[f"aqi{self._locale}"]
-            [level] = [
-                i
-                for i in POLLUTANT_LEVEL_MAPPING
-                if i["minimum"] <= aqi <= i["maximum"]
-            ]
-            self._state = level["label"]
-            self._icon = level["icon"]
+            self._state, self._icon = async_get_pollutant_level_info(aqi)
         elif self._kind == SENSOR_KIND_AQI:
             self._state = data[f"aqi{self._locale}"]
         elif self._kind == SENSOR_KIND_POLLUTANT:
@@ -223,22 +216,20 @@ class AirVisualNodeProSensor(AirVisualEntity):
     def device_info(self):
         """Return device registry information for this entity."""
         return {
-            "identifiers": {
-                (DOMAIN, self.coordinator.data["current"]["serial_number"])
-            },
-            "name": self.coordinator.data["current"]["settings"]["node_name"],
+            "identifiers": {(DOMAIN, self.coordinator.data["serial_number"])},
+            "name": self.coordinator.data["settings"]["node_name"],
             "manufacturer": "AirVisual",
-            "model": f'{self.coordinator.data["current"]["status"]["model"]}',
+            "model": f'{self.coordinator.data["status"]["model"]}',
             "sw_version": (
-                f'Version {self.coordinator.data["current"]["status"]["system_version"]}'
-                f'{self.coordinator.data["current"]["status"]["app_version"]}'
+                f'Version {self.coordinator.data["status"]["system_version"]}'
+                f'{self.coordinator.data["status"]["app_version"]}'
             ),
         }
 
     @property
     def name(self):
         """Return the name."""
-        node_name = self.coordinator.data["current"]["settings"]["node_name"]
+        node_name = self.coordinator.data["settings"]["node_name"]
         return f"{node_name} Node/Pro: {self._name}"
 
     @property
@@ -249,18 +240,14 @@ class AirVisualNodeProSensor(AirVisualEntity):
     @property
     def unique_id(self):
         """Return a unique, Home Assistant friendly identifier for this entity."""
-        return f"{self.coordinator.data['current']['serial_number']}_{self._kind}"
+        return f"{self.coordinator.data['serial_number']}_{self._kind}"
 
     @callback
     def update_from_latest_data(self):
         """Update the entity from the latest data."""
         if self._kind == SENSOR_KIND_BATTERY_LEVEL:
-            self._state = self.coordinator.data["current"]["status"]["battery"]
+            self._state = self.coordinator.data["status"]["battery"]
         elif self._kind == SENSOR_KIND_HUMIDITY:
-            self._state = self.coordinator.data["current"]["measurements"].get(
-                "humidity"
-            )
+            self._state = self.coordinator.data["measurements"].get("humidity")
         elif self._kind == SENSOR_KIND_TEMPERATURE:
-            self._state = self.coordinator.data["current"]["measurements"].get(
-                "temperature_C"
-            )
+            self._state = self.coordinator.data["measurements"].get("temperature_C")

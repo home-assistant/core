@@ -1,4 +1,6 @@
 """The tests for the MQTT cover platform."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import cover
@@ -38,6 +40,7 @@ from .test_common import (
     help_test_discovery_removal,
     help_test_discovery_update,
     help_test_discovery_update_attr,
+    help_test_discovery_update_unchanged,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -732,7 +735,7 @@ async def test_set_position_untemplated(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("position-topic", 62, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("position-topic", "62", 0, False)
 
 
 async def test_set_position_untemplated_custom_percentage_range(hass, mqtt_mock):
@@ -764,7 +767,7 @@ async def test_set_position_untemplated_custom_percentage_range(hass, mqtt_mock)
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("position-topic", 62, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("position-topic", "62", 0, False)
 
 
 async def test_no_command_topic(hass, mqtt_mock):
@@ -896,7 +899,9 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 100, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "100", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
@@ -906,7 +911,7 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 0, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", "0", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     # Close tilt status would be received from device when non-optimistic
@@ -924,7 +929,9 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 100, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "100", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # Open tilt status would be received from device when non-optimistic
@@ -942,7 +949,7 @@ async def test_tilt_via_invocation_defaults(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 0, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", "0", 0, False)
 
 
 async def test_tilt_given_value(hass, mqtt_mock):
@@ -976,7 +983,9 @@ async def test_tilt_given_value(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 80, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "80", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
@@ -986,7 +995,9 @@ async def test_tilt_given_value(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # Close tilt status would be received from device when non-optimistic
@@ -1004,7 +1015,9 @@ async def test_tilt_given_value(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 80, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "80", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # Open tilt status would be received from device when non-optimistic
@@ -1022,7 +1035,9 @@ async def test_tilt_given_value(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
 
 
 async def test_tilt_given_value_optimistic(hass, mqtt_mock):
@@ -1062,7 +1077,9 @@ async def test_tilt_given_value_optimistic(hass, mqtt_mock):
     ]
     assert current_cover_tilt_position == 80
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 80, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "80", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
@@ -1077,7 +1094,9 @@ async def test_tilt_given_value_optimistic(hass, mqtt_mock):
     ]
     assert current_cover_tilt_position == 25
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
 
 
 async def test_tilt_given_value_altered_range(hass, mqtt_mock):
@@ -1119,7 +1138,9 @@ async def test_tilt_given_value_altered_range(hass, mqtt_mock):
     ]
     assert current_cover_tilt_position == 50
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
@@ -1134,7 +1155,7 @@ async def test_tilt_given_value_altered_range(hass, mqtt_mock):
     ]
     assert current_cover_tilt_position == 0
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 0, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", "0", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
@@ -1149,7 +1170,9 @@ async def test_tilt_given_value_altered_range(hass, mqtt_mock):
     ]
     assert current_cover_tilt_position == 50
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
 
 
 async def test_tilt_via_topic(hass, mqtt_mock):
@@ -1353,7 +1376,9 @@ async def test_tilt_position(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 50, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "50", 0, False
+    )
 
 
 async def test_tilt_position_altered_range(hass, mqtt_mock):
@@ -1389,12 +1414,15 @@ async def test_tilt_position_altered_range(hass, mqtt_mock):
         blocking=True,
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("tilt-command-topic", 25, 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "25", 0, False
+    )
 
 
 async def test_find_percentage_in_range_defaults(hass, mqtt_mock):
     """Test find percentage in range with default range."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1438,6 +1466,7 @@ async def test_find_percentage_in_range_defaults(hass, mqtt_mock):
 async def test_find_percentage_in_range_altered(hass, mqtt_mock):
     """Test find percentage in range with altered range."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1481,6 +1510,7 @@ async def test_find_percentage_in_range_altered(hass, mqtt_mock):
 async def test_find_percentage_in_range_defaults_inverted(hass, mqtt_mock):
     """Test find percentage in range with default range but inverted."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1524,6 +1554,7 @@ async def test_find_percentage_in_range_defaults_inverted(hass, mqtt_mock):
 async def test_find_percentage_in_range_altered_inverted(hass, mqtt_mock):
     """Test find percentage in range with altered range and inverted."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1567,6 +1598,7 @@ async def test_find_percentage_in_range_altered_inverted(hass, mqtt_mock):
 async def test_find_in_range_defaults(hass, mqtt_mock):
     """Test find in range with default range."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1610,6 +1642,7 @@ async def test_find_in_range_defaults(hass, mqtt_mock):
 async def test_find_in_range_altered(hass, mqtt_mock):
     """Test find in range with altered range."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1653,6 +1686,7 @@ async def test_find_in_range_altered(hass, mqtt_mock):
 async def test_find_in_range_defaults_inverted(hass, mqtt_mock):
     """Test find in range with default range but inverted."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1696,6 +1730,7 @@ async def test_find_in_range_defaults_inverted(hass, mqtt_mock):
 async def test_find_in_range_altered_inverted(hass, mqtt_mock):
     """Test find in range with altered range and inverted."""
     mqtt_cover = MqttCover(
+        hass,
         {
             "name": "cover.test",
             "state_topic": "state-topic",
@@ -1862,24 +1897,35 @@ async def test_unique_id(hass, mqtt_mock):
 
 async def test_discovery_removal_cover(hass, mqtt_mock, caplog):
     """Test removal of discovered cover."""
-    data = '{ "name": "test",' '  "command_topic": "test_topic" }'
+    data = '{ "name": "test", "command_topic": "test_topic" }'
     await help_test_discovery_removal(hass, mqtt_mock, caplog, cover.DOMAIN, data)
 
 
 async def test_discovery_update_cover(hass, mqtt_mock, caplog):
     """Test update of discovered cover."""
-    data1 = '{ "name": "Beer",' '  "command_topic": "test_topic" }'
-    data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
+    data1 = '{ "name": "Beer", "command_topic": "test_topic" }'
+    data2 = '{ "name": "Milk", "command_topic": "test_topic" }'
     await help_test_discovery_update(
         hass, mqtt_mock, caplog, cover.DOMAIN, data1, data2
     )
 
 
+async def test_discovery_update_unchanged_cover(hass, mqtt_mock, caplog):
+    """Test update of discovered cover."""
+    data1 = '{ "name": "Beer", "command_topic": "test_topic" }'
+    with patch(
+        "homeassistant.components.mqtt.cover.MqttCover.discovery_update"
+    ) as discovery_update:
+        await help_test_discovery_update_unchanged(
+            hass, mqtt_mock, caplog, cover.DOMAIN, data1, discovery_update
+        )
+
+
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
-    data1 = '{ "name": "Beer",' '  "command_topic": "test_topic#" }'
-    data2 = '{ "name": "Milk",' '  "command_topic": "test_topic" }'
+    data1 = '{ "name": "Beer", "command_topic": "test_topic#" }'
+    data2 = '{ "name": "Milk", "command_topic": "test_topic" }'
     await help_test_discovery_broken(
         hass, mqtt_mock, caplog, cover.DOMAIN, data1, data2
     )

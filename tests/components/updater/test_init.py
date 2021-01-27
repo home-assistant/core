@@ -1,11 +1,12 @@
 """The tests for the Updater component."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import updater
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import mock_component
 
 NEW_VERSION = "10000.0"
@@ -154,12 +155,7 @@ async def test_new_version_shows_entity_after_hour_hassio(
     """Test if binary sensor gets updated if new version is available / Hass.io."""
     mock_get_uuid.return_value = MOCK_HUUID
     mock_component(hass, "hassio")
-    hass.data["hassio_info"] = {"hassos": None, "homeassistant": "999.0"}
-    hass.data["hassio_host"] = {
-        "supervisor": "222",
-        "chassis": "vm",
-        "operating_system": "HassOS 4.6",
-    }
+    hass.data["hassio_core_info"] = {"version_latest": "999.0"}
 
     assert await async_setup_component(hass, updater.DOMAIN, {updater.DOMAIN: {}})
 

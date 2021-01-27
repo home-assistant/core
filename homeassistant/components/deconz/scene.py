@@ -9,20 +9,17 @@ from .const import NEW_SCENE
 from .gateway import get_gateway_from_config_entry
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ platforms."""
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up scenes for deCONZ component."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     @callback
-    def async_add_scene(scenes):
+    def async_add_scene(scenes=gateway.api.scenes.values()):
         """Add scene from deCONZ."""
         entities = [DeconzScene(scene, gateway) for scene in scenes]
 
-        async_add_entities(entities)
+        if entities:
+            async_add_entities(entities)
 
     gateway.listeners.append(
         async_dispatcher_connect(
@@ -30,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
     )
 
-    async_add_scene(gateway.api.scenes.values())
+    async_add_scene()
 
 
 class DeconzScene(Scene):

@@ -1,6 +1,7 @@
 """The tests for the Prometheus exporter."""
 from dataclasses import dataclass
 import datetime
+import unittest.mock as mock
 
 import pytest
 
@@ -9,6 +10,7 @@ from homeassistant.components.demo.sensor import DemoSensor
 import homeassistant.components.prometheus as prometheus
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONTENT_TYPE_TEXT_PLAIN,
     DEGREE,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
@@ -17,8 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import split_entity_id
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-import tests.async_mock as mock
 
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
 
@@ -97,7 +97,7 @@ async def test_view(hass, hass_client):
     resp = await client.get(prometheus.API_ENDPOINT)
 
     assert resp.status == 200
-    assert resp.headers["content-type"] == "text/plain"
+    assert resp.headers["content-type"] == CONTENT_TYPE_TEXT_PLAIN
     body = await resp.text()
     body = body.split("\n")
 

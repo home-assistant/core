@@ -1,5 +1,4 @@
 {
-  "title": "Agent DVR",
   "config": {
     "step": {
       "user": {
@@ -11,11 +10,11 @@
       }
     },
     "abort": {
-      "already_configured": "Device is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "already_in_progress": "Config flow for device is already in progress.",
-      "device_unavailable": "Device is not available"
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   }
 }

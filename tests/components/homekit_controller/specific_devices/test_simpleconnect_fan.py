@@ -1,7 +1,7 @@
 """
 Test against characteristics captured from a SIMPLEconnect Fan.
 
-https://github.com/home-assistant/home-assistant/issues/26180
+https://github.com/home-assistant/core/issues/26180
 """
 
 from homeassistant.components.fan import SUPPORT_DIRECTION, SUPPORT_SET_SPEED
@@ -26,7 +26,11 @@ async def test_simpleconnect_fan_setup(hass):
     assert fan.unique_id == "homekit-1234567890abcd-8"
 
     fan_helper = Helper(
-        hass, "fan.simpleconnect_fan_06f674", pairing, accessories[0], config_entry,
+        hass,
+        "fan.simpleconnect_fan_06f674",
+        pairing,
+        accessories[0],
+        config_entry,
     )
 
     fan_state = await fan_helper.poll_and_get_state()

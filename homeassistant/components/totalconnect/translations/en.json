@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account already configured"
+            "already_configured": "Account is already configured"
         },
         "error": {
-            "login": "Login error: please check your username & password"
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
             "user": {

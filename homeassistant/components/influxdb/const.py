@@ -22,6 +22,7 @@ CONF_BUCKET = "bucket"
 CONF_ORG = "organization"
 CONF_TAGS = "tags"
 CONF_DEFAULT_MEASUREMENT = "default_measurement"
+CONF_MEASUREMENT_ATTR = "measurement_attr"
 CONF_OVERRIDE_MEASUREMENT = "override_measurement"
 CONF_TAGS_ATTRIBUTES = "tags_attributes"
 CONF_COMPONENT_CONFIG = "component_config"
@@ -29,6 +30,7 @@ CONF_COMPONENT_CONFIG_GLOB = "component_config_glob"
 CONF_COMPONENT_CONFIG_DOMAIN = "component_config_domain"
 CONF_RETRY_COUNT = "max_retries"
 CONF_IGNORE_ATTRIBUTES = "ignore_attributes"
+CONF_PRECISION = "precision"
 
 CONF_LANGUAGE = "language"
 CONF_QUERIES = "queries"
@@ -55,6 +57,7 @@ DEFAULT_FIELD = "value"
 DEFAULT_RANGE_START = "-15m"
 DEFAULT_RANGE_STOP = "now()"
 DEFAULT_FUNCTION_FLUX = "|> limit(n: 1)"
+DEFAULT_MEASUREMENT_ATTR = "unit_of_measurement"
 
 INFLUX_CONF_MEASUREMENT = "measurement"
 INFLUX_CONF_TAGS = "tags"
@@ -129,12 +132,14 @@ RENDERING_WHERE_ERROR_MESSAGE = "Could not render where template: %s."
 COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     # Connection config for V1 and V2 APIs.
     vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): vol.All(
-        vol.Coerce(str), vol.In([DEFAULT_API_VERSION, API_VERSION_2]),
+        vol.Coerce(str),
+        vol.In([DEFAULT_API_VERSION, API_VERSION_2]),
     ),
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PATH): cv.string,
     vol.Optional(CONF_PORT): cv.port,
     vol.Optional(CONF_SSL): cv.boolean,
+    vol.Optional(CONF_PRECISION): vol.In(["ms", "s", "us", "ns"]),
     # Connection config for V1 API only.
     vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
     vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,

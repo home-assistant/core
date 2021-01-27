@@ -58,10 +58,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
     except nvr.NvrError as ex:
         _LOGGER.error("NVR refuses to talk to me: %s", str(ex))
-        raise PlatformNotReady
+        raise PlatformNotReady from ex
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to NVR: %s", str(ex))
-        raise PlatformNotReady
+        raise PlatformNotReady from ex
 
     add_entities(
         [
@@ -120,6 +120,11 @@ class UnifiVideoCamera(Camera):
         return self._caminfo["recordingSettings"]["motionRecordEnabled"]
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this client."""
+        return self._uuid
+
+    @property
     def brand(self):
         """Return the brand of this camera."""
         return "Ubiquiti"
@@ -152,7 +157,7 @@ class UnifiVideoCamera(Camera):
                 camera.login()
                 _LOGGER.debug(
                     "Logged into UVC camera %(name)s via %(addr)s",
-                    dict(name=self._name, addr=addr),
+                    {"name": self._name, "addr": addr},
                 )
                 self._connect_addr = addr
                 break

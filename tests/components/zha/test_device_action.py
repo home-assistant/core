@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import pytest
+import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.security as security
 import zigpy.zcl.foundation as zcl_f
@@ -15,6 +16,7 @@ from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service, mock_coro
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 SHORT_PRESS = "remote_button_short_press"
 COMMAND = "command"
@@ -31,7 +33,7 @@ async def device_ias(hass, zigpy_device_mock, zha_device_joined_restored):
             1: {
                 "in_clusters": [c.cluster_id for c in clusters],
                 "out_clusters": [general.OnOff.cluster_id],
-                "device_type": 0,
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         },
     )
@@ -48,7 +50,7 @@ async def test_get_actions(hass, device_ias):
     ieee_address = str(device_ias[0].ieee)
 
     ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({(DOMAIN, ieee_address)}, set())
+    reg_device = ha_device_registry.async_get_device({(DOMAIN, ieee_address)})
 
     actions = await async_get_device_automations(hass, "action", reg_device.id)
 
@@ -71,7 +73,7 @@ async def test_action(hass, device_ias):
     ieee_address = str(zha_device.ieee)
 
     ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({(DOMAIN, ieee_address)}, set())
+    reg_device = ha_device_registry.async_get_device({(DOMAIN, ieee_address)})
 
     with patch(
         "zigpy.zcl.Cluster.request",

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "V omre\u017eju ni najdenih naprav.",
+            "single_instance_allowed": "Je \u017ee name\u0161\u010deno. Mo\u017ena je le ena konfiguracija."
+        },
+        "step": {
+            "confirm": {
+                "description": "\u017delite pri\u010deti namestitev?"
+            }
+        }
+    }
+}

@@ -1,4 +1,6 @@
 """Tests for the Freebox config flow."""
+from unittest.mock import AsyncMock, patch
+
 from aiofreepybox.exceptions import (
     AuthorizationError,
     HttpRequestError,
@@ -11,7 +13,6 @@ from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 HOST = "myrouter.freeboxos.fr"
@@ -139,7 +140,7 @@ async def test_on_link_failed(hass):
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "connection_failed"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(
         "homeassistant.components.freebox.router.Freepybox.open",
