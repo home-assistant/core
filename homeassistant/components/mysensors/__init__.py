@@ -171,7 +171,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     gateway = await setup_gateway(hass, entry)
 
     if not gateway:
-        _LOGGER.error("gateway setup failed")
+        _LOGGER.error("Gateway setup failed for %s", entry.data)
         return False
 
     if DOMAIN not in hass.data:

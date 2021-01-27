@@ -11,10 +11,9 @@ import voluptuous as vol
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.decorator import Registry
 
-from ...config_entries import ConfigEntry
-from ...helpers.dispatcher import async_dispatcher_send
 from .const import (
     ATTR_DEVICES,
     ATTR_GATEWAY_ID,
@@ -23,6 +22,7 @@ from .const import (
     MYSENSORS_DISCOVERY,
     TYPE_TO_PLATFORMS,
     DevId,
+    GatewayId,
     SensorType,
     ValueType,
 )
@@ -33,17 +33,17 @@ SCHEMAS = Registry()
 
 @callback
 def discover_mysensors_platform(
-    hass, hass_config: ConfigEntry, platform: str, new_devices: List[DevId]
+    hass, gateway_id: GatewayId, platform: str, new_devices: List[DevId]
 ) -> None:
     """Discover a MySensors platform."""
     _LOGGER.debug("discovering platform %s with devIds: %s", platform, new_devices)
     async_dispatcher_send(
         hass,
-        MYSENSORS_DISCOVERY.format(hass_config.entry_id, platform),
+        MYSENSORS_DISCOVERY.format(gateway_id, platform),
         {
             ATTR_DEVICES: new_devices,
             CONF_NAME: DOMAIN,
-            ATTR_GATEWAY_ID: hass_config.entry_id,
+            ATTR_GATEWAY_ID: gateway_id,
         },
     )
 
@@ -130,12 +130,12 @@ def invalid_msg(
     )
 
 
-def validate_set_msg(hass_config: ConfigEntry, msg: Message) -> Dict[str, List[DevId]]:
+def validate_set_msg(gateway_id: GatewayId, msg: Message) -> Dict[str, List[DevId]]:
     """Validate a set message."""
     if not validate_node(msg.gateway, msg.node_id):
         return {}
     child = msg.gateway.sensors[msg.node_id].children[msg.child_id]
-    return validate_child(hass_config, msg.gateway, msg.node_id, child, msg.sub_type)
+    return validate_child(gateway_id, msg.gateway, msg.node_id, child, msg.sub_type)
 
 
 def validate_node(gateway: BaseAsyncGateway, node_id: int) -> bool:
@@ -147,7 +147,7 @@ def validate_node(gateway: BaseAsyncGateway, node_id: int) -> bool:
 
 
 def validate_child(
-    hass_config: ConfigEntry,
+    gateway_id: GatewayId,
     gateway: BaseAsyncGateway,
     node_id: int,
     child: ChildSensor,
@@ -195,7 +195,7 @@ def validate_child(
                 )
                 continue
             dev_id: DevId = (
-                hass_config.entry_id,
+                gateway_id,
                 node_id,
                 child.id,
                 set_req[v_name].value,

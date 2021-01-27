@@ -3,13 +3,18 @@ from typing import Dict, List
 
 from mysensors import Message
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import decorator
 
-from .const import CHILD_CALLBACK, MYSENSORS_GATEWAY_READY, NODE_CALLBACK, DevId
+from .const import (
+    CHILD_CALLBACK,
+    MYSENSORS_GATEWAY_READY,
+    NODE_CALLBACK,
+    DevId,
+    GatewayId,
+)
 from .device import get_mysensors_devices
 from .helpers import discover_mysensors_platform, validate_set_msg
 
@@ -17,62 +22,60 @@ HANDLERS = decorator.Registry()
 
 
 @HANDLERS.register("set")
-async def handle_set(hass, hass_config: ConfigEntry, msg: Message) -> None:
+async def handle_set(hass, gateway_id: GatewayId, msg: Message) -> None:
     """Handle a mysensors set message."""
-    validated = validate_set_msg(hass_config, msg)
-    _handle_child_update(hass, hass_config, validated)
+    validated = validate_set_msg(gateway_id, msg)
+    _handle_child_update(hass, gateway_id, validated)
 
 
 @HANDLERS.register("internal")
-async def handle_internal(hass, hass_config: ConfigEntry, msg: Message) -> None:
+async def handle_internal(hass, gateway_id: GatewayId, msg: Message) -> None:
     """Handle a mysensors internal message."""
     internal = msg.gateway.const.Internal(msg.sub_type)
     handler = HANDLERS.get(internal.name)
     if handler is None:
         return
-    await handler(hass, hass_config, msg)
+    await handler(hass, gateway_id, msg)
 
 
 @HANDLERS.register("I_BATTERY_LEVEL")
-async def handle_battery_level(hass, hass_config: ConfigEntry, msg: Message) -> None:
+async def handle_battery_level(hass, gateway_id: GatewayId, msg: Message) -> None:
     """Handle an internal battery level message."""
-    _handle_node_update(hass, hass_config, msg)
+    _handle_node_update(hass, gateway_id, msg)
 
 
 @HANDLERS.register("I_HEARTBEAT_RESPONSE")
-async def handle_heartbeat(hass, hass_config: ConfigEntry, msg: Message) -> None:
+async def handle_heartbeat(hass, gateway_id: GatewayId, msg: Message) -> None:
     """Handle an heartbeat."""
-    _handle_node_update(hass, hass_config, msg)
+    _handle_node_update(hass, gateway_id, msg)
 
 
 @HANDLERS.register("I_SKETCH_NAME")
-async def handle_sketch_name(hass, hass_config: ConfigEntry, msg: Message) -> None:
+async def handle_sketch_name(hass, gatway_id: GatewayId, msg: Message) -> None:
     """Handle an internal sketch name message."""
-    _handle_node_update(hass, hass_config, msg)
+    _handle_node_update(hass, gatway_id, msg)
 
 
 @HANDLERS.register("I_SKETCH_VERSION")
-async def handle_sketch_version(hass, hass_config: ConfigEntry, msg: Message) -> None:
+async def handle_sketch_version(hass, gatway_id: GatewayId, msg: Message) -> None:
     """Handle an internal sketch version message."""
-    _handle_node_update(hass, hass_config, msg)
+    _handle_node_update(hass, gatway_id, msg)
 
 
 @HANDLERS.register("I_GATEWAY_READY")
-async def handle_gateway_ready(hass, hass_config: ConfigEntry, msg: Message) -> None:
+async def handle_gateway_ready(hass, gatway_id: GatewayId, msg: Message) -> None:
     """Handle an internal gateway ready message.
 
     Set asyncio future result if gateway is ready.
     """
-    gateway_ready = hass.data.get(MYSENSORS_GATEWAY_READY.format(hass_config.entry_id))
+    gateway_ready = hass.data.get(MYSENSORS_GATEWAY_READY.format(gatway_id))
     if gateway_ready is None or gateway_ready.cancelled():
         return
     gateway_ready.set_result(True)
 
 
 @callback
-def _handle_child_update(
-    hass, hass_config: ConfigEntry, validated: Dict[str, List[DevId]]
-):
+def _handle_child_update(hass, gatway_id: GatewayId, validated: Dict[str, List[DevId]]):
     """Handle a child update."""
     signals: List[str] = []
 
@@ -87,7 +90,7 @@ def _handle_child_update(
             else:
                 new_dev_ids.append(dev_id)
         if new_dev_ids:
-            discover_mysensors_platform(hass, hass_config, platform, new_dev_ids)
+            discover_mysensors_platform(hass, gatway_id, platform, new_dev_ids)
     for signal in set(signals):
         # Only one signal per device is needed.
         # A device can have multiple platforms, ie multiple schemas.
@@ -95,9 +98,7 @@ def _handle_child_update(
 
 
 @callback
-def _handle_node_update(
-    hass: HomeAssistantType, hass_config: ConfigEntry, msg: Message
-):
+def _handle_node_update(hass: HomeAssistantType, gateway_id: GatewayId, msg: Message):
     """Handle a node update."""
-    signal = NODE_CALLBACK.format(hass_config.entry_id, msg.node_id)
+    signal = NODE_CALLBACK.format(gateway_id, msg.node_id)
     async_dispatcher_send(hass, signal)
