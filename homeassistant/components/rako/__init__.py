@@ -2,17 +2,18 @@
 import logging
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.rako.bridge import RakoBridge
-from homeassistant.components.rako.const import (
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
+
+from .bridge import RakoBridge
+from .const import (
     CONF_MAC_ADDRESS,
     DATA_RAKO_BRIDGE_CLIENT,
     DATA_RAKO_LIGHT_MAP,
     DATA_RAKO_LISTENER_TASK,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -8,11 +8,12 @@ from python_rako.exceptions import RakoBridgeError
 from python_rako.model import BridgeInfo
 import voluptuous as vol
 
-from homeassistant.components.rako.const import CONF_MAC_ADDRESS, DOMAIN
 from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigFlow
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
+
+from .const import CONF_MAC_ADDRESS, DOMAIN  # pylint:disable=unused-import
 
 
 class RakoConfigFlow(ConfigFlow, domain=DOMAIN):

@@ -12,17 +12,14 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
-from homeassistant.components.rako import DATA_RAKO_BRIDGE_CLIENT, DOMAIN
-from homeassistant.components.rako.const import (
-    ATTR_CHANNEL_ID,
-    ATTR_MANUFACTURER,
-    ATTR_ROOM_ID,
-)
-from homeassistant.components.rako.util import create_unique_id
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
+
+from . import DATA_RAKO_BRIDGE_CLIENT, DOMAIN
+from .const import ATTR_CHANNEL_ID, ATTR_MANUFACTURER, ATTR_ROOM_ID
+from .util import create_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 

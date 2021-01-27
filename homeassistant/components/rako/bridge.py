@@ -6,12 +6,8 @@ from python_rako import Bridge
 from python_rako.helpers import convert_to_brightness
 from python_rako.model import ChannelStatusMessage, SceneStatusMessage, StatusMessage
 
-from homeassistant.components.rako.const import (
-    DATA_RAKO_LIGHT_MAP,
-    DATA_RAKO_LISTENER_TASK,
-    DOMAIN,
-)
-from homeassistant.components.rako.util import create_unique_id
+from .const import DATA_RAKO_LIGHT_MAP, DATA_RAKO_LISTENER_TASK, DOMAIN
+from .util import create_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
