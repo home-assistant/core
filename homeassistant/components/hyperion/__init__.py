@@ -329,7 +329,7 @@ async def async_unload_entry(
                 config_data[CONF_INSTANCE_CLIENTS][
                     instance_num
                 ].async_client_disconnect()
-                for instance_num in list(config_data[CONF_INSTANCE_CLIENTS])
+                for instance_num in config_data[CONF_INSTANCE_CLIENTS]
             ]
         )
 
