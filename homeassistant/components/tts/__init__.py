@@ -116,7 +116,7 @@ async def async_setup(hass, config):
         use_cache = conf.get(CONF_CACHE, DEFAULT_CACHE)
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
-        base_url = conf.get(CONF_BASE_URL) or get_url(hass)
+        base_url = conf.get(CONF_BASE_URL)
         hass.data[BASE_URL_KEY] = base_url
 
         await tts.async_init_cache(use_cache, cache_dir, time_memory, base_url)
@@ -618,4 +618,4 @@ class TextToSpeechView(HomeAssistantView):
 
 def get_base_url(hass):
     """Get base URL."""
-    return hass.data[BASE_URL_KEY]
+    return hass.data[BASE_URL_KEY] or get_url(hass)
