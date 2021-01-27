@@ -148,6 +148,31 @@ async def test_reauth_auth_failed(hass: HomeAssistantType, fritz: Mock):
     assert result["errors"]["base"] == "invalid_auth"
 
 
+async def test_reauth_not_successful(hass: HomeAssistantType, fritz: Mock):
+    """Test starting a reauthentication flow but no connection found."""
+    fritz().login.side_effect = OSError("Boom")
+
+    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_REAUTH}, data=mock_config.data
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "other_fake_user",
+            CONF_PASSWORD: "other_fake_password",
+        },
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "no_devices_found"
+
+
 async def test_import(hass: HomeAssistantType, fritz: Mock):
     """Test starting a flow by import."""
     result = await hass.config_entries.flow.async_init(
