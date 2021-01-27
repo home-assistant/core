@@ -102,7 +102,7 @@ async def test_call_service_schema_validation_error(
     """Test call service command with invalid service data."""
 
     calls = []
-    SERVICE_SCHEMA = vol.Schema(
+    service_schema = vol.Schema(
         {
             vol.Required("message"): str,
         }
@@ -116,7 +116,7 @@ async def test_call_service_schema_validation_error(
         "domain_test",
         "test_service",
         service_call,
-        schema=SERVICE_SCHEMA,
+        schema=service_schema,
     )
 
     await websocket_client.send_json(
