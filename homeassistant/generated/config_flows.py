@@ -94,6 +94,7 @@ FLOWS = [
     "homematicip_cloud",
     "huawei_lte",
     "hue",
+    "huisbaasje",
     "hunterdouglas_powerview",
     "hvv_departures",
     "hyperion",

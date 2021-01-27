@@ -786,6 +786,9 @@ httplib2==0.18.1
 # homeassistant.components.huawei_lte
 huawei-lte-api==1.4.17
 
+# homeassistant.components.huisbaasje
+huisbaasje-client==0.1.0
+
 # homeassistant.components.hydrawise
 hydrawiser==0.2
 
