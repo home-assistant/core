@@ -11,7 +11,7 @@ from homeassistant.const import (
 )
 
 
-class MediaPlayer(mp.MediaPlayerEntity):
+class ExtendedMediaPlayer(mp.MediaPlayerEntity):
     """Media player test class."""
 
     def __init__(self, hass):
@@ -49,12 +49,20 @@ class MediaPlayer(mp.MediaPlayerEntity):
     def volume_up(self):
         """Turn volume up for media player."""
         if self.volume_level < 1:
-            self.set_volume_level(min(1, self.volume_level + 0.2))
+            self.set_volume_level(min(1, self.volume_level + 0.1))
 
     def volume_down(self):
         """Turn volume down for media player."""
         if self.volume_level > 0:
-            self.set_volume_level(max(0, self.volume_level - 0.2))
+            self.set_volume_level(max(0, self.volume_level - 0.1))
+
+    def media_play(self):
+        """Play the media player."""
+        self._state = STATE_PLAYING
+
+    def media_pause(self):
+        """Plause the media player."""
+        self._state = STATE_PAUSED
 
     def media_play_pause(self):
         """Play or pause the media player."""
@@ -79,10 +87,62 @@ class MediaPlayer(mp.MediaPlayerEntity):
             self._state = STATE_OFF
 
 
-@pytest.fixture
-def player(hass):
-    """Fixture of a media player."""
-    return MediaPlayer(hass)
+class SimpleMediaPlayer(mp.MediaPlayerEntity):
+    """Media player test class."""
+
+    def __init__(self, hass):
+        """Initialize the test media player."""
+        self.hass = hass
+        self._volume = 0
+        self._state = STATE_OFF
+
+    @property
+    def state(self):
+        """State of the player."""
+        return self._state
+
+    @property
+    def volume_level(self):
+        """Volume level of the media player (0..1)."""
+        return self._volume
+
+    @property
+    def supported_features(self):
+        """Flag media player features that are supported."""
+        return (
+            mp.const.SUPPORT_VOLUME_SET
+            | mp.const.SUPPORT_VOLUME_STEP
+            | mp.const.SUPPORT_PLAY
+            | mp.const.SUPPORT_PAUSE
+            | mp.const.SUPPORT_TURN_OFF
+            | mp.const.SUPPORT_TURN_ON
+        )
+
+    def set_volume_level(self, volume):
+        """Set volume level, range 0..1."""
+        self._volume = volume
+
+    def media_play(self):
+        """Play the media player."""
+        self._state = STATE_PLAYING
+
+    def media_pause(self):
+        """Plause the media player."""
+        self._state = STATE_PAUSED
+
+    def turn_on(self):
+        """Turn on state."""
+        self._state = STATE_ON
+
+    def turn_off(self):
+        """Turn off state."""
+        self._state = STATE_OFF
+
+
+@pytest.fixture(params=[ExtendedMediaPlayer, SimpleMediaPlayer])
+def player(hass, request):
+    """Return a media player."""
+    return request.param(hass)
 
 
 async def test_volume_up(player):
@@ -91,7 +151,7 @@ async def test_volume_up(player):
     await player.async_set_volume_level(0.5)
     assert player.volume_level == 0.5
     await player.async_volume_up()
-    assert player.volume_level == 0.7
+    assert player.volume_level == 0.6
 
 
 async def test_volume_down(player):
@@ -100,7 +160,7 @@ async def test_volume_down(player):
     await player.async_set_volume_level(0.5)
     assert player.volume_level == 0.5
     await player.async_volume_down()
-    assert player.volume_level == 0.3
+    assert player.volume_level == 0.4
 
 
 async def test_media_play_pause(player):
