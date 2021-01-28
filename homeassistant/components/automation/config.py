@@ -22,6 +22,7 @@ from .const import (
     CONF_HIDE_ENTITY,
     CONF_INITIAL_STATE,
     CONF_TRIGGER,
+    CONF_TRIGGER_VARIABLES,
     DOMAIN,
 )
 from .helpers import async_get_blueprints
@@ -44,6 +45,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
             vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
             vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+            vol.Optional(CONF_TRIGGER_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
         },
         script.SCRIPT_MODE_SINGLE,

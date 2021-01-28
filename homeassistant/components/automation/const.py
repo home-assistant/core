@@ -4,6 +4,7 @@ import logging
 CONF_CONDITION = "condition"
 CONF_ACTION = "action"
 CONF_TRIGGER = "trigger"
+CONF_TRIGGER_VARIABLES = "trigger_variables"
 DOMAIN = "automation"
 
 CONF_DESCRIPTION = "description"

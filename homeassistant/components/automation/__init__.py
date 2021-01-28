@@ -2,7 +2,6 @@
 import logging
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Set, Union, cast
 
-from jinja2 import ChainableUndefined  # type: ignore
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -61,6 +60,7 @@ from .const import (
     CONF_CONDITION,
     CONF_INITIAL_STATE,
     CONF_TRIGGER,
+    CONF_TRIGGER_VARIABLES,
     DEFAULT_INITIAL_STATE,
     DOMAIN,
     LOGGER,
@@ -222,6 +222,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         action_script,
         initial_state,
         variables,
+        trigger_variables,
     ):
         """Initialize an automation entity."""
         self._id = automation_id
@@ -237,6 +238,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._referenced_devices: Optional[Set[str]] = None
         self._logger = LOGGER
         self._variables: ScriptVariables = variables
+        self._trigger_variables: ScriptVariables = trigger_variables
 
     @property
     def name(self):
@@ -466,31 +468,14 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         def log_cb(level, msg, **kwargs):
             self._logger.log(level, "%s %s", msg, self._name, **kwargs)
 
-        class DummyTrigger(ChainableUndefined):  # type: ignore
-            """Dummy trigger variable to handle the case when a variable reference the trigger."""
-
-            def _dummy(self, *args, **kwargs):
-                return 0
-
-            __add__ = __radd__ = __sub__ = __rsub__ = _dummy
-            __mul__ = __rmul__ = __div__ = __rdiv__ = _dummy
-            __truediv__ = __rtruediv__ = _dummy
-            __floordiv__ = __rfloordiv__ = _dummy
-            __mod__ = __rmod__ = _dummy
-            __pos__ = __neg__ = _dummy
-            __call__ = __getitem__ = _dummy
-            __lt__ = __le__ = __gt__ = __ge__ = _dummy
-            __int__ = __float__ = __complex__ = _dummy
-            __pow__ = __rpow__ = _dummy
-
         variables = None
-        if self._variables:
+        if self._trigger_variables:
             try:
-                variables = self._variables.async_render(
-                    cast(HomeAssistant, self.hass), {"trigger": DummyTrigger()}
+                variables = self._trigger_variables.async_render(
+                    cast(HomeAssistant, self.hass), None, limited=True
                 )
             except template.TemplateError as err:
-                self._logger.error("Error rendering variables: %s", err)
+                self._logger.error("Error rendering trigger variables: %s", err)
                 return None
 
         return await async_initialize_triggers(
@@ -587,6 +572,7 @@ async def _async_process_config(
                 action_script,
                 initial_state,
                 config_block.get(CONF_VARIABLES),
+                config_block.get(CONF_TRIGGER_VARIABLES),
             )
 
             entities.append(entity)
