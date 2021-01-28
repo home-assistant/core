@@ -6,7 +6,6 @@ import logging
 
 from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
-from pyhap.const import CATEGORY_OTHER
 
 from homeassistant.components import cover
 from homeassistant.components.cover import (
@@ -88,13 +87,14 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 SWITCH_TYPES = {
-    TYPE_FAUCET: "Valve",
+    TYPE_FAUCET: "Faucet",
     TYPE_OUTLET: "Outlet",
-    TYPE_SHOWER: "Valve",
-    TYPE_SPRINKLER: "Valve",
+    TYPE_SHOWER: "ShowerHead",
+    TYPE_SPRINKLER: "Sprinkler",
     TYPE_SWITCH: "Switch",
     TYPE_VALVE: "Valve",
 }
+
 TYPES = Registry()
 
 
@@ -245,7 +245,6 @@ class HomeAccessory(Accessory):
         aid,
         config,
         *args,
-        category=CATEGORY_OTHER,
         **kwargs,
     ):
         """Initialize a Accessory object."""
@@ -275,7 +274,6 @@ class HomeAccessory(Accessory):
             firmware_revision=sw_version,
         )
 
-        self.category = category
         self.entity_id = entity_id
         self.hass = hass
         self.debounce = {}
