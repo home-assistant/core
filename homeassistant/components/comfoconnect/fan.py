@@ -28,7 +28,7 @@ CMD_MAPPING = {
     3: CMD_FAN_MODE_HIGH,
 }
 
-SPEED_RANGE = (1, 3)  # off (CMD_FAN_MODE_AWAY) is not included
+SPEED_RANGE = (1, 3)  # away is not included in speeds and instead mapped to off
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
