@@ -200,7 +200,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return self._convert_units(self._current_mode_setpoint_values[0].units)
+        return _convert_units(self._current_mode_setpoint_values[0].units)
 
     @property
     def current_temperature(self):
@@ -209,7 +209,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             return None
         return convert_temperature(
             self.values.temperature.value,
-            self._convert_units(self._current_mode_setpoint_values[0].units),
+            _convert_units(self._current_mode_setpoint_values[0].units),
             self.temperature_unit,
         )
 
@@ -241,7 +241,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         """Return the temperature we try to reach."""
         return convert_temperature(
             self._current_mode_setpoint_values[0].value,
-            self._convert_units(self._current_mode_setpoint_values[0].units),
+            _convert_units(self._current_mode_setpoint_values[0].units),
             self.temperature_unit,
         )
 
@@ -250,7 +250,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         """Return the lowbound target temperature we try to reach."""
         return convert_temperature(
             self._current_mode_setpoint_values[0].value,
-            self._convert_units(self._current_mode_setpoint_values[0].units),
+            _convert_units(self._current_mode_setpoint_values[0].units),
             self.temperature_unit,
         )
 
@@ -259,7 +259,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         """Return the highbound target temperature we try to reach."""
         return convert_temperature(
             self._current_mode_setpoint_values[1].value,
-            self._convert_units(self._current_mode_setpoint_values[1].units),
+            _convert_units(self._current_mode_setpoint_values[1].units),
             self.temperature_unit,
         )
 
@@ -280,7 +280,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
                 target_temp = convert_temperature(
                     target_temp,
                     self.temperature_unit,
-                    self._convert_units(setpoint.units),
+                    _convert_units(setpoint.units),
                 )
                 setpoint.send_value(target_temp)
         elif len(self._current_mode_setpoint_values) == 2:
@@ -291,14 +291,14 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
                 target_temp_low = convert_temperature(
                     target_temp_low,
                     self.temperature_unit,
-                    self._convert_units(setpoint_low.units),
+                    _convert_units(setpoint_low.units),
                 )
                 setpoint_low.send_value(target_temp_low)
             if setpoint_high is not None and target_temp_high is not None:
                 target_temp_high = convert_temperature(
                     target_temp_high,
                     self.temperature_unit,
-                    self._convert_units(setpoint_high.units),
+                    _convert_units(setpoint_high.units),
                 )
                 setpoint_high.send_value(target_temp_high)
 
