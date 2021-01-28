@@ -3,14 +3,10 @@ import logging
 
 from pylutron_caseta import FAN_HIGH, FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_OFF
 
-from homeassistant.components.fan import (
-    DOMAIN,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
-    SUPPORT_SET_SPEED,
-    FanEntity,
+from homeassistant.components.fan import DOMAIN, SUPPORT_SET_SPEED, FanEntity
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
 )
 
 from . import LutronCasetaDevice
@@ -18,23 +14,8 @@ from .const import BRIDGE_DEVICE, BRIDGE_LEAP, DOMAIN as CASETA_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-VALUE_TO_SPEED = {
-    None: SPEED_OFF,
-    FAN_OFF: SPEED_OFF,
-    FAN_LOW: SPEED_LOW,
-    FAN_MEDIUM: SPEED_MEDIUM,
-    FAN_MEDIUM_HIGH: SPEED_MEDIUM,
-    FAN_HIGH: SPEED_HIGH,
-}
-
-SPEED_TO_VALUE = {
-    SPEED_OFF: FAN_OFF,
-    SPEED_LOW: FAN_LOW,
-    SPEED_MEDIUM: FAN_MEDIUM,
-    SPEED_HIGH: FAN_HIGH,
-}
-
-FAN_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+DEFAULT_ON_PERCENTAGE = 50
+ORDERED_NAMED_FAN_SPEEDS = [FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH]
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -61,27 +42,17 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
     """Representation of a Lutron Caseta fan. Including Fan Speed."""
 
     @property
-    def speed(self) -> str:
-        """Return the current speed."""
-        return VALUE_TO_SPEED[self._device["fan_speed"]]
-
-    @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return FAN_SPEEDS
+    def percentage(self) -> str:
+        """Return the current speed percentage."""
+        return ordered_list_item_to_percentage(
+            ORDERED_NAMED_FAN_SPEEDS, self._device["fan_speed"]
+        )
 
     @property
     def supported_features(self) -> int:
         """Flag supported features. Speed Only."""
         return SUPPORT_SET_SPEED
 
-    #
-    # The fan entity model has changed to use percentages and preset_modes
-    # instead of speeds.
-    #
-    # Please review
-    # https://developers.home-assistant.io/docs/core/entity/fan/
-    #
     async def async_turn_on(
         self,
         speed: str = None,
@@ -90,26 +61,30 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
         **kwargs,
     ):
         """Turn the fan on."""
-        if speed is None:
-            speed = SPEED_MEDIUM
-        await self.async_set_speed(speed)
+        if percentage is None:
+            percentage = DEFAULT_ON_PERCENTAGE
+
+        await self.async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs):
         """Turn the fan off."""
-        await self.async_set_speed(SPEED_OFF)
+        await self.async_set_percentage(0)
 
-    async def async_set_speed(self, speed: str) -> None:
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan."""
-        await self._smartbridge.set_fan(self.device_id, SPEED_TO_VALUE[speed])
+        if percentage == 0:
+            named_speed = FAN_OFF
+        else:
+            named_speed = percentage_to_ordered_list_item(
+                ORDERED_NAMED_FAN_SPEEDS, percentage
+            )
+
+        await self._smartbridge.set_fan(self.device_id, named_speed)
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        return VALUE_TO_SPEED[self._device["fan_speed"]] in [
-            SPEED_LOW,
-            SPEED_MEDIUM,
-            SPEED_HIGH,
-        ]
+        return self.percentage and self.percentage > 0
 
     async def async_update(self):
         """Update when forcing a refresh of the device."""
