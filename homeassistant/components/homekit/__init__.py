@@ -655,6 +655,7 @@ class HomeKit:
             state = bridged_states[0]
             conf = self._config.pop(state.entity_id, {})
             acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
+
             self.driver.add_accessory(acc)
         else:
             from .accessories import HomeBridge
@@ -668,7 +669,7 @@ class HomeKit:
             show_setup_message(
                 self.hass,
                 self._entry_id,
-                self._name,
+                self.driver.accessory.display_name,
                 self.driver.state.pincode,
                 self.driver.accessory.xhm_uri(),
             )
