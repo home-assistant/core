@@ -16,6 +16,7 @@ CONF_VOLUME = "volume"
 CONF_PITCH = "pitch"
 CONF_CONTOUR = "contour"
 CONF_REGION = "region"
+CONF_OUTPUT = "output"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,12 +65,22 @@ SUPPORTED_LANGUAGES = [
     "zh-tw",
 ]
 
+OUTPUTS = {
+    "wav-8": ("wav", "riff-8khz-16bit-mono-pcm"),
+    "wav-16": ("wav", "riff-16khz-16bit-mono-pcm"),
+    "wav-24": ("wav", "riff-24khz-16bit-mono-pcm"),
+    "mp3-16": ("mp3", "audio-16khz-128kbitrate-mono-mp3"),
+    "mp3-24": ("mp3", "audio-24khz-160kbitrate-mono-mp3"),
+    "ogg-16": ("ogg", "ogg-16khz-16bit-mono-opus"),
+    "ogg-24": ("ogg", "ogg-24khz-16bit-mono-opus"),
+}
+
 GENDERS = ["Female", "Male"]
 
 DEFAULT_LANG = "en-us"
 DEFAULT_GENDER = "Female"
 DEFAULT_TYPE = "ZiraRUS"
-DEFAULT_OUTPUT = "audio-16khz-128kbitrate-mono-mp3"
+DEFAULT_OUTPUT = "mp3-16"
 DEFAULT_RATE = 0
 DEFAULT_VOLUME = 0
 DEFAULT_PITCH = "default"
@@ -91,6 +102,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PITCH, default=DEFAULT_PITCH): cv.string,
         vol.Optional(CONF_CONTOUR, default=DEFAULT_CONTOUR): cv.string,
         vol.Optional(CONF_REGION, default=DEFAULT_REGION): cv.string,
+        vol.Optional(CONF_OUTPUT, default=DEFAULT_OUTPUT): vol.In(OUTPUTS),
     }
 )
 
@@ -107,6 +119,7 @@ def get_engine(hass, config, discovery_info=None):
         config[CONF_PITCH],
         config[CONF_CONTOUR],
         config[CONF_REGION],
+        config[CONF_OUTPUT],
     )
 
 
@@ -114,14 +127,15 @@ class MicrosoftProvider(Provider):
     """The Microsoft speech API provider."""
 
     def __init__(
-        self, apikey, lang, gender, ttype, rate, volume, pitch, contour, region
+        self, apikey, lang, gender, ttype, rate, volume, pitch, contour, region, output
     ):
         """Init Microsoft TTS service."""
         self._apikey = apikey
         self._lang = lang
         self._gender = gender
         self._type = ttype
-        self._output = DEFAULT_OUTPUT
+        self._extension = OUTPUTS[output][0]
+        self._output = OUTPUTS[output][1]
         self._rate = f"{rate}{PERCENTAGE}"
         self._volume = f"{volume}{PERCENTAGE}"
         self._pitch = pitch
@@ -160,4 +174,4 @@ class MicrosoftProvider(Provider):
         except HTTPException as ex:
             _LOGGER.error("Error occurred for Microsoft TTS: %s", ex)
             return (None, None)
-        return ("mp3", data)
+        return (self._extension, data)
