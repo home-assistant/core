@@ -21,8 +21,6 @@ from homeassistant.components.homekit.const import (
     TYPE_VALVE,
 )
 from homeassistant.components.homekit.util import (
-    HomeKitSpeedMapping,
-    SpeedRange,
     cleanup_name_for_homekit,
     convert_to_float,
     density_to_air_quality,
@@ -249,63 +247,6 @@ async def test_dismiss_setup_msg(hass):
 
     assert call_dismiss_notification
     assert call_dismiss_notification[0].data[ATTR_NOTIFICATION_ID] == "entry_id"
-
-
-def test_homekit_speed_mapping():
-    """Test if the SpeedRanges from a speed_list are as expected."""
-    # A standard 2-speed fan
-    speed_mapping = HomeKitSpeedMapping(["off", "low", "high"])
-    assert speed_mapping.speed_ranges == {
-        "off": SpeedRange(0, 0),
-        "low": SpeedRange(100 / 3, 50),
-        "high": SpeedRange(200 / 3, 100),
-    }
-
-    # A standard 3-speed fan
-    speed_mapping = HomeKitSpeedMapping(["off", "low", "medium", "high"])
-    assert speed_mapping.speed_ranges == {
-        "off": SpeedRange(0, 0),
-        "low": SpeedRange(100 / 4, 100 / 3),
-        "medium": SpeedRange(200 / 4, 200 / 3),
-        "high": SpeedRange(300 / 4, 100),
-    }
-
-    # a Dyson-like fan with 10 speeds
-    speed_mapping = HomeKitSpeedMapping([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-    assert speed_mapping.speed_ranges == {
-        0: SpeedRange(0, 0),
-        1: SpeedRange(10, 100 / 9),
-        2: SpeedRange(20, 200 / 9),
-        3: SpeedRange(30, 300 / 9),
-        4: SpeedRange(40, 400 / 9),
-        5: SpeedRange(50, 500 / 9),
-        6: SpeedRange(60, 600 / 9),
-        7: SpeedRange(70, 700 / 9),
-        8: SpeedRange(80, 800 / 9),
-        9: SpeedRange(90, 100),
-    }
-
-
-def test_speed_to_homekit():
-    """Test speed conversion from HA to Homekit."""
-    speed_mapping = HomeKitSpeedMapping(["off", "low", "high"])
-    assert speed_mapping.speed_to_homekit(None) is None
-    assert speed_mapping.speed_to_homekit("off") == 0
-    assert speed_mapping.speed_to_homekit("low") == 50
-    assert speed_mapping.speed_to_homekit("high") == 100
-
-
-def test_speed_to_states():
-    """Test speed conversion from Homekit to HA."""
-    speed_mapping = HomeKitSpeedMapping(["off", "low", "high"])
-    assert speed_mapping.speed_to_states(-1) == "off"
-    assert speed_mapping.speed_to_states(0) == "off"
-    assert speed_mapping.speed_to_states(33) == "off"
-    assert speed_mapping.speed_to_states(34) == "low"
-    assert speed_mapping.speed_to_states(50) == "low"
-    assert speed_mapping.speed_to_states(66) == "low"
-    assert speed_mapping.speed_to_states(67) == "high"
-    assert speed_mapping.speed_to_states(100) == "high"
 
 
 async def test_port_is_available(hass):
