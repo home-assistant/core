@@ -947,6 +947,7 @@ async def test_automation_with_error_in_script(hass, caplog):
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert "Service not found" in caplog.text
+    assert "Traceback" not in caplog.text
 
 
 async def test_automation_with_error_in_script_2(hass, caplog):
