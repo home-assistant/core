@@ -165,6 +165,12 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         self._hvac_presets = {}
         self.on_value_update()
 
+    def _convert_units(units):
+        """Return units as a farenheit or celsius constant."""
+        if units == "F":
+            return TEMP_FAHRENHEIT
+        return TEMP_CELSIUS
+
     @callback
     def on_value_update(self):
         """Call when the underlying values object changes."""
@@ -396,12 +402,6 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             all_modes[HVAC_MODE_HEAT] = None
         self._hvac_modes = all_modes
         self._hvac_presets = all_presets
-
-    def _convert_units(units):
-        """Return units as a farenheit or celsius constant."""
-        if units == "F":
-            return TEMP_FAHRENHEIT
-        return TEMP_CELSIUS
 
 def _get_list_id(value_lst, value_lbl):
     """Return the id for the value in the list."""
