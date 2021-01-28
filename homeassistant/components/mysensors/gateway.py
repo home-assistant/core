@@ -64,21 +64,6 @@ async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bo
     if user_input[CONF_DEVICE] == MQTT_COMPONENT:
         return True  # dont validate mqtt. mqtt gateways dont send ready messages :(
     try:
-        gateway: Optional[BaseAsyncGateway] = await _get_gateway(
-            hass,
-            gateway_id=None,
-            device=user_input[CONF_DEVICE],
-            version=user_input[CONF_VERSION],
-            persistence_file=user_input.get(CONF_PERSISTENCE_FILE),
-            baud_rate=user_input.get(CONF_BAUD_RATE),
-            tcp_port=user_input.get(CONF_TCP_PORT),
-            topic_in_prefix=None,
-            topic_out_prefix=None,
-            retain=False,
-            persistence=False,
-        )
-        if gateway is None:
-            return False
         gateway_ready = asyncio.Future()
 
         def gateway_ready_callback(msg):
@@ -92,7 +77,22 @@ async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bo
             _LOGGER.debug("Received gateway ready")
             gateway_ready.set_result(True)
 
-        gateway.event_callback = gateway_ready_callback
+        gateway: Optional[BaseAsyncGateway] = await _get_gateway(
+            hass,
+            device=user_input[CONF_DEVICE],
+            version=user_input[CONF_VERSION],
+            event_callback=gateway_ready_callback,
+            persistence_file=None,
+            baud_rate=user_input.get(CONF_BAUD_RATE),
+            tcp_port=user_input.get(CONF_TCP_PORT),
+            topic_in_prefix=None,
+            topic_out_prefix=None,
+            retain=False,
+            persistence=False,
+        )
+        if gateway is None:
+            return False
+
         connect_task = None
         try:
             connect_task = asyncio.create_task(gateway.start())
@@ -128,10 +128,12 @@ async def setup_gateway(
 
     ready_gateway = await _get_gateway(
         hass,
-        gateway_id=entry.entry_id,
         device=entry.data[CONF_DEVICE],
         version=entry.data[CONF_VERSION],
-        persistence_file=entry.data.get(CONF_PERSISTENCE_FILE),
+        event_callback=_gw_callback_factory(hass, entry.entry_id),
+        persistence_file=entry.data.get(
+            CONF_PERSISTENCE_FILE, f"mysensors_{entry.entry_id}.json"
+        ),
         baud_rate=entry.data.get(CONF_BAUD_RATE),
         tcp_port=entry.data.get(CONF_TCP_PORT),
         topic_in_prefix=entry.data.get(CONF_TOPIC_IN_PREFIX),
@@ -143,9 +145,9 @@ async def setup_gateway(
 
 async def _get_gateway(
     hass: HomeAssistantType,
-    gateway_id: Optional[GatewayId],
     device: str,
     version: str,
+    event_callback: Callable[[Message], None],
     persistence_file: Optional[str] = None,
     baud_rate: Optional[int] = None,
     tcp_port: Optional[int] = None,
@@ -156,10 +158,9 @@ async def _get_gateway(
 ) -> Optional[BaseAsyncGateway]:
     """Return gateway after setup of the gateway."""
 
-    if persistence_file is None and gateway_id is not None:
-        persistence_file = f"mysensors_{gateway_id}.json"
-    # interpret relative paths to be in hass config folder. absolute paths will be left as they are
-    persistence_file = hass.config.path(persistence_file)
+    if persistence_file is not None:
+        # interpret relative paths to be in hass config folder. absolute paths will be left as they are
+        persistence_file = hass.config.path(persistence_file)
 
     if device == MQTT_COMPONENT:
         # what is the purpose of this?
@@ -222,8 +223,7 @@ async def _get_gateway(
                 # invalid ip address
                 _LOGGER.error("Connect failed: Invalid device %s", device)
                 return None
-    if gateway_id is not None:
-        gateway.event_callback = _gw_callback_factory(hass, gateway_id)
+    gateway.event_callback = event_callback
     if persistence:
         await gateway.start_persistence()
 
