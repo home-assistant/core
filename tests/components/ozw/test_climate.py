@@ -144,11 +144,11 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     assert len(sent_messages) == 7  # 2 messages !
     msg = sent_messages[-2]  # low setpoint
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
-    assert round(msg["payload"]["Value"], 2) == 68.0
+    assert round(msg["payload"]["Value"], 2) == 20.0
     assert msg["payload"]["ValueIDKey"] == 281475099443218
     msg = sent_messages[-1]  # high setpoint
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
-    assert round(msg["payload"]["Value"], 2) == 77.0
+    assert round(msg["payload"]["Value"], 2) == 25.0
     assert msg["payload"]["ValueIDKey"] == 562950076153874
 
     # Test basic/single-setpoint thermostat (node 16 in dump)
