@@ -1,7 +1,7 @@
 """Constants for Stream component."""
 DOMAIN = "stream"
 
-CONF_STREAM_SOURCE = "stream_source"
+CONF_STREAM_ID = "stream_id"
 CONF_LOOKBACK = "lookback"
 CONF_DURATION = "duration"
 

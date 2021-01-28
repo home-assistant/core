@@ -13,6 +13,8 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video
 
+STREAM_ID = "test_stream_id"
+
 
 async def test_hls_stream(hass, hass_client, stream_worker_sync):
     """
@@ -27,7 +29,7 @@ async def test_hls_stream(hass, hass_client, stream_worker_sync):
 
     # Setup demo HLS track
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, STREAM_ID, source)
 
     # Request stream
     url = stream.stream_view_url("hls")
@@ -71,7 +73,7 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync):
 
     # Setup demo HLS track
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, STREAM_ID, source)
 
     # Request stream
     url = stream.stream_view_url("hls")
@@ -111,7 +113,7 @@ async def test_stream_ended(hass, stream_worker_sync):
 
     # Setup demo HLS track
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, STREAM_ID, source)
     track = stream.add_provider("hls")
 
     # Request stream
@@ -140,7 +142,7 @@ async def test_stream_keepalive(hass):
 
     # Setup demo HLS track
     source = "test_stream_keepalive_source"
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, STREAM_ID, source)
     track = stream.add_provider("hls")
     track.num_segments = 2
     stream.start()
@@ -162,7 +164,6 @@ async def test_stream_keepalive(hass):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
         mock_time.time.side_effect = time_side_effect
         # Request stream
-        stream = create_stream(hass, source)
         stream.keepalive = True
         stream.start()
         stream._thread.join()

@@ -18,6 +18,7 @@ from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video
 
 TEST_TIMEOUT = 10
+STREAM_ID = "stream_id"
 
 
 class SaveRecordWorkerSync:
@@ -76,7 +77,7 @@ async def test_record_stream(hass, hass_client, stream_worker_sync, record_worke
 
     # Setup demo track
     source = generate_h264_video()
-    stream = create_stream(hass, source)
+    stream = create_stream(hass, STREAM_ID, source)
     recorder = stream.add_provider("recorder")
     stream.start()
 
@@ -110,7 +111,7 @@ async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
     with patch("homeassistant.components.stream.IdleTimer.fire") as mock_timeout:
         # Setup demo track
         source = generate_h264_video()
-        stream = create_stream(hass, source)
+        stream = create_stream(hass, STREAM_ID, source)
         recorder = stream.add_provider("recorder", timeout=30)
         stream.start()
 
@@ -166,7 +167,8 @@ async def test_record_stream_audio(
         source = generate_h264_video(
             container_format="mov", audio_codec=a_codec
         )  # mov can store PCM
-        stream = create_stream(hass, source)
+        stream_id = f"{STREAM_ID}-{a_codec}"
+        stream = create_stream(hass, stream_id, source)
         recorder = stream.add_provider("recorder")
         stream.start()
 

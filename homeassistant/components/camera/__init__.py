@@ -27,7 +27,7 @@ from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.stream.const import (
     CONF_DURATION,
     CONF_LOOKBACK,
-    CONF_STREAM_SOURCE,
+    CONF_STREAM_ID,
     DOMAIN as DOMAIN_STREAM,
     FORMAT_CONTENT_TYPE,
     OUTPUT_FORMATS,
@@ -369,7 +369,9 @@ class Camera(Entity):
                 source = await self.stream_source()
             if not source:
                 return None
-            self.stream = create_stream(self.hass, source, options=self.stream_options)
+            self.stream = create_stream(
+                self.hass, self.entity_id, source, options=self.stream_options
+            )
 
         # Update keepalive setting which manages idle shutdown
         camera_prefs = self.hass.data[DATA_CAMERA_PREFS].get(self.entity_id)
@@ -718,9 +720,9 @@ async def async_handle_play_stream_service(camera, service_call):
 async def async_handle_record_service(camera, call):
     """Handle stream recording service calls."""
     async with async_timeout.timeout(10):
-        source = await camera.stream_source()
+        stream = await camera.create_stream()
 
-    if not source:
+    if not stream:
         raise HomeAssistantError(f"{camera.entity_id} does not support record service")
 
     hass = camera.hass
@@ -729,7 +731,7 @@ async def async_handle_record_service(camera, call):
     video_path = filename.async_render(variables={ATTR_ENTITY_ID: camera})
 
     data = {
-        CONF_STREAM_SOURCE: source,
+        CONF_STREAM_ID: stream.stream_id,
         CONF_FILENAME: video_path,
         CONF_DURATION: call.data[CONF_DURATION],
         CONF_LOOKBACK: call.data[CONF_LOOKBACK],

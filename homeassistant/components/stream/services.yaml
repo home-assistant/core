@@ -1,6 +1,9 @@
 record:
-  description: Make a .mp4 recording from a provided stream.
+  description: Make a .mp4 recording from a provided stream. This is an internal service meant to be called by other components.
   fields:
+    stream_id:
+      description: The stream identifier of the stream to record.
+      example: "stream_id"
     stream_source:
       description: The input source for the stream.
       example: "rtsp://my.stream.feed:554"

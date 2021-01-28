@@ -32,7 +32,7 @@ from .const import (
     ATTR_STREAMS,
     CONF_DURATION,
     CONF_LOOKBACK,
-    CONF_STREAM_SOURCE,
+    CONF_STREAM_ID,
     DOMAIN,
     MAX_SEGMENTS,
     OUTPUT_IDLE_TIMEOUT,
@@ -45,7 +45,7 @@ from .hls import async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
 
-STREAM_SERVICE_SCHEMA = vol.Schema({vol.Required(CONF_STREAM_SOURCE): cv.string})
+STREAM_SERVICE_SCHEMA = vol.Schema({vol.Required(CONF_STREAM_ID): cv.string})
 
 SERVICE_RECORD_SCHEMA = STREAM_SERVICE_SCHEMA.extend(
     {
@@ -56,14 +56,17 @@ SERVICE_RECORD_SCHEMA = STREAM_SERVICE_SCHEMA.extend(
 )
 
 
-def create_stream(hass, stream_source, options=None):
-    """Create a stream based on the source url.
+def create_stream(hass, stream_id, stream_source, options=None):
+    """Create a stream with the specified identfier based on the source url.
 
     The stream_source is typically an rtsp url and options are passed into
     pyav / ffmpeg as options.
     """
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
+
+    if stream_id in hass.data[DOMAIN][ATTR_STREAMS]:
+        raise HomeAssistantError(f"Stream '{stream_id}' already exists.")
 
     if options is None:
         options = {}
@@ -76,8 +79,8 @@ def create_stream(hass, stream_source, options=None):
             **options,
         }
 
-    stream = Stream(hass, stream_source, options=options)
-    hass.data[DOMAIN][ATTR_STREAMS].append(stream)
+    stream = Stream(hass, stream_id, stream_source, options=options)
+    hass.data[DOMAIN][ATTR_STREAMS][stream_id] = stream
     return stream
 
 
@@ -93,7 +96,7 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
-    hass.data[DOMAIN][ATTR_STREAMS] = []
+    hass.data[DOMAIN][ATTR_STREAMS] = {}
 
     # Setup HLS
     hls_endpoint = async_setup_hls(hass)
@@ -105,7 +108,7 @@ async def async_setup(hass, config):
     @callback
     def shutdown(event):
         """Stop all stream workers."""
-        for stream in hass.data[DOMAIN][ATTR_STREAMS]:
+        for stream in hass.data[DOMAIN][ATTR_STREAMS].values():
             stream.keepalive = False
             stream.stop()
         _LOGGER.info("Stopped stream workers")
@@ -126,9 +129,10 @@ async def async_setup(hass, config):
 class Stream:
     """Represents a single stream."""
 
-    def __init__(self, hass, source, options=None):
+    def __init__(self, hass, stream_id, source, options=None):
         """Initialize a stream."""
         self.hass = hass
+        self.stream_id = stream_id
         self.source = source
         self.options = options
         self.keepalive = False
@@ -254,17 +258,9 @@ class Stream:
             _LOGGER.info("Stopped stream: %s", self.source)
 
 
-def _get_stream_by_source(hass, stream_source):
-    """Find an existing stream by its source."""
-    for stream in hass.data[DOMAIN][ATTR_STREAMS]:
-        if stream.source == stream_source:
-            return stream
-    return None
-
-
 async def async_handle_record_service(hass, call):
     """Handle save video service calls."""
-    stream_source = call.data[CONF_STREAM_SOURCE]
+    stream_id = call.data[CONF_STREAM_ID]
     video_path = call.data[CONF_FILENAME]
     duration = call.data[CONF_DURATION]
     lookback = call.data[CONF_LOOKBACK]
@@ -273,9 +269,9 @@ async def async_handle_record_service(hass, call):
     if not hass.config.is_allowed_path(video_path):
         raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
 
-    stream = _get_stream_by_source(hass, stream_source)
+    stream = hass.data[DOMAIN][ATTR_STREAMS].get(stream_id)
     if not stream:
-        stream = create_stream(hass, stream_source)
+        raise HomeAssistantError(f"Stream '{stream_id}' does not exist")
 
     # Add recorder
     recorder = stream.outputs.get("recorder")

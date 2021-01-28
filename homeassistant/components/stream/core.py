@@ -194,7 +194,11 @@ class StreamView(HomeAssistantView):
         hass = request.app["hass"]
 
         stream = next(
-            (s for s in hass.data[DOMAIN][ATTR_STREAMS] if s.access_token == token),
+            (
+                s
+                for s in hass.data[DOMAIN][ATTR_STREAMS].values()
+                if s.access_token == token
+            ),
             None,
         )
 
