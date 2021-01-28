@@ -2,7 +2,12 @@
 import asyncio
 
 from pyairvisual import CloudAPI, NodeSamba
-from pyairvisual.errors import InvalidKeyError, NodeProError
+from pyairvisual.errors import (
+    AirVisualError,
+    InvalidKeyError,
+    NodeProError,
+    NotFoundError,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -132,21 +137,38 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if integration_type == INTEGRATION_TYPE_GEOGRAPHY_COORDS:
+            coro = cloud_api.air_quality.nearest_city()
             error_schema = self.geography_coords_schema
             error_step = "geography_by_coords"
         else:
+            coro = cloud_api.air_quality.city(
+                user_input[CONF_CITY], user_input[CONF_STATE], user_input[CONF_COUNTRY]
+            )
             error_schema = GEOGRAPHY_NAME_SCHEMA
             error_step = "geography_by_name"
 
         async with valid_keys_lock:
             if user_input[CONF_API_KEY] not in valid_keys:
                 try:
-                    await cloud_api.air_quality.nearest_city()
+                    await coro
                 except InvalidKeyError:
                     return self.async_show_form(
                         step_id=error_step,
                         data_schema=error_schema,
                         errors={CONF_API_KEY: "invalid_api_key"},
+                    )
+                except NotFoundError:
+                    return self.async_show_form(
+                        step_id=error_step,
+                        data_schema=error_schema,
+                        errors={CONF_CITY: "location_not_found"},
+                    )
+                except AirVisualError as err:
+                    LOGGER.error(err)
+                    return self.async_show_form(
+                        step_id=error_step,
+                        data_schema=error_schema,
+                        errors={CONF_CITY: "unknown"},
                     )
 
                 valid_keys.add(user_input[CONF_API_KEY])
