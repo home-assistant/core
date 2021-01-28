@@ -332,7 +332,7 @@ class ControllerDevice(ClimateEntity):
         if not self._supported_features & SUPPORT_TARGET_TEMPERATURE:
             zone_ctrl = self._controller.zone_ctrl
             zone = next(
-                (z for z in self.zones.values() if z._zone.index == zone_ctrl), None
+                (z for z in self.zones.values() if z.zone_index == zone_ctrl), None
             )
             if zone is None:
                 return None
@@ -345,11 +345,11 @@ class ControllerDevice(ClimateEntity):
         if not self._supported_features & SUPPORT_TARGET_TEMPERATURE:
             zone_ctrl = self._controller.zone_ctrl
             zone = next(
-                (z for z in self.zones.values() if z._zone.index == zone_ctrl), None
+                (z for z in self.zones.values() if z.zone_index == zone_ctrl), None
             )
             if zone is None:
                 return None
-            return zone._zone.temp_setpoint
+            return zone.target_temperature
         return None
 
     @property
@@ -607,6 +607,11 @@ class ZoneDevice(ClimateEntity):
         """Turn device off (close zone)."""
         await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.CLOSE))
         self.async_write_ha_state()
+
+    @property
+    def zone_index(self):
+        """Return the zone index for matching to CtrlZone."""
+        return self._zone.index
 
     @property
     def device_state_attributes(self):
