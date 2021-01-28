@@ -332,7 +332,7 @@ class ControllerDevice(ClimateEntity):
         if not self._supported_features & SUPPORT_TARGET_TEMPERATURE:
             zone_ctrl = self._controller.zone_ctrl
             zone = next(
-                (z for z in self.zones.values() if z.zone_index == zone_ctrl), None
+                (z for z in self.zones.values() if z._zone.index == zone_ctrl), None
             )
             if zone is None:
                 return None
@@ -345,7 +345,7 @@ class ControllerDevice(ClimateEntity):
         if not self._supported_features & SUPPORT_TARGET_TEMPERATURE:
             zone_ctrl = self._controller.zone_ctrl
             zone = next(
-                (z for z in self.zones.values() if z.zone_index == zone_ctrl), None
+                (z for z in self.zones.values() if z._zone.index == zone_ctrl), None
             )
             if zone is None:
                 return None
@@ -612,5 +612,5 @@ class ZoneDevice(ClimateEntity):
     def device_state_attributes(self):
         """Return the optional state attributes."""
         return {
-            "zone_index": self.zone_index,
+            "zone_index": self._zone.index,
         }
