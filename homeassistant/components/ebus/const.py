@@ -25,7 +25,6 @@ PRIO_OFF = 9  # there is not OFF
 SCAN = "scan"
 
 CONF_CIRCUITINFOS = "circuitinfos"
-CONF_CIRCUITMAP = "circuitmap"
 CONF_MSGDEFCODES = "msgdefcodes"
 
 DEFAULT_HOST = "127.0.0.1"
