@@ -1383,10 +1383,10 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "now",
             ]
             hass_filters = ["closest", "expand"]
-            for g in hass_globals:
-                self.globals[g] = unsupported(g)
-            for f in hass_filters:
-                self.filters[f] = unsupported(f)
+            for glob in hass_globals:
+                self.globals[glob] = unsupported(glob)
+            for filt in hass_filters:
+                self.filters[filt] = unsupported(filt)
             return
 
         # We mark these as a context functions to ensure they get
