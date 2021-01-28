@@ -119,6 +119,25 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             },
         )
 
+    async def async_redirect_camera_stream(service):
+        if "camera_entity_id" not in service.data:
+            return
+        if "player_entity_id" not in service.data:
+            return
+        camera_entity_id = service.data["camera_entity_id"]
+        camera_component = hass.data.get("camera")
+        camera = camera_component.get_entity(camera_entity_id)
+        stream_source = await camera.stream_source()
+
+        player_entity_id = service.data["player_entity_id"]
+        player_state = hass.states.get(player_entity_id)
+        player_attr = player_state.attributes
+        speaker_ws_url = player_attr.get("ais_ws_url")
+
+        await ais_gate.async_redirect_camera_stream(
+            speaker_ws_url, stream_source, camera_entity_id
+        )
+
     def play_text_or_url(service):
         # text
         text = service.data["text"].strip()
@@ -140,6 +159,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         "ais_exo_player", "redirect_media", async_redirect_media
     )
     hass.services.async_register("ais_exo_player", "play_text_or_url", play_text_or_url)
+    hass.services.async_register(
+        "ais_exo_player", "redirect_camera_stream", async_redirect_camera_stream
+    )
 
     name = config.get(CONF_NAME)
     _ip = config.get(CONF_IP_ADDRESS)

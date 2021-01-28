@@ -138,7 +138,6 @@ async def async_ais_audio_books_library(media_content_id, ais_gate) -> BrowseMed
             can_expand=True,
             can_play=False,
             children=ais_authors,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/book-music.svg",
         )
     elif media_content_id.count("/") == 1:
         # get books for author
@@ -174,7 +173,6 @@ async def async_ais_audio_books_library(media_content_id, ais_gate) -> BrowseMed
             can_expand=True,
             can_play=False,
             children=ais_books,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/book-music.svg",
         )
     else:
         # get book chapters
@@ -206,7 +204,6 @@ async def async_ais_audio_books_library(media_content_id, ais_gate) -> BrowseMed
                 can_expand=True,
                 can_play=False,
                 children=ais_book_chapters,
-                thumbnail="http://www.ai-speaker.com/images/media-browser/book-music.svg",
             )
         except Exception as error:  # pylint: disable=broad-except
             _LOGGER.error("Can't load chapters: %s", error)
@@ -239,7 +236,6 @@ async def async_ais_podcast_library(media_content_id, ais_gate) -> BrowseMedia:
             can_expand=True,
             can_play=False,
             children=ais_podcast_types,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/podcast.svg",
         )
     elif media_content_id.count("/") == 1:
         # get podcasts for types
@@ -269,7 +265,6 @@ async def async_ais_podcast_library(media_content_id, ais_gate) -> BrowseMedia:
             can_expand=True,
             can_play=False,
             children=ais_radio_stations,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/podcast.svg",
         )
     else:
         # get podcast tracks
@@ -300,7 +295,6 @@ async def async_ais_podcast_library(media_content_id, ais_gate) -> BrowseMedia:
                 media_content_type=MEDIA_TYPE_CHANNELS,
                 can_expand=True,
                 can_play=False,
-                thumbnail="http://www.ai-speaker.com/images/media-browser/podcast.svg",
                 children=ais_podcast_episodes,
             )
         else:
@@ -332,7 +326,6 @@ async def async_ais_radio_library(media_content_id, ais_gate) -> BrowseMedia:
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/radio.svg",
             children=ais_radio_types,
         )
     else:
@@ -358,7 +351,6 @@ async def async_ais_radio_library(media_content_id, ais_gate) -> BrowseMedia:
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/radio.svg",
             children=ais_radio_stations,
         )
     return root

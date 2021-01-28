@@ -1,9 +1,9 @@
 # Describes the format for available AIS cloud services
 cec_command:
-  description: Wysłanie komendy HDMI-CEC
+  description: Wysłanie komendy HDMI-CEC, dostpne komendy https://www.cec-o-matic.com
   fields:
     command:
-      description: komenda, np. 0x40 0x04 (One Touch Play), 0x40 0x36 (System Standby),
+      description: komenda, np. 0x40 0x04 (One Touch Play from Playback 1 to TV), 0x40 0x36 (System Standby from Playback 1 to TV),
       example: '0x40 0x04'
 
 change_host_name:

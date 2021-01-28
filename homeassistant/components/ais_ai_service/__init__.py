@@ -26,7 +26,6 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_IP_ADDRESS,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_TOGGLE,
@@ -3173,9 +3172,7 @@ async def _publish_command_to_frame(hass, key, val, ip=None):
         component = hass.data.get("camera")
         camera = component.get_entity(val)
         stream_source = await camera.stream_source()
-        requests_json = {
-            "showCamera": {"streamUrl": stream_source, "openAutomationName": ""}
-        }
+        requests_json = {"showCamera": {"streamUrl": stream_source, "haCamId": val}}
     else:
         requests_json = {key: val, "ip": ip}
     try:

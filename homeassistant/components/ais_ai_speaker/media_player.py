@@ -68,6 +68,7 @@ class AisPlayerDevice(MediaPlayerEntity):
         """Initialize the Ais Player device."""
         self._ais_gate = ais_gate_instance
         self._ais_id = None
+        self._ais_ws_url = None
         self._ais_product = None
         self._ais_manufacturer = None
         self._ais_model = None
@@ -115,6 +116,7 @@ class AisPlayerDevice(MediaPlayerEntity):
             _LOGGER.warning("Problem to fetch status from AI Speaker %s", ais_info)
             return
         self._ais_id = ais_info["ais_id"]
+        self._ais_ws_url = ais_info["ais_url"]
         self._ais_product = ais_info.get("Product", "Player")
         self._ais_manufacturer = ais_info.get("Manufacturer", "AIS")
         self._ais_model = ais_info.get("Model", "Speaker")
@@ -249,6 +251,7 @@ class AisPlayerDevice(MediaPlayerEntity):
         """Return the specific state attributes of the player."""
         return {
             "ais_id": self._ais_id,
+            "ais_ws_url": self._ais_ws_url,
             "ais_exo_version": "2.2",
         }
 
