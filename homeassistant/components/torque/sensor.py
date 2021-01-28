@@ -8,12 +8,14 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_EMAIL, CONF_NAME, DEGREE
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.restore_state import RestoreEntity
 
 API_PATH = "/api/torque"
 
 DEFAULT_NAME = "vehicle"
 DOMAIN = "torque"
+CONF_PIDS = "pids"
+CONF_UNIT = "unit"
 
 ENTITY_NAME_FORMAT = "{0} {1}"
 
@@ -30,6 +32,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_EMAIL): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PIDS, default={}): vol.Schema(
+            {
+                cv.string: vol.Schema(
+                    {
+                        vol.Required(CONF_NAME): cv.string,
+                        vol.Optional(CONF_UNIT): cv.string,
+                    }
+                )
+            }
+        ),
     }
 )
 
@@ -43,7 +55,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Torque platform."""
     vehicle = config.get(CONF_NAME)
     email = config.get(CONF_EMAIL)
+    pids = config.get(CONF_PIDS)
+
     sensors = {}
+    for pid, data in pids.items():
+        pid = convert_pid(pid)
+        name = ENTITY_NAME_FORMAT.format(vehicle, data[CONF_NAME])
+        sensors[pid] = TorqueSensor(pid, name, data[CONF_UNIT])
+        add_entities([sensors[pid]])
 
     hass.http.register_view(
         TorqueReceiveDataView(email, vehicle, sensors, add_entities)
@@ -75,6 +94,7 @@ class TorqueReceiveDataView(HomeAssistantView):
 
         names = {}
         units = {}
+        values = {}
         for key in data:
             is_name = NAME_KEY.match(key)
             is_unit = UNIT_KEY.match(key)
@@ -93,27 +113,44 @@ class TorqueReceiveDataView(HomeAssistantView):
                 units[pid] = temp_unit
             elif is_value:
                 pid = convert_pid(is_value.group(1))
+                values[pid] = data[key]
                 if pid in self.sensors:
-                    self.sensors[pid].async_on_update(data[key])
+                    self.sensors[pid].async_on_update(values[pid])
 
         for pid in names:
             if pid not in self.sensors:
                 self.sensors[pid] = TorqueSensor(
-                    ENTITY_NAME_FORMAT.format(self.vehicle, names[pid]), units.get(pid)
+                    pid,
+                    ENTITY_NAME_FORMAT.format(self.vehicle, names[pid]),
+                    units.get(pid),
                 )
                 hass.async_add_job(self.add_entities, [self.sensors[pid]])
 
         return "OK!"
 
 
-class TorqueSensor(Entity):
+class TorqueSensor(RestoreEntity):
     """Representation of a Torque sensor."""
 
-    def __init__(self, name, unit):
+    def __init__(self, pid, name, unit):
         """Initialize the sensor."""
+        self._attrs = {"pid": f"{pid:x}"}
         self._name = name
         self._unit = unit
         self._state = None
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
+        if not state:
+            return
+        self._state = state.state
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
+        return self._attrs
 
     @property
     def name(self):
