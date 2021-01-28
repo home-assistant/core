@@ -127,7 +127,7 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     assert state is not None
     assert state.state == HVAC_MODE_HEAT_COOL
     assert state.attributes.get(ATTR_TEMPERATURE) is None
-    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 21.1
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 70.0
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 25.6
 
     # Test setting high/low temp on multiple setpoints
