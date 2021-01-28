@@ -535,7 +535,7 @@ async def test_flow_hassio_discovery(hass):
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["result"].data == {
-        CONF_HOST: "mock-deconz",
+        CONF_HOST: "core-deconz",
         CONF_PORT: 80,
         CONF_API_KEY: API_KEY,
     }
@@ -565,7 +565,7 @@ async def test_hassio_discovery_update_configuration(hass):
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-    assert config_entry.data[CONF_HOST] == "2.3.4.5"
+    assert config_entry.data[CONF_HOST] == "core-deconz"
     assert config_entry.data[CONF_PORT] == 8080
     assert config_entry.data[CONF_API_KEY] == "updated"
     assert len(mock_setup_entry.mock_calls) == 1
