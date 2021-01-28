@@ -541,7 +541,7 @@ class HomeDriver(AccessoryDriver):
         show_setup_message(
             self.hass,
             self._entry_id,
-            self._bridge_name,
+            self.accessory.display_name,
             self.state.pincode,
             self.accessory.xhm_uri(),
         )
