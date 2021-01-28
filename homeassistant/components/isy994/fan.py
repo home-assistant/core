@@ -1,36 +1,22 @@
 """Support for ISY994 fans."""
+import math
 from typing import Callable
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
-from homeassistant.components.fan import (
-    DOMAIN as FAN,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import DOMAIN as FAN, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util.percentage import (
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
+)
 
 from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
 from .entity import ISYNodeEntity, ISYProgramEntity
 from .helpers import migrate_old_unique_ids
 
-VALUE_TO_STATE = {
-    0: SPEED_OFF,
-    63: SPEED_LOW,
-    64: SPEED_LOW,
-    190: SPEED_MEDIUM,
-    191: SPEED_MEDIUM,
-    255: SPEED_HIGH,
-}
-
-STATE_TO_VALUE = {}
-for key in VALUE_TO_STATE:
-    STATE_TO_VALUE[VALUE_TO_STATE[key]] = key
+SPEED_RANGE = (1, 255)  # off is not included
 
 
 async def async_setup_entry(
@@ -56,9 +42,11 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
     """Representation of an ISY994 fan device."""
 
     @property
-    def speed(self) -> str:
-        """Return the current speed."""
-        return VALUE_TO_STATE.get(self._node.status)
+    def percentage(self) -> str:
+        """Return the current speed percentage."""
+        if self._node.status == ISY_VALUE_UNKNOWN:
+            return None
+        return ranged_value_to_percentage(SPEED_RANGE, self._node.status)
 
     @property
     def is_on(self) -> bool:
@@ -67,17 +55,16 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
             return None
         return self._node.status != 0
 
-    def set_speed(self, speed: str) -> None:
-        """Send the set speed command to the ISY994 fan device."""
-        self._node.turn_on(val=STATE_TO_VALUE.get(speed, 255))
+    def set_percentage(self, percentage: int) -> None:
+        """Set node to speed percentage for the ISY994 fan device."""
+        if percentage == 0:
+            self._node.turn_off()
+            return
 
-    #
-    # The fan entity model has changed to use percentages and preset_modes
-    # instead of speeds.
-    #
-    # Please review
-    # https://developers.home-assistant.io/docs/core/entity/fan/
-    #
+        isy_speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+
+        self._node.turn_on(val=isy_speed)
+
     def turn_on(
         self,
         speed: str = None,
@@ -86,16 +73,11 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         **kwargs,
     ) -> None:
         """Send the turn on command to the ISY994 fan device."""
-        self.set_speed(speed)
+        self.set_percentage(percentage)
 
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 fan device."""
         self._node.turn_off()
-
-    @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
     @property
     def supported_features(self) -> int:
@@ -107,9 +89,11 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
     """Representation of an ISY994 fan program."""
 
     @property
-    def speed(self) -> str:
-        """Return the current speed."""
-        return VALUE_TO_STATE.get(self._node.status)
+    def percentage(self) -> str:
+        """Return the current speed percentage."""
+        if self._node.status == ISY_VALUE_UNKNOWN:
+            return None
+        return ranged_value_to_percentage(SPEED_RANGE, self._node.status)
 
     @property
     def is_on(self) -> bool:
@@ -121,13 +105,6 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
         if not self._actions.run_then():
             _LOGGER.error("Unable to turn off the fan")
 
-    #
-    # The fan entity model has changed to use percentages and preset_modes
-    # instead of speeds.
-    #
-    # Please review
-    # https://developers.home-assistant.io/docs/core/entity/fan/
-    #
     def turn_on(
         self,
         speed: str = None,
