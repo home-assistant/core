@@ -4,9 +4,9 @@ from unittest.mock import patch
 from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
 import pytest
 
-from homeassistant.components.devolo_home_control import async_unload_entry
-from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.config_entries import (
+    ENTRY_STATE_LOADED,
+    ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
 )
@@ -19,8 +19,8 @@ async def test_setup_entry(hass: HomeAssistant):
     """Test setup entry."""
     entry = configure_integration(hass)
     with patch("homeassistant.components.devolo_home_control.HomeControl"):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        assert hass.data[DOMAIN]
+        await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state == ENTRY_STATE_LOADED
 
 
 @pytest.mark.credentials_invalid
@@ -67,5 +67,5 @@ async def test_unload_entry(hass: HomeAssistant):
     with patch("homeassistant.components.devolo_home_control.HomeControl"):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert await async_unload_entry(hass, entry)
-        assert not hass.data[DOMAIN]
+        await hass.config_entries.async_unload(entry.entry_id)
+        assert entry.state == ENTRY_STATE_NOT_LOADED
