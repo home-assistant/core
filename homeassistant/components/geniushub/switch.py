@@ -1,15 +1,11 @@
 """Support for Genius Hub switch/outlet devices."""
 from datetime import timedelta
-from typing import Optional
 
 import voluptuous as vol
 
 from homeassistant.components.switch import DEVICE_CLASS_OUTLET, SwitchEntity
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.service import verify_domain_control
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import ATTR_DURATION, DOMAIN, GeniusZone
@@ -46,39 +42,13 @@ async def async_setup_platform(
         ]
     )
 
-    setup_service_functions(hass, broker)
+    # Register custom services
+    platform = entity_platform.current_platform.get()
 
-
-@callback
-def setup_service_functions(hass: HomeAssistantType, broker):
-    """Set up the service functions."""
-
-    @verify_domain_control(hass, DOMAIN)
-    async def set_switch_override(call) -> None:
-        """Set the system mode."""
-        entity_id = call.data[ATTR_ENTITY_ID]
-
-        registry = await hass.helpers.entity_registry.async_get_registry()
-        registry_entry = registry.async_get(entity_id)
-
-        if registry_entry is None or registry_entry.platform != DOMAIN:
-            raise ValueError(f"'{entity_id}' is not a known {DOMAIN} entity")
-
-        if registry_entry.domain != "switch":
-            raise ValueError(f"'{entity_id}' is not an {DOMAIN} zone")
-
-        payload = {
-            "unique_id": registry_entry.unique_id,
-            "service": call.service,
-            "data": call.data,
-        }
-        async_dispatcher_send(hass, DOMAIN, payload)
-
-    hass.services.async_register(
-        DOMAIN,
+    platform.async_register_entity_service(
         SVC_SET_SWITCH_OVERRIDE,
-        set_switch_override,
-        schema=SET_SWITCH_OVERRIDE_SCHEMA,
+        SET_SWITCH_OVERRIDE_SCHEMA,
+        "async_turn_on",
     )
 
 
@@ -89,23 +59,6 @@ class GeniusSwitch(GeniusZone, SwitchEntity):
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_OUTLET
-
-    async def _refresh(self, payload: Optional[dict] = None) -> None:
-        """Process any signals."""
-        if payload is None:
-            self.async_schedule_update_ha_state(force_refresh=True)
-            return
-
-        if payload["unique_id"] != self._unique_id:
-            return
-
-        if payload["service"] == SVC_SET_SWITCH_OVERRIDE:
-            duration = payload["data"].get(ATTR_DURATION, timedelta(hours=1))
-
-            await self._zone.set_override(1, int(duration.total_seconds()))
-            return
-
-        raise TypeError(f"'{self.entity_id}' is not a geniushub switch")
 
     @property
     def is_on(self) -> bool:
