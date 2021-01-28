@@ -105,12 +105,15 @@ async def async_setup(hass, hass_config):
             else:
                 lights = [service_data[ATTR_ENTITY_ID]]
 
-            for _, (entity_id, color) in enumerate(zip(lights, colors)):
-                service_data[ATTR_ENTITY_ID] = entity_id
-                service_data[ATTR_RGB_COLOR] = color
+            for entity_id, color in zip(lights, colors):
+                data = {
+                    **service_data,
+                    ATTR_ENTITY_ID: entity_id,
+                    ATTR_RGB_COLOR: color,
+                }
 
                 await hass.services.async_call(
-                    LIGHT_DOMAIN, LIGHT_SERVICE_TURN_ON, service_data, blocking=True
+                    LIGHT_DOMAIN, LIGHT_SERVICE_TURN_ON, data, blocking=True
                 )
 
     hass.services.async_register(
