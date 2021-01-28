@@ -153,7 +153,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ATTR_NODE_ID: node.node_id,
                 ATTR_HOME_ID: client.driver.controller.home_id,
                 ATTR_DEVICE_ID: device.id,
-                **notification.data,
+                "type": notification.command_class_name,
+                "label": notification.metadata.label
+                or notification.property_key_name
+                or notification.property_name,
+                "value": notification.value or notification.data.get("newValue"),
             },
         )
 
