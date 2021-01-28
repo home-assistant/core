@@ -188,6 +188,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "node added", lambda event: async_on_node_added(event["node"])
         )
         # listen for nodes being removed from the mesh
+        # NOTE: This will not remove nodes that were removed when HA was not running
         client.driver.controller.on(
             "node removed", lambda event: async_on_node_removed(event["node"])
         )

@@ -5,15 +5,12 @@ import logging
 from aiohttp import hdrs, web, web_exceptions
 import voluptuous as vol
 from zwave_js_server import dump
-from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.model.node import Node as ZwaveNode
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -248,9 +245,6 @@ async def websocket_remove_node(
             "node_id": node.node_id,
         }
 
-        # Remove from device registry
-        hass.async_create_task(remove_from_device_registry(hass, client, node))
-
         connection.send_message(
             websocket_api.event_message(
                 msg[ID], {"event": "node removed", "node": node_details}
@@ -270,20 +264,6 @@ async def websocket_remove_node(
         msg[ID],
         result,
     )
-
-
-async def remove_from_device_registry(
-    hass: HomeAssistant, client: ZwaveClient, node: ZwaveNode
-) -> None:
-    """Remove a node from the device registry."""
-    registry = await device_registry.async_get_registry(hass)
-    device = registry.async_get_device(
-        {(DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")}
-    )
-    if device is None:
-        return
-
-    registry.async_remove_device(device.id)
 
 
 class DumpView(HomeAssistantView):
