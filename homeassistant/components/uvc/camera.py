@@ -2,6 +2,7 @@
 from datetime import datetime
 import logging
 import re
+from typing import Optional
 
 import requests
 from uvcclient import camera as uvc_camera, nvr
@@ -111,9 +112,9 @@ class UnifiVideoCamera(Camera):
         return 0
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the camera state attributes."""
-        attr = super().state_attributes
+        attr = {}
         if self.motion_detection_enabled:
             attr["last_recording_start_time"] = timestamp_ms_to_date(
                 self._caminfo["lastRecordingStartTime"]
@@ -124,7 +125,7 @@ class UnifiVideoCamera(Camera):
     def is_recording(self):
         """Return true if the camera is recording."""
         recording_state = "DISABLED"
-        if "recordingIndicator" in self._caminfo.keys():
+        if "recordingIndicator" in self._caminfo:
             recording_state = self._caminfo["recordingIndicator"]
 
         return (
@@ -227,7 +228,7 @@ class UnifiVideoCamera(Camera):
             _LOGGER.debug(err)
 
     def enable_motion_detection(self):
-        """Enable motion detection in camera."""
+        """Enable motion detection in camlast_recording_start_timeera."""
         self.set_motion_detection(True)
 
     def disable_motion_detection(self):
@@ -256,7 +257,8 @@ class UnifiVideoCamera(Camera):
         self._caminfo = self._nvr.get_camera(self._uuid)
 
 
-def timestamp_ms_to_date(epoch_ms) -> datetime or None:
+def timestamp_ms_to_date(epoch_ms) -> Optional[datetime]:
     """Convert millisecond timestamp to datetime."""
     if epoch_ms:
         return datetime.fromtimestamp(epoch_ms / 1000)
+    return None
