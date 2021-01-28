@@ -699,9 +699,10 @@ async def test_setup_component_and_web_get_url(hass, hass_client):
     req = await client.post(url, json=data)
     assert req.status == 200
     response = await req.json()
-    assert response.get("url") == (
-        "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3"
-    )
+    assert response == {
+        "url": "http://example.local:8123/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
+        "path": "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_demo.mp3",
+    }
 
 
 async def test_setup_component_and_web_get_url_bad_config(hass, hass_client):
