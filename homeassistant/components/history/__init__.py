@@ -700,6 +700,8 @@ class LazyState(State):
         self._row = row
         self.entity_id = self._row.entity_id
         self.state = self._row.state
+        if self.state is None:
+            self.state = ""
         self._attributes = None
         self._last_changed = None
         self._last_updated = None
