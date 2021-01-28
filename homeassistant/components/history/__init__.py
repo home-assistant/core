@@ -699,7 +699,7 @@ class LazyState(State):
         """Init the lazy state."""
         self._row = row
         self.entity_id = self._row.entity_id
-        self.state = self._row.state
+        self.state = self._row.state or ""
         self._attributes = None
         self._last_changed = None
         self._last_updated = None
