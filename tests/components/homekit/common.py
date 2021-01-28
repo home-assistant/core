@@ -6,10 +6,7 @@ EMPTY_8_6_JPEG = b"empty_8_6"
 
 def patch_debounce():
     """Return patch for debounce method."""
-    return patch(
-        "homeassistant.components.homekit.accessories.debounce",
-        lambda f: lambda *args, **kwargs: f(*args, **kwargs),
-    )
+    pass
 
 
 def mock_turbo_jpeg(

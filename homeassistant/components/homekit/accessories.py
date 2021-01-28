@@ -98,37 +98,6 @@ SWITCH_TYPES = {
 TYPES = Registry()
 
 
-def debounce(func):
-    """Decorate function to debounce callbacks from HomeKit."""
-
-    @ha_callback
-    def call_later_listener(self, *args):
-        """Handle call_later callback."""
-        debounce_params = self.debounce.pop(func.__name__, None)
-        if debounce_params:
-            self.hass.async_add_executor_job(func, self, *debounce_params[1:])
-
-    @wraps(func)
-    def wrapper(self, *args):
-        """Start async timer."""
-        debounce_params = self.debounce.pop(func.__name__, None)
-        if debounce_params:
-            debounce_params[0]()  # remove listener
-        remove_listener = track_point_in_utc_time(
-            self.hass,
-            partial(call_later_listener, self),
-            dt_util.utcnow() + timedelta(seconds=DEBOUNCE_TIMEOUT),
-        )
-        self.debounce[func.__name__] = (remove_listener, *args)
-        logger.debug(
-            "%s: Start %s timeout", self.entity_id, func.__name__.replace("set_", "")
-        )
-
-    name = getmodule(func).__name__
-    logger = logging.getLogger(name)
-    return wrapper
-
-
 def get_accessory(hass, driver, state, aid, config):
     """Take state and return an accessory object if supported."""
     if not aid:
@@ -278,7 +247,6 @@ class HomeAccessory(Accessory):
         self.category = category
         self.entity_id = entity_id
         self.hass = hass
-        self.debounce = {}
         self._subscriptions = []
         self._char_battery = None
         self._char_charging = None
