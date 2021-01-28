@@ -12,6 +12,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_UNKNOWN,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 
@@ -52,6 +53,7 @@ def setup(hass, config):
 
     initialize(statsd_host=host, statsd_port=port)
 
+    @callback
     def logbook_entry_listener(event):
         """Listen for logbook entries and send them as events."""
         name = event.data.get("name")
@@ -68,6 +70,7 @@ def setup(hass, config):
 
         _LOGGER.debug("Sent event %s", event.data.get("entity_id"))
 
+    @callback
     def state_changed_listener(event):
         """Listen for new messages on the bus and sends them to Datadog."""
         state = event.data.get("new_state")

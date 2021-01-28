@@ -457,7 +457,7 @@ coronavirus==1.1.1
 crimereports==1.0.1
 
 # homeassistant.components.datadog
-datadog==0.15.0
+datadog==0.39.0
 
 # homeassistant.components.metoffice
 datapoint==0.9.5
