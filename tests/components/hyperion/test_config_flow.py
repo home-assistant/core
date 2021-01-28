@@ -10,6 +10,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components.hyperion.const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
+    CONF_EFFECT_HIDE_LIST,
     CONF_PRIORITY,
     DOMAIN,
 )
@@ -599,8 +600,8 @@ async def test_ssdp_abort_duplicates(hass: HomeAssistantType) -> None:
     assert result_2["reason"] == "already_in_progress"
 
 
-async def test_options(hass: HomeAssistantType) -> None:
-    """Check an options flow."""
+async def test_options_priority(hass: HomeAssistantType) -> None:
+    """Check an options flow priority option."""
 
     config_entry = add_test_config_entry(hass)
 
@@ -618,11 +619,12 @@ async def test_options(hass: HomeAssistantType) -> None:
 
         new_priority = 1
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_PRIORITY: new_priority}
+            result["flow_id"],
+            user_input={CONF_PRIORITY: new_priority},
         )
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["data"] == {CONF_PRIORITY: new_priority}
+        assert result["data"][CONF_PRIORITY] == new_priority
 
         # Turn the light on and ensure the new priority is used.
         client.async_send_set_color = AsyncMock(return_value=True)
@@ -634,6 +636,35 @@ async def test_options(hass: HomeAssistantType) -> None:
         )
         # pylint: disable=unsubscriptable-object
         assert client.async_send_set_color.call_args[1][CONF_PRIORITY] == new_priority
+
+
+async def test_options_effect_hide_list(hass: HomeAssistantType) -> None:
+    """Check an options flow effect hide list."""
+
+    config_entry = add_test_config_entry(hass)
+
+    client = create_mock_client()
+    client.effects = [
+        {const.KEY_NAME: "effect1"},
+        {const.KEY_NAME: "effect2"},
+        {const.KEY_NAME: "effect3"},
+    ]
+
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_EFFECT_HIDE_LIST: ["effect2"]}
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"][CONF_EFFECT_HIDE_LIST] == ["effect2"]
 
 
 async def test_reauth_success(hass: HomeAssistantType) -> None:
