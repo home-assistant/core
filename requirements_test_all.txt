@@ -377,9 +377,6 @@ griddypower==0.1.0
 # homeassistant.components.profiler
 guppy3==3.1.0
 
-# homeassistant.components.rest
-h11==0.12.0
-
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.0.2
 
@@ -418,9 +415,6 @@ homeconnect==0.6.3
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.13.1
-
-# homeassistant.components.rest
-httpcore==0.12.3
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
