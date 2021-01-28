@@ -168,7 +168,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     return self.async_show_form(
                         step_id=error_step,
                         data_schema=error_schema,
-                        errors={CONF_CITY: "unknown"},
+                        errors={"base": "unknown"},
                     )
 
                 valid_keys.add(user_input[CONF_API_KEY])
