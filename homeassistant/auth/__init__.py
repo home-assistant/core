@@ -24,6 +24,14 @@ _ProviderKey = Tuple[str, Optional[str]]
 _ProviderDict = Dict[_ProviderKey, AuthProvider]
 
 
+class InvalidAuthError(Exception):
+    """Raised when a authentication error occurs."""
+
+
+class InvalidProvider(Exception):
+    """Authentication provider not found."""
+
+
 async def auth_manager_from_config(
     hass: HomeAssistant,
     provider_configs: List[Dict[str, Any]],
@@ -96,7 +104,7 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
             return result
 
         # we got final result
-        if isinstance(result["data"], models.User):
+        if isinstance(result["data"], models.Credentials):
             result["result"] = result["data"]
             return result
 
@@ -120,11 +128,12 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
                 modules = await self.auth_manager.async_get_enabled_mfa(user)
 
                 if modules:
+                    flow.credential = credentials
                     flow.user = user
                     flow.available_mfa_modules = modules
                     return await flow.async_step_select_mfa_module()
 
-        result["result"] = await self.auth_manager.async_get_or_create_user(credentials)
+        result["result"] = credentials
         return result
 
 
@@ -156,7 +165,7 @@ class AuthManager:
         return list(self._mfa_modules.values())
 
     def get_auth_provider(
-        self, provider_type: str, provider_id: str
+        self, provider_type: str, provider_id: Optional[str]
     ) -> Optional[AuthProvider]:
         """Return an auth provider, None if not found."""
         return self._providers.get((provider_type, provider_id))
@@ -367,6 +376,7 @@ class AuthManager:
         client_icon: Optional[str] = None,
         token_type: Optional[str] = None,
         access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
+        credential: Optional[models.Credentials] = None,
     ) -> models.RefreshToken:
         """Create a new refresh token for a user."""
         if not user.is_active:
@@ -415,6 +425,7 @@ class AuthManager:
             client_icon,
             token_type,
             access_token_expiration,
+            credential,
         )
 
     async def async_get_refresh_token(
@@ -440,6 +451,8 @@ class AuthManager:
         self, refresh_token: models.RefreshToken, remote_ip: Optional[str] = None
     ) -> str:
         """Create a new access token."""
+        self.async_validate_refresh_token(refresh_token, remote_ip)
+
         self._store.async_log_refresh_token_usage(refresh_token, remote_ip)
 
         now = dt_util.utcnow()
@@ -452,6 +465,40 @@ class AuthManager:
             refresh_token.jwt_key,
             algorithm="HS256",
         ).decode()
+
+    @callback
+    def _async_resolve_provider(
+        self, refresh_token: models.RefreshToken
+    ) -> Optional[AuthProvider]:
+        """Get the auth provider for the given refresh token.
+
+        Raises an exception if the expected provider is no longer available or return
+        None if no provider was expected for this refresh token.
+        """
+        if refresh_token.credential is None:
+            return None
+
+        provider = self.get_auth_provider(
+            refresh_token.credential.auth_provider_type,
+            refresh_token.credential.auth_provider_id,
+        )
+        if provider is None:
+            raise InvalidProvider(
+                f"Auth provider {refresh_token.credential.auth_provider_type}, {refresh_token.credential.auth_provider_id} not available"
+            )
+        return provider
+
+    @callback
+    def async_validate_refresh_token(
+        self, refresh_token: models.RefreshToken, remote_ip: Optional[str] = None
+    ) -> None:
+        """Validate that a refresh token is usable.
+
+        Will raise InvalidAuthError on errors.
+        """
+        provider = self._async_resolve_provider(refresh_token)
+        if provider:
+            provider.async_validate_refresh_token(refresh_token, remote_ip)
 
     async def async_validate_access_token(
         self, token: str
