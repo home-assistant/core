@@ -108,7 +108,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
     def set_percentage(self, percentage):
         """Set the speed of the device."""
         if percentage == 0:
-            self.smartfan.turn_on()
+            self.smartfan.turn_off()
             return
 
         if not self.smartfan.is_on:
