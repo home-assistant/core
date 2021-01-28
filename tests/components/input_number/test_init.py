@@ -1,4 +1,7 @@
 """The tests for the Input number component."""
+# pylint: disable=protected-access
+from unittest.mock import patch
+
 import pytest
 import voluptuous as vol
 
@@ -21,8 +24,6 @@ from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
-# pylint: disable=protected-access
-from tests.async_mock import patch
 from tests.common import mock_restore_cache
 
 

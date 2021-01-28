@@ -14,5 +14,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "friendly_name": "S\u00f5bralike nimede kasutamine pr\u00fcgi t\u00fc\u00fcpide puhul (kui see on v\u00f5imalik)"
+                },
+                "title": "Seadista Recollect Waste"
+            }
+        }
     }
 }

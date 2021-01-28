@@ -16,3 +16,18 @@ start_multiple_zone_schedule:
     duration:
       description: Number of minutes to run the zone(s). If only 1 duration is given, that time will be used for all zones. If given a list of durations, the durations will apply to the respective zone listed above. [Required]
       example: 15, 20
+pause_watering:
+  description: Pause any currently running zones or schedules.
+  fields:
+    devices:
+      description: Name of controllers to pause. Defaults to all controllers on the account if not provided. [Optional]
+      example: Main House
+    duration:
+      description: The number of minutes to pause running schedules. Accepts 1-60. Default is 60 minutes. [Optional]
+      example: 30
+resume_watering:
+  description: Resume any paused zone runs or schedules.
+  fields:
+    devices:
+      description: Name of controllers to resume. Defaults to all controllers on the account if not provided. [Optional]
+      example: Main House

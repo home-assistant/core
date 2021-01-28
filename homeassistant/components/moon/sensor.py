@@ -49,6 +49,7 @@ class MoonSensor(Entity):
         """Initialize the moon sensor."""
         self._name = name
         self._state = None
+        self._astral = Astral()
 
     @property
     def name(self):
@@ -87,4 +88,4 @@ class MoonSensor(Entity):
     async def async_update(self):
         """Get the time and updates the states."""
         today = dt_util.as_local(dt_util.utcnow()).date()
-        self._state = Astral().moon_phase(today)
+        self._state = self._astral.moon_phase(today)

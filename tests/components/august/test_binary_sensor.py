@@ -121,9 +121,7 @@ async def test_doorbell_device_registry(hass):
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("august", "tmt100")}, connections=set()
-    )
+    reg_device = device_registry.async_get_device(identifiers={("august", "tmt100")})
     assert reg_device.model == "hydra1"
     assert reg_device.name == "tmt100 Name"
     assert reg_device.manufacturer == "August Home Inc."

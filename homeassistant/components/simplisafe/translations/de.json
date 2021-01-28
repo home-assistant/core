@@ -4,7 +4,8 @@
             "already_configured": "Dieses SimpliSafe-Konto wird bereits verwendet."
         },
         "error": {
-            "identifier_exists": "Konto bereits registriert"
+            "identifier_exists": "Konto bereits registriert",
+            "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "reauth_confirm": {

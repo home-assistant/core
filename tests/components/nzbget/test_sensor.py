@@ -1,5 +1,6 @@
 """Test the NZBGet sensors."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -10,8 +11,6 @@ from homeassistant.const import (
 from homeassistant.util import dt as dt_util
 
 from . import init_integration
-
-from tests.async_mock import patch
 
 
 async def test_sensors(hass, nzbget_api) -> None:

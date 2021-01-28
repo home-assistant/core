@@ -15,7 +15,7 @@
                     "longitude": "Longitud",
                     "station": "Codi d'estaci\u00f3 METAR"
                 },
-                "description": "Si no s'especifica un codi d'estaci\u00f3 METAR, la latitud i longitud s'utilitzaran per trobar l'estaci\u00f3 m\u00e9s propera.",
+                "description": "Si no s'especifica un codi d'estaci\u00f3 METAR, s'utilitzaran la latitud i longitud per trobar l'estaci\u00f3 m\u00e9s propera. De moment, la clau d'API pot ser qualsevol cosa. Es recomana utilitzar una adre\u00e7a de correu electr\u00f2nic v\u00e0lida.",
                 "title": "Connexi\u00f3 amb el Servei Meteorol\u00f2gic Nacional (USA)"
             }
         }

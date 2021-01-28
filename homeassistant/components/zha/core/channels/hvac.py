@@ -43,17 +43,10 @@ class FanChannel(ZigbeeChannel):
 
     REPORT_CONFIG = ({"attr": "fan_mode", "config": REPORT_CONFIG_OP},)
 
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
-    ):
-        """Init Thermostat channel instance."""
-        super().__init__(cluster, ch_pool)
-        self._fan_mode = None
-
     @property
     def fan_mode(self) -> Optional[int]:
         """Return current fan mode."""
-        return self._fan_mode
+        return self.cluster.get("fan_mode")
 
     async def async_set_speed(self, value) -> None:
         """Set the speed of the fan."""
@@ -66,12 +59,7 @@ class FanChannel(ZigbeeChannel):
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
-        result = await self.get_attribute_value("fan_mode", from_cache=True)
-        if result is not None:
-            self._fan_mode = result
-            self.async_send_signal(
-                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", 0, "fan_mode", result
-            )
+        await self.get_attribute_value("fan_mode", from_cache=False)
 
     @callback
     def attribute_updated(self, attrid: int, value: Any) -> None:
@@ -80,8 +68,7 @@ class FanChannel(ZigbeeChannel):
         self.debug(
             "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
         )
-        if attrid == self._value_attribute:
-            self._fan_mode = value
+        if attr_name == "fan_mode":
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
             )

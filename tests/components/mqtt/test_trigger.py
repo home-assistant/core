@@ -1,11 +1,12 @@
 """The tests for the MQTT automation."""
+from unittest.mock import ANY
+
 import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import ANY
 from tests.common import async_fire_mqtt_message, async_mock_service, mock_component
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 

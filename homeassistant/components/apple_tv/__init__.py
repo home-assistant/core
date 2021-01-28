@@ -15,6 +15,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -134,15 +135,6 @@ class AppleTVEntity(Entity):
 
     def async_device_disconnected(self):
         """Handle when connection was lost to device."""
-
-    @property
-    def device_info(self):
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._identifier)},
-            "manufacturer": "Apple",
-            "name": self.name,
-        }
 
     @property
     def name(self):
@@ -337,12 +329,35 @@ class AppleTVManager:
         self._dispatch_send(SIGNAL_CONNECTED, self.atv)
         self._address_updated(str(conf.address))
 
+        await self._async_setup_device_registry()
+
         self._connection_attempts = 0
         if self._connection_was_lost:
             _LOGGER.info(
                 'Connection was re-established to Apple TV "%s"', self.atv.service.name
             )
             self._connection_was_lost = False
+
+    async def _async_setup_device_registry(self):
+        attrs = {
+            "identifiers": {(DOMAIN, self.config_entry.unique_id)},
+            "manufacturer": "Apple",
+            "name": self.config_entry.data[CONF_NAME],
+        }
+
+        if self.atv:
+            dev_info = self.atv.device_info
+
+            attrs["model"] = "Apple TV " + dev_info.model.name.replace("Gen", "")
+            attrs["sw_version"] = dev_info.version
+
+            if dev_info.mac:
+                attrs["connections"] = {(dr.CONNECTION_NETWORK_MAC, dev_info.mac)}
+
+        device_registry = await dr.async_get_registry(self.hass)
+        device_registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id, **attrs
+        )
 
     @property
     def is_connecting(self):

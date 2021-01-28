@@ -2,9 +2,10 @@
     "system_health": {
         "info": {
             "arch": "Arquitetura do Processador",
+            "chassis": "Chassis",
             "dev": "Desenvolvimento",
-            "docker": "Docker",
-            "docker_version": "Docker",
+            "docker": "",
+            "docker_version": "",
             "hassio": "Supervisor",
             "host_os": "Sistema Operativo do Home Assistant",
             "installation_type": "Tipo de Instala\u00e7\u00e3o",

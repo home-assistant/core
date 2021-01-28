@@ -93,7 +93,11 @@ async def async_setup(hass, config):
                 "You are on the latest version (%s) of Home Assistant", newest
             )
         elif StrictVersion(newest) < StrictVersion(current_version):
-            _LOGGER.debug("Local version is newer than the latest version (%s)", newest)
+            _LOGGER.debug(
+                "Local version (%s) is newer than the latest available version (%s)",
+                current_version,
+                newest,
+            )
 
         _LOGGER.debug("Update available: %s", update_available)
 

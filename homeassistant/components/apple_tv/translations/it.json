@@ -30,7 +30,7 @@
                 "data": {
                     "pin": "Codice PIN"
                 },
-                "description": "L'abbinamento \u00e8 richiesto per il {protocol} \"{protocol}\". Immettere il codice PIN visualizzato sullo schermo. Gli zeri iniziali devono essere omessi, ovvero immettere 123 se il codice visualizzato \u00e8 0123.",
+                "description": "L'abbinamento \u00e8 richiesto per il protocollo \"{protocol}\". Immettere il codice PIN visualizzato sullo schermo. Gli zeri iniziali devono essere omessi, ovvero immettere 123 se il codice visualizzato \u00e8 0123.",
                 "title": "Abbinamento"
             },
             "reconfigure": {

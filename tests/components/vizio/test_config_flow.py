@@ -858,6 +858,7 @@ async def test_zeroconf_ignore(
 
 async def test_zeroconf_no_unique_id(
     hass: HomeAssistantType,
+    vizio_guess_device_type: pytest.fixture,
     vizio_no_unique_id: pytest.fixture,
 ) -> None:
     """Test zeroconf discovery aborts when unique_id is None."""

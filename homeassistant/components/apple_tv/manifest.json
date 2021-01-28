@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/apple_tv",
   "requirements": [
-    "pyatv==0.7.3"
+    "pyatv==0.7.5"
   ],
   "zeroconf": [
     "_mediaremotetv._tcp.local.",

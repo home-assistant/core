@@ -1,5 +1,6 @@
 """Helper for HomematicIP Cloud Tests."""
 import json
+from unittest.mock import Mock, patch
 
 from homematicip.aio.class_maps import (
     TYPE_CLASS_MAP,
@@ -21,7 +22,6 @@ from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
 from tests.common import load_fixture
 
 HAPID = "3014F7110000000000000001"

@@ -1,13 +1,16 @@
 """The tests for the REST sensor platform."""
 import asyncio
 from os import path
+from unittest.mock import patch
 
 import httpx
 import respx
 
 from homeassistant import config as hass_config
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 import homeassistant.components.sensor as sensor
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONTENT_TYPE_JSON,
     DATA_MEGABYTES,
@@ -15,8 +18,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 async def test_setup_missing_config(hass):
@@ -151,9 +152,20 @@ async def test_setup_get(hass):
             }
         },
     )
+    await async_setup_component(hass, "homeassistant", {})
 
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
+
+    assert hass.states.get("sensor.foo").state == ""
+    await hass.services.async_call(
+        "homeassistant",
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "sensor.foo"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.foo").state == ""
 
 
 @respx.mock

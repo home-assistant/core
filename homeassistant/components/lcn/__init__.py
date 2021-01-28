@@ -117,7 +117,7 @@ async def async_setup(hass, config):
         ("pck", Pck),
     ):
         hass.services.async_register(
-            DOMAIN, service_name, service(hass), service.schema
+            DOMAIN, service_name, service(hass).async_call_service, service.schema
         )
 
     return True
@@ -139,7 +139,8 @@ class LcnEntity(Entity):
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
-        self.device_connection.register_for_inputs(self.input_received)
+        if not self.device_connection.is_group:
+            self.device_connection.register_for_inputs(self.input_received)
 
     @property
     def name(self):

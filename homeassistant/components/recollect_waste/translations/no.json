@@ -14,5 +14,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "friendly_name": "Bruk vennlige navn for hentetyper (n\u00e5r det er mulig)"
+                },
+                "title": "Konfigurer Recollect Waste"
+            }
+        }
     }
 }

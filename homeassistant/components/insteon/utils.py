@@ -294,9 +294,7 @@ def async_register_services(hass):
         signal = f"{address.id}_{SIGNAL_REMOVE_ENTITY}"
         async_dispatcher_send(hass, signal)
         dev_registry = await hass.helpers.device_registry.async_get_registry()
-        device = dev_registry.async_get_device(
-            identifiers={(DOMAIN, str(address))}, connections=set()
-        )
+        device = dev_registry.async_get_device(identifiers={(DOMAIN, str(address))})
         if device:
             dev_registry.async_remove_device(device.id)
 

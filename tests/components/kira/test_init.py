@@ -3,13 +3,12 @@
 import os
 import shutil
 import tempfile
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 import homeassistant.components.kira as kira
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import MagicMock, patch
 
 TEST_CONFIG = {
     kira.DOMAIN: {

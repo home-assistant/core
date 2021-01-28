@@ -1,11 +1,11 @@
 """Tests for iZone."""
 
+from unittest.mock import Mock, patch
+
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.izone.const import DISPATCH_CONTROLLER_DISCOVERED, IZONE
-
-from tests.async_mock import Mock, patch
 
 
 @pytest.fixture

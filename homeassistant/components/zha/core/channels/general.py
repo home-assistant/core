@@ -4,6 +4,7 @@ from typing import Any, Coroutine, List, Optional
 
 import zigpy.exceptions
 import zigpy.zcl.clusters.general as general
+from zigpy.zcl.foundation import Status
 
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
@@ -19,6 +20,7 @@ from ..const import (
     SIGNAL_SET_LEVEL,
     SIGNAL_UPDATE_DEVICE,
 )
+from ..helpers import retryable_req
 from .base import ClientChannel, ZigbeeChannel, parse_and_log_command
 
 
@@ -34,11 +36,84 @@ class AnalogInput(ZigbeeChannel):
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
+@registries.BINDABLE_CLUSTERS.register(general.AnalogOutput.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.AnalogOutput.cluster_id)
 class AnalogOutput(ZigbeeChannel):
     """Analog Output channel."""
 
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+
+    @property
+    def present_value(self) -> Optional[float]:
+        """Return cached value of present_value."""
+        return self.cluster.get("present_value")
+
+    @property
+    def min_present_value(self) -> Optional[float]:
+        """Return cached value of min_present_value."""
+        return self.cluster.get("min_present_value")
+
+    @property
+    def max_present_value(self) -> Optional[float]:
+        """Return cached value of max_present_value."""
+        return self.cluster.get("max_present_value")
+
+    @property
+    def resolution(self) -> Optional[float]:
+        """Return cached value of resolution."""
+        return self.cluster.get("resolution")
+
+    @property
+    def relinquish_default(self) -> Optional[float]:
+        """Return cached value of relinquish_default."""
+        return self.cluster.get("relinquish_default")
+
+    @property
+    def description(self) -> Optional[str]:
+        """Return cached value of description."""
+        return self.cluster.get("description")
+
+    @property
+    def engineering_units(self) -> Optional[int]:
+        """Return cached value of engineering_units."""
+        return self.cluster.get("engineering_units")
+
+    @property
+    def application_type(self) -> Optional[int]:
+        """Return cached value of application_type."""
+        return self.cluster.get("application_type")
+
+    async def async_set_present_value(self, value: float) -> bool:
+        """Update present_value."""
+        try:
+            res = await self.cluster.write_attributes({"present_value": value})
+        except zigpy.exceptions.ZigbeeException as ex:
+            self.error("Could not set value: %s", ex)
+            return False
+        if isinstance(res, list) and all(
+            [record.status == Status.SUCCESS for record in res[0]]
+        ):
+            return True
+        return False
+
+    @retryable_req(delays=(1, 1, 3))
+    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
+        """Initialize channel."""
+        return self.fetch_config(from_cache)
+
+    async def fetch_config(self, from_cache: bool) -> None:
+        """Get the channel configuration."""
+        attributes = [
+            "min_present_value",
+            "max_present_value",
+            "resolution",
+            "relinquish_default",
+            "description",
+            "engineering_units",
+            "application_type",
+        ]
+        # just populates the cache, if not already done
+        await self.get_attributes(attributes, from_cache=from_cache)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.AnalogValue.cluster_id)

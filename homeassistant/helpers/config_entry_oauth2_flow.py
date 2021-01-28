@@ -191,6 +191,13 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             data["client_secret"] = self.client_secret
 
         resp = await session.post(self.token_url, data=data)
+        if resp.status >= 400 and _LOGGER.isEnabledFor(logging.DEBUG):
+            body = await resp.text()
+            _LOGGER.debug(
+                "Token request failed with status=%s, body=%s",
+                resp.status,
+                body,
+            )
         resp.raise_for_status()
         return cast(dict, await resp.json())
 
@@ -322,6 +329,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     async_step_ssdp = async_step_discovery
     async_step_zeroconf = async_step_discovery
     async_step_homekit = async_step_discovery
+    async_step_dhcp = async_step_discovery
 
     @classmethod
     def async_register_implementation(

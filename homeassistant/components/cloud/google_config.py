@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 class CloudGoogleConfig(AbstractConfig):
     """HA Cloud Configuration for Google Assistant."""
 
-    def __init__(self, hass, config, cloud_user, prefs: CloudPreferences, cloud):
+    def __init__(self, hass, config, cloud_user: str, prefs: CloudPreferences, cloud):
         """Initialize the Google config."""
         super().__init__(hass)
         self._config = config
