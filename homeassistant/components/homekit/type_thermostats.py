@@ -134,11 +134,9 @@ HEAT_COOL_DEADBAND = 5
 class Thermostat(HomeAccessory):
     """Generate a Thermostat accessory for a climate."""
 
-    category = CATEGORY_THERMOSTAT
-
     def __init__(self, *args):
         """Initialize a Thermostat accessory object."""
-        super().__init__(*args)
+        super().__init__(*args, category=CATEGORY_THERMOSTAT)
         self._unit = self.hass.config.units.temperature_unit
         self.hc_homekit_to_hass = None
         self.hc_hass_to_homekit = None
@@ -526,11 +524,9 @@ class Thermostat(HomeAccessory):
 class WaterHeater(HomeAccessory):
     """Generate a WaterHeater accessory for a water_heater."""
 
-    category = CATEGORY_THERMOSTAT
-
     def __init__(self, *args):
         """Initialize a WaterHeater accessory object."""
-        super().__init__(*args)
+        super().__init__(*args, category=CATEGORY_THERMOSTAT)
         self._unit = self.hass.config.units.temperature_unit
         min_temp, max_temp = self.get_temperature_range()
 

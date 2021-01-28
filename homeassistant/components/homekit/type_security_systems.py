@@ -65,11 +65,9 @@ STATE_TO_SERVICE = {
 class SecuritySystem(HomeAccessory):
     """Generate an SecuritySystem accessory for an alarm control panel."""
 
-    category = CATEGORY_ALARM_SYSTEM
-
     def __init__(self, *args):
         """Initialize a SecuritySystem accessory object."""
-        super().__init__(*args)
+        super().__init__(*args, category=CATEGORY_ALARM_SYSTEM)
         state = self.hass.states.get(self.entity_id)
         self._alarm_code = self.config.get(ATTR_CODE)
 

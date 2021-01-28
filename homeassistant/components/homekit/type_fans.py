@@ -46,11 +46,9 @@ class Fan(HomeAccessory):
     Currently supports: state, speed, oscillate, direction.
     """
 
-    category = CATEGORY_FAN
-
     def __init__(self, *args):
         """Initialize a new Fan accessory object."""
-        super().__init__(*args)
+        super().__init__(*args, category=CATEGORY_FAN)
         chars = []
         state = self.hass.states.get(self.entity_id)
 

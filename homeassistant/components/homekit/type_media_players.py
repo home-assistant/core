@@ -121,11 +121,9 @@ MEDIA_PLAYER_OFF_STATES = (
 class MediaPlayer(HomeAccessory):
     """Generate a Media Player accessory."""
 
-    category = CATEGORY_SWITCH
-
     def __init__(self, *args):
         """Initialize a Switch accessory object."""
-        super().__init__(*args)
+        super().__init__(*args, category=CATEGORY_SWITCH)
         state = self.hass.states.get(self.entity_id)
         self.chars = {
             FEATURE_ON_OFF: None,
@@ -255,11 +253,9 @@ class MediaPlayer(HomeAccessory):
 class TelevisionMediaPlayer(HomeAccessory):
     """Generate a Television Media Player accessory."""
 
-    category = CATEGORY_TELEVISION
-
     def __init__(self, *args):
         """Initialize a Switch accessory object."""
-        super().__init__(*args)
+        super().__init__(*args, category=CATEGORY_TELEVISION)
         state = self.hass.states.get(self.entity_id)
 
         self.support_select_source = False

@@ -70,11 +70,9 @@ HC_STATE_DEHUMIDIFYING = 3
 class HumidifierDehumidifier(HomeAccessory):
     """Generate a HumidifierDehumidifier accessory for a humidifier."""
 
-    category = CATEGORY_HUMIDIFIER
-
     def __init__(self, *args):
         """Initialize a HumidifierDehumidifier accessory object."""
-        super().__init__(*args)
+        super().__init__(*args, category=CATEGORY_HUMIDIFIER)
         self.chars = []
         state = self.hass.states.get(self.entity_id)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS, DEVICE_CLASS_HUMIDIFIER)

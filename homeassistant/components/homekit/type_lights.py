@@ -53,11 +53,9 @@ class Light(HomeAccessory):
     Currently supports: state, brightness, color temperature, rgb_color.
     """
 
-    category = CATEGORY_LIGHTBULB
-
     def __init__(self, *args):
         """Initialize a new Light accessory object."""
-        super().__init__(*args)
+        super().__init__(*args, category=CATEGORY_LIGHTBULB)
 
         self.chars = []
         state = self.hass.states.get(self.entity_id)
