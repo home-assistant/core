@@ -617,5 +617,5 @@ class ZoneDevice(ClimateEntity):
     def device_state_attributes(self):
         """Return the optional state attributes."""
         return {
-            "zone_index": self._zone.index,
+            "zone_index": self.zone_index,
         }
