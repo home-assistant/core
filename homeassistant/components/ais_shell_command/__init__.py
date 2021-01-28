@@ -115,22 +115,19 @@ async def _run(cmd):
     stdout, stderr = await cmd_process.communicate()
 
     if stdout:
-        _LOGGER.info(f"[stdout]\n{stdout.decode()}")
+        _LOGGER.info("stdout %s", stdout.decode())
     if stderr:
-        _LOGGER.info(f"[stderr]\n{stderr.decode()}")
+        _LOGGER.info("stderr %s", stderr.decode())
 
 
 async def _cec_command(hass, call):
     if "command" not in call.data:
         return
+    if not ais_global.has_root():
+        return
     command = call.data["command"]
-    cec_cmd = f"su -c 'echo {command} > /sys/class/cec/cmd'"
-    process = subprocess.Popen(cec_cmd, shell=True, stdout=subprocess.PIPE)  # nosec
-    stdout, stderr = await process.communicate()
-    if stdout:
-        _LOGGER.info(f"[stdout]\n{stdout.decode()}")
-    if stderr:
-        _LOGGER.info(f"[stderr]\n{stderr.decode()}")
+    cec_cmd = "su -c 'echo " + command + " > /sys/class/cec/cmd'"
+    await _run(cec_cmd)
 
 
 async def _change_host_name(hass, call):
