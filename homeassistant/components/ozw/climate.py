@@ -154,11 +154,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
     )
 
+
 def convert_units(units):
     """Return units as a farenheit or celsius constant."""
     if units == "F":
         return TEMP_FAHRENHEIT
     return TEMP_CELSIUS
+
 
 class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     """Representation of a Z-Wave Climate device."""
@@ -401,6 +403,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             all_modes[HVAC_MODE_HEAT] = None
         self._hvac_modes = all_modes
         self._hvac_presets = all_presets
+
 
 def _get_list_id(value_lst, value_lbl):
     """Return the id for the value in the list."""
