@@ -77,7 +77,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     @property
     def percentage(self) -> str:
         """Return the current speed percentage."""
-        return ranged_value_to_percentage(SPEED_RANGE, self._node.status)
+        return ranged_value_to_percentage(SPEED_RANGE, self._device.status.fan_speed)
 
     @property
     def supported_features(self) -> int:
