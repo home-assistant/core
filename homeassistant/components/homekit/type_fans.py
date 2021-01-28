@@ -6,14 +6,13 @@ from pyhap.const import CATEGORY_FAN
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
-    ATTR_SPEED,
-    ATTR_SPEED_LIST,
+    ATTR_PERCENTAGE,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
-    SERVICE_SET_SPEED,
+    SERVICE_SET_PERCENTAGE,
     SUPPORT_DIRECTION,
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
@@ -36,7 +35,6 @@ from .const import (
     CHAR_SWING_MODE,
     SERV_FANV2,
 )
-from .util import HomeKitSpeedMapping
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,10 +59,6 @@ class Fan(HomeAccessory):
         if features & SUPPORT_OSCILLATE:
             chars.append(CHAR_SWING_MODE)
         if features & SUPPORT_SET_SPEED:
-            speed_list = self.hass.states.get(self.entity_id).attributes.get(
-                ATTR_SPEED_LIST
-            )
-            self.speed_mapping = HomeKitSpeedMapping(speed_list)
             chars.append(CHAR_ROTATION_SPEED)
 
         serv_fan = self.add_preload_service(SERV_FANV2, chars)
@@ -117,7 +111,7 @@ class Fan(HomeAccessory):
         # We always do this LAST to ensure they
         # get the speed they asked for
         if CHAR_ROTATION_SPEED in char_values:
-            self.set_speed(char_values[CHAR_ROTATION_SPEED])
+            self.set_percentage(char_values[CHAR_ROTATION_SPEED])
 
     def set_state(self, value):
         """Set state if call came from HomeKit."""
@@ -140,12 +134,11 @@ class Fan(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_OSCILLATING: oscillating}
         self.call_service(DOMAIN, SERVICE_OSCILLATE, params, oscillating)
 
-    def set_speed(self, value):
+    def set_percentage(self, value):
         """Set state if call came from HomeKit."""
         _LOGGER.debug("%s: Set speed to %d", self.entity_id, value)
-        speed = self.speed_mapping.speed_to_states(value)
-        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_SPEED: speed}
-        self.call_service(DOMAIN, SERVICE_SET_SPEED, params, speed)
+        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_PERCENTAGE: value}
+        self.call_service(DOMAIN, SERVICE_SET_PERCENTAGE, params, value)
 
     @callback
     def async_update_state(self, new_state):
@@ -169,24 +162,22 @@ class Fan(HomeAccessory):
         if self.char_speed is not None and state != STATE_OFF:
             # We do not change the homekit speed when turning off
             # as it will clear the restore state
-            speed = new_state.attributes.get(ATTR_SPEED)
-            hk_speed_value = self.speed_mapping.speed_to_homekit(speed)
-            if hk_speed_value is not None and self.char_speed.value != hk_speed_value:
-                # If the homeassistant component reports its speed as the first entry
-                # in its speed list but is not off, the hk_speed_value is 0. But 0
-                # is a special value in homekit. When you turn on a homekit accessory
-                # it will try to restore the last rotation speed state which will be
-                # the last value saved by char_speed.set_value. But if it is set to
-                # 0, HomeKit will update the rotation speed to 100 as it thinks 0 is
-                # off.
-                #
-                # Therefore, if the hk_speed_value is 0 and the device is still on,
-                # the rotation speed is mapped to 1 otherwise the update is ignored
-                # in order to avoid this incorrect behavior.
-                if hk_speed_value == 0 and state == STATE_ON:
-                    hk_speed_value = 1
-                if self.char_speed.value != hk_speed_value:
-                    self.char_speed.set_value(hk_speed_value)
+            percentage = new_state.attributes.get(ATTR_PERCENTAGE)
+            # If the homeassistant component reports its speed as the first entry
+            # in its speed list but is not off, the hk_speed_value is 0. But 0
+            # is a special value in homekit. When you turn on a homekit accessory
+            # it will try to restore the last rotation speed state which will be
+            # the last value saved by char_speed.set_value. But if it is set to
+            # 0, HomeKit will update the rotation speed to 100 as it thinks 0 is
+            # off.
+            #
+            # Therefore, if the hk_speed_value is 0 and the device is still on,
+            # the rotation speed is mapped to 1 otherwise the update is ignored
+            # in order to avoid this incorrect behavior.
+            if percentage == 0 and state == STATE_ON:
+                percentage = 1
+            if percentage is not None and self.char_speed.value != percentage:
+                self.char_speed.set_value(percentage)
 
         # Handle Oscillating
         if self.char_swing is not None:
