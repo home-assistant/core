@@ -528,6 +528,9 @@ openerz-api==0.1.0
 # homeassistant.components.ovo_energy
 ovoenergy==1.1.11
 
+# homeassistant.components.mysensors
+packaging==20.8
+
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
 paho-mqtt==1.5.1
