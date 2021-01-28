@@ -44,6 +44,8 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
     @property
     def percentage(self) -> str:
         """Return the current speed percentage."""
+        if self._node.status == ISY_VALUE_UNKNOWN:
+            return None
         return ranged_value_to_percentage(SPEED_RANGE, self._node.status)
 
     @property
@@ -89,6 +91,8 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
     @property
     def percentage(self) -> str:
         """Return the current speed percentage."""
+        if self._node.status == ISY_VALUE_UNKNOWN:
+            return None
         return ranged_value_to_percentage(SPEED_RANGE, self._node.status)
 
     @property
