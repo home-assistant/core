@@ -49,7 +49,7 @@ class MySensorsDevice:
         self.node_id: int = node_id
         self.child_id: int = child_id
         self.value_type: int = value_type  # value_type as int. string variant can be looked up in gateway consts
-        self.child_type = self._mysensors_childsensor.type
+        self.child_type = self._mysensors_child.type
         self._values = {}
         self._update_scheduled = False
         self.hass = None
@@ -83,22 +83,22 @@ class MySensorsDevice:
                     )
 
     @property
-    def _mysensors_sensor(self) -> Sensor:
+    def _mysensors_node(self) -> Sensor:
         return self.gateway.sensors[self.node_id]
 
     @property
-    def _mysensors_childsensor(self) -> ChildSensor:
-        return self._mysensors_sensor.children[self.child_id]
+    def _mysensors_child(self) -> ChildSensor:
+        return self._mysensors_node.children[self.child_id]
 
     @property
     def sketch_name(self) -> str:
         """Return the name of the sketch running on the whole node (will be the same for several entities!)."""
-        return self._mysensors_sensor.sketch_name
+        return self._mysensors_node.sketch_name
 
     @property
     def sketch_version(self) -> str:
         """Return the version of the sketch running on the whole node (will be the same for several entities!)."""
-        return self._mysensors_sensor.sketch_version
+        return self._mysensors_node.sketch_version
 
     @property
     def node_name(self) -> str:
@@ -108,16 +108,15 @@ class MySensorsDevice:
     @property
     def unique_id(self) -> str:
         """Return a unique ID for use in home assistant."""
-        return f"mys{self.gateway_id}-{self.node_id}-{self.child_id}-{self.value_type}"
+        return f"{self.gateway_id}-{self.node_id}-{self.child_id}-{self.value_type}"
 
     @property
     def device_info(self) -> Optional[Dict[str, Any]]:
         """Return a dict that allows home assistant to puzzle all entities belonging to a node together."""
         return {
-            "identifiers": {(DOMAIN, f"mys{self.gateway_id}-{self.node_id}")},
+            "identifiers": {(DOMAIN, f"{self.gateway_id}-{self.node_id}")},
             "name": self.node_name,
             "manufacturer": DOMAIN,
-            "model": self.node_name,
             "sw_version": self.sketch_version,
         }
 
