@@ -1,6 +1,7 @@
 """The Z-Wave JS integration."""
 import asyncio
 import logging
+from typing import Tuple
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
@@ -37,6 +38,12 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 
 @callback
+def get_device_id(client: ZwaveClient, node: ZwaveNode) -> Tuple[str, str]:
+    """Get device registry identifier for Z-Wave node."""
+    return (DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")
+
+
+@callback
 def register_node_in_dev_reg(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -47,7 +54,7 @@ def register_node_in_dev_reg(
     """Register node in dev reg."""
     device = dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")},
+        identifiers={get_device_id(client, node)},
         sw_version=node.firmware_version,
         name=node.name or node.device_config.description or f"Node {node.node_id}",
         model=node.device_config.label,
@@ -118,6 +125,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # some visual feedback that something is (in the process of) being added
         register_node_in_dev_reg(hass, entry, dev_reg, client, node)
 
+    @callback
+    def async_on_node_removed(node: ZwaveNode) -> None:
+        """Handle node removed event."""
+        # grab device in device registry attached to this node
+        dev_id = get_device_id(client, node)
+        device = dev_reg.async_get_device({dev_id})
+        # note: removal of entity registry is handled by core
+        dev_reg.async_remove_device(device.id)
+
     async def handle_ha_shutdown(event: Event) -> None:
         """Handle HA shutdown."""
         await client.disconnect()
@@ -170,6 +186,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # listen for new nodes being added to the mesh
         client.driver.controller.on(
             "node added", lambda event: async_on_node_added(event["node"])
+        )
+        # listen for nodes being removed from the mesh
+        # NOTE: This will not remove nodes that were removed when HA was not running
+        client.driver.controller.on(
+            "node removed", lambda event: async_on_node_removed(event["node"])
         )
 
     hass.async_create_task(start_platforms())
