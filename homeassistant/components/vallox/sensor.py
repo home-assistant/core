@@ -5,6 +5,7 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
@@ -98,6 +99,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_class=None,
             unit_of_measurement=PERCENTAGE,
             icon="mdi:gauge",
+        ),
+        ValloxSensor(
+            name=f"{name} CO2",
+            state_proxy=state_proxy,
+            metric_key="A_CYC_CO2_VALUE",
+            device_class=None,
+            unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            icon="mdi:molecule-co2",
         ),
     ]
 
