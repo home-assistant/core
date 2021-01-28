@@ -91,6 +91,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             unit_of_measurement=None,
             icon="mdi:filter",
         ),
+        ValloxSensor(
+            name=f"{name} Efficiency",
+            state_proxy=state_proxy,
+            metric_key="A_CYC_EXTRACT_EFFICIENCY",
+            device_class=None,
+            unit_of_measurement=PERCENTAGE,
+            icon="mdi:gauge",
+        ),
     ]
 
     async_add_entities(sensors, update_before_add=False)
