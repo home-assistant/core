@@ -53,9 +53,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         for camera in all_cameras:
             if camera["type"] == "NOC":
-                if not data_handler.webhook:
-                    raise PlatformNotReady
-
                 _LOGGER.debug("Adding camera light %s %s", camera["id"], camera["name"])
                 entities.append(
                     NetatmoLight(
@@ -125,6 +122,11 @@ class NetatmoLight(NetatmoBase, LightEntity):
 
             self.async_write_ha_state()
             return
+
+    @property
+    def available(self) -> bool:
+        """If the webhook is not established, mark as unavailable."""
+        return bool(self.data_handler.webhook)
 
     @property
     def is_on(self):

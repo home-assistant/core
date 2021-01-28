@@ -21,6 +21,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.event import async_call_later
 
 from . import api, config_flow
 from .const import (
@@ -54,18 +59,19 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["camera", "climate", "sensor"]
+PLATFORMS = ["camera", "climate", "light", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Netatmo component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_PERSONS] = {}
-    hass.data[DOMAIN][DATA_DEVICE_IDS] = {}
-    hass.data[DOMAIN][DATA_SCHEDULES] = {}
-    hass.data[DOMAIN][DATA_HOMES] = {}
-    hass.data[DOMAIN][DATA_EVENTS] = {}
-    hass.data[DOMAIN][DATA_CAMERAS] = {}
+    hass.data[DOMAIN] = {
+        DATA_PERSONS: {},
+        DATA_DEVICE_IDS: {},
+        DATA_SCHEDULES: {},
+        DATA_HOMES: {},
+        DATA_EVENTS: {},
+        DATA_CAMERAS: {},
+    }
 
     if DOMAIN not in config:
         return True
@@ -114,6 +120,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         if CONF_WEBHOOK_ID not in entry.data:
             return
         _LOGGER.debug("Unregister Netatmo webhook (%s)", entry.data[CONF_WEBHOOK_ID])
+        async_dispatcher_send(
+            hass,
+            f"signal-{DOMAIN}-webhook-None",
+            {"type": "None", "data": {"push_type": "webhook_deactivation"}},
+        )
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
     async def register_webhook(event):
@@ -148,13 +159,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             webhook_register(
                 hass, DOMAIN, "Netatmo", entry.data[CONF_WEBHOOK_ID], handle_webhook
             )
+
+            async def handle_event(event):
+                """Handle webhook events."""
+                if event["data"]["push_type"] == "webhook_activation":
+                    if activation_listener is not None:
+                        _LOGGER.debug("sub called")
+                        activation_listener()
+
+                    if activation_timeout is not None:
+                        _LOGGER.debug("Unsub called")
+                        activation_timeout()
+
+            activation_listener = async_dispatcher_connect(
+                hass,
+                f"signal-{DOMAIN}-webhook-None",
+                handle_event,
+            )
+
+            activation_timeout = async_call_later(hass, 10, unregister_webhook)
+
             await hass.async_add_executor_job(
                 hass.data[DOMAIN][entry.entry_id][AUTH].addwebhook, webhook_url
             )
             _LOGGER.info("Register Netatmo webhook: %s", webhook_url)
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, "light")
-            )
         except pyatmo.ApiError as err:
             _LOGGER.error("Error during webhook registration - %s", err)
 
