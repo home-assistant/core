@@ -43,7 +43,7 @@ async def test_fan(hass, client, in_wall_smart_fan_control, integration):
             "label": "Target value",
         },
     }
-    assert args["value"] == 50
+    assert args["value"] == 66
 
     client.async_send_command.reset_mock()
 
