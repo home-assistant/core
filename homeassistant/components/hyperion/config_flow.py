@@ -456,7 +456,7 @@ class HyperionOptionsFlow(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        effects = {}
+        effects = {source: source for source in const.KEY_COMPONENTID_EXTERNAL_SOURCES}
         async with self._create_client() as hyperion_client:
             if not hyperion_client:
                 return self.async_abort(reason="cannot_connect")
