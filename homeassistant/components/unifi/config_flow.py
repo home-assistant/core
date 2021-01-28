@@ -40,7 +40,7 @@ from .const import (
 from .controller import get_controller
 from .errors import AuthenticationRequired, CannotConnect
 
-DEFAULT_PORT = 8443
+DEFAULT_PORT = 443
 DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
 

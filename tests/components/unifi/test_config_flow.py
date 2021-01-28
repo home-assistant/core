@@ -97,7 +97,7 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
         CONF_HOST: "unifi",
         CONF_USERNAME: "",
         CONF_PASSWORD: "",
-        CONF_PORT: 8443,
+        CONF_PORT: 443,
         CONF_VERIFY_SSL: False,
     }
 
