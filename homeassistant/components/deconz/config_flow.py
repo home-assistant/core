@@ -227,6 +227,8 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.bridge_id = normalize_bridge_id(discovery_info[CONF_SERIAL])
         await self.async_set_unique_id(self.bridge_id)
 
+        discovery_info[CONF_HOST] = "core-deconz"
+
         self._abort_if_unique_id_configured(
             updates={
                 CONF_HOST: discovery_info[CONF_HOST],
