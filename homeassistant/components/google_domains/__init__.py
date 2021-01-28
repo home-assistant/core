@@ -18,6 +18,8 @@ INTERVAL = timedelta(minutes=5)
 
 DEFAULT_TIMEOUT = 10
 
+IPIFY = "https://api.ipify.org"
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -42,38 +44,49 @@ async def async_setup(hass, config):
 
     session = hass.helpers.aiohttp_client.async_get_clientsession()
 
-    address = await _update_google_domains(
-        hass, session, domain, user, password, timeout, None
-    )
-
+    address = await _get_ip_address(session, timeout)
     if address is None:
         return False
 
+    result = await _update_google_domains(
+        session, domain, user, password, address, timeout
+    )
+    if not result:
+        return False
+
     async def update_domain_interval(now):
+        """Update the Google Domains entry."""
         nonlocal address
-        address = await _update_google_domains(
-            hass, session, domain, user, password, timeout, address
-        )
+        new_address = await _get_ip_address(session, timeout)
+        if new_address is not None and new_address != address:
+            result = await _update_google_domains(
+                hass, session, domain, user, password, timeout, new_address
+            )
+            if result:
+                address = new_address
 
     hass.helpers.event.async_track_time_interval(update_domain_interval, INTERVAL)
 
     return True
 
 
-async def _update_google_domains(
-    hass, session, domain, user, password, timeout, address
-):
+async def _get_ip_address(session, timeout):
     try:
-        # Check IP address
         with async_timeout.timeout(timeout):
-            resp = await session.get("https://api.ipify.org")
-            body = await resp.text()
+            resp = await session.get(IPIFY)
+            return await resp.text()
 
-            if body == address:
-                return address
-            address = body
+    except aiohttp.ClientError:
+        _LOGGER.warning("Can't connect to %s", IPIFY)
 
-        # Update Google Domains
+    except asyncio.TimeoutError:
+        _LOGGER.warning("Timeout from %s", IPIFY)
+
+    return None
+
+
+async def _update_google_domains(session, domain, user, password, address, timeout):
+    try:
         url = f"https://{user}:{password}@domains.google.com/nic/update"
         params = {"hostname": domain, "myip": address}
 
@@ -82,7 +95,7 @@ async def _update_google_domains(
             body = await resp.text()
 
             if body.startswith("good") or body.startswith("nochg"):
-                return address
+                return True
 
             _LOGGER.warning("Updating Google Domains failed: %s => %s", domain, body)
 
@@ -92,4 +105,4 @@ async def _update_google_domains(
     except asyncio.TimeoutError:
         _LOGGER.warning("Timeout from Google Domains API for domain: %s", domain)
 
-    return None
+    return False
