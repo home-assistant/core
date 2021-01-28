@@ -28,7 +28,6 @@ from .const import (
     API,
     CHECKINTERVAL,
     CONF_CIRCUITINFOS,
-    CONF_CIRCUITMAP,
     CONF_MSGDEFCODES,
     DEFAULT_CIRCUITMAP,
     DEFAULT_PRIO,
@@ -127,9 +126,7 @@ class Api:
             circuitinfo.circuit: circuitinfo for circuitinfo in ebus.circuitinfos
         }
         # circuitmap
-        circuitmap = entry.data.get(CONF_CIRCUITMAP, {})
         self.circuitmap = CircuitMap(DEFAULT_CIRCUITMAP)
-        self.circuitmap.update(circuitmap)
 
     @property
     def ident(self):
