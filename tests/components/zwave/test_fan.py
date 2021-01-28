@@ -39,9 +39,6 @@ def test_fan_turn_on(mock_openzwave):
 
     node.reset_mock()
 
-    import pprint
-
-    pprint.pprint(device)
     device.turn_on(percentage=0)
 
     assert node.set_dimmer.called
