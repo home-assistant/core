@@ -72,7 +72,7 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     # Celsius is converted to Fahrenheit here!
-    assert round(msg["payload"]["Value"], 2) == 75.38
+    assert round(msg["payload"]["Value"], 2) == 24.1
     assert msg["payload"]["ValueIDKey"] == 281475099443218
 
     # Test set mode
