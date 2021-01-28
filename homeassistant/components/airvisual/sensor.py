@@ -58,14 +58,23 @@ NODE_PRO_SENSORS = [
     (SENSOR_KIND_TEMPERATURE, "Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS),
 ]
 
-POLLUTANT_MAPPING = {
-    "co": {"label": "Carbon Monoxide", "unit": CONCENTRATION_PARTS_PER_MILLION},
-    "n2": {"label": "Nitrogen Dioxide", "unit": CONCENTRATION_PARTS_PER_BILLION},
-    "o3": {"label": "Ozone", "unit": CONCENTRATION_PARTS_PER_BILLION},
-    "p1": {"label": "PM10", "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    "p2": {"label": "PM2.5", "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    "s2": {"label": "Sulfur Dioxide", "unit": CONCENTRATION_PARTS_PER_BILLION},
-}
+
+@callback
+def async_get_pollutant_label(symbol):
+    """Get a pollutant's label based on its symbol."""
+    if symbol == "co":
+        return "Carbon Monoxide"
+    if symbol == "n2":
+        return "Nitrogen Dioxide"
+    if symbol == "o3":
+        return "Ozone"
+    if symbol == "p1":
+        return "PM10"
+    if symbol == "p2":
+        return "PM2.5"
+    if symbol == "s2":
+        return "Sulfur Dioxide"
+    return symbol
 
 
 @callback
@@ -82,6 +91,24 @@ def async_get_pollutant_level_info(value):
     if 201 <= value <= 300:
         return ("Very Unhealthy", "mdi:emoticon-dead")
     return ("Hazardous", "mdi:biohazard")
+
+
+@callback
+def async_get_pollutant_unit(symbol):
+    """Get a pollutant's unit based on its symbol."""
+    if symbol == "co":
+        return CONCENTRATION_PARTS_PER_MILLION
+    if symbol == "n2":
+        return CONCENTRATION_PARTS_PER_BILLION
+    if symbol == "o3":
+        return CONCENTRATION_PARTS_PER_BILLION
+    if symbol == "p1":
+        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    if symbol == "p2":
+        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    if symbol == "s2":
+        return CONCENTRATION_PARTS_PER_BILLION
+    return None
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -173,11 +200,11 @@ class AirVisualGeographySensor(AirVisualEntity):
             self._state = data[f"aqi{self._locale}"]
         elif self._kind == SENSOR_KIND_POLLUTANT:
             symbol = data[f"main{self._locale}"]
-            self._state = POLLUTANT_MAPPING[symbol]["label"]
+            self._state = async_get_pollutant_label(symbol)
             self._attrs.update(
                 {
                     ATTR_POLLUTANT_SYMBOL: symbol,
-                    ATTR_POLLUTANT_UNIT: POLLUTANT_MAPPING[symbol]["unit"],
+                    ATTR_POLLUTANT_UNIT: async_get_pollutant_unit(symbol),
                 }
             )
 
