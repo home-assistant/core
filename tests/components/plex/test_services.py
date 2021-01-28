@@ -113,6 +113,7 @@ async def test_sonos_play_media(
     setup_plex_server,
     requests_mock,
     empty_payload,
+    playqueue_1234,
     playqueue_created,
     plextv_account,
     sonos_resources,
@@ -178,3 +179,19 @@ async def test_sonos_play_media(
         play_on_sonos(hass, MEDIA_TYPE_MUSIC, content_id_bad_media, sonos_speaker_name)
     assert "Plex media not found" in str(excinfo.value)
     assert playback_mock.call_count == 3
+
+    # Test with speakers available and playqueue
+    requests_mock.get("https://1.2.3.4:32400/playQueues/1234", text=playqueue_1234)
+    content_id_with_playqueue = '{"playqueue_id": 1234}'
+    play_on_sonos(hass, MEDIA_TYPE_MUSIC, content_id_with_playqueue, sonos_speaker_name)
+    assert playback_mock.call_count == 4
+
+    # Test with speakers available and invalid playqueue
+    requests_mock.get("https://1.2.3.4:32400/playQueues/1235", status_code=404)
+    content_id_with_playqueue = '{"playqueue_id": 1235}'
+    with pytest.raises(HomeAssistantError) as excinfo:
+        play_on_sonos(
+            hass, MEDIA_TYPE_MUSIC, content_id_with_playqueue, sonos_speaker_name
+        )
+    assert "PlayQueue '1235' could not be found" in str(excinfo.value)
+    assert playback_mock.call_count == 4
