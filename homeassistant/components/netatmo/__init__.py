@@ -126,7 +126,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             {"type": "None", "data": {"push_type": "webhook_deactivation"}},
         )
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-        await hass.config_entries.async_forward_entry_unload(entry, "light")
 
     async def register_webhook(event):
         if CONF_WEBHOOK_ID not in entry.data:
@@ -164,21 +163,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             async def handle_event(event):
                 """Handle webhook events."""
                 if event["data"]["push_type"] == "webhook_activation":
-                    if sub is not None:
+                    if activation_listener is not None:
                         _LOGGER.debug("sub called")
-                        sub()
+                        activation_listener()
 
-                    if unsub is not None:
+                    if activation_timeout is not None:
                         _LOGGER.debug("Unsub called")
-                        unsub()
+                        activation_timeout()
 
-            sub = async_dispatcher_connect(
+            activation_listener = async_dispatcher_connect(
                 hass,
                 f"signal-{DOMAIN}-webhook-None",
                 handle_event,
             )
 
-            unsub = async_call_later(hass, 10, unregister_webhook)
+            activation_timeout = async_call_later(hass, 10, unregister_webhook)
 
             await hass.async_add_executor_job(
                 hass.data[DOMAIN][entry.entry_id][AUTH].addwebhook, webhook_url
