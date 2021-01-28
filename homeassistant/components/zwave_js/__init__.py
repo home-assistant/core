@@ -6,10 +6,11 @@ from typing import Tuple
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.node import Node as ZwaveNode
+from zwave_js_server.model.value import ValueNotification
 
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import ATTR_DEVICE_ID, CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry
@@ -18,12 +19,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .api import async_register_api
 from .const import (
+    ATTR_HOME_ID,
+    ATTR_NODE_ID,
     CONF_INTEGRATION_CREATED_ADDON,
     DATA_CLIENT,
     DATA_UNSUBSCRIBE,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     PLATFORMS,
+    ZWAVE_EVENT,
 )
 from .discovery import async_discover_values
 
@@ -106,8 +110,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async_dispatcher_send(
                 hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
             )
-        # add listener for node events
-        node.on("value notification", on_node_event)
+        # add listener for stateless node events (value notification)
+        node.on("value notification", on_node_value_notification)
 
     @callback
     def async_on_node_added(node: ZwaveNode) -> None:
@@ -135,6 +139,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device = dev_reg.async_get_device({dev_id})
         # note: removal of entity registry is handled by core
         dev_reg.async_remove_device(device.id)
+
+    def on_node_value_notification(event_data: dict) -> None:
+        """Relay stateless value notification events from Z-Wave nodes to hass."""
+        notification: ValueNotification = event_data["notification"]
+        node = event_data["node"]
+        device = dev_reg.async_get_device(
+            {(DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")}
+        )
+        hass.bus.async_fire(
+            ZWAVE_EVENT,
+            {
+                ATTR_NODE_ID: node.node_id,
+                ATTR_HOME_ID: client.driver.controller.home_id,
+                ATTR_DEVICE_ID: device.id,
+                **notification.data,
+            },
+        )
 
     async def handle_ha_shutdown(event: Event) -> None:
         """Handle HA shutdown."""
