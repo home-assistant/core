@@ -291,6 +291,9 @@ class _ScriptRun:
         elif isinstance(exception, exceptions.ServiceNotFound):
             error_desc = "Service not found"
 
+        elif isinstance(exception, exceptions.HomeAssistantError):
+            error_desc = "Error"
+
         else:
             error_desc = "Unexpected error"
             level = _LOG_EXCEPTION

@@ -348,7 +348,7 @@ georss_qld_bushfire_alert_client==0.3
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==0.1.4
+gios==0.1.5
 
 # homeassistant.components.glances
 glances_api==0.2.0
@@ -387,7 +387,7 @@ hangups==0.4.11
 hass-nabucasa==0.41.0
 
 # homeassistant.components.tasmota
-hatasmota==0.2.6
+hatasmota==0.2.7
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12

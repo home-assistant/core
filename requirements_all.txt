@@ -333,7 +333,7 @@ batinfo==0.4.2
 # beacontools[scan]==1.2.3
 
 # homeassistant.components.scrape
-beautifulsoup4==4.9.1
+beautifulsoup4==4.9.3
 
 # homeassistant.components.beewi_smartclim
 # beewi_smartclim==0.0.10
@@ -657,7 +657,7 @@ georss_qld_bushfire_alert_client==0.3
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==0.1.4
+gios==0.1.5
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
@@ -738,7 +738,7 @@ hass-nabucasa==0.41.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.2.6
+hatasmota==0.2.7
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12
