@@ -154,6 +154,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
     )
 
+def convert_units(units):
+    """Return units as a farenheit or celsius constant."""
+    if units == "F":
+        return TEMP_FAHRENHEIT
+    return TEMP_CELSIUS
 
 class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     """Representation of a Z-Wave Climate device."""
@@ -164,12 +169,6 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         self._hvac_modes = {}
         self._hvac_presets = {}
         self.on_value_update()
-
-    def _convert_units(units):
-        """Return units as a farenheit or celsius constant."""
-        if units == "F":
-            return TEMP_FAHRENHEIT
-        return TEMP_CELSIUS
 
     @callback
     def on_value_update(self):
@@ -206,7 +205,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return _convert_units(self._current_mode_setpoint_values[0].units)
+        return convert_units(self._current_mode_setpoint_values[0].units)
 
     @property
     def current_temperature(self):
@@ -215,7 +214,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             return None
         return convert_temperature(
             self.values.temperature.value,
-            _convert_units(self._current_mode_setpoint_values[0].units),
+            convert_units(self._current_mode_setpoint_values[0].units),
             self.temperature_unit,
         )
 
@@ -247,7 +246,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         """Return the temperature we try to reach."""
         return convert_temperature(
             self._current_mode_setpoint_values[0].value,
-            _convert_units(self._current_mode_setpoint_values[0].units),
+            convert_units(self._current_mode_setpoint_values[0].units),
             self.temperature_unit,
         )
 
@@ -256,7 +255,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         """Return the lowbound target temperature we try to reach."""
         return convert_temperature(
             self._current_mode_setpoint_values[0].value,
-            _convert_units(self._current_mode_setpoint_values[0].units),
+            convert_units(self._current_mode_setpoint_values[0].units),
             self.temperature_unit,
         )
 
@@ -265,7 +264,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         """Return the highbound target temperature we try to reach."""
         return convert_temperature(
             self._current_mode_setpoint_values[1].value,
-            _convert_units(self._current_mode_setpoint_values[1].units),
+            convert_units(self._current_mode_setpoint_values[1].units),
             self.temperature_unit,
         )
 
@@ -286,7 +285,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
                 target_temp = convert_temperature(
                     target_temp,
                     self.temperature_unit,
-                    _convert_units(setpoint.units),
+                    convert_units(setpoint.units),
                 )
                 setpoint.send_value(target_temp)
         elif len(self._current_mode_setpoint_values) == 2:
@@ -297,14 +296,14 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
                 target_temp_low = convert_temperature(
                     target_temp_low,
                     self.temperature_unit,
-                    _convert_units(setpoint_low.units),
+                    convert_units(setpoint_low.units),
                 )
                 setpoint_low.send_value(target_temp_low)
             if setpoint_high is not None and target_temp_high is not None:
                 target_temp_high = convert_temperature(
                     target_temp_high,
                     self.temperature_unit,
-                    _convert_units(setpoint_high.units),
+                    convert_units(setpoint_high.units),
                 )
                 setpoint_high.send_value(target_temp_high)
 
