@@ -84,7 +84,7 @@ class ZWaveLock(ZWaveDeviceEntity, LockEntity):
         )
 
         if user_code is None:
-            return
+            return None
 
         return f"{user_code.value}"
 
