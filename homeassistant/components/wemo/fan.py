@@ -2,20 +2,18 @@
 import asyncio
 from datetime import timedelta
 import logging
+import math
 
 from pywemo.ouimeaux_device.api.service import ActionException
 import voluptuous as vol
 
-from homeassistant.components.fan import (
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.percentage import (
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
+)
 
 from .const import (
     DOMAIN as WEMO_DOMAIN,
@@ -48,37 +46,17 @@ WEMO_HUMIDITY_100 = 4
 
 WEMO_FAN_OFF = 0
 WEMO_FAN_MINIMUM = 1
-WEMO_FAN_LOW = 2  # Not used due to limitations of the base fan implementation
-WEMO_FAN_MEDIUM = 3
-WEMO_FAN_HIGH = 4  # Not used due to limitations of the base fan implementation
+WEMO_FAN_MEDIUM = 4
 WEMO_FAN_MAXIMUM = 5
+
+SPEED_RANGE = (WEMO_FAN_MINIMUM, WEMO_FAN_MAXIMUM)  # off is not included
 
 WEMO_WATER_EMPTY = 0
 WEMO_WATER_LOW = 1
 WEMO_WATER_GOOD = 2
 
-SUPPORTED_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
-
 SUPPORTED_FEATURES = SUPPORT_SET_SPEED
 
-# Since the base fan object supports a set list of fan speeds,
-# we have to reuse some of them when mapping to the 5 WeMo speeds
-WEMO_FAN_SPEED_TO_HASS = {
-    WEMO_FAN_OFF: SPEED_OFF,
-    WEMO_FAN_MINIMUM: SPEED_LOW,
-    WEMO_FAN_LOW: SPEED_LOW,  # Reusing SPEED_LOW
-    WEMO_FAN_MEDIUM: SPEED_MEDIUM,
-    WEMO_FAN_HIGH: SPEED_HIGH,  # Reusing SPEED_HIGH
-    WEMO_FAN_MAXIMUM: SPEED_HIGH,
-}
-
-# Because we reused mappings in the previous dict, we have to filter them
-# back out in this dict, or else we would have duplicate keys
-HASS_FAN_SPEED_TO_WEMO = {
-    v: k
-    for (k, v) in WEMO_FAN_SPEED_TO_HASS.items()
-    if k not in [WEMO_FAN_LOW, WEMO_FAN_HIGH]
-}
 
 SET_HUMIDITY_SCHEMA = {
     vol.Required(ATTR_TARGET_HUMIDITY): vol.All(
@@ -122,7 +100,8 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
     def __init__(self, device):
         """Initialize the WeMo switch."""
         super().__init__(device)
-        self._fan_mode = None
+        self._fan_mode = WEMO_FAN_OFF
+        self._fan_mode_string = None
         self._target_humidity = None
         self._current_humidity = None
         self._water_level = None
@@ -141,21 +120,16 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         return {
             ATTR_CURRENT_HUMIDITY: self._current_humidity,
             ATTR_TARGET_HUMIDITY: self._target_humidity,
-            ATTR_FAN_MODE: self._fan_mode,
+            ATTR_FAN_MODE: self._fan_mode_string,
             ATTR_WATER_LEVEL: self._water_level,
             ATTR_FILTER_LIFE: self._filter_life,
             ATTR_FILTER_EXPIRED: self._filter_expired,
         }
 
     @property
-    def speed(self) -> str:
-        """Return the current speed."""
-        return WEMO_FAN_SPEED_TO_HASS.get(self._fan_mode)
-
-    @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return SUPPORTED_SPEEDS
+    def percentage(self) -> str:
+        """Return the current speed percentage."""
+        return ranged_value_to_percentage(SPEED_RANGE, self._fan_mode)
 
     @property
     def supported_features(self) -> int:
@@ -167,7 +141,8 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         try:
             self._state = self.wemo.get_state(force_update)
 
-            self._fan_mode = self.wemo.fan_mode_string
+            self._fan_mode = self.wemo.fan_mode
+            self._fan_mode_string = self.wemo.fan_mode_string
             self._target_humidity = self.wemo.desired_humidity_percent
             self._current_humidity = self.wemo.current_humidity_percent
             self._water_level = self.wemo.water_level_string
@@ -185,13 +160,6 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
             self._available = False
             self.wemo.reconnect_with_device()
 
-    #
-    # The fan entity model has changed to use percentages and preset_modes
-    # instead of speeds.
-    #
-    # Please review
-    # https://developers.home-assistant.io/docs/core/entity/fan/
-    #
     def turn_on(
         self,
         speed: str = None,
@@ -199,17 +167,8 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         preset_mode: str = None,
         **kwargs,
     ) -> None:
-        """Turn the switch on."""
-        if speed is None:
-            try:
-                self.wemo.set_state(self._last_fan_on_mode)
-            except ActionException as err:
-                _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
-                self._available = False
-        else:
-            self.set_speed(speed)
-
-        self.schedule_update_ha_state()
+        """Turn the fan on."""
+        self.set_percentage(percentage)
 
     def turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
@@ -221,10 +180,17 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
 
         self.schedule_update_ha_state()
 
-    def set_speed(self, speed: str) -> None:
+    def set_percentage(self, percentage: int) -> None:
         """Set the fan_mode of the Humidifier."""
+        if percentage is None:
+            named_speed = self._last_fan_on_mode
+        elif percentage == 0:
+            named_speed = WEMO_FAN_OFF
+        else:
+            named_speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+
         try:
-            self.wemo.set_state(HASS_FAN_SPEED_TO_WEMO.get(speed))
+            self.wemo.set_state(named_speed)
         except ActionException as err:
             _LOGGER.warning(
                 "Error while setting speed of device %s (%s)", self.name, err
