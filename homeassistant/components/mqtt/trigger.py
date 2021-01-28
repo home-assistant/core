@@ -37,7 +37,9 @@ async def async_attach_trigger(hass, config, action, automation_info):
     encoding = config[CONF_ENCODING] or None
     qos = config[CONF_QOS]
     job = HassJob(action)
-    variables = automation_info["variables"]
+    variables = None
+    if automation_info:
+        variables = automation_info.get("variables")
 
     if payload:
         template.attach(hass, payload)
