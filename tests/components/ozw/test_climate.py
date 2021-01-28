@@ -36,7 +36,7 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
         HVAC_MODE_HEAT_COOL,
     ]
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 23.1
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 73.5
     assert state.attributes[ATTR_TEMPERATURE] == 21.1
     assert state.attributes.get(ATTR_TARGET_TEMP_LOW) is None
     assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) is None
