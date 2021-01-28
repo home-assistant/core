@@ -238,10 +238,10 @@ def test_type_sensors(type_name, entity_id, state, attrs):
         ("Switch", "script.test", "on", {}, {}),
         ("Switch", "switch.test", "on", {}, {}),
         ("Switch", "switch.test", "on", {}, {CONF_TYPE: TYPE_SWITCH}),
-        ("Valve", "switch.test", "on", {}, {CONF_TYPE: TYPE_FAUCET}),
+        ("Faucet", "switch.test", "on", {}, {CONF_TYPE: TYPE_FAUCET}),
         ("Valve", "switch.test", "on", {}, {CONF_TYPE: TYPE_VALVE}),
-        ("Valve", "switch.test", "on", {}, {CONF_TYPE: TYPE_SHOWER}),
-        ("Valve", "switch.test", "on", {}, {CONF_TYPE: TYPE_SPRINKLER}),
+        ("ShowerHead", "switch.test", "on", {}, {CONF_TYPE: TYPE_SHOWER}),
+        ("Sprinkler", "switch.test", "on", {}, {CONF_TYPE: TYPE_SPRINKLER}),
     ],
 )
 def test_type_switches(type_name, entity_id, state, attrs, config):
