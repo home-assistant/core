@@ -328,37 +328,37 @@ class ControllerDevice(ClimateEntity):
 
     @property
     def control_zone_name(self):
-        """Return the zone that currently controls the AC unit."""
-        if not self._supported_features & SUPPORT_TARGET_TEMPERATURE:
-            zone_ctrl = self._controller.zone_ctrl
-            zone = next(
-                (z for z in self.zones.values() if z.zone_index == zone_ctrl), None
-            )
-            if zone is None:
-                return None
-            return zone.name
-        return None
+        """Return the zone that currently controls the AC unit (if target temp not set by controller)."""
+        if self._supported_features & SUPPORT_TARGET_TEMPERATURE:
+            return None
+        zone_ctrl = self._controller.zone_ctrl
+        zone = next(
+            (z for z in self.zones.values() if z.zone_index == zone_ctrl), None
+        )
+        if zone is None:
+            return None
+        return zone.name
 
     @property
     def control_zone_setpoint(self) -> Optional[float]:
-        """Return the temperature setpoint of the zone that currently controls the AC unit."""
-        if not self._supported_features & SUPPORT_TARGET_TEMPERATURE:
-            zone_ctrl = self._controller.zone_ctrl
-            zone = next(
-                (z for z in self.zones.values() if z.zone_index == zone_ctrl), None
-            )
-            if zone is None:
-                return None
-            return zone.target_temperature
-        return None
+        """Return the temperature setpoint of the zone that currently controls the AC unit (if target temp not set by controller)."""
+        if self._supported_features & SUPPORT_TARGET_TEMPERATURE:
+            return None
+        zone_ctrl = self._controller.zone_ctrl
+        zone = next(
+            (z for z in self.zones.values() if z.zone_index == zone_ctrl), None
+        )
+        if zone is None:
+            return None
+        return zone.target_temperature
 
     @property
     @_return_on_connection_error()
     def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach (either from control zone or master unit)."""
-        if not self._supported_features & SUPPORT_TARGET_TEMPERATURE:
-            return self.control_zone_setpoint
-        return self._controller.temp_setpoint
+        if self._supported_features & SUPPORT_TARGET_TEMPERATURE:
+            return self._controller.temp_setpoint
+        return self.control_zone_setpoint
 
     @property
     def supply_temperature(self) -> float:
