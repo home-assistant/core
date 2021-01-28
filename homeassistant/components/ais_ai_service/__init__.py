@@ -2395,10 +2395,16 @@ async def async_setup(hass, config):
             hass.states.async_set("sensor.ais_tv_activity", "spotify")
             _say_it(hass, "Odtwarzacz Spotify")
             await _publish_command_to_frame(hass, "goToActivity", "SpotifyActivity")
-        elif context == "ais_tv_camera":
+        elif context == "ais_tv_cameras":
             hass.states.async_set("sensor.ais_tv_activity", "camera")
-            _say_it(hass, "Podgląd z kamery, funkcjonalność w przygotowaniu")
-            await _publish_command_to_frame(hass, "goToActivity", "ExoPlayerActivity")
+            _say_it(hass, "Podgląd z kamery")
+        elif context == "ais_tv_show_camera":
+            hass.states.async_set("sensor.ais_tv_activity", "camera")
+            cam_id = service.data["entity_id"]
+            cam_attr = hass.states.get(cam_id).attributes
+            cam_name = cam_attr.get("friendly_name", "")
+            _say_it(hass, "Podgląd z kamery " + cam_name)
+            await _publish_command_to_frame(hass, "showCamera", cam_id)
         elif context == "ais_tv_settings":
             hass.states.async_set("sensor.ais_tv_activity", "settings")
             _say_it(hass, "Ustawienia aplikacji")
@@ -3162,6 +3168,13 @@ async def _publish_command_to_frame(hass, key, val, ip=None):
             "WifiNetworkSsid": ssid,
             "IotName": name,
             "bsssid": bssid,
+        }
+    elif key == "showCamera":
+        component = hass.data.get("camera")
+        camera = component.get_entity(val)
+        stream_source = await camera.stream_source()
+        requests_json = {
+            "showCamera": {"streamUrl": stream_source, "openAutomationName": ""}
         }
     else:
         requests_json = {key: val, "ip": ip}

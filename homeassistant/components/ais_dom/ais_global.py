@@ -168,7 +168,7 @@ def get_sercure_android_id_dom():
                 G_AIS_SECURE_ANDROID_ID_DOM = dom_id
                 return G_AIS_SECURE_ANDROID_ID_DOM
     except Exception as e:
-        _LOGGER.error("Error get_sercure_android_id_dom " + str(e))
+        _LOGGER.info("Error get_sercure_android_id_dom " + str(e))
 
     # get dom_id from secure android settings and save in file
     import subprocess

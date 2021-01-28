@@ -504,6 +504,10 @@ class FileReadView(HomeAssistantView):
         except ValueError:
             return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
         file_path = data["filePath"]
+        if file_path == "/data/data/pl.sviete.dom/files/home/AIS/ais_welcome.txt":
+            if not os.path.isfile(file_path):
+                # create empty file
+                os.mknod(file_path)
         response = FileResponse(path=file_path)
         return response
 

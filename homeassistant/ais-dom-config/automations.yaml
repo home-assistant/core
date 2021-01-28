@@ -221,7 +221,7 @@
   initial_state: True
   trigger:
     platform: time
-    at: '04:12:00'
+    at: '05:15:00'
   action:
     - service: ais_shell_command.flush_logs
 

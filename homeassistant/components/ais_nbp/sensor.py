@@ -121,7 +121,7 @@ class AisNbpSensor(Entity):
                 else:
                     return json_info["rates"][0]["mid"]
         except Exception as e:
-            _LOGGER.error("Ask NBP timeout error: " + str(e))
+            _LOGGER.info("Ask NBP timeout error: " + str(e))
 
     async def async_update(self):
         """Pobranie aktualnego statusu sensora

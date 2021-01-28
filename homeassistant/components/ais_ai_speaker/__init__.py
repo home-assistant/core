@@ -5,6 +5,7 @@ from aisapi.ws import AisWebService
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -21,7 +22,13 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up AI Speaker from a config entry."""
     web_session = aiohttp_client.async_get_clientsession(hass)
-    ais = AisWebService(web_session, entry.data["host"])
+    try:
+        ais = AisWebService(web_session, entry.data["host"])
+        if not ais:
+            raise ConfigEntryNotReady
+    except (OSError, ConnectionRefusedError, TimeoutError) as error:
+        raise ConfigEntryNotReady() from error
+
     hass.data[DOMAIN][entry.entry_id] = ais
 
     for component in PLATFORMS:
