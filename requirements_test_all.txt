@@ -750,7 +750,7 @@ pydexcom==0.2.0
 pydispatcher==2.0.5
 
 # homeassistant.components.ebus
-pyebus==1.1.5
+pyebus==1.2.2
 
 # homeassistant.components.econet
 pyeconet==0.1.14
