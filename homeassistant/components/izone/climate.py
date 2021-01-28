@@ -355,7 +355,7 @@ class ControllerDevice(ClimateEntity):
     @property
     @_return_on_connection_error()
     def target_temperature(self) -> Optional[float]:
-        """Return the temperature we try to reach (ether from control zone or master unit)."""
+        """Return the temperature we try to reach (either from control zone or master unit)."""
         if not self._supported_features & SUPPORT_TARGET_TEMPERATURE:
             return self.control_zone_setpoint
         return self._controller.temp_setpoint
@@ -607,11 +607,6 @@ class ZoneDevice(ClimateEntity):
         """Turn device off (close zone)."""
         await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.CLOSE))
         self.async_write_ha_state()
-
-    @property
-    def zone_index(self):
-        """Return the zone index for matching to CtrlZone."""
-        return self._zone.index
 
     @property
     def device_state_attributes(self):
