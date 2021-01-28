@@ -43,7 +43,7 @@ async def test_setup_connection_error(hass: HomeAssistant):
     """Test setup entry fails on connection error."""
     entry = configure_integration(hass)
     with patch(
-        "devolo_home_control_api.homecontrol.HomeControl.__init__",
+        "homeassistant.components.devolo_home_control.HomeControl",
         side_effect=ConnectionError,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -54,7 +54,7 @@ async def test_setup_gateway_offline(hass: HomeAssistant):
     """Test setup entry fails on gateway offline."""
     entry = configure_integration(hass)
     with patch(
-        "devolo_home_control_api.homecontrol.HomeControl.__init__",
+        "homeassistant.components.devolo_home_control.HomeControl",
         side_effect=GatewayOfflineError,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
