@@ -80,9 +80,11 @@ class TemperatureSensor(HomeAccessory):
     Sensor entity must return temperature in °C, °F.
     """
 
+    category = CATEGORY_SENSOR
+
     def __init__(self, *args):
         """Initialize a TemperatureSensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
+        super().__init__(*args)
         state = self.hass.states.get(self.entity_id)
         serv_temp = self.add_preload_service(SERV_TEMPERATURE_SENSOR)
         self.char_temp = serv_temp.configure_char(
@@ -110,9 +112,11 @@ class TemperatureSensor(HomeAccessory):
 class HumiditySensor(HomeAccessory):
     """Generate a HumiditySensor accessory as humidity sensor."""
 
+    category = CATEGORY_SENSOR
+
     def __init__(self, *args):
         """Initialize a HumiditySensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
+        super().__init__(*args)
         state = self.hass.states.get(self.entity_id)
         serv_humidity = self.add_preload_service(SERV_HUMIDITY_SENSOR)
         self.char_humidity = serv_humidity.configure_char(
@@ -135,9 +139,11 @@ class HumiditySensor(HomeAccessory):
 class AirQualitySensor(HomeAccessory):
     """Generate a AirQualitySensor accessory as air quality sensor."""
 
+    category = CATEGORY_SENSOR
+
     def __init__(self, *args):
         """Initialize a AirQualitySensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
+        super().__init__(*args)
         state = self.hass.states.get(self.entity_id)
         serv_air_quality = self.add_preload_service(
             SERV_AIR_QUALITY_SENSOR, [CHAR_AIR_PARTICULATE_DENSITY]
@@ -168,9 +174,11 @@ class AirQualitySensor(HomeAccessory):
 class CarbonMonoxideSensor(HomeAccessory):
     """Generate a CarbonMonoxidSensor accessory as CO sensor."""
 
+    category = CATEGORY_SENSOR
+
     def __init__(self, *args):
         """Initialize a CarbonMonoxideSensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
+        super().__init__(*args)
         state = self.hass.states.get(self.entity_id)
         serv_co = self.add_preload_service(
             SERV_CARBON_MONOXIDE_SENSOR,
@@ -206,9 +214,11 @@ class CarbonMonoxideSensor(HomeAccessory):
 class CarbonDioxideSensor(HomeAccessory):
     """Generate a CarbonDioxideSensor accessory as CO2 sensor."""
 
+    category = CATEGORY_SENSOR
+
     def __init__(self, *args):
         """Initialize a CarbonDioxideSensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
+        super().__init__(*args)
         state = self.hass.states.get(self.entity_id)
         serv_co2 = self.add_preload_service(
             SERV_CARBON_DIOXIDE_SENSOR,
@@ -244,9 +254,11 @@ class CarbonDioxideSensor(HomeAccessory):
 class LightSensor(HomeAccessory):
     """Generate a LightSensor accessory as light sensor."""
 
+    category = CATEGORY_SENSOR
+
     def __init__(self, *args):
         """Initialize a LightSensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
+        super().__init__(*args)
         state = self.hass.states.get(self.entity_id)
         serv_light = self.add_preload_service(SERV_LIGHT_SENSOR)
         self.char_light = serv_light.configure_char(
@@ -269,9 +281,11 @@ class LightSensor(HomeAccessory):
 class BinarySensor(HomeAccessory):
     """Generate a BinarySensor accessory as binary sensor."""
 
+    category = CATEGORY_SENSOR
+
     def __init__(self, *args):
         """Initialize a BinarySensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
+        super().__init__(*args)
         state = self.hass.states.get(self.entity_id)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         service_char = (

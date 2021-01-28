@@ -47,21 +47,18 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-VALVE_TYPE = {
-    TYPE_FAUCET: (CATEGORY_FAUCET, 3),
-    TYPE_SHOWER: (CATEGORY_SHOWER_HEAD, 2),
-    TYPE_SPRINKLER: (CATEGORY_SPRINKLER, 1),
-    TYPE_VALVE: (CATEGORY_FAUCET, 0),
-}
+VALVE_TYPE = {TYPE_FAUCET: 3, TYPE_SHOWER: 2, TYPE_SPRINKLER: 1, TYPE_VALVE: 0}
 
 
 @TYPES.register("Outlet")
 class Outlet(HomeAccessory):
     """Generate an Outlet accessory."""
 
+    category = CATEGORY_OUTLET
+
     def __init__(self, *args):
         """Initialize an Outlet accessory object."""
-        super().__init__(*args, category=CATEGORY_OUTLET)
+        super().__init__(*args)
         state = self.hass.states.get(self.entity_id)
 
         serv_outlet = self.add_preload_service(SERV_OUTLET)
@@ -95,9 +92,11 @@ class Outlet(HomeAccessory):
 class Switch(HomeAccessory):
     """Generate a Switch accessory."""
 
+    category = CATEGORY_SWITCH
+
     def __init__(self, *args):
         """Initialize a Switch accessory object."""
-        super().__init__(*args, category=CATEGORY_SWITCH)
+        super().__init__(*args)
         self._domain = split_entity_id(self.entity_id)[0]
         state = self.hass.states.get(self.entity_id)
 
@@ -156,6 +155,8 @@ class Switch(HomeAccessory):
 class Vacuum(Switch):
     """Generate a Switch accessory."""
 
+    category = CATEGORY_SWITCH
+
     def set_state(self, value):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
@@ -180,8 +181,7 @@ class Vacuum(Switch):
             self.char_on.set_value(current_state)
 
 
-@TYPES.register("Valve")
-class Valve(HomeAccessory):
+class ValveBase(HomeAccessory):
     """Generate a Valve accessory."""
 
     def __init__(self, *args):
@@ -189,7 +189,6 @@ class Valve(HomeAccessory):
         super().__init__(*args)
         state = self.hass.states.get(self.entity_id)
         valve_type = self.config[CONF_TYPE]
-        self.category = VALVE_TYPE[valve_type][0]
 
         serv_valve = self.add_preload_service(SERV_VALVE)
         self.char_active = serv_valve.configure_char(
@@ -197,7 +196,7 @@ class Valve(HomeAccessory):
         )
         self.char_in_use = serv_valve.configure_char(CHAR_IN_USE, value=False)
         self.char_valve_type = serv_valve.configure_char(
-            CHAR_VALVE_TYPE, value=VALVE_TYPE[valve_type][1]
+            CHAR_VALVE_TYPE, value=VALVE_TYPE[valve_type]
         )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
@@ -221,3 +220,31 @@ class Valve(HomeAccessory):
         if self.char_in_use.value != current_state:
             _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
             self.char_in_use.set_value(current_state)
+
+
+@TYPES.register("Faucet")
+class Faucet(ValveBase):
+    """Generate a faucet accessory."""
+
+    category = CATEGORY_FAUCET
+
+
+@TYPES.register("ShowerHead")
+class ShowerHead(ValveBase):
+    """Generate a shower head accessory."""
+
+    category = CATEGORY_SHOWER_HEAD
+
+
+@TYPES.register("Sprinkler")
+class Sprinkler(ValveBase):
+    """Generate a sprinkler accessory."""
+
+    category = CATEGORY_SPRINKLER
+
+
+@TYPES.register("Valve")
+class Valve(ValveBase):
+    """Generate a valve accessory."""
+
+    category = CATEGORY_FAUCET

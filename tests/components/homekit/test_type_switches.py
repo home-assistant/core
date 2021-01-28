@@ -1,6 +1,7 @@
 """Test different accessory types: Switches."""
 from datetime import timedelta
 
+from pyhap.const import CATEGORY_FAUCET, CATEGORY_SHOWER_HEAD, CATEGORY_SPRINKLER
 import pytest
 
 from homeassistant.components.homekit.const import (
@@ -10,7 +11,15 @@ from homeassistant.components.homekit.const import (
     TYPE_SPRINKLER,
     TYPE_VALVE,
 )
-from homeassistant.components.homekit.type_switches import Outlet, Switch, Vacuum, Valve
+from homeassistant.components.homekit.type_switches import (
+    Faucet,
+    Outlet,
+    ShowerHead,
+    Sprinkler,
+    Switch,
+    Vacuum,
+    Valve,
+)
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_RETURN_TO_BASE,
@@ -138,22 +147,26 @@ async def test_valve_set_state(hass, hk_driver, events):
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
 
-    acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_FAUCET})
+    acc = Faucet(hass, hk_driver, "Faucet", entity_id, 2, {CONF_TYPE: TYPE_FAUCET})
     await acc.run_handler()
     await hass.async_block_till_done()
-    assert acc.category == 29  # Faucet
+    assert acc.category == CATEGORY_FAUCET  # Faucet
     assert acc.char_valve_type.value == 3  # Water faucet
 
-    acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_SHOWER})
+    acc = ShowerHead(
+        hass, hk_driver, "ShowerHead", entity_id, 2, {CONF_TYPE: TYPE_SHOWER}
+    )
     await acc.run_handler()
     await hass.async_block_till_done()
-    assert acc.category == 30  # Shower
+    assert acc.category == CATEGORY_SHOWER_HEAD  # Shower
     assert acc.char_valve_type.value == 2  # Shower head
 
-    acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_SPRINKLER})
+    acc = Sprinkler(
+        hass, hk_driver, "Sprinkler", entity_id, 2, {CONF_TYPE: TYPE_SPRINKLER}
+    )
     await acc.run_handler()
     await hass.async_block_till_done()
-    assert acc.category == 28  # Sprinkler
+    assert acc.category == CATEGORY_SPRINKLER  # Sprinkler
     assert acc.char_valve_type.value == 1  # Irrigation
 
     acc = Valve(hass, hk_driver, "Valve", entity_id, 2, {CONF_TYPE: TYPE_VALVE})
@@ -161,7 +174,7 @@ async def test_valve_set_state(hass, hk_driver, events):
     await hass.async_block_till_done()
 
     assert acc.aid == 2
-    assert acc.category == 29  # Faucet
+    assert acc.category == CATEGORY_FAUCET  # Faucet
 
     assert acc.char_active.value == 0
     assert acc.char_in_use.value == 0
