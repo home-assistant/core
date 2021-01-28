@@ -1,4 +1,5 @@
 """iCloud account."""
+import asyncio
 from datetime import timedelta
 import logging
 import operator
@@ -130,7 +131,9 @@ class IcloudAccount:
             }
             if not any(
                 flow
-                for flow in self.hass.config_entries.flow.async_progress()
+                for flow in asyncio.run_coroutine_threadsafe(
+                    self.hass.config_entries.flow.async_progress(), self.hass.loop
+                ).result()
                 if flow["context"] == context
             ):
                 self.hass.add_job(
