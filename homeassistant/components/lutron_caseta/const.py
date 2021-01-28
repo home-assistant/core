@@ -19,7 +19,7 @@ LUTRON_CASETA_BUTTON_EVENT = "lutron_caseta_button_event"
 
 BRIDGE_DEVICE_ID = "1"
 
-MANUFACTURER = "Lutron"
+MANUFACTURER = "Lutron Electronics Co., Inc"
 
 ATTR_SERIAL = "serial"
 ATTR_TYPE = "type"
