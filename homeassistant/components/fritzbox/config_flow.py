@@ -47,6 +47,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize flow."""
+        self._entry = None
         self._host = None
         self._name = None
         self._password = None
@@ -63,17 +64,16 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _update_entry(self):
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data[CONF_HOST] == self._host:
-                self.hass.config_entries.async_update_entry(
-                    entry,
-                    data={
-                        CONF_HOST: self._host,
-                        CONF_PASSWORD: self._password,
-                        CONF_USERNAME: self._username,
-                    },
-                )
-                await self.hass.config_entries.async_reload(entry.entry_id)
+        if self._entry is not None:
+            self.hass.config_entries.async_update_entry(
+                self._entry,
+                data={
+                    CONF_HOST: self._host,
+                    CONF_PASSWORD: self._password,
+                    CONF_USERNAME: self._username,
+                },
+            )
+            await self.hass.config_entries.async_reload(self._entry.entry_id)
 
     def _try_connect(self):
         """Try to connect and check auth."""
@@ -174,11 +174,12 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, config):
+    async def async_step_reauth(self, entry):
         """Trigger a reauthentication flow."""
-        self._host = config[CONF_HOST]
-        self._name = config[CONF_HOST]
-        self._username = config[CONF_USERNAME]
+        self._entry = entry
+        self._host = entry.data[CONF_HOST]
+        self._name = entry.data[CONF_HOST]
+        self._username = entry.data[CONF_USERNAME]
 
         return await self.async_step_reauth_confirm()
 

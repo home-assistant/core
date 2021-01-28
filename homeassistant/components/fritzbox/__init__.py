@@ -85,7 +85,7 @@ async def async_setup_entry(hass, entry):
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": SOURCE_REAUTH},
-                data=entry.data,
+                data=entry,
             )
         )
         return False
