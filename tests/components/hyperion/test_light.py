@@ -1,21 +1,12 @@
 """Tests for the Hyperion integration."""
 import logging
-from types import MappingProxyType
 from typing import Optional
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from hyperion import const
 
-from homeassistant import setup
-from homeassistant.components.hyperion import (
-    get_hyperion_unique_id,
-    light as hyperion_light,
-)
-from homeassistant.components.hyperion.const import (
-    DEFAULT_ORIGIN,
-    DOMAIN,
-    TYPE_HYPERION_LIGHT,
-)
+from homeassistant.components.hyperion import light as hyperion_light
+from homeassistant.components.hyperion.const import DEFAULT_ORIGIN, DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
@@ -43,7 +34,6 @@ import homeassistant.util.color as color_util
 from . import (
     TEST_AUTH_NOT_REQUIRED_RESP,
     TEST_AUTH_REQUIRED_RESP,
-    TEST_CONFIG_ENTRY_OPTIONS,
     TEST_ENTITY_ID_1,
     TEST_ENTITY_ID_2,
     TEST_ENTITY_ID_3,
@@ -56,8 +46,6 @@ from . import (
     TEST_PRIORITY,
     TEST_PRIORITY_LIGHT_ENTITY_ID_1,
     TEST_SYSINFO_ID,
-    TEST_YAML_ENTITY_ID,
-    TEST_YAML_NAME,
     add_test_config_entry,
     call_registered_callback,
     create_mock_client,
@@ -69,28 +57,6 @@ _LOGGER = logging.getLogger(__name__)
 COLOR_BLACK = color_util.COLORS["black"]
 
 
-async def _setup_entity_yaml(hass: HomeAssistantType, client: AsyncMock = None) -> None:
-    """Add a test Hyperion entity to hass."""
-    client = client or create_mock_client()
-    with patch(
-        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
-    ):
-        assert await setup.async_setup_component(
-            hass,
-            LIGHT_DOMAIN,
-            {
-                LIGHT_DOMAIN: {
-                    "platform": "hyperion",
-                    "name": TEST_YAML_NAME,
-                    "host": TEST_HOST,
-                    "port": TEST_PORT,
-                    "priority": TEST_PRIORITY,
-                }
-            },
-        )
-        await hass.async_block_till_done()
-
-
 def _get_config_entry_from_unique_id(
     hass: HomeAssistantType, unique_id: str
 ) -> Optional[ConfigEntry]:
@@ -98,127 +64,6 @@ def _get_config_entry_from_unique_id(
         if TEST_SYSINFO_ID == entry.unique_id:
             return entry
     return None
-
-
-async def test_setup_yaml_already_converted(hass: HomeAssistantType) -> None:
-    """Test an already converted YAML style config."""
-    # This tests "Possibility 1" from async_setup_platform()
-
-    # Add a pre-existing config entry.
-    add_test_config_entry(hass)
-    client = create_mock_client()
-    await _setup_entity_yaml(hass, client=client)
-    assert client.async_client_disconnect.called
-
-    # Setup should be skipped for the YAML config as there is a pre-existing config
-    # entry.
-    assert hass.states.get(TEST_YAML_ENTITY_ID) is None
-
-
-async def test_setup_yaml_old_style_unique_id(hass: HomeAssistantType) -> None:
-    """Test an already converted YAML style config."""
-    # This tests "Possibility 2" from async_setup_platform()
-    old_unique_id = f"{TEST_HOST}:{TEST_PORT}-0"
-
-    # Add a pre-existing registry entry.
-    registry = await async_get_registry(hass)
-    registry.async_get_or_create(
-        domain=LIGHT_DOMAIN,
-        platform=DOMAIN,
-        unique_id=old_unique_id,
-        suggested_object_id=TEST_YAML_NAME,
-    )
-
-    client = create_mock_client()
-    await _setup_entity_yaml(hass, client=client)
-    assert client.async_client_disconnect.called
-
-    # The entity should have been created with the same entity_id.
-    assert hass.states.get(TEST_YAML_ENTITY_ID) is not None
-
-    # The unique_id should have been updated in the registry (rather than the one
-    # specified above).
-    assert registry.async_get(TEST_YAML_ENTITY_ID).unique_id == get_hyperion_unique_id(
-        TEST_SYSINFO_ID, 0, TYPE_HYPERION_LIGHT
-    )
-    assert registry.async_get_entity_id(LIGHT_DOMAIN, DOMAIN, old_unique_id) is None
-
-    # There should be a config entry with the correct server unique_id.
-    entry = _get_config_entry_from_unique_id(hass, TEST_SYSINFO_ID)
-    assert entry
-    assert entry.options == MappingProxyType(TEST_CONFIG_ENTRY_OPTIONS)
-
-
-async def test_setup_yaml_new_style_unique_id_wo_config(
-    hass: HomeAssistantType,
-) -> None:
-    """Test an a new unique_id without a config entry."""
-    # Note: This casde should not happen in the wild, as no released version of Home
-    # Assistant should this combination, but verify correct behavior for defense in
-    # depth.
-
-    new_unique_id = get_hyperion_unique_id(TEST_SYSINFO_ID, 0, TYPE_HYPERION_LIGHT)
-    entity_id_to_preserve = "light.magic_entity"
-
-    # Add a pre-existing registry entry.
-    registry = await async_get_registry(hass)
-    registry.async_get_or_create(
-        domain=LIGHT_DOMAIN,
-        platform=DOMAIN,
-        unique_id=new_unique_id,
-        suggested_object_id=entity_id_to_preserve.split(".")[1],
-    )
-
-    client = create_mock_client()
-    await _setup_entity_yaml(hass, client=client)
-    assert client.async_client_disconnect.called
-
-    # The entity should have been created with the same entity_id.
-    assert hass.states.get(entity_id_to_preserve) is not None
-
-    # The unique_id should have been updated in the registry (rather than the one
-    # specified above).
-    assert registry.async_get(entity_id_to_preserve).unique_id == new_unique_id
-
-    # There should be a config entry with the correct server unique_id.
-    entry = _get_config_entry_from_unique_id(hass, TEST_SYSINFO_ID)
-    assert entry
-    assert entry.options == MappingProxyType(TEST_CONFIG_ENTRY_OPTIONS)
-
-
-async def test_setup_yaml_no_registry_entity(hass: HomeAssistantType) -> None:
-    """Test an already converted YAML style config."""
-    # This tests "Possibility 3" from async_setup_platform()
-
-    registry = await async_get_registry(hass)
-
-    # Add a pre-existing config entry.
-    client = create_mock_client()
-    await _setup_entity_yaml(hass, client=client)
-    assert client.async_client_disconnect.called
-
-    # The entity should have been created with the same entity_id.
-    assert hass.states.get(TEST_YAML_ENTITY_ID) is not None
-
-    # The unique_id should have been updated in the registry (rather than the one
-    # specified above).
-    assert registry.async_get(TEST_YAML_ENTITY_ID).unique_id == get_hyperion_unique_id(
-        TEST_SYSINFO_ID, 0, TYPE_HYPERION_LIGHT
-    )
-
-    # There should be a config entry with the correct server unique_id.
-    entry = _get_config_entry_from_unique_id(hass, TEST_SYSINFO_ID)
-    assert entry
-    assert entry.options == MappingProxyType(TEST_CONFIG_ENTRY_OPTIONS)
-
-
-async def test_setup_yaml_not_ready(hass: HomeAssistantType) -> None:
-    """Test the component not being ready."""
-    client = create_mock_client()
-    client.async_client_connect = AsyncMock(return_value=False)
-    await _setup_entity_yaml(hass, client=client)
-    assert client.async_client_disconnect.called
-    assert hass.states.get(TEST_YAML_ENTITY_ID) is None
 
 
 async def test_setup_config_entry(hass: HomeAssistantType) -> None:
