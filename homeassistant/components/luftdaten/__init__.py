@@ -44,6 +44,8 @@ SENSOR_LAEQ = "noise_LAeq"
 SENSOR_LA_MIN = "noise_LA_min"
 SENSOR_LA_MAX = "noise_LA_max"
 
+SENSOR_RADIATION_CPM = "counts_per_minute"
+
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
 SENSORS = {
@@ -64,6 +66,7 @@ SENSORS = {
     SENSOR_LAEQ: ["LAeq", "mdi:waveform", "LAeq"],
     SENSOR_LA_MIN: ["LAmin", "mdi:waveform", "LAmin"],
     SENSOR_LA_MAX: ["LAmax", "mdi:waveform", "LAmax"],
+    SENSOR_RADIATION_CPM: ["cpm", "mdi:atom", "cpm"],
 }
 
 SENSOR_SCHEMA = vol.Schema(
