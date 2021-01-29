@@ -13,8 +13,8 @@ async def test_significant_change():
         async_check_significant_change(None, "on", old_attrs, "on", old_attrs) is False
     )
     assert (
-        async_check_significant_change(None, "on", old_attrs, "off", old_attrs) is True
+        async_check_significant_change(None, "on", old_attrs, "on", new_attrs) is False
     )
     assert (
-        async_check_significant_change(None, "on", old_attrs, "on", new_attrs) is False
+        async_check_significant_change(None, "on", old_attrs, "off", old_attrs) is True
     )
