@@ -24,7 +24,7 @@
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
     "files.trimTrailingWhitespace": true,
-    "terminal.integrated.shell.linux": "/bin/bash",
+    "terminal.integrated.shell.linux": "/usr/bin/zsh",
     "yaml.customTags": [
       "!input scalar",
       "!secret scalar",
