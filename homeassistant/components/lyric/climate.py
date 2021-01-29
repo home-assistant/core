@@ -37,6 +37,12 @@ from .const import (
     SERVICE_HOLD_TIME,
 )
 
+LYRIC_EXCEPTIONS = (
+    LyricAuthenticationException,
+    LyricException,
+    ClientResponseError,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
@@ -233,11 +239,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                         await self.coordinator.data.update_thermostat(
                             location, device, heatSetpoint=temp
                         )
-                    except (
-                        LyricAuthenticationException,
-                        LyricException,
-                        ClientResponseError,
-                    ) as exception:
+                    except LYRIC_EXCEPTIONS as exception:
                         _LOGGER.error(exception)
         await self.coordinator.async_refresh()
 
@@ -251,11 +253,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                         await self.coordinator.data.update_thermostat(
                             location, device, mode=LYRIC_HVAC_MODES[hvac_mode]
                         )
-                    except (
-                        LyricAuthenticationException,
-                        LyricException,
-                        ClientResponseError,
-                    ) as exception:
+                    except LYRIC_EXCEPTIONS as exception:
                         _LOGGER.error(exception)
         await self.coordinator.async_refresh()
 
@@ -269,11 +267,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                         await self.coordinator.data.update_thermostat(
                             location, device, thermostatSetpointStatus=preset_mode
                         )
-                    except (
-                        LyricAuthenticationException,
-                        LyricException,
-                        ClientResponseError,
-                    ) as exception:
+                    except LYRIC_EXCEPTIONS as exception:
                         _LOGGER.error(exception)
         await self.coordinator.async_refresh()
 
@@ -286,11 +280,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                         await self.coordinator.data.update_thermostat(
                             location, device, nextPeriodTime=period
                         )
-                    except (
-                        LyricAuthenticationException,
-                        LyricException,
-                        ClientResponseError,
-                    ) as exception:
+                    except LYRIC_EXCEPTIONS as exception:
                         _LOGGER.error(exception)
         await self.coordinator.async_refresh()
 
@@ -308,10 +298,6 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                             thermostatSetpointStatus=PRESET_HOLD_UNTIL,
                             nextPeriodTime=time,
                         )
-                    except (
-                        LyricAuthenticationException,
-                        LyricException,
-                        ClientResponseError,
-                    ) as exception:
+                    except LYRIC_EXCEPTIONS as exception:
                         _LOGGER.error(exception)
         await self.coordinator.async_refresh()
