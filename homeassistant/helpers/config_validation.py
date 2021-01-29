@@ -266,7 +266,7 @@ def entity_id(value: Any) -> str:
     if valid_entity_id(str_value):
         return str_value
 
-    raise vol.Invalid(f"Entity ID {value} is an invalid entity id")
+    raise vol.Invalid(f"Entity ID {value} is an invalid entity ID")
 
 
 def entity_ids(value: Union[str, List]) -> List[str]:
