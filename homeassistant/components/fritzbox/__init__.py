@@ -2,9 +2,10 @@
 import asyncio
 import socket
 
-from pyfritzhome import Fritzhome
+from pyfritzhome import Fritzhome, LoginError
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -62,7 +63,7 @@ async def async_setup(hass, config):
         for entry_config in config[DOMAIN][CONF_DEVICES]:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": "import"}, data=entry_config
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config
                 )
             )
 
@@ -76,7 +77,18 @@ async def async_setup_entry(hass, entry):
         user=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
     )
-    await hass.async_add_executor_job(fritz.login)
+
+    try:
+        await hass.async_add_executor_job(fritz.login)
+    except LoginError:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_REAUTH},
+                data=entry,
+            )
+        )
+        return False
 
     hass.data.setdefault(DOMAIN, {CONF_CONNECTIONS: {}, CONF_DEVICES: set()})
     hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = fritz

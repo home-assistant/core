@@ -278,10 +278,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         }
     )
 
-    # Must only listen for option updates after the setup is complete, as otherwise
-    # the YAML->ConfigEntry migration code triggers an options update, which causes a
-    # reload -- which clashes with the initial load (causing entity_id / unique_id
-    # clashes).
     async def setup_then_listen() -> None:
         await asyncio.gather(
             *[
