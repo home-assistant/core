@@ -1,10 +1,10 @@
 """Support for the iZone HVAC."""
 
-import voluptuous as vol
 import logging
 from typing import List, Optional
 
 from pizone import Controller, Zone
+import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -26,11 +26,11 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_ENTITY_ID,
     CONF_EXCLUDE,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     TEMP_CELSIUS,
-    CONF_ENTITY_ID,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform, service
