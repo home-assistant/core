@@ -804,6 +804,9 @@ pymonoprice==0.3
 # homeassistant.components.myq
 pymyq==2.0.14
 
+# homeassistant.components.nuki
+pynuki==1.3.8
+
 # homeassistant.components.nut
 pynut2==2.1.2
 
