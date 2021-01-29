@@ -1,10 +1,10 @@
 """Support for MyQ-Enabled Garage Doors."""
+import logging
 import time
 
 from pymyq.const import (
     DEVICE_STATE as MYQ_DEVICE_STATE,
     DEVICE_STATE_ONLINE as MYQ_DEVICE_STATE_ONLINE,
-    DEVICE_TYPE as MYQ_DEVICE_TYPE,
     DEVICE_TYPE_GATE as MYQ_DEVICE_TYPE_GATE,
     KNOWN_MODELS,
     MANUFACTURER,
@@ -31,6 +31,8 @@ from .const import (
     TRANSITION_START_DURATION,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up mysq covers."""
@@ -56,7 +58,7 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
     @property
     def device_class(self):
         """Define this cover as a garage door."""
-        device_type = self._device.device_json.get(MYQ_DEVICE_TYPE)
+        device_type = self._device.device_type
         if device_type is not None and device_type == MYQ_DEVICE_TYPE_GATE:
             return DEVICE_CLASS_GATE
         return DEVICE_CLASS_GARAGE
@@ -105,13 +107,15 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
     async def async_close_cover(self, **kwargs):
         """Issue close command to cover."""
         self._last_action_timestamp = time.time()
-        await self._device.close()
+        if not await self._device.close(wait_for_state=True):
+            _LOGGER.error(f"Closing of cover {self._device.name} failed")
         self._async_schedule_update_for_transition()
 
     async def async_open_cover(self, **kwargs):
         """Issue open command to cover."""
         self._last_action_timestamp = time.time()
-        await self._device.open()
+        if not await self._device.open(wait_for_state=True):
+            _LOGGER.error(f"Closing of cover {self._device.name} failed")
         self._async_schedule_update_for_transition()
 
     @callback
