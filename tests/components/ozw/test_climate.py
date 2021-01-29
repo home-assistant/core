@@ -15,6 +15,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
+    TEMP_FAHRENHEIT,
 )
 
 from .common import setup_ozw
@@ -325,3 +326,6 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     )
     assert len(sent_messages) == 12
     assert "does not support setting a mode" in caplog.text
+
+    assert convert_units("F") == TEMP_FAHRENHEIT
+    
