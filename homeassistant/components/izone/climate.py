@@ -66,7 +66,7 @@ IZONE_SERVICE_AIRFLOW_MAX = "airflow_max"
 IZONE_SERVICE_AIRFLOW_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_AIRFLOW): cv.positive_int
+        vol.Required(ATTR_AIRFLOW): cv.positive_int,
     }
 )
 
