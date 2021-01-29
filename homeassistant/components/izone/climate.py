@@ -33,7 +33,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv, entity_platform, service
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -58,15 +58,18 @@ _IZONE_FAN_TO_HA = {
     Controller.Fan.AUTO: FAN_AUTO,
 }
 
-ATTR_AIRFLOW = 'airflow'
+ATTR_AIRFLOW = "airflow"
 
 IZONE_SERVICE_AIRFLOW_MIN = "airflow_min"
 IZONE_SERVICE_AIRFLOW_MAX = "airflow_max"
 
-IZONE_SERVICE_AIRFLOW_SCHEMA = vol.Schema({
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Required(ATTR_AIRFLOW): cv.positive_int
-})
+IZONE_SERVICE_AIRFLOW_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_AIRFLOW): cv.positive_int
+    }
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistantType, config: ConfigType, async_add_entities
@@ -109,6 +112,7 @@ async def async_setup_entry(
     )
 
     return True
+
 
 def _return_on_connection_error(ret=None):
     def wrap(func):
@@ -581,11 +585,17 @@ class ZoneDevice(ClimateEntity):
         }
 
     async def async_set_airflow_min(self, **kwargs):
-        await self._controller.wrap_and_catch(self._zone.set_airflow_min(int(kwargs[ATTR_AIRFLOW])))
+        """Set new airflow minimum."""
+        await self._controller.wrap_and_catch(
+            self._zone.set_airflow_min(int(kwargs[ATTR_AIRFLOW]))
+        )
         self.async_write_ha_state()
 
     async def async_set_airflow_max(self, **kwargs):
-        await self._controller.wrap_and_catch(self._zone.set_airflow_max(int(kwargs[ATTR_AIRFLOW])))
+        """Set new airflow maximum."""
+        await self._controller.wrap_and_catch(
+            self._zone.set_airflow_max(int(kwargs[ATTR_AIRFLOW]))
+        )
         self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs):
