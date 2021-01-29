@@ -83,11 +83,6 @@ class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
         return self._white
 
     @property
-    def assumed_state(self):
-        """Return true if unable to access real state of entity."""
-        return False
-
-    @property
     def is_on(self):
         """Return true if device is on."""
         return self._state

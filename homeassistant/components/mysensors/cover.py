@@ -44,11 +44,6 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):
     """Representation of the value of a MySensors Cover child node."""
 
     @property
-    def assumed_state(self):
-        """Return True if unable to access real state of entity."""
-        return False
-
-    @property
     def is_closed(self):
         """Return True if cover is closed."""
         set_req = self.gateway.const.SetReq

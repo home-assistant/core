@@ -22,14 +22,18 @@ HANDLERS = decorator.Registry()
 
 
 @HANDLERS.register("set")
-async def handle_set(hass, gateway_id: GatewayId, msg: Message) -> None:
+async def handle_set(
+    hass: HomeAssistantType, gateway_id: GatewayId, msg: Message
+) -> None:
     """Handle a mysensors set message."""
     validated = validate_set_msg(gateway_id, msg)
     _handle_child_update(hass, gateway_id, validated)
 
 
 @HANDLERS.register("internal")
-async def handle_internal(hass, gateway_id: GatewayId, msg: Message) -> None:
+async def handle_internal(
+    hass: HomeAssistantType, gateway_id: GatewayId, msg: Message
+) -> None:
     """Handle a mysensors internal message."""
     internal = msg.gateway.const.Internal(msg.sub_type)
     handler = HANDLERS.get(internal.name)
@@ -39,31 +43,41 @@ async def handle_internal(hass, gateway_id: GatewayId, msg: Message) -> None:
 
 
 @HANDLERS.register("I_BATTERY_LEVEL")
-async def handle_battery_level(hass, gateway_id: GatewayId, msg: Message) -> None:
+async def handle_battery_level(
+    hass: HomeAssistantType, gateway_id: GatewayId, msg: Message
+) -> None:
     """Handle an internal battery level message."""
     _handle_node_update(hass, gateway_id, msg)
 
 
 @HANDLERS.register("I_HEARTBEAT_RESPONSE")
-async def handle_heartbeat(hass, gateway_id: GatewayId, msg: Message) -> None:
+async def handle_heartbeat(
+    hass: HomeAssistantType, gateway_id: GatewayId, msg: Message
+) -> None:
     """Handle an heartbeat."""
     _handle_node_update(hass, gateway_id, msg)
 
 
 @HANDLERS.register("I_SKETCH_NAME")
-async def handle_sketch_name(hass, gatway_id: GatewayId, msg: Message) -> None:
+async def handle_sketch_name(
+    hass: HomeAssistantType, gatway_id: GatewayId, msg: Message
+) -> None:
     """Handle an internal sketch name message."""
     _handle_node_update(hass, gatway_id, msg)
 
 
 @HANDLERS.register("I_SKETCH_VERSION")
-async def handle_sketch_version(hass, gatway_id: GatewayId, msg: Message) -> None:
+async def handle_sketch_version(
+    hass: HomeAssistantType, gatway_id: GatewayId, msg: Message
+) -> None:
     """Handle an internal sketch version message."""
     _handle_node_update(hass, gatway_id, msg)
 
 
 @HANDLERS.register("I_GATEWAY_READY")
-async def handle_gateway_ready(hass, gatway_id: GatewayId, msg: Message) -> None:
+async def handle_gateway_ready(
+    hass: HomeAssistantType, gatway_id: GatewayId, msg: Message
+) -> None:
     """Handle an internal gateway ready message.
 
     Set asyncio future result if gateway is ready.
@@ -75,7 +89,9 @@ async def handle_gateway_ready(hass, gatway_id: GatewayId, msg: Message) -> None
 
 
 @callback
-def _handle_child_update(hass, gatway_id: GatewayId, validated: Dict[str, List[DevId]]):
+def _handle_child_update(
+    hass: HomeAssistantType, gatway_id: GatewayId, validated: Dict[str, List[DevId]]
+):
     """Handle a child update."""
     signals: List[str] = []
 

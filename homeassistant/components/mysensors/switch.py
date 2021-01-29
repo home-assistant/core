@@ -97,11 +97,6 @@ class MySensorsSwitch(mysensors.device.MySensorsEntity, SwitchEntity):
     """Representation of the value of a MySensors Switch child node."""
 
     @property
-    def assumed_state(self):
-        """Return True if unable to access real state of entity."""
-        return False
-
-    @property
     def current_power_w(self):
         """Return the current power usage in W."""
         set_req = self.gateway.const.SetReq

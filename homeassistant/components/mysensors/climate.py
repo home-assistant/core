@@ -85,11 +85,6 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateEntity):
         return features
 
     @property
-    def assumed_state(self):
-        """Return True if unable to access real state of entity."""
-        return False
-
-    @property
     def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_CELSIUS if self.hass.config.units.is_metric else TEMP_FAHRENHEIT
