@@ -11,10 +11,9 @@ from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockEnt
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.helpers import config_validation as cv, entity_platform
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT
 
-DEFAULT_PORT = 8080
-DEFAULT_TIMEOUT = 20
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_BATTERY_CRITICAL = "battery_critical"
 ATTR_NUKI_ID = "nuki_id"
@@ -38,6 +37,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Nuki lock platform."""
+    _LOGGER.warning(
+        "Loading Nuki by lock platform configuration is deprecated and will be removed in the future"
+    )
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Nuki lock platform."""
+    config = config_entry.data
+    _LOGGER.debug("Config: %s", config)
 
     def get_entities():
         bridge = NukiBridge(
