@@ -98,6 +98,21 @@ def verify_cleanup():
     assert not threads
 
 
+@pytest.fixture(autouse=True)
+def bcrypt_cost():
+    """Run with reduced rounds during tests, to speed up uses."""
+    import bcrypt
+
+    gensalt_orig = bcrypt.gensalt
+
+    def gensalt_mock(rounds=12, prefix=b"2b"):
+        return gensalt_orig(4, prefix)
+
+    bcrypt.gensalt = gensalt_mock
+    yield
+    bcrypt.gensalt = gensalt_orig
+
+
 @pytest.fixture
 def hass_storage():
     """Fixture to mock storage."""
