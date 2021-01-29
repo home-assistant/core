@@ -253,6 +253,7 @@ async def async_setup(hass, config):
             if not stream:
                 continue
             stream.add_provider("hls")
+            stream.start()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, preload_stream)
 
