@@ -49,7 +49,7 @@ class MySensorsDevice:
         self.node_id: int = node_id
         self.child_id: int = child_id
         self.value_type: int = value_type  # value_type as int. string variant can be looked up in gateway consts
-        self.child_type = self._mysensors_child.type
+        self.child_type = self._child.type
         self._values = {}
         self._update_scheduled = False
         self.hass = None
@@ -83,22 +83,22 @@ class MySensorsDevice:
                     )
 
     @property
-    def _mysensors_node(self) -> Sensor:
+    def _node(self) -> Sensor:
         return self.gateway.sensors[self.node_id]
 
     @property
-    def _mysensors_child(self) -> ChildSensor:
-        return self._mysensors_node.children[self.child_id]
+    def _child(self) -> ChildSensor:
+        return self._node.children[self.child_id]
 
     @property
     def sketch_name(self) -> str:
         """Return the name of the sketch running on the whole node (will be the same for several entities!)."""
-        return self._mysensors_node.sketch_name
+        return self._node.sketch_name
 
     @property
     def sketch_version(self) -> str:
         """Return the version of the sketch running on the whole node (will be the same for several entities!)."""
-        return self._mysensors_node.sketch_version
+        return self._node.sketch_version
 
     @property
     def node_name(self) -> str:
