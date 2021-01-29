@@ -2,7 +2,7 @@
 
 COAP = "coap"
 DATA_CONFIG_ENTRY = "config_entry"
-DATA_SENSORS = "sensors"
+DEVICE = "device"
 DOMAIN = "shelly"
 REST = "rest"
 
