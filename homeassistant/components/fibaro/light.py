@@ -137,7 +137,7 @@ class FibaroLight(FibaroDevice, LightEntity):
             )
 
             if self.state == "off":
-                self.set_level(int(self._brightness if self._brightness < 100 else 99))
+                self.set_level(min(int(self._brightness), 99))
             return
 
         if self._reset_color:
@@ -145,7 +145,7 @@ class FibaroLight(FibaroDevice, LightEntity):
             self.call_set_color(bri255, bri255, bri255, bri255)
 
         if self._supported_flags & SUPPORT_BRIGHTNESS:
-            self.set_level(int(self._brightness if self._brightness < 100 else 99))
+            self.set_level(min(int(self._brightness), 99))
             return
 
         # The simplest case is left for last. No dimming, just switch on
