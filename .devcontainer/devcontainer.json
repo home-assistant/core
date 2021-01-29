@@ -19,7 +19,7 @@
     "python.linting.enabled": true,
     "python.formatting.provider": "black",
     "python.testing.pytestArgs": ["--no-cov"],
-    "python.testing.pytestEnabled": true,
+    "python.testing.pytestEnabled": false,
     "editor.formatOnPaste": false,
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
