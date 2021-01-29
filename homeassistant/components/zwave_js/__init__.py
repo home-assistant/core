@@ -1,7 +1,6 @@
 """The Z-Wave JS integration."""
 import asyncio
 import logging
-from typing import Tuple
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
@@ -10,7 +9,12 @@ from zwave_js_server.model.value import ValueNotification
 
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, CONF_URL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_URL,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry
@@ -19,8 +23,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .api import async_register_api
 from .const import (
+    ATTR_COMMAND_CLASS,
+    ATTR_ENDPOINT,
     ATTR_HOME_ID,
+    ATTR_LABEL,
     ATTR_NODE_ID,
+    ATTR_VALUE,
     CONF_INTEGRATION_CREATED_ADDON,
     DATA_CLIENT,
     DATA_UNSUBSCRIBE,
@@ -30,6 +38,7 @@ from .const import (
     ZWAVE_EVENT,
 )
 from .discovery import async_discover_values
+from .entity import get_device_id
 
 LOGGER = logging.getLogger(__name__)
 CONNECT_TIMEOUT = 10
@@ -39,12 +48,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Z-Wave JS component."""
     hass.data[DOMAIN] = {}
     return True
-
-
-@callback
-def get_device_id(client: ZwaveClient, node: ZwaveNode) -> Tuple[str, str]:
-    """Get device registry identifier for Z-Wave node."""
-    return (DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")
 
 
 @callback
@@ -111,7 +114,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
             )
         # add listener for stateless node events (value notification)
-        node.on("value notification", on_node_value_notification)
+        node.on(
+            "value notification",
+            lambda event: async_on_value_notification(event["notification"]),
+        )
 
     @callback
     def async_on_node_added(node: ZwaveNode) -> None:
@@ -140,24 +146,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # note: removal of entity registry is handled by core
         dev_reg.async_remove_device(device.id)
 
-    def on_node_value_notification(event_data: dict) -> None:
+    @callback
+    def async_on_value_notification(notification: ValueNotification) -> None:
         """Relay stateless value notification events from Z-Wave nodes to hass."""
-        notification: ValueNotification = event_data["notification"]
-        node = event_data["node"]
-        device = dev_reg.async_get_device(
-            {(DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")}
-        )
+        device = dev_reg.async_get_device({get_device_id(client, notification.node)})
+        value = notification.value or notification.data.get("newValue")
+        if notification.metadata.states:
+            value = notification.metadata.states.get(str(value), value)
         hass.bus.async_fire(
             ZWAVE_EVENT,
             {
-                ATTR_NODE_ID: node.node_id,
+                CONF_DOMAIN: DOMAIN,
+                ATTR_NODE_ID: notification.node.node_id,
                 ATTR_HOME_ID: client.driver.controller.home_id,
-                ATTR_DEVICE_ID: device.id,
-                "type": notification.command_class_name,
-                "label": notification.metadata.label
+                ATTR_ENDPOINT: notification.endpoint,
+                CONF_DEVICE_ID: device.id,
+                ATTR_COMMAND_CLASS: notification.command_class_name,
+                ATTR_LABEL: notification.metadata.label
                 or notification.property_key_name
                 or notification.property_name,
-                "value": notification.value or notification.data.get("newValue"),
+                ATTR_VALUE: value,
             },
         )
 
