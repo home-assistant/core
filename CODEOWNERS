@@ -143,7 +143,7 @@ homeassistant/components/eq3btsmart/* @rytilahti
 homeassistant/components/esphome/* @OttoWinter
 homeassistant/components/essent/* @TheLastProject
 homeassistant/components/evohome/* @zxdavb
-homeassistant/components/ezviz/* @baqs
+homeassistant/components/ezviz/* @RenierM26 @baqs
 homeassistant/components/fastdotcom/* @rohankapoorcom
 homeassistant/components/file/* @fabaff
 homeassistant/components/filter/* @dgomes
@@ -310,7 +310,7 @@ homeassistant/components/notion/* @bachya
 homeassistant/components/nsw_fuel_station/* @nickw444
 homeassistant/components/nsw_rural_fire_service_feed/* @exxamalte
 homeassistant/components/nuheat/* @bdraco
-homeassistant/components/nuki/* @pschmitt @pvizeli @pree
+homeassistant/components/nuki/* @pschmitt @pvizeli
 homeassistant/components/numato/* @clssn
 homeassistant/components/number/* @home-assistant/core @Shulyaka
 homeassistant/components/nut/* @bdraco
