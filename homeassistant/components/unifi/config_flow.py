@@ -38,9 +38,9 @@ from .const import (
     LOGGER,
 )
 from .controller import get_controller
-from .errors import AlreadyConfigured, AuthenticationRequired, CannotConnect
+from .errors import AuthenticationRequired, CannotConnect
 
-DEFAULT_PORT = 8443
+DEFAULT_PORT = 443
 DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
 
@@ -76,7 +76,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         """Initialize the UniFi flow."""
         self.config = {}
         self.sites = None
-        self.reauth_config_entry = {}
+        self.reauth_config_entry = None
         self.reauth_config = {}
         self.reauth_schema = {}
 
@@ -146,32 +146,40 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         errors = {}
 
         if user_input is not None:
-            try:
-                self.config[CONF_SITE_ID] = user_input[CONF_SITE_ID]
-                data = {CONF_CONTROLLER: self.config}
 
-                if self.reauth_config_entry:
-                    self.hass.config_entries.async_update_entry(
-                        self.reauth_config_entry, data=data
-                    )
-                    await self.hass.config_entries.async_reload(
-                        self.reauth_config_entry.entry_id
-                    )
-                    return self.async_abort(reason="reauth_successful")
+            self.config[CONF_SITE_ID] = user_input[CONF_SITE_ID]
+            data = {CONF_CONTROLLER: self.config}
 
-                for entry in self._async_current_entries():
-                    controller = entry.data[CONF_CONTROLLER]
-                    if (
-                        controller[CONF_HOST] == self.config[CONF_HOST]
-                        and controller[CONF_SITE_ID] == self.config[CONF_SITE_ID]
-                    ):
-                        raise AlreadyConfigured
+            if self.reauth_config_entry:
+                self.hass.config_entries.async_update_entry(
+                    self.reauth_config_entry, data=data
+                )
+                await self.hass.config_entries.async_reload(
+                    self.reauth_config_entry.entry_id
+                )
+                return self.async_abort(reason="reauth_successful")
 
-                site_nice_name = self.sites[self.config[CONF_SITE_ID]]
-                return self.async_create_entry(title=site_nice_name, data=data)
+            for config_entry in self._async_current_entries():
+                controller_data = config_entry.data[CONF_CONTROLLER]
+                if (
+                    controller_data[CONF_HOST] != self.config[CONF_HOST]
+                    or controller_data[CONF_SITE_ID] != self.config[CONF_SITE_ID]
+                ):
+                    continue
 
-            except AlreadyConfigured:
-                return self.async_abort(reason="already_configured")
+                controller = self.hass.data.get(UNIFI_DOMAIN, {}).get(
+                    config_entry.entry_id
+                )
+
+                if controller and controller.available:
+                    return self.async_abort(reason="already_configured")
+
+                self.hass.config_entries.async_update_entry(config_entry, data=data)
+                await self.hass.config_entries.async_reload(config_entry.entry_id)
+                return self.async_abort(reason="configuration_updated")
+
+            site_nice_name = self.sites[self.config[CONF_SITE_ID]]
+            return self.async_create_entry(title=site_nice_name, data=data)
 
         if len(self.sites) == 1:
             return await self.async_step_site({CONF_SITE_ID: next(iter(self.sites))})
