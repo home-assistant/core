@@ -32,7 +32,6 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
     MASS_KILOGRAMS,
     PERCENTAGE,
-    SCORE_POINTS,
     SPEED_METERS_PER_SECOND,
     TIME_SECONDS,
 )
@@ -403,7 +402,7 @@ WITHINGS_ATTRIBUTES = [
         Measurement.SLEEP_SCORE,
         GetSleepSummaryField.SLEEP_SCORE,
         "Sleep score",
-        SCORE_POINTS,
+        const.SCORE_POINTS,
         "mdi:medal-outline",
         SENSOR_DOMAIN,
         False,
