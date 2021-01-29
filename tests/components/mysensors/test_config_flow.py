@@ -2,6 +2,7 @@
 from typing import Dict
 from unittest.mock import patch
 
+import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries, setup
@@ -40,21 +41,21 @@ async def get_form(
     assert stepuser["type"] == "form"
     assert not stepuser["errors"]
 
-    actualstep = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         stepuser["flow_id"],
         {CONF_GATEWAY_TYPE: gatway_type},
     )
     await hass.async_block_till_done()
-    assert actualstep["type"] == "form"
-    assert actualstep["step_id"] == expected_step_id
+    assert result["type"] == "form"
+    assert result["step_id"] == expected_step_id
 
-    return actualstep
+    return result
 
 
 async def test_config_mqtt(hass: HomeAssistantType):
     """Test configuring a mqtt gateway."""
     step = await get_form(hass, CONF_GATEWAY_TYPE_MQTT, "gw_mqtt")
-    flowid = step["flow_id"]
+    flow_id = step["flow_id"]
 
     with patch(
         "homeassistant.components.mysensors.async_setup", return_value=True
@@ -63,7 +64,7 @@ async def test_config_mqtt(hass: HomeAssistantType):
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            flowid,
+            flow_id,
             {
                 CONF_RETAIN: True,
                 CONF_TOPIC_IN_PREFIX: "bla",
@@ -218,16 +219,132 @@ async def test_fail_to_connect(hass: HomeAssistantType):
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def config_invalid(
+@pytest.mark.parametrize(
+    "gateway_type, expected_step_id, user_input, err_field, err_string",
+    [
+        (
+            CONF_GATEWAY_TYPE_TCP,
+            "gw_tcp",
+            {
+                CONF_TCP_PORT: 600_000,
+                CONF_DEVICE: "127.0.0.1",
+                CONF_VERSION: "2.4",
+            },
+            CONF_TCP_PORT,
+            "port_out_of_range",
+        ),
+        (
+            CONF_GATEWAY_TYPE_TCP,
+            "gw_tcp",
+            {
+                CONF_TCP_PORT: 0,
+                CONF_DEVICE: "127.0.0.1",
+                CONF_VERSION: "2.4",
+            },
+            CONF_TCP_PORT,
+            "port_out_of_range",
+        ),
+        (
+            CONF_GATEWAY_TYPE_TCP,
+            "gw_tcp",
+            {
+                CONF_TCP_PORT: 5003,
+                CONF_DEVICE: "127.0.0.1",
+                CONF_VERSION: "a",
+            },
+            CONF_VERSION,
+            "invalid_version",
+        ),
+        (
+            CONF_GATEWAY_TYPE_TCP,
+            "gw_tcp",
+            {
+                CONF_TCP_PORT: 5003,
+                CONF_DEVICE: "127.0.0.1",
+                CONF_VERSION: "a.b",
+            },
+            CONF_VERSION,
+            "invalid_version",
+        ),
+        (
+            CONF_GATEWAY_TYPE_TCP,
+            "gw_tcp",
+            {
+                CONF_TCP_PORT: 5003,
+                CONF_DEVICE: "127.0.0.1",
+            },
+            CONF_VERSION,
+            "invalid_version",
+        ),
+        (
+            CONF_GATEWAY_TYPE_TCP,
+            "gw_tcp",
+            {
+                CONF_TCP_PORT: 5003,
+                CONF_DEVICE: "127.0.0.",
+            },
+            CONF_DEVICE,
+            "invalid_ip",
+        ),
+        (
+            CONF_GATEWAY_TYPE_TCP,
+            "gw_tcp",
+            {
+                CONF_TCP_PORT: 5003,
+                CONF_DEVICE: "abcd",
+            },
+            CONF_DEVICE,
+            "invalid_ip",
+        ),
+        (
+            CONF_GATEWAY_TYPE_MQTT,
+            "gw_mqtt",
+            {
+                CONF_RETAIN: True,
+                CONF_TOPIC_IN_PREFIX: "bla",
+                CONF_TOPIC_OUT_PREFIX: "blub",
+                CONF_PERSISTENCE_FILE: "asdf.zip",
+                CONF_VERSION: "2.4",
+            },
+            CONF_PERSISTENCE_FILE,
+            "invalid_persistence_file",
+        ),
+        (
+            CONF_GATEWAY_TYPE_MQTT,
+            "gw_mqtt",
+            {
+                CONF_RETAIN: True,
+                CONF_TOPIC_IN_PREFIX: "/#/#",
+                CONF_TOPIC_OUT_PREFIX: "blub",
+                CONF_VERSION: "2.4",
+            },
+            CONF_TOPIC_IN_PREFIX,
+            "invalid_subscribe_topic",
+        ),
+        (
+            CONF_GATEWAY_TYPE_MQTT,
+            "gw_mqtt",
+            {
+                CONF_RETAIN: True,
+                CONF_TOPIC_IN_PREFIX: "asdf",
+                CONF_TOPIC_OUT_PREFIX: "/#/#",
+                CONF_VERSION: "2.4",
+            },
+            CONF_TOPIC_OUT_PREFIX,
+            "invalid_publish_topic",
+        ),
+    ],
+)
+async def test_config_invalid(
     hass: HomeAssistantType,
-    gatway_type: ConfGatewayType,
+    gateway_type: ConfGatewayType,
     expected_step_id: str,
     user_input: Dict[str, any],
     err_field,
     err_string,
 ):
     """Perform a test that is expected to generate an error."""
-    step = await get_form(hass, gatway_type, expected_step_id)
+    step = await get_form(hass, gateway_type, expected_step_id)
     flowid = step["flow_id"]
 
     with patch(
@@ -250,153 +367,6 @@ async def config_invalid(
     assert result2["errors"][err_field] == err_string
     assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
-
-
-async def test_config_tcp_invalid_port(hass: HomeAssistantType):
-    """Test invalid port on a tcp gateway."""
-    await config_invalid(
-        hass,
-        CONF_GATEWAY_TYPE_TCP,
-        "gw_tcp",
-        {
-            CONF_TCP_PORT: 60000000,
-            CONF_DEVICE: "127.0.0.1",
-            CONF_VERSION: "2.4",
-        },
-        CONF_TCP_PORT,
-        "port_out_of_range",
-    )
-
-
-async def test_config_tcp_invalid_port_too_small(hass: HomeAssistantType):
-    """Test invalid port on a tcp gateway."""
-    await config_invalid(
-        hass,
-        CONF_GATEWAY_TYPE_TCP,
-        "gw_tcp",
-        {
-            CONF_TCP_PORT: 0,
-            CONF_DEVICE: "127.0.0.1",
-            CONF_VERSION: "2.4",
-        },
-        CONF_TCP_PORT,
-        "port_out_of_range",
-    )
-
-
-async def test_config_tcp_invalid_version(hass: HomeAssistantType):
-    """Test tcp gateway with invalid version."""
-    await config_invalid(
-        hass,
-        CONF_GATEWAY_TYPE_TCP,
-        "gw_tcp",
-        {
-            CONF_TCP_PORT: 5003,
-            CONF_DEVICE: "127.0.0.1",
-            CONF_VERSION: "a",
-        },
-        CONF_VERSION,
-        "invalid_version",
-    )
-
-
-async def test_config_tcp_invalid_version2(hass: HomeAssistantType):
-    """Test tcp gateway with invalid version."""
-    await config_invalid(
-        hass,
-        CONF_GATEWAY_TYPE_TCP,
-        "gw_tcp",
-        {
-            CONF_TCP_PORT: 5003,
-            CONF_DEVICE: "127.0.0.1",
-            CONF_VERSION: "a.b",
-        },
-        CONF_VERSION,
-        "invalid_version",
-    )
-
-
-async def test_config_tcp_no_version(hass: HomeAssistantType):
-    """Test tcp gateway with invalid version."""
-    await config_invalid(
-        hass,
-        CONF_GATEWAY_TYPE_TCP,
-        "gw_tcp",
-        {
-            CONF_TCP_PORT: 5003,
-            CONF_DEVICE: "127.0.0.1",
-        },
-        CONF_VERSION,
-        "invalid_version",
-    )
-
-
-async def test_config_tcp_invalid_address(hass: HomeAssistantType):
-    """Test tcp gateway with invalid ip address."""
-    await config_invalid(
-        hass,
-        CONF_GATEWAY_TYPE_TCP,
-        "gw_tcp",
-        {
-            CONF_TCP_PORT: 5003,
-            CONF_DEVICE: "127.0.0.",
-            CONF_VERSION: "2.4",
-        },
-        CONF_DEVICE,
-        "invalid_ip",
-    )
-
-
-async def test_config_mqtt_invalid_persistence_file(hass: HomeAssistantType):
-    """Test mqtt gateway with invalid input topic."""
-    await config_invalid(
-        hass,
-        CONF_GATEWAY_TYPE_MQTT,
-        "gw_mqtt",
-        {
-            CONF_RETAIN: True,
-            CONF_TOPIC_IN_PREFIX: "bla",
-            CONF_TOPIC_OUT_PREFIX: "blub",
-            CONF_PERSISTENCE_FILE: "asdf.zip",
-            CONF_VERSION: "2.4",
-        },
-        CONF_PERSISTENCE_FILE,
-        "invalid_persistence_file",
-    )
-
-
-async def test_config_mqtt_invalid_in_topic(hass: HomeAssistantType):
-    """Test mqtt gateway with invalid input topic."""
-    await config_invalid(
-        hass,
-        CONF_GATEWAY_TYPE_MQTT,
-        "gw_mqtt",
-        {
-            CONF_RETAIN: True,
-            CONF_TOPIC_IN_PREFIX: "/#/#",
-            CONF_TOPIC_OUT_PREFIX: "blub",
-            CONF_VERSION: "2.4",
-        },
-        CONF_TOPIC_IN_PREFIX,
-        "invalid_subscribe_topic",
-    )
-
-
-async def test_config_mqtt_invalid_out_topic(hass: HomeAssistantType):
-    """Test mqtt gateway with invalid output topic."""
-    await config_invalid(
-        hass,
-        CONF_GATEWAY_TYPE_MQTT,
-        "gw_mqtt",
-        {
-            CONF_RETAIN: True,
-            CONF_TOPIC_IN_PREFIX: "asdf",
-            CONF_TOPIC_OUT_PREFIX: "/#/#",
-            CONF_VERSION: "2.4",
-        },
-        CONF_TOPIC_OUT_PREFIX,
-        "invalid_publish_topic",
-    )
 
 
 async def attempt_import(hass: HomeAssistantType, config: ConfigType, expected_calls=1):
