@@ -576,7 +576,8 @@ async def ws_camera_stream(hass, connection, msg):
     """
     try:
         entity_id = msg["entity_id"]
-        url = await async_request_stream(hass, entity_id, fmt=msg["format"])
+        camera = _get_camera_from_entity_id(hass, entity_id)
+        url = await _async_stream_endpoint_url(hass, camera, fmt=msg["format"])
         connection.send_result(msg["id"], {"url": url})
     except HomeAssistantError as ex:
         _LOGGER.error("Error requesting stream: %s", ex)
