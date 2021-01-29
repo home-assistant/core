@@ -12,6 +12,7 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     TEMP_CELSIUS,
+    TIME_HOURS,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -52,6 +53,11 @@ SENSOR_GAS_CONSUMPTION_THIS_YEAR = "gas_consumption_heating_this_year"
 # heatpump sensors
 SENSOR_COMPRESSOR_STARTS = "compressor_starts"
 SENSOR_COMPRESSOR_HOURS = "compressor_hours"
+SENSOR_COMPRESSOR_HOURS_LOADCLASS1 = "compressor_hours_loadclass1"
+SENSOR_COMPRESSOR_HOURS_LOADCLASS2 = "compressor_hours_loadclass2"
+SENSOR_COMPRESSOR_HOURS_LOADCLASS3 = "compressor_hours_loadclass3"
+SENSOR_COMPRESSOR_HOURS_LOADCLASS4 = "compressor_hours_loadclass4"
+SENSOR_COMPRESSOR_HOURS_LOADCLASS5 = "compressor_hours_loadclass5"
 
 SENSOR_TYPES = {
     SENSOR_OUTSIDE_TEMPERATURE: {
@@ -149,7 +155,7 @@ SENSOR_TYPES = {
     SENSOR_BURNER_HOURS: {
         CONF_NAME: "Burner Hours",
         CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: None,
+        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
         CONF_GETTER: lambda api: api.getBurnerHours(),
         CONF_DEVICE_CLASS: None,
     },
@@ -164,8 +170,43 @@ SENSOR_TYPES = {
     SENSOR_COMPRESSOR_HOURS: {
         CONF_NAME: "Compressor Hours",
         CONF_ICON: "mdi:counter",
-        CONF_UNIT_OF_MEASUREMENT: None,
+        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
         CONF_GETTER: lambda api: api.getCompressorHours(),
+        CONF_DEVICE_CLASS: None,
+    },
+    SENSOR_COMPRESSOR_HOURS_LOADCLASS1: {
+        CONF_NAME: "Compressor Hours Load Class 1",
+        CONF_ICON: "mdi:counter",
+        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
+        CONF_GETTER: lambda api: api.getCompressorHoursLoadClass1(),
+        CONF_DEVICE_CLASS: None,
+    },
+    SENSOR_COMPRESSOR_HOURS_LOADCLASS2: {
+        CONF_NAME: "Compressor Hours Load Class 2",
+        CONF_ICON: "mdi:counter",
+        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
+        CONF_GETTER: lambda api: api.getCompressorHoursLoadClass2(),
+        CONF_DEVICE_CLASS: None,
+    },
+    SENSOR_COMPRESSOR_HOURS_LOADCLASS3: {
+        CONF_NAME: "Compressor Hours Load Class 3",
+        CONF_ICON: "mdi:counter",
+        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
+        CONF_GETTER: lambda api: api.getCompressorHoursLoadClass3(),
+        CONF_DEVICE_CLASS: None,
+    },
+    SENSOR_COMPRESSOR_HOURS_LOADCLASS4: {
+        CONF_NAME: "Compressor Hours Load Class 4",
+        CONF_ICON: "mdi:counter",
+        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
+        CONF_GETTER: lambda api: api.getCompressorHoursLoadClass4(),
+        CONF_DEVICE_CLASS: None,
+    },
+    SENSOR_COMPRESSOR_HOURS_LOADCLASS5: {
+        CONF_NAME: "Compressor Hours Load Class 5",
+        CONF_ICON: "mdi:counter",
+        CONF_UNIT_OF_MEASUREMENT: TIME_HOURS,
+        CONF_GETTER: lambda api: api.getCompressorHoursLoadClass5(),
         CONF_DEVICE_CLASS: None,
     },
     SENSOR_RETURN_TEMPERATURE: {
@@ -195,8 +236,13 @@ SENSORS_BY_HEATINGTYPE = {
         SENSOR_GAS_CONSUMPTION_THIS_YEAR,
     ],
     HeatingType.heatpump: [
-        SENSOR_COMPRESSOR_HOURS,
         SENSOR_COMPRESSOR_STARTS,
+        SENSOR_COMPRESSOR_HOURS,
+        SENSOR_COMPRESSOR_HOURS_LOADCLASS1,
+        SENSOR_COMPRESSOR_HOURS_LOADCLASS2,
+        SENSOR_COMPRESSOR_HOURS_LOADCLASS3,
+        SENSOR_COMPRESSOR_HOURS_LOADCLASS4,
+        SENSOR_COMPRESSOR_HOURS_LOADCLASS5,
         SENSOR_RETURN_TEMPERATURE,
     ],
 }
