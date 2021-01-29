@@ -3,6 +3,8 @@
   "config": {
     "step": {
       "user": {
+        "title": "FAA Delays",
+        "description": "Enter a US Airport Code in IATA Format",
         "data": {
           "id": "Airport"
         }

@@ -6,7 +6,6 @@ import logging
 from aiohttp import ClientConnectionError
 from async_timeout import timeout
 from faadelays import Airport, get_airport_delays
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
@@ -19,10 +18,6 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=1)
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-
 PLATFORMS = ["binary_sensor"]
 
 
@@ -34,16 +29,14 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up FAA Delays from a config entry."""
-    websession = aiohttp_client.async_get_clientsession(hass)
     code = entry.data[CONF_ID]
 
-    coordinator = FAADataUpdateCoordinator(hass, websession, code)
+    coordinator = FAADataUpdateCoordinator(hass, code)
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for component in PLATFORMS:
@@ -73,13 +66,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class FAADataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching FAA API data from a single endpoint."""
 
-    def __init__(self, hass, session, code):
+    def __init__(self, hass, code):
         """Initialize the coordinator."""
-        self.data = Airport(code, session)
-        self.session = session
+        self.session = aiohttp_client.async_get_clientsession(hass)
+        self.data = Airport(code, self.session)
         self.code = code
 
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        super().__init__(
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=1)
+        )
 
     async def _async_update_data(self):
         try:

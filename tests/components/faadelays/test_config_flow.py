@@ -1,4 +1,6 @@
 """Test the FAA Delays config flow."""
+from unittest.mock import patch
+
 from aiohttp import ClientConnectionError
 import faadelays
 
@@ -6,8 +8,6 @@ from homeassistant import config_entries, setup
 from homeassistant.components.faadelays.const import DOMAIN
 from homeassistant.const import CONF_ID
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.async_mock import patch
 
 
 async def mock_valid_airport(self, *args, **kwargs):
