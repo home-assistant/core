@@ -1,6 +1,8 @@
 """Config flow to configure the Nuki integration."""
+import logging
 
 from pynuki import NukiBridge
+from pynuki.bridge import InvalidCredentialsException
 from requests.exceptions import RequestException
 import voluptuous as vol
 
@@ -12,6 +14,8 @@ from .const import (  # pylint: disable=unused-import
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 USER_SCHEMA = vol.Schema(
     {
@@ -25,22 +29,24 @@ USER_SCHEMA = vol.Schema(
 async def validate_input(hass, data):
     """Validate the user input allows us to connect.
 
-    Data has the keys from DATA_SCHEMA with values provided by the user.
+    Data has the keys from USER_SCHEMA with values provided by the user.
     """
 
-    bridge = await hass.async_add_executor_job(
-        NukiBridge,
-        data[CONF_HOST],
-        data[CONF_TOKEN],
-        data[CONF_PORT],
-        True,
-        DEFAULT_TIMEOUT,
-    )
-
     try:
+        bridge = await hass.async_add_executor_job(
+            NukiBridge,
+            data[CONF_HOST],
+            data[CONF_TOKEN],
+            data[CONF_PORT],
+            True,
+            DEFAULT_TIMEOUT,
+        )
+
         info = bridge.info()
+    except InvalidCredentialsException as err:
+        raise InvalidAuth from err
     except RequestException as err:
-        raise exceptions.HomeAssistantError from err
+        raise CannotConnect from err
 
     return info
 
@@ -63,8 +69,13 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-            except RequestException:
+            except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
 
             if "base" not in errors:
                 await self.async_set_unique_id(info["ids"]["hardwareId"])
@@ -76,3 +87,11 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth."""
