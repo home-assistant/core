@@ -403,7 +403,7 @@ WITHINGS_ATTRIBUTES = [
         GetSleepSummaryField.SLEEP_SCORE,
         "Sleep score",
         const.SCORE_POINTS,
-        "mdi:medal-outline",
+        "mdi:medal",
         SENSOR_DOMAIN,
         False,
         UpdateType.POLL,
