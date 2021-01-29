@@ -2,47 +2,30 @@
 from __future__ import annotations
 
 import logging
-import re
 from types import MappingProxyType
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from hyperion import client, const
-import voluptuous as vol
 
-from homeassistant import data_entry_flow
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    DOMAIN as LIGHT_DOMAIN,
-    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_EFFECT,
     LightEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
-from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_registry import async_get_registry
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
-from . import (
-    create_hyperion_client,
-    get_hyperion_unique_id,
-    listen_for_instance_updates,
-)
+from . import get_hyperion_unique_id, listen_for_instance_updates
 from .const import (
     CONF_INSTANCE_CLIENTS,
     CONF_PRIORITY,
@@ -73,8 +56,6 @@ CONF_EFFECT_LIST = "effect_list"
 # showing a solid color. This is the same method used by WLED.
 KEY_EFFECT_SOLID = "Solid"
 
-KEY_ENTRY_ID_YAML = "YAML"
-
 DEFAULT_COLOR = [255, 255, 255]
 DEFAULT_BRIGHTNESS = 255
 DEFAULT_EFFECT = KEY_EFFECT_SOLID
@@ -85,142 +66,9 @@ DEFAULT_EFFECT_LIST: List[str] = []
 
 SUPPORT_HYPERION = SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
 
-# Usage of YAML for configuration of the Hyperion component is deprecated.
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_HDMI_PRIORITY),
-    cv.deprecated(CONF_HOST),
-    cv.deprecated(CONF_PORT),
-    cv.deprecated(CONF_DEFAULT_COLOR),
-    cv.deprecated(CONF_NAME),
-    cv.deprecated(CONF_PRIORITY),
-    cv.deprecated(CONF_EFFECT_LIST),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_DEFAULT_COLOR, default=DEFAULT_COLOR): vol.All(
-                list,
-                vol.Length(min=3, max=3),
-                [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))],
-            ),
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_PRIORITY, default=DEFAULT_PRIORITY): cv.positive_int,
-            vol.Optional(
-                CONF_HDMI_PRIORITY, default=DEFAULT_HDMI_PRIORITY
-            ): cv.positive_int,
-            vol.Optional(CONF_EFFECT_LIST, default=DEFAULT_EFFECT_LIST): vol.All(
-                cv.ensure_list, [cv.string]
-            ),
-        }
-    ),
-)
-
 ICON_LIGHTBULB = "mdi:lightbulb"
 ICON_EFFECT = "mdi:lava-lamp"
 ICON_EXTERNAL_SOURCE = "mdi:television-ambient-light"
-
-
-async def async_setup_platform(
-    hass: HomeAssistantType,
-    config: ConfigType,
-    async_add_entities: Callable,
-    discovery_info: Optional[DiscoveryInfoType] = None,
-) -> None:
-    """Set up Hyperion platform.."""
-
-    # This is the entrypoint for the old YAML-style Hyperion integration. The goal here
-    # is to auto-convert the YAML configuration into a config entry, with no human
-    # interaction, preserving the entity_id. This should be possible, as the YAML
-    # configuration did not support any of the things that should otherwise require
-    # human interaction in the config flow (e.g. it did not support auth).
-
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    instance = 0  # YAML only supports a single instance.
-
-    # First, connect to the server and get the server id (which will be unique_id on a config_entry
-    # if there is one).
-    async with create_hyperion_client(host, port) as hyperion_client:
-        if not hyperion_client:
-            raise PlatformNotReady
-        hyperion_id = await hyperion_client.async_sysinfo_id()
-        if not hyperion_id:
-            raise PlatformNotReady
-
-    future_unique_id = get_hyperion_unique_id(
-        hyperion_id, instance, TYPE_HYPERION_LIGHT
-    )
-
-    # Possibility 1: Already converted.
-    # There is already a config entry with the unique id reporting by the
-    # server. Nothing to do here.
-    for entry in hass.config_entries.async_entries(domain=DOMAIN):
-        if entry.unique_id == hyperion_id:
-            return
-
-    # Possibility 2: Upgraded to the new Hyperion component pre-config-flow.
-    # No config entry for this unique_id, but have an entity_registry entry
-    # with an old-style unique_id:
-    #     <host>:<port>-<instance> (instance will always be 0, as YAML
-    #                               configuration does not support multiple
-    #                               instances)
-    # The unique_id needs to be updated, then the config_flow should do the rest.
-    registry = await async_get_registry(hass)
-    for entity_id, entity in registry.entities.items():
-        if entity.config_entry_id is not None or entity.platform != DOMAIN:
-            continue
-        result = re.search(rf"([^:]+):(\d+)-{instance}", entity.unique_id)
-        if result and result.group(1) == host and int(result.group(2)) == port:
-            registry.async_update_entity(entity_id, new_unique_id=future_unique_id)
-            break
-    else:
-        # Possibility 3: This is the first upgrade to the new Hyperion component.
-        # No config entry and no entity_registry entry, in which case the CONF_NAME
-        # variable will be used as the preferred name. Rather than pollute the config
-        # entry with a "suggested name" type variable, instead create an entry in the
-        # registry that will subsequently be used when the entity is created with this
-        # unique_id.
-
-        # This also covers the case that should not occur in the wild (no config entry,
-        # but new style unique_id).
-        registry.async_get_or_create(
-            domain=LIGHT_DOMAIN,
-            platform=DOMAIN,
-            unique_id=future_unique_id,
-            suggested_object_id=config[CONF_NAME],
-        )
-
-    async def migrate_yaml_to_config_entry_and_options(
-        host: str, port: int, priority: int
-    ) -> None:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_HOST: host,
-                CONF_PORT: port,
-            },
-        )
-        if (
-            result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-            or result.get("result") is None
-        ):
-            _LOGGER.warning(
-                "Could not automatically migrate Hyperion YAML to a config entry."
-            )
-            return
-        config_entry = result.get("result")
-        options = {**config_entry.options, CONF_PRIORITY: config[CONF_PRIORITY]}
-        hass.config_entries.async_update_entry(config_entry, options=options)
-
-        _LOGGER.info(
-            "Successfully migrated Hyperion YAML configuration to a config entry."
-        )
-
-    # Kick off a config flow to create the config entry.
-    hass.async_create_task(
-        migrate_yaml_to_config_entry_and_options(host, port, config[CONF_PRIORITY])
-    )
 
 
 async def async_setup_entry(

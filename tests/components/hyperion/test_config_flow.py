@@ -14,12 +14,7 @@ from homeassistant.components.hyperion.const import (
     DOMAIN,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.config_entries import (
-    SOURCE_IMPORT,
-    SOURCE_REAUTH,
-    SOURCE_SSDP,
-    SOURCE_USER,
-)
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -604,56 +599,6 @@ async def test_ssdp_abort_duplicates(hass: HomeAssistantType) -> None:
     assert result_1["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result_2["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result_2["reason"] == "already_in_progress"
-
-
-async def test_import_success(hass: HomeAssistantType) -> None:
-    """Check an import flow from the old-style YAML."""
-
-    client = create_mock_client()
-    with patch(
-        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
-    ):
-        result = await _init_flow(
-            hass,
-            source=SOURCE_IMPORT,
-            data={
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
-            },
-        )
-        await hass.async_block_till_done()
-
-    # No human interaction should be required.
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["handler"] == DOMAIN
-    assert result["title"] == TEST_TITLE
-    assert result["data"] == {
-        CONF_HOST: TEST_HOST,
-        CONF_PORT: TEST_PORT,
-    }
-
-
-async def test_import_cannot_connect(hass: HomeAssistantType) -> None:
-    """Check an import flow that cannot connect."""
-
-    client = create_mock_client()
-    client.async_client_connect = AsyncMock(return_value=False)
-
-    with patch(
-        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
-    ):
-        result = await _init_flow(
-            hass,
-            source=SOURCE_IMPORT,
-            data={
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "cannot_connect"
 
 
 async def test_options(hass: HomeAssistantType) -> None:
