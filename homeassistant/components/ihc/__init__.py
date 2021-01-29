@@ -346,7 +346,7 @@ def get_discovery_info(component_setup, groups, controller_id):
 def setup_service_functions(hass: HomeAssistantType):
     """Set up the IHC service functions."""
 
-    def __get_controller(call):
+    def _get_controller(call):
         controller_id = call.data[ATTR_CONTROLLER_ID]
         ihc_key = f"ihc{controller_id}"
         return hass.data[ihc_key][IHC_CONTROLLER]
