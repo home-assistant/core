@@ -1,4 +1,6 @@
 """Home Assistant representation of an UPnP/IGD."""
+from __future__ import annotations
+
 import asyncio
 from ipaddress import IPv4Address
 from typing import List, Mapping
@@ -16,8 +18,10 @@ from .const import (
     BYTES_SENT,
     CONF_LOCAL_IP,
     DISCOVERY_LOCATION,
+    DISCOVERY_NAME,
     DISCOVERY_ST,
     DISCOVERY_UDN,
+    DISCOVERY_UNIQUE_ID,
     DISCOVERY_USN,
     DOMAIN,
     DOMAIN_CONFIG,
@@ -29,12 +33,11 @@ from .const import (
 
 
 class Device:
-    """Home Assistant representation of an UPnP/IGD."""
+    """Home Assistant representation of a UPnP/IGD device."""
 
     def __init__(self, igd_device):
         """Initialize UPnP/IGD device."""
         self._igd_device: IgdDevice = igd_device
-        self._mapped_ports = []
 
     @classmethod
     async def async_discover(cls, hass: HomeAssistantType) -> List[Mapping]:
@@ -46,24 +49,35 @@ class Device:
         if local_ip:
             local_ip = IPv4Address(local_ip)
 
-        discovery_infos = await IgdDevice.async_search(source_ip=local_ip, timeout=10)
+        discoveries = await IgdDevice.async_search(source_ip=local_ip, timeout=10)
 
-        # add extra info and store devices
-        devices = []
-        for discovery_info in discovery_infos:
-            discovery_info[DISCOVERY_UDN] = discovery_info["_udn"]
-            discovery_info[DISCOVERY_ST] = discovery_info["st"]
-            discovery_info[DISCOVERY_LOCATION] = discovery_info["location"]
-            usn = f"{discovery_info[DISCOVERY_UDN]}::{discovery_info[DISCOVERY_ST]}"
-            discovery_info[DISCOVERY_USN] = usn
-            _LOGGER.debug("Discovered device: %s", discovery_info)
+        # Supplement/standardize discovery.
+        for discovery in discoveries:
+            discovery[DISCOVERY_UDN] = discovery["_udn"]
+            discovery[DISCOVERY_ST] = discovery["st"]
+            discovery[DISCOVERY_LOCATION] = discovery["location"]
+            discovery[DISCOVERY_USN] = discovery["usn"]
+            _LOGGER.debug("Discovered device: %s", discovery)
 
-            devices.append(discovery_info)
-
-        return devices
+        return discoveries
 
     @classmethod
-    async def async_create_device(cls, hass: HomeAssistantType, ssdp_location: str):
+    async def async_supplement_discovery(
+        cls, hass: HomeAssistantType, discovery: Mapping
+    ) -> Mapping:
+        """Get additional data from device and supplement discovery."""
+        device = await Device.async_create_device(hass, discovery[DISCOVERY_LOCATION])
+        discovery[DISCOVERY_NAME] = device.name
+
+        # Set unique_id.
+        discovery[DISCOVERY_UNIQUE_ID] = discovery[DISCOVERY_USN]
+
+        return discovery
+
+    @classmethod
+    async def async_create_device(
+        cls, hass: HomeAssistantType, ssdp_location: str
+    ) -> Device:
         """Create UPnP/IGD device."""
         # build async_upnp_client requester
         session = async_get_clientsession(hass)
@@ -103,9 +117,14 @@ class Device:
         return self._igd_device.device_type
 
     @property
+    def usn(self) -> str:
+        """Get the USN."""
+        return f"{self.udn}::{self.device_type}"
+
+    @property
     def unique_id(self) -> str:
         """Get the unique id."""
-        return f"{self.udn}::{self.device_type}"
+        return self.usn
 
     def __str__(self) -> str:
         """Get string representation."""

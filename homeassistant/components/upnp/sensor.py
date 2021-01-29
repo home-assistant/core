@@ -83,13 +83,7 @@ async def async_setup_entry(
     hass, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the UPnP/IGD sensors."""
-    data = config_entry.data
-    if CONFIG_ENTRY_UDN in data:
-        udn = data[CONFIG_ENTRY_UDN]
-    else:
-        # any device will do
-        udn = list(hass.data[DOMAIN][DOMAIN_DEVICES])[0]
-
+    udn = config_entry.data[CONFIG_ENTRY_UDN]
     device: Device = hass.data[DOMAIN][DOMAIN_DEVICES][udn]
 
     update_interval_sec = config_entry.options.get(
