@@ -182,6 +182,3 @@ async def test_form_already_configured(hass):
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result2["reason"] == "already_configured"
-
-    # Test config entry got updated with latest IP
-    assert entry.data["host"] == "1.1.1.1"
