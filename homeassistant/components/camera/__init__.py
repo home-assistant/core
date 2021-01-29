@@ -650,13 +650,6 @@ async def async_handle_snapshot_service(camera, service):
 
 async def async_handle_play_stream_service(camera, service_call):
     """Handle play stream services calls."""
-
-    stream = await camera.create_stream()
-    if not stream:
-        raise HomeAssistantError(
-            f"{camera.entity_id} does not support play stream service"
-        )
-
     fmt = service_call.data[ATTR_FORMAT]
     url = await _async_stream_endpoint_url(camera.hass, camera, fmt)
 
