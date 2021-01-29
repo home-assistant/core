@@ -87,18 +87,3 @@ class FAABinarySensor(CoordinatorEntity):
             self._attrs["end"] = self.coordinator.data.closure.end
             self._attrs["reason"] = self.coordinator.data.closure.reason
         return self._attrs
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
-
-    async def async_added_to_hass(self):
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update the data from the FAA API."""
-        await self.coordinator.async_request_refresh()
