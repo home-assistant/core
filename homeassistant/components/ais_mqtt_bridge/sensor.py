@@ -1,7 +1,6 @@
 """Support for MQTT BRIDGE sensors."""
 from datetime import timedelta
 import logging
-import queue
 
 import paho.mqtt.client as ais_mqtt
 
@@ -40,12 +39,27 @@ class AisMqttSoftBridge(Entity):
         self._os_version = "v1"
         self._ais_cloud_published = 0
         self._ais_cloud_received = 0
-        self._ais_mqtt_connection_code = None
-        self._ais_mqtt_client = None
+        self._ais_mqtt_connection_code = -1
         self._sub_state = None
+        self._try_to_connect_no = 0
+
+        # connection on start
+        self._ais_mqtt_client = ais_mqtt.Client(
+            self._client_id, protocol=ais_mqtt.MQTTv5
+        )
+        self._ais_mqtt_client.username_pw_set(self._username, password=self._password)
+        self._ais_mqtt_client.on_connect = self.on_ais_connect
+        self._ais_mqtt_client.on_disconnect = self.on_ais_disconnect
+        self._ais_mqtt_client.on_message = self.on_ais_message
+        self._ais_mqtt_client.on_publish = self.on_ais_publish
+
+        self._ais_mqtt_client.connect_async(
+            self._hostname, port=self._port, keepalive=self._keepalive
+        )
+        self._ais_mqtt_client.loop_start()
 
     async def async_publish_to_ais(self, topic, payload):
-        if self._ais_mqtt_client is not None:
+        if self._ais_mqtt_connection_code == 0:
             self._ais_mqtt_client.publish(
                 topic=topic, payload=payload, qos=self._qos, retain=False
             )
@@ -110,7 +124,9 @@ class AisMqttSoftBridge(Entity):
     def state(self):
         """Return the status of the sensor."""
         # connection result codes
-        if self._ais_mqtt_connection_code == 0:
+        if self._ais_mqtt_connection_code == -1:
+            return "not started"
+        elif self._ais_mqtt_connection_code == 0:
             return "success"
         elif self._ais_mqtt_connection_code == 1:
             return "bad protocol"
@@ -135,8 +151,7 @@ class AisMqttSoftBridge(Entity):
         return {
             "MQTT packets sent": self._ais_cloud_published,
             "MQTT packets received": self._ais_cloud_received,
-            "Host": self._hostname,
-            "Port": self._port,
+            "MQTT trying to connect": self._try_to_connect_no,
         }
 
     @property
@@ -148,13 +163,14 @@ class AisMqttSoftBridge(Entity):
         """Handle connection result.
         Subscribing in on_connect() means that if we lose the connection and
         reconnect then subscriptions will be renewed."""
+        self._try_to_connect_no = self._try_to_connect_no + 1
         self._ais_mqtt_connection_code = result_code
-        client_.subscribe("dom/#")
+        if result_code == 0:
+            client_.subscribe("dom/#")
 
     def on_ais_disconnect(self, client_, userdata, result_code):
         """Handle connection result."""
         self._ais_mqtt_connection_code = result_code
-        self._ais_mqtt_client = None
 
     def on_ais_message(self, client, userdata, msg):
         """The callback for when a PUBLISH message is received from ais cloud broker."""
@@ -169,28 +185,4 @@ class AisMqttSoftBridge(Entity):
 
     async def async_update(self):
         """Update the sensor."""
-        if self._ais_mqtt_connection_code != 0:
-            self._ais_mqtt_client = None
-        if self._ais_mqtt_client is None:
-            self._ais_mqtt_client = ais_mqtt.Client(
-                self._client_id, protocol=ais_mqtt.MQTTv5
-            )
-            self._ais_mqtt_client.username_pw_set(
-                self._username, password=self._password
-            )
-            result = queue.Queue(maxsize=1)
-
-            self._ais_mqtt_client.on_connect = self.on_ais_connect
-            self._ais_mqtt_client.on_disconnect = self.on_ais_disconnect
-            self._ais_mqtt_client.on_message = self.on_ais_message
-            self._ais_mqtt_client.on_publish = self.on_ais_publish
-
-            self._ais_mqtt_client.connect_async(
-                self._hostname, port=self._port, keepalive=self._keepalive
-            )
-            self._ais_mqtt_client.loop_start()
-
-            try:
-                return result.get(timeout=5)
-            except queue.Empty:
-                pass
+        pass
