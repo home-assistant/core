@@ -9,7 +9,6 @@ from unittest.mock import AsyncMock, Mock, patch
 from hyperion import const
 
 from homeassistant.components.hyperion.const import CONF_PRIORITY, DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.typing import HomeAssistantType
@@ -24,8 +23,6 @@ TEST_ID = "default"
 TEST_SYSINFO_ID = "f9aab089-f85a-55cf-b7c1-222a72faebe9"
 TEST_SYSINFO_VERSION = "2.0.0-alpha.8"
 TEST_PRIORITY = 180
-TEST_YAML_NAME = f"{TEST_HOST}_{TEST_PORT}_{TEST_INSTANCE}"
-TEST_YAML_ENTITY_ID = f"{LIGHT_DOMAIN}.{TEST_YAML_NAME}"
 TEST_ENTITY_ID_1 = "light.test_instance_1"
 TEST_ENTITY_ID_2 = "light.test_instance_2"
 TEST_ENTITY_ID_3 = "light.test_instance_3"
