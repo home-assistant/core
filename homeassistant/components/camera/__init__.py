@@ -24,15 +24,7 @@ from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.components.stream import Stream, create_stream
-from homeassistant.components.stream.const import (
-    CONF_DURATION,
-    CONF_LOOKBACK,
-    CONF_STREAM_ID,
-    DOMAIN as DOMAIN_STREAM,
-    FORMAT_CONTENT_TYPE,
-    OUTPUT_FORMATS,
-    SERVICE_RECORD,
-)
+from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, OUTPUT_FORMATS
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_FILENAME,
@@ -53,7 +45,13 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.loader import bind_hass
 
-from .const import DATA_CAMERA_PREFS, DOMAIN
+from .const import (
+    CONF_DURATION,
+    CONF_LOOKBACK,
+    DATA_CAMERA_PREFS,
+    DOMAIN,
+    SERVICE_RECORD,
+)
 from .prefs import CameraPreferences
 
 # mypy: allow-untyped-calls, allow-untyped-defs
@@ -369,9 +367,7 @@ class Camera(Entity):
                 source = await self.stream_source()
             if not source:
                 return None
-            self.stream = create_stream(
-                self.hass, self.entity_id, source, options=self.stream_options
-            )
+            self.stream = create_stream(self.hass, source, options=self.stream_options)
 
         # Update keepalive setting which manages idle shutdown
         camera_prefs = self.hass.data[DATA_CAMERA_PREFS].get(self.entity_id)
@@ -730,13 +726,6 @@ async def async_handle_record_service(camera, call):
     filename.hass = hass
     video_path = filename.async_render(variables={ATTR_ENTITY_ID: camera})
 
-    data = {
-        CONF_STREAM_ID: stream.stream_id,
-        CONF_FILENAME: video_path,
-        CONF_DURATION: call.data[CONF_DURATION],
-        CONF_LOOKBACK: call.data[CONF_LOOKBACK],
-    }
-
-    await hass.services.async_call(
-        DOMAIN_STREAM, SERVICE_RECORD, data, blocking=True, context=call.context
+    await stream.async_record(
+        video_path, duration=call.data[CONF_DURATION], lookback=call.data[CONF_LOOKBACK]
     )

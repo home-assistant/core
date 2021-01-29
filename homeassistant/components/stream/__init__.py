@@ -20,23 +20,16 @@ import threading
 import time
 from types import MappingProxyType
 
-import voluptuous as vol
-
-from homeassistant.const import CONF_FILENAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
 
 from .const import (
     ATTR_ENDPOINTS,
     ATTR_STREAMS,
-    CONF_DURATION,
-    CONF_LOOKBACK,
-    CONF_STREAM_ID,
     DOMAIN,
     MAX_SEGMENTS,
     OUTPUT_IDLE_TIMEOUT,
-    SERVICE_RECORD,
     STREAM_RESTART_INCREMENT,
     STREAM_RESTART_RESET_TIME,
 )
@@ -45,18 +38,8 @@ from .hls import async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
 
-STREAM_SERVICE_SCHEMA = vol.Schema({vol.Required(CONF_STREAM_ID): cv.string})
 
-SERVICE_RECORD_SCHEMA = STREAM_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(CONF_FILENAME): cv.string,
-        vol.Optional(CONF_DURATION, default=30): int,
-        vol.Optional(CONF_LOOKBACK, default=0): int,
-    }
-)
-
-
-def create_stream(hass, stream_id, stream_source, options=None):
+def create_stream(hass, stream_source, options=None):
     """Create a stream with the specified identfier based on the source url.
 
     The stream_source is typically an rtsp url and options are passed into
@@ -64,9 +47,6 @@ def create_stream(hass, stream_id, stream_source, options=None):
     """
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
-
-    if stream_id in hass.data[DOMAIN][ATTR_STREAMS]:
-        raise HomeAssistantError(f"Stream '{stream_id}' already exists.")
 
     if options is None:
         options = {}
@@ -79,8 +59,8 @@ def create_stream(hass, stream_id, stream_source, options=None):
             **options,
         }
 
-    stream = Stream(hass, stream_id, stream_source, options=options)
-    hass.data[DOMAIN][ATTR_STREAMS][stream_id] = stream
+    stream = Stream(hass, stream_source, options=options)
+    hass.data[DOMAIN][ATTR_STREAMS].append(stream)
     return stream
 
 
@@ -96,7 +76,7 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
-    hass.data[DOMAIN][ATTR_STREAMS] = {}
+    hass.data[DOMAIN][ATTR_STREAMS] = []
 
     # Setup HLS
     hls_endpoint = async_setup_hls(hass)
@@ -108,20 +88,12 @@ async def async_setup(hass, config):
     @callback
     def shutdown(event):
         """Stop all stream workers."""
-        for stream in hass.data[DOMAIN][ATTR_STREAMS].values():
+        for stream in hass.data[DOMAIN][ATTR_STREAMS]:
             stream.keepalive = False
             stream.stop()
         _LOGGER.info("Stopped stream workers")
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
-
-    async def async_record(call):
-        """Call record stream service handler."""
-        await async_handle_record_service(hass, call)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_RECORD, async_record, schema=SERVICE_RECORD_SCHEMA
-    )
 
     return True
 
@@ -129,10 +101,9 @@ async def async_setup(hass, config):
 class Stream:
     """Represents a single stream."""
 
-    def __init__(self, hass, stream_id, source, options=None):
+    def __init__(self, hass, source, options=None):
         """Initialize a stream."""
         self.hass = hass
-        self.stream_id = stream_id
         self.source = source
         self.options = options
         self.keepalive = False
@@ -257,36 +228,28 @@ class Stream:
             self._thread = None
             _LOGGER.info("Stopped stream: %s", self.source)
 
+    async def async_record(self, video_path, duration=30, lookback=5):
+        """Make a .mp4 recording from a provided stream."""
 
-async def async_handle_record_service(hass, call):
-    """Handle save video service calls."""
-    stream_id = call.data[CONF_STREAM_ID]
-    video_path = call.data[CONF_FILENAME]
-    duration = call.data[CONF_DURATION]
-    lookback = call.data[CONF_LOOKBACK]
+        # Check for file access
+        if not self.hass.config.is_allowed_path(video_path):
+            raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
 
-    # Check for file access
-    if not hass.config.is_allowed_path(video_path):
-        raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
+        # Add recorder
+        recorder = self.outputs.get("recorder")
+        if recorder:
+            raise HomeAssistantError(
+                f"Stream already recording to {recorder.video_path}!"
+            )
+        recorder = self.add_provider("recorder", timeout=duration)
+        recorder.video_path = video_path
 
-    stream = hass.data[DOMAIN][ATTR_STREAMS].get(stream_id)
-    if not stream:
-        raise HomeAssistantError(f"Stream '{stream_id}' does not exist")
+        self.start()
 
-    # Add recorder
-    recorder = stream.outputs.get("recorder")
-    if recorder:
-        raise HomeAssistantError(f"Stream already recording to {recorder.video_path}!")
-
-    recorder = stream.add_provider("recorder", timeout=duration)
-    recorder.video_path = video_path
-
-    stream.start()
-
-    # Take advantage of lookback
-    hls = stream.outputs.get("hls")
-    if lookback > 0 and hls:
-        num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
-        # Wait for latest segment, then add the lookback
-        await hls.recv()
-        recorder.prepend(list(hls.get_segment())[-num_segments:])
+        # Take advantage of lookback
+        hls = self.outputs.get("hls")
+        if lookback > 0 and hls:
+            num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
+            # Wait for latest segment, then add the lookback
+            await hls.recv()
+            recorder.prepend(list(hls.get_segment())[-num_segments:])

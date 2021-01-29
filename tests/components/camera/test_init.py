@@ -341,10 +341,9 @@ async def test_record_service(hass, mock_camera, mock_stream):
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
         return_value="http://example.com",
     ), patch(
-        "homeassistant.components.stream.async_handle_record_service",
-    ) as mock_record_service, patch.object(
-        hass.config, "is_allowed_path", return_value=True
-    ):
+        "homeassistant.components.stream.Stream.async_record",
+        autospec=True,
+    ) as mock_record:
         # Call service
         await hass.services.async_call(
             camera.DOMAIN,
@@ -354,4 +353,4 @@ async def test_record_service(hass, mock_camera, mock_stream):
         )
         # So long as we call stream.record, the rest should be covered
         # by those tests.
-        assert mock_record_service.called
+        assert mock_record.called
