@@ -30,7 +30,9 @@ async def test_hls_stream(hass, hass_client, stream_worker_sync):
     stream = create_stream(hass, source)
 
     # Request stream
-    url = stream.stream_view_url("hls")
+    stream.add_provider("hls")
+    stream.start()
+    url = stream.endpoint_url("hls")
 
     http_client = await hass_client()
 
@@ -74,7 +76,9 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync):
     stream = create_stream(hass, source)
 
     # Request stream
-    url = stream.stream_view_url("hls")
+    stream.add_provider("hls")
+    stream.start()
+    url = stream.endpoint_url("hls")
 
     http_client = await hass_client()
 
@@ -115,7 +119,9 @@ async def test_stream_ended(hass, stream_worker_sync):
     track = stream.add_provider("hls")
 
     # Request stream
-    stream.stream_view_url("hls")
+    stream.add_provider("hls")
+    stream.start()
+    stream.endpoint_url("hls")
 
     # Run it dead
     while True:

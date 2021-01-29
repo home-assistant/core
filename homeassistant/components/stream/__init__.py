@@ -115,12 +115,12 @@ class Stream:
         if self.options is None:
             self.options = {}
 
-    def stream_view_url(self, fmt):
+    def endpoint_url(self, fmt):
         """Start the stream and returns a url for the output format."""
-        self.add_provider(fmt)
+        if fmt not in self._outputs:
+            raise ValueError(f"Stream is not configured for format '{fmt}'")
         if not self.access_token:
             self.access_token = secrets.token_hex()
-            self.start()
         return self.hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(self.access_token)
 
     @property

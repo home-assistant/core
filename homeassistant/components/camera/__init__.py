@@ -128,12 +128,7 @@ class Image:
 async def async_request_stream(hass, entity_id, fmt):
     """Request a stream for a camera entity."""
     camera = _get_camera_from_entity_id(hass, entity_id)
-    stream = await camera.create_stream()
-    if not stream:
-        raise HomeAssistantError(
-            f"{camera.entity_id} does not support play stream service"
-        )
-    return stream.stream_view_url(fmt)
+    return await _async_stream_endpoint_url(hass, camera, fmt)
 
 
 @bind_hass
@@ -257,7 +252,7 @@ async def async_setup(hass, config):
             stream = await camera.create_stream()
             if not stream:
                 continue
-            stream.stream_view_url("hls")
+            stream.add_provider("hls")
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, preload_stream)
 
@@ -368,10 +363,6 @@ class Camera(Entity):
             if not source:
                 return None
             self.stream = create_stream(self.hass, source, options=self.stream_options)
-
-        # Update keepalive setting which manages idle shutdown
-        camera_prefs = self.hass.data[DATA_CAMERA_PREFS].get(self.entity_id)
-        self.stream.keepalive = camera_prefs.preload_stream
         return self.stream
 
     async def stream_source(self):
@@ -665,7 +656,7 @@ async def async_handle_play_stream_service(camera, service_call):
         )
 
     fmt = service_call.data[ATTR_FORMAT]
-    url = stream.stream_view_url(fmt)
+    url = await _async_stream_endpoint_url(camera.hass, camera, fmt)
 
     hass = camera.hass
     data = {
@@ -711,6 +702,22 @@ async def async_handle_play_stream_service(camera, service_call):
             blocking=True,
             context=service_call.context,
         )
+
+
+async def _async_stream_endpoint_url(hass, camera, fmt):
+    stream = await camera.create_stream()
+    if not stream:
+        raise HomeAssistantError(
+            f"{camera.entity_id} does not support play stream service"
+        )
+
+    # Update keepalive setting which manages idle shutdown
+    camera_prefs = hass.data[DATA_CAMERA_PREFS].get(camera.entity_id)
+    stream.keepalive = camera_prefs.preload_stream
+
+    stream.add_provider(fmt)
+    stream.start()
+    return stream.endpoint_url(fmt)
 
 
 async def async_handle_record_service(camera, call):
