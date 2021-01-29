@@ -1,8 +1,9 @@
 """Platform for FAA Delays sensor component."""
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.const import ATTR_ICON, ATTR_NAME
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_ICON, ATTR_NAME, DOMAIN, FAA_BINARY_SENSORS
+from .const import DOMAIN, FAA_BINARY_SENSORS
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -21,7 +22,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(binary_sensors, True)
 
 
-class FAABinarySensor(BinarySensorEntity, CoordinatorEntity):
+class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Define a binary sensor for FAA Delays."""
 
     def __init__(self, coordinator, sensor_type, name, icon, entry_id):
