@@ -33,14 +33,23 @@ CONFIG_THEMES = {
 
 
 @pytest.fixture
-def mock_http_client(hass, aiohttp_client):
+async def ignore_frontend_deps(hass):
+    """Frontend dependencies."""
+    frontend = await async_get_integration(hass, "frontend")
+    for dep in frontend.dependencies:
+        if dep not in ("http", "websocket_api"):
+            hass.config.components.add(dep)
+
+
+@pytest.fixture
+def mock_http_client(hass, aiohttp_client, ignore_frontend_deps):
     """Start the Home Assistant HTTP component."""
     hass.loop.run_until_complete(async_setup_component(hass, "frontend", {}))
     return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture
-def mock_http_client_with_themes(hass, aiohttp_client):
+def mock_http_client_with_themes(hass, aiohttp_client, ignore_frontend_deps):
     """Start the Home Assistant HTTP component."""
     hass.loop.run_until_complete(
         async_setup_component(
@@ -53,7 +62,7 @@ def mock_http_client_with_themes(hass, aiohttp_client):
 
 
 @pytest.fixture
-def mock_http_client_with_urls(hass, aiohttp_client):
+def mock_http_client_with_urls(hass, aiohttp_client, ignore_frontend_deps):
     """Start the Home Assistant HTTP component."""
     hass.loop.run_until_complete(
         async_setup_component(
@@ -422,16 +431,16 @@ async def test_get_translations(hass, hass_ws_client):
     assert msg["result"] == {"resources": {"lang": "nl"}}
 
 
-async def test_auth_load(mock_http_client, mock_onboarded):
+async def test_auth_load(hass):
     """Test auth component loaded by default."""
-    resp = await mock_http_client.get("/auth/providers")
-    assert resp.status == 200
+    frontend = await async_get_integration(hass, "frontend")
+    assert "auth" in frontend.dependencies
 
 
-async def test_onboarding_load(mock_http_client):
+async def test_onboarding_load(hass):
     """Test onboarding component loaded by default."""
-    resp = await mock_http_client.get("/api/onboarding")
-    assert resp.status == 200
+    frontend = await async_get_integration(hass, "frontend")
+    assert "onboarding" in frontend.dependencies
 
 
 async def test_auth_authorize(mock_http_client):
