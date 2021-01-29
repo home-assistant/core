@@ -107,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         # Need to get sleep info or first time sleeping device setup, wait for device
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][DEVICE] = device
         _LOGGER.debug(
-            f"Setup for device {entry.title} will continue when device is online"
+            "Setup for device %s will continue when device is online", entry.title
         )
         device.subscribe_updates(_async_device_online)
     else:
@@ -130,7 +130,7 @@ async def async_online_device_setup(
         REST
     ] = ShellyDeviceRestWrapper(hass, device)
 
-    _LOGGER.debug(f"Setting up online device {device_wrapper.name}")
+    _LOGGER.debug("Setting up online device %s", device_wrapper.name)
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -147,7 +147,7 @@ async def async_offline_device_setup(
     ] = ShellyDeviceWrapper(hass, entry, device)
     device_wrapper.offline_setup(entry.entry_id)
 
-    _LOGGER.debug(f"Setting up offline device {device_wrapper.name}")
+    _LOGGER.debug("Setting up offline device %s", device_wrapper.name)
 
     for component in SLEEPING_PLATFORMS:
         hass.async_create_task(

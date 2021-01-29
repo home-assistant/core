@@ -149,11 +149,6 @@ class ShellySleepingBinarySensor(
         """Return true if sensor state is on."""
         return bool(self.attribute_value)
 
-    async def async_added_to_hass(self):
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-
-        last_state = await self.async_get_last_state()
-
-        if last_state is not None:
-            self.last_state = last_state.state == STATE_ON
+    def set_last_state(self, last_state):
+        """Set the last state of the attribute."""
+        super().set_last_state(last_state.state == STATE_ON)

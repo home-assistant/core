@@ -36,7 +36,7 @@ async def async_setup_entry_attribute_entities(
         )
     else:
         await async_restore_block_attribute_entities(
-            hass, config_entry, async_add_entities, wrapper, sensors, sensor_class
+            hass, config_entry, async_add_entities, wrapper, sensor_class
         )
 
 
@@ -78,7 +78,7 @@ async def async_setup_block_attribute_entities(
 
 
 async def async_restore_block_attribute_entities(
-    hass, config_entry, async_add_entities, wrapper, sensors, sensor_class
+    hass, config_entry, async_add_entities, wrapper, sensor_class
 ):
     """Restore block attributes entities."""
     entities = []
@@ -417,6 +417,19 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
 
         return self.last_state
 
+    def set_last_state(self, last_state):
+        """Set the last state of the attribute."""
+        self.last_state = last_state
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+
+        last_state = await self.async_get_last_state()
+
+        if last_state is not None:
+            self.set_last_state(last_state.state)
+
     @callback
     def _update_callback(self):
         """Handle device update."""
@@ -426,7 +439,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
                     unique_id = f"{self.wrapper.mac}-{block.description}-{sensor_id}"
                     if unique_id == self.unique_id:
                         self.block = block
-                        _LOGGER.debug(f"Entity {self.name} attached to block")
+                        _LOGGER.debug("Entity %s attached to block", self.name)
                         break
                 else:
                     continue
