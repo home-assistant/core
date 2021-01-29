@@ -3,7 +3,15 @@ from pyplaato.models.device import PlaatoDevice
 
 from homeassistant.helpers import entity
 
-from .const import DEVICE, DEVICE_ID, DEVICE_NAME, DEVICE_TYPE, DOMAIN, SENSOR_DATA
+from .const import (
+    DEVICE,
+    DEVICE_ID,
+    DEVICE_NAME,
+    DEVICE_TYPE,
+    DOMAIN,
+    SENSOR_DATA,
+    SENSOR_SIGNAL,
+)
 
 
 class PlaatoEntity(entity.Entity):
@@ -11,21 +19,32 @@ class PlaatoEntity(entity.Entity):
 
     def __init__(self, data, sensor_type, coordinator=None):
         """Initialize the sensor."""
-        sensor_data = data[SENSOR_DATA] if coordinator is None else coordinator.data
         self._coordinator = coordinator
-        self._sensor_data: PlaatoDevice = sensor_data
+        self._entry_data = data
         self._sensor_type = sensor_type
         self._device_id = data[DEVICE][DEVICE_ID]
         self._device_type = data[DEVICE][DEVICE_TYPE]
         self._device_name = data[DEVICE][DEVICE_NAME]
-        self._name = self._sensor_data.get_sensor_name(sensor_type)
-        self._attributes = PlaatoEntity._to_snake_case(self._sensor_data.attributes)
         self._state = 0
+
+    @property
+    def _attributes(self) -> dict:
+        return PlaatoEntity._to_snake_case(self._sensor_data.attributes)
+
+    @property
+    def _sensor_name(self) -> str:
+        return self._sensor_data.get_sensor_name(self._sensor_type)
+
+    @property
+    def _sensor_data(self) -> PlaatoDevice:
+        if self._coordinator:
+            return self._coordinator.data
+        return self._entry_data[SENSOR_DATA]
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{DOMAIN} {self._device_type} {self._device_name} {self._name}".title()
+        return f"{DOMAIN} {self._device_type} {self._device_name} {self._sensor_name}".title()
 
     @property
     def unique_id(self):
@@ -74,7 +93,8 @@ class PlaatoEntity(entity.Entity):
         else:
             self.async_on_remove(
                 self.hass.helpers.dispatcher.async_dispatcher_connect(
-                    f"{DOMAIN}_{self.unique_id}", self.async_write_ha_state
+                    SENSOR_SIGNAL % (self._device_id, self._sensor_type),
+                    self.async_write_ha_state,
                 )
             )
 

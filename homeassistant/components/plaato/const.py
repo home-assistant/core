@@ -4,6 +4,7 @@ from datetime import timedelta
 DOMAIN = "plaato"
 PLAATO_DEVICE_SENSORS = "sensors"
 PLAATO_DEVICE_ATTRS = "attrs"
+SENSOR_SIGNAL = f"{DOMAIN}_%s_%s"
 
 CONF_USE_WEBHOOK = "use_webhook"
 CONF_DEVICE_TYPE = "device_type"

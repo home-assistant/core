@@ -13,7 +13,16 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from . import ATTR_TEMP, SENSOR_UPDATE
-from .const import CONF_USE_WEBHOOK, COORDINATOR, DEVICE, DEVICE_ID, DOMAIN, SENSOR_DATA
+from ...core import callback
+from .const import (
+    CONF_USE_WEBHOOK,
+    COORDINATOR,
+    DEVICE,
+    DEVICE_ID,
+    DOMAIN,
+    SENSOR_DATA,
+    SENSOR_SIGNAL,
+)
 from .entity import PlaatoEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,28 +34,27 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Plaato from a config entry."""
-    devices = {}
     entry_data = hass.data[DOMAIN][entry.entry_id]
 
-    async def _update_sensor(device_id, sensor_data: PlaatoDevice):
+    @callback
+    async def _async_update_from_webhook(device_id, sensor_data: PlaatoDevice):
         """Update/Create the sensors."""
         entry_data[SENSOR_DATA] = sensor_data
 
-        if entry.entry_id not in devices:
+        if device_id != entry_data[DEVICE][DEVICE_ID]:
             entry_data[DEVICE][DEVICE_ID] = device_id
-
-            entities = [
-                PlaatoSensor(entry_data, sensor_type)
-                for sensor_type in sensor_data.sensors.keys()
-            ]
-            devices[entry.entry_id] = entities
-            async_add_entities(entities)
+            async_add_entities(
+                [
+                    PlaatoSensor(entry_data, sensor_type)
+                    for sensor_type in sensor_data.sensors
+                ]
+            )
         else:
-            for entity in devices[entry.entry_id]:
-                async_dispatcher_send(hass, f"{DOMAIN}_{entity.unique_id}")
+            for sensor_type in sensor_data.sensors:
+                async_dispatcher_send(hass, SENSOR_SIGNAL % (device_id, sensor_type))
 
-    if entry.data.get(CONF_USE_WEBHOOK, False):
-        async_dispatcher_connect(hass, SENSOR_UPDATE, _update_sensor)
+    if entry.data[CONF_USE_WEBHOOK]:
+        async_dispatcher_connect(hass, SENSOR_UPDATE, _async_update_from_webhook)
     else:
         coordinator = entry_data[COORDINATOR]
         async_add_entities(
@@ -73,9 +81,6 @@ class PlaatoSensor(PlaatoEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._coordinator is not None:
-            return self._coordinator.data.sensors.get(self._sensor_type)
-
         return self._sensor_data.sensors.get(self._sensor_type)
 
     @property
