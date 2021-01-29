@@ -3,11 +3,8 @@ from typing import Dict
 from unittest.mock import patch
 
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries, setup
-from homeassistant.components.mysensors import async_setup
-from homeassistant.components.mysensors.config_flow import MySensorsConfigFlowHandler
 from homeassistant.components.mysensors.const import (
     CONF_BAUD_RATE,
     CONF_DEVICE,
@@ -15,7 +12,6 @@ from homeassistant.components.mysensors.const import (
     CONF_GATEWAY_TYPE_MQTT,
     CONF_GATEWAY_TYPE_SERIAL,
     CONF_GATEWAY_TYPE_TCP,
-    CONF_GATEWAYS,
     CONF_PERSISTENCE,
     CONF_PERSISTENCE_FILE,
     CONF_RETAIN,
@@ -26,8 +22,7 @@ from homeassistant.components.mysensors.const import (
     DOMAIN,
     ConfGatewayType,
 )
-from homeassistant.components.mysensors.gateway import is_serial_port
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType
 
 
 async def get_form(
@@ -87,30 +82,6 @@ async def test_config_mqtt(hass: HomeAssistantType):
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-def test_is_serial_port_windows(hass: HomeAssistantType):
-    """Test windows serial ports."""
-    tests = {
-        "COM5": True,
-        "asdf": False,
-        "COM17": True,
-        "COM": False,
-        "/dev/ttyACM0": False,
-    }
-
-    def testport(port, result):
-        try:
-            is_serial_port(port)
-        except vol.Invalid:
-            success = False
-        else:
-            success = True
-        assert success == result
-
-    with patch("sys.platform", "win32"):
-        for test, result in tests.items():
-            testport(test, result)
 
 
 async def test_config_serial(hass: HomeAssistantType):
@@ -369,161 +340,60 @@ async def test_config_invalid(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def attempt_import(hass: HomeAssistantType, config: ConfigType, expected_calls=1):
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        {
+            CONF_DEVICE: "COM5",
+            CONF_BAUD_RATE: 57600,
+            CONF_TCP_PORT: 5003,
+            CONF_RETAIN: True,
+            CONF_VERSION: "2.3",
+            CONF_PERSISTENCE_FILE: "bla.json",
+        },
+        {
+            CONF_DEVICE: "COM5",
+            CONF_PERSISTENCE_FILE: "bla.json",
+            CONF_BAUD_RATE: 57600,
+            CONF_TCP_PORT: 5003,
+            CONF_VERSION: "2.3",
+            CONF_PERSISTENCE: False,
+            CONF_RETAIN: True,
+        },
+        {
+            CONF_DEVICE: "mqtt",
+            CONF_BAUD_RATE: 115200,
+            CONF_TCP_PORT: 5003,
+            CONF_TOPIC_IN_PREFIX: "intopic",
+            CONF_TOPIC_OUT_PREFIX: "outtopic",
+            CONF_VERSION: "2.4",
+            CONF_PERSISTENCE: False,
+            CONF_RETAIN: False,
+        },
+        {
+            CONF_DEVICE: "127.0.0.1",
+            CONF_PERSISTENCE_FILE: "blub.pickle",
+            CONF_BAUD_RATE: 115200,
+            CONF_TCP_PORT: 343,
+            CONF_VERSION: "2.4",
+            CONF_PERSISTENCE: False,
+            CONF_RETAIN: False,
+        },
+    ],
+)
+async def test_import(hass: HomeAssistantType, user_input: Dict):
     """Test importing a gateway."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch("sys.platform", "win32"), patch(
         "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
     ), patch(
         "homeassistant.components.mysensors.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
-        result = await async_setup(hass, config)
-        assert result
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, data=user_input, context={"source": config_entries.SOURCE_IMPORT}
+        )
         await hass.async_block_till_done()
 
-    assert len(mock_setup_entry.mock_calls) == expected_calls
-    return mock_setup_entry.call_args
-
-
-async def test_import_serial(hass: HomeAssistantType):
-    """Test importing a gateway via serial."""
-    args, _ = await attempt_import(
-        hass,
-        {
-            DOMAIN: {
-                CONF_GATEWAYS: [
-                    {
-                        CONF_DEVICE: "COM5",
-                        CONF_PERSISTENCE_FILE: "bla.json",
-                        CONF_BAUD_RATE: 57600,
-                        CONF_TCP_PORT: 5003,
-                    }
-                ],
-                CONF_VERSION: "2.3",
-                CONF_PERSISTENCE: False,
-                CONF_RETAIN: True,
-            }
-        },
-        1,
-    )
-    # check result
-    # we check in this weird way bc there may be some extra keys that we don't care about
-    wanted = {
-        CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_SERIAL,
-        CONF_DEVICE: "COM5",
-        CONF_PERSISTENCE_FILE: "bla.json",
-        CONF_BAUD_RATE: 57600,
-        CONF_VERSION: "2.3",
-    }
-    for key, value in wanted.items():
-        assert key in args[1].data
-        assert args[1].data[key] == value
-
-
-async def test_import_tcp(hass: HomeAssistantType):
-    """Test configuring a gateway via serial."""
-    args, _ = await attempt_import(
-        hass,
-        {
-            DOMAIN: {
-                CONF_GATEWAYS: [
-                    {
-                        CONF_DEVICE: "127.0.0.1",
-                        CONF_PERSISTENCE_FILE: "blub.pickle",
-                        CONF_BAUD_RATE: 115200,
-                        CONF_TCP_PORT: 343,
-                    }
-                ],
-                CONF_VERSION: "2.4",
-                CONF_PERSISTENCE: False,
-                CONF_RETAIN: False,
-            }
-        },
-        1,
-    )
-    # check result
-    # we check in this weird way bc there may be some extra keys that we don't care about
-    wanted = {
-        CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_TCP,
-        CONF_DEVICE: "127.0.0.1",
-        CONF_PERSISTENCE_FILE: "blub.pickle",
-        CONF_TCP_PORT: 343,
-        CONF_VERSION: "2.4",
-    }
-    for key, value in wanted.items():
-        assert key in args[1].data
-        assert args[1].data[key] == value
-
-
-async def test_import_mqtt(hass: HomeAssistantType):
-    """Test configuring a gateway via serial."""
-    args, _ = await attempt_import(
-        hass,
-        {
-            DOMAIN: {
-                CONF_GATEWAYS: [
-                    {
-                        CONF_DEVICE: "mqtt",
-                        CONF_BAUD_RATE: 115200,
-                        CONF_TCP_PORT: 5003,
-                        CONF_TOPIC_IN_PREFIX: "intopic",
-                        CONF_TOPIC_OUT_PREFIX: "outtopic",
-                    }
-                ],
-                CONF_VERSION: "2.4",
-                CONF_PERSISTENCE: False,
-                CONF_RETAIN: False,
-            }
-        },
-        1,
-    )
-    # check result
-    # we check in this weird way bc there may be some extra keys that we don't care about
-    wanted = {
-        CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_MQTT,
-        CONF_DEVICE: "mqtt",
-        CONF_VERSION: "2.4",
-        CONF_TOPIC_OUT_PREFIX: "outtopic",
-        CONF_TOPIC_IN_PREFIX: "intopic",
-    }
-    for key, value in wanted.items():
-        assert key in args[1].data
-        assert args[1].data[key] == value
-
-
-async def test_import_two(hass: HomeAssistantType):
-    """Test configuring a gateway via serial."""
-    await attempt_import(
-        hass,
-        {
-            DOMAIN: {
-                CONF_GATEWAYS: [
-                    {
-                        CONF_DEVICE: "mqtt",
-                        CONF_PERSISTENCE_FILE: "bla.json",
-                        CONF_BAUD_RATE: 115200,
-                        CONF_TCP_PORT: 5003,
-                    },
-                    {
-                        CONF_DEVICE: "COM6",
-                        CONF_PERSISTENCE_FILE: "bla.json",
-                        CONF_BAUD_RATE: 115200,
-                        CONF_TCP_PORT: 5003,
-                    },
-                ],
-                CONF_VERSION: "2.4",
-                CONF_PERSISTENCE: False,
-                CONF_RETAIN: False,
-            }
-        },
-        2,
-    )
-
-
-async def test_validate_common_none(hass: HomeAssistantType):
-    """Test validate common with None."""
-    with patch("sys.platform", "win32"), patch(
-        "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
-    ):
-        handler = MySensorsConfigFlowHandler()
-        assert await handler.validate_common(CONF_GATEWAY_TYPE_MQTT) == {}
+    assert result["type"] == "create_entry"

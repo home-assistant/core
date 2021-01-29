@@ -105,7 +105,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             errors.update(
-                await self.validate_common(CONF_GATEWAY_TYPE_SERIAL, user_input, errors)
+                await self.validate_common(CONF_GATEWAY_TYPE_SERIAL, errors, user_input)
             )
             if not errors:
                 return self.async_create_entry(
@@ -133,7 +133,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     errors[CONF_TCP_PORT] = "port_out_of_range"
 
             errors.update(
-                await self.validate_common(CONF_GATEWAY_TYPE_TCP, user_input, errors)
+                await self.validate_common(CONF_GATEWAY_TYPE_TCP, errors, user_input)
             )
             if not errors:
                 return self.async_create_entry(
@@ -167,7 +167,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     errors[CONF_TOPIC_OUT_PREFIX] = "invalid_publish_topic"
 
             errors.update(
-                await self.validate_common(CONF_GATEWAY_TYPE_MQTT, user_input, errors)
+                await self.validate_common(CONF_GATEWAY_TYPE_MQTT, errors, user_input)
             )
             if not errors:
                 return self.async_create_entry(
@@ -187,12 +187,10 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def validate_common(
         self,
         gw_type: ConfGatewayType,
+        errors: Dict[str, str],
         user_input: Optional[Dict[str, str]] = None,
-        errors: Optional[Dict[str, str]] = None,
     ) -> Dict[str, str]:
         """Validate parameters common to all gateway types."""
-        if errors is None:
-            errors = {}
         if user_input is not None:
             errors.update(_validate_version(user_input.get(CONF_VERSION)))
 
