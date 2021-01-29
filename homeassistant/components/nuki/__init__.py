@@ -1,7 +1,6 @@
 """The nuki component."""
 
 from datetime import timedelta
-import logging
 
 import voluptuous as vol
 
@@ -11,8 +10,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 
 from .const import DEFAULT_PORT, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 NUKI_PLATFORMS = ["lock"]
 UPDATE_INTERVAL = timedelta(seconds=30)
@@ -27,16 +24,10 @@ NUKI_SCHEMA = vol.Schema(
     )
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(NUKI_SCHEMA)},
-    extra=vol.ALLOW_EXTRA,
-)
-
 
 async def async_setup(hass, config):
     """Set up the Nuki component."""
     hass.data.setdefault(DOMAIN, {})
-    _LOGGER.debug("Config: %s", config)
 
     for platform in NUKI_PLATFORMS:
         confs = config.get(platform)
@@ -44,7 +35,6 @@ async def async_setup(hass, config):
             continue
 
         for conf in confs:
-            _LOGGER.debug("Conf: %s", conf)
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
