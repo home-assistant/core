@@ -45,7 +45,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Nuki lock platform."""
     config = config_entry.data
-    _LOGGER.debug("Config: %s", config)
 
     def get_entities():
         bridge = NukiBridge(
