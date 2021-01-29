@@ -1,0 +1,32 @@
+{
+  "config": {
+    "flow_title": "ezviz: {name}",
+    "step": {
+      "user": {
+        "title": "Connect to Ezviz Cloud",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "region": "Account region code (eu is for eurpose as example)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "timeout": "Request Timeout (seconds)",
+          "ffmpeg_arguments": "Arguments passed to ffmpeg for cameras"
+        }
+      }
+    }
+  }
+}

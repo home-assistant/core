@@ -67,6 +67,7 @@ FLOWS = [
     "epson",
     "esphome",
     "faa_delays",
+    "ezviz",
     "fireservicerota",
     "flick_electric",
     "flo",
