@@ -23,5 +23,5 @@ DEVICE_NAME = "device_name"
 DEVICE_TYPE = "device_type"
 DEVICE_ID = "device_id"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
+DEFAULT_SCAN_INTERVAL = 5
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)

@@ -131,7 +131,7 @@ async def async_setup_coordinator(hass: HomeAssistant, entry: ConfigEntry):
     if entry.options.get(CONF_SCAN_INTERVAL):
         update_interval = timedelta(minutes=entry.options[CONF_SCAN_INTERVAL])
     else:
-        update_interval = DEFAULT_SCAN_INTERVAL
+        update_interval = timedelta(minutes=DEFAULT_SCAN_INTERVAL)
 
     coordinator = PlaatoCoordinator(hass, auth_token, device_type, update_interval)
     await coordinator.async_refresh()
