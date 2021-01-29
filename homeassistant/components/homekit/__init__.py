@@ -575,13 +575,15 @@ class HomeKit:
 
         bridged_states = []
         for state in self.hass.states.async_all():
-            if not self._filter(state.entity_id):
+            entity_id = state.entity_id
+
+            if not self._filter(entity_id):
                 continue
 
-            ent_reg_ent = ent_reg.async_get(state.entity_id)
+            ent_reg_ent = ent_reg.async_get(entity_id)
             if ent_reg_ent:
                 await self._async_set_device_info_attributes(
-                    ent_reg_ent, dev_reg, state.entity_id
+                    ent_reg_ent, dev_reg, entity_id
                 )
                 self._async_configure_linked_sensors(ent_reg_ent, device_lookup, state)
 
@@ -612,13 +614,15 @@ class HomeKit:
         connection = (device_registry.CONNECTION_NETWORK_MAC, formatted_mac)
         identifier = (DOMAIN, self._entry_id, BRIDGE_SERIAL_NUMBER)
         self._async_purge_old_bridges(dev_reg, identifier, connection)
+        is_accessory_mode = self._homekit_mode == HOMEKIT_MODE_ACCESSORY
+        hk_mode_name = "Accessory" if is_accessory_mode else "Bridge"
         dev_reg.async_get_or_create(
             config_entry_id=self._entry_id,
             identifiers={identifier},
             connections={connection},
             manufacturer=MANUFACTURER,
             name=self._name,
-            model="Home Assistant HomeKit Bridge",
+            model=f"Home Assistant HomeKit {hk_mode_name}",
         )
 
     @callback
