@@ -104,6 +104,7 @@ SERVICE_HOMEKIT_RESET_ACCESSORY = "reset_accessory"
 BRIDGE_MODEL = "Bridge"
 BRIDGE_NAME = "Home Assistant Bridge"
 SHORT_BRIDGE_NAME = "HASS Bridge"
+SHORT_ACCESSORY_NAME = "HASS Accessory"
 BRIDGE_SERIAL_NUMBER = "homekit.bridge"
 MANUFACTURER = "Home Assistant"
 
