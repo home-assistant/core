@@ -127,7 +127,7 @@ class HMLight(HMDevice, LightEntity):
         """Turn the light off."""
         if ATTR_TRANSITION in kwargs:
             self._hmdevice.setValue("RAMP_TIME", kwargs[ATTR_TRANSITION], self._channel)
-            
+
         self._hmdevice.off(self._channel)
 
     def _init_data_struct(self):
