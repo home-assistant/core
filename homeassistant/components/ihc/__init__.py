@@ -355,27 +355,27 @@ def setup_service_functions(hass: HomeAssistantType):
         """Set a IHC runtime bool value service function."""
         ihc_id = call.data[ATTR_IHC_ID]
         value = call.data[ATTR_VALUE]
-        ihc_controller = __get_controller(call)
+        ihc_controller = _get_controller(call)
         ihc_controller.set_runtime_value_bool(ihc_id, value)
 
     def set_runtime_value_int(call):
         """Set a IHC runtime integer value service function."""
         ihc_id = call.data[ATTR_IHC_ID]
         value = call.data[ATTR_VALUE]
-        ihc_controller = __get_controller(call)
+        ihc_controller = _get_controller(call)
         ihc_controller.set_runtime_value_int(ihc_id, value)
 
     def set_runtime_value_float(call):
         """Set a IHC runtime float value service function."""
         ihc_id = call.data[ATTR_IHC_ID]
         value = call.data[ATTR_VALUE]
-        ihc_controller = __get_controller(call)
+        ihc_controller = _get_controller(call)
         ihc_controller.set_runtime_value_float(ihc_id, value)
 
     async def async_pulse_runtime_input(call):
         """Pulse a IHC controller input function."""
         ihc_id = call.data[ATTR_IHC_ID]
-        ihc_controller = __get_controller(call)
+        ihc_controller = _get_controller(call)
         await async_pulse(hass, ihc_controller, ihc_id)
 
     hass.services.register(
