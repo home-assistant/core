@@ -49,7 +49,9 @@ POSITION_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(POSITION_ACTION_TYPES),
         vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
-        vol.Required("position"): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+        vol.Optional("position", default=0): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=100)
+        ),
     }
 )
 
