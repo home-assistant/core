@@ -7,5 +7,5 @@
   "homekit": {
     "models": ["TRADFRI"]
   },
-  "codeowners": ["@ggravlingen"]
+  "codeowners": []
 }
