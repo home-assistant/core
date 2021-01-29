@@ -5,7 +5,12 @@ from homeassistant.components.person.significant_change import (
 
 
 async def test_significant_change():
-    """Detect Person significant changes."""
-    attrs = {}
-    assert not async_check_significant_change(None, "home", attrs, "home", attrs)
-    assert async_check_significant_change(None, "home", attrs, "not_home", attrs)
+    """Detect Person significant changes and ensure that attribute changes do not trigger a significant change."""
+    old_attrs = {"source": "device_tracker.wifi_device"}
+    new_attrs = {"source": "device_tracker.gps_device"}
+    assert not async_check_significant_change(
+        None, "home", old_attrs, "home", new_attrs
+    )
+    assert async_check_significant_change(
+        None, "home", new_attrs, "not_home", new_attrs
+    )
