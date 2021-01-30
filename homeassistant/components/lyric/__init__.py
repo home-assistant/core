@@ -18,14 +18,13 @@ from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
     config_validation as cv,
+    device_registry as dr,
 )
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
-from homeassistant.helpers import device_registry as dr
-
 
 from .api import ConfigEntryLyricClient, LyricLocalOAuth2Implementation
 from .config_flow import OAuth2FlowHandler
@@ -178,6 +177,7 @@ class LyricEntity(CoordinatorEntity):
     def icon(self) -> str:
         """Return the mdi icon of the entity."""
         return self._icon
+
     @property
     def location(self) -> LyricLocation:
         """Get the Lyric Location."""
