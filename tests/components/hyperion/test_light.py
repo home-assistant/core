@@ -6,7 +6,11 @@ from unittest.mock import AsyncMock, Mock, call, patch
 from hyperion import const
 
 from homeassistant.components.hyperion import light as hyperion_light
-from homeassistant.components.hyperion.const import CONF_EFFECT_HIDE_LIST, DEFAULT_ORIGIN, DOMAIN
+from homeassistant.components.hyperion.const import (
+    CONF_EFFECT_HIDE_LIST,
+    DEFAULT_ORIGIN,
+    DOMAIN,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
