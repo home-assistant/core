@@ -110,14 +110,14 @@ def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
 def catch_log_exception(  # type: ignore
     func: Callable[..., Awaitable[Any]], format_err: Callable[..., Any], *args: Any
 ) -> Callable[..., Awaitable[None]]:
-    """Overload for Callables that return a Awaitable."""
+    """Overload for Callables that return an Awaitable."""
 
 
 @overload
 def catch_log_exception(
     func: Callable[..., Any], format_err: Callable[..., Any], *args: Any
 ) -> Callable[..., None]:
-    """Overload for Callables the return Any."""
+    """Overload for Callables that return Any."""
 
 
 def catch_log_exception(
