@@ -292,7 +292,7 @@ class SolarEdgeDataService:
         self.coordinator = DataUpdateCoordinator(
             self.hass,
             _LOGGER,
-            name=self.__name__,
+            name=str(self),
             update_method=self.async_update_data,
             update_interval=self.update_interval,
         )
