@@ -2,7 +2,9 @@
 import asyncio
 import logging
 import os
+import ssl
 
+import async_timeout
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, async_pair
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
@@ -15,6 +17,7 @@ from homeassistant.core import callback
 from .const import (
     ABORT_REASON_ALREADY_CONFIGURED,
     ABORT_REASON_CANNOT_CONNECT,
+    BRIDGE_TIMEOUT,
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
@@ -214,25 +217,23 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 certfile=self.hass.config.path(self.data[CONF_CERTFILE]),
                 ca_certs=self.hass.config.path(self.data[CONF_CA_CERTS]),
             )
-            _LOGGER.warning("past create_tls")
-            _LOGGER.warning("bridge is %s: in try", bridge)
-            await bridge.connect()
-            _LOGGER.warning("past connect")
+            with async_timeout.timeout(BRIDGE_TIMEOUT):
+                await bridge.connect()
             connected_ok = bridge.is_connected()
-            _LOGGER.warning("connected_ok: %s", connected_ok)
-            # Ensure we stop trying to reconnect
             await bridge.close()
-            _LOGGER.warning("did close")
             return connected_ok
+        except (asyncio.TimeoutError, ssl.SSLCertVerificationError):
+            _LOGGER.error(
+                "Incorrect certificate used to connect to Lutron Caseta bridge at %s.",
+                self.data[CONF_HOST],
+            )
+            return False
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.warning("did Exception")
-
             _LOGGER.exception(
                 "Unknown exception while checking connectivity to bridge %s",
                 self.data[CONF_HOST],
             )
-            _LOGGER.warning("bridge is %s: in exce", bridge)
-
-            if bridge is not None:
-                await bridge.close()
             return False
+        finally:
+            if bridge:
+                await bridge.close()

@@ -6,6 +6,7 @@ import ssl
 from aiolip import LIP
 from aiolip.data import LIPMode
 from aiolip.protocol import LIP_BUTTON_PRESS
+import async_timeout
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
@@ -30,6 +31,7 @@ from .const import (
     BRIDGE_DEVICE_ID,
     BRIDGE_LEAP,
     BRIDGE_LIP,
+    BRIDGE_TIMEOUT,
     BUTTON_DEVICES,
     CONF_CA_CERTS,
     CONF_CERTFILE,
@@ -101,8 +103,9 @@ async def async_setup_entry(hass, config_entry):
         bridge = Smartbridge.create_tls(
             hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
         )
-        await bridge.connect()
-    except ssl.SSLCertVerificationError:
+        with async_timeout.timeout(BRIDGE_TIMEOUT):
+            await bridge.connect()
+    except (asyncio.TimeoutError, ssl.SSLCertVerificationError):
         _LOGGER.error(
             "Incorrect certificate used to connect to Lutron Caseta bridge at %s.", host
         )
