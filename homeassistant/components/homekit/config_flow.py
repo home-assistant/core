@@ -162,7 +162,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(title=self.entry_title, data=self.hk_data)
 
-        self.hk_data[CONF_PORT] = await async_find_next_available_port()
+        self.hk_data[CONF_PORT] = await async_find_next_available_port(
+            self.hass, DEFAULT_CONFIG_FLOW_PORT
+        )
         self.hk_data[CONF_NAME] = self._async_available_name(
             self.hk_data[CONF_HOMEKIT_MODE]
         )
