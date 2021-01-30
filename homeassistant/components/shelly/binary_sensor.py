@@ -151,4 +151,4 @@ class ShellySleepingBinarySensor(
 
     def set_last_state(self, last_state):
         """Set the last state of the attribute."""
-        super().set_last_state(last_state.state == STATE_ON)
+        super().set_last_state(last_state == STATE_ON)
