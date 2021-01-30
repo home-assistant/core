@@ -36,7 +36,9 @@ from .const import (
     CONF_QUERY_DEVICE,
     CONF_QUERY_INTERVAL,
     CONF_SUPPORT_COLOR,
+    CONF_SET_TEMP_DIVIDED,
     CONF_TEMP_DIVIDER,
+    CONF_TEMP_STEP_OVERRIDE,
     CONF_TUYA_MAX_COLTEMP,
     DEFAULT_DISCOVERY_INTERVAL,
     DEFAULT_QUERY_INTERVAL,
@@ -374,6 +376,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Create option schema for climate device."""
         unit = device.temperature_unit()
         def_unit = TEMP_FAHRENHEIT if unit == "FAHRENHEIT" else TEMP_CELSIUS
+        supported_steps = device.supported_temperature_steps()
+        default_step = device.target_temperature_step()
 
         config_schema = vol.Schema(
             {
@@ -389,6 +393,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_CURR_TEMP_DIVIDER,
                     default=curr_conf.get(CONF_CURR_TEMP_DIVIDER, 0),
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0)),
+                vol.Optional(
+                    CONF_SET_TEMP_DIVIDED,
+                    default=curr_conf.get(CONF_SET_TEMP_DIVIDED, True),
+                ): bool,
+                vol.Optional(
+                    CONF_TEMP_STEP_OVERRIDE,
+                    default=curr_conf.get(CONF_TEMP_STEP_OVERRIDE, default_step),
+                ): vol.In(supported_steps),
                 vol.Optional(
                     CONF_MIN_TEMP,
                     default=curr_conf.get(CONF_MIN_TEMP, 0),
