@@ -228,7 +228,7 @@ class UnifiVideoCamera(Camera):
             _LOGGER.debug(err)
 
     def enable_motion_detection(self):
-        """Enable motion detection in camlast_recording_start_timeera."""
+        """Enable motion detection in camera."""
         self.set_motion_detection(True)
 
     def disable_motion_detection(self):
@@ -257,7 +257,7 @@ class UnifiVideoCamera(Camera):
         self._caminfo = self._nvr.get_camera(self._uuid)
 
 
-def timestamp_ms_to_date(epoch_ms) -> Optional[datetime]:
+def timestamp_ms_to_date(epoch_ms: int) -> Optional[datetime]:
     """Convert millisecond timestamp to datetime."""
     if epoch_ms:
         return datetime.fromtimestamp(epoch_ms / 1000)
