@@ -127,10 +127,10 @@ class SolarEdgeSensor(CoordinatorEntity, Entity):
         self.data_service = data_service
         self.coordinator = data_service.coordinator
 
-        self._state = None
-
-        self._unit_of_measurement = SENSOR_TYPES[self.sensor_key][2]
-        self._icon = SENSOR_TYPES[self.sensor_key][3]
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return SENSOR_TYPES[self.sensor_key][2]
 
     @property
     def name(self):
@@ -140,7 +140,7 @@ class SolarEdgeSensor(CoordinatorEntity, Entity):
     @property
     def icon(self):
         """Return the sensor icon."""
-        return self._icon
+        return SENSOR_TYPES[self.sensor_key][3]
 
 
 class SolarEdgeOverviewSensor(SolarEdgeSensor):
