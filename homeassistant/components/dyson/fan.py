@@ -1,5 +1,6 @@
 """Support for Dyson Pure Cool link fan."""
 import logging
+import math
 from typing import Optional
 
 from libpurecool.const import FanMode, FanSpeed, NightMode, Oscillation
@@ -9,15 +10,12 @@ from libpurecool.dyson_pure_state import DysonPureCoolState
 from libpurecool.dyson_pure_state_v2 import DysonPureCoolV2State
 import voluptuous as vol
 
-from homeassistant.components.fan import (
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SUPPORT_OSCILLATE,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.util.percentage import (
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
+)
 
 from . import DYSON_DEVICES, DysonEntity
 
@@ -70,7 +68,8 @@ SET_DYSON_SPEED_SCHEMA = {
 }
 
 
-SPEED_LIST_HA = [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+PRESET_MODE_AUTO = "AUTO"
+PRESET_MODES = [PRESET_MODE_AUTO]
 
 SPEED_LIST_DYSON = [
     int(FanSpeed.FAN_SPEED_1.value),
@@ -85,25 +84,10 @@ SPEED_LIST_DYSON = [
     int(FanSpeed.FAN_SPEED_10.value),
 ]
 
-SPEED_DYSON_TO_HA = {
-    FanSpeed.FAN_SPEED_1.value: SPEED_LOW,
-    FanSpeed.FAN_SPEED_2.value: SPEED_LOW,
-    FanSpeed.FAN_SPEED_3.value: SPEED_LOW,
-    FanSpeed.FAN_SPEED_4.value: SPEED_LOW,
-    FanSpeed.FAN_SPEED_AUTO.value: SPEED_MEDIUM,
-    FanSpeed.FAN_SPEED_5.value: SPEED_MEDIUM,
-    FanSpeed.FAN_SPEED_6.value: SPEED_MEDIUM,
-    FanSpeed.FAN_SPEED_7.value: SPEED_MEDIUM,
-    FanSpeed.FAN_SPEED_8.value: SPEED_HIGH,
-    FanSpeed.FAN_SPEED_9.value: SPEED_HIGH,
-    FanSpeed.FAN_SPEED_10.value: SPEED_HIGH,
-}
-
-SPEED_HA_TO_DYSON = {
-    SPEED_LOW: FanSpeed.FAN_SPEED_4,
-    SPEED_MEDIUM: FanSpeed.FAN_SPEED_7,
-    SPEED_HIGH: FanSpeed.FAN_SPEED_10,
-}
+SPEED_RANGE = (
+    int(FanSpeed.FAN_SPEED_1.value),
+    int(FanSpeed.FAN_SPEED_10.value),
+)  # off is not included
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -160,14 +144,23 @@ class DysonFanEntity(DysonEntity, FanEntity):
     """Representation of a Dyson fan."""
 
     @property
-    def speed(self):
-        """Return the current speed."""
-        return SPEED_DYSON_TO_HA[self._device.state.speed]
+    def percentage(self):
+        """Return the current speed percentage."""
+        if self.auto_mode:
+            return None
+        return ranged_value_to_percentage(SPEED_RANGE, self._device.state.speed)
 
     @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return SPEED_LIST_HA
+    def preset_modes(self):
+        """Return the available preset modes."""
+        return PRESET_MODES
+
+    @property
+    def preset_mode(self):
+        """Return the current preset mode."""
+        if self.auto_mode:
+            return PRESET_MODE_AUTO
+        return None
 
     @property
     def dyson_speed(self):
@@ -206,12 +199,26 @@ class DysonFanEntity(DysonEntity, FanEntity):
             ATTR_DYSON_SPEED_LIST: self.dyson_speed_list,
         }
 
-    def set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
-        if speed not in SPEED_LIST_HA:
-            raise ValueError(f'"{speed}" is not a valid speed')
-        _LOGGER.debug("Set fan speed to: %s", speed)
-        self.set_dyson_speed(SPEED_HA_TO_DYSON[speed])
+    def set_auto_mode(self, auto_mode: bool) -> None:
+        """Set auto mode."""
+        raise NotImplementedError
+
+    def set_percentage(self, percentage: int) -> None:
+        """Set the speed percentage of the fan."""
+        if percentage is None:
+            # percentage not set, just turn on
+            self._device.set_configuration(fan_mode=FanMode.FAN)
+        if percentage == 0:
+            self.turn_off()
+        else:
+            dyson_speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+            self.set_dyson_speed(dyson_speed)
+
+    def set_preset_mode(self, preset_mode: str) -> None:
+        """Set a preset mode on the fan."""
+        self._valid_preset_mode_or_raise(preset_mode)
+        # There currently is only one
+        self.set_auto_mode(True)
 
     def set_dyson_speed(self, speed: FanSpeed) -> None:
         """Set the exact speed of the fan."""
@@ -225,21 +232,6 @@ class DysonFanEntity(DysonEntity, FanEntity):
         speed = FanSpeed(f"{int(dyson_speed):04d}")
         self.set_dyson_speed(speed)
 
-
-class DysonPureCoolLinkEntity(DysonFanEntity):
-    """Representation of a Dyson fan."""
-
-    def __init__(self, device):
-        """Initialize the fan."""
-        super().__init__(device, DysonPureCoolState)
-
-    #
-    # The fan entity model has changed to use percentages and preset_modes
-    # instead of speeds.
-    #
-    # Please review
-    # https://developers.home-assistant.io/docs/core/entity/fan/
-    #
     def turn_on(
         self,
         speed: Optional[str] = None,
@@ -248,12 +240,27 @@ class DysonPureCoolLinkEntity(DysonFanEntity):
         **kwargs,
     ) -> None:
         """Turn on the fan."""
-        _LOGGER.debug("Turn on fan %s with speed %s", self.name, speed)
-        if speed is not None:
-            self.set_speed(speed)
+        _LOGGER.debug("Turn on fan %s with percentage %s", self.name, percentage)
+        if preset_mode:
+            self.set_preset_mode(preset_mode)
         else:
-            # Speed not set, just turn on
+            self.set_percentage(percentage)
+
+
+class DysonPureCoolLinkEntity(DysonFanEntity):
+    """Representation of a Dyson fan."""
+
+    def __init__(self, device):
+        """Initialize the fan."""
+        super().__init__(device, DysonPureCoolState)
+
+    def set_percentage(self, percentage: int) -> None:
+        """Set the speed percentage of the fan."""
+        if percentage is None:
+            # percentage not set, just turn on
             self._device.set_configuration(fan_mode=FanMode.FAN)
+            return
+        super().set_percentage(percentage)
 
     def turn_off(self, **kwargs) -> None:
         """Turn off the fan."""
@@ -312,27 +319,13 @@ class DysonPureCoolEntity(DysonFanEntity):
         """Initialize the fan."""
         super().__init__(device, DysonPureCoolV2State)
 
-    #
-    # The fan entity model has changed to use percentages and preset_modes
-    # instead of speeds.
-    #
-    # Please review
-    # https://developers.home-assistant.io/docs/core/entity/fan/
-    #
-    def turn_on(
-        self,
-        speed: Optional[str] = None,
-        percentage: Optional[int] = None,
-        preset_mode: Optional[str] = None,
-        **kwargs,
-    ) -> None:
-        """Turn on the fan."""
-        _LOGGER.debug("Turn on fan %s", self.name)
-
-        if speed is not None:
-            self.set_speed(speed)
-        else:
+    def set_percentage(self, percentage: int) -> None:
+        """Set the speed percentage of the fan."""
+        if percentage is None:
+            # percentage not set, just turn on
             self._device.turn_on()
+            return
+        super().set_percentage(percentage)
 
     def turn_off(self, **kwargs):
         """Turn off the fan."""
