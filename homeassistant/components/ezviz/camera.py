@@ -278,10 +278,7 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
     @property
     def is_on(self):
         """Return true if on."""
-        if self.coordinator.data[self._idx]["status"] == "1":
-            return True
-        else:
-            return False
+        return bool(self.coordinator.data[self._idx]["status"])
 
     @property
     def is_recording(self):
@@ -355,7 +352,7 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
 
     def perform_ezviz_switch_set(self, switch, enable):
         """Change a device switch on the camera."""
-        _LOGGER.debug("Set EZVIZ Switch '%s' on %s", switch, self._name)
+        _LOGGER.debug("Set EZVIZ Switch '%s' on %s", switch, self._name, enable)
         service_switch = getattr(DeviceSwitchType, switch)
 
         self.coordinator.EzvizClient.switch_status(
@@ -364,20 +361,23 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
 
     def perform_ezviz_wake_device(self):
         """Basically wakes the camera by querying the device."""
-        _LOGGER.debug("Wake camera '%s' on %s", self._name)
+        _LOGGER.debug("Wake camera '%s' on %s", self._serial, self._name)
 
         self.coordinator.EzvizClient.get_detection_sensibility(self._serial)
 
     def perform_ezviz_alarm_sound(self, level):
         """Enable/Disable movement sound alarm."""
-        _LOGGER.debug("Set alarm sound on camera '%s' on %s", self._name)
+        _LOGGER.debug("Set alarm sound on camera '%s' on %s", self._serial, self._name)
 
         self.coordinator.EzvizClient.alarm_sound(self._serial, level, 1)
 
     def perform_ezviz_set_alarm_detection_sensibility(self, level, type):
         """Set camera detection sensibility level service."""
         _LOGGER.debug(
-            "Set detection sensibility level on camera '%s' on %s", self._name
+            "Set detection sensibility level on camera '%s' on %s",
+            self._name,
+            level,
+            type,
         )
 
         self.coordinator.EzvizClient.detection_sensibility(self._serial, level, type)
