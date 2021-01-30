@@ -75,11 +75,8 @@ inputs:
       label: Example YAML snippet
       required: false
       description: |
-        It this issue has an example piece of YAML that can help reproducing
-        this problem, please provide.
-
-        This can be an piece of YAML from, e.g., an automation, script, scene
-        or configuration.
+        It this issue has an example piece of YAML that can help reproducing this problem, please provide.
+        This can be an piece of YAML from, e.g., an automation, script, scene or configuration.
       value: |
         ```yaml
         # Put your YAML below this line
@@ -95,14 +92,13 @@ inputs:
         # Put your logs below this line
 
         ```
-
   - type: description
     attributes:
       value: |
         ## Additional information
   - type: description
     attributes:
-      value: |
+      value: >
         If you have any additional information for us, use the field below.
-        Please note, you can attach screenshots or screen recordings here,
-        by dragging and dropping files in the field below.
+        Please note, you can attach screenshots or screen recordings here, by
+        dragging and dropping files in the field below.
