@@ -1,7 +1,7 @@
 """Test the Ezviz config flow."""
 from unittest.mock import patch
 
-from requests import ConnectTimeout, HTTPError
+from pyezviz.client import PyEzvizError
 
 from homeassistant.components.ezviz.const import (
     CONF_FFMPEG_ARGUMENTS,
@@ -48,7 +48,7 @@ async def test_user_form(hass, ezviz_config_flow):
 
 async def test_user_form_cannot_connect(hass, ezviz_config_flow):
     """Test we handle errors that should trigger the cannot connect error."""
-    ezviz_config_flow.side_effect = HTTPError()
+    ezviz_config_flow.side_effect = PyEzvizError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -62,7 +62,7 @@ async def test_user_form_cannot_connect(hass, ezviz_config_flow):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    ezviz_config_flow.side_effect = ConnectTimeout()
+    ezviz_config_flow.side_effect = PyEzvizError()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
