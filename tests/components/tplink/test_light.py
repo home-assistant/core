@@ -18,10 +18,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.components.tplink.common import (
-    CONF_DIMMER,
-    CONF_LIGHT,
-)
+from homeassistant.components.tplink.common import CONF_DIMMER, CONF_LIGHT
 from homeassistant.components.tplink.light import SLEEP_TIME
 from homeassistant.const import (
     ATTR_ENTITY_ID,

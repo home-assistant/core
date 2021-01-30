@@ -17,18 +17,19 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     CONF_CLIENT_ID,
+    CONF_DISCOVERY,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_PORT,
     CONF_PROTOCOL,
+    CONF_UNIQUE_ID,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.const import CONF_DISCOVERY, CONF_UNIQUE_ID  # noqa: F401
 from homeassistant.core import CoreState, Event, HassJob, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template

@@ -7,8 +7,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import (
-    CONF_DEVICES,
     CONF_DEVICE_CLASS,
+    CONF_DEVICES,
     CONF_FORCE_UPDATE,
     CONF_NAME,
 )

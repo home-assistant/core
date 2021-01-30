@@ -17,8 +17,8 @@ import yaml
 
 from homeassistant.const import (
     CONF_CLIENT_ID,
-    CONF_DEVICE_ID,
     CONF_CLIENT_SECRET,
+    CONF_DEVICE_ID,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_OFFSET,

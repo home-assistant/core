@@ -7,8 +7,8 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
-    CONF_SENSORS,
     CONF_SENSOR_TYPE,
+    CONF_SENSORS,
     CONF_TEMPERATURE_UNIT,
     EVENT_HOMEASSISTANT_STOP,
     TIME_HOURS,

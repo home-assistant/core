@@ -13,12 +13,7 @@ from homeassistant.components.camera import (
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FILE_PATH, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    DATA_LOCAL_FILE,
-    DEFAULT_NAME,
-    DOMAIN,
-    SERVICE_UPDATE_FILE_PATH,
-)
+from .const import DATA_LOCAL_FILE, DEFAULT_NAME, DOMAIN, SERVICE_UPDATE_FILE_PATH
 
 _LOGGER = logging.getLogger(__name__)
 
