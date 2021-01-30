@@ -102,7 +102,9 @@ async def websocket_update_entity(hass, connection, msg):
         if hass.states.get(msg["new_entity_id"]) is not None:
             connection.send_message(
                 websocket_api.error_message(
-                    msg["id"], "invalid_info", "Entity is already registered"
+                    msg["id"],
+                    "invalid_info",
+                    "Entity with this ID is already registered",
                 )
             )
             return

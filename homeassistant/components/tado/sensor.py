@@ -2,7 +2,12 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -126,12 +131,13 @@ class TadoZoneSensor(TadoZoneEntity, Entity):
             return None
 
     @property
-    def icon(self):
-        """Icon for the sensor."""
-        if self.zone_variable == "temperature":
-            return "mdi:thermometer"
+    def device_class(self):
+        """Return the device class."""
         if self.zone_variable == "humidity":
-            return "mdi:water-percent"
+            return DEVICE_CLASS_HUMIDITY
+        if self.zone_variable == "temperature":
+            return DEVICE_CLASS_TEMPERATURE
+        return None
 
     @callback
     def _async_update_callback(self):

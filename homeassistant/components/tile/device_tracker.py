@@ -4,10 +4,11 @@ import logging
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DATA_COORDINATOR, DOMAIN, TileEntity
+from . import DATA_COORDINATOR, DATA_TILE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,21 +16,24 @@ ATTR_ALTITUDE = "altitude"
 ATTR_CONNECTION_STATE = "connection_state"
 ATTR_IS_DEAD = "is_dead"
 ATTR_IS_LOST = "is_lost"
+ATTR_LAST_LOST_TIMESTAMP = "last_lost_timestamp"
 ATTR_RING_STATE = "ring_state"
-ATTR_VOIP_STATE = "voip_state"
 ATTR_TILE_NAME = "tile_name"
+ATTR_VOIP_STATE = "voip_state"
+
+DEFAULT_ATTRIBUTION = "Data provided by Tile"
+DEFAULT_ICON = "mdi:view-grid"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Tile device trackers."""
-    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
-
     async_add_entities(
         [
-            TileDeviceTracker(coordinator, tile_uuid, tile)
-            for tile_uuid, tile in coordinator.data.items()
-        ],
-        True,
+            TileDeviceTracker(
+                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][tile_uuid], tile
+            )
+            for tile_uuid, tile in hass.data[DOMAIN][DATA_TILE][entry.entry_id].items()
+        ]
     )
 
 
@@ -54,21 +58,19 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     return True
 
 
-class TileDeviceTracker(TileEntity, TrackerEntity):
+class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
     """Representation of a network infrastructure device."""
 
-    def __init__(self, coordinator, tile_uuid, tile):
+    def __init__(self, coordinator, tile):
         """Initialize."""
         super().__init__(coordinator)
-        self._name = tile["name"]
+        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._tile = tile
-        self._tile_uuid = tile_uuid
-        self._unique_id = f"tile_{tile_uuid}"
 
     @property
     def available(self):
         """Return if entity is available."""
-        return self.coordinator.last_update_success and not self._tile["is_dead"]
+        return self.coordinator.last_update_success and not self._tile.dead
 
     @property
     def battery_level(self):
@@ -79,41 +81,42 @@ class TileDeviceTracker(TileEntity, TrackerEntity):
         return None
 
     @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        return self._attrs
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return DEFAULT_ICON
+
+    @property
     def location_accuracy(self):
         """Return the location accuracy of the device.
 
         Value in meters.
         """
-        state = self._tile["last_tile_state"]
-        h_accuracy = state.get("h_accuracy")
-        v_accuracy = state.get("v_accuracy")
-
-        if h_accuracy is not None and v_accuracy is not None:
-            return round(
-                (
-                    self._tile["last_tile_state"]["h_accuracy"]
-                    + self._tile["last_tile_state"]["v_accuracy"]
-                )
-                / 2
-            )
-
-        if h_accuracy is not None:
-            return h_accuracy
-
-        if v_accuracy is not None:
-            return v_accuracy
-
-        return None
+        return self._tile.accuracy
 
     @property
     def latitude(self) -> float:
         """Return latitude value of the device."""
-        return self._tile["last_tile_state"]["latitude"]
+        return self._tile.latitude
 
     @property
     def longitude(self) -> float:
         """Return longitude value of the device."""
-        return self._tile["last_tile_state"]["longitude"]
+        return self._tile.longitude
+
+    @property
+    def name(self):
+        """Return the name."""
+        return self._tile.name
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the entity."""
+        return f"tile_{self._tile.uuid}"
 
     @property
     def source_type(self):
@@ -121,10 +124,25 @@ class TileDeviceTracker(TileEntity, TrackerEntity):
         return SOURCE_TYPE_GPS
 
     @callback
+    def _handle_coordinator_update(self):
+        """Respond to a DataUpdateCoordinator update."""
+        self._update_from_latest_data()
+        self.async_write_ha_state()
+
+    @callback
     def _update_from_latest_data(self):
         """Update the entity from the latest data."""
-        self._tile = self.coordinator.data[self._tile_uuid]
-        self._attrs[ATTR_ALTITUDE] = self._tile["last_tile_state"]["altitude"]
-        self._attrs[ATTR_IS_LOST] = self._tile["last_tile_state"]["is_lost"]
-        self._attrs[ATTR_RING_STATE] = self._tile["last_tile_state"]["ring_state"]
-        self._attrs[ATTR_VOIP_STATE] = self._tile["last_tile_state"]["voip_state"]
+        self._attrs.update(
+            {
+                ATTR_ALTITUDE: self._tile.altitude,
+                ATTR_IS_LOST: self._tile.lost,
+                ATTR_LAST_LOST_TIMESTAMP: self._tile.lost_timestamp,
+                ATTR_RING_STATE: self._tile.ring_state,
+                ATTR_VOIP_STATE: self._tile.voip_state,
+            }
+        )
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._update_from_latest_data()

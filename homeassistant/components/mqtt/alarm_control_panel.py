@@ -48,10 +48,7 @@ from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
+    MqttEntity,
     async_setup_entry_helper,
 )
 
@@ -127,46 +124,19 @@ async def _async_setup_entity(
     async_add_entities([MqttAlarm(hass, config, config_entry, discovery_data)])
 
 
-class MqttAlarm(
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    alarm.AlarmControlPanelEntity,
-):
+class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     """Representation of a MQTT alarm status."""
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Init the MQTT Alarm Control Panel."""
-        self.hass = hass
         self._state = None
-        self._unique_id = config.get(CONF_UNIQUE_ID)
-        self._sub_state = None
 
-        # Load config
-        self._setup_from_config(config)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
-        device_config = config.get(CONF_DEVICE)
-
-        MqttAttributes.__init__(self, config)
-        MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
-
-    async def async_added_to_hass(self):
-        """Subscribe mqtt events."""
-        await super().async_added_to_hass()
-        await self._subscribe_topics()
-
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA(discovery_payload)
-        self._setup_from_config(config)
-        await self.attributes_discovery_update(config)
-        await self.availability_discovery_update(config)
-        await self.device_info_discovery_update(config)
-        await self._subscribe_topics()
-        self.async_write_ha_state()
+    @staticmethod
+    def config_schema():
+        """Return the config schema."""
+        return PLATFORM_SCHEMA
 
     def _setup_from_config(self, config):
         self._config = config
@@ -217,29 +187,10 @@ class MqttAlarm(
             },
         )
 
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
-            self.hass, self._sub_state
-        )
-        await MqttAttributes.async_will_remove_from_hass(self)
-        await MqttAvailability.async_will_remove_from_hass(self)
-        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
     @property
     def name(self):
         """Return the name of the device."""
         return self._config[CONF_NAME]
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
 
     @property
     def state(self):

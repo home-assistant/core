@@ -5,7 +5,7 @@ import logging
 import os
 
 from aiohttp import web
-from pyhap.const import STANDALONE_AID
+from pyhap.const import CATEGORY_CAMERA, CATEGORY_TELEVISION, STANDALONE_AID
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
@@ -114,6 +114,7 @@ def _has_all_unique_names_and_ports(bridges):
 
 BRIDGE_SCHEMA = vol.All(
     cv.deprecated(CONF_ZEROCONF_DEFAULT_INTERFACE),
+    cv.deprecated(CONF_SAFE_MODE),
     vol.Schema(
         {
             vol.Optional(CONF_HOMEKIT_MODE, default=DEFAULT_HOMEKIT_MODE): vol.In(
@@ -246,7 +247,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     homekit_mode = options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
     entity_config = options.get(CONF_ENTITY_CONFIG, {}).copy()
     auto_start = options.get(CONF_AUTO_START, DEFAULT_AUTO_START)
-    safe_mode = options.get(CONF_SAFE_MODE, DEFAULT_SAFE_MODE)
     entity_filter = FILTER_SCHEMA(options.get(CONF_FILTER, {}))
 
     homekit = HomeKit(
@@ -256,7 +256,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         ip_address,
         entity_filter,
         entity_config,
-        safe_mode,
         homekit_mode,
         advertise_ip,
         entry.entry_id,
@@ -421,7 +420,6 @@ class HomeKit:
         ip_address,
         entity_filter,
         entity_config,
-        safe_mode,
         homekit_mode,
         advertise_ip=None,
         entry_id=None,
@@ -433,7 +431,6 @@ class HomeKit:
         self._ip_address = ip_address
         self._filter = entity_filter
         self._config = entity_config
-        self._safe_mode = safe_mode
         self._advertise_ip = advertise_ip
         self._entry_id = entry_id
         self._homekit_mode = homekit_mode
@@ -469,10 +466,6 @@ class HomeKit:
             self.driver.load()
         else:
             self.driver.persist()
-
-        if self._safe_mode:
-            _LOGGER.debug("Safe_mode selected for %s", self._name)
-            self.driver.safe_mode = True
 
     def reset_accessories(self, entity_ids):
         """Reset the accessory to load the latest configuration."""
@@ -530,6 +523,24 @@ class HomeKit:
         try:
             acc = get_accessory(self.hass, self.driver, state, aid, conf)
             if acc is not None:
+                if acc.category == CATEGORY_CAMERA:
+                    _LOGGER.warning(
+                        "The bridge %s has camera %s. For best performance, "
+                        "and to prevent unexpected unavailability, create and "
+                        "pair a separate HomeKit instance in accessory mode for "
+                        "each camera.",
+                        self._name,
+                        acc.entity_id,
+                    )
+                elif acc.category == CATEGORY_TELEVISION:
+                    _LOGGER.warning(
+                        "The bridge %s has tv %s. For best performance, "
+                        "and to prevent unexpected unavailability, create and "
+                        "pair a separate HomeKit instance in accessory mode for "
+                        "each tv media player.",
+                        self._name,
+                        acc.entity_id,
+                    )
                 self.bridge.add_accessory(acc)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -564,13 +575,15 @@ class HomeKit:
 
         bridged_states = []
         for state in self.hass.states.async_all():
-            if not self._filter(state.entity_id):
+            entity_id = state.entity_id
+
+            if not self._filter(entity_id):
                 continue
 
-            ent_reg_ent = ent_reg.async_get(state.entity_id)
+            ent_reg_ent = ent_reg.async_get(entity_id)
             if ent_reg_ent:
                 await self._async_set_device_info_attributes(
-                    ent_reg_ent, dev_reg, state.entity_id
+                    ent_reg_ent, dev_reg, entity_id
                 )
                 self._async_configure_linked_sensors(ent_reg_ent, device_lookup, state)
 
@@ -601,13 +614,15 @@ class HomeKit:
         connection = (device_registry.CONNECTION_NETWORK_MAC, formatted_mac)
         identifier = (DOMAIN, self._entry_id, BRIDGE_SERIAL_NUMBER)
         self._async_purge_old_bridges(dev_reg, identifier, connection)
+        is_accessory_mode = self._homekit_mode == HOMEKIT_MODE_ACCESSORY
+        hk_mode_name = "Accessory" if is_accessory_mode else "Bridge"
         dev_reg.async_get_or_create(
             config_entry_id=self._entry_id,
             identifiers={identifier},
             connections={connection},
             manufacturer=MANUFACTURER,
             name=self._name,
-            model="Home Assistant HomeKit Bridge",
+            model=f"Home Assistant HomeKit {hk_mode_name}",
         )
 
     @callback

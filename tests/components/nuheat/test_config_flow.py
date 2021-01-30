@@ -53,45 +53,6 @@ async def test_form_user(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_import(hass):
-    """Test we get the form with import source."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    mock_thermostat = _get_mock_thermostat_run()
-
-    with patch(
-        "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.nuheat.config_flow.nuheat.NuHeat.get_thermostat",
-        return_value=mock_thermostat,
-    ), patch(
-        "homeassistant.components.nuheat.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.nuheat.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_SERIAL_NUMBER: "12345",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "Master bathroom"
-    assert result["data"] == {
-        CONF_SERIAL_NUMBER: "12345",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_form_invalid_auth(hass):
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(

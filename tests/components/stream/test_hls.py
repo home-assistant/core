@@ -4,7 +4,6 @@ from unittest.mock import patch
 from urllib.parse import urlparse
 
 import av
-import pytest
 
 from homeassistant.components.stream import request_stream
 from homeassistant.const import HTTP_NOT_FOUND
@@ -15,8 +14,7 @@ from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video, preload_stream
 
 
-@pytest.mark.skip("Flaky in CI")
-async def test_hls_stream(hass, hass_client):
+async def test_hls_stream(hass, hass_client, stream_worker_sync):
     """
     Test hls stream.
 
@@ -24,6 +22,8 @@ async def test_hls_stream(hass, hass_client):
     integration with the stream component.
     """
     await async_setup_component(hass, "stream", {"stream": {}})
+
+    stream_worker_sync.pause()
 
     # Setup demo HLS track
     source = generate_h264_video()
@@ -50,9 +50,11 @@ async def test_hls_stream(hass, hass_client):
     # Fetch segment
     playlist = await playlist_response.text()
     playlist_url = "/".join(parsed_url.path.split("/")[:-1])
-    segment_url = playlist_url + playlist.splitlines()[-1][1:]
+    segment_url = playlist_url + "/" + playlist.splitlines()[-1]
     segment_response = await http_client.get(segment_url)
     assert segment_response.status == 200
+
+    stream_worker_sync.resume()
 
     # Stop stream, if it hasn't quit already
     stream.stop()
@@ -62,10 +64,11 @@ async def test_hls_stream(hass, hass_client):
     assert fail_response.status == HTTP_NOT_FOUND
 
 
-@pytest.mark.skip("Flaky in CI")
-async def test_stream_timeout(hass, hass_client):
+async def test_stream_timeout(hass, hass_client, stream_worker_sync):
     """Test hls stream timeout."""
     await async_setup_component(hass, "stream", {"stream": {}})
+
+    stream_worker_sync.pause()
 
     # Setup demo HLS track
     source = generate_h264_video()
@@ -90,6 +93,8 @@ async def test_stream_timeout(hass, hass_client):
     playlist_response = await http_client.get(parsed_url.path)
     assert playlist_response.status == 200
 
+    stream_worker_sync.resume()
+
     # Wait 5 minutes
     future = dt_util.utcnow() + timedelta(minutes=5)
     async_fire_time_changed(hass, future)
@@ -99,10 +104,11 @@ async def test_stream_timeout(hass, hass_client):
     assert fail_response.status == HTTP_NOT_FOUND
 
 
-@pytest.mark.skip("Flaky in CI")
-async def test_stream_ended(hass):
+async def test_stream_ended(hass, stream_worker_sync):
     """Test hls stream packets ended."""
     await async_setup_component(hass, "stream", {"stream": {}})
+
+    stream_worker_sync.pause()
 
     # Setup demo HLS track
     source = generate_h264_video()
@@ -118,6 +124,9 @@ async def test_stream_ended(hass):
         if segment is None:
             break
         segments = segment.sequence
+        # Allow worker to finalize once enough of the stream is been consumed
+        if segments > 1:
+            stream_worker_sync.resume()
 
     assert segments > 1
     assert not track.get_segment()

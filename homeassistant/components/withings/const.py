@@ -55,6 +55,7 @@ class Measurement(Enum):
     WEIGHT_KG = "weight_kg"
 
 
+SCORE_POINTS = "points"
 UOM_BEATS_PER_MINUTE = "bpm"
 UOM_BREATHS_PER_MINUTE = f"br/{const.TIME_MINUTES}"
 UOM_FREQUENCY = "times"
