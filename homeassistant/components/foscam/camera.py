@@ -15,7 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv, entity_platform
 
-from .const import CONF_STREAM, DOMAIN, LOGGER, SERVICE_PTZ
+from .const import CONF_STREAM, DOMAIN, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -53,6 +53,9 @@ DEFAULT_TRAVELTIME = 0.125
 
 ATTR_MOVEMENT = "movement"
 ATTR_TRAVELTIME = "travel_time"
+ATTR_PRESET_NAME = "preset_name"
+
+PTZ_GOTO_PRESET_COMMAND = "ptz_goto_preset"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -98,6 +101,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             vol.Optional(ATTR_TRAVELTIME, default=DEFAULT_TRAVELTIME): cv.small_float,
         },
         "async_perform_ptz",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_PTZ_PRESET,
+        {
+            vol.Required(ATTR_PRESET_NAME): cv.string,
+        },
+        "async_perform_ptz_preset",
     )
 
     camera = FoscamCamera(
@@ -238,6 +249,20 @@ class HassFoscamCamera(Camera):
 
         if ret != 0:
             LOGGER.error("Error stopping movement on '%s': %s", self._name, ret)
+            return
+
+    async def async_perform_ptz_preset(self, preset_name):
+        """Perform a PTZ preset action on the camera."""
+        LOGGER.debug("PTZ preset '%s' on %s", preset_name, self._name)
+
+        preset_function = getattr(self._foscam_session, PTZ_GOTO_PRESET_COMMAND)
+
+        ret, _ = await self.hass.async_add_executor_job(preset_function, preset_name)
+
+        if ret != 0:
+            LOGGER.error(
+                "Error moving to preset %s on '%s': %s", preset_name, self._name, ret
+            )
             return
 
     @property

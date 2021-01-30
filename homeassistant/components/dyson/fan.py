@@ -233,7 +233,20 @@ class DysonPureCoolLinkEntity(DysonFanEntity):
         """Initialize the fan."""
         super().__init__(device, DysonPureCoolState)
 
-    def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    def turn_on(
+        self,
+        speed: Optional[str] = None,
+        percentage: Optional[int] = None,
+        preset_mode: Optional[str] = None,
+        **kwargs,
+    ) -> None:
         """Turn on the fan."""
         _LOGGER.debug("Turn on fan %s with speed %s", self.name, speed)
         if speed is not None:
@@ -299,7 +312,20 @@ class DysonPureCoolEntity(DysonFanEntity):
         """Initialize the fan."""
         super().__init__(device, DysonPureCoolV2State)
 
-    def turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    def turn_on(
+        self,
+        speed: Optional[str] = None,
+        percentage: Optional[int] = None,
+        preset_mode: Optional[str] = None,
+        **kwargs,
+    ) -> None:
         """Turn on the fan."""
         _LOGGER.debug("Turn on fan %s", self.name)
 

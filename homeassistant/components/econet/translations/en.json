@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "title": "Setup Rheem EcoNet Account"
+            }
+        }
+    }
+}
