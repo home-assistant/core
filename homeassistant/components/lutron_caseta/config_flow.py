@@ -205,6 +205,8 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_validate_connectable_bridge_config(self):
         """Check if we can connect to the bridge with the current config."""
 
+        bridge = None
+
         try:
             bridge = Smartbridge.create_tls(
                 hostname=self.data[CONF_HOST],
@@ -223,4 +225,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 "Unknown exception while checking connectivity to bridge %s",
                 self.data[CONF_HOST],
             )
+            if bridge is not None:
+                await bridge.close()
             return False

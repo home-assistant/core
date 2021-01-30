@@ -1,6 +1,7 @@
 """Component for interacting with a Lutron Caseta system."""
 import asyncio
 import logging
+import ssl
 
 from aiolip import LIP
 from aiolip.data import LIPMode
@@ -94,12 +95,21 @@ async def async_setup_entry(hass, config_entry):
     keyfile = hass.config.path(config_entry.data[CONF_KEYFILE])
     certfile = hass.config.path(config_entry.data[CONF_CERTFILE])
     ca_certs = hass.config.path(config_entry.data[CONF_CA_CERTS])
+    bridge = None
 
-    bridge = Smartbridge.create_tls(
-        hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
-    )
+    try:
+        bridge = Smartbridge.create_tls(
+            hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
+        )
+        await bridge.connect()
+    except ssl.SSLCertVerificationError:
+        _LOGGER.error(
+            "Incorrect certificate used to connect to Lutron Caseta bridge at %s.", host
+        )
+        if bridge:
+            await bridge.close()
+        return
 
-    await bridge.connect()
     if not bridge.is_connected():
         await bridge.close()
         _LOGGER.error("Unable to connect to Lutron Caseta bridge at %s", host)
