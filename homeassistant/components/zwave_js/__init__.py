@@ -35,7 +35,7 @@ from .const import (
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     PLATFORMS,
-    ZWAVE_EVENT,
+    ZWAVE_JS_EVENT,
 )
 from .discovery import async_discover_values
 from .entity import get_device_id
@@ -154,7 +154,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if notification.metadata.states:
             value = notification.metadata.states.get(str(value), value)
         hass.bus.async_fire(
-            ZWAVE_EVENT,
+            ZWAVE_JS_EVENT,
             {
                 CONF_DOMAIN: DOMAIN,
                 ATTR_NODE_ID: notification.node.node_id,
