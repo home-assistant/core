@@ -10,11 +10,11 @@ import async_timeout
 import pysonos
 from pysonos import alarms
 from pysonos.core import (
+    MUSIC_SRC_LINE_IN,
+    MUSIC_SRC_RADIO,
+    MUSIC_SRC_TV,
     PLAY_MODE_BY_MEANING,
     PLAY_MODES,
-    PLAYING_LINE_IN,
-    PLAYING_RADIO,
-    PLAYING_TV,
 )
 from pysonos.exceptions import SoCoException, SoCoUPnPException
 import pysonos.music_library
@@ -759,11 +759,12 @@ class SonosEntity(MediaPlayerEntity):
         self._status = new_status
 
         track_uri = variables["current_track_uri"] if variables else None
-        whats_playing = self.soco.whats_playing(track_uri)
 
-        if whats_playing == PLAYING_TV:
+        music_source = self.soco.music_source_from_uri(track_uri)
+
+        if music_source == MUSIC_SRC_TV:
             self.update_media_linein(SOURCE_TV)
-        elif whats_playing == PLAYING_LINE_IN:
+        elif music_source == MUSIC_SRC_LINE_IN:
             self.update_media_linein(SOURCE_LINEIN)
         else:
             track_info = self.soco.get_current_track_info()
@@ -775,7 +776,7 @@ class SonosEntity(MediaPlayerEntity):
                 self._media_album_name = track_info.get("album")
                 self._media_title = track_info.get("title")
 
-                if whats_playing == PLAYING_RADIO:
+                if music_source == MUSIC_SRC_RADIO:
                     self.update_media_radio(variables, track_info)
                 else:
                     self.update_media_music(update_position, track_info)
@@ -816,7 +817,7 @@ class SonosEntity(MediaPlayerEntity):
                 uri_meta_data, pysonos.data_structures.DidlAudioBroadcast
             ) and (
                 self.state != STATE_PLAYING
-                or self.soco.is_radio_uri(self._media_title)
+                or self.soco.music_source_from_uri(self._media_title) == MUSIC_SRC_RADIO
                 or self._media_title in self._uri
             ):
                 self._media_title = uri_meta_data.title
@@ -1117,7 +1118,7 @@ class SonosEntity(MediaPlayerEntity):
             if len(fav) == 1:
                 src = fav.pop()
                 uri = src.reference.get_uri()
-                if self.soco.is_radio_uri(uri):
+                if self.soco.music_source_from_uri(uri) == MUSIC_SRC_RADIO:
                     self.soco.play_uri(uri, title=source)
                 else:
                     self.soco.clear_queue()
@@ -1201,8 +1202,8 @@ class SonosEntity(MediaPlayerEntity):
         elif media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 try:
-                    if self.soco.is_spotify_uri(media_id):
-                        self.soco.add_spotify_uri_to_queue(media_id)
+                    if self.soco.is_service_uri(media_id):
+                        self.soco.add_service_uri_to_queue(media_id)
                     else:
                         self.soco.add_uri_to_queue(media_id)
                 except SoCoUPnPException:
@@ -1213,9 +1214,9 @@ class SonosEntity(MediaPlayerEntity):
                         media_id,
                     )
             else:
-                if self.soco.is_spotify_uri(media_id):
+                if self.soco.is_service_uri(media_id):
                     self.soco.clear_queue()
-                    self.soco.add_spotify_uri_to_queue(media_id)
+                    self.soco.add_service_uri_to_queue(media_id)
                     self.soco.play_from_queue(0)
                 else:
                     self.soco.play_uri(media_id)
