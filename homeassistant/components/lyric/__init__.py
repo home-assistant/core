@@ -196,7 +196,7 @@ class LyricDeviceEntity(LyricEntity):
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this Honeywell Lyric instance."""
         return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._device.macID)},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self.macID)},
             "manufacturer": "Honeywell",
             "model": self._device.deviceModel,
             "name": self._device.name,
