@@ -887,7 +887,7 @@ pysmartthings==0.7.6
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.37
+pysonos==0.0.40
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
