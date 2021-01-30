@@ -53,6 +53,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize a Lutron Caseta flow."""
         self.data = {}
         self.lutron_id = None
+        self.tls_assets_validated = False
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -93,11 +94,14 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._configure_tls_assets()
 
+        if (
+            await self.hass.async_add_executor_job(self._tls_assets_exist)
+            and await self.async_validate_connectable_bridge_config()
+        ):
+            self.tls_assets_validated = True
+
         if user_input is not None:
-            if (
-                await self.hass.async_add_executor_job(self._tls_assets_exist)
-                and await self.async_validate_connectable_bridge_config()
-            ):
+            if self.tls_assets_validated:
                 # If we previous paired and the tls assets already exist,
                 # we do not need to go though pairing again.
                 return self.async_create_entry(title=self.bridge_id, data=self.data)
