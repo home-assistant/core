@@ -78,12 +78,10 @@ class BittrexDataUpdateCoordinator(DataUpdateCoordinator):
                 result_dict["balances"] = balances
 
             open_orders = await self.bittrex.get_open_orders()
-            if open_orders:
-                result_dict["open_orders"] = open_orders
+            result_dict["open_orders"] = open_orders
 
             closed_orders = await self.bittrex.get_closed_orders()
-            if closed_orders:
-                result_dict["closed_orders"] = closed_orders
+            result_dict["closed_orders"] = closed_orders
 
             return result_dict
         except BittrexInvalidAuthentication as error:
