@@ -246,7 +246,7 @@ class TodoistProjectDevice(CalendarEventDevice):
         data,
         labels,
         token,
-        latest_task_due_date=None,
+        due_date_days=None,
         whitelisted_labels=None,
         whitelisted_projects=None,
     ):
@@ -255,7 +255,7 @@ class TodoistProjectDevice(CalendarEventDevice):
             data,
             labels,
             token,
-            latest_task_due_date,
+            due_date_days,
             whitelisted_labels,
             whitelisted_projects,
         )
@@ -338,7 +338,7 @@ class TodoistProjectData:
         project_data,
         labels,
         api,
-        latest_task_due_date=None,
+        due_date_days=None,
         whitelisted_labels=None,
         whitelisted_projects=None,
     ):
@@ -356,12 +356,12 @@ class TodoistProjectData:
 
         self.all_project_tasks = []
 
-        # The latest date a task can be due (for making lists of everything
+        # The days a task can be due (for making lists of everything
         # due today, or everything due in the next week, for example).
-        if latest_task_due_date is not None:
-            self._latest_due_date = dt.utcnow() + timedelta(days=latest_task_due_date)
+        if due_date_days is not None:
+            self._due_date_days = timedelta(days=due_date_days)
         else:
-            self._latest_due_date = None
+            self._due_date_days = None
 
         # Only tasks with one of these labels will be included.
         if whitelisted_labels is not None:
@@ -409,8 +409,8 @@ class TodoistProjectData:
         if data[DUE] is not None:
             task[END] = _parse_due_date(data[DUE])
 
-            if self._latest_due_date is not None and (
-                task[END] > self._latest_due_date
+            if self._due_date_days is not None and (
+                task[END] > dt.utcnow() + self._due_date_days
             ):
                 # This task is out of range of our due date;
                 # it shouldn't be counted.
@@ -430,7 +430,7 @@ class TodoistProjectData:
         else:
             # If we ask for everything due before a certain date, don't count
             # things which have no due dates.
-            if self._latest_due_date is not None:
+            if self._due_date_days is not None:
                 return None
 
             # Define values for tasks without due dates
