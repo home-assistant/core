@@ -214,11 +214,10 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             await bridge.connect()
-            if not bridge.is_connected():
-                return False
-
+            connected_ok = bridge.is_connected()
+            # Ensure we stop trying to reconnect
             await bridge.close()
-            return True
+            return connected_ok
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Unknown exception while checking connectivity to bridge %s",
