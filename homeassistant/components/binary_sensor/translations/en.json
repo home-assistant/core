@@ -159,8 +159,8 @@
             "on": "Plugged in"
         },
         "presence": {
-            "off": "Away",
-            "on": "Home"
+            "off": "[%key:common::state::not_home%]",
+            "on": "[%key:common::state::home%]"
         },
         "problem": {
             "off": "OK",
