@@ -7,8 +7,8 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import solaredge
 from stringcase import snakecase
 
-from homeassistant import callback
 from homeassistant.const import CONF_API_KEY, DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
