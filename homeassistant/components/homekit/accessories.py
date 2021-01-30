@@ -499,18 +499,6 @@ class HomeBridge(Bridge):
             )
         return await acc.async_get_snapshot(info)
 
-    def get_snapshot(self, info):
-        """Get snapshot from accessory if supported."""
-        acc = self.accessories.get(info["aid"])
-        if acc is None:
-            raise ValueError("Requested snapshot for missing accessory")
-        if not hasattr(acc, "get_snapshot"):
-            raise ValueError(
-                "Got a request for snapshot, but the Accessory "
-                'does not define a "get_snapshot" method'
-            )
-        return acc.get_snapshot(info)
-
 
 class HomeDriver(AccessoryDriver):
     """Adapter class for AccessoryDriver."""
