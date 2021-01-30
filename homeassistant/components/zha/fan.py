@@ -1,5 +1,6 @@
 """Fans on Zigbee Home Automation networks."""
 import functools
+import math
 from typing import List, Optional
 
 from zigpy.exceptions import ZigbeeException
@@ -17,6 +18,10 @@ from homeassistant.components.fan import (
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.percentage import (
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
+)
 
 from .core import discovery
 from .core.const import (
@@ -48,8 +53,10 @@ SPEED_LIST = [
     SPEED_SMART,
 ]
 
-VALUE_TO_SPEED = dict(enumerate(SPEED_LIST))
-SPEED_TO_VALUE = {speed: i for i, speed in enumerate(SPEED_LIST)}
+SPEED_RANGE = (1, 3)  # off is not included
+PRESET_MODES_TO_NAME = {5: SPEED_AUTO, 6: SPEED_SMART}
+NAME_TO_PRESET_MODE = {v: k for k, v in PRESET_MODES_TO_NAME.items()}
+
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, DOMAIN)
 
@@ -81,44 +88,55 @@ class BaseFan(FanEntity):
         self._fan_channel = None
 
     @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return SPEED_LIST
+    def percentage(self) -> str:
+        """Return the current speed percentage."""
+        if self._state is None or self._state > SPEED_RANGE[1]:
+            return None
+        if self._state == 0:
+            return 0
+        return ranged_value_to_percentage(SPEED_RANGE, self._state)
 
     @property
-    def speed(self) -> str:
-        """Return the current speed."""
-        return self._state
+    def preset_mode(self) -> str:
+        """Return the current preset mode."""
+        return PRESET_MODES_TO_NAME.get(self._state)
+
+    @property
+    def preset_modes(self) -> str:
+        """Return the available preset modes."""
+        return NAME_TO_PRESET_MODE.keys()
 
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_SET_SPEED
 
-    #
-    # The fan entity model has changed to use percentages and preset_modes
-    # instead of speeds.
-    #
-    # Please review
-    # https://developers.home-assistant.io/docs/core/entity/fan/
-    #
     async def async_turn_on(
         self, speed=None, percentage=None, preset_mode=None, **kwargs
     ) -> None:
         """Turn the entity on."""
-        if speed is None:
-            speed = SPEED_MEDIUM
-
-        await self.async_set_speed(speed)
+        await self.async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        await self.async_set_speed(SPEED_OFF)
+        await self.async_set_percentage(0)
 
-    async def async_set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
-        await self._fan_channel.async_set_speed(SPEED_TO_VALUE[speed])
-        self.async_set_state(0, "fan_mode", speed)
+    async def async_set_percentage(self, percentage: Optional[int]) -> None:
+        """Set the speed percenage of the fan."""
+        if percentage is None:
+            percentage = 50
+        fan_mode = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+        await self._async_set_fan_mode(fan_mode)
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the speed percenage of the fan."""
+        fan_mode = NAME_TO_PRESET_MODE.get(preset_mode)
+        await self._async_set_fan_mode(fan_mode)
+
+    async def _async_set_fan_mode(self, fan_mode: int) -> None:
+        """Set the fan mode for the fan."""
+        await self._fan_channel.async_set_speed(fan_mode)
+        self.async_set_state(0, "fan_mode", fan_mode)
 
     @callback
     def async_set_state(self, attr_id, attr_name, value):
@@ -142,9 +160,21 @@ class ZhaFan(BaseFan, ZhaEntity):
         )
 
     @property
-    def speed(self) -> Optional[str]:
-        """Return the current speed."""
-        return VALUE_TO_SPEED.get(self._fan_channel.fan_mode)
+    def percentage(self) -> str:
+        """Return the current speed percentage."""
+        if (
+            self._fan_channel.fan_mode is None
+            or self._fan_channel.fan_mode > SPEED_RANGE[1]
+        ):
+            return None
+        if self._fan_channel.fan_mode == 0:
+            return 0
+        return ranged_value_to_percentage(SPEED_RANGE, self._fan_channel.fan_mode)
+
+    @property
+    def preset_mode(self) -> str:
+        """Return the current preset mode."""
+        return PRESET_MODES_TO_NAME.get(self._fan_channel.fan_mode)
 
     @callback
     def async_set_state(self, attr_id, attr_name, value):
@@ -165,16 +195,25 @@ class FanGroup(BaseFan, ZhaGroupEntity):
         group = self.zha_device.gateway.get_group(self._group_id)
         self._fan_channel = group.endpoint[hvac.Fan.cluster_id]
 
-        # what should we do with this hack?
-        async def async_set_speed(value) -> None:
-            """Set the speed of the fan."""
-            try:
-                await self._fan_channel.write_attributes({"fan_mode": value})
-            except ZigbeeException as ex:
-                self.error("Could not set speed: %s", ex)
-                return
+    async def async_set_percentage(self, percentage: Optional[int]) -> None:
+        """Set the speed percenage of the fan."""
+        if percentage is None:
+            percentage = 50
+        fan_mode = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+        await self._async_set_fan_mode(fan_mode)
 
-        self._fan_channel.async_set_speed = async_set_speed
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the speed percenage of the fan."""
+        fan_mode = NAME_TO_PRESET_MODE.get(preset_mode)
+        await self._async_set_fan_mode(fan_mode)
+
+    async def _async_set_fan_mode(self, fan_mode: int) -> None:
+        """Set the fan mode for the group."""
+        try:
+            await self._fan_channel.write_attributes({"fan_mode": fan_mode})
+        except ZigbeeException as ex:
+            self.error("Could not set fan mode: %s", ex)
+        self.async_set_state(0, "fan_mode", fan_mode)
 
     async def async_update(self):
         """Attempt to retrieve on off state from the fan."""
