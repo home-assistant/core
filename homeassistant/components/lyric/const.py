@@ -1,4 +1,6 @@
 """Constants for the Honeywell Lyric integration."""
+from aiohttp.client_exceptions import ClientResponseError
+from aiolyric.exceptions import LyricAuthenticationException, LyricException
 
 DOMAIN = "lyric"
 
@@ -12,3 +14,9 @@ PRESET_PERMANENT_HOLD = "PermanentHold"
 PRESET_VACATION_HOLD = "VacationHold"
 
 SERVICE_HOLD_TIME = "set_hold_time"
+
+LYRIC_EXCEPTIONS = (
+    LyricAuthenticationException,
+    LyricException,
+    ClientResponseError,
+)

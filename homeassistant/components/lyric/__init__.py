@@ -4,9 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any, Dict
 
-from aiohttp.client_exceptions import ClientResponseError
 from aiolyric import Lyric
-from aiolyric.exceptions import LyricAuthenticationException, LyricException
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 import async_timeout
@@ -29,7 +27,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .api import ConfigEntryLyricClient, LyricLocalOAuth2Implementation
 from .config_flow import OAuth2FlowHandler
-from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import DOMAIN, LYRIC_EXCEPTIONS, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -86,15 +84,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = ConfigEntryLyricClient(session, oauth_session)
 
     client_id = hass.data[DOMAIN][CONF_CLIENT_ID]
-    lyric = Lyric(client, client_id)
+    lyric: Lyric = Lyric(client, client_id)
 
     try:
         await lyric.get_locations()
-    except (
-        LyricAuthenticationException,
-        LyricException,
-        ClientResponseError,
-    ) as exception:
+    except LYRIC_EXCEPTIONS as exception:
         _LOGGER.warning(exception)
         raise ConfigEntryNotReady from exception
 
@@ -103,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with async_timeout.timeout(60):
             try:
                 await lyric.get_locations()
-            except (LyricAuthenticationException, LyricException) as exception:
+            except LYRIC_EXCEPTIONS as exception:
                 raise UpdateFailed(exception) from exception
             return lyric
 
