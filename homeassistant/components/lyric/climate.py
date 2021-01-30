@@ -134,18 +134,12 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
-        device: LyricDevice = self.coordinator.data.locations_dict[
-            self._location.locationID
-        ].devices_dict[self._device.macID]
-        return device.indoorTemperature
+        return self.device.indoorTemperature
 
     @property
     def hvac_mode(self) -> str:
         """Return the hvac mode."""
-        device: LyricDevice = self.coordinator.data.locations_dict[
-            self._location.locationID
-        ].devices_dict[self._device.macID]
-        return HVAC_MODES[device.changeableValues.mode]
+        return HVAC_MODES[self.device.changeableValues.mode]
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -155,37 +149,28 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
-        device: LyricDevice = self.coordinator.data.locations_dict[
-            self._location.locationID
-        ].devices_dict[self._device.macID]
+        device: LyricDevice = self.device
         if not device.hasDualSetpointStatus:
             return device.changeableValues.heatSetpoint
 
     @property
     def target_temperature_low(self) -> Optional[float]:
         """Return the upper bound temperature we try to reach."""
-        device: LyricDevice = self.coordinator.data.locations_dict[
-            self._location.locationID
-        ].devices_dict[self._device.macID]
+        device: LyricDevice = self.device
         if device.hasDualSetpointStatus:
             return device.changeableValues.coolSetpoint
 
     @property
     def target_temperature_high(self) -> Optional[float]:
         """Return the upper bound temperature we try to reach."""
-        device: LyricDevice = self.coordinator.data.locations_dict[
-            self._location.locationID
-        ].devices_dict[self._device.macID]
+        device: LyricDevice = self.device
         if device.hasDualSetpointStatus:
             return device.changeableValues.heatSetpoint
 
     @property
     def preset_mode(self) -> Optional[str]:
         """Return current preset mode."""
-        device: LyricDevice = self.coordinator.data.locations_dict[
-            self._location.locationID
-        ].devices_dict[self._device.macID]
-        return device.changeableValues.thermostatSetpointStatus
+        return self.device.changeableValues.thermostatSetpointStatus
 
     @property
     def preset_modes(self) -> Optional[List[str]]:
@@ -201,9 +186,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Identify min_temp in Lyric API or defaults if not available."""
-        device: LyricDevice = self.coordinator.data.locations_dict[
-            self._location.locationID
-        ].devices_dict[self._device.macID]
+        device: LyricDevice = self.device
         return (
             device.minCoolSetpoint
             if LYRIC_HVAC_MODE_COOL in device.allowedModes
@@ -213,9 +196,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def max_temp(self) -> float:
         """Identify max_temp in Lyric API or defaults if not available."""
-        device: LyricDevice = self.coordinator.data.locations_dict[
-            self._location.locationID
-        ].devices_dict[self._device.macID]
+        device: LyricDevice = self.device
         return (
             device.maxHeatSetpoint
             if LYRIC_HVAC_MODE_HEAT in device.allowedModes
@@ -227,10 +208,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
 
-        location: LyricLocation = self.coordinator.data.locations_dict[
-            self._location.locationID
-        ]
-        device: LyricDevice = location.devices_dict[self._device.macID]
+        device: LyricDevice = self.device
         if device.hasDualSetpointStatus:
             if target_temp_low is not None and target_temp_high is not None:
                 temp = (target_temp_low, target_temp_high)
@@ -238,21 +216,17 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             temp = kwargs.get(ATTR_TEMPERATURE)
             _LOGGER.debug("Set temperature: %s", temp)
         try:
-            await self._update_thermostat(location, device, heatSetpoint=temp)
+            await self._update_thermostat(self.location, device, heatSetpoint=temp)
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
         await self.coordinator.async_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set hvac mode."""
-        location: LyricLocation = self.coordinator.data.locations_dict[
-            self._location.locationID
-        ]
-        device: LyricDevice = location.devices_dict[self._device.macID]
         _LOGGER.debug("Set hvac mode: %s", hvac_mode)
         try:
             await self._update_thermostat(
-                location, device, mode=LYRIC_HVAC_MODES[hvac_mode]
+                self.location, self.device, mode=LYRIC_HVAC_MODES[hvac_mode]
             )
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
@@ -260,14 +234,10 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset (PermanentHold, HoldUntil, NoHold, VacationHold) mode."""
-        location: LyricLocation = self.coordinator.data.locations_dict[
-            self._location.locationID
-        ]
-        device: LyricDevice = location.devices_dict[self._device.macID]
         _LOGGER.debug("Set preset mode: %s", preset_mode)
         try:
             await self._update_thermostat(
-                location, device, thermostatSetpointStatus=preset_mode
+                self.location, self.device, thermostatSetpointStatus=preset_mode
             )
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
@@ -275,12 +245,10 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     async def async_set_preset_period(self, period: str) -> None:
         """Set preset period (time)."""
-        location: LyricLocation = self.coordinator.data.locations_dict[
-            self._location.locationID
-        ]
-        device: LyricDevice = location.devices_dict[self._device.macID]
         try:
-            await self._update_thermostat(location, device, nextPeriodTime=period)
+            await self._update_thermostat(
+                self.location, self.device, nextPeriodTime=period
+            )
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
         await self.coordinator.async_refresh()
@@ -288,15 +256,10 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     async def set_hold_time(self, time: str) -> None:
         """Set the time to hold until."""
         _LOGGER.debug("set_hold_time: %s", time)
-
-        location: LyricLocation = self.coordinator.data.locations_dict[
-            self._location.locationID
-        ]
-        device: LyricDevice = location.devices_dict[self._device.macID]
         try:
             await self._update_thermostat(
-                location,
-                device,
+                self.location,
+                self.device,
                 thermostatSetpointStatus=PRESET_HOLD_UNTIL,
                 nextPeriodTime=time,
             )

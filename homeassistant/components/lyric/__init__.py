@@ -183,6 +183,16 @@ class LyricEntity(CoordinatorEntity):
         """Return True if entity is available."""
         return self.coordinator.last_update_success and self._available
 
+    @property
+    def location(self) -> LyricLocation:
+        """Get the Lyric Location."""
+        return self.coordinator.data.locations_dict[self._location.locationID]
+
+    @property
+    def device(self) -> LyricDevice:
+        """Get the Lyric Device."""
+        return self.location.devices_dict[self._device.macID]
+
 
 class LyricDeviceEntity(LyricEntity):
     """Defines a Honeywell Lyric device entity."""
@@ -191,7 +201,7 @@ class LyricDeviceEntity(LyricEntity):
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this Honeywell Lyric instance."""
         return {
-            "identifiers": {(DOMAIN, self._device.macID)},
+            "connections": {(DOMAIN, self._device.macID)},
             "manufacturer": "Honeywell",
             "model": self._device.deviceModel,
             "name": self._device.name,
