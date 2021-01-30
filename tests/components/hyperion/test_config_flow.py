@@ -1,8 +1,9 @@
 """Tests for the Hyperion config flow."""
 from __future__ import annotations
 
+import asyncio
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from hyperion import const
 
@@ -395,6 +396,66 @@ async def test_auth_create_token_approval_declined(hass: HomeAssistantType) -> N
         result = await _configure_flow(hass, result)
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "auth_new_token_not_granted_error"
+
+
+async def test_auth_create_token_approval_declined_task_canceled(
+    hass: HomeAssistantType,
+) -> None:
+    """Verify correct behaviour when a token request is declined."""
+    result = await _init_flow(hass)
+
+    client = create_mock_client()
+    client.async_is_auth_required = AsyncMock(return_value=TEST_AUTH_REQUIRED_RESP)
+
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
+    assert result["step_id"] == "auth"
+
+    client.async_request_token = AsyncMock(return_value=TEST_REQUEST_TOKEN_FAIL)
+
+    class CanceledAwaitableMock(AsyncMock):
+        """A canceled awaitable mock."""
+
+        def __await__(self):
+            raise asyncio.CancelledError
+
+    mock_task = CanceledAwaitableMock()
+    task_coro = None
+
+    def create_task(arg):
+        nonlocal task_coro
+        task_coro = arg
+        return mock_task
+
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ), patch(
+        "homeassistant.components.hyperion.config_flow.client.generate_random_auth_id",
+        return_value=TEST_AUTH_ID,
+    ), patch.object(
+        hass, "async_create_task", side_effect=create_task
+    ):
+        result = await _configure_flow(
+            hass, result, user_input={CONF_CREATE_TOKEN: True}
+        )
+        assert result["step_id"] == "create_token"
+
+        result = await _configure_flow(hass, result)
+        assert result["step_id"] == "create_token_external"
+
+        # Leave the task running, to ensure it is canceled.
+        mock_task.done = Mock(return_value=False)
+        mock_task.cancel = Mock()
+
+        result = await _configure_flow(hass, result)
+
+        # This await will advance to the next step.
+        await task_coro
+
+        # Assert that cancel is called on the task.
+        assert mock_task.cancel.called
 
 
 async def test_auth_create_token_when_issued_token_fails(
