@@ -52,7 +52,7 @@ class LoggingThreadPoolExecutor(ThreadPoolExecutor):
         _LOGGER.debug(
             "Calling executor with function: %s, args: %s, kwargs: %s", fn, args, kwargs
         )
-        super().submit(fn, *args, **kwargs)
+        return super().submit(fn, *args, **kwargs)
 
 
 class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid-type,misc]
