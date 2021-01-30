@@ -44,12 +44,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
             _LOGGER.error("SolarEdge site is not active")
             return
         _LOGGER.debug("Credentials correct and site is active")
-    except KeyError:
+    except KeyError as ex:
         _LOGGER.error("Missing details data in SolarEdge response")
-        raise ConfigEntryNotReady
-    except (ConnectTimeout, HTTPError):
+        raise ConfigEntryNotReady from ex
+    except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Could not retrieve details from SolarEdge API")
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
     sensor_factory = SolarEdgeSensorFactory(
         hass, entry.title, entry.data[CONF_SITE_ID], api
@@ -122,10 +122,10 @@ class SolarEdgeSensor(CoordinatorEntity, Entity):
 
     def __init__(self, platform_name, sensor_key, data_service):
         """Initialize the sensor."""
+        super.__init__(data_service.coordinator)
         self.platform_name = platform_name
         self.sensor_key = sensor_key
         self.data_service = data_service
-        self.coordinator = data_service.coordinator
 
     @property
     def unit_of_measurement(self):
@@ -160,10 +160,6 @@ class SolarEdgeOverviewSensor(SolarEdgeSensor):
 
 class SolarEdgeDetailsSensor(SolarEdgeSensor):
     """Representation of an SolarEdge Monitoring API details sensor."""
-
-    def __init__(self, platform_name, sensor_key, data_service):
-        """Initialize the details sensor."""
-        super().__init__(platform_name, sensor_key, data_service)
 
     @property
     def device_state_attributes(self):
@@ -303,6 +299,10 @@ class SolarEdgeDataService:
     @abstractmethod
     def update_interval(self):
         """Update interval."""
+
+    @abstractmethod
+    def update(self):
+        """Update data in executor."""
 
     async def async_update_data(self):
         """Update data."""
