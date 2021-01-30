@@ -46,7 +46,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         _LOGGER.debug("Credentials correct and site is active")
     except KeyError:
         _LOGGER.error("Missing details data in SolarEdge response")
-        return
+        raise ConfigEntryNotReady
     except (ConnectTimeout, HTTPError):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
         raise ConfigEntryNotReady
@@ -54,6 +54,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
     sensor_factory = SolarEdgeSensorFactory(
         hass, entry.title, entry.data[CONF_SITE_ID], api
     )
+    for service in sensor_factory.all_services:
+        service.async_setup()
+        await service.coordinator.async_refresh()
+
     entities = []
     for sensor_key in SENSOR_TYPES:
         sensor = sensor_factory.create_sensor(sensor_key)
@@ -70,15 +74,12 @@ class SolarEdgeSensorFactory:
         self.platform_name = platform_name
 
         details = SolarEdgeDetailsDataService(hass, api, site_id)
-        details.async_setup()
         overview = SolarEdgeOverviewDataService(hass, api, site_id)
-        overview.async_setup()
         inventory = SolarEdgeInventoryDataService(hass, api, site_id)
-        inventory.async_setup()
         flow = SolarEdgePowerFlowDataService(hass, api, site_id)
-        flow.async_setup()
         energy = SolarEdgeEnergyDetailsService(hass, api, site_id)
-        energy.async_setup()
+
+        self.all_services = (details, overview, inventory, flow, energy)
 
         self.services = {"site_details": (SolarEdgeDetailsSensor, details)}
 
