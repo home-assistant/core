@@ -79,11 +79,21 @@ inputs:
 
         This can be an piece of YAML from, e.g., an automation, script, scene
         or configuration.
+      value: |
+        ```yaml
+        # Put your YAML below this line
+
+        ```
   - type: textarea
     attributes:
       label: Anything in the logs that might be useful for us?
       description: For example, error message, or stack traces.
       required: false
+      value: |
+        ```txt
+        # Put your logs below this line
+
+        ```
   - type: description
     attributes:
       value: |
