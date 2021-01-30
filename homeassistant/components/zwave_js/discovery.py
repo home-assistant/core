@@ -74,6 +74,24 @@ DISCOVERY_SCHEMAS = [
         property={"currentMode", "locked"},
         type={"number", "boolean"},
     ),
+    # door lock door status
+    ZWaveDiscoverySchema(
+        platform="binary_sensor",
+        hint="property",
+        device_class_generic={"Entry Control"},
+        device_class_specific={
+            "Door Lock",
+            "Advanced Door Lock",
+            "Secure Keypad Door Lock",
+            "Secure Lockbox",
+        },
+        command_class={
+            CommandClass.LOCK,
+            CommandClass.DOOR_LOCK,
+        },
+        property={"doorStatus"},
+        type={"any"},
+    ),
     # climate
     ZWaveDiscoverySchema(
         platform="climate",
@@ -93,7 +111,7 @@ DISCOVERY_SCHEMAS = [
         platform="light",
         device_class_generic={"Multilevel Switch", "Remote Switch"},
         device_class_specific={
-            "Multilevel Tunable Color Light",
+            "Tunable Color Light",
             "Binary Tunable Color Light",
             "Multilevel Remote Switch",
             "Multilevel Power Switch",
@@ -153,6 +171,31 @@ DISCOVERY_SCHEMAS = [
         platform="switch",
         command_class={CommandClass.SWITCH_BINARY},
         property={"currentValue"},
+    ),
+    # cover
+    ZWaveDiscoverySchema(
+        platform="cover",
+        hint="cover",
+        device_class_generic={"Multilevel Switch"},
+        device_class_specific={
+            "Motor Control Class A",
+            "Motor Control Class B",
+            "Motor Control Class C",
+            "Multiposition Motor",
+        },
+        command_class={CommandClass.SWITCH_MULTILEVEL},
+        property={"currentValue"},
+        type={"number"},
+    ),
+    # fan
+    ZWaveDiscoverySchema(
+        platform="fan",
+        hint="fan",
+        device_class_generic={"Multilevel Switch"},
+        device_class_specific={"Fan Switch"},
+        command_class={CommandClass.SWITCH_MULTILEVEL},
+        property={"currentValue"},
+        type={"number"},
     ),
 ]
 

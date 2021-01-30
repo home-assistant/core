@@ -37,6 +37,27 @@ async def test_setup_entry_without_mqtt(hass):
     assert not await hass.config_entries.async_setup(entry.entry_id)
 
 
+async def test_publish_without_mqtt(hass, caplog):
+    """Test publish without mqtt integration setup."""
+    with patch("homeassistant.components.ozw.OZWOptions") as ozw_options:
+        await setup_ozw(hass)
+
+        send_message = ozw_options.call_args[1]["send_message"]
+
+        mqtt_entries = hass.config_entries.async_entries("mqtt")
+        mqtt_entry = mqtt_entries[0]
+        await hass.config_entries.async_remove(mqtt_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert not hass.config_entries.async_entries("mqtt")
+
+        # Sending a message should not error with the MQTT integration not set up.
+        send_message("test_topic", "test_payload")
+        await hass.async_block_till_done()
+
+    assert "MQTT integration is not set up" in caplog.text
+
+
 async def test_unload_entry(hass, generic_data, switch_msg, caplog):
     """Test unload the config entry."""
     entry = MockConfigEntry(
@@ -107,8 +128,8 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
 
     await hass.config_entries.async_remove(entry.entry_id)
 
-    stop_addon.call_count == 1
-    uninstall_addon.call_count == 1
+    assert stop_addon.call_count == 1
+    assert uninstall_addon.call_count == 1
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     stop_addon.reset_mock()
@@ -121,8 +142,8 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
 
     await hass.config_entries.async_remove(entry.entry_id)
 
-    stop_addon.call_count == 1
-    uninstall_addon.call_count == 0
+    assert stop_addon.call_count == 1
+    assert uninstall_addon.call_count == 0
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to stop the OpenZWave add-on" in caplog.text
@@ -137,8 +158,8 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
 
     await hass.config_entries.async_remove(entry.entry_id)
 
-    stop_addon.call_count == 1
-    uninstall_addon.call_count == 1
+    assert stop_addon.call_count == 1
+    assert uninstall_addon.call_count == 1
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to uninstall the OpenZWave add-on" in caplog.text

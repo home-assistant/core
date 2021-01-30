@@ -87,7 +87,7 @@ from homeassistant.helpers import (
     template as template_helper,
 )
 from homeassistant.helpers.logging import KeywordStyleAdapter
-from homeassistant.util import sanitize_path, slugify as util_slugify
+from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
 # pylint: disable=invalid-name
@@ -118,8 +118,10 @@ def path(value: Any) -> str:
     if not isinstance(value, str):
         raise vol.Invalid("Expected a string")
 
-    if sanitize_path(value) != value:
-        raise vol.Invalid("Invalid path")
+    try:
+        raise_if_invalid_path(value)
+    except ValueError as err:
+        raise vol.Invalid("Invalid path") from err
 
     return value
 
@@ -264,7 +266,7 @@ def entity_id(value: Any) -> str:
     if valid_entity_id(str_value):
         return str_value
 
-    raise vol.Invalid(f"Entity ID {value} is an invalid entity id")
+    raise vol.Invalid(f"Entity ID {value} is an invalid entity ID")
 
 
 def entity_ids(value: Union[str, List]) -> List[str]:

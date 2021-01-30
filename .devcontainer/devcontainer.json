@@ -8,7 +8,6 @@
   "extensions": [
     "ms-python.vscode-pylance",
     "visualstudioexptteam.vscodeintellicode",
-    "ms-azure-devops.azure-pipelines",
     "redhat.vscode-yaml",
     "esbenp.prettier-vscode"
   ],
@@ -19,12 +18,11 @@
     "python.linting.enabled": true,
     "python.formatting.provider": "black",
     "python.testing.pytestArgs": ["--no-cov"],
-    "python.testing.pytestEnabled": true,
     "editor.formatOnPaste": false,
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
     "files.trimTrailingWhitespace": true,
-    "terminal.integrated.shell.linux": "/bin/bash",
+    "terminal.integrated.shell.linux": "/usr/bin/zsh",
     "yaml.customTags": [
       "!input scalar",
       "!secret scalar",

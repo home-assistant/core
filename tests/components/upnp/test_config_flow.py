@@ -11,10 +11,13 @@ from homeassistant.components.upnp.const import (
     CONFIG_ENTRY_UDN,
     DEFAULT_SCAN_INTERVAL,
     DISCOVERY_LOCATION,
+    DISCOVERY_NAME,
     DISCOVERY_ST,
     DISCOVERY_UDN,
+    DISCOVERY_UNIQUE_ID,
     DISCOVERY_USN,
     DOMAIN,
+    DOMAIN_COORDINATORS,
 )
 from homeassistant.components.upnp.device import Device
 from homeassistant.helpers.typing import HomeAssistantType
@@ -28,25 +31,34 @@ from tests.common import MockConfigEntry
 async def test_flow_ssdp_discovery(hass: HomeAssistantType):
     """Test config flow: discovered + configured through ssdp."""
     udn = "uuid:device_1"
+    location = "dummy"
     mock_device = MockDevice(udn)
-    discovery_infos = [
+    discoveries = [
         {
+            DISCOVERY_LOCATION: location,
+            DISCOVERY_NAME: mock_device.name,
             DISCOVERY_ST: mock_device.device_type,
             DISCOVERY_UDN: mock_device.udn,
-            DISCOVERY_LOCATION: "dummy",
+            DISCOVERY_UNIQUE_ID: mock_device.unique_id,
+            DISCOVERY_USN: mock_device.usn,
         }
     ]
     with patch.object(
         Device, "async_create_device", AsyncMock(return_value=mock_device)
-    ), patch.object(Device, "async_discover", AsyncMock(return_value=discovery_infos)):
+    ), patch.object(
+        Device, "async_discover", AsyncMock(return_value=discoveries)
+    ), patch.object(
+        Device, "async_supplement_discovery", AsyncMock(return_value=discoveries[0])
+    ):
         # Discovered via step ssdp.
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
             data={
+                ssdp.ATTR_SSDP_LOCATION: location,
                 ssdp.ATTR_SSDP_ST: mock_device.device_type,
+                ssdp.ATTR_SSDP_USN: mock_device.usn,
                 ssdp.ATTR_UPNP_UDN: mock_device.udn,
-                "friendlyName": mock_device.name,
             },
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -69,47 +81,46 @@ async def test_flow_ssdp_discovery(hass: HomeAssistantType):
 async def test_flow_ssdp_discovery_incomplete(hass: HomeAssistantType):
     """Test config flow: incomplete discovery through ssdp."""
     udn = "uuid:device_1"
+    location = "dummy"
     mock_device = MockDevice(udn)
-    discovery_infos = [
-        {
-            DISCOVERY_ST: mock_device.device_type,
-            DISCOVERY_UDN: mock_device.udn,
-            DISCOVERY_LOCATION: "dummy",
-        }
-    ]
-    with patch.object(
-        Device, "async_create_device", AsyncMock(return_value=mock_device)
-    ), patch.object(Device, "async_discover", AsyncMock(return_value=discovery_infos)):
-        # Discovered via step ssdp.
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_SSDP},
-            data={
-                ssdp.ATTR_SSDP_ST: mock_device.device_type,
-                # ssdp.ATTR_UPNP_UDN: mock_device.udn,  # Not provided.
-                "friendlyName": mock_device.name,
-            },
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "incomplete_discovery"
+
+    # Discovered via step ssdp.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data={
+            ssdp.ATTR_SSDP_ST: mock_device.device_type,
+            # ssdp.ATTR_UPNP_UDN: mock_device.udn,  # Not provided.
+            ssdp.ATTR_SSDP_LOCATION: location,
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "incomplete_discovery"
 
 
 async def test_flow_user(hass: HomeAssistantType):
     """Test config flow: discovered + configured through user."""
     udn = "uuid:device_1"
+    location = "dummy"
     mock_device = MockDevice(udn)
-    discovery_infos = [
+    discoveries = [
         {
-            DISCOVERY_USN: mock_device.unique_id,
+            DISCOVERY_LOCATION: location,
+            DISCOVERY_NAME: mock_device.name,
             DISCOVERY_ST: mock_device.device_type,
             DISCOVERY_UDN: mock_device.udn,
-            DISCOVERY_LOCATION: "dummy",
+            DISCOVERY_UNIQUE_ID: mock_device.unique_id,
+            DISCOVERY_USN: mock_device.usn,
         }
     ]
 
     with patch.object(
         Device, "async_create_device", AsyncMock(return_value=mock_device)
-    ), patch.object(Device, "async_discover", AsyncMock(return_value=discovery_infos)):
+    ), patch.object(
+        Device, "async_discover", AsyncMock(return_value=discoveries)
+    ), patch.object(
+        Device, "async_supplement_discovery", AsyncMock(return_value=discoveries[0])
+    ):
         # Discovered via step user.
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -120,7 +131,7 @@ async def test_flow_user(hass: HomeAssistantType):
         # Confirmed via step user.
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"usn": mock_device.unique_id},
+            user_input={"unique_id": mock_device.unique_id},
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -135,18 +146,25 @@ async def test_flow_import(hass: HomeAssistantType):
     """Test config flow: discovered + configured through configuration.yaml."""
     udn = "uuid:device_1"
     mock_device = MockDevice(udn)
-    discovery_infos = [
+    location = "dummy"
+    discoveries = [
         {
-            DISCOVERY_USN: mock_device.unique_id,
+            DISCOVERY_LOCATION: location,
+            DISCOVERY_NAME: mock_device.name,
             DISCOVERY_ST: mock_device.device_type,
             DISCOVERY_UDN: mock_device.udn,
-            DISCOVERY_LOCATION: "dummy",
+            DISCOVERY_UNIQUE_ID: mock_device.unique_id,
+            DISCOVERY_USN: mock_device.usn,
         }
     ]
 
     with patch.object(
         Device, "async_create_device", AsyncMock(return_value=mock_device)
-    ), patch.object(Device, "async_discover", AsyncMock(return_value=discovery_infos)):
+    ), patch.object(
+        Device, "async_discover", AsyncMock(return_value=discoveries)
+    ), patch.object(
+        Device, "async_supplement_discovery", AsyncMock(return_value=discoveries[0])
+    ):
         # Discovered via step import.
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
@@ -160,18 +178,10 @@ async def test_flow_import(hass: HomeAssistantType):
         }
 
 
-async def test_flow_import_duplicate(hass: HomeAssistantType):
+async def test_flow_import_already_configured(hass: HomeAssistantType):
     """Test config flow: discovered, but already configured."""
     udn = "uuid:device_1"
     mock_device = MockDevice(udn)
-    discovery_infos = [
-        {
-            DISCOVERY_USN: mock_device.unique_id,
-            DISCOVERY_ST: mock_device.device_type,
-            DISCOVERY_UDN: mock_device.udn,
-            DISCOVERY_LOCATION: "dummy",
-        }
-    ]
 
     # Existing entry.
     config_entry = MockConfigEntry(
@@ -184,33 +194,32 @@ async def test_flow_import_duplicate(hass: HomeAssistantType):
     )
     config_entry.add_to_hass(hass)
 
-    with patch.object(
-        Device, "async_create_device", AsyncMock(return_value=mock_device)
-    ), patch.object(Device, "async_discover", AsyncMock(return_value=discovery_infos)):
-        # Discovered via step import.
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-        )
+    # Discovered via step import.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+    )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "already_configured"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_flow_import_incomplete(hass: HomeAssistantType):
     """Test config flow: incomplete discovery, configured through configuration.yaml."""
     udn = "uuid:device_1"
     mock_device = MockDevice(udn)
-    discovery_infos = [
+    location = "dummy"
+    discoveries = [
         {
-            DISCOVERY_ST: mock_device.device_type,
+            DISCOVERY_LOCATION: location,
+            DISCOVERY_NAME: mock_device.name,
+            # DISCOVERY_ST: mock_device.device_type,
             DISCOVERY_UDN: mock_device.udn,
-            DISCOVERY_LOCATION: "dummy",
+            DISCOVERY_UNIQUE_ID: mock_device.unique_id,
+            DISCOVERY_USN: mock_device.usn,
         }
     ]
 
-    with patch.object(
-        Device, "async_create_device", AsyncMock(return_value=mock_device)
-    ), patch.object(Device, "async_discover", AsyncMock(return_value=discovery_infos)):
+    with patch.object(Device, "async_discover", AsyncMock(return_value=discoveries)):
         # Discovered via step import.
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
@@ -224,12 +233,16 @@ async def test_options_flow(hass: HomeAssistantType):
     """Test options flow."""
     # Set up config entry.
     udn = "uuid:device_1"
+    location = "http://192.168.1.1/desc.xml"
     mock_device = MockDevice(udn)
-    discovery_infos = [
+    discoveries = [
         {
-            DISCOVERY_UDN: mock_device.udn,
+            DISCOVERY_LOCATION: location,
+            DISCOVERY_NAME: mock_device.name,
             DISCOVERY_ST: mock_device.device_type,
-            DISCOVERY_LOCATION: "http://192.168.1.1/desc.xml",
+            DISCOVERY_UDN: mock_device.udn,
+            DISCOVERY_UNIQUE_ID: mock_device.unique_id,
+            DISCOVERY_USN: mock_device.usn,
         }
     ]
     config_entry = MockConfigEntry(
@@ -245,16 +258,15 @@ async def test_options_flow(hass: HomeAssistantType):
     config = {
         # no upnp, ensures no import-flow is started.
     }
-    async_discover = AsyncMock(return_value=discovery_infos)
     with patch.object(
         Device, "async_create_device", AsyncMock(return_value=mock_device)
-    ), patch.object(Device, "async_discover", async_discover):
+    ), patch.object(Device, "async_discover", AsyncMock(return_value=discoveries)):
         # Initialisation of component.
         await async_setup_component(hass, "upnp", config)
         await hass.async_block_till_done()
 
         # DataUpdateCoordinator gets a default of 30 seconds for updates.
-        coordinator = hass.data[DOMAIN]["coordinators"][mock_device.udn]
+        coordinator = hass.data[DOMAIN][DOMAIN_COORDINATORS][mock_device.udn]
         assert coordinator.update_interval == timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
         # Options flow with no input results in form.

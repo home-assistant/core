@@ -105,15 +105,25 @@ def lookup_plex_media(hass, content_type, content_id):
         content_type = DOMAIN
 
     plex_server_name = content.pop("plex_server", None)
-    shuffle = content.pop("shuffle", 0)
-
     plex_server = get_plex_server(hass, plex_server_name)
 
-    media = plex_server.lookup_media(content_type, **content)
-    if media is None:
-        raise HomeAssistantError(f"Plex media not found using payload: '{content_id}'")
+    playqueue_id = content.pop("playqueue_id", None)
+    if playqueue_id:
+        try:
+            playqueue = plex_server.get_playqueue(playqueue_id)
+        except NotFound as err:
+            raise HomeAssistantError(
+                f"PlayQueue '{playqueue_id}' could not be found"
+            ) from err
+    else:
+        shuffle = content.pop("shuffle", 0)
+        media = plex_server.lookup_media(content_type, **content)
+        if media is None:
+            raise HomeAssistantError(
+                f"Plex media not found using payload: '{content_id}'"
+            )
+        playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
 
-    playqueue = plex_server.create_playqueue(media, shuffle=shuffle)
     return (playqueue, plex_server)
 
 
