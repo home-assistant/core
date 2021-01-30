@@ -12,8 +12,8 @@ from homeassistant.components.rako import (
     DATA_RAKO_LIGHT_MAP,
     DATA_RAKO_LISTENER_TASK,
     DOMAIN,
-    RakoBridge,
 )
+from homeassistant.components.rako.bridge import RakoBridge
 
 from . import MOCK_ENTITY_ID, MOCK_HOST, MOCK_MAC
 
