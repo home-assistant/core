@@ -156,12 +156,11 @@ class LyricEntity(CoordinatorEntity):
         """Initialize the Honeywell Lyric entity."""
         super().__init__(coordinator)
         self._update_thermostat = coordinator.data.update_thermostat
-        self._device = device
+        self._mac_id = device.macID
         self._location = location
         self._key = key
         self._name = name
         self._icon = icon
-        self._available = True
 
     @property
     def unique_id(self) -> str:
@@ -177,12 +176,6 @@ class LyricEntity(CoordinatorEntity):
     def icon(self) -> str:
         """Return the mdi icon of the entity."""
         return self._icon
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success and self._available
-
     @property
     def location(self) -> LyricLocation:
         """Get the Lyric Location."""
