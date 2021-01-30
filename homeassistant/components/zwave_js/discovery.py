@@ -74,6 +74,24 @@ DISCOVERY_SCHEMAS = [
         property={"currentMode", "locked"},
         type={"number", "boolean"},
     ),
+    # door lock door status
+    ZWaveDiscoverySchema(
+        platform="binary_sensor",
+        hint="property",
+        device_class_generic={"Entry Control"},
+        device_class_specific={
+            "Door Lock",
+            "Advanced Door Lock",
+            "Secure Keypad Door Lock",
+            "Secure Lockbox",
+        },
+        command_class={
+            CommandClass.LOCK,
+            CommandClass.DOOR_LOCK,
+        },
+        property={"doorStatus"},
+        type={"any"},
+    ),
     # climate
     ZWaveDiscoverySchema(
         platform="climate",
@@ -93,7 +111,7 @@ DISCOVERY_SCHEMAS = [
         platform="light",
         device_class_generic={"Multilevel Switch", "Remote Switch"},
         device_class_specific={
-            "Multilevel Tunable Color Light",
+            "Tunable Color Light",
             "Binary Tunable Color Light",
             "Multilevel Remote Switch",
             "Multilevel Power Switch",

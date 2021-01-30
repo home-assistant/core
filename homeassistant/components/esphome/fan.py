@@ -1,19 +1,22 @@
 """Support for ESPHome fans."""
-from typing import List, Optional
+from typing import Optional
 
-from aioesphomeapi import FanInfo, FanSpeed, FanState
+from aioesphomeapi import FanDirection, FanInfo, FanSpeed, FanState
 
 from homeassistant.components.fan import (
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
+    DIRECTION_FORWARD,
+    DIRECTION_REVERSE,
+    SUPPORT_DIRECTION,
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
     FanEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
+)
 
 from . import (
     EsphomeEntity,
@@ -21,6 +24,8 @@ from . import (
     esphome_state_property,
     platform_async_setup_entry,
 )
+
+ORDERED_NAMED_FAN_SPEEDS = [FanSpeed.LOW, FanSpeed.MEDIUM, FanSpeed.HIGH]
 
 
 async def async_setup_entry(
@@ -39,11 +44,10 @@ async def async_setup_entry(
 
 
 @esphome_map_enum
-def _fan_speeds():
+def _fan_directions():
     return {
-        FanSpeed.LOW: SPEED_LOW,
-        FanSpeed.MEDIUM: SPEED_MEDIUM,
-        FanSpeed.HIGH: SPEED_HIGH,
+        FanDirection.FORWARD: DIRECTION_FORWARD,
+        FanDirection.REVERSE: DIRECTION_REVERSE,
     }
 
 
@@ -58,25 +62,29 @@ class EsphomeFan(EsphomeEntity, FanEntity):
     def _state(self) -> Optional[FanState]:
         return super()._state
 
-    async def async_set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
-        if speed == SPEED_OFF:
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the speed percentage of the fan."""
+        if percentage == 0:
             await self.async_turn_off()
             return
 
-        await self._client.fan_command(
-            self._static_info.key, speed=_fan_speeds.from_hass(speed)
-        )
-
-    async def async_turn_on(self, speed: Optional[str] = None, **kwargs) -> None:
-        """Turn on the fan."""
-        if speed == SPEED_OFF:
-            await self.async_turn_off()
-            return
         data = {"key": self._static_info.key, "state": True}
-        if speed is not None:
-            data["speed"] = _fan_speeds.from_hass(speed)
+        if percentage is not None:
+            named_speed = percentage_to_ordered_list_item(
+                ORDERED_NAMED_FAN_SPEEDS, percentage
+            )
+            data["speed"] = named_speed
         await self._client.fan_command(**data)
+
+    async def async_turn_on(
+        self,
+        speed: Optional[str] = None,
+        percentage: Optional[int] = None,
+        preset_mode: Optional[str] = None,
+        **kwargs,
+    ) -> None:
+        """Turn on the fan."""
+        await self.async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off the fan."""
@@ -88,6 +96,12 @@ class EsphomeFan(EsphomeEntity, FanEntity):
             key=self._static_info.key, oscillating=oscillating
         )
 
+    async def async_set_direction(self, direction: str):
+        """Set direction of the fan."""
+        await self._client.fan_command(
+            key=self._static_info.key, direction=_fan_directions.from_hass(direction)
+        )
+
     # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
     # pylint: disable=invalid-overridden-method
 
@@ -97,11 +111,13 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         return self._state.state
 
     @esphome_state_property
-    def speed(self) -> Optional[str]:
-        """Return the current speed."""
+    def percentage(self) -> Optional[str]:
+        """Return the current speed percentage."""
         if not self._static_info.supports_speed:
             return None
-        return _fan_speeds.from_esphome(self._state.speed)
+        return ordered_list_item_to_percentage(
+            ORDERED_NAMED_FAN_SPEEDS, self._state.speed
+        )
 
     @esphome_state_property
     def oscillating(self) -> None:
@@ -110,12 +126,12 @@ class EsphomeFan(EsphomeEntity, FanEntity):
             return None
         return self._state.oscillating
 
-    @property
-    def speed_list(self) -> Optional[List[str]]:
-        """Get the list of available speeds."""
-        if not self._static_info.supports_speed:
+    @esphome_state_property
+    def current_direction(self) -> None:
+        """Return the current fan direction."""
+        if not self._static_info.supports_direction:
             return None
-        return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+        return _fan_directions.from_esphome(self._state.direction)
 
     @property
     def supported_features(self) -> int:
@@ -125,4 +141,6 @@ class EsphomeFan(EsphomeEntity, FanEntity):
             flags |= SUPPORT_OSCILLATE
         if self._static_info.supports_speed:
             flags |= SUPPORT_SET_SPEED
+        if self._static_info.supports_direction:
+            flags |= SUPPORT_DIRECTION
         return flags

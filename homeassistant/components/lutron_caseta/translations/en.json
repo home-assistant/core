@@ -26,5 +26,51 @@
                 "title": "Automaticlly connect to the bridge"
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "First button",
+            "button_2": "Second button",
+            "button_3": "Third button",
+            "button_4": "Fourth button",
+            "close_1": "Close 1",
+            "close_2": "Close 2",
+            "close_3": "Close 3",
+            "close_4": "Close 4",
+            "close_all": "Close all",
+            "group_1_button_1": "First Group first button",
+            "group_1_button_2": "First Group second button",
+            "group_2_button_1": "Second Group first button",
+            "group_2_button_2": "Second Group second button",
+            "lower": "Lower",
+            "lower_1": "Lower 1",
+            "lower_2": "Lower 2",
+            "lower_3": "Lower 3",
+            "lower_4": "Lower 4",
+            "lower_all": "Lower all",
+            "off": "Off",
+            "on": "On",
+            "open_1": "Open 1",
+            "open_2": "Open 2",
+            "open_3": "Open 3",
+            "open_4": "Open 4",
+            "open_all": "Open all",
+            "raise": "Raise",
+            "raise_1": "Raise 1",
+            "raise_2": "Raise 2",
+            "raise_3": "Raise 3",
+            "raise_4": "Raise 4",
+            "raise_all": "Raise all",
+            "stop": "Stop (favorite)",
+            "stop_1": "Stop 1",
+            "stop_2": "Stop 2",
+            "stop_3": "Stop 3",
+            "stop_4": "Stop 4",
+            "stop_all": "Stop all"
+        },
+        "trigger_type": {
+            "press": "\"{subtype}\" pressed",
+            "release": "\"{subtype}\" released"
+        }
     }
 }
