@@ -34,6 +34,30 @@ binary_sensor:
     type: "light"
 
 light:
+  # Swedish Wireless dimmer (Mobil VU/Dimmer 1-knapp/touch)
+  - xpath: './/product_airlink[@product_identifier="_0x4301"]'
+    node: "airlink_dimming"
+    dimmable: true
+  # Swedish Wireless dimmer (Lamputtag/Dimmer 1-knapp/touch)
+  - xpath: './/product_airlink[@product_identifier="_0x4302"]'
+    node: "airlink_dimming"
+    dimmable: true
+  # Swedish Wireless dimmer (Blind/Dimmer 1-knapp/touch)
+  - xpath: './/product_airlink[@product_identifier="_0x4305"]'
+    node: "airlink_dimming"
+    dimmable: true
+  # Swedish Wireless dimmer (3-tråds Puck/Dimmer 1-knapp/touch)
+  - xpath: './/product_airlink[@product_identifier="_0x4307"]'
+    node: "airlink_dimming"
+    dimmable: true
+  # Swedish Wireless dimmer (3-tråds Puck/Dimmer 2-knapp)
+  - xpath: './/product_airlink[@product_identifier="_0x4308"]'
+    node: "airlink_dimming"
+    dimmable: true
+  # 2 channel RS485 dimmer
+  - xpath: './/rs485_led_dimmer_channel[@product_identifier="_0x4410"]'
+    node: "airlink_dimming"
+    dimmable: true
   # Wireless Combi dimmer 4 buttons
   - xpath: './/product_airlink[@product_identifier="_0x4406"]'
     node: "airlink_dimming"
