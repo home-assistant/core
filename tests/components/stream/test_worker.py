@@ -409,3 +409,26 @@ async def test_audio_packets_found(hass):
     assert len(segments) == num_packets - 1
     assert len(decoded_stream.video_packets) == 24
     assert len(decoded_stream.audio_packets) == 1
+
+
+async def test_pts_out_of_order(hass):
+    """Test pts can be out of order and still be valid."""
+
+    packets = list(PacketSequence(5))
+    packets[0].pts = 30
+    packets[1].pts = 10
+    packets[2].pts = 20
+    packets[3].pts = 50
+    packets[4].pts = 40
+
+    decoded_stream = await async_decode_stream(hass, iter(packets))
+    segments = decoded_stream.segments
+    print(segments)
+    assert len(segments) == 3
+    assert segments[0].sequence == 1
+    assert segments[0].duration == PACKET_DURATION
+    assert segments[1].sequence == 2
+    assert segments[1].duration == 3 * PACKET_DURATION
+    assert segments[2] is None
+    assert len(decoded_stream.video_packets) == 5
+    assert len(decoded_stream.audio_packets) == 0
