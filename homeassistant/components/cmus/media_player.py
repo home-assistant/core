@@ -65,33 +65,54 @@ def setup_platform(hass, config, add_entities, discover_info=None):
     name = config[CONF_NAME]
 
     try:
-        cmus_remote = CmusDevice(host, password, port, name)
+        cmus_remote = remote.PyCmus(server=host, port=port, password=password)
     except exceptions.InvalidPassword:
         _LOGGER.error("The provided password was rejected by cmus")
         return False
-    add_entities([cmus_remote], True)
+    add_entities(
+        [
+            CmusDevice(
+                device=cmus_remote, name=name, server=host, port=port, password=password
+            )
+        ],
+        True,
+    )
 
 
 class CmusDevice(MediaPlayerEntity):
     """Representation of a running cmus."""
 
     # pylint: disable=no-member
-    def __init__(self, server, password, port, name):
+    def __init__(self, device, name, server, port, password):
         """Initialize the CMUS device."""
 
+        self.cmus = device
         if server:
-            self.cmus = remote.PyCmus(server=server, password=password, port=port)
             auto_name = f"cmus-{server}"
         else:
-            self.cmus = remote.PyCmus()
             auto_name = "cmus-local"
         self._name = name or auto_name
+        self._server = server
+        self._password = password
+        self._port = port
         self.status = {}
+
+    def reconnect(self):
+        """Reconnect to cmus device."""
+        self.cmus = remote.PyCmus(
+            server=self._server, port=self._port, password=self._password
+        )
 
     def update(self):
         """Get the latest data and update the state."""
-        status = self.cmus.get_status_dict()
-        if not status:
+        try:
+            status = self.cmus.get_status_dict()
+        except BrokenPipeError:
+            self.reconnect()
+        except exceptions.ConfigurationError:
+            self.reconnect()
+            _LOGGER.warning("A configuration error occurred")
+        if "status" not in locals():
             _LOGGER.warning("Received no status from cmus")
         else:
             self.status = status
