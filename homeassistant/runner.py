@@ -9,6 +9,8 @@ from homeassistant import bootstrap
 from homeassistant.core import callback
 from homeassistant.helpers.frame import warn_use
 
+_LOGGER = logging.getLogger(__name__)
+
 # mypy: disallow-any-generics
 
 #
@@ -42,6 +44,17 @@ class RuntimeConfig:
     open_ui: bool = False
 
 
+class LoggingThreadPoolExecutor(ThreadPoolExecutor):
+    """Log calls to ThreadPoolExecutor."""
+
+    def submit(self, fn, /, *args, **kwargs):  # type: ignore
+        """Log submit."""
+        _LOGGER.debug(
+            "Calling executor with function: %s, args: %s, kwargs: %s", fn, args, kwargs
+        )
+        super().submit(fn, *args, **kwargs)
+
+
 class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid-type,misc]
     """Event loop policy for Home Assistant."""
 
@@ -62,7 +75,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid
         if self.debug:
             loop.set_debug(True)
 
-        executor = ThreadPoolExecutor(
+        executor = LoggingThreadPoolExecutor(
             thread_name_prefix="SyncWorker", max_workers=MAX_EXECUTOR_WORKERS
         )
         loop.set_default_executor(executor)
