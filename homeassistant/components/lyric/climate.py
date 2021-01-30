@@ -79,7 +79,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_HOLD_TIME,
         {vol.Required(ATTR_TIME): cv.string},
-        "set_hold_time",
+        "async_set_hold_time",
     )
 
 
@@ -255,7 +255,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             _LOGGER.error(exception)
         await self.coordinator.async_refresh()
 
-    async def set_hold_time(self, time: str) -> None:
+    async def async_set_hold_time(self, time: str) -> None:
         """Set the time to hold until."""
         _LOGGER.debug("set_hold_time: %s", time)
         try:
