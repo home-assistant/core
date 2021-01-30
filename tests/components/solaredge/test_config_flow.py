@@ -7,14 +7,15 @@ from requests.exceptions import ConnectTimeout, HTTPError
 from homeassistant import data_entry_flow
 from homeassistant.components.solaredge import config_flow
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DEFAULT_NAME
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
 NAME = "solaredge site 1 2 3"
 SITE_ID = "1a2b3c4d5e6f7g8h"
 API_KEY = "a1b2c3d4e5f6g7h8"
-TOKEN = "t0k3n"
+USERNAME = "user"
+PASSWORD = "passw0rd"
 
 
 @pytest.fixture(name="test_api")
@@ -50,20 +51,22 @@ async def test_user(hass, test_api, test_ha_api):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    # tets with all provided
+    # test with all provided
     result = await flow.async_step_user(
         {
             CONF_NAME: NAME,
             CONF_API_KEY: API_KEY,
             CONF_SITE_ID: SITE_ID,
-            CONF_ACCESS_TOKEN: TOKEN,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "solaredge_site_1_2_3"
     assert result["data"][CONF_SITE_ID] == SITE_ID
     assert result["data"][CONF_API_KEY] == API_KEY
-    assert result["data"][CONF_ACCESS_TOKEN] == TOKEN
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_PASSWORD] == PASSWORD
 
 
 async def test_import(hass, test_api, test_ha_api):
@@ -78,24 +81,32 @@ async def test_import(hass, test_api, test_ha_api):
     assert result["title"] == "solaredge"
     assert result["data"][CONF_SITE_ID] == SITE_ID
     assert result["data"][CONF_API_KEY] == API_KEY
-    assert CONF_ACCESS_TOKEN not in result["data"]
+    assert CONF_USERNAME not in result["data"]
+    assert CONF_PASSWORD not in result["data"]
 
-    # import with site_id and api_key and token
+    # import with site_id, api_key, username, and password
     result = await flow.async_step_import(
-        {CONF_API_KEY: API_KEY, CONF_SITE_ID: SITE_ID, CONF_ACCESS_TOKEN: TOKEN}
+        {
+            CONF_API_KEY: API_KEY,
+            CONF_SITE_ID: SITE_ID,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "solaredge"
     assert result["data"][CONF_SITE_ID] == SITE_ID
     assert result["data"][CONF_API_KEY] == API_KEY
-    assert result["data"][CONF_ACCESS_TOKEN] == TOKEN
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_PASSWORD] == PASSWORD
 
     # import with all
     result = await flow.async_step_import(
         {
             CONF_API_KEY: API_KEY,
             CONF_SITE_ID: SITE_ID,
-            CONF_ACCESS_TOKEN: TOKEN,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
             CONF_NAME: NAME,
         }
     )
@@ -103,7 +114,8 @@ async def test_import(hass, test_api, test_ha_api):
     assert result["title"] == "solaredge_site_1_2_3"
     assert result["data"][CONF_SITE_ID] == SITE_ID
     assert result["data"][CONF_API_KEY] == API_KEY
-    assert result["data"][CONF_ACCESS_TOKEN] == TOKEN
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_PASSWORD] == PASSWORD
 
 
 async def test_abort_if_already_setup(hass, test_api, test_ha_api):
@@ -115,7 +127,8 @@ async def test_abort_if_already_setup(hass, test_api, test_ha_api):
             CONF_NAME: DEFAULT_NAME,
             CONF_SITE_ID: SITE_ID,
             CONF_API_KEY: API_KEY,
-            CONF_ACCESS_TOKEN: TOKEN,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
         },
     ).add_to_hass(hass)
 
@@ -125,7 +138,8 @@ async def test_abort_if_already_setup(hass, test_api, test_ha_api):
             CONF_NAME: DEFAULT_NAME,
             CONF_SITE_ID: SITE_ID,
             CONF_API_KEY: API_KEY,
-            CONF_ACCESS_TOKEN: TOKEN,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -137,7 +151,8 @@ async def test_abort_if_already_setup(hass, test_api, test_ha_api):
             CONF_NAME: "test",
             CONF_SITE_ID: SITE_ID,
             CONF_API_KEY: "test",
-            CONF_ACCESS_TOKEN: "test",
+            CONF_USERNAME: "test",
+            CONF_PASSWORD: "test",
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -155,7 +170,8 @@ async def test_asserts(hass, test_api, test_ha_api):
             CONF_NAME: NAME,
             CONF_API_KEY: API_KEY,
             CONF_SITE_ID: SITE_ID,
-            CONF_ACCESS_TOKEN: TOKEN,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -168,7 +184,8 @@ async def test_asserts(hass, test_api, test_ha_api):
             CONF_NAME: NAME,
             CONF_API_KEY: API_KEY,
             CONF_SITE_ID: SITE_ID,
-            CONF_ACCESS_TOKEN: TOKEN,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -181,7 +198,8 @@ async def test_asserts(hass, test_api, test_ha_api):
             CONF_NAME: NAME,
             CONF_API_KEY: API_KEY,
             CONF_SITE_ID: SITE_ID,
-            CONF_ACCESS_TOKEN: TOKEN,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -194,7 +212,8 @@ async def test_asserts(hass, test_api, test_ha_api):
             CONF_NAME: NAME,
             CONF_API_KEY: API_KEY,
             CONF_SITE_ID: SITE_ID,
-            CONF_ACCESS_TOKEN: TOKEN,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -212,11 +231,13 @@ async def test_ha_asserts(hass, test_api, test_ha_api):
             CONF_NAME: NAME,
             CONF_API_KEY: API_KEY,
             CONF_SITE_ID: SITE_ID,
-            CONF_ACCESS_TOKEN: TOKEN,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert CONF_ACCESS_TOKEN not in result["data"]
+    assert CONF_USERNAME not in result["data"]
+    assert CONF_PASSWORD not in result["data"]
 
     # test with ha api_failure
     test_ha_api.get_devices.return_value = {}
@@ -225,11 +246,13 @@ async def test_ha_asserts(hass, test_api, test_ha_api):
             CONF_NAME: NAME,
             CONF_API_KEY: API_KEY,
             CONF_SITE_ID: SITE_ID,
-            CONF_ACCESS_TOKEN: TOKEN,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert CONF_ACCESS_TOKEN not in result["data"]
+    assert CONF_USERNAME not in result["data"]
+    assert CONF_PASSWORD not in result["data"]
 
     # test with ha ConnectionTimeout
     test_ha_api.get_devices.side_effect = ConnectTimeout()
@@ -238,11 +261,13 @@ async def test_ha_asserts(hass, test_api, test_ha_api):
             CONF_NAME: NAME,
             CONF_API_KEY: API_KEY,
             CONF_SITE_ID: SITE_ID,
-            CONF_ACCESS_TOKEN: TOKEN,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert CONF_ACCESS_TOKEN not in result["data"]
+    assert CONF_USERNAME not in result["data"]
+    assert CONF_PASSWORD not in result["data"]
 
     # test with ha HTTPError
     test_ha_api.get_devices.side_effect = HTTPError()
@@ -251,8 +276,10 @@ async def test_ha_asserts(hass, test_api, test_ha_api):
             CONF_NAME: NAME,
             CONF_API_KEY: API_KEY,
             CONF_SITE_ID: SITE_ID,
-            CONF_ACCESS_TOKEN: TOKEN,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
         }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert CONF_ACCESS_TOKEN not in result["data"]
+    assert CONF_USERNAME not in result["data"]
+    assert CONF_PASSWORD not in result["data"]

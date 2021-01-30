@@ -7,7 +7,8 @@
           "name": "The name of this installation",
           "site_id": "The SolarEdge site-id",
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "access_token": "[%key:common::config_flow::data::access_token%]"
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },

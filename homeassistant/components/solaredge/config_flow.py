@@ -5,7 +5,7 @@ import solaredgeha
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
@@ -53,11 +53,11 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return False
         return True
 
-    def _check_ha_site(self, site_id, access_token) -> bool:
+    def _check_ha_site(self, site_id, username, password) -> bool:
         """Check if we can connect to the solaredge ha api service."""
-        api = solaredgeha.SolaredgeHa(site_id, access_token)
+        api = solaredgeha.SolaredgeHa(username, password)
         try:
-            response = api.get_devices()
+            response = api.get_devices(site_id)
         except (ConnectTimeout, HTTPError):
             self._errors[CONF_SITE_ID] = "could_no_connect"
             return False
@@ -84,11 +84,12 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._check_site, site, api
                 )
                 can_connect_ha = False
-                if CONF_ACCESS_TOKEN in user_input:
-                    token = user_input[CONF_ACCESS_TOKEN]
-                    if token != "":
+                if CONF_USERNAME in user_input and CONF_PASSWORD in user_input:
+                    username = user_input[CONF_USERNAME]
+                    password = user_input[CONF_PASSWORD]
+                    if username != "" and password != "":
                         can_connect_ha = await self.hass.async_add_executor_job(
-                            self._check_ha_site, site, token
+                            self._check_ha_site, site, username, password
                         )
                 if can_connect:
                     if can_connect_ha:
@@ -97,7 +98,8 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             data={
                                 CONF_SITE_ID: site,
                                 CONF_API_KEY: api,
-                                CONF_ACCESS_TOKEN: token,
+                                CONF_USERNAME: username,
+                                CONF_PASSWORD: password,
                             },
                         )
                     return self.async_create_entry(
@@ -109,7 +111,8 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_NAME] = DEFAULT_NAME
             user_input[CONF_SITE_ID] = ""
             user_input[CONF_API_KEY] = ""
-            user_input[CONF_ACCESS_TOKEN] = ""
+            user_input[CONF_USERNAME] = ""
+            user_input[CONF_PASSWORD] = ""
 
         return self.async_show_form(
             step_id="user",
@@ -120,9 +123,8 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): str,
                     vol.Required(CONF_SITE_ID, default=user_input[CONF_SITE_ID]): str,
                     vol.Required(CONF_API_KEY, default=user_input[CONF_API_KEY]): str,
-                    vol.Optional(
-                        CONF_ACCESS_TOKEN, default=user_input[CONF_ACCESS_TOKEN]
-                    ): str,
+                    vol.Optional(CONF_USERNAME, default=user_input[CONF_USERNAME]): str,
+                    vol.Optional(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
                 }
             ),
             errors=self._errors,

@@ -5,7 +5,7 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import solaredgeha
 
 from homeassistant.components.light import LightEntity
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 
 from .const import CONF_SITE_ID, DOMAIN, LIGHT_UPDATE_DELAY
@@ -16,14 +16,18 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Add an solarEdge entry."""
 
+    if not (CONF_USERNAME in entry.data and CONF_PASSWORD in entry.data):
+        _LOGGER.error("SolarEdge HA required configuration not present")
+        return
+
     # Add the lights to hass
-    api = solaredgeha.SolaredgeHa(
-        entry.data[CONF_SITE_ID], entry.data[CONF_ACCESS_TOKEN]
-    )
+    api = solaredgeha.SolaredgeHa(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
 
     # Check if api can be reached and site is active
     try:
-        response = await hass.async_add_executor_job(api.get_devices)
+        response = await hass.async_add_executor_job(
+            api.get_devices, entry.data[CONF_SITE_ID]
+        )
         if response["status"] != "PASSED":
             _LOGGER.error("SolarEdge HA site is not active")
             return
@@ -32,17 +36,20 @@ async def async_setup_entry(hass, entry, async_add_entities):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
         return
 
-    service = SolarEdgeLightService(entry.title, api, async_add_entities)
+    service = SolarEdgeLightService(
+        entry.title, api, entry.data[CONF_SITE_ID], async_add_entities
+    )
     await hass.async_add_executor_job(service.update)
 
 
 class SolarEdgeLightService:
     """Get and update the HA device data."""
 
-    def __init__(self, platform_name, api, async_add_entities):
+    def __init__(self, platform_name, api, site_id, async_add_entities):
         """Initialize the data object."""
         self.platform_name = platform_name
         self.api = api
+        self.site_id = site_id
         self.async_add_entities = async_add_entities
 
         self.devices = {}
@@ -52,7 +59,7 @@ class SolarEdgeLightService:
         """Update the devices from SolarEdge HA API."""
 
         try:
-            response = self.api.get_devices()
+            response = self.api.get_devices(self.site_id)
         except (ConnectTimeout, HTTPError):
             _LOGGER.error("Could not retrieve data, skipping update")
             return
