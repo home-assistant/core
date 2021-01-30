@@ -9,6 +9,7 @@ inputs:
         This issue form is for reporting bugs only!
 
         If you have a feature or enhancement request, please use the [feature request][fr] section of our [Community Forum][fr].
+
         [fr]: https://community.home-assistant.io/c/feature-requests
   - type: textarea
     attributes:
