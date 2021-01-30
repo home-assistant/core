@@ -75,7 +75,7 @@ inputs:
       label: Example YAML snippet
       required: false
       description: |
-        It this issue has an example piece of YAML that can help reproducing this problem, please provide.
+        If this issue has an example piece of YAML that can help reproducing this problem, please provide.
         This can be an piece of YAML from, e.g., an automation, script, scene or configuration.
       value: |
         ```yaml
