@@ -3,8 +3,7 @@
   "name": "MySensors",
   "documentation": "https://www.home-assistant.io/integrations/mysensors",
   "requirements": [
-    "pymysensors==0.20.1",
-    "packaging==20.8"
+    "pymysensors==0.20.1"
   ],
   "after_dependencies": [
     "mqtt"
