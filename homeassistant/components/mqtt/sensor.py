@@ -143,7 +143,7 @@ class MqttSensor(MqttEntity, Entity):
             template = self._config.get(CONF_VALUE_TEMPLATE)
             if template is not None:
                 payload = template.async_render_with_possible_json_value(
-                    payload, self._state
+                    payload, self._state, variables={"entity_id": self.entity_id}
                 )
             self._state = payload
             self.async_write_ha_state()

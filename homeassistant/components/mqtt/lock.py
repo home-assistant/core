@@ -133,7 +133,9 @@ class MqttLock(MqttEntity, LockEntity):
             payload = msg.payload
             value_template = self._config.get(CONF_VALUE_TEMPLATE)
             if value_template is not None:
-                payload = value_template.async_render_with_possible_json_value(payload)
+                payload = value_template.async_render_with_possible_json_value(
+                    payload, variables={"entity_id": self.entity_id}
+                )
             if payload == self._config[CONF_STATE_LOCKED]:
                 self._state = True
             elif payload == self._config[CONF_STATE_UNLOCKED]:

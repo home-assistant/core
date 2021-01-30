@@ -166,9 +166,12 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
+
+            variables = {"entity_id": self.entity_id}
+
             state = self._templates[
                 CONF_STATE_TEMPLATE
-            ].async_render_with_possible_json_value(msg.payload)
+            ].async_render_with_possible_json_value(msg.payload, variables=variables)
             if state == STATE_ON:
                 self._state = True
             elif state == STATE_OFF:
@@ -181,7 +184,9 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                     self._brightness = int(
                         self._templates[
                             CONF_BRIGHTNESS_TEMPLATE
-                        ].async_render_with_possible_json_value(msg.payload)
+                        ].async_render_with_possible_json_value(
+                            msg.payload, variables=variables
+                        )
                     )
                 except ValueError:
                     _LOGGER.warning("Invalid brightness value received")
@@ -191,7 +196,9 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                     self._color_temp = int(
                         self._templates[
                             CONF_COLOR_TEMP_TEMPLATE
-                        ].async_render_with_possible_json_value(msg.payload)
+                        ].async_render_with_possible_json_value(
+                            msg.payload, variables=variables
+                        )
                     )
                 except ValueError:
                     _LOGGER.warning("Invalid color temperature value received")
@@ -205,17 +212,23 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                     red = int(
                         self._templates[
                             CONF_RED_TEMPLATE
-                        ].async_render_with_possible_json_value(msg.payload)
+                        ].async_render_with_possible_json_value(
+                            msg.payload, variables=variables
+                        )
                     )
                     green = int(
                         self._templates[
                             CONF_GREEN_TEMPLATE
-                        ].async_render_with_possible_json_value(msg.payload)
+                        ].async_render_with_possible_json_value(
+                            msg.payload, variables=variables
+                        )
                     )
                     blue = int(
                         self._templates[
                             CONF_BLUE_TEMPLATE
-                        ].async_render_with_possible_json_value(msg.payload)
+                        ].async_render_with_possible_json_value(
+                            msg.payload, variables=variables
+                        )
                     )
                     self._hs = color_util.color_RGB_to_hs(red, green, blue)
                 except ValueError:
@@ -226,7 +239,9 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                     self._white_value = int(
                         self._templates[
                             CONF_WHITE_VALUE_TEMPLATE
-                        ].async_render_with_possible_json_value(msg.payload)
+                        ].async_render_with_possible_json_value(
+                            msg.payload, variables=variables
+                        )
                     )
                 except ValueError:
                     _LOGGER.warning("Invalid white value received")
@@ -234,7 +249,9 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             if self._templates[CONF_EFFECT_TEMPLATE] is not None:
                 effect = self._templates[
                     CONF_EFFECT_TEMPLATE
-                ].async_render_with_possible_json_value(msg.payload)
+                ].async_render_with_possible_json_value(
+                    msg.payload, variables=variables
+                )
 
                 if effect in self._config.get(CONF_EFFECT_LIST):
                     self._effect = effect

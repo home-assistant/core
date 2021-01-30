@@ -283,7 +283,7 @@ homeassistant/components/monoprice/* @etsinko @OnFreund
 homeassistant/components/moon/* @fabaff
 homeassistant/components/motion_blinds/* @starkillerOG
 homeassistant/components/mpd/* @fabaff
-homeassistant/components/mqtt/* @home-assistant/core @emontnemery
+homeassistant/components/mqtt/* @home-assistant/core @emontnemery @qistoph
 homeassistant/components/msteams/* @peroyvind
 homeassistant/components/myq/* @bdraco
 homeassistant/components/mysensors/* @MartinHjelmare

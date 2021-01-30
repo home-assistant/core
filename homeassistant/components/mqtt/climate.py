@@ -390,7 +390,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         def render_template(msg, template_name):
             template = self._value_templates[template_name]
-            return template(msg.payload)
+            return template(msg.payload, variables={"entity_id": self.entity_id})
 
         @callback
         @log_messages(self.hass, self.entity_id)

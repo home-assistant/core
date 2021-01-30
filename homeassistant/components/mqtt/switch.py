@@ -138,7 +138,9 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
             payload = msg.payload
             template = self._config.get(CONF_VALUE_TEMPLATE)
             if template is not None:
-                payload = template.async_render_with_possible_json_value(payload)
+                payload = template.async_render_with_possible_json_value(
+                    payload, variables={"entity_id": self.entity_id}
+                )
             if payload == self._state_on:
                 self._state = True
             elif payload == self._state_off:

@@ -195,7 +195,9 @@ class MqttAttributes(Entity):
             try:
                 payload = msg.payload
                 if attr_tpl is not None:
-                    payload = attr_tpl.async_render_with_possible_json_value(payload)
+                    payload = attr_tpl.async_render_with_possible_json_value(
+                        payload, variables={"entity_id": self.entity_id}
+                    )
                 json_dict = json.loads(payload)
                 if isinstance(json_dict, dict):
                     self._attributes = json_dict
