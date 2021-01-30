@@ -267,7 +267,7 @@ class SolarEdgeStorageLevelSensor(SolarEdgeSensor):
         attr = self.data_service.attributes.get(self._json_key)
         if attr and "soc" in attr:
             return attr["soc"]
-        return
+        return None
 
 
 class SolarEdgeDataService:
