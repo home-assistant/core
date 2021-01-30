@@ -10,14 +10,7 @@ from libpurecool.dyson_pure_state import DysonPureCoolState
 from libpurecool.dyson_pure_state_v2 import DysonPureCoolV2State
 import voluptuous as vol
 
-from homeassistant.components.fan import (
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SUPPORT_OSCILLATE,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -75,7 +68,6 @@ SET_DYSON_SPEED_SCHEMA = {
 }
 
 
-SPEED_LIST_HA = [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 PRESET_MODE_AUTO = "AUTO"
 PRESET_MODES = [PRESET_MODE_AUTO]
 
