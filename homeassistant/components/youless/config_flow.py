@@ -3,7 +3,7 @@ import logging
 from urllib.error import HTTPError, URLError
 
 import voluptuous as vol
-from youless_api.youless_api import YoulessAPI
+from youless_api import YoulessAPI
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
