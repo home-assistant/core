@@ -88,4 +88,5 @@ inputs:
     attributes:
       value: |
         If you have any additional information for us, use the field below.
-        Please note, you can attach screenshots or screen recordings here.
+        Please note, you can attach screenshots or screen recordings here,
+        by dragging and dropping file in the field below.
