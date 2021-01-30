@@ -215,6 +215,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ca_certs=self.hass.config.path(self.data[CONF_CA_CERTS]),
             )
             _LOGGER.warning("past create_tls")
+            _LOGGER.warning("bridge is %s: in try", bridge)
             await bridge.connect()
             _LOGGER.warning("past connect")
             connected_ok = bridge.is_connected()
@@ -224,10 +225,14 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.warning("did close")
             return connected_ok
         except Exception:  # pylint: disable=broad-except
+            _LOGGER.warning("did Exception")
+
             _LOGGER.exception(
                 "Unknown exception while checking connectivity to bridge %s",
                 self.data[CONF_HOST],
             )
+            _LOGGER.warning("bridge is %s: in exce", bridge)
+
             if bridge is not None:
                 await bridge.close()
             return False
