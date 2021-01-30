@@ -1,0 +1,12 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindungsfehler"
+        },
+        "step": {
+            "user": {
+                "title": "Twinkly"
+            }
+        }
+    }
+}

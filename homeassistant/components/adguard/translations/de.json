@@ -4,6 +4,9 @@
             "existing_instance_updated": "Bestehende Konfiguration wurde aktualisiert.",
             "single_instance_allowed": "Es ist nur eine einzige Konfiguration von AdGuard Home zul\u00e4ssig."
         },
+        "error": {
+            "cannot_connect": "Verbindungsfehler"
+        },
         "step": {
             "hassio_confirm": {
                 "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass eine Verbindung mit AdGuard Home als Hass.io-Add-On hergestellt wird: {addon}?",

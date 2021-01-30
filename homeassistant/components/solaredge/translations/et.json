@@ -1,10 +1,15 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "site_exists": "See site_id on juba konfigureeritud"
         },
         "error": {
-            "site_exists": "See site_id on juba konfigureeritud"
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "could_not_connect": "Ei saanud \u00fchendust Solaredge API-ga",
+            "invalid_api_key": "Vale API v\u00f5ti",
+            "site_exists": "See site_id on juba konfigureeritud",
+            "site_not_active": "Sait pole aktiivne"
         },
         "step": {
             "user": {

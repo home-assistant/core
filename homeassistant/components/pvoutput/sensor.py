@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_NAME,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -53,14 +54,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     verify_ssl = DEFAULT_VERIFY_SSL
     headers = {"X-Pvoutput-Apikey": api_key, "X-Pvoutput-SystemId": system_id}
 
-    rest = RestData(method, _ENDPOINT, auth, headers, None, payload, verify_ssl)
+    rest = RestData(hass, method, _ENDPOINT, auth, headers, None, payload, verify_ssl)
     await rest.async_update()
 
     if rest.data is None:
         _LOGGER.error("Unable to fetch data from PVOutput")
         return False
 
-    async_add_entities([PvoutputSensor(rest, name)], True)
+    async_add_entities([PvoutputSensor(rest, name)])
 
 
 class PvoutputSensor(Entity):
@@ -114,13 +115,18 @@ class PvoutputSensor(Entity):
 
     async def async_update(self):
         """Get the latest data from the PVOutput API and updates the state."""
+        await self.rest.async_update()
+        self._async_update_from_rest_data()
+
+    async def async_added_to_hass(self):
+        """Ensure the data from the initial update is reflected in the state."""
+        self._async_update_from_rest_data()
+
+    @callback
+    def _async_update_from_rest_data(self):
+        """Update state from the rest data."""
         try:
-            await self.rest.async_update()
             self.pvcoutput = self.status._make(self.rest.data.split(","))
         except TypeError:
             self.pvcoutput = None
             _LOGGER.error("Unable to fetch data from PVOutput. %s", self.rest.data)
-
-    async def async_will_remove_from_hass(self):
-        """Shutdown the session."""
-        await self.rest.async_remove()

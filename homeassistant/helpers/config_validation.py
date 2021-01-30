@@ -28,12 +28,12 @@ from typing import (
 from urllib.parse import urlparse
 from uuid import UUID
 
-from pkg_resources import parse_version
 import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant.const import (
     ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     CONF_ABOVE,
     CONF_ALIAS,
@@ -62,6 +62,7 @@ from homeassistant.const import (
     CONF_SERVICE,
     CONF_SERVICE_TEMPLATE,
     CONF_STATE,
+    CONF_TARGET,
     CONF_TIMEOUT,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
@@ -78,7 +79,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     WEEKDAYS,
-    __version__,
 )
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
@@ -87,7 +87,7 @@ from homeassistant.helpers import (
     template as template_helper,
 )
 from homeassistant.helpers.logging import KeywordStyleAdapter
-from homeassistant.util import sanitize_path, slugify as util_slugify
+from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
 # pylint: disable=invalid-name
@@ -118,8 +118,10 @@ def path(value: Any) -> str:
     if not isinstance(value, str):
         raise vol.Invalid("Expected a string")
 
-    if sanitize_path(value) != value:
-        raise vol.Invalid("Invalid path")
+    try:
+        raise_if_invalid_path(value)
+    except ValueError as err:
+        raise vol.Invalid("Invalid path") from err
 
     return value
 
@@ -264,7 +266,7 @@ def entity_id(value: Any) -> str:
     if valid_entity_id(str_value):
         return str_value
 
-    raise vol.Invalid(f"Entity ID {value} is an invalid entity id")
+    raise vol.Invalid(f"Entity ID {value} is an invalid entity ID")
 
 
 def entity_ids(value: Union[str, List]) -> List[str]:
@@ -556,7 +558,7 @@ def template(value: Optional[Any]) -> template_helper.Template:
     template_value = template_helper.Template(str(value))  # type: ignore
 
     try:
-        template_value.ensure_valid()  # type: ignore[no-untyped-call]
+        template_value.ensure_valid()
         return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
@@ -574,7 +576,7 @@ def dynamic_template(value: Optional[Any]) -> template_helper.Template:
 
     template_value = template_helper.Template(str(value))  # type: ignore
     try:
-        template_value.ensure_valid()  # type: ignore[no-untyped-call]
+        template_value.ensure_valid()
         return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
@@ -710,7 +712,6 @@ class multi_select:
 def deprecated(
     key: str,
     replacement_key: Optional[str] = None,
-    invalidation_version: Optional[str] = None,
     default: Optional[Any] = None,
 ) -> Callable[[Dict], Dict]:
     """
@@ -723,8 +724,6 @@ def deprecated(
         - No warning if only replacement_key provided
         - No warning if neither key nor replacement_key are provided
             - Adds replacement_key with default value in this case
-        - Once the invalidation_version is crossed, raises vol.Invalid if key
-        is detected
     """
     module = inspect.getmodule(inspect.stack()[1][0])
     if module is not None:
@@ -735,24 +734,10 @@ def deprecated(
         # https://github.com/home-assistant/core/issues/24982
         module_name = __name__
 
-    if replacement_key and invalidation_version:
-        warning = (
-            "The '{key}' option is deprecated,"
-            " please replace it with '{replacement_key}'."
-            " This option {invalidation_status} invalid in version"
-            " {invalidation_version}"
-        )
-    elif replacement_key:
+    if replacement_key:
         warning = (
             "The '{key}' option is deprecated,"
             " please replace it with '{replacement_key}'"
-        )
-    elif invalidation_version:
-        warning = (
-            "The '{key}' option is deprecated,"
-            " please remove it from your configuration."
-            " This option {invalidation_status} invalid in version"
-            " {invalidation_version}"
         )
     else:
         warning = (
@@ -760,31 +745,13 @@ def deprecated(
             " please remove it from your configuration"
         )
 
-    def check_for_invalid_version() -> None:
-        """Raise error if current version has reached invalidation."""
-        if not invalidation_version:
-            return
-
-        if parse_version(__version__) >= parse_version(invalidation_version):
-            raise vol.Invalid(
-                warning.format(
-                    key=key,
-                    replacement_key=replacement_key,
-                    invalidation_status="became",
-                    invalidation_version=invalidation_version,
-                )
-            )
-
     def validator(config: Dict) -> Dict:
         """Check if key is in config and log warning."""
         if key in config:
-            check_for_invalid_version()
             KeywordStyleAdapter(logging.getLogger(module_name)).warning(
                 warning,
                 key=key,
                 replacement_key=replacement_key,
-                invalidation_status="will become",
-                invalidation_version=invalidation_version,
             )
 
             value = config[key]
@@ -881,7 +848,13 @@ PLATFORM_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-ENTITY_SERVICE_FIELDS = (ATTR_ENTITY_ID, ATTR_AREA_ID)
+ENTITY_SERVICE_FIELDS = {
+    vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
+    vol.Optional(ATTR_DEVICE_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [str])
+    ),
+    vol.Optional(ATTR_AREA_ID): vol.Any(ENTITY_MATCH_NONE, vol.All(ensure_list, [str])),
+}
 
 
 def make_entity_service_schema(
@@ -892,10 +865,7 @@ def make_entity_service_schema(
         vol.Schema(
             {
                 **schema,
-                vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
-                vol.Optional(ATTR_AREA_ID): vol.Any(
-                    ENTITY_MATCH_NONE, vol.All(ensure_list, [str])
-                ),
+                **ENTITY_SERVICE_FIELDS,
             },
             extra=extra,
         ),
@@ -942,9 +912,14 @@ SERVICE_SCHEMA = vol.All(
             vol.Optional("data"): vol.All(dict, template_complex),
             vol.Optional("data_template"): vol.All(dict, template_complex),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
+            vol.Optional(CONF_TARGET): ENTITY_SERVICE_FIELDS,
         }
     ),
     has_at_least_one_key(CONF_SERVICE, CONF_SERVICE_TEMPLATE),
+)
+
+NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
+    vol.Coerce(float), vol.All(str, entity_domain("input_number"))
 )
 
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
@@ -953,12 +928,8 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
             vol.Required(CONF_CONDITION): "numeric_state",
             vol.Required(CONF_ENTITY_ID): entity_ids,
             vol.Optional(CONF_ATTRIBUTE): str,
-            CONF_BELOW: vol.Any(
-                vol.Coerce(float), vol.All(str, entity_domain("input_number"))
-            ),
-            CONF_ABOVE: vol.Any(
-                vol.Coerce(float), vol.All(str, entity_domain("input_number"))
-            ),
+            CONF_BELOW: NUMERIC_STATE_THRESHOLD_SCHEMA,
+            CONF_ABOVE: NUMERIC_STATE_THRESHOLD_SCHEMA,
             vol.Optional(CONF_VALUE_TEMPLATE): template,
         }
     ),

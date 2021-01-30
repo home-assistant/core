@@ -856,6 +856,22 @@ async def test_zeroconf_ignore(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
+async def test_zeroconf_no_unique_id(
+    hass: HomeAssistantType,
+    vizio_guess_device_type: pytest.fixture,
+    vizio_no_unique_id: pytest.fixture,
+) -> None:
+    """Test zeroconf discovery aborts when unique_id is None."""
+
+    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 async def test_zeroconf_abort_when_ignored(
     hass: HomeAssistantType,
     vizio_connect: pytest.fixture,

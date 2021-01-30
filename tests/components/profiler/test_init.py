@@ -1,6 +1,7 @@
 """Test the Profiler config flow."""
 from datetime import timedelta
 import os
+from unittest.mock import patch
 
 from homeassistant import setup
 from homeassistant.components.profiler import (
@@ -16,7 +17,6 @@ from homeassistant.components.profiler import (
 from homeassistant.components.profiler.const import DOMAIN
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 

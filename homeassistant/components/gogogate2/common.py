@@ -70,7 +70,7 @@ def get_data_update_coordinator(
 
         async def async_update_data():
             try:
-                return await hass.async_add_executor_job(api.info)
+                return await api.async_info()
             except Exception as exception:
                 raise UpdateFailed(
                     f"Error communicating with API: {exception}"

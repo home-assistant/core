@@ -6,15 +6,20 @@ import async_timeout
 from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_SUNNY,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
 )
+from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt
 
 from .const import (
     ATTR_API_CLOUDS,
@@ -35,6 +40,7 @@ from .const import (
     FORECAST_MODE_HOURLY,
     FORECAST_MODE_ONECALL_DAILY,
     FORECAST_MODE_ONECALL_HOURLY,
+    WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -133,13 +139,16 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     def _convert_forecast(self, entry):
         forecast = {
-            ATTR_FORECAST_TIME: entry.reference_time("unix") * 1000,
+            ATTR_FORECAST_TIME: dt.utc_from_timestamp(entry.reference_time("unix")),
             ATTR_FORECAST_PRECIPITATION: self._calc_precipitation(
                 entry.rain, entry.snow
             ),
+            ATTR_FORECAST_PRESSURE: entry.pressure.get("press"),
             ATTR_FORECAST_WIND_SPEED: entry.wind().get("speed"),
             ATTR_FORECAST_WIND_BEARING: entry.wind().get("deg"),
-            ATTR_FORECAST_CONDITION: self._get_condition(entry.weather_code),
+            ATTR_FORECAST_CONDITION: self._get_condition(
+                entry.weather_code, entry.reference_time("unix")
+            ),
         }
 
         temperature_dict = entry.temperature("celsius")
@@ -186,9 +195,17 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             return None
         return round(rain_value + snow_value, 1)
 
-    @staticmethod
-    def _get_condition(weather_code):
+    def _get_condition(self, weather_code, timestamp=None):
         """Get weather condition from weather data."""
+        if weather_code == WEATHER_CODE_SUNNY_OR_CLEAR_NIGHT:
+
+            if timestamp:
+                timestamp = dt.utc_from_timestamp(timestamp)
+
+            if sun.is_up(self.hass, timestamp):
+                return ATTR_CONDITION_SUNNY
+            return ATTR_CONDITION_CLEAR_NIGHT
+
         return [k for k, v in CONDITION_CLASSES.items() if weather_code in v][0]
 
 

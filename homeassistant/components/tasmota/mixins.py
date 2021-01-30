@@ -116,10 +116,9 @@ class TasmotaAvailability(TasmotaEntity):
 class TasmotaDiscoveryUpdate(TasmotaEntity):
     """Mixin used to handle updated discovery message."""
 
-    def __init__(self, discovery_hash, discovery_update, **kwds) -> None:
+    def __init__(self, discovery_hash, **kwds) -> None:
         """Initialize the discovery update mixin."""
         self._discovery_hash = discovery_hash
-        self._discovery_update = discovery_update
         self._removed_from_hass = False
         super().__init__(**kwds)
 
@@ -138,7 +137,7 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
             if not self._tasmota_entity.config_same(config):
                 # Changed payload: Notify component
                 _LOGGER.debug("Updating component: %s", self.entity_id)
-                await self._discovery_update(config)
+                await self.discovery_update(config)
             else:
                 # Unchanged payload: Ignore to avoid changing states
                 _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)

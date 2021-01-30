@@ -13,12 +13,12 @@ class NodeStrClass(str):
 
 
 @dataclass(frozen=True)
-class Placeholder:
-    """A placeholder that should be substituted."""
+class Input:
+    """Input that should be substituted."""
 
     name: str
 
     @classmethod
-    def from_node(cls, loader: yaml.Loader, node: yaml.nodes.Node) -> "Placeholder":
+    def from_node(cls, loader: yaml.Loader, node: yaml.nodes.Node) -> "Input":
         """Create a new placeholder from a node."""
         return cls(node.value)

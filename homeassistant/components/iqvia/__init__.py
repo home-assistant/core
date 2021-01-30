@@ -52,7 +52,7 @@ async def async_setup_entry(hass, entry):
         )
 
     websession = aiohttp_client.async_get_clientsession(hass)
-    client = Client(entry.data[CONF_ZIP_CODE], websession)
+    client = Client(entry.data[CONF_ZIP_CODE], session=websession)
 
     async def async_get_data_from_api(api_coro):
         """Get data from a particular API coroutine."""
@@ -155,6 +155,9 @@ class IQVIAEntity(CoordinatorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        if not self.coordinator.last_update_success:
+            return
+
         self.update_from_latest_data()
         self.async_write_ha_state()
 

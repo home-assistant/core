@@ -235,7 +235,10 @@ CAPABILITY_TO_SENSORS = {
         )
     ],
     Capability.three_axis: [],
-    Capability.tv_channel: [Map(Attribute.tv_channel, "Tv Channel", None, None)],
+    Capability.tv_channel: [
+        Map(Attribute.tv_channel, "Tv Channel", None, None),
+        Map(Attribute.tv_channel_name, "Tv Channel Name", None, None),
+    ],
     Capability.tvoc_measurement: [
         Map(
             Attribute.tvoc_level,

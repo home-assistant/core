@@ -12,7 +12,6 @@ from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
 from homeassistant.loader import async_get_integration
-from homeassistant.util import sanitize_path
 
 from . import dashboard, resources, websocket
 from .const import (
@@ -37,6 +36,7 @@ from .const import (
     STORAGE_DASHBOARD_UPDATE_FIELDS,
     url_slug,
 )
+from .system_health import system_health_info  # NOQA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ YAML_DASHBOARD_SCHEMA = vol.Schema(
     {
         **DASHBOARD_BASE_CREATE_FIELDS,
         vol.Required(CONF_MODE): MODE_YAML,
-        vol.Required(CONF_FILENAME): vol.All(cv.string, sanitize_path),
+        vol.Required(CONF_FILENAME): cv.path,
     }
 )
 

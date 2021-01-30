@@ -1,8 +1,9 @@
 """The camera tests for the august platform."""
 
+from unittest.mock import patch
+
 from homeassistant.const import STATE_IDLE
 
-from tests.async_mock import patch
 from tests.components.august.mocks import (
     _create_august_with_devices,
     _mock_doorbell_from_fixture,

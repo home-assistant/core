@@ -30,7 +30,7 @@ from .coordinator import CanaryDataUpdateCoordinator
 MIN_TIME_BETWEEN_SESSION_RENEW = timedelta(seconds=90)
 
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_FFMPEG_ARGUMENTS, invalidation_version="0.118"),
+    cv.deprecated(CONF_FFMPEG_ARGUMENTS),
     PLATFORM_SCHEMA.extend(
         {
             vol.Optional(
@@ -127,11 +127,14 @@ class CanaryCamera(CoordinatorEntity, Camera):
     async def async_camera_image(self):
         """Return a still image response from the camera."""
         await self.hass.async_add_executor_job(self.renew_live_stream_session)
+        live_stream_url = await self.hass.async_add_executor_job(
+            getattr, self._live_stream_session, "live_stream_url"
+        )
 
-        ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
+        ffmpeg = ImageFrame(self._ffmpeg.binary)
         image = await asyncio.shield(
             ffmpeg.get_image(
-                self._live_stream_session.live_stream_url,
+                live_stream_url,
                 output_format=IMAGE_JPEG,
                 extra_cmd=self._ffmpeg_arguments,
             )
@@ -143,7 +146,7 @@ class CanaryCamera(CoordinatorEntity, Camera):
         if self._live_stream_session is None:
             return
 
-        stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
+        stream = CameraMjpeg(self._ffmpeg.binary)
         await stream.open_camera(
             self._live_stream_session.live_stream_url, extra_cmd=self._ffmpeg_arguments
         )

@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Verbindungsfehler"
+        },
         "step": {
             "user": {
                 "data": {
@@ -9,6 +12,21 @@
                 },
                 "title": "AccuWeather"
             }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "forecast": "Wettervorhersage"
+                }
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "AccuWeather Server erreichen",
+            "remaining_requests": "Verbleibende erlaubte Anfragen"
         }
     }
 }

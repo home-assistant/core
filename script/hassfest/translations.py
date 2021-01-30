@@ -98,6 +98,7 @@ def gen_data_entry_schema(
         },
         vol.Optional("error"): {str: cv.string_with_no_html},
         vol.Optional("abort"): {str: cv.string_with_no_html},
+        vol.Optional("progress"): {str: cv.string_with_no_html},
         vol.Optional("create_entry"): {str: cv.string_with_no_html},
     }
     if flow_title == REQUIRED:

@@ -1,4 +1,5 @@
 """Tests for the SmartThings component init module."""
+from unittest.mock import Mock, patch
 from uuid import uuid4
 
 from aiohttp import ClientConnectionError, ClientResponseError
@@ -22,7 +23,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 

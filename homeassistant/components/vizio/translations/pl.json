@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured_device": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "updated_entry": "Ten wpis zosta\u0142 ju\u017c skonfigurowany, ale nazwa, aplikacje i/lub opcje zdefiniowane w konfiguracji nie pasuj\u0105 do wcze\u015bniej zaimportowanych warto\u015bci, wi\u0119c wpis konfiguracji zosta\u0142 odpowiednio zaktualizowany."
         },
         "error": {
@@ -18,7 +19,7 @@
                 "title": "Ko\u0144czenie procesu parowania"
             },
             "pairing_complete": {
-                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistant.",
+                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistantem.",
                 "title": "Parowanie zako\u0144czone"
             },
             "pairing_complete_import": {

@@ -1,1 +1,1 @@
-{"e950c7d5e1ee407a858e2a8b5016c8b3": {"name": "P1", "types": {"py/set": ["power", "home"]}, "class": "gateway", "location": "cd3e822288064775a7c4afcdd70bdda2"}}
+{"e950c7d5e1ee407a858e2a8b5016c8b3": {"name": "P1", "model": "Smile P1", "types": {"py/set": ["home", "power"]}, "class": "gateway", "location": "cd3e822288064775a7c4afcdd70bdda2"}}

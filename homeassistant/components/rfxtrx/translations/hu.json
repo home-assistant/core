@@ -2,9 +2,23 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "step": {
+            "setup_serial": {
+                "data": {
+                    "device": "Eszk\u00f6z kiv\u00e1laszt\u00e1sa"
+                },
+                "title": "Eszk\u00f6z"
+            },
+            "setup_serial_manual_path": {
+                "title": "El\u00e9r\u00e9si \u00fat"
+            }
         }
     },
     "options": {
+        "error": {
+            "invalid_event_code": "\u00c9rv\u00e9nytelen esem\u00e9nyk\u00f3d"
+        },
         "step": {
             "prompt_options": {
                 "data": {

@@ -163,7 +163,11 @@ async def async_setup(hass, config):
     """Set up the automation."""
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
 
-    await _async_process_config(hass, config, component)
+    # To register the automation blueprints
+    async_get_blueprints(hass)
+
+    if not await _async_process_config(hass, config, component):
+        await async_get_blueprints(hass).async_populate()
 
     async def trigger_service_handler(entity, service_call):
         """Handle automation triggers."""
@@ -400,6 +404,12 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             await self.action_script.async_run(
                 variables, trigger_context, started_action
             )
+        except (vol.Invalid, HomeAssistantError) as err:
+            self._logger.error(
+                "Error while executing automation %s: %s",
+                self.entity_id,
+                err,
+            )
         except Exception:  # pylint: disable=broad-except
             self._logger.exception("While executing automation %s", self.entity_id)
 
@@ -458,8 +468,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
     ) -> Optional[Callable[[], None]]:
         """Set up the triggers."""
 
-        def log_cb(level, msg):
-            self._logger.log(level, "%s %s", msg, self._name)
+        def log_cb(level, msg, **kwargs):
+            self._logger.log(level, "%s %s", msg, self._name, **kwargs)
 
         return await async_initialize_triggers(
             cast(HomeAssistant, self.hass),
@@ -484,12 +494,13 @@ async def _async_process_config(
     hass: HomeAssistant,
     config: Dict[str, Any],
     component: EntityComponent,
-) -> None:
+) -> bool:
     """Process config and add automations.
 
-    This method is a coroutine.
+    Returns if blueprints were used.
     """
     entities = []
+    blueprints_used = False
 
     for config_key in extract_domain_configs(config, DOMAIN):
         conf: List[Union[Dict[str, Any], blueprint.BlueprintInputs]] = config[  # type: ignore
@@ -498,6 +509,7 @@ async def _async_process_config(
 
         for list_no, config_block in enumerate(conf):
             if isinstance(config_block, blueprint.BlueprintInputs):  # type: ignore
+                blueprints_used = True
                 blueprint_inputs = config_block
 
                 try:
@@ -558,6 +570,8 @@ async def _async_process_config(
 
     if entities:
         await component.async_add_entities(entities)
+
+    return blueprints_used
 
 
 async def _async_process_if(hass, config, p_config):

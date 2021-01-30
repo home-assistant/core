@@ -75,6 +75,7 @@ ATTR_STATUS = "status"
 ATTR_ZONE_ARRAY = "zone"
 ATTR_ZONE_REPEATER = "repeats"
 ATTR_TIMERS = "timers"
+ATTR_MOP_ATTACHED = "mop_attached"
 
 SUPPORT_XIAOMI = (
     SUPPORT_STATE
@@ -326,6 +327,7 @@ class MiroboVacuum(StateVacuumEntity):
                         self.consumable_state.sensor_dirty_left.total_seconds() / 3600
                     ),
                     ATTR_STATUS: str(self.vacuum_state.state),
+                    ATTR_MOP_ATTACHED: self.vacuum_state.is_water_box_attached,
                 }
             )
 

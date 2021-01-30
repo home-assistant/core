@@ -1,9 +1,9 @@
 """Test the Elk-M1 Control config flow."""
 
+from unittest.mock import MagicMock, patch
+
 from homeassistant import config_entries, setup
 from homeassistant.components.elkm1.const import DOMAIN
-
-from tests.async_mock import MagicMock, patch
 
 
 def mock_elk(invalid_auth=None, sync_complete=None):

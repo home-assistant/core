@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 from os import path
 import unittest
+from unittest.mock import patch
 
 import pytest
 import pytz
@@ -16,7 +17,6 @@ from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component, setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import get_test_home_assistant, init_recorder_component
 
 
@@ -37,6 +37,28 @@ class TestHistoryStatsSensor(unittest.TestCase):
                 "platform": "history_stats",
                 "entity_id": "binary_sensor.test_id",
                 "state": "on",
+                "start": "{{ now().replace(hour=0)"
+                ".replace(minute=0).replace(second=0) }}",
+                "duration": "02:00",
+                "name": "Test",
+            },
+        }
+
+        assert setup_component(self.hass, "sensor", config)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("sensor.test")
+        assert state.state == STATE_UNKNOWN
+
+    def test_setup_multiple_states(self):
+        """Test the history statistics sensor setup for multiple states."""
+        self.init_recorder()
+        config = {
+            "history": {},
+            "sensor": {
+                "platform": "history_stats",
+                "entity_id": "binary_sensor.test_id",
+                "state": ["on", "true"],
                 "start": "{{ now().replace(hour=0)"
                 ".replace(minute=0).replace(second=0) }}",
                 "duration": "02:00",
@@ -131,6 +153,90 @@ class TestHistoryStatsSensor(unittest.TestCase):
 
         sensor4 = HistoryStatsSensor(
             self.hass, "binary_sensor.test_id", "on", start, end, None, "ratio", "test"
+        )
+
+        assert sensor1._type == "time"
+        assert sensor3._type == "count"
+        assert sensor4._type == "ratio"
+
+        with patch(
+            "homeassistant.components.history.state_changes_during_period",
+            return_value=fake_states,
+        ):
+            with patch("homeassistant.components.history.get_state", return_value=None):
+                sensor1.update()
+                sensor2.update()
+                sensor3.update()
+                sensor4.update()
+
+        assert sensor1.state == 0.5
+        assert sensor2.state is None
+        assert sensor3.state == 2
+        assert sensor4.state == 50
+
+    def test_measure_multiple(self):
+        """Test the history statistics sensor measure for multiple states."""
+        t0 = dt_util.utcnow() - timedelta(minutes=40)
+        t1 = t0 + timedelta(minutes=20)
+        t2 = dt_util.utcnow() - timedelta(minutes=10)
+
+        # Start     t0        t1        t2        End
+        # |--20min--|--20min--|--10min--|--10min--|
+        # |---------|--orange-|-default-|---blue--|
+
+        fake_states = {
+            "input_select.test_id": [
+                ha.State("input_select.test_id", "orange", last_changed=t0),
+                ha.State("input_select.test_id", "default", last_changed=t1),
+                ha.State("input_select.test_id", "blue", last_changed=t2),
+            ]
+        }
+
+        start = Template("{{ as_timestamp(now()) - 3600 }}", self.hass)
+        end = Template("{{ now() }}", self.hass)
+
+        sensor1 = HistoryStatsSensor(
+            self.hass,
+            "input_select.test_id",
+            ["orange", "blue"],
+            start,
+            end,
+            None,
+            "time",
+            "Test",
+        )
+
+        sensor2 = HistoryStatsSensor(
+            self.hass,
+            "unknown.id",
+            ["orange", "blue"],
+            start,
+            end,
+            None,
+            "time",
+            "Test",
+        )
+
+        sensor3 = HistoryStatsSensor(
+            self.hass,
+            "input_select.test_id",
+            ["orange", "blue"],
+            start,
+            end,
+            None,
+            "count",
+            "test",
+        )
+
+        sensor4 = HistoryStatsSensor(
+            self.hass,
+            "input_select.test_id",
+            ["orange", "blue"],
+            start,
+            end,
+            None,
+            "ratio",
+            "test",
         )
 
         assert sensor1._type == "time"

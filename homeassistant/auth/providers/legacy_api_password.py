@@ -8,13 +8,12 @@ from typing import Any, Dict, Optional, cast
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
-from .. import AuthManager
-from ..models import Credentials, User, UserMeta
+from ..models import Credentials, UserMeta
 
 AUTH_PROVIDER_TYPE = "legacy_api_password"
 CONF_API_PASSWORD = "api_password"
@@ -28,23 +27,6 @@ LEGACY_USER_NAME = "Legacy API password user"
 
 class InvalidAuthError(HomeAssistantError):
     """Raised when submitting invalid authentication."""
-
-
-async def async_validate_password(hass: HomeAssistant, password: str) -> Optional[User]:
-    """Return a user if password is valid. None if not."""
-    auth = cast(AuthManager, hass.auth)  # type: ignore
-    providers = auth.get_auth_providers(AUTH_PROVIDER_TYPE)
-    if not providers:
-        raise ValueError("Legacy API password provider not found")
-
-    try:
-        provider = cast(LegacyApiPasswordAuthProvider, providers[0])
-        provider.async_validate_login(password)
-        return await auth.async_get_or_create_user(
-            await provider.async_get_or_create_credentials({})
-        )
-    except InvalidAuthError:
-        return None
 
 
 @AUTH_PROVIDERS.register(AUTH_PROVIDER_TYPE)

@@ -1,5 +1,6 @@
 """Test zha cover."""
 import asyncio
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import zigpy.profiles.zha
@@ -32,7 +33,6 @@ from .common import (
     send_attributes_report,
 )
 
-from tests.async_mock import AsyncMock, MagicMock, patch
 from tests.common import async_capture_events, mock_coro, mock_restore_cache
 
 
@@ -104,19 +104,13 @@ def zigpy_keen_vent(zigpy_device_mock):
 async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
     """Test zha cover platform."""
 
-    async def get_chan_attr(*args, **kwargs):
-        return 100
-
-    with patch(
-        "homeassistant.components.zha.core.channels.base.ZigbeeChannel.get_attribute_value",
-        new=MagicMock(side_effect=get_chan_attr),
-    ) as get_attr_mock:
-        # load up cover domain
-        zha_device = await zha_device_joined_restored(zigpy_cover_device)
-        assert get_attr_mock.call_count == 2
-        assert get_attr_mock.call_args[0][0] == "current_position_lift_percentage"
-
+    # load up cover domain
     cluster = zigpy_cover_device.endpoints.get(1).window_covering
+    cluster.PLUGGED_ATTR_READS = {"current_position_lift_percentage": 100}
+    zha_device = await zha_device_joined_restored(zigpy_cover_device)
+    assert cluster.read_attributes.call_count == 2
+    assert "current_position_lift_percentage" in cluster.read_attributes.call_args[0][0]
+
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
     assert entity_id is not None
 

@@ -5,10 +5,6 @@
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "cannot_connect": "Impossibile connettersi"
         },
-        "error": {
-            "one": "uno",
-            "other": "altri"
-        },
         "flow_title": "Arcam FMJ su {host}",
         "step": {
             "confirm": {

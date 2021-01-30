@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured_device": "Device is already configured",
+            "cannot_connect": "Failed to connect",
             "updated_entry": "This entry has already been setup but the name, apps, and/or options defined in the configuration do not match the previously imported configuration, so the configuration entry has been updated accordingly."
         },
         "error": {

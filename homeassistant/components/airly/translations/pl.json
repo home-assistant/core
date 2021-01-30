@@ -19,5 +19,10 @@
                 "title": "Airly"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Dost\u0119p do serwera Airly"
+        }
     }
 }

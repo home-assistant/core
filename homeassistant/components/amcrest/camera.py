@@ -236,7 +236,7 @@ class AmcrestCam(Camera):
         # streaming via ffmpeg
 
         streaming_url = self._rtsp_url
-        stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
+        stream = CameraMjpeg(self._ffmpeg.binary)
         await stream.open_camera(streaming_url, extra_cmd=self._ffmpeg_arguments)
 
         try:

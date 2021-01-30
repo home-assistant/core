@@ -18,6 +18,7 @@ from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
+from homeassistant.components.number import DOMAIN as NUMBER
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 
@@ -71,6 +72,7 @@ BINDINGS = "bindings"
 
 CHANNEL_ACCELEROMETER = "accelerometer"
 CHANNEL_ANALOG_INPUT = "analog_input"
+CHANNEL_ANALOG_OUTPUT = "analog_output"
 CHANNEL_ATTRIBUTE = "attribute"
 CHANNEL_BASIC = "basic"
 CHANNEL_COLOR = "light_color"
@@ -110,6 +112,7 @@ COMPONENTS = (
     FAN,
     LIGHT,
     LOCK,
+    NUMBER,
     SENSOR,
     SWITCH,
 )
@@ -155,6 +158,9 @@ DEBUG_RELAY_LOGGERS = [DEBUG_COMP_ZHA, DEBUG_COMP_ZIGPY]
 DEFAULT_RADIO_TYPE = "ezsp"
 DEFAULT_BAUDRATE = 57600
 DEFAULT_DATABASE_NAME = "zigbee.db"
+
+DEVICE_PAIRING_STATUS = "pairing_status"
+
 DISCOVERY_KEY = "zha_discovery_info"
 
 DOMAIN = "zha"

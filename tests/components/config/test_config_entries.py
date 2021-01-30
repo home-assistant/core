@@ -1,6 +1,7 @@
 """Test config entries API."""
 
 from collections import OrderedDict
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
@@ -12,7 +13,6 @@ from homeassistant.core import callback
 from homeassistant.generated import config_flows
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import (
     MockConfigEntry,
     MockModule,
@@ -750,6 +750,7 @@ async def test_ignore_flow(hass, hass_ws_client):
                 "id": 5,
                 "type": "config_entries/ignore_flow",
                 "flow_id": result["flow_id"],
+                "title": "Test Integration",
             }
         )
         response = await ws_client.receive_json()
@@ -761,3 +762,4 @@ async def test_ignore_flow(hass, hass_ws_client):
     entry = hass.config_entries.async_entries("test")[0]
     assert entry.source == "ignore"
     assert entry.unique_id == "mock-unique-id"
+    assert entry.title == "Test Integration"

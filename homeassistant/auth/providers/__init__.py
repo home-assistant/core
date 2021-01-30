@@ -16,7 +16,7 @@ from homeassistant.util.decorator import Registry
 
 from ..auth_store import AuthStore
 from ..const import MFA_SESSION_EXPIRATION
-from ..models import Credentials, User, UserMeta
+from ..models import Credentials, RefreshToken, User, UserMeta
 
 _LOGGER = logging.getLogger(__name__)
 DATA_REQS = "auth_prov_reqs_processed"
@@ -117,6 +117,16 @@ class AuthProvider:
     async def async_initialize(self) -> None:
         """Initialize the auth provider."""
 
+    @callback
+    def async_validate_refresh_token(
+        self, refresh_token: RefreshToken, remote_ip: Optional[str] = None
+    ) -> None:
+        """Verify a refresh token is still valid.
+
+        Optional hook for an auth provider to verify validity of a refresh token.
+        Should raise InvalidAuthError on errors.
+        """
+
 
 async def auth_provider_from_config(
     hass: HomeAssistant, store: AuthStore, config: Dict[str, Any]
@@ -182,6 +192,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
         self.created_at = dt_util.utcnow()
         self.invalid_mfa_times = 0
         self.user: Optional[User] = None
+        self.credential: Optional[Credentials] = None
 
     async def async_step_init(
         self, user_input: Optional[Dict[str, str]] = None
@@ -222,6 +233,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
         self, user_input: Optional[Dict[str, str]] = None
     ) -> Dict[str, Any]:
         """Handle the step of mfa validation."""
+        assert self.credential
         assert self.user
 
         errors = {}
@@ -257,7 +269,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
                     return self.async_abort(reason="too_many_retry")
 
             if not errors:
-                return await self.async_finish(self.user)
+                return await self.async_finish(self.credential)
 
         description_placeholders: Dict[str, Optional[str]] = {
             "mfa_module_name": auth_module.name,

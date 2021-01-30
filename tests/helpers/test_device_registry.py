@@ -1,5 +1,7 @@
 """Tests for the Device Registry."""
 import asyncio
+import time
+from unittest.mock import patch
 
 import pytest
 
@@ -7,7 +9,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, callback
 from homeassistant.helpers import device_registry, entity_registry
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, flush_store, mock_device_registry
 
 
@@ -152,6 +153,7 @@ async def test_loading_from_storage(hass, hass_storage):
                     "entry_type": "service",
                     "area_id": "12345A",
                     "name_by_user": "Test Friendly Name",
+                    "disabled_by": "user",
                 }
             ],
             "deleted_devices": [
@@ -180,6 +182,7 @@ async def test_loading_from_storage(hass, hass_storage):
     assert entry.area_id == "12345A"
     assert entry.name_by_user == "Test Friendly Name"
     assert entry.entry_type == "service"
+    assert entry.disabled_by == "user"
     assert isinstance(entry.config_entries, set)
     assert isinstance(entry.connections, set)
     assert isinstance(entry.identifiers, set)
@@ -227,8 +230,8 @@ async def test_removing_config_entries(hass, registry, update_events):
     assert entry2.config_entries == {"123", "456"}
 
     registry.async_clear_config_entry("123")
-    entry = registry.async_get_device({("bridgeid", "0123")}, set())
-    entry3_removed = registry.async_get_device({("bridgeid", "4567")}, set())
+    entry = registry.async_get_device({("bridgeid", "0123")})
+    entry3_removed = registry.async_get_device({("bridgeid", "4567")})
 
     assert entry.config_entries == {"456"}
     assert entry3_removed is None
@@ -299,26 +302,41 @@ async def test_deleted_device_removing_config_entries(hass, registry, update_eve
 
     registry.async_clear_config_entry("123")
     assert len(registry.devices) == 0
-    assert len(registry.deleted_devices) == 1
+    assert len(registry.deleted_devices) == 2
 
     registry.async_clear_config_entry("456")
     assert len(registry.devices) == 0
-    assert len(registry.deleted_devices) == 0
+    assert len(registry.deleted_devices) == 2
 
     # No event when a deleted device is purged
     await hass.async_block_till_done()
     assert len(update_events) == 5
 
-    # Re-add, expect new device id
+    # Re-add, expect to keep the device id
     entry2 = registry.async_get_or_create(
-        config_entry_id="123",
+        config_entry_id="456",
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
     )
 
-    assert entry.id != entry2.id
+    assert entry.id == entry2.id
+
+    future_time = time.time() + device_registry.ORPHANED_DEVICE_KEEP_SECONDS + 1
+
+    with patch("time.time", return_value=future_time):
+        registry.async_purge_expired_orphaned_devices()
+
+    # Re-add, expect to get a new device id after the purge
+    entry4 = registry.async_get_or_create(
+        config_entry_id="123",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert entry3.id != entry4.id
 
 
 async def test_removing_area_id(registry):
@@ -334,7 +352,7 @@ async def test_removing_area_id(registry):
     entry_w_area = registry.async_update_device(entry.id, area_id="12345A")
 
     registry.async_clear_area_id("12345A")
-    entry_wo_area = registry.async_get_device({("bridgeid", "0123")}, set())
+    entry_wo_area = registry.async_get_device({("bridgeid", "0123")})
 
     assert not entry_wo_area.area_id
     assert entry_w_area != entry_wo_area
@@ -364,7 +382,7 @@ async def test_deleted_device_removing_area_id(registry):
     )
     assert entry.id == entry2.id
 
-    entry_wo_area = registry.async_get_device({("bridgeid", "0123")}, set())
+    entry_wo_area = registry.async_get_device({("bridgeid", "0123")})
 
     assert not entry_wo_area.area_id
     assert entry_w_area != entry_wo_area
@@ -445,6 +463,7 @@ async def test_loading_saving_data(hass, registry):
         manufacturer="manufacturer",
         model="light",
         via_device=("hue", "0123"),
+        disabled_by="user",
     )
 
     orig_light2 = registry.async_get_or_create(
@@ -502,9 +521,9 @@ async def test_loading_saving_data(hass, registry):
     assert list(registry.devices) == list(registry2.devices)
     assert list(registry.deleted_devices) == list(registry2.deleted_devices)
 
-    new_via = registry2.async_get_device({("hue", "0123")}, set())
-    new_light = registry2.async_get_device({("hue", "456")}, set())
-    new_light4 = registry2.async_get_device({("hue", "abc")}, set())
+    new_via = registry2.async_get_device({("hue", "0123")})
+    new_light = registry2.async_get_device({("hue", "456")})
+    new_light4 = registry2.async_get_device({("hue", "abc")})
 
     assert orig_via == new_via
     assert orig_light == new_light
@@ -581,6 +600,7 @@ async def test_update(registry):
             name_by_user="Test Friendly Name",
             new_identifiers=new_identifiers,
             via_device_id="98765B",
+            disabled_by="user",
         )
 
     assert mock_save.call_count == 1
@@ -591,12 +611,13 @@ async def test_update(registry):
     assert updated_entry.name_by_user == "Test Friendly Name"
     assert updated_entry.identifiers == new_identifiers
     assert updated_entry.via_device_id == "98765B"
+    assert updated_entry.disabled_by == "user"
 
-    assert registry.async_get_device({("hue", "456")}, {}) is None
-    assert registry.async_get_device({("bla", "123")}, {}) is None
+    assert registry.async_get_device({("hue", "456")}) is None
+    assert registry.async_get_device({("bla", "123")}) is None
 
-    assert registry.async_get_device({("hue", "654")}, {}) == updated_entry
-    assert registry.async_get_device({("bla", "321")}, {}) == updated_entry
+    assert registry.async_get_device({("hue", "654")}) == updated_entry
+    assert registry.async_get_device({("bla", "321")}) == updated_entry
 
     assert (
         registry.async_get_device(
@@ -647,7 +668,7 @@ async def test_update_remove_config_entries(hass, registry, update_events):
     assert updated_entry.config_entries == {"456"}
     assert removed_entry is None
 
-    removed_entry = registry.async_get_device({("bridgeid", "4567")}, set())
+    removed_entry = registry.async_get_device({("bridgeid", "4567")})
 
     assert removed_entry is None
 
@@ -723,10 +744,44 @@ async def test_cleanup_device_registry(hass, registry):
 
     device_registry.async_cleanup(hass, registry, ent_reg)
 
-    assert registry.async_get_device({("hue", "d1")}, set()) is not None
-    assert registry.async_get_device({("hue", "d2")}, set()) is not None
-    assert registry.async_get_device({("hue", "d3")}, set()) is not None
-    assert registry.async_get_device({("something", "d4")}, set()) is None
+    assert registry.async_get_device({("hue", "d1")}) is not None
+    assert registry.async_get_device({("hue", "d2")}) is not None
+    assert registry.async_get_device({("hue", "d3")}) is not None
+    assert registry.async_get_device({("something", "d4")}) is None
+
+
+async def test_cleanup_device_registry_removes_expired_orphaned_devices(hass, registry):
+    """Test cleanup removes expired orphaned devices."""
+    config_entry = MockConfigEntry(domain="hue")
+    config_entry.add_to_hass(hass)
+
+    registry.async_get_or_create(
+        identifiers={("hue", "d1")}, config_entry_id=config_entry.entry_id
+    )
+    registry.async_get_or_create(
+        identifiers={("hue", "d2")}, config_entry_id=config_entry.entry_id
+    )
+    registry.async_get_or_create(
+        identifiers={("hue", "d3")}, config_entry_id=config_entry.entry_id
+    )
+
+    registry.async_clear_config_entry(config_entry.entry_id)
+    assert len(registry.devices) == 0
+    assert len(registry.deleted_devices) == 3
+
+    ent_reg = await entity_registry.async_get_registry(hass)
+    device_registry.async_cleanup(hass, registry, ent_reg)
+
+    assert len(registry.devices) == 0
+    assert len(registry.deleted_devices) == 3
+
+    future_time = time.time() + device_registry.ORPHANED_DEVICE_KEEP_SECONDS + 1
+
+    with patch("time.time", return_value=future_time):
+        device_registry.async_cleanup(hass, registry, ent_reg)
+
+    assert len(registry.devices) == 0
+    assert len(registry.deleted_devices) == 0
 
 
 async def test_cleanup_startup(hass):

@@ -4,9 +4,15 @@
             "single_instance_allowed": "Csak egyetlen Abode konfigur\u00e1ci\u00f3 enged\u00e9lyezett."
         },
         "error": {
-            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_mfa_code": "\u00c9rv\u00e9nytelen MFA k\u00f3d"
         },
         "step": {
+            "mfa": {
+                "data": {
+                    "mfa_code": "MFA k\u00f3d (6 jegy\u0171)"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Jelsz\u00f3",

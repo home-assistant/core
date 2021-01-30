@@ -5,7 +5,8 @@
             "authorize_url_fail": "Nezn\u00e1m\u00e1 chyba p\u0159i generov\u00e1n\u00ed autoriza\u010dn\u00ed URL.",
             "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
             "external_setup": "Point \u00fasp\u011b\u0161n\u011b nastaveno jin\u00fdm zp\u016fsobem.",
-            "no_flows": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace."
+            "no_flows": "Komponenta nen\u00ed nastavena. Postupujte podle dokumentace.",
+            "unknown_authorize_url_generation": "Nezn\u00e1m\u00e1 chyba p\u0159i generov\u00e1n\u00ed autoriza\u010dn\u00ed URL adresy."
         },
         "create_entry": {
             "default": "\u00dasp\u011b\u0161n\u011b ov\u011b\u0159eno"

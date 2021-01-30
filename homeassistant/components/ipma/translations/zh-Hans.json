@@ -15,5 +15,10 @@
                 "title": "\u4f4d\u7f6e"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "\u53ef\u8bbf\u95ee IPMA API"
+        }
     }
 }

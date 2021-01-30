@@ -11,7 +11,7 @@ import yaml
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import _SECRET_NAMESPACE, SECRET_YAML
-from .objects import NodeListClass, NodeStrClass, Placeholder
+from .objects import Input, NodeListClass, NodeStrClass
 
 try:
     import keyring
@@ -31,6 +31,9 @@ DICT_T = TypeVar("DICT_T", bound=Dict)  # pylint: disable=invalid-name
 
 _LOGGER = logging.getLogger(__name__)
 __SECRET_CACHE: Dict[str, JSON_TYPE] = {}
+
+CREDSTASH_WARN = False
+KEYRING_WARN = False
 
 
 def clear_secret_cache() -> None:
@@ -295,6 +298,14 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
         # do some keyring stuff
         pwd = keyring.get_password(_SECRET_NAMESPACE, node.value)
         if pwd:
+            global KEYRING_WARN  # pylint: disable=global-statement
+
+            if not KEYRING_WARN:
+                KEYRING_WARN = True
+                _LOGGER.warning(
+                    "Keyring is deprecated and will be removed in March 2021."
+                )
+
             _LOGGER.debug("Secret %s retrieved from keyring", node.value)
             return pwd
 
@@ -305,6 +316,13 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
         try:
             pwd = credstash.getSecret(node.value, table=_SECRET_NAMESPACE)
             if pwd:
+                global CREDSTASH_WARN  # pylint: disable=global-statement
+
+                if not CREDSTASH_WARN:
+                    CREDSTASH_WARN = True
+                    _LOGGER.warning(
+                        "Credstash is deprecated and will be removed in March 2021."
+                    )
                 _LOGGER.debug("Secret %s retrieved from credstash", node.value)
                 return pwd
         except credstash.ItemNotFound:
@@ -331,4 +349,4 @@ yaml.SafeLoader.add_constructor("!include_dir_named", _include_dir_named_yaml)
 yaml.SafeLoader.add_constructor(
     "!include_dir_merge_named", _include_dir_merge_named_yaml
 )
-yaml.SafeLoader.add_constructor("!placeholder", Placeholder.from_node)
+yaml.SafeLoader.add_constructor("!input", Input.from_node)

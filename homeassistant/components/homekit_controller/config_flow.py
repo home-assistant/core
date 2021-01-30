@@ -21,6 +21,15 @@ HOMEKIT_BRIDGE_DOMAIN = "homekit"
 HOMEKIT_BRIDGE_SERIAL_NUMBER = "homekit.bridge"
 HOMEKIT_BRIDGE_MODEL = "Home Assistant HomeKit Bridge"
 
+HOMEKIT_IGNORE = [
+    # eufy Indoor Cam 2K and 2K Pan & Tilt
+    # https://github.com/home-assistant/core/issues/42307
+    "T8400",
+    "T8410",
+    # Hive Hub - vendor does not give user a pairing code
+    "HHKBridge1,1",
+]
+
 PAIRING_FILE = "pairing.json"
 
 MDNS_SUFFIX = "._hap._tcp.local."
@@ -255,6 +264,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         # Devices in HOMEKIT_IGNORE have native local integrations - users
         # should be encouraged to use native integration and not confused
         # by alternative HK API.
+        if model in HOMEKIT_IGNORE:
+            return self.async_abort(reason="ignored_model")
+
+        # If this is a HomeKit bridge exported by *this* HA instance ignore it.
         if await self._hkid_is_homekit_bridge(hkid):
             return self.async_abort(reason="ignored_model")
 

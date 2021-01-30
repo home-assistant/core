@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
@@ -11,7 +11,7 @@
                 "data": {
                     "host": "\u4e3b\u6a5f\u7aef"
                 },
-                "description": "\u8acb\u8f38\u5165\u4e3b\u6a5f\u6bb5\u540d\u7a31\u6216 Heos \u8a2d\u5099 IP \u4f4d\u5740\uff08\u5df2\u900f\u904e\u6709\u7dda\u7db2\u8def\u9023\u7dda\uff09\u3002",
+                "description": "\u8acb\u8f38\u5165\u4e3b\u6a5f\u6bb5\u540d\u7a31\u6216 Heos \u88dd\u7f6e IP \u4f4d\u5740\uff08\u5df2\u900f\u904e\u6709\u7dda\u7db2\u8def\u9023\u7dda\uff09\u3002",
                 "title": "\u9023\u7dda\u81f3 Heos"
             }
         }

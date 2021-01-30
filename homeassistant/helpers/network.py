@@ -4,7 +4,7 @@ from typing import Optional, cast
 
 import yarl
 
-from homeassistant.components.http import current_request
+from homeassistant.components import http
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
@@ -49,7 +49,7 @@ def get_url(
     prefer_cloud: bool = False,
 ) -> str:
     """Get a URL to this instance."""
-    if require_current_request and current_request.get() is None:
+    if require_current_request and http.current_request.get() is None:
         raise NoURLAvailableError
 
     order = [TYPE_URL_INTERNAL, TYPE_URL_EXTERNAL]
@@ -125,7 +125,7 @@ def get_url(
 
 def _get_request_host() -> Optional[str]:
     """Get the host address of the current request."""
-    request = current_request.get()
+    request = http.current_request.get()
     if request is None:
         raise NoURLAvailableError
     return yarl.URL(request.url).host

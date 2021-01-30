@@ -11,10 +11,6 @@
         },
         "flow_title": "UPnP/IGD: {name}",
         "step": {
-            "init": {
-                "one": "uno",
-                "other": "altri"
-            },
             "ssdp_confirm": {
                 "description": "Vuoi configurare questo dispositivo UPnP/IGD?"
             },
