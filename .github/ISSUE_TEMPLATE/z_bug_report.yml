@@ -60,7 +60,7 @@ inputs:
       label: Link to integration documentation on our website
       required: false
       placeholder: "https://www.home-assistant.io/integrations/..."
-      description: >
+      description: |
         Providing a link [to the documentation][docs] help us categorizing the
         issue, while providing a useful reference at the same time.
 
@@ -95,6 +95,11 @@ inputs:
         # Put your logs below this line
 
         ```
+
+  - type: description
+    attributes:
+      value: |
+        ## Additional information
   - type: description
     attributes:
       value: |
