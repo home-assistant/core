@@ -207,6 +207,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         if device.hasDualSetpointStatus:
             if target_temp_low is not None and target_temp_high is not None:
                 temp = (target_temp_low, target_temp_high)
+            else:
+                return
         else:
             temp = kwargs.get(ATTR_TEMPERATURE)
             _LOGGER.debug("Set temperature: %s", temp)
