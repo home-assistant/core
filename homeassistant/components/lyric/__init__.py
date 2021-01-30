@@ -156,12 +156,14 @@ class LyricEntity(CoordinatorEntity):
     ) -> None:
         """Initialize the Honeywell Lyric entity."""
         super().__init__(coordinator)
-        self._update_thermostat = coordinator.data.update_thermostat
-        self._mac_id = device.macID
-        self._location = location
         self._key = key
         self._name = name
         self._icon = icon
+        self._location = location
+        self._mac_id = device.macID
+        self._device_name = device.name
+        self._device_model = device.deviceModel
+        self._update_thermostat = coordinator.data.update_thermostat
 
     @property
     def unique_id(self) -> str:
@@ -186,7 +188,7 @@ class LyricEntity(CoordinatorEntity):
     @property
     def device(self) -> LyricDevice:
         """Get the Lyric Device."""
-        return self.location.devices_dict[self._device.macID]
+        return self.location.devices_dict[self._mac_id]
 
 
 class LyricDeviceEntity(LyricEntity):
@@ -196,8 +198,8 @@ class LyricDeviceEntity(LyricEntity):
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this Honeywell Lyric instance."""
         return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.macID)},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
             "manufacturer": "Honeywell",
-            "model": self._device.deviceModel,
-            "name": self._device.name,
+            "model": self._device_name,
+            "name": self._device_model,
         }
