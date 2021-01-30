@@ -199,6 +199,10 @@ class DysonFanEntity(DysonEntity, FanEntity):
             ATTR_DYSON_SPEED_LIST: self.dyson_speed_list,
         }
 
+    def set_auto_mode(self, auto_mode: bool) -> None:
+        """Set auto mode."""
+        raise NotImplementedError
+
     def set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if percentage is None:
