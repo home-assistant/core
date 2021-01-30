@@ -78,7 +78,12 @@ inputs:
         this problem, please provide.
 
         This can be an piece of YAML from, e.g., an automation, script, scene
-        or configuration
+        or configuration.
+  - type: textarea
+    attributes:
+      label: Anything in the logs that might be useful for us?
+      description: For example, error message, or stack traces.
+      required: false
   - type: description
     attributes:
       value: |
