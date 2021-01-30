@@ -595,7 +595,7 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(
         domain=UNIFI_DOMAIN,
-        data={},
+        data={"not_controller_key": None},
         source=config_entries.SOURCE_IGNORE,
     )
     entry.add_to_hass(hass)

@@ -244,7 +244,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     def _host_already_configured(self, host):
         """See if we already have a unifi entry matching the host."""
         for entry in self._async_current_entries():
-            if not entry.data:
+            if not entry.data or CONF_CONTROLLER not in entry.data:
                 continue
             if entry.data[CONF_CONTROLLER][CONF_HOST] == host:
                 return True
