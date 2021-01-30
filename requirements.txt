@@ -13,7 +13,7 @@ httpcore>=0.12.3
 httpx==0.16.1
 jinja2>=2.11.2
 PyJWT==1.7.1
-cryptography==3.2
+cryptography==3.3.1
 pip>=8.0.3,<20.3
 python-slugify==4.0.1
 pytz>=2020.5

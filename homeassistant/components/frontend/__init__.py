@@ -262,10 +262,10 @@ async def async_setup(hass, config):
     for path, should_cache in (
         ("service_worker.js", False),
         ("robots.txt", False),
-        ("onboarding.html", True),
-        ("static", True),
-        ("frontend_latest", True),
-        ("frontend_es5", True),
+        ("onboarding.html", not is_dev),
+        ("static", not is_dev),
+        ("frontend_latest", not is_dev),
+        ("frontend_es5", not is_dev),
     ):
         hass.http.register_static_path(f"/{path}", str(root_path / path), should_cache)
 

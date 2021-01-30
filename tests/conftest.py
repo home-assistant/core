@@ -98,6 +98,21 @@ def verify_cleanup():
     assert not threads
 
 
+@pytest.fixture(autouse=True)
+def bcrypt_cost():
+    """Run with reduced rounds during tests, to speed up uses."""
+    import bcrypt
+
+    gensalt_orig = bcrypt.gensalt
+
+    def gensalt_mock(rounds=12, prefix=b"2b"):
+        return gensalt_orig(4, prefix)
+
+    bcrypt.gensalt = gensalt_mock
+    yield
+    bcrypt.gensalt = gensalt_orig
+
+
 @pytest.fixture
 def hass_storage():
     """Fixture to mock storage."""
@@ -204,9 +219,13 @@ def mock_device_tracker_conf():
 @pytest.fixture
 async def hass_admin_credential(hass, local_auth):
     """Provide credentials for admin user."""
-    await hass.async_add_executor_job(local_auth.data.add_auth, "admin", "admin-pass")
-
-    return await local_auth.async_get_or_create_credentials({"username": "admin"})
+    return Credentials(
+        id="mock-credential-id",
+        auth_provider_type="homeassistant",
+        auth_provider_id=None,
+        data={"username": "admin"},
+        is_new=False,
+    )
 
 
 @pytest.fixture

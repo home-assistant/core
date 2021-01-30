@@ -4,7 +4,7 @@ from datetime import timedelta
 from functools import partial
 
 from pytile import async_login
-from pytile.errors import SessionExpiredError, TileError
+from pytile.errors import InvalidAuthError, SessionExpiredError, TileError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -43,6 +43,9 @@ async def async_setup_entry(hass, entry):
             session=websession,
         )
         hass.data[DOMAIN][DATA_TILE][entry.entry_id] = await client.async_get_tiles()
+    except InvalidAuthError:
+        LOGGER.error("Invalid credentials provided")
+        return False
     except TileError as err:
         raise ConfigEntryNotReady("Error during integration setup") from err
 
