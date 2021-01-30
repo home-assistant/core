@@ -1,7 +1,12 @@
 """Define tests for the AirVisual config flow."""
 from unittest.mock import patch
 
-from pyairvisual.errors import InvalidKeyError, NodeProError
+from pyairvisual.errors import (
+    AirVisualError,
+    InvalidKeyError,
+    NodeProError,
+    NotFoundError,
+)
 
 from homeassistant import data_entry_flow
 from homeassistant.components.airvisual.const import (
@@ -70,14 +75,8 @@ async def test_duplicate_error(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_invalid_identifier_geography(hass):
-    """Test that an invalid API key or Node/Pro ID throws an error."""
-    geography_conf = {
-        CONF_API_KEY: "abcde12345",
-        CONF_LATITUDE: 51.528308,
-        CONF_LONGITUDE: -0.3817765,
-    }
-
+async def test_invalid_identifier_geography_api_key(hass):
+    """Test that an invalid API key throws an error."""
     with patch(
         "pyairvisual.air_quality.AirQuality.nearest_city",
         side_effect=InvalidKeyError,
@@ -88,15 +87,70 @@ async def test_invalid_identifier_geography(hass):
             data={"type": INTEGRATION_TYPE_GEOGRAPHY_COORDS},
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=geography_conf
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: "abcde12345",
+                CONF_LATITUDE: 51.528308,
+                CONF_LONGITUDE: -0.3817765,
+            },
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
 
+async def test_invalid_identifier_geography_name(hass):
+    """Test that an invalid location name throws an error."""
+    with patch(
+        "pyairvisual.air_quality.AirQuality.city",
+        side_effect=NotFoundError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={"type": INTEGRATION_TYPE_GEOGRAPHY_NAME},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: "abcde12345",
+                CONF_CITY: "Beijing",
+                CONF_STATE: "Beijing",
+                CONF_COUNTRY: "China",
+            },
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {CONF_CITY: "location_not_found"}
+
+
+async def test_invalid_identifier_geography_unknown(hass):
+    """Test that an unknown identifier issue throws an error."""
+    with patch(
+        "pyairvisual.air_quality.AirQuality.city",
+        side_effect=AirVisualError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={"type": INTEGRATION_TYPE_GEOGRAPHY_NAME},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: "abcde12345",
+                CONF_CITY: "Beijing",
+                CONF_STATE: "Beijing",
+                CONF_COUNTRY: "China",
+            },
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "unknown"}
+
+
 async def test_invalid_identifier_node_pro(hass):
-    """Test that an invalid Node/Pro ID shows an error."""
+    """Test that an invalid Node/Pro identifier shows an error."""
     node_pro_conf = {CONF_IP_ADDRESS: "192.168.1.100", CONF_PASSWORD: "my_password"}
 
     with patch(
@@ -130,9 +184,9 @@ async def test_migration(hass):
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    with patch("pyairvisual.air_quality.AirQuality.nearest_city"), patch.object(
-        hass.config_entries, "async_forward_entry_setup"
-    ):
+    with patch("pyairvisual.air_quality.AirQuality.city"), patch(
+        "pyairvisual.air_quality.AirQuality.nearest_city"
+    ), patch.object(hass.config_entries, "async_forward_entry_setup"):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: conf})
         await hass.async_block_till_done()
 
@@ -234,7 +288,7 @@ async def test_step_geography_by_name(hass):
 
     with patch(
         "homeassistant.components.airvisual.async_setup_entry", return_value=True
-    ), patch("pyairvisual.air_quality.AirQuality.nearest_city"):
+    ), patch("pyairvisual.air_quality.AirQuality.city"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
