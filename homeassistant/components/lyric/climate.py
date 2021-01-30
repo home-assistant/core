@@ -1,5 +1,6 @@
 """Support for Honeywell Lyric climate platform."""
 import logging
+from time import gmtime, strftime, time
 from typing import List, Optional
 
 from aiolyric.objects.device import LyricDevice
@@ -18,7 +19,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, ATTR_TIME
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
@@ -33,7 +34,6 @@ from .const import (
     PRESET_PERMANENT_HOLD,
     PRESET_TEMPORARY_HOLD,
     PRESET_VACATION_HOLD,
-    SERVICE_HOLD_TIME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,6 +59,17 @@ HVAC_MODES = {
     LYRIC_HVAC_MODE_HEAT_COOL: HVAC_MODE_HEAT_COOL,
 }
 
+SERVICE_HOLD_TIME = "set_hold_time"
+ATTR_TIME_PERIOD = "time_period"
+
+SCHEMA_HOLD_TIME = {
+    vol.Required(ATTR_TIME_PERIOD, default="01:00:00"): vol.All(
+        cv.time_period,
+        cv.positive_timedelta,
+        lambda td: strftime("%H:%M:%S", gmtime(time() + td.total_seconds())),
+    )
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
@@ -78,7 +89,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_HOLD_TIME,
-        {vol.Required(ATTR_TIME): cv.string},
+        SCHEMA_HOLD_TIME,
         "async_set_hold_time",
     )
 
@@ -255,15 +266,15 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             _LOGGER.error(exception)
         await self.coordinator.async_refresh()
 
-    async def async_set_hold_time(self, time: str) -> None:
+    async def async_set_hold_time(self, time_period: str) -> None:
         """Set the time to hold until."""
-        _LOGGER.debug("set_hold_time: %s", time)
+        _LOGGER.debug("set_hold_time: %s", time_period)
         try:
             await self._update_thermostat(
                 self.location,
                 self.device,
                 thermostatSetpointStatus=PRESET_HOLD_UNTIL,
-                nextPeriodTime=time,
+                nextPeriodTime=time_period,
             )
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)

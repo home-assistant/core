@@ -13,8 +13,6 @@ PRESET_HOLD_UNTIL = "HoldUntil"
 PRESET_PERMANENT_HOLD = "PermanentHold"
 PRESET_VACATION_HOLD = "VacationHold"
 
-SERVICE_HOLD_TIME = "set_hold_time"
-
 LYRIC_EXCEPTIONS = (
     LyricAuthenticationException,
     LyricException,
