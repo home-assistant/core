@@ -5,6 +5,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import (
     ATTR_MANUFACTURER,
+    CONF_CONTROLLER,
     DOMAIN as UNIFI_DOMAIN,
     LOGGER,
     UNIFI_WIRELESS_CLIENTS,
@@ -62,6 +63,20 @@ async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
     controller = hass.data[UNIFI_DOMAIN].pop(config_entry.entry_id)
     return await controller.async_reset()
+
+
+async def async_migrate_entry(hass, config_entry):
+    """Migrate old entry."""
+    LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    #  Flatten configuration but keep old data if user rollbacks HASS prior to 2021.03
+    if config_entry.version == 1:
+        config_entry.data = {**config_entry.data, **config_entry.data[CONF_CONTROLLER]}
+        config_entry.version = 2
+
+    LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True
 
 
 class UnifiWirelessClients:

@@ -36,16 +36,15 @@ async def test_controller_no_mac(hass):
     entry = MockConfigEntry(
         domain=UNIFI_DOMAIN,
         data={
-            "controller": {
-                "host": "0.0.0.0",
-                "username": "user",
-                "password": "pass",
-                "port": 80,
-                "site": "default",
-                "verify_ssl": True,
-            },
+            "host": "0.0.0.0",
+            "username": "user",
+            "password": "pass",
+            "port": 80,
+            "site": "default",
+            "verify_ssl": True,
         },
         unique_id="1",
+        version=2,
     )
     entry.add_to_hass(hass)
     mock_registry = Mock()
@@ -62,6 +61,44 @@ async def test_controller_no_mac(hass):
     assert len(mock_controller.mock_calls) == 2
 
     assert len(mock_registry.mock_calls) == 0
+
+
+async def test_migrate_entry(hass):
+    """Test that configured options for a host are loaded via config entry."""
+    entry = MockConfigEntry(
+        domain=UNIFI_DOMAIN,
+        data={
+            "controller": {
+                "host": "0.0.0.0",
+                "username": "user",
+                "password": "pass",
+                "port": 80,
+                "site": "default",
+                "verify_ssl": True,
+            }
+        },
+        version=1,
+    )
+
+    await entry.async_migrate(hass)
+
+    assert entry.version == 2
+    assert entry.data == {
+        "controller": {
+            "host": "0.0.0.0",
+            "username": "user",
+            "password": "pass",
+            "port": 80,
+            "site": "default",
+            "verify_ssl": True,
+        },
+        "host": "0.0.0.0",
+        "username": "user",
+        "password": "pass",
+        "port": 80,
+        "site": "default",
+        "verify_ssl": True,
+    }
 
 
 async def test_unload_entry(hass, aioclient_mock):
