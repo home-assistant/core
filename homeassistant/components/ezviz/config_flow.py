@@ -2,11 +2,10 @@
 import logging
 from typing import Any, Dict, Optional
 
-from pyezviz.client import EzvizClient
-from requests import ConnectTimeout, HTTPError
+from pyezviz.client import EzvizClient, PyEzvizError
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow, OptionsFlow
+from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -35,14 +34,13 @@ def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
         data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
     )
 
-    return True
 
-
-class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
+@config_entries.HANDLERS.register(DOMAIN)
+class EzvizConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ezviz."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback
@@ -76,7 +74,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     validate_input, self.hass, user_input
                 )
-            except (ConnectTimeout, HTTPError):
+            except PyEzvizError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -100,7 +98,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class EzvizOptionsFlowHandler(OptionsFlow):
+class EzvizOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Canary client options."""
 
     def __init__(self, config_entry):
