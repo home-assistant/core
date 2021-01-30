@@ -47,18 +47,23 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
+LYRIC_HVAC_MODE_OFF = "Off"
+LYRIC_HVAC_MODE_HEAT = "Heat"
+LYRIC_HVAC_MODE_COOL = "Cool"
+LYRIC_HVAC_MODE_HEAT_COOL = "Auto"
+
 LYRIC_HVAC_MODES = {
-    HVAC_MODE_OFF: "Off",
-    HVAC_MODE_HEAT: "Heat",
-    HVAC_MODE_COOL: "Cool",
-    HVAC_MODE_HEAT_COOL: "Auto",
+    HVAC_MODE_OFF: LYRIC_HVAC_MODE_OFF,
+    HVAC_MODE_HEAT: LYRIC_HVAC_MODE_HEAT,
+    HVAC_MODE_COOL: LYRIC_HVAC_MODE_COOL,
+    HVAC_MODE_HEAT_COOL: LYRIC_HVAC_MODE_HEAT_COOL,
 }
 
 HVAC_MODES = {
-    "Off": HVAC_MODE_OFF,
-    "Heat": HVAC_MODE_HEAT,
-    "Cool": HVAC_MODE_COOL,
-    "Auto": HVAC_MODE_HEAT_COOL,
+    LYRIC_HVAC_MODE_OFF: HVAC_MODE_OFF,
+    LYRIC_HVAC_MODE_HEAT: HVAC_MODE_HEAT,
+    LYRIC_HVAC_MODE_COOL: HVAC_MODE_COOL,
+    LYRIC_HVAC_MODE_HEAT_COOL: HVAC_MODE_HEAT_COOL,
 }
 
 
@@ -102,13 +107,16 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         self._hvac_modes = [HVAC_MODE_OFF]
 
         # Add supported lyric thermostat features
-        if "Heat" in device.allowedModes:
+        if LYRIC_HVAC_MODE_HEAT in device.allowedModes:
             self._hvac_modes.append(HVAC_MODE_HEAT)
 
-        if "Cool" in device.allowedModes:
+        if LYRIC_HVAC_MODE_COOL in device.allowedModes:
             self._hvac_modes.append(HVAC_MODE_COOL)
 
-        if "Heat" in device.allowedModes and "Cool" in device.allowedModes:
+        if (
+            LYRIC_HVAC_MODE_HEAT in device.allowedModes
+            and LYRIC_HVAC_MODE_COOL in device.allowedModes
+        ):
             self._hvac_modes.append(HVAC_MODE_HEAT_COOL)
 
         super().__init__(
@@ -205,7 +213,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                 if device.macID == self._device.macID:
                     return (
                         device.minCoolSetpoint
-                        if "Cool" in device.allowedModes
+                        if LYRIC_HVAC_MODE_COOL in device.allowedModes
                         else device.minHeatSetpoint
                     )
 
@@ -217,7 +225,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                 if device.macID == self._device.macID:
                     return (
                         device.maxHeatSetpoint
-                        if "Heat" in device.allowedModes
+                        if LYRIC_HVAC_MODE_HEAT in device.allowedModes
                         else device.maxCoolSetpoint
                     )
 
