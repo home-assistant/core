@@ -83,6 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     @callback
     def _async_device_online(_):
+        _LOGGER.debug("Device %s is online, resuming setup", entry.title)
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][DEVICE] = None
 
         if sleep_period is None:
@@ -92,32 +93,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_update_entry(entry, data=data)
             entry.data = data
 
-        hass.loop.create_task(async_online_device_setup(hass, entry, device))
+        hass.loop.create_task(async_device_setup(hass, entry, device))
 
     if sleep_period == 0:
         # Not a sleeping device, finish setup
+        _LOGGER.debug("Setting up online device %s", entry.title)
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 await device.initialize(True)
         except (asyncio.TimeoutError, OSError) as err:
             raise ConfigEntryNotReady from err
 
-        await async_online_device_setup(hass, entry, device)
+        await async_device_setup(hass, entry, device)
     elif sleep_period is None or device_entry is None:
         # Need to get sleep info or first time sleeping device setup, wait for device
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][DEVICE] = device
         _LOGGER.debug(
-            "Setup for device %s will continue when device is online", entry.title
+            "Setup for device %s will resume when device is online", entry.title
         )
         device.subscribe_updates(_async_device_online)
     else:
         # Restore sensors for sleeping device
-        await async_offline_device_setup(hass, entry, device)
+        _LOGGER.debug("Setting up offline device %s", entry.title)
+        await async_device_setup(hass, entry, device)
 
     return True
 
 
-async def async_online_device_setup(
+async def async_device_setup(
     hass: HomeAssistant, entry: ConfigEntry, device: aioshelly.Device
 ):
     """Set up a device that is online."""
@@ -126,30 +129,15 @@ async def async_online_device_setup(
     ] = ShellyDeviceWrapper(hass, entry, device)
     await device_wrapper.async_setup()
 
-    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
-        REST
-    ] = ShellyDeviceRestWrapper(hass, device)
+    platforms = SLEEPING_PLATFORMS
 
-    _LOGGER.debug("Setting up online device %s", device_wrapper.name)
+    if not entry.data.get("sleep_period"):
+        hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
+            REST
+        ] = ShellyDeviceRestWrapper(hass, device)
+        platforms = PLATFORMS
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
-
-
-async def async_offline_device_setup(
-    hass: HomeAssistant, entry: ConfigEntry, device: aioshelly.Device
-):
-    """Set up a device that is offline (sleeping)."""
-    device_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
-        COAP
-    ] = ShellyDeviceWrapper(hass, entry, device)
-    device_wrapper.offline_setup(entry.entry_id)
-
-    _LOGGER.debug("Setting up offline device %s", device_wrapper.name)
-
-    for component in SLEEPING_PLATFORMS:
+    for component in platforms:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
@@ -253,7 +241,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     async def async_setup(self):
         """Set up the wrapper."""
         dev_reg = await device_registry.async_get_registry(self.hass)
-        model_type = self.device.settings["device"]["type"]
+        sw_version = self.device.settings["fw"] if self.device.initialized else ""
         entry = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             name=self.name,
@@ -261,15 +249,10 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             # This is duplicate but otherwise via_device can't work
             identifiers={(DOMAIN, self.mac)},
             manufacturer="Shelly",
-            model=aioshelly.MODEL_NAMES.get(model_type, model_type),
-            sw_version=self.device.settings["fw"],
+            model=aioshelly.MODEL_NAMES.get(self.model, self.model),
+            sw_version=sw_version,
         )
         self.device_id = entry.id
-        self.device.subscribe_updates(self.async_set_updated_data)
-
-    def offline_setup(self, device_id):
-        """Offline device setup."""
-        self.device_id = device_id
         self.device.subscribe_updates(self.async_set_updated_data)
 
     def shutdown(self):
@@ -330,11 +313,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         device.shutdown()
         return True
 
+    platforms = SLEEPING_PLATFORMS
+
+    if not entry.data.get("sleep_period"):
+        hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][REST] = None
+        platforms = PLATFORMS
+
     unload_ok = all(
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                for component in platforms
             ]
         )
     )
