@@ -9,6 +9,7 @@ ZEROCONF_GATEWAY = "lumi-gateway"
 ZEROCONF_ACPARTNER = "lumi-acpartner"
 
 CONF_INTERFACE = "interface"
+CONF_PROTOCOL = "protocol"
 CONF_KEY = "key"
 CONF_SID = "sid"
 
