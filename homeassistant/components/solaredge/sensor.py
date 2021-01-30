@@ -122,7 +122,7 @@ class SolarEdgeSensor(CoordinatorEntity, Entity):
 
     def __init__(self, platform_name, sensor_key, data_service):
         """Initialize the sensor."""
-        super.__init__(data_service.coordinator)
+        super().__init__(data_service.coordinator)
         self.platform_name = platform_name
         self.sensor_key = sensor_key
         self.data_service = data_service
