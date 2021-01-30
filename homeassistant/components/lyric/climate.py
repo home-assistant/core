@@ -113,12 +113,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             self._hvac_modes.append(HVAC_MODE_HEAT_COOL)
 
         super().__init__(
-            coordinator,
-            location,
-            device,
-            f"{device.macID}_thermostat",
-            device.name,
-            "mdi:thermostat",
+            coordinator, location, device, f"{device.macID}_thermostat", device.name
         )
 
     @property

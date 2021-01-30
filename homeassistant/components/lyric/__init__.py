@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from aiolyric import Lyric
 from aiolyric.objects.device import LyricDevice
@@ -151,7 +151,7 @@ class LyricEntity(CoordinatorEntity):
         device: LyricDevice,
         key: str,
         name: str,
-        icon: str,
+        icon: Optional[str],
     ) -> None:
         """Initialize the Honeywell Lyric entity."""
         super().__init__(coordinator)
