@@ -24,7 +24,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Rako from a config entry."""
-    from .bridge import RakoBridge  # pylint:import-outside-toplevel
+    from .bridge import RakoBridge  # pylint:disable=import-outside-toplevel
 
     bridge = RakoBridge(
         entry.data[CONF_HOST],
