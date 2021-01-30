@@ -24,6 +24,8 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.helpers import device_registry as dr
+
 
 from .api import ConfigEntryLyricClient, LyricLocalOAuth2Implementation
 from .config_flow import OAuth2FlowHandler
@@ -194,7 +196,7 @@ class LyricDeviceEntity(LyricEntity):
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this Honeywell Lyric instance."""
         return {
-            "connections": {(DOMAIN, self._device.macID)},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self._device.macID)},
             "manufacturer": "Honeywell",
             "model": self._device.deviceModel,
             "name": self._device.name,
