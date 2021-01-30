@@ -214,11 +214,14 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 certfile=self.hass.config.path(self.data[CONF_CERTFILE]),
                 ca_certs=self.hass.config.path(self.data[CONF_CA_CERTS]),
             )
-
+            _LOGGER.warning("past create_tls")
             await bridge.connect()
+            _LOGGER.warning("past connect")
             connected_ok = bridge.is_connected()
+            _LOGGER.warning("connected_ok: %s", connected_ok)
             # Ensure we stop trying to reconnect
             await bridge.close()
+            _LOGGER.warning("did close")
             return connected_ok
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
