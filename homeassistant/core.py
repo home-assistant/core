@@ -205,7 +205,7 @@ class CoreState(enum.Enum):
 
     def __str__(self) -> str:  # pylint: disable=invalid-str-returned
         """Return the event."""
-        return self.value  # type: ignore
+        return self.value
 
 
 class HomeAssistant:
@@ -584,7 +584,7 @@ class EventOrigin(enum.Enum):
 
     def __str__(self) -> str:  # pylint: disable=invalid-str-returned
         """Return the event."""
-        return self.value  # type: ignore
+        return self.value
 
 
 class Event:
