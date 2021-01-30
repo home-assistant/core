@@ -8,7 +8,13 @@ import voluptuous as vol
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ID, CONF_DEVICE_ID, CONF_NAME, CONF_TIMEOUT, STATE_NOT_HOME
+from homeassistant.const import (
+    ATTR_ID,
+    CONF_DEVICE_ID,
+    CONF_NAME,
+    CONF_TIMEOUT,
+    STATE_NOT_HOME,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity

@@ -5,7 +5,12 @@ import logging
 from pyenvisalink import EnvisalinkAlarmPanel
 import voluptuous as vol
 
-from homeassistant.const import CONF_CODE, CONF_HOST, CONF_TIMEOUT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_CODE,
+    CONF_HOST,
+    CONF_TIMEOUT,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform

@@ -8,7 +8,12 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_DEVICE_ID, CONTENT_TYPE_JSON, HTTP_NOT_FOUND, HTTP_UNAUTHORIZED
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONTENT_TYPE_JSON,
+    HTTP_NOT_FOUND,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity

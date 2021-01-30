@@ -5,7 +5,12 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_CURRENCY, CONF_MONITORED_VARIABLES, ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.const import (
+    CONF_CURRENCY,
+    CONF_MONITORED_VARIABLES,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 

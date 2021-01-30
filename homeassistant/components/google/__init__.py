@@ -15,7 +15,14 @@ import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
 import yaml
 
-from homeassistant.const import CONF_CLIENT_ID, CONF_DEVICE_ID, CONF_CLIENT_SECRET, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_DEVICE_ID,
+    CONF_CLIENT_SECRET,
+    CONF_ENTITIES,
+    CONF_NAME,
+    CONF_OFFSET,
+)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id

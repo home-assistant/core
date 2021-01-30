@@ -6,7 +6,12 @@ from threading import RLock
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
-from homeassistant.const import CONF_NAME, CONF_PROTOCOL, CONF_SWITCHES, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PROTOCOL,
+    CONF_SWITCHES,
+    EVENT_HOMEASSISTANT_STOP,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)

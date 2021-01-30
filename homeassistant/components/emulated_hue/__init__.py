@@ -5,7 +5,11 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.const import CONF_ENTITIES, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_ENTITIES,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
