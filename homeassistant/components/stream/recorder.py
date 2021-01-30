@@ -72,9 +72,9 @@ def recorder_save_worker(file_out: str, segments: List[Segment], container_forma
 class RecorderOutput(StreamOutput):
     """Represents HLS Output formats."""
 
-    def __init__(self, stream, timeout: int = 30) -> None:
+    def __init__(self, hass, idle_timer) -> None:
         """Initialize recorder output."""
-        super().__init__(stream, timeout)
+        super().__init__(hass, idle_timer)
         self.video_path = None
         self._segments = []
 
@@ -104,12 +104,6 @@ class RecorderOutput(StreamOutput):
         segments = [s for s in segments if s.sequence not in own_segments]
         self._segments = segments + self._segments
 
-    @callback
-    def _timeout(self, _now=None):
-        """Handle recorder timeout."""
-        self._unsub = None
-        self.cleanup()
-
     def cleanup(self):
         """Write recording and clean up."""
         _LOGGER.debug("Starting recorder worker thread")
@@ -119,6 +113,4 @@ class RecorderOutput(StreamOutput):
             args=(self.video_path, self._segments, self.format),
         )
         thread.start()
-
         self._segments = []
-        self._stream.remove_provider(self)

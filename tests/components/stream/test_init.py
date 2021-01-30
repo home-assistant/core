@@ -80,5 +80,7 @@ async def test_record_service_lookback(hass):
         await hass.services.async_call(DOMAIN, SERVICE_RECORD, data, blocking=True)
 
         assert stream_mock.called
-        stream_mock.return_value.add_provider.assert_called_once_with("recorder")
+        stream_mock.return_value.add_provider.assert_called_once_with(
+            "recorder", timeout=30
+        )
         assert hls_mock.recv.called

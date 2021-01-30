@@ -98,6 +98,7 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync):
     # Wait 5 minutes
     future = dt_util.utcnow() + timedelta(minutes=5)
     async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
 
     # Ensure playlist not accessible
     fail_response = await http_client.get(parsed_url.path)
@@ -155,9 +156,9 @@ async def test_stream_keepalive(hass):
         return cur_time
 
     with patch("av.open") as av_open, patch(
-        "homeassistant.components.stream.worker.time"
+        "homeassistant.components.stream.time"
     ) as mock_time, patch(
-        "homeassistant.components.stream.worker.STREAM_RESTART_INCREMENT", 0
+        "homeassistant.components.stream.STREAM_RESTART_INCREMENT", 0
     ):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
         mock_time.time.side_effect = time_side_effect

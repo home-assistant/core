@@ -36,23 +36,61 @@ class Segment:
     duration: float = attr.ib()
 
 
+class IdleTimer:
+    """Invokes a callback after an inactivity timeout."""
+
+    def __init__(self, hass, timeout, callback):
+        """Initialize IdleTimer."""
+        self._hass = hass
+        self._unsub = None
+        self._timeout = timeout
+        self._callback = callback
+        self.idle = False
+
+    def start(self):
+        """Start the idle timer if not already started."""
+        self.idle = False
+        if self._unsub is None:
+            self._unsub = async_call_later(self._hass, self._timeout, self._fire)
+
+    def alive(self):
+        """Reset the idle timeout."""
+        self.idle = False
+        # Reset idle timeout
+        self.clear()
+        self._unsub = async_call_later(self._hass, self._timeout, self._fire)
+
+    def clear(self):
+        """Clear and disable the timer."""
+        if self._unsub is not None:
+            self._unsub()
+
+    def _fire(self, now=None):
+        self.idle = True
+        self._unsub = None
+        self._callback()
+
+
 class StreamOutput:
     """Represents a stream output."""
 
-    def __init__(self, stream, timeout: int = 300) -> None:
+    def __init__(self, hass, idle_timer) -> None:
         """Initialize a stream output."""
-        self.idle = False
-        self.timeout = timeout
-        self._stream = stream
+        self._hass = hass
+        self._idle_timer = idle_timer
         self._cursor = None
         self._event = asyncio.Event()
         self._segments = deque(maxlen=MAX_SEGMENTS)
-        self._unsub = None
 
     @property
     def name(self) -> str:
         """Return provider name."""
         return None
+
+    @property
+    def idle(self) -> bool:
+        """Return True if the output is idle."""
+        return self._idle_timer.idle
 
     @property
     def format(self) -> str:
@@ -90,11 +128,7 @@ class StreamOutput:
 
     def get_segment(self, sequence: int = None) -> Any:
         """Retrieve a specific segment, or the whole list."""
-        self.idle = False
-        # Reset idle timeout
-        if self._unsub is not None:
-            self._unsub()
-        self._unsub = async_call_later(self._stream.hass, self.timeout, self._timeout)
+        self._idle_timer.alive()
 
         if not sequence:
             return self._segments
@@ -119,43 +153,26 @@ class StreamOutput:
 
     def put(self, segment: Segment) -> None:
         """Store output."""
-        self._stream.hass.loop.call_soon_threadsafe(self._async_put, segment)
+        self._hass.loop.call_soon_threadsafe(self._async_put, segment)
 
     @callback
     def _async_put(self, segment: Segment) -> None:
         """Store output from event loop."""
         # Start idle timeout when we start receiving data
-        if self._unsub is None:
-            self._unsub = async_call_later(
-                self._stream.hass, self.timeout, self._timeout
-            )
-
-        if segment is None:
-            self._event.set()
-            # Cleanup provider
-            if self._unsub is not None:
-                self._unsub()
-            self.cleanup()
-            return
-
+        self._idle_timer.start()
         self._segments.append(segment)
         self._event.set()
         self._event.clear()
 
-    @callback
-    def _timeout(self, _now=None):
-        """Handle stream timeout."""
-        self._unsub = None
-        if self._stream.keepalive:
-            self.idle = True
-            self._stream.check_idle()
-        else:
-            self.cleanup()
+    def finish(self):
+        """End the stream and cleanup."""
+        self._event.set()
+        self._idle_timer.clear()
+        self.cleanup()
 
     def cleanup(self):
         """Handle cleanup."""
         self._segments = deque(maxlen=MAX_SEGMENTS)
-        self._stream.remove_provider(self)
 
 
 class StreamView(HomeAssistantView):

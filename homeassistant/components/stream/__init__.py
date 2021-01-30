@@ -2,6 +2,7 @@
 import logging
 import secrets
 import threading
+import time
 from types import MappingProxyType
 
 import voluptuous as vol
@@ -21,8 +22,11 @@ from .const import (
     DOMAIN,
     MAX_SEGMENTS,
     SERVICE_RECORD,
+    STREAM_IDLE_TIMEOUT,
+    STREAM_RESTART_INCREMENT,
+    STREAM_RESTART_RESET_TIME,
 )
-from .core import PROVIDERS
+from .core import PROVIDERS, IdleTimer
 from .hls import async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
@@ -142,33 +146,39 @@ class Stream:
         # without concern about self._outputs being modified from another thread.
         return MappingProxyType(self._outputs.copy())
 
-    def add_provider(self, fmt):
+    def add_provider(self, fmt, timeout=STREAM_IDLE_TIMEOUT):
         """Add provider output stream."""
         if not self._outputs.get(fmt):
-            provider = PROVIDERS[fmt](self)
+            # Set up idle timeout
+            @callback
+            def idle_callback():
+                self._idle_timeout(fmt)
+
+            idle_timer = IdleTimer(self.hass, timeout, idle_callback)
+
+            provider = PROVIDERS[fmt](self.hass, idle_timer)
             self._outputs[fmt] = provider
         return self._outputs[fmt]
 
-    def remove_provider(self, provider):
-        """Remove provider output stream."""
-        if provider.name in self._outputs:
-            del self._outputs[provider.name]
-            self.check_idle()
+    def _idle_timeout(self, fmt):
+        """Idle timeout."""
+        provider = self._outputs.get(fmt)
+        if not provider:
+            return
+        if not self.keepalive:
+            provider.cleanup()
+            del self._outputs[fmt]
 
-        if not self._outputs:
-            self.stop()
-
-    def check_idle(self):
-        """Reset access token if all providers are idle."""
-        if all([p.idle for p in self._outputs.values()]):
-            self.access_token = None
+            # Stop the stream entirely if this was the last output
+            if not self._outputs:
+                self.stop()
+        else:
+            # Revoke the access token if this was the last active provider
+            if all([p.idle for p in self._outputs.values()]):
+                self.access_token = None
 
     def start(self):
         """Start a stream."""
-        # Keep import here so that we can import stream integration without installing reqs
-        # pylint: disable=import-outside-toplevel
-        from .worker import stream_worker
-
         if self._thread is None or not self._thread.is_alive():
             if self._thread is not None:
                 # The thread must have crashed/exited. Join to clean up the
@@ -177,23 +187,54 @@ class Stream:
             self._thread_quit = threading.Event()
             self._thread = threading.Thread(
                 name="stream_worker",
-                target=stream_worker,
-                args=(self.hass, self, self._thread_quit),
+                target=self._run_worker,
             )
             self._thread.start()
             _LOGGER.info("Started stream: %s", self.source)
+
+    def _run_worker(self):
+        """Handle consuming streams and restart keepalive streams."""
+        # Keep import here so that we can import stream integration without installing reqs
+        # pylint: disable=import-outside-toplevel
+        from .worker import stream_worker
+
+        wait_timeout = 0
+        while not self._thread_quit.wait(timeout=wait_timeout):
+            start_time = time.time()
+            stream_worker(self.hass, self, self._thread_quit)
+            if not self.keepalive or self._thread_quit.is_set():
+                break
+
+            # To avoid excessive restarts, wait before restarting
+            # As the required recovery time may be different for different setups, start
+            # with trying a short wait_timeout and increase it on each reconnection attempt.
+            # Reset the wait_timeout after the worker has been up for several minutes
+            if time.time() - start_time > STREAM_RESTART_RESET_TIME:
+                wait_timeout = 0
+            wait_timeout += STREAM_RESTART_INCREMENT
+            _LOGGER.debug(
+                "Restarting stream worker in %d seconds: %s",
+                wait_timeout,
+                self.source,
+            )
+        self._worker_finished()
+
+    def _worker_finished(self):
+        """Schedule cleanup of all outputs."""
+        self.hass.loop.call_soon_threadsafe(self._cleanup)
+
+    @callback
+    def _cleanup(self):
+        # Mark outputs as finished
+        for fmt in self.outputs:
+            self.outputs[fmt].finish()
 
     def stop(self):
         """Remove outputs and access token."""
         self._outputs = {}
         self.access_token = None
 
-        if not self.keepalive:
-            self._stop()
-
-    def _stop(self):
-        """Stop worker thread."""
-        if self._thread is not None:
+        if not self.keepalive and self._thread is not None:
             self._thread_quit.set()
             self._thread.join()
             self._thread = None
@@ -223,9 +264,8 @@ async def async_handle_record_service(hass, call):
     if recorder:
         raise HomeAssistantError(f"Stream already recording to {recorder.video_path}!")
 
-    recorder = stream.add_provider("recorder")
+    recorder = stream.add_provider("recorder", timeout=duration)
     recorder.video_path = video_path
-    recorder.timeout = duration
 
     stream.start()
 
