@@ -4,6 +4,7 @@ from datetime import timedelta
 from openerz_api.main import OpenERZConnector
 import voluptuous as vol
 
+from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
@@ -12,7 +13,6 @@ SCAN_INTERVAL = timedelta(hours=12)
 
 CONF_ZIP = "zip"
 CONF_WASTE_TYPE = "waste_type"
-CONF_NAME = "name"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

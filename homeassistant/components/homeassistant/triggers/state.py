@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_ALL
+from homeassistant.const import CONF_ATTRIBUTE, CONF_ENTITY_ID, CONF_FOR, CONF_PLATFORM, MATCH_ALL
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
@@ -21,7 +21,6 @@ from homeassistant.helpers.event import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ENTITY_ID = "entity_id"
 CONF_FROM = "from"
 CONF_TO = "to"
 

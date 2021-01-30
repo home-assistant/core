@@ -6,15 +6,13 @@ import async_timeout
 from roombapy import Roomba, RoombaConnectionError
 
 from homeassistant import exceptions
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
 
 from .const import (
     BLID,
     COMPONENTS,
     CONF_BLID,
     CONF_CONTINUOUS,
-    CONF_DELAY,
-    CONF_NAME,
     DOMAIN,
     ROOMBA_SESSION,
 )

@@ -5,7 +5,7 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_ENTITIES, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
@@ -31,7 +31,6 @@ NUMBERS_FILE = "emulated_hue_ids.json"
 
 CONF_ADVERTISE_IP = "advertise_ip"
 CONF_ADVERTISE_PORT = "advertise_port"
-CONF_ENTITIES = "entities"
 CONF_ENTITY_HIDDEN = "hidden"
 CONF_ENTITY_NAME = "name"
 CONF_EXPOSE_BY_DEFAULT = "expose_by_default"

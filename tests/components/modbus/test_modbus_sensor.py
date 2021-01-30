@@ -6,9 +6,7 @@ import pytest
 from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
-    CONF_COUNT,
     CONF_DATA_TYPE,
-    CONF_OFFSET,
     CONF_PRECISION,
     CONF_REGISTER,
     CONF_REGISTER_TYPE,
@@ -21,7 +19,7 @@ from homeassistant.components.modbus.const import (
     DATA_TYPE_UINT,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_COUNT, CONF_NAME, CONF_OFFSET
 
 from .conftest import run_base_read_test, setup_base_test
 

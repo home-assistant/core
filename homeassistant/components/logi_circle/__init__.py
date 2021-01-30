@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.components.camera import ATTR_FILENAME, CAMERA_SERVICE_SCHEMA
 from homeassistant.const import (
     ATTR_MODE,
+    CONF_API_KEY,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_MONITORED_CONDITIONS,
@@ -22,7 +23,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import config_flow
 from .const import (
-    CONF_API_KEY,
     CONF_REDIRECT_URI,
     DATA_LOGI,
     DEFAULT_CACHEDB,

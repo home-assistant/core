@@ -38,7 +38,6 @@ from . import ZWaveDeviceEntity, const
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_NAME = "name"
 DEFAULT_NAME = "Z-Wave Climate"
 
 REMOTEC = 0x5254

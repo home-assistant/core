@@ -9,11 +9,10 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import tplink
 from homeassistant.components.tplink.common import (
     CONF_DIMMER,
-    CONF_DISCOVERY,
     CONF_LIGHT,
     CONF_SWITCH,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_DISCOVERY, CONF_HOST
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_coro

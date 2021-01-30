@@ -54,8 +54,6 @@ ICON_JSON_EXTRACT = re.compile('"icon": "([^"]+)"')
 
 ATTR_MESSAGE = "message"
 
-CONF_DOMAINS = "domains"
-CONF_ENTITIES = "entities"
 CONTINUOUS_DOMAINS = ["proximity", "sensor"]
 
 DOMAIN = "logbook"

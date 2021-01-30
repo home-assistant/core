@@ -5,7 +5,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_CURRENCY, ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.const import CONF_CURRENCY, CONF_MONITORED_VARIABLES, ENERGY_KILO_WATT_HOUR, POWER_WATT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -14,7 +14,6 @@ _RESOURCE = "https://engage.efergy.com/mobile_proxy/"
 
 CONF_APPTOKEN = "app_token"
 CONF_UTC_OFFSET = "utc_offset"
-CONF_MONITORED_VARIABLES = "monitored_variables"
 CONF_SENSOR_TYPE = "type"
 
 CONF_PERIOD = "period"

@@ -11,6 +11,7 @@ from pyprof2calltree import convert
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
@@ -36,7 +37,6 @@ SERVICES = (
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 CONF_SECONDS = "seconds"
-CONF_SCAN_INTERVAL = "scan_interval"
 CONF_TYPE = "type"
 
 LOG_INTERVAL_SUB = "log_interval_subscription"

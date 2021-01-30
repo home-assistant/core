@@ -16,7 +16,7 @@ from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
-from homeassistant.const import CONF_TIMEOUT
+from homeassistant.const import CONF_COVERS, CONF_TIMEOUT
 from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
@@ -34,7 +34,6 @@ CONF_AUTH_KEY = "auth_key"
 CONF_DETECTOR = "detector"
 CONF_LABELS = "labels"
 CONF_AREA = "area"
-CONF_COVERS = "covers"
 CONF_TOP = "top"
 CONF_BOTTOM = "bottom"
 CONF_RIGHT = "right"

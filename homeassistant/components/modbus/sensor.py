@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA
 from homeassistant.const import (
+    CONF_COUNT,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OFFSET,
@@ -22,7 +23,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
-    CONF_COUNT,
     CONF_DATA_TYPE,
     CONF_HUB,
     CONF_PRECISION,

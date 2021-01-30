@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_ADDRESS,
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_PREFIX,
     CONF_PROTOCOL,
     CONF_TEMPERATURE_UNIT,
     CONF_USERNAME,
@@ -20,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.util import slugify
 
 from . import async_wait_for_elk_to_sync
-from .const import CONF_AUTO_CONFIGURE, CONF_PREFIX
+from .const import CONF_AUTO_CONFIGURE
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)

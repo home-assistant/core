@@ -6,7 +6,7 @@ import vasttrafik
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_DELAY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -20,7 +20,6 @@ ATTR_LINE = "line"
 ATTR_TRACK = "track"
 ATTRIBUTION = "Data provided by Västtrafik"
 
-CONF_DELAY = "delay"
 CONF_DEPARTURES = "departures"
 CONF_FROM = "from"
 CONF_HEADING = "heading"

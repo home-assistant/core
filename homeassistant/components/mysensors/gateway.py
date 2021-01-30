@@ -9,14 +9,13 @@ import async_timeout
 from mysensors import mysensors
 import voluptuous as vol
 
-from homeassistant.const import CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_DEVICE, CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_setup_component
 
 from .const import (
     CONF_BAUD_RATE,
-    CONF_DEVICE,
     CONF_GATEWAYS,
     CONF_NODES,
     CONF_PERSISTENCE,

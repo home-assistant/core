@@ -20,7 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_CONFIG = "config"
 CONF_DIMMER = "dimmer"
-CONF_DISCOVERY = "discovery"
 CONF_LIGHT = "light"
 CONF_STRIP = "strip"
 CONF_SWITCH = "switch"

@@ -7,7 +7,7 @@ from fixerio.exceptions import FixerioException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME, CONF_TARGET
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -16,8 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_EXCHANGE_RATE = "Exchange rate"
 ATTR_TARGET = "Target currency"
 ATTRIBUTION = "Data provided by the European Central Bank (ECB)"
-
-CONF_TARGET = "target"
 
 DEFAULT_BASE = "USD"
 DEFAULT_NAME = "Exchange rate"

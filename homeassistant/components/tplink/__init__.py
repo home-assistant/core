@@ -4,14 +4,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_DISCOVERY, CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .common import (
     ATTR_CONFIG,
     CONF_DIMMER,
-    CONF_DISCOVERY,
     CONF_LIGHT,
     CONF_STRIP,
     CONF_SWITCH,

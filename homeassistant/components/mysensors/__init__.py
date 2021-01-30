@@ -4,14 +4,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
-from homeassistant.const import CONF_OPTIMISTIC
+from homeassistant.const import CONF_DEVICE, CONF_OPTIMISTIC
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
     ATTR_DEVICES,
     CONF_BAUD_RATE,
-    CONF_DEVICE,
     CONF_GATEWAYS,
     CONF_NODES,
     CONF_PERSISTENCE,

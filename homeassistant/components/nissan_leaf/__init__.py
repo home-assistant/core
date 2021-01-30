@@ -7,7 +7,7 @@ import sys
 from pycarwings2 import CarwingsError, Session
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_OK
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, HTTP_OK
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -34,7 +34,6 @@ DATA_RANGE_AC_OFF = "range_ac_off"
 CONF_INTERVAL = "update_interval"
 CONF_CHARGING_INTERVAL = "update_interval_charging"
 CONF_CLIMATE_INTERVAL = "update_interval_climate"
-CONF_REGION = "region"
 CONF_VALID_REGIONS = ["NNA", "NE", "NCI", "NMA", "NML"]
 CONF_FORCE_MILES = "force_miles"
 

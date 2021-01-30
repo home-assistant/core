@@ -7,7 +7,7 @@ from typing import List
 
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
 from .minio_helper import MinioEventThread, create_minio_client
@@ -15,8 +15,6 @@ from .minio_helper import MinioEventThread, create_minio_client
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "minio"
-CONF_HOST = "host"
-CONF_PORT = "port"
 CONF_ACCESS_KEY = "access_key"
 CONF_SECRET_KEY = "secret_key"
 CONF_SECURE = "secure"

@@ -5,13 +5,12 @@ from temperusb.temper import TemperHandler
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME, TEMP_FAHRENHEIT
+from homeassistant.const import CONF_NAME, CONF_OFFSET, DEVICE_DEFAULT_NAME, TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SCALE = "scale"
-CONF_OFFSET = "offset"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

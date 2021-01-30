@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
+    CONF_DEVICES,
     CONF_ID,
     CONF_NAME,
     CONF_SENSORS,
@@ -23,7 +24,6 @@ DOMAIN = "numato"
 
 CONF_INVERT_LOGIC = "invert_logic"
 CONF_DISCOVER = "discover"
-CONF_DEVICES = "devices"
 CONF_DEVICE_ID = "id"
 CONF_PORTS = "ports"
 CONF_SRC_RANGE = "source_range"

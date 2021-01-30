@@ -1,12 +1,11 @@
 """Support for LCN sensors."""
 import pypck
 
-from homeassistant.const import CONF_ADDRESS, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import CONF_ADDRESS, CONF_SOURCE, CONF_UNIT_OF_MEASUREMENT
 
 from . import LcnEntity
 from .const import (
     CONF_CONNECTIONS,
-    CONF_SOURCE,
     DATA_LCN,
     LED_PORTS,
     S0_INPUTS,

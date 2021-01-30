@@ -8,7 +8,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONTENT_TYPE_JSON, HTTP_NOT_FOUND, HTTP_UNAUTHORIZED
+from homeassistant.const import CONF_DEVICE_ID, CONTENT_TYPE_JSON, HTTP_NOT_FOUND, HTTP_UNAUTHORIZED
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -22,7 +22,6 @@ ATTR_RAW = "raw"
 ATTR_TIME = "time"
 
 DEFAULT_TIMEOUT = 10
-CONF_DEVICE_ID = "device_id"
 CONF_VALUES = "values"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

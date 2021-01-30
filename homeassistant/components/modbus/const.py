@@ -11,9 +11,7 @@ CONF_REGISTER_TYPE = "register_type"
 CONF_REGISTERS = "registers"
 CONF_REVERSE_ORDER = "reverse_order"
 CONF_SCALE = "scale"
-CONF_COUNT = "count"
 CONF_PRECISION = "precision"
-CONF_OFFSET = "offset"
 CONF_COILS = "coils"
 
 # integration names
@@ -51,7 +49,6 @@ DEFAULT_SCAN_INTERVAL = 15  # seconds
 # binary_sensor.py
 CONF_INPUTS = "inputs"
 CONF_INPUT_TYPE = "input_type"
-CONF_ADDRESS = "address"
 
 # sensor.py
 # CONF_DATA_TYPE = "data_type"

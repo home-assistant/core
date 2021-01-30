@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_NAME,
+    CONF_ENTITIES,
     CONF_ICON,
     CONF_NAME,
     ENTITY_MATCH_ALL,
@@ -41,7 +42,6 @@ GROUP_ORDER = "group_order"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-CONF_ENTITIES = "entities"
 CONF_ALL = "all"
 
 ATTR_ADD_ENTITIES = "add_entities"

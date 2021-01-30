@@ -20,6 +20,7 @@ from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
     async_load_config,
 )
+from homeassistant.const import CONF_DEVICE_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
@@ -31,8 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 BT_PREFIX = "BT_"
 
 CONF_REQUEST_RSSI = "request_rssi"
-
-CONF_DEVICE_ID = "device_id"
 
 DEFAULT_DEVICE_ID = -1
 

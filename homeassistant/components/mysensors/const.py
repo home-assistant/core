@@ -4,7 +4,6 @@ from collections import defaultdict
 ATTR_DEVICES = "devices"
 
 CONF_BAUD_RATE = "baud_rate"
-CONF_DEVICE = "device"
 CONF_GATEWAYS = "gateways"
 CONF_NODES = "nodes"
 CONF_PERSISTENCE = "persistence"

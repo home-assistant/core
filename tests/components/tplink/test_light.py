@@ -20,12 +20,12 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.tplink.common import (
     CONF_DIMMER,
-    CONF_DISCOVERY,
     CONF_LIGHT,
 )
 from homeassistant.components.tplink.light import SLEEP_TIME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_DISCOVERY,
     CONF_HOST,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,

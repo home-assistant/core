@@ -20,6 +20,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.const import (
+    CONF_COVERS,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
@@ -52,8 +53,6 @@ _VALID_STATES = [
     "true",
     "false",
 ]
-
-CONF_COVERS = "covers"
 
 CONF_POSITION_TEMPLATE = "position_template"
 CONF_TILT_TEMPLATE = "tilt_template"

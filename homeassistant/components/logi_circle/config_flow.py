@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_SENSORS,
@@ -17,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-from .const import CONF_API_KEY, CONF_REDIRECT_URI, DEFAULT_CACHEDB, DOMAIN
+from .const import CONF_REDIRECT_URI, DEFAULT_CACHEDB, DOMAIN
 
 _TIMEOUT = 15  # seconds
 
