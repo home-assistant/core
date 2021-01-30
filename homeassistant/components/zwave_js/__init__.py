@@ -4,6 +4,7 @@ import logging
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import Notification
 from zwave_js_server.model.value import ValueNotification
@@ -45,6 +46,7 @@ from .entity import get_device_id
 
 LOGGER = logging.getLogger(__name__)
 CONNECT_TIMEOUT = 10
+DATA_CLIENT_TASK = "client_task"
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -85,6 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Handle websocket is (re)connected."""
         LOGGER.info("Connected to Zwave JS Server")
         connected.set()
+        async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
 
     async def async_on_disconnect() -> None:
         """Handle websocket is disconnected."""
@@ -211,7 +214,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def handle_ha_shutdown(event: Event) -> None:
         """Handle HA shutdown."""
-        await client.disconnect()
+        await disconnect_client(client, client_task)
 
     # register main event callbacks.
     unsubs = [
@@ -222,18 +225,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ]
 
     # connect and throw error if connection failed
-    asyncio.create_task(client.connect())
+    client_task = asyncio.create_task(connect_client(hass, entry, client))
     try:
         async with timeout(CONNECT_TIMEOUT):
             await connected.wait()
     except asyncio.TimeoutError as err:
         for unsub in unsubs:
             unsub()
-        await client.disconnect()
+        await disconnect_client(client, client_task)
         raise ConfigEntryNotReady from err
 
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_CLIENT: client,
+        DATA_CLIENT_TASK: client_task,
         DATA_UNSUBSCRIBE: unsubs,
     }
 
@@ -273,6 +277,55 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def connect_client(
+    hass: HomeAssistant, entry: ConfigEntry, client: ZwaveClient
+) -> None:
+    """Connect and reconnect the client."""
+    connected = False
+    error = False
+    reconnect_time = 1
+    while True:
+        try:
+            if error:
+                await asyncio.sleep(reconnect_time)
+            async with client:
+                connected = True
+                if error:
+                    LOGGER.info("Reconnected client after error")
+                    error = False
+                await client.listen()
+        except asyncio.CancelledError:
+            break
+        except BaseZwaveJSServerError as err:
+            if connected:
+                # If the client has been connected, the entry needs to be reloaded
+                # since a new driver state will be acquired on reconnect.
+                # All model instances will be replaced when the new state is acquired.
+                hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+                break
+
+            reconnect_time = min(reconnect_time * 2, 600)
+            level = logging.DEBUG
+            if not error:
+                level = logging.ERROR
+                error = True
+            LOGGER.log(
+                level,
+                "Client error: %s. Reconnecting in %s seconds",
+                err,
+                reconnect_time,
+            )
+        else:
+            break
+
+
+async def disconnect_client(client: ZwaveClient, client_task: asyncio.Task) -> None:
+    """Disconnect client."""
+    await client.disconnect()
+    client_task.cancel()
+    await client_task
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = all(
@@ -291,7 +344,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for unsub in info[DATA_UNSUBSCRIBE]:
         unsub()
 
-    await info[DATA_CLIENT].disconnect()
+    await disconnect_client(info[DATA_CLIENT], info[DATA_CLIENT_TASK])
 
     return True
 
