@@ -29,7 +29,7 @@ ezviz_set_alarm_detection_sensibility:
       description: 'Sensibility level (1-6) for device (type 0)
       or (1-100) for cameras (type 3).'
       example: '0'
-    type:
+    type_value:
       description: 'Type of detection. Options : 0 - Device or 3 - Camera'
       example: '3'
 ezviz_switch_set:
