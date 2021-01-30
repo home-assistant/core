@@ -25,7 +25,6 @@ from homeassistant.components.dyson.fan import (
     SERVICE_SET_FLOW_DIRECTION_FRONT,
     SERVICE_SET_NIGHT_MODE,
     SERVICE_SET_TIMER,
-    SPEED_LOW,
 )
 from homeassistant.components.fan import (
     ATTR_OSCILLATING,
@@ -37,6 +36,7 @@ from homeassistant.components.fan import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SPEED_HIGH,
+    SPEED_LOW,
     SPEED_MEDIUM,
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
