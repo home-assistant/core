@@ -1,7 +1,4 @@
 """Extend the basic Accessory and Bridge functions."""
-from datetime import timedelta
-from functools import partial, wraps
-from inspect import getmodule
 import logging
 
 from pyhap.accessory import Accessory, Bridge
@@ -37,11 +34,7 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import Context, callback as ha_callback, split_entity_id
-from homeassistant.helpers.event import (
-    async_track_state_change_event,
-    track_point_in_utc_time,
-)
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -60,7 +53,6 @@ from .const import (
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
-    DEBOUNCE_TIMEOUT,
     DEFAULT_LOW_BATTERY_THRESHOLD,
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
