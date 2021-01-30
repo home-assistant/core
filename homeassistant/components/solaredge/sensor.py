@@ -124,6 +124,7 @@ class SolarEdgeSensor(CoordinatorEntity, Entity):
         self.platform_name = platform_name
         self.sensor_key = sensor_key
         self.data_service = data_service
+        self.coordinator = data_service.coordinator
 
         self._state = None
 
