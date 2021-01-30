@@ -238,11 +238,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             temp = kwargs.get(ATTR_TEMPERATURE)
             _LOGGER.debug("Set temperature: %s", temp)
         try:
-            await self.coordinator.data.update_thermostat(
-                location,
-                device,
-                heatSetpoint=temp,
-            )
+            await self._update_thermostat(location, device, heatSetpoint=temp)
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
         await self.coordinator.async_refresh()
@@ -255,7 +251,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         device: LyricDevice = location.devices_dict[self._device.macID]
         _LOGGER.debug("Set hvac mode: %s", hvac_mode)
         try:
-            await self.coordinator.data.update_thermostat(
+            await self._update_thermostat(
                 location, device, mode=LYRIC_HVAC_MODES[hvac_mode]
             )
         except LYRIC_EXCEPTIONS as exception:
@@ -270,10 +266,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         device: LyricDevice = location.devices_dict[self._device.macID]
         _LOGGER.debug("Set preset mode: %s", preset_mode)
         try:
-            await self.coordinator.data.update_thermostat(
-                location,
-                device,
-                thermostatSetpointStatus=preset_mode,
+            await self._update_thermostat(
+                location, device, thermostatSetpointStatus=preset_mode
             )
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
@@ -286,11 +280,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         ]
         device: LyricDevice = location.devices_dict[self._device.macID]
         try:
-            await self.coordinator.data.update_thermostat(
-                location,
-                device,
-                nextPeriodTime=period,
-            )
+            await self._update_thermostat(location, device, nextPeriodTime=period)
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)
         await self.coordinator.async_refresh()
@@ -304,7 +294,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         ]
         device: LyricDevice = location.devices_dict[self._device.macID]
         try:
-            await self.coordinator.data.update_thermostat(
+            await self._update_thermostat(
                 location,
                 device,
                 thermostatSetpointStatus=PRESET_HOLD_UNTIL,

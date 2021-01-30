@@ -154,6 +154,7 @@ class LyricEntity(CoordinatorEntity):
     ) -> None:
         """Initialize the Honeywell Lyric entity."""
         super().__init__(coordinator)
+        self._update_thermostat = coordinator.data.update_thermostat
         self._device = device
         self._location = location
         self._key = key
