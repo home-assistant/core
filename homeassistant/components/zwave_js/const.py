@@ -18,7 +18,7 @@ DATA_UNSUBSCRIBE = "unsubs"
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
 
-ZWAVE_JS_EVENT = "zwave_js_event"
+ZWAVE_JS_EVENT = f"{DOMAIN}_event"
 ATTR_NODE_ID = "node_id"
 ATTR_HOME_ID = "home_id"
 ATTR_ENDPOINT = "endpoint"
