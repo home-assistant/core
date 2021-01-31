@@ -35,6 +35,7 @@ AUDIO_STREAM_FORMAT = "mp3"
 VIDEO_STREAM_FORMAT = "h264"
 PACKET_DURATION = 1
 SEGMENT_DURATION = math.ceil(MIN_SEGMENT_DURATION / PACKET_DURATION) * PACKET_DURATION
+PACKETS_PER_SEGMENT = SEGMENT_DURATION / PACKET_DURATION
 TEST_SEQUENCE_LENGTH = 5
 LONGER_TEST_SEQUENCE_LENGTH = 20
 OUT_OF_ORDER_PACKET_INDEX = 3
@@ -245,7 +246,7 @@ async def test_skip_out_of_order_packet(hass):
     # If skipped packet would have been the first packet of a segment, the previous
     # segment will be longer by a packet duration
     # We also may possibly lose a segment due to the shifting pts boundary
-    if OUT_OF_ORDER_PACKET_INDEX % (SEGMENT_DURATION / PACKET_DURATION) == 0:
+    if OUT_OF_ORDER_PACKET_INDEX % PACKETS_PER_SEGMENT == 0:
         # Check duration of affected segment and remove it
         longer_segment_index = int(
             (OUT_OF_ORDER_PACKET_INDEX - 1) * PACKET_DURATION / SEGMENT_DURATION
@@ -381,35 +382,12 @@ async def test_skip_missing_dts(hass):
     segments = decoded_stream.segments
     # Check sequence numbers
     assert all([segments[i].sequence == i + 1 for i in range(len(segments) - 1)])
-    # Check segment duration of segment spanning "bad" packets
-    longer_segment_index = int(
-        (bad_packet_start - 1) * PACKET_DURATION / SEGMENT_DURATION
-    )
-    # This segment length depends on the typical segment duration, the number of
-    # missing packets, and the position of the missing packets relative to the
-    # segment borders
-    longer_segment_length = int(
-        SEGMENT_DURATION
-        + MAX_MISSING_DTS
-        - 1
-        - (-bad_packet_start) % (SEGMENT_DURATION / PACKET_DURATION)
-    )
-    assert segments[longer_segment_index].duration == longer_segment_length
-    # Check number of segments (easiest to check using longer_segment_length)
+    # Check segment durations (not counting the elongated segment or the None)
     assert (
-        len(segments)
-        == int(
-            (num_packets - longer_segment_length - 1)
-            * PACKET_DURATION
-            / SEGMENT_DURATION
+        sum(
+            [segments[i].duration == SEGMENT_DURATION for i in range(len(segments) - 1)]
         )
-        + 1
-        + 1
-    )
-    del segments[longer_segment_index]
-    # Check remaining segment durations
-    assert all(
-        [segments[i].duration == SEGMENT_DURATION for i in range(len(segments) - 1)]
+        >= len(segments) - 2
     )
     assert len(decoded_stream.video_packets) == num_packets - num_bad_packets
     assert len(decoded_stream.audio_packets) == 0
@@ -516,7 +494,7 @@ async def test_pts_out_of_order(hass):
     # Create a sequence of packets with some out of order pts
     packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
     for i, _ in enumerate(packets):
-        if i % (SEGMENT_DURATION / PACKET_DURATION) == 1:
+        if i % PACKETS_PER_SEGMENT == 1:
             packets[i].pts = packets[i - 1].pts - 1
             packets[i].is_keyframe = False
 
