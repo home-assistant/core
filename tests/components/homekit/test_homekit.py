@@ -67,7 +67,6 @@ from homeassistant.util import json as json_util
 from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
 
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
-from tests.components.homekit.common import patch_debounce
 
 IP_ADDRESS = "127.0.0.1"
 
@@ -89,12 +88,14 @@ def entity_reg_fixture(hass):
     return mock_registry(hass)
 
 
+
 @pytest.fixture(name="debounce_patcher", scope="module")
 def debounce_patcher_fixture():
     """Patch debounce method."""
     patcher = patch_debounce()
     yield patcher.start()
     patcher.stop()
+
 
 
 async def test_setup_min(hass, mock_zeroconf):
@@ -485,7 +486,7 @@ async def test_homekit_entity_glob_filter(hass, mock_zeroconf):
         mock_get_acc.reset_mock()
 
 
-async def test_homekit_start(hass, hk_driver, device_reg, debounce_patcher):
+async def test_homekit_start(hass, hk_driver, device_reg):
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
 
@@ -571,6 +572,7 @@ async def test_homekit_start(hass, hk_driver, device_reg, debounce_patcher):
     assert (device_registry.CONNECTION_NETWORK_MAC, formatted_mac) in device.connections
 
     assert len(device_reg.devices) == 1
+
 
 
 async def test_homekit_start_with_a_broken_accessory(
@@ -754,6 +756,7 @@ async def test_homekit_too_many_accessories(hass, hk_driver, caplog, mock_zeroco
 
 
 async def test_homekit_finds_linked_batteries(
+
     hass, hk_driver, debounce_patcher, device_reg, entity_reg, mock_zeroconf
 ):
     """Test HomeKit start method."""
@@ -840,7 +843,9 @@ async def test_homekit_finds_linked_batteries(
 
 
 async def test_homekit_async_get_integration_fails(
+
     hass, hk_driver, debounce_patcher, device_reg, entity_reg, mock_zeroconf
+
 ):
     """Test that we continue if async_get_integration fails."""
     entry = await async_init_integration(hass)
@@ -1072,7 +1077,9 @@ def _write_data(path: str, data: Dict) -> None:
 
 
 async def test_homekit_ignored_missing_devices(
+
     hass, hk_driver, debounce_patcher, device_reg, entity_reg, mock_zeroconf
+
 ):
     """Test HomeKit handles a device in the entity registry but missing from the device registry."""
     entry = await async_init_integration(hass)
@@ -1153,7 +1160,9 @@ async def test_homekit_ignored_missing_devices(
 
 
 async def test_homekit_finds_linked_motion_sensors(
+
     hass, hk_driver, debounce_patcher, device_reg, entity_reg, mock_zeroconf
+
 ):
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
@@ -1228,7 +1237,9 @@ async def test_homekit_finds_linked_motion_sensors(
 
 
 async def test_homekit_finds_linked_humidity_sensors(
+
     hass, hk_driver, debounce_patcher, device_reg, entity_reg, mock_zeroconf
+
 ):
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
@@ -1376,9 +1387,7 @@ def _get_fixtures_base_path():
     return os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
 
-async def test_homekit_start_in_accessory_mode(
-    hass, hk_driver, device_reg, debounce_patcher
-):
+async def test_homekit_start_in_accessory_mode(hass, hk_driver, device_reg):
     """Test HomeKit start method in accessory mode."""
     entry = await async_init_integration(hass)
 

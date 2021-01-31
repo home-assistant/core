@@ -1,10 +1,12 @@
 """Component for interacting with a Lutron Caseta system."""
 import asyncio
 import logging
+import ssl
 
 from aiolip import LIP
 from aiolip.data import LIPMode
 from aiolip.protocol import LIP_BUTTON_PRESS
+
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
@@ -29,6 +31,7 @@ from .const import (
     BRIDGE_DEVICE_ID,
     BRIDGE_LEAP,
     BRIDGE_LIP,
+
     BUTTON_DEVICES,
     CONF_CA_CERTS,
     CONF_CERTFILE,
@@ -94,6 +97,8 @@ async def async_setup_entry(hass, config_entry):
     keyfile = hass.config.path(config_entry.data[CONF_KEYFILE])
     certfile = hass.config.path(config_entry.data[CONF_CERTFILE])
     ca_certs = hass.config.path(config_entry.data[CONF_CA_CERTS])
+    bridge = None
+
 
     bridge = Smartbridge.create_tls(
         hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
@@ -106,6 +111,7 @@ async def async_setup_entry(hass, config_entry):
         raise ConfigEntryNotReady
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LEAP at %s", host)
+
 
     devices = bridge.get_devices()
     bridge_device = devices[BRIDGE_DEVICE_ID]

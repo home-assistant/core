@@ -2,7 +2,9 @@
 
 This includes tests for all mock object types.
 """
+
 from datetime import timedelta
+
 from unittest.mock import Mock, patch
 
 import pytest
@@ -11,7 +13,6 @@ from homeassistant.components.homekit.accessories import (
     HomeAccessory,
     HomeBridge,
     HomeDriver,
-    debounce,
 )
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
@@ -45,7 +46,7 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
-import homeassistant.util.dt as dt_util
+
 
 from tests.common import async_fire_time_changed, async_mock_service
 
