@@ -37,6 +37,7 @@ class SlideCover(CoverEntity):
 
     def __init__(self, api, slide):
         """Initialize the cover."""
+        CoverEntity.__init__(self)
         self._api = api
         self._slide = slide
         self._id = slide["id"]

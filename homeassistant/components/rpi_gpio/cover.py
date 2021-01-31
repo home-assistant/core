@@ -88,6 +88,7 @@ class RPiGPIOCover(CoverEntity):
         invert_relay,
     ):
         """Initialize the cover."""
+        CoverEntity.__init__(self)
         self._name = name
         self._state = False
         self._relay_pin = relay_pin

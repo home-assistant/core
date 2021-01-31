@@ -72,6 +72,7 @@ class CoverGroup(GroupEntity, CoverEntity):
 
     def __init__(self, name, entities):
         """Initialize a CoverGroup entity."""
+        CoverEntity.__init__(self)
         self._name = name
         self._is_closed = False
         self._is_closing = False

@@ -86,6 +86,7 @@ class CommandCover(CoverEntity):
         timeout,
     ):
         """Initialize the cover."""
+        CoverEntity.__init__(self)
         self._hass = hass
         self._name = name
         self._state = None

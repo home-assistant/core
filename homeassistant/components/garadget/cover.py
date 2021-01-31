@@ -79,6 +79,7 @@ class GaradgetCover(CoverEntity):
 
     def __init__(self, hass, args):
         """Initialize the cover."""
+        CoverEntity.__init__(self)
         self.particle_url = "https://api.particle.io"
         self.hass = hass
         self._name = args["name"]

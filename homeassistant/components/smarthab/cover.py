@@ -39,6 +39,7 @@ class SmartHabCover(CoverEntity):
 
     def __init__(self, cover):
         """Initialize a SmartHabCover."""
+        CoverEntity.__init__(self)
         self._cover = cover
 
     @property

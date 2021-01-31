@@ -40,6 +40,7 @@ class VeraCover(VeraDevice[veraApi.VeraCurtain], CoverEntity):
     ):
         """Initialize the Vera device."""
         VeraDevice.__init__(self, vera_device, controller_data)
+        CoverEntity.__init__(self)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property

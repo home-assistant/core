@@ -88,6 +88,7 @@ class OpenGarageCover(CoverEntity):
 
     def __init__(self, name, open_garage, device_id):
         """Initialize the cover."""
+        CoverEntity.__init__(self)
         self._name = name
         self._open_garage = open_garage
         self._state = None

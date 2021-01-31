@@ -40,6 +40,7 @@ class VeluxCover(CoverEntity):
 
     def __init__(self, node):
         """Initialize the cover."""
+        CoverEntity.__init__(self)
         self.node = node
 
     @callback

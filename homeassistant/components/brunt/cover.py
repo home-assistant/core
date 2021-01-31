@@ -71,6 +71,7 @@ class BruntDevice(CoverEntity):
 
     def __init__(self, bapi, name, thing_uri):
         """Init the Brunt device."""
+        CoverEntity.__init__(self)
         self._bapi = bapi
         self._name = name
         self._thing_uri = thing_uri

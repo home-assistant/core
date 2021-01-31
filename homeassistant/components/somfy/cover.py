@@ -55,6 +55,7 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
     def __init__(self, coordinator, device_id, api, optimistic):
         """Initialize the Somfy device."""
         super().__init__(coordinator, device_id, api)
+        CoverEntity.__init__(self)
         self.categories = set(self.device.categories)
         self.optimistic = optimistic
         self._closed = None

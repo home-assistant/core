@@ -64,6 +64,7 @@ class AladdinDevice(CoverEntity):
 
     def __init__(self, acc, device):
         """Initialize the cover."""
+        CoverEntity.__init__(self)
         self._acc = acc
         self._device_id = device["device_id"]
         self._number = device["door_number"]

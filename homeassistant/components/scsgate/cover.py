@@ -50,6 +50,7 @@ class SCSGateCover(CoverEntity):
 
     def __init__(self, scs_id, name, logger, scsgate):
         """Initialize the cover."""
+        CoverEntity.__init__(self)
         self._scs_id = scs_id
         self._name = name
         self._logger = logger

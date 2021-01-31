@@ -61,6 +61,7 @@ class ZwaveRollershutter(ZWaveDeviceEntity, CoverEntity):
 
     def __init__(self, hass, values, invert_buttons, invert_percent):
         """Initialize the Z-Wave rollershutter."""
+        CoverEntity.__init__(self)
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         self._network = hass.data[DATA_NETWORK]
         self._open_id = None
@@ -146,6 +147,7 @@ class ZwaveGarageDoorBase(ZWaveDeviceEntity, CoverEntity):
     def __init__(self, values):
         """Initialize the zwave garage door."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
+        CoverEntity.__init__(self)
         self._state = None
         self.update_properties()
 
