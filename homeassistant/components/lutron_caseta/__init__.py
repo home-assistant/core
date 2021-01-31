@@ -113,13 +113,10 @@ async def async_setup_entry(hass, config_entry):
             await bridge.connect()
             timed_out = False
     except asyncio.TimeoutError:
-        _LOGGER.error(
-            "Timeout or incorrect certificate used to connect to bridge at %s.", host
-        )
+        _LOGGER.error("Timeout while trying to connect to bridge at %s.", host)
 
     if timed_out or not bridge.is_connected():
         await bridge.close()
-        _LOGGER.error("Unable to connect to bridge at %s", host)
         raise ConfigEntryNotReady
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LEAP at %s", host)

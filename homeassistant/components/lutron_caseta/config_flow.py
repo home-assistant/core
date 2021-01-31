@@ -239,7 +239,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return connected_ok
         except asyncio.TimeoutError:
             _LOGGER.error(
-                "Timeout or incorrect certificate used to connect to bridge at %s.",
+                "Timeout while trying to connect to bridge at %s.",
                 self.data[CONF_HOST],
             )
 
