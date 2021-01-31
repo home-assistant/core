@@ -34,7 +34,9 @@ SCENE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_GROUP_NAME): cv.string,
         vol.Required(ATTR_SCENE_NAME): cv.string,
-        vol.Optional(ATTR_TRANSITION, default=DEFAULT_SCENE_TRANSITION): cv.positive_int
+        vol.Optional(
+            ATTR_TRANSITION, default=DEFAULT_SCENE_TRANSITION
+        ): cv.positive_int,
     }
 )
 # How long should we sleep if the hub is busy
@@ -243,7 +245,9 @@ class HueBridge:
             LOGGER.warning("Unable to find scene %s", scene_name)
             return False
 
-        return await self.async_request_call(partial(group.set_action, scene=scene.id, transitiontime=transition))
+        return await self.async_request_call(
+            partial(group.set_action, scene=scene.id, transitiontime=transition)
+        )
 
     async def handle_unauthorized_error(self):
         """Create a new config flow when the authorization is no longer valid."""
