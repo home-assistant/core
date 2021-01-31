@@ -407,7 +407,6 @@ class MqttCover(MqttEntity, CoverEntity):
 
         This method is a coroutine.
         """
-        self._is_last_toggle_direction_open = True
         self._state = STATE_OPENING
         mqtt.async_publish(
             self.hass,
@@ -430,7 +429,6 @@ class MqttCover(MqttEntity, CoverEntity):
 
         This method is a coroutine.
         """
-        self._is_last_toggle_direction_open = False
         self._state = STATE_CLOSING
         mqtt.async_publish(
             self.hass,
