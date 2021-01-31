@@ -55,6 +55,7 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     CONF_SERIAL,
     CONF_VOLUMES,
+    COORDINATOR_SURVEILLANCE,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_USE_SSL,
     DEFAULT_VERIFY_SSL,
@@ -225,27 +226,15 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
         data = {
             "cameras": {},
-            "home_mode": {
-                "info": {},
-                "state": False,
-            },
         }
         if SynoSurveillanceStation.CAMERA_API_KEY in api.dsm.apis:
             for camera in surveillance_station.get_all_cameras():
                 data["cameras"][camera.id] = camera
 
-        if SynoSurveillanceStation.INFO_API_KEY in api.dsm.apis:
-            data["home_mode"]["info"] = await hass.async_add_executor_job(
-                surveillance_station.get_info
-            )
-            data["home_mode"]["state"] = await hass.async_add_executor_job(
-                surveillance_station.get_home_mode_status
-            )
-
         return data
 
     hass.data[DOMAIN][entry.unique_id][
-        "surveillance_station_coordinator"
+        COORDINATOR_SURVEILLANCE
     ] = DataUpdateCoordinator(
         hass,
         _LOGGER,
@@ -362,6 +351,7 @@ class SynoApi:
 
     async def async_setup(self):
         """Start interacting with the NAS."""
+        # init SynologyDSM object and login
         self.dsm = SynologyDSM(
             self._entry.data[CONF_HOST],
             self._entry.data[CONF_PORT],
@@ -374,6 +364,7 @@ class SynoApi:
         )
         await self._hass.async_add_executor_job(self.dsm.login)
 
+        # check if surveillance station is used
         self._with_surveillance_station = bool(
             self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
         )
@@ -417,12 +408,16 @@ class SynoApi:
     @callback
     def _async_setup_api_requests(self):
         """Determine if we should fetch each API, if one entity needs it."""
-        # Entities not added yet, fetch all
         _LOGGER.debug(
             "SynoAPI._async_setup_api_requests() - self._fetching_entities:%s",
             self._fetching_entities,
         )
+
+        # Entities not added yet, fetch all
         if not self._fetching_entities:
+            _LOGGER.debug(
+                "SynoAPI._async_setup_api_requests() - Entities not added yet, fetch all"
+            )
             return
 
         # Determine if we should fetch an API
@@ -439,9 +434,7 @@ class SynoApi:
             self._fetching_entities.get(SynoDSMInformation.API_KEY)
         )
         self._with_surveillance_station = bool(
-            self._fetching_entities.get(SynoSurveillanceStation.CAMERA_API_KEY)
-        ) or bool(
-            self._fetching_entities.get(SynoSurveillanceStation.HOME_MODE_API_KEY)
+            self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
         )
 
         # Reset not used API, information is not reset since it's used in device_info
@@ -670,23 +663,6 @@ class SynologyDSMCoordinatorEntity(CoordinatorEntity):
     def name(self) -> str:
         """Return the name."""
         return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit the value is expressed in."""
-        if self.entity_type in TEMP_SENSORS_KEYS:
-            return self.hass.config.units.temperature_unit
-        return self._unit
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this device."""
-        return self._class
 
     @property
     def device_state_attributes(self) -> Dict[str, any]:

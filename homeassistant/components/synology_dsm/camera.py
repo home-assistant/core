@@ -11,7 +11,13 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SynoApi, SynologyDSMCoordinatorEntity
-from .const import DOMAIN, ENTITY_ENABLE, ENTITY_NAME, SYNO_API
+from .const import (
+    COORDINATOR_SURVEILLANCE,
+    DOMAIN,
+    ENTITY_ENABLE,
+    ENTITY_NAME,
+    SYNO_API,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,13 +27,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Synology NAS cameras."""
 
-    api = hass.data[DOMAIN][entry.unique_id][SYNO_API]
+    data = hass.data[DOMAIN][entry.unique_id]
+    api = data[SYNO_API]
 
     if SynoSurveillanceStation.CAMERA_API_KEY not in api.dsm.apis:
         return
 
     # initial data fetch
-    coordinator = hass.data[DOMAIN][entry.unique_id]["surveillance_station_coordinator"]
+    coordinator = data[COORDINATOR_SURVEILLANCE]
     await coordinator.async_refresh()
 
     async_add_entities(
