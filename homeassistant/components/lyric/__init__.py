@@ -195,6 +195,6 @@ class LyricDeviceEntity(LyricEntity):
         return {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
             "manufacturer": "Honeywell",
-            "model": self._device_name,
-            "name": self._device_model,
+            "model": self._device_model,
+            "name": self._device_name,
         }
