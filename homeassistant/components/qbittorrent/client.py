@@ -1,4 +1,4 @@
-"""Some recurrend functions used in the qtorrent components."""
+"""Some common functions used in the qbittorrent components."""
 from qbittorrent.client import Client
 
 

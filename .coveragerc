@@ -723,7 +723,6 @@ omit =
     homeassistant/components/pvoutput/sensor.py
     homeassistant/components/pyload/sensor.py
     homeassistant/components/qbittorrent/sensor.py
-    homeassistant/components/qbittorrent/const.py
     homeassistant/components/qbittorrent/client.py
     homeassistant/components/qnap/sensor.py
     homeassistant/components/qrcode/image_processing.py

@@ -4,18 +4,18 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "invalid_auth": "Invalid authentication",
-            "cannot_connect": "Invalid server URL given"
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
             "user": {
                 "data": {
-                    "username": "Username",
                     "password": "Password",
-                    "url":"Server URL"
+                    "url": "URL",
+                    "username": "Username"
                 },
                 "description": "Do you want to start set up?",
-                "title": "Qbittorrent"
+                "title": "qBitTorrent"
             }
         }
     }
