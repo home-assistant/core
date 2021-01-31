@@ -226,7 +226,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             connected_ok = bridge.is_connected()
             await bridge.close()
             return connected_ok
-        except (asyncio.TimeoutError, ssl.SSLCertVerificationError):
+        except (asyncio.TimeoutError, ssl.SSLCertVerificationError, ssl.SSLError):
             _LOGGER.error(
                 "Incorrect certificate used to connect to Lutron Caseta bridge at %s.",
                 self.data[CONF_HOST],

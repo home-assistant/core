@@ -105,7 +105,7 @@ async def async_setup_entry(hass, config_entry):
         )
         with async_timeout.timeout(BRIDGE_TIMEOUT):
             await bridge.connect()
-    except (asyncio.TimeoutError, ssl.SSLCertVerificationError):
+    except (asyncio.TimeoutError, ssl.SSLCertVerificationError, ssl.SSLError):
         _LOGGER.error(
             "Incorrect certificate used to connect to Lutron Caseta bridge at %s.", host
         )
