@@ -54,7 +54,9 @@ async def async_setup_entry(hass, config_entry):
         raise ConfigEntryNotReady from err
 
     try:
-        equipment = await api.get_equipment_by_type([EquipmentType.WATER_HEATER])
+        equipment = await api.get_equipment_by_type(
+            [EquipmentType.WATER_HEATER, EquipmentType.THERMOSTAT]
+        )
     except (ClientError, GenericHTTPError, InvalidResponseFormat) as err:
         raise ConfigEntryNotReady from err
     hass.data[DOMAIN][API_CLIENT][config_entry.entry_id] = api
