@@ -211,11 +211,11 @@ class DysonFanEntity(DysonEntity, FanEntity):
         """Set the speed percentage of the fan."""
         if percentage == 0:
             self.turn_off()
-        else:
-            dyson_speed = INT_VALUE_TO_DYSON_SPEED[
-                math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
-            ]
-            self.set_dyson_speed(dyson_speed)
+            return
+        dyson_speed = INT_VALUE_TO_DYSON_SPEED[
+            math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+        ]
+        self.set_dyson_speed(dyson_speed)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set a preset mode on the fan."""
@@ -259,14 +259,6 @@ class DysonPureCoolLinkEntity(DysonFanEntity):
     def __init__(self, device):
         """Initialize the fan."""
         super().__init__(device, DysonPureCoolState)
-
-    def set_percentage(self, percentage: int) -> None:
-        """Set the speed percentage of the fan."""
-        if percentage is None:
-            # percentage not set, just turn on
-            self._device.set_configuration(fan_mode=FanMode.FAN)
-            return
-        super().set_percentage(percentage)
 
     def turn_off(self, **kwargs) -> None:
         """Turn off the fan."""
