@@ -15,9 +15,9 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    TEMP_FAHRENHEIT,
 )
 from homeassistant.components.ozw.climate import convert_units
+from homeassistant.const import TEMP_FAHRENHEIT
 
 from .common import setup_ozw
 
