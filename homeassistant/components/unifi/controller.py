@@ -309,14 +309,7 @@ class UniFiController:
             await self.api.initialize()
 
             sites = await self.api.sites()
-
-            for site in sites.values():
-                if self.site == site["name"]:
-                    self._site_name = site["desc"]
-                    break
-
             description = await self.api.site_description()
-            self._site_role = description[0]["site_role"]
 
         except CannotConnect as err:
             raise ConfigEntryNotReady from err
@@ -330,6 +323,13 @@ class UniFiController:
                 )
             )
             return False
+
+        for site in sites.values():
+            if self.site == site["name"]:
+                self._site_name = site["desc"]
+                break
+
+        self._site_role = description[0]["site_role"]
 
         # Restore clients that is not a part of active clients list.
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()

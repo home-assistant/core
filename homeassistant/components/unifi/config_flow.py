@@ -86,27 +86,18 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
         if user_input is not None:
 
+            self.config = {
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_PORT: user_input.get(CONF_PORT),
+                CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL),
+                CONF_SITE_ID: DEFAULT_SITE_ID,
+            }
+
             try:
-                self.config = {
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_PORT: user_input.get(CONF_PORT),
-                    CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL),
-                    CONF_SITE_ID: DEFAULT_SITE_ID,
-                }
-
                 controller = await get_controller(self.hass, **self.config)
-
                 sites = await controller.sites()
-                self.sites = {site["name"]: site["desc"] for site in sites.values()}
-
-                if self.reauth_config.get(CONF_SITE_ID) in self.sites:
-                    return await self.async_step_site(
-                        {CONF_SITE_ID: self.reauth_config[CONF_SITE_ID]}
-                    )
-
-                return await self.async_step_site()
 
             except AuthenticationRequired:
                 errors["base"] = "faulty_credentials"
@@ -120,6 +111,16 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                     user_input[CONF_HOST],
                 )
                 return self.async_abort(reason="unknown")
+
+            else:
+                self.sites = {site["name"]: site["desc"] for site in sites.values()}
+
+                if self.reauth_config.get(CONF_SITE_ID) in self.sites:
+                    return await self.async_step_site(
+                        {CONF_SITE_ID: self.reauth_config[CONF_SITE_ID]}
+                    )
+
+                return await self.async_step_site()
 
         host = self.config.get(CONF_HOST)
         if not host and await async_discover_unifi(self.hass):
