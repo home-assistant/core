@@ -42,27 +42,20 @@ async def async_setup_entry(
 
     for location in coordinator.data.locations:
         for device in location.devices:
+            cls_list = []
             if device.indoorTemperature:
-                entities.append(
-                    LyricIndoorTemperatureSensor(hass, coordinator, location, device)
-                )
+                cls_list.append(LyricIndoorTemperatureSensor)
             if device.outdoorTemperature:
-                entities.append(
-                    LyricOutdoorTemperatureSensor(hass, coordinator, location, device)
-                )
+                cls_list.append(LyricOutdoorTemperatureSensor)
             if device.displayedOutdoorHumidity:
-                entities.append(
-                    LyricOutdoorHumiditySensor(hass, coordinator, location, device)
-                )
+                cls_list.append(LyricOutdoorHumiditySensor)
             if device.changeableValues:
                 if device.changeableValues.nextPeriodTime:
-                    entities.append(
-                        LyricNextPeriodSensor(hass, coordinator, location, device)
-                    )
+                    cls_list.append(LyricNextPeriodSensor)
                 if device.changeableValues.thermostatSetpointStatus:
-                    entities.append(
-                        LyricSetpointStatusSensor(hass, coordinator, location, device)
-                    )
+                    cls_list.append(LyricSetpointStatusSensor)
+            for cls in cls_list:
+                entities.append(cls(hass, coordinator, location, device))
 
     async_add_entities(entities, True)
 
