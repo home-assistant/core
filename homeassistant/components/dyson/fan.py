@@ -86,7 +86,7 @@ ORDERED_DYSON_SPEEDS = [
 DYSON_SPEED_TO_INT_VALUE = {k: int(k.value) for k in ORDERED_DYSON_SPEEDS}
 INT_VALUE_TO_DYSON_SPEED = {v: k for k, v in DYSON_SPEED_TO_INT_VALUE.items()}
 
-SPEED_LIST_DYSON = [int(speed) for speed in DYSON_SPEED_TO_INT_VALUE.values()]
+SPEED_LIST_DYSON = [speed for speed in DYSON_SPEED_TO_INT_VALUE.values()]
 
 SPEED_RANGE = (
     SPEED_LIST_DYSON[0],
