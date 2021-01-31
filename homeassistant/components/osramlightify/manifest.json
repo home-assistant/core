@@ -1,5 +1,5 @@
 {
-  "disabled": "Upstream PyPi package has been removed from PyPi",
+  "disabled": "Upstream package has been removed from PyPi",
   "domain": "osramlightify",
   "name": "Osramlightify",
   "documentation": "https://www.home-assistant.io/integrations/osramlightify",
