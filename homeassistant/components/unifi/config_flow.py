@@ -254,7 +254,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_simple_options()
 
     async def async_step_simple_options(self, user_input=None):
-        """For simple Jack."""
+        """For users without advanced settings enabled."""
         if user_input is not None:
             self.options.update(user_input)
             return await self._update_options()
