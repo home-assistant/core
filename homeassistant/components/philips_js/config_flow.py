@@ -1,6 +1,6 @@
 """Config flow for Philips TV integration."""
 import logging
-from typing import Optional, TypedDict
+from typing import Any, Dict, Optional, TypedDict
 
 from haphilipsjs import ConnectionFailure, PhilipsTV
 import voluptuous as vol
@@ -40,7 +40,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     _default = {}
 
-    async def async_step_import(self, conf: dict):
+    async def async_step_import(self, conf: Dict[str, Any]):
         """Import a configuration from config.yaml."""
         for entry in self._async_current_entries():
             if entry.data[CONF_HOST] == conf[CONF_HOST]:
