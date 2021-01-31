@@ -1,4 +1,6 @@
 """Tests for the Synology DSM config flow."""
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
 from synology_dsm.exceptions import (
     SynologyDSMException,
@@ -50,7 +52,6 @@ from .consts import (
     VERIFY_SSL,
 )
 
-from tests.async_mock import MagicMock, Mock, patch
 from tests.common import MockConfigEntry
 
 

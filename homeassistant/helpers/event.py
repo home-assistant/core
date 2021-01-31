@@ -116,7 +116,9 @@ class TrackTemplateResult:
     result: Any
 
 
-def threaded_listener_factory(async_factory: Callable[..., Any]) -> CALLBACK_TYPE:
+def threaded_listener_factory(
+    async_factory: Callable[..., Any]
+) -> Callable[..., CALLBACK_TYPE]:
     """Convert an async event helper to a threaded one."""
 
     @ft.wraps(async_factory)
@@ -715,9 +717,9 @@ def async_track_template(
 
         hass.async_run_hass_job(
             job,
-            event.data.get("entity_id"),
-            event.data.get("old_state"),
-            event.data.get("new_state"),
+            event and event.data.get("entity_id"),
+            event and event.data.get("old_state"),
+            event and event.data.get("new_state"),
         )
 
     info = async_track_template_result(

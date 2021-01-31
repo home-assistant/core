@@ -1,5 +1,6 @@
 """Test ZHA API."""
 from binascii import unhexlify
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
@@ -40,8 +41,6 @@ from homeassistant.components.zha.core.const import (
 from homeassistant.core import Context
 
 from .conftest import FIXTURE_GRP_ID, FIXTURE_GRP_NAME
-
-from tests.async_mock import AsyncMock, patch
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"

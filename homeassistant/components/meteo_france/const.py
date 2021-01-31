@@ -36,6 +36,8 @@ COORDINATOR_RAIN = "coordinator_rain"
 COORDINATOR_ALERT = "coordinator_alert"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 ATTRIBUTION = "Data provided by Météo-France"
+MODEL = "Météo-France mobile API"
+MANUFACTURER = "Météo-France"
 
 CONF_CITY = "city"
 FORECAST_MODE_HOURLY = "hourly"

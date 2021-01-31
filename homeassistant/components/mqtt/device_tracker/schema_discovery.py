@@ -1,4 +1,5 @@
 """Support for tracking MQTT enabled devices identified through discovery."""
+import functools
 import logging
 
 import voluptuous as vol
@@ -20,19 +21,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .. import (
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    subscription,
-)
+from .. import subscription
 from ... import mqtt
-from ..const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_STATE_TOPIC
+from ..const import CONF_QOS, CONF_STATE_TOPIC
 from ..debug_info import log_messages
-from ..discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
+from ..mixins import (
+    MQTT_AVAILABILITY_SCHEMA,
+    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    MQTT_JSON_ATTRS_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ CONF_SOURCE_TYPE = "source_type"
 PLATFORM_SCHEMA_DISCOVERY = (
     mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
         {
-            vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
@@ -52,78 +52,42 @@ PLATFORM_SCHEMA_DISCOVERY = (
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
     )
-    .extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
+    .extend(MQTT_AVAILABILITY_SCHEMA.schema)
+    .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
 )
 
 
 async def async_setup_entry_from_discovery(hass, config_entry, async_add_entities):
     """Set up MQTT device tracker dynamically through MQTT discovery."""
 
-    async def async_discover(discovery_payload):
-        """Discover and add an MQTT device tracker."""
-        discovery_data = discovery_payload.discovery_data
-        try:
-            config = PLATFORM_SCHEMA_DISCOVERY(discovery_payload)
-            await _async_setup_entity(
-                hass, config, async_add_entities, config_entry, discovery_data
-            )
-        except Exception:
-            clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
-            raise
-
-    async_dispatcher_connect(
-        hass, MQTT_DISCOVERY_NEW.format(device_tracker.DOMAIN, "mqtt"), async_discover
+    setup = functools.partial(
+        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    )
+    await async_setup_entry_helper(
+        hass, device_tracker.DOMAIN, setup, PLATFORM_SCHEMA_DISCOVERY
     )
 
 
 async def _async_setup_entity(
-    hass, config, async_add_entities, config_entry=None, discovery_data=None
+    hass, async_add_entities, config, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT Device Tracker entity."""
     async_add_entities([MqttDeviceTracker(hass, config, config_entry, discovery_data)])
 
 
-class MqttDeviceTracker(
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    TrackerEntity,
-):
+class MqttDeviceTracker(MqttEntity, TrackerEntity):
     """Representation of a device tracker using MQTT."""
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the tracker."""
-        self.hass = hass
         self._location_name = None
-        self._sub_state = None
-        self._unique_id = config.get(CONF_UNIQUE_ID)
 
-        # Load config
-        self._setup_from_config(config)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
-        device_config = config.get(CONF_DEVICE)
-
-        MqttAttributes.__init__(self, config)
-        MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
-
-    async def async_added_to_hass(self):
-        """Subscribe to MQTT events."""
-        await super().async_added_to_hass()
-        await self._subscribe_topics()
-
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA_DISCOVERY(discovery_payload)
-        self._setup_from_config(config)
-        await self.attributes_discovery_update(config)
-        await self.availability_discovery_update(config)
-        await self.device_info_discovery_update(config)
-        await self._subscribe_topics()
-        self.async_write_ha_state()
+    @staticmethod
+    def config_schema():
+        """Return the config schema."""
+        return PLATFORM_SCHEMA_DISCOVERY
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -164,15 +128,6 @@ class MqttDeviceTracker(
                 }
             },
         )
-
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
-            self.hass, self._sub_state
-        )
-        await MqttAttributes.async_will_remove_from_hass(self)
-        await MqttAvailability.async_will_remove_from_hass(self)
-        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
 
     @property
     def icon(self):
@@ -218,11 +173,6 @@ class MqttDeviceTracker(
     def name(self):
         """Return the name of the device tracker."""
         return self._config.get(CONF_NAME)
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
 
     @property
     def source_type(self):

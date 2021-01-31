@@ -1,5 +1,7 @@
 """Test zha climate."""
 
+from unittest.mock import patch
+
 import pytest
 import zigpy.zcl.clusters
 from zigpy.zcl.clusters.hvac import Thermostat
@@ -45,8 +47,6 @@ from homeassistant.components.zha.climate import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNKNOWN
 
 from .common import async_enable_traffic, find_entity_id, send_attributes_report
-
-from tests.async_mock import patch
 
 CLIMATE = {
     1: {

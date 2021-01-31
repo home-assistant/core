@@ -1,4 +1,6 @@
 """The tests for local file camera component."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.camera import (
@@ -15,8 +17,6 @@ from homeassistant.components.demo import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 ENTITY_CAMERA = "camera.demo_camera"
 

@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 from ipaddress import ip_address
 import json
+from unittest.mock import patch
 
 from aiohttp.hdrs import CONTENT_TYPE
 import pytest
@@ -50,7 +51,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, get_test_instance_port
 
 HTTP_SERVER_PORT = get_test_instance_port()
@@ -70,16 +70,19 @@ ENTITY_IDS_BY_NUMBER = {
     "8": "media_player.lounge_room",
     "9": "fan.living_room_fan",
     "10": "fan.ceiling_fan",
-    "11": "cover.living_room_window",
-    "12": "climate.hvac",
-    "13": "climate.heatpump",
-    "14": "climate.ecobee",
-    "15": "light.no_brightness",
-    "16": "humidifier.humidifier",
-    "17": "humidifier.dehumidifier",
-    "18": "humidifier.hygrostat",
-    "19": "scene.light_on",
-    "20": "scene.light_off",
+    "11": "fan.percentage_full_fan",
+    "12": "fan.percentage_limited_fan",
+    "13": "fan.preset_only_limited_fan",
+    "14": "cover.living_room_window",
+    "15": "climate.hvac",
+    "16": "climate.heatpump",
+    "17": "climate.ecobee",
+    "18": "light.no_brightness",
+    "19": "humidifier.humidifier",
+    "20": "humidifier.dehumidifier",
+    "21": "humidifier.hygrostat",
+    "22": "scene.light_on",
+    "23": "scene.light_off",
 }
 
 ENTITY_NUMBERS_BY_ID = {v: k for k, v in ENTITY_IDS_BY_NUMBER.items()}

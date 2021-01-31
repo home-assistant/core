@@ -1,14 +1,13 @@
 """The tests for the Home Assistant HTTP component."""
 from ipaddress import ip_network
 import logging
+from unittest.mock import Mock, patch
 
 import pytest
 
 import homeassistant.components.http as http
 from homeassistant.setup import async_setup_component
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
-
-from tests.async_mock import Mock, patch
 
 
 @pytest.fixture

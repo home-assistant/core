@@ -8,3 +8,8 @@ MOTION_PLATFORMS = ["cover", "sensor"]
 KEY_GATEWAY = "gateway"
 KEY_COORDINATOR = "coordinator"
 KEY_MULTICAST_LISTENER = "multicast_listener"
+
+ATTR_WIDTH = "width"
+ATTR_ABSOLUTE_POSITION = "absolute_position"
+
+SERVICE_SET_ABSOLUTE_POSITION = "set_absolute_position"

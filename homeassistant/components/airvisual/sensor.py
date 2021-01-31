@@ -58,33 +58,57 @@ NODE_PRO_SENSORS = [
     (SENSOR_KIND_TEMPERATURE, "Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS),
 ]
 
-POLLUTANT_LEVEL_MAPPING = [
-    {"label": "Good", "icon": "mdi:emoticon-excited", "minimum": 0, "maximum": 50},
-    {"label": "Moderate", "icon": "mdi:emoticon-happy", "minimum": 51, "maximum": 100},
-    {
-        "label": "Unhealthy for sensitive groups",
-        "icon": "mdi:emoticon-neutral",
-        "minimum": 101,
-        "maximum": 150,
-    },
-    {"label": "Unhealthy", "icon": "mdi:emoticon-sad", "minimum": 151, "maximum": 200},
-    {
-        "label": "Very Unhealthy",
-        "icon": "mdi:emoticon-dead",
-        "minimum": 201,
-        "maximum": 300,
-    },
-    {"label": "Hazardous", "icon": "mdi:biohazard", "minimum": 301, "maximum": 10000},
-]
 
-POLLUTANT_MAPPING = {
-    "co": {"label": "Carbon Monoxide", "unit": CONCENTRATION_PARTS_PER_MILLION},
-    "n2": {"label": "Nitrogen Dioxide", "unit": CONCENTRATION_PARTS_PER_BILLION},
-    "o3": {"label": "Ozone", "unit": CONCENTRATION_PARTS_PER_BILLION},
-    "p1": {"label": "PM10", "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    "p2": {"label": "PM2.5", "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    "s2": {"label": "Sulfur Dioxide", "unit": CONCENTRATION_PARTS_PER_BILLION},
-}
+@callback
+def async_get_pollutant_label(symbol):
+    """Get a pollutant's label based on its symbol."""
+    if symbol == "co":
+        return "Carbon Monoxide"
+    if symbol == "n2":
+        return "Nitrogen Dioxide"
+    if symbol == "o3":
+        return "Ozone"
+    if symbol == "p1":
+        return "PM10"
+    if symbol == "p2":
+        return "PM2.5"
+    if symbol == "s2":
+        return "Sulfur Dioxide"
+    return symbol
+
+
+@callback
+def async_get_pollutant_level_info(value):
+    """Return a verbal pollutant level (and associated icon) for a numeric value."""
+    if 0 <= value <= 50:
+        return ("Good", "mdi:emoticon-excited")
+    if 51 <= value <= 100:
+        return ("Moderate", "mdi:emoticon-happy")
+    if 101 <= value <= 150:
+        return ("Unhealthy for sensitive groups", "mdi:emoticon-neutral")
+    if 151 <= value <= 200:
+        return ("Unhealthy", "mdi:emoticon-sad")
+    if 201 <= value <= 300:
+        return ("Very Unhealthy", "mdi:emoticon-dead")
+    return ("Hazardous", "mdi:biohazard")
+
+
+@callback
+def async_get_pollutant_unit(symbol):
+    """Get a pollutant's unit based on its symbol."""
+    if symbol == "co":
+        return CONCENTRATION_PARTS_PER_MILLION
+    if symbol == "n2":
+        return CONCENTRATION_PARTS_PER_BILLION
+    if symbol == "o3":
+        return CONCENTRATION_PARTS_PER_BILLION
+    if symbol == "p1":
+        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    if symbol == "p2":
+        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    if symbol == "s2":
+        return CONCENTRATION_PARTS_PER_BILLION
+    return None
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -171,22 +195,16 @@ class AirVisualGeographySensor(AirVisualEntity):
 
         if self._kind == SENSOR_KIND_LEVEL:
             aqi = data[f"aqi{self._locale}"]
-            [level] = [
-                i
-                for i in POLLUTANT_LEVEL_MAPPING
-                if i["minimum"] <= aqi <= i["maximum"]
-            ]
-            self._state = level["label"]
-            self._icon = level["icon"]
+            self._state, self._icon = async_get_pollutant_level_info(aqi)
         elif self._kind == SENSOR_KIND_AQI:
             self._state = data[f"aqi{self._locale}"]
         elif self._kind == SENSOR_KIND_POLLUTANT:
             symbol = data[f"main{self._locale}"]
-            self._state = POLLUTANT_MAPPING[symbol]["label"]
+            self._state = async_get_pollutant_label(symbol)
             self._attrs.update(
                 {
                     ATTR_POLLUTANT_SYMBOL: symbol,
-                    ATTR_POLLUTANT_UNIT: POLLUTANT_MAPPING[symbol]["unit"],
+                    ATTR_POLLUTANT_UNIT: async_get_pollutant_unit(symbol),
                 }
             )
 
