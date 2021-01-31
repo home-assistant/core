@@ -214,7 +214,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         instance.set_enable(False)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_DISABLE, async_handle_disable_service, schema=SERVICE_DISABLE_SCHEMA
+        DOMAIN,
+        SERVICE_DISABLE,
+        async_handle_disable_service,
+        schema=SERVICE_DISABLE_SCHEMA,
     )
 
     return await instance.async_db_ready
@@ -276,6 +279,7 @@ class Recorder(threading.Thread):
         self.enabled = True
 
     def set_enable(self, enable):
+        """Enables or disables recording events and states"""
         self.enabled = enable
 
     @callback
