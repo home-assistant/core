@@ -286,7 +286,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             ]
         )
         assert hyperion_client
-        await async_instances_to_clients_raw(hyperion_client.instances)
+        if hyperion_client.instances is not None:
+            await async_instances_to_clients_raw(hyperion_client.instances)
         hass.data[DOMAIN][config_entry.entry_id][CONF_ON_UNLOAD].append(
             config_entry.add_update_listener(_async_entry_updated)
         )
