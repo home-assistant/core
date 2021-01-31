@@ -17,7 +17,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==3.1.0
+HAP-python==3.2.0
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1

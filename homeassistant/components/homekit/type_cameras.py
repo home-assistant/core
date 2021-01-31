@@ -1,5 +1,4 @@
 """Class to hold all camera accessories."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -444,13 +443,10 @@ class Camera(HomeAccessory, PyhapCamera):
         """Reconfigure the stream so that it uses the given ``stream_config``."""
         return True
 
-    def get_snapshot(self, image_size):
+    async def async_get_snapshot(self, image_size):
         """Return a jpeg of a snapshot from the camera."""
         return scale_jpeg_camera_image(
-            asyncio.run_coroutine_threadsafe(
-                self.hass.components.camera.async_get_image(self.entity_id),
-                self.hass.loop,
-            ).result(),
+            await self.hass.components.camera.async_get_image(self.entity_id),
             image_size["image-width"],
             image_size["image-height"],
         )
