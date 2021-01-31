@@ -1,4 +1,5 @@
 """Test the Honeywell Lyric config flow."""
+import asyncio
 from unittest.mock import patch
 
 import pytest
@@ -27,7 +28,7 @@ async def mock_impl(hass):
         OAUTH2_AUTHORIZE,
         OAUTH2_TOKEN,
     )
-    config_flow.SomfyFlowHandler.async_register_implementation(hass, impl)
+    config_flow.OAuth2FlowHandler.async_register_implementation(hass, impl)
     return impl
 
 
@@ -111,3 +112,17 @@ async def test_full_flow(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
+
+
+async def test_abort_if_authorization_timeout(hass, mock_impl):
+    """Check Somfy authorization timeout."""
+    flow = config_flow.OAuth2FlowHandler()
+    flow.hass = hass
+
+    with patch.object(
+        mock_impl, "async_generate_authorize_url", side_effect=asyncio.TimeoutError
+    ):
+        result = await flow.async_step_user()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "authorize_url_timeout"
