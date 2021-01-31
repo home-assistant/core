@@ -231,12 +231,11 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return False
 
+        connected_ok = False
         try:
             with async_timeout.timeout(BRIDGE_TIMEOUT):
                 await bridge.connect()
             connected_ok = bridge.is_connected()
-            await bridge.close()
-            return connected_ok
         except asyncio.TimeoutError:
             _LOGGER.error(
                 "Timeout while trying to connect to bridge at %s.",
@@ -244,4 +243,4 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         await bridge.close()
-        return False
+        return connected_ok
