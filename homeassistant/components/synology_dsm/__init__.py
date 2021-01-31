@@ -552,10 +552,10 @@ class SynologyDSMBaseEntity:
         self._api_key = entity_type.split(":")[0]
         self.entity_type = entity_type.split(":")[-1]
         self._name = f"{api.network.hostname} {entity_info[ENTITY_NAME]}"
-        self._class = entity_info.get(ENTITY_CLASS)
-        self._enable_default = entity_info.get(ENTITY_ENABLE, False)
-        self._icon = entity_info.get(ENTITY_ICON)
-        self._unit = entity_info.get(ENTITY_UNIT)
+        self._class = entity_info[ENTITY_CLASS]
+        self._enable_default = entity_info[ENTITY_ENABLE]
+        self._icon = entity_info[ENTITY_ICON]
+        self._unit = entity_info[ENTITY_UNIT]
         self._unique_id = f"{self._api.information.serial}_{entity_type}"
 
     @property
