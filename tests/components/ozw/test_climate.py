@@ -1,5 +1,6 @@
 """Test Z-Wave Multi-setpoint Climate entities."""
-from homeassistant.components.climate import ATTR_TEMPERATURE, convert_units
+from homeassistant.components.climate import ATTR_TEMPERATURE
+from homeassistant.components.ozw.climate import convert_units
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
