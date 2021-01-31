@@ -68,25 +68,25 @@ SET_DYSON_SPEED_SCHEMA = {
 }
 
 
-PRESET_MODE_AUTO = "AUTO"
+PRESET_MODE_AUTO = "auto"
 PRESET_MODES = [PRESET_MODE_AUTO]
 
 ORDERED_DYSON_SPEEDS = [
-    FanSpeed.FAN_SPEED_1.value,
-    FanSpeed.FAN_SPEED_2.value,
-    FanSpeed.FAN_SPEED_3.value,
-    FanSpeed.FAN_SPEED_4.value,
-    FanSpeed.FAN_SPEED_5.value,
-    FanSpeed.FAN_SPEED_6.value,
-    FanSpeed.FAN_SPEED_7.value,
-    FanSpeed.FAN_SPEED_8.value,
-    FanSpeed.FAN_SPEED_9.value,
-    FanSpeed.FAN_SPEED_10.value,
+    FanSpeed.FAN_SPEED_1,
+    FanSpeed.FAN_SPEED_2,
+    FanSpeed.FAN_SPEED_3,
+    FanSpeed.FAN_SPEED_4,
+    FanSpeed.FAN_SPEED_5,
+    FanSpeed.FAN_SPEED_6,
+    FanSpeed.FAN_SPEED_7,
+    FanSpeed.FAN_SPEED_8,
+    FanSpeed.FAN_SPEED_9,
+    FanSpeed.FAN_SPEED_10,
 ]
-DYSON_SPEED_TO_INT_VALUE = {k: int(k) for k in ORDERED_DYSON_SPEEDS}
+DYSON_SPEED_TO_INT_VALUE = {k: int(k.value) for k in ORDERED_DYSON_SPEEDS}
 INT_VALUE_TO_DYSON_SPEED = {v: k for k, v in DYSON_SPEED_TO_INT_VALUE.items()}
 
-SPEED_LIST_DYSON = list(DYSON_SPEED_TO_INT_VALUE.values())
+SPEED_LIST_DYSON = [int(speed) for speed in DYSON_SPEED_TO_INT_VALUE.values()]
 
 SPEED_RANGE = (
     SPEED_LIST_DYSON[0],
@@ -152,9 +152,7 @@ class DysonFanEntity(DysonEntity, FanEntity):
         """Return the current speed percentage."""
         if self.auto_mode:
             return None
-        return INT_VALUE_TO_DYSON_SPEED[
-            ranged_value_to_percentage(SPEED_RANGE, int(self._device.state.speed))
-        ]
+        return ranged_value_to_percentage(SPEED_RANGE, int(self._device.state.speed))
 
     @property
     def preset_modes(self):
