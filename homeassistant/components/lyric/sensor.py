@@ -232,6 +232,7 @@ class LyricSetpointStatusSensor(LyricSensor):
             f"{device.macID}_setpoint_status",
             "Setpoint Status",
             "mdi:thermostat",
+            None,
         )
 
     @property
