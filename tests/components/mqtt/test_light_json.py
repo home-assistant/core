@@ -1014,6 +1014,18 @@ async def test_invalid_values(hass, mqtt_mock):
     assert state.attributes.get("white_value") == 255
     assert state.attributes.get("color_temp") == 100
 
+    # Empty color value
+    async_fire_mqtt_message(
+        hass,
+        "test_light_rgb",
+        '{"state":"ON",' '"color":{}}',
+    )
+
+    # Color should not have changed
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == (255, 255, 255)
+
     # Bad HS color values
     async_fire_mqtt_message(
         hass,
