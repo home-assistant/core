@@ -208,8 +208,8 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         """Identify max_temp in Lyric API or defaults if not available."""
         device: LyricDevice = self.device
         if LYRIC_HVAC_MODE_HEAT in device.allowedModes:
-            device.maxHeatSetpoint
-        device.maxCoolSetpoint
+            return device.maxHeatSetpoint
+        return device.maxCoolSetpoint
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
