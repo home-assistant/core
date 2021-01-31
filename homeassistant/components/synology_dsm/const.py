@@ -37,6 +37,7 @@ DEFAULT_PORT_SSL = 5001
 DEFAULT_SCAN_INTERVAL = 15  # min
 DEFAULT_TIMEOUT = 10  # sec
 
+ENTITY_UNIT_LOAD = "load"
 
 ENTITY_NAME = "name"
 ENTITY_UNIT = "unit"
@@ -95,50 +96,50 @@ STORAGE_DISK_BINARY_SENSORS = {
 # Sensors
 UTILISATION_SENSORS = {
     f"{SynoCoreUtilization.API_KEY}:cpu_other_load": {
-        ENTITY_NAME: "CPU Load (Other)",
+        ENTITY_NAME: "CPU Utilization (Other)",
         ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_user_load": {
-        ENTITY_NAME: "CPU Load (User)",
+        ENTITY_NAME: "CPU Utilization (User)",
         ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_system_load": {
-        ENTITY_NAME: "CPU Load (System)",
+        ENTITY_NAME: "CPU Utilization (System)",
         ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_total_load": {
-        ENTITY_NAME: "CPU Load (Total)",
+        ENTITY_NAME: "CPU Utilization (Total)",
         ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_1min_load": {
-        ENTITY_NAME: "CPU Load (1 min)",
-        ENTITY_UNIT: PERCENTAGE,
+        ENTITY_NAME: "CPU Load Averarge (1 min)",
+        ENTITY_UNIT: ENTITY_UNIT_LOAD,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_5min_load": {
-        ENTITY_NAME: "CPU Load (5 min)",
-        ENTITY_UNIT: PERCENTAGE,
+        ENTITY_NAME: "CPU Load Averarge (5 min)",
+        ENTITY_UNIT: ENTITY_UNIT_LOAD,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_15min_load": {
-        ENTITY_NAME: "CPU Load (15 min)",
-        ENTITY_UNIT: PERCENTAGE,
+        ENTITY_NAME: "CPU Load Averarge (15 min)",
+        ENTITY_UNIT: ENTITY_UNIT_LOAD,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
