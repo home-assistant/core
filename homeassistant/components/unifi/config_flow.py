@@ -215,7 +215,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         # pylint: disable=no-member
         self.context["title_placeholders"] = {
             CONF_HOST: self.config[CONF_HOST],
-            CONF_SITE_ID: "default",
+            CONF_SITE_ID: DEFAULT_SITE_ID,
         }
 
         port = MODEL_PORTS.get(model_description)
