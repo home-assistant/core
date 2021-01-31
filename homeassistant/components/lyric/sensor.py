@@ -140,7 +140,7 @@ class LyricOutdoorTemperatureSensor(LyricSensor):
             device,
             f"{device.macID}_outdoor_temperature",
             "Outdoor Temperature",
-            "mdi:thermometer",
+            None,
             DEVICE_CLASS_TEMPERATURE,
             hass.config.units.temperature_unit,
         )
@@ -169,7 +169,7 @@ class LyricOutdoorHumiditySensor(LyricSensor):
             device,
             f"{device.macID}_outdoor_humidity",
             "Outdoor Humidity",
-            "mdi:water-percent",
+            None,
             DEVICE_CLASS_HUMIDITY,
             "%",
         )
@@ -198,7 +198,7 @@ class LyricNextPeriodSensor(LyricSensor):
             device,
             f"{device.macID}_next_period_time",
             "Next Period Time",
-            "mdi:clock",
+            None,
             DEVICE_CLASS_TIMESTAMP,
         )
 
