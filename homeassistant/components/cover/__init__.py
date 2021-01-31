@@ -257,7 +257,6 @@ class CoverEntity(Entity):
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        self._is_last_toggle_direction_open = True
         await self.hass.async_add_executor_job(ft.partial(self.open_cover, **kwargs))
 
     def close_cover(self, **kwargs: Any) -> None:
@@ -266,7 +265,6 @@ class CoverEntity(Entity):
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
-        self._is_last_toggle_direction_open = False
         await self.hass.async_add_executor_job(ft.partial(self.close_cover, **kwargs))
 
     def toggle(self, **kwargs: Any) -> None:
@@ -285,17 +283,7 @@ class CoverEntity(Entity):
 
     async def async_toggle(self, **kwargs):
         """Toggle the entity."""
-        if SUPPORT_STOP | self.supported_features and (
-            self.is_closing or self.is_opening
-        ):
-            await self.async_stop_cover(**kwargs)
-        elif self.is_closed:
-            await self.async_open_cover(**kwargs)
-        else:
-            if self.is_last_toggle_direction_open:
-                await self.async_close_cover(**kwargs)
-            else:
-                await self.async_open_cover(**kwargs)
+        await self.hass.async_add_executor_job(ft.partial(self.toggle, **kwargs))
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
@@ -358,10 +346,18 @@ class CoverEntity(Entity):
 
     async def async_toggle_tilt(self, **kwargs):
         """Toggle the entity."""
-        if self.current_cover_tilt_position == 0:
-            await self.async_open_cover_tilt(**kwargs)
+        await self.hass.async_add_executor_job(ft.partial(self.toggle_tilt, **kwargs))
+
+    def async_write_ha_state(self) -> None:
+        """Set last toggle direction when writing ha state."""
+        super().async_write_ha_state()
+        if self.state == STATE_OPENING:
+            self._is_last_toggle_direction_open = True
+        elif self.state == STATE_CLOSING:
+            self._is_last_toggle_direction_open = False
         else:
-            await self.async_close_cover_tilt(**kwargs)
+            # do nothing on all other states
+            pass
 
 
 class CoverDevice(CoverEntity):
