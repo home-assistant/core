@@ -427,7 +427,7 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.attributes["icon"] == hyperion_light.ICON_EXTERNAL_SOURCE
-    assert entity_state.attributes["effect"] == effect
+    assert entity_state.attributes["effect"] == const.KEY_COMPONENTID_TO_NAME[effect]
 
     # On (=), 100% (=), "Warm Blobs" (!), [0,255,255] (=)
     effect = "Warm Blobs"
@@ -636,7 +636,10 @@ async def test_light_async_updates_from_hyperion_client(
     assert entity_state
     assert entity_state.attributes["icon"] == hyperion_light.ICON_EXTERNAL_SOURCE
     assert entity_state.attributes["hs_color"] == (0.0, 0.0)
-    assert entity_state.attributes["effect"] == const.KEY_COMPONENTID_V4L
+    assert (
+        entity_state.attributes["effect"]
+        == const.KEY_COMPONENTID_TO_NAME[const.KEY_COMPONENTID_V4L]
+    )
 
     # Update priorities (Effect)
     effect = "foo"
@@ -682,7 +685,10 @@ async def test_light_async_updates_from_hyperion_client(
     assert entity_state
     assert entity_state.attributes["effect_list"] == [
         hyperion_light.KEY_EFFECT_SOLID
-    ] + const.KEY_COMPONENTID_EXTERNAL_SOURCES + [
+    ] + [
+        const.KEY_COMPONENTID_TO_NAME[component]
+        for component in const.KEY_COMPONENTID_EXTERNAL_SOURCES
+    ] + [
         effect[const.KEY_NAME] for effect in effects
     ]
 
@@ -1247,3 +1253,45 @@ async def test_lights_can_be_enabled(hass: HomeAssistantType) -> None:
 
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entity_state
+
+
+async def test_deprecated_effect_names(caplog, hass: HomeAssistantType) -> None:  # type: ignore[no-untyped-def]
+    """Test deprecated effects function and issue a warning."""
+    client = create_mock_client()
+    client.async_send_clear = AsyncMock(return_value=True)
+    client.async_send_set_component = AsyncMock(return_value=True)
+
+    await setup_test_config_entry(hass, hyperion_client=client)
+
+    for component in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_EFFECT: component},
+            blocking=True,
+        )
+        assert "Use of Hyperion effect '%s' is deprecated" % component in caplog.text
+
+        # Simulate a state callback from Hyperion.
+        client.visible_priority = {
+            const.KEY_COMPONENTID: component,
+        }
+        call_registered_callback(client, "priorities-update")
+
+        entity_state = hass.states.get(TEST_ENTITY_ID_1)
+        assert entity_state
+        assert (
+            entity_state.attributes["effect"]
+            == const.KEY_COMPONENTID_TO_NAME[component]
+        )
+
+
+async def test_deprecated_effect_names_not_in_effect_list(
+    hass: HomeAssistantType,
+) -> None:
+    """Test deprecated effects are not in shown effect list."""
+    await setup_test_config_entry(hass)
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
+    assert entity_state
+    for component in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+        assert component not in entity_state.attributes["effect_list"]

@@ -5,13 +5,20 @@ from unittest.mock import AsyncMock, call, patch
 from hyperion.const import (
     KEY_COMPONENT,
     KEY_COMPONENTID_ALL,
+    KEY_COMPONENTID_BLACKBORDER,
+    KEY_COMPONENTID_BOBLIGHTSERVER,
+    KEY_COMPONENTID_FORWARDER,
+    KEY_COMPONENTID_GRABBER,
+    KEY_COMPONENTID_LEDDEVICE,
+    KEY_COMPONENTID_SMOOTHING,
+    KEY_COMPONENTID_TO_NAME,
+    KEY_COMPONENTID_V4L,
     KEY_COMPONENTSTATE,
     KEY_STATE,
 )
 
 from homeassistant.components.hyperion import get_hyperion_device_id
 from homeassistant.components.hyperion.const import (
-    COMPONENT_TO_NAME,
     DOMAIN,
     HYPERION_MANUFACTURER_NAME,
     HYPERION_MODEL_NAME,
@@ -157,6 +164,7 @@ async def test_device_info(hass: HomeAssistantType) -> None:
             f"{TYPE_HYPERION_COMPONENT_SWITCH_BASE}_{name}",
             f"{TEST_SWITCH_COMPONENT_BASE_ENTITY_ID}_{name}",
         )
+
     await setup_test_config_entry(hass, hyperion_client=client)
     assert hass.states.get(TEST_SWITCH_COMPONENT_ALL_ENTITY_ID) is not None
 
