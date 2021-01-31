@@ -40,7 +40,7 @@ DEFAULT_NAME = "REST Switch"
 DEFAULT_TIMEOUT = 10
 DEFAULT_VERIFY_SSL = True
 
-SUPPORT_REST_METHODS = ["post", "put"]
+SUPPORT_REST_METHODS = ["post", "put", "patch"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
