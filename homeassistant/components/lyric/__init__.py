@@ -44,7 +44,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["climate"]
+PLATFORMS = ["climate", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
