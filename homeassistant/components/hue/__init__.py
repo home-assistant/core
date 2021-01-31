@@ -18,8 +18,10 @@ from .bridge import (
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
+    CONF_SCENE_TRANSITION,
     DEFAULT_ALLOW_HUE_GROUPS,
     DEFAULT_ALLOW_UNREACHABLE,
+    DEFAULT_SCENE_TRANSITION,
     DOMAIN,
 )
 
@@ -97,6 +99,20 @@ async def async_setup_entry(
         }
         data = entry.data.copy()
         data.pop(CONF_ALLOW_HUE_GROUPS)
+        hass.config_entries.async_update_entry(entry, data=data, options=options)
+
+    # Migrate default_scene_transition from config entry data to config entry options
+    if (
+        CONF_SCENE_TRANSITION not in entry.options
+        and CONF_SCENE_TRANSITION in entry.data
+        and entry.data[CONF_SCENE_TRANSITION] != DEFAULT_SCENE_TRANSITION
+    ):
+        options = {
+            **entry.options,
+            CONF_SCENE_TRANSITION: entry.data[CONF_SCENE_TRANSITION],
+        }
+        data = entry.data.copy()
+        data.pop(CONF_SCENE_TRANSITION)
         hass.config_entries.async_update_entry(entry, data=data, options=options)
 
     bridge = HueBridge(hass, entry)
