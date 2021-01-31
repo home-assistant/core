@@ -765,7 +765,7 @@ hole==0.5.1
 holidays==0.10.4
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210127.5
+home-assistant-frontend==20210127.6
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -878,9 +878,6 @@ life360==4.1.1
 
 # homeassistant.components.lifx_legacy
 liffylights==0.9.4
-
-# homeassistant.components.osramlightify
-lightify==1.0.7.2
 
 # homeassistant.components.lightwave
 lightwave==0.19
@@ -1708,7 +1705,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.37
+pysonos==0.0.40
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1964,7 +1961,7 @@ roombapy==1.6.2
 roonapi==0.0.31
 
 # homeassistant.components.rova
-rova==0.1.0
+rova==0.2.1
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
