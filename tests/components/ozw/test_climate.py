@@ -1,5 +1,5 @@
 """Test Z-Wave Multi-setpoint Climate entities."""
-from homeassistant.components.climate import ATTR_TEMPERATURE
+from homeassistant.components.climate import ATTR_TEMPERATURE, convert_units
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -328,4 +328,3 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     assert "does not support setting a mode" in caplog.text
 
     assert convert_units("F") == TEMP_FAHRENHEIT
-    
