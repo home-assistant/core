@@ -2,9 +2,7 @@
 import asyncio
 import logging
 import os
-import ssl
 
-import async_timeout
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, async_pair
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
@@ -17,7 +15,6 @@ from homeassistant.core import callback
 from .const import (
     ABORT_REASON_ALREADY_CONFIGURED,
     ABORT_REASON_CANNOT_CONNECT,
-    BRIDGE_TIMEOUT,
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
@@ -53,8 +50,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize a Lutron Caseta flow."""
         self.data = {}
         self.lutron_id = None
-        self.tls_assets_validated = False
-        self.attempted_tls_validation = False
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -86,7 +81,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(self, discovery_info):
         """Handle a flow initialized by homekit discovery."""
-        await self.async_step_zeroconf(discovery_info)
+        return await self.async_step_zeroconf(discovery_info)
 
     async def async_step_link(self, user_input=None):
         """Handle pairing with the hub."""
@@ -97,16 +92,11 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._configure_tls_assets()
 
-        if (
-            not self.attempted_tls_validation
-            and await self.hass.async_add_executor_job(self._tls_assets_exist)
-            and await self.async_validate_connectable_bridge_config()
-        ):
-            self.tls_assets_validated = True
-        self.attempted_tls_validation = True
-
         if user_input is not None:
-            if self.tls_assets_validated:
+            if (
+                await self.hass.async_add_executor_job(self._tls_assets_exist)
+                and await self.async_validate_connectable_bridge_config()
+            ):
                 # If we previous paired and the tls assets already exist,
                 # we do not need to go though pairing again.
                 return self.async_create_entry(title=self.bridge_id, data=self.data)
@@ -217,7 +207,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_validate_connectable_bridge_config(self):
         """Check if we can connect to the bridge with the current config."""
 
-        bridge = None
         try:
             bridge = Smartbridge.create_tls(
                 hostname=self.data[CONF_HOST],
@@ -225,23 +214,16 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 certfile=self.hass.config.path(self.data[CONF_CERTFILE]),
                 ca_certs=self.hass.config.path(self.data[CONF_CA_CERTS]),
             )
-        except ssl.SSLError:
-            _LOGGER.error(
-                "Invalid certificate used to connect to bridge at %s.",
+
+            await bridge.connect()
+            if not bridge.is_connected():
+                return False
+
+            await bridge.close()
+            return True
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Unknown exception while checking connectivity to bridge %s",
                 self.data[CONF_HOST],
             )
             return False
-
-        connected_ok = False
-        try:
-            with async_timeout.timeout(BRIDGE_TIMEOUT):
-                await bridge.connect()
-            connected_ok = bridge.is_connected()
-        except asyncio.TimeoutError:
-            _LOGGER.error(
-                "Timeout while trying to connect to bridge at %s.",
-                self.data[CONF_HOST],
-            )
-
-        await bridge.close()
-        return connected_ok
