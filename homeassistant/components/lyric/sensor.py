@@ -111,7 +111,7 @@ class LyricIndoorTemperatureSensor(LyricSensor):
             device,
             f"{device.macID}_indoor_temperature",
             "Indoor Temperature",
-            "mdi:thermometer",
+            None,
             DEVICE_CLASS_TEMPERATURE,
             hass.config.units.temperature_unit,
         )
