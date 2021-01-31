@@ -87,21 +87,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client_id = hass.data[DOMAIN][CONF_CLIENT_ID]
     lyric: Lyric = Lyric(client, client_id)
 
-    async with async_timeout.timeout(60):
-        try:
+    try:
+        async with async_timeout.timeout(60):
             await lyric.get_locations()
-        except LYRIC_EXCEPTIONS as exception:
-            _LOGGER.warning(exception)
-            raise ConfigEntryNotReady from exception
+    except (*LYRIC_EXCEPTIONS, TimeoutError) as exception:
+        _LOGGER.warning(exception)
+        raise ConfigEntryNotReady from exception
 
     async def async_update_data() -> Lyric:
         """Fetch data from Lyric."""
-        async with async_timeout.timeout(60):
-            try:
+        try:
+            async with async_timeout.timeout(60):
                 await lyric.get_locations()
-            except LYRIC_EXCEPTIONS as exception:
-                raise UpdateFailed(exception) from exception
             return lyric
+        except (*LYRIC_EXCEPTIONS, TimeoutError) as exception:
+            raise UpdateFailed(exception) from exception
 
     coordinator = DataUpdateCoordinator(
         hass,
