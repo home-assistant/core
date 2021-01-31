@@ -65,6 +65,7 @@ class SomfyShade(RestoreEntity, CoverEntity):
         device_class=DEVICE_CLASS_WINDOW,
     ):
         """Initialize the cover."""
+        CoverEntity.__init__(self)
         self.somfy_mylink = somfy_mylink
         self._target_id = target_id
         self._name = name

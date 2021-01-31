@@ -65,6 +65,7 @@ class DemoCover(CoverEntity):
         supported_features=None,
     ):
         """Initialize the cover."""
+        CoverEntity.__init__(self)
         self.hass = hass
         self._unique_id = unique_id
         self._name = name
