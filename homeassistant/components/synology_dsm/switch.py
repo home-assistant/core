@@ -1,4 +1,5 @@
 """Support for Synology DSM switch."""
+import logging
 from typing import Dict
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
@@ -7,8 +8,10 @@ from homeassistant.components.switch import ToggleEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import SynoApi, SynologyDSMEntity
+from . import SynoApi, SynologyDSMDispatcherEntity
 from .const import DOMAIN, SURVEILLANCE_SWITCH, SYNO_API
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -33,7 +36,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class SynoDSMSurveillanceHomeModeToggle(SynologyDSMEntity, ToggleEntity):
+class SynoDSMSurveillanceHomeModeToggle(SynologyDSMDispatcherEntity, ToggleEntity):
     """Representation a Synology Surveillance Station Home Mode toggle."""
 
     def __init__(
@@ -62,16 +65,28 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMEntity, ToggleEntity):
 
     async def async_update(self):
         """Update the toggle state."""
+        _LOGGER.debug(
+            "SynoDSMSurveillanceHomeModeToggle.async_update(%s)",
+            self._api.information.serial,
+        )
         self._state = await self.hass.async_add_executor_job(
             self._api.surveillance_station.get_home_mode_status
         )
 
     def turn_on(self, **kwargs) -> None:
         """Turn on Home mode."""
+        _LOGGER.debug(
+            "SynoDSMSurveillanceHomeModeToggle.turn_on(%s)",
+            self._api.information.serial,
+        )
         self._api.surveillance_station.set_home_mode(True)
 
     def turn_off(self, **kwargs) -> None:
         """Turn off Home mode."""
+        _LOGGER.debug(
+            "SynoDSMSurveillanceHomeModeToggle.turn_off(%s)",
+            self._api.information.serial,
+        )
         self._api.surveillance_station.set_home_mode(False)
 
     @property
