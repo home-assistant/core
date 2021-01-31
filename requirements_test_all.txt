@@ -678,7 +678,7 @@ pybotvac==0.0.20
 pycfdns==1.2.1
 
 # homeassistant.components.cast
-pychromecast==7.7.2
+pychromecast==8.0.0
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.4
