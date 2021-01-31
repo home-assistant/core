@@ -71,7 +71,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 data = {**user_input, "system": system}
 
-                return self.async_create_entry(title=system["name"], data=data)
+                return self.async_create_entry(
+                    title=f"{system['name']} ({system['serialnumber']})", data=data
+                )
 
         schema = vol.Schema(
             {
