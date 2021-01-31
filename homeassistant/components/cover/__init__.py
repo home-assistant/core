@@ -167,6 +167,15 @@ async def async_unload_entry(hass, entry):
 class CoverEntity(Entity):
     """Representation of a cover."""
 
+    def __init__(self):
+        """Initialize the cover."""
+        self._is_last_toggle_direction_open = True
+
+    @property
+    def is_last_toggle_direction_open(self):
+        """State for last toggle direction."""
+        return self._is_last_toggle_direction_open
+
     @property
     def current_cover_position(self):
         """Return current position of cover.
@@ -248,6 +257,7 @@ class CoverEntity(Entity):
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
+        self._is_last_toggle_direction_open = True
         await self.hass.async_add_executor_job(ft.partial(self.open_cover, **kwargs))
 
     def close_cover(self, **kwargs: Any) -> None:
@@ -256,21 +266,36 @@ class CoverEntity(Entity):
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
+        self._is_last_toggle_direction_open = False
         await self.hass.async_add_executor_job(ft.partial(self.close_cover, **kwargs))
 
     def toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""
-        if self.is_closed:
+        if SUPPORT_STOP | self.supported_features and (
+            self.is_closing or self.is_opening
+        ):
+            self.stop_cover(**kwargs)
+        elif self.is_closed:
             self.open_cover(**kwargs)
         else:
-            self.close_cover(**kwargs)
+            if self.is_last_toggle_direction_open:
+                self.close_cover(**kwargs)
+            else:
+                self.open_cover(**kwargs)
 
     async def async_toggle(self, **kwargs):
         """Toggle the entity."""
-        if self.is_closed:
+        if SUPPORT_STOP | self.supported_features and (
+            self.is_closing or self.is_opening
+        ):
+            await self.async_stop_cover(**kwargs)
+        elif self.is_closed:
             await self.async_open_cover(**kwargs)
         else:
-            await self.async_close_cover(**kwargs)
+            if self.is_last_toggle_direction_open:
+                await self.async_close_cover(**kwargs)
+            else:
+                await self.async_open_cover(**kwargs)
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""

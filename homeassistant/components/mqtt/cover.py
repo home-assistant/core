@@ -202,12 +202,12 @@ class MqttCover(MqttEntity, CoverEntity):
         """Initialize the cover."""
         self._position = None
         self._state = None
-        self._is_toggle_direction_open = False
 
         self._optimistic = None
         self._tilt_value = None
         self._tilt_optimistic = None
 
+        CoverEntity.__init__(self)
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
@@ -407,7 +407,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
         This method is a coroutine.
         """
-        self._is_toggle_direction_open = True
+        self._is_last_toggle_direction_open = True
         self._state = STATE_OPENING
         mqtt.async_publish(
             self.hass,
@@ -430,7 +430,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
         This method is a coroutine.
         """
-        self._is_toggle_direction_open = False
+        self._is_last_toggle_direction_open = False
         self._state = STATE_CLOSING
         mqtt.async_publish(
             self.hass,
@@ -531,20 +531,6 @@ class MqttCover(MqttEntity, CoverEntity):
             )
             self._position = percentage_position
             self.async_write_ha_state()
-
-    async def async_toggle(self, **kwargs):
-        """Toggle the entity."""
-        if SUPPORT_STOP | self.supported_features and (
-            self.is_closing or self.is_opening
-        ):
-            await self.async_stop_cover(**kwargs)
-        elif self.is_closed:
-            await self.async_open_cover(**kwargs)
-        else:
-            if self._is_toggle_direction_open:
-                await self.async_close_cover(**kwargs)
-            else:
-                await self.async_open_cover(**kwargs)
 
     async def async_toggle_tilt(self, **kwargs):
         """Toggle the entity."""
