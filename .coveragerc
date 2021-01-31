@@ -518,6 +518,9 @@ omit =
     homeassistant/components/lutron_caseta/switch.py
     homeassistant/components/lw12wifi/light.py
     homeassistant/components/lyft/sensor.py
+    homeassistant/components/lyric/__init__.py
+    homeassistant/components/lyric/api.py
+    homeassistant/components/lyric/climate.py
     homeassistant/components/magicseaweed/sensor.py
     homeassistant/components/mailgun/notify.py
     homeassistant/components/map/*
