@@ -42,6 +42,21 @@ DHCP = [
         "macaddress": "B4E62D*"
     },
     {
+        "domain": "lyric",
+        "hostname": "lyric-*",
+        "macaddress": "48A2E6"
+    },
+    {
+        "domain": "lyric",
+        "hostname": "lyric-*",
+        "macaddress": "B82CA0"
+    },
+    {
+        "domain": "lyric",
+        "hostname": "lyric-*",
+        "macaddress": "00D02D"
+    },
+    {
         "domain": "nest",
         "macaddress": "18B430*"
     },
