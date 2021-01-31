@@ -765,7 +765,7 @@ hole==0.5.1
 holidays==0.10.4
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210127.5
+home-assistant-frontend==20210127.6
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1708,7 +1708,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.37
+pysonos==0.0.40
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -2181,7 +2181,7 @@ temperusb==1.5.3
 tesla-powerwall==0.3.3
 
 # homeassistant.components.tesla
-teslajsonpy==0.10.4
+teslajsonpy==0.11.3
 
 # homeassistant.components.tensorflow
 # tf-models-official==2.3.0
