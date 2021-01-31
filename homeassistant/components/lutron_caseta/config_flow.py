@@ -84,7 +84,9 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_link()
 
-    async_step_homekit = async_step_zeroconf
+    async def async_step_homekit(self, discovery_info):
+        """Handle a flow initialized by homekit discovery."""
+        await self.async_step_zeroconf(discovery_info)
 
     async def async_step_link(self, user_input=None):
         """Handle pairing with the hub."""
@@ -216,7 +218,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Check if we can connect to the bridge with the current config."""
 
         bridge = None
-
         try:
             bridge = Smartbridge.create_tls(
                 hostname=self.data[CONF_HOST],
