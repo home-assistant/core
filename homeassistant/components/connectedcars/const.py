@@ -19,7 +19,6 @@ ATTR_API_VEHICLE_POS_LONGITUDE = "vehicle_position_longitude"
 ATTR_API_VEHICLE_VIN = "vehicle_vin"
 ATTR_API_VEHICLE_VOLTAGE = "vehicle_voltage"
 
-ATTR_ICON = "icon"
 ATTR_IDENTIFIERS = "identifiers"
 ATTR_LABEL = "label"
 ATTR_MANUFACTURER = "manufacturer"
@@ -27,6 +26,7 @@ ATTR_MODEL = "model"
 ATTR_UNIT = "unit"
 
 CONF_NAMESPACE = "namespace"
+CONF_TITLE = "title"
 CONF_VIN = "config_vin"
 
 CONNECTED_CARS_CLIENT = "connectec_cars_client"

@@ -5,6 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
+    ATTR_ICON,
     ATTR_NAME,
     LENGTH_KILOMETERS,
     PERCENTAGE,
@@ -13,6 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ConnectedCarsDataUpdateCoordinator
 from .const import (
@@ -25,7 +27,6 @@ from .const import (
     ATTR_API_VEHICLE_ODOMETER,
     ATTR_API_VEHICLE_VIN,
     ATTR_API_VEHICLE_VOLTAGE,
-    ATTR_ICON,
     ATTR_IDENTIFIERS,
     ATTR_LABEL,
     ATTR_MANUFACTURER,
@@ -75,7 +76,6 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
 
-    # Maybe add vin to unique id
     sensors = []
     for sensor in SENSOR_TYPES:
         unique_id = f"{config_entry.unique_id}-{sensor.lower()}"
@@ -84,11 +84,12 @@ async def async_setup_entry(
     async_add_entities(sensors, False)
 
 
-class ConnectedCarsSensor(Entity):
+class ConnectedCarsSensor(CoordinatorEntity):
     """Define an Connected Cars sensor."""
 
     def __init__(self, coordinator, name, kind, unique_id):
         """Initialize."""
+        super().__init__(coordinator)
         self._name = name
         self._unique_id = unique_id
         self.kind = kind
@@ -101,7 +102,9 @@ class ConnectedCarsSensor(Entity):
     @property
     def name(self):
         """Return the name."""
-        return f"{self.coordinator.data[ATTR_API_VEHICLE_LICENSEPLATE]} {SENSOR_TYPES[self.kind][ATTR_LABEL]}"
+        plate = self.coordinator.data[ATTR_API_VEHICLE_LICENSEPLATE]
+        label = SENSOR_TYPES[self.kind][ATTR_LABEL]
+        return f"{plate} {label}"
 
     @property
     def state(self):

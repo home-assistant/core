@@ -7,7 +7,6 @@ import async_timeout
 from connectedcars.client import ConnectedCarsClient
 from connectedcars.constants import QUERY_COMPLETE
 from connectedcars.exceptions import ConnectedCarsException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -37,8 +36,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "device_tracker"]
-UPDATE_INTERVAL = timedelta(minutes=5)  # Maybe create a config for this
+PLATFORMS = ["sensor"]
+UPDATE_INTERVAL = timedelta(minutes=5)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):

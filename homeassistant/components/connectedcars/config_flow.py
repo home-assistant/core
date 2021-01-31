@@ -6,9 +6,15 @@ from connectedcars.constants import QUERY_USER, QUERY_VEHICLE_VIN
 from connectedcars.exceptions import ConnectedCarsException
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, exceptions
+from homeassistant.const import CONF_BASE, CONF_PASSWORD, CONF_USERNAME
 
-from .const import DEFAULT_NAMESPACE, DOMAIN  # pylint:disable=unused-import
+from .const import (  # pylint:disable=unused-import
+    CONF_NAMESPACE,
+    CONF_TITLE,
+    DEFAULT_NAMESPACE,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +23,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_NAMESPACE, default=DEFAULT_NAMESPACE): str,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional("vin"): str,
     }
 )
 
@@ -34,12 +39,10 @@ class ConnectedcarsApiHandler:
 
     async def authenticate(self, username, password) -> bool:
         """Test if we can authenticate with the namespace."""
-        client = ConnectedCarsClient(username, password, self.namespace)
-
-        self.client = client
+        self.client = ConnectedCarsClient(username, password, self.namespace)
 
         try:
-            self.user_data = await client.async_query(QUERY_USER)
+            self.user_data = await self.client.async_query(QUERY_USER)
         except ConnectedCarsException:
             return False
 
@@ -50,49 +53,16 @@ class ConnectedcarsApiHandler:
         if not self.user_data:
             self.user_data = await self.client.async_query(QUERY_USER)
 
-        email = self.user_data["data"]["viewer"]["email"]
+        return self.user_data["data"]["viewer"]["email"]
 
-        return email
-
-    async def get_vin(self, userinput_vin) -> str:
+    async def get_vin(self) -> str:
         """Will get the vin identifier of the car."""
         if not self.vin:
             response = await self.client.async_query(QUERY_VEHICLE_VIN)
-            # This needs to lookup the "userinput_vin" to see if it can be found in the result, not just take the first car
-            vin = response["data"]["viewer"]["vehicles"][0]["vehicle"]["vin"]
-            self.vin = vin
+            # This integration only collects data of the first vehicle (array position 0)
+            self.vin = response["data"]["viewer"]["vehicles"][0]["vehicle"]["vin"]
 
         return self.vin
-
-
-async def validate_input(hass: core.HomeAssistant, data):
-    """Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
-    ccah = ConnectedcarsApiHandler(data["namespace"])
-
-    if not await ccah.authenticate(data["username"], data["password"]):
-        raise InvalidAuth
-
-    try:
-        email = await ccah.get_email()
-    except ConnectedCarsException as exception:
-        raise CannotGetEmail from exception
-
-    userinput_vin = None
-    # if not data["vin"]: ## Do this somehow
-    #     userinput_vin = data["vin"]
-
-    try:
-        vin = await ccah.get_vin(userinput_vin)
-    except ConnectedCarsException as exception:
-        raise CannotGetVin from exception
-
-    integration_title = f"{email} - {vin}"
-
-    # Return info that you want to store in the config entry.
-    return {"title": integration_title}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -106,25 +76,42 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                ccah = ConnectedcarsApiHandler(user_input[CONF_NAMESPACE])
+
+                if not await ccah.authenticate(
+                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                ):
+                    raise InvalidAuth
+
+                try:
+                    email = await ccah.get_email()
+                except ConnectedCarsException as exception:
+                    raise CannotGetEmail from exception
+
+                try:
+                    vin = await ccah.get_vin()
+                except ConnectedCarsException as exception:
+                    raise CannotGetVin from exception
+
+                info = {CONF_TITLE: f"{email} - {vin}"}
 
                 # Check if already configured
-                await self.async_set_unique_id(info["title"])
+                await self.async_set_unique_id(info[CONF_TITLE])
                 self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(title=info[CONF_TITLE], data=user_input)
             except CannotGetEmail:
-                errors["base"] = "cannot_get_email"
+                errors[CONF_BASE] = "cannot_get_email"
                 _LOGGER.error("Unable to find your email from connectedcars.io")
             except CannotGetVin:
-                errors["base"] = "cannot_get_vin"
+                errors[CONF_BASE] = "cannot_get_vin"
                 _LOGGER.error("Unable to find a car vin-name from connectedcars.io")
             except InvalidAuth:
-                errors["base"] = "invalid_auth"
+                errors[CONF_BASE] = "invalid_auth"
                 _LOGGER.error("Unable to login to ConnectedCars.io, wrong user/pass")
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                errors[CONF_BASE] = "unknown"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors

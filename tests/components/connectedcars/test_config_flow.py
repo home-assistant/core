@@ -218,7 +218,7 @@ async def test_form_unknown_error(hass):
         "homeassistant.components.connectedcars.config_flow.ConnectedCarsClient",
         return_value=cc_client,
     ), patch(
-        "homeassistant.components.connectedcars.config_flow.validate_input",
+        "homeassistant.components.connectedcars.config_flow.ConnectedcarsApiHandler.authenticate",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
