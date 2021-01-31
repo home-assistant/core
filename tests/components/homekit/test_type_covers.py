@@ -1,7 +1,4 @@
 """Test different accessory types: Covers."""
-from collections import namedtuple
-
-import pytest
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -22,6 +19,12 @@ from homeassistant.components.homekit.const import (
     HK_DOOR_OPEN,
     HK_DOOR_OPENING,
 )
+from homeassistant.components.homekit.type_covers import (
+    GarageDoorOpener,
+    Window,
+    WindowCovering,
+    WindowCoveringBasic,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -40,37 +43,15 @@ from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry
 
 from tests.common import async_mock_service
-from tests.components.homekit.common import patch_debounce
 
 
-@pytest.fixture(scope="module")
-def cls():
-    """Patch debounce decorator during import of type_covers."""
-    patcher = patch_debounce()
-    patcher.start()
-    _import = __import__(
-        "homeassistant.components.homekit.type_covers",
-        fromlist=["GarageDoorOpener", "WindowCovering", "WindowCoveringBasic"],
-    )
-    patcher_tuple = namedtuple(
-        "Cls", ["window", "windowcovering", "windowcovering_basic", "garage"]
-    )
-    yield patcher_tuple(
-        window=_import.Window,
-        windowcovering=_import.WindowCovering,
-        windowcovering_basic=_import.WindowCoveringBasic,
-        garage=_import.GarageDoorOpener,
-    )
-    patcher.stop()
-
-
-async def test_garage_door_open_close(hass, hk_driver, cls, events):
+async def test_garage_door_open_close(hass, hk_driver, events):
     """Test if accessory and HA are updated accordingly."""
     entity_id = "cover.garage_door"
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = cls.garage(hass, hk_driver, "Garage Door", entity_id, 2, None)
+    acc = GarageDoorOpener(hass, hk_driver, "Garage Door", entity_id, 2, None)
     await acc.run_handler()
     await hass.async_block_till_done()
 
@@ -148,13 +129,13 @@ async def test_garage_door_open_close(hass, hk_driver, cls, events):
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_windowcovering_set_cover_position(hass, hk_driver, cls, events):
+async def test_windowcovering_set_cover_position(hass, hk_driver, events):
     """Test if accessory and HA are updated accordingly."""
     entity_id = "cover.window"
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = cls.windowcovering(hass, hk_driver, "Cover", entity_id, 2, None)
+    acc = WindowCovering(hass, hk_driver, "Cover", entity_id, 2, None)
     await acc.run_handler()
     await hass.async_block_till_done()
 
@@ -218,13 +199,13 @@ async def test_windowcovering_set_cover_position(hass, hk_driver, cls, events):
     assert events[-1].data[ATTR_VALUE] == 75
 
 
-async def test_window_instantiate(hass, hk_driver, cls, events):
+async def test_window_instantiate(hass, hk_driver, events):
     """Test if Window accessory is instantiated correctly."""
     entity_id = "cover.window"
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = cls.window(hass, hk_driver, "Window", entity_id, 2, None)
+    acc = Window(hass, hk_driver, "Window", entity_id, 2, None)
     await acc.run_handler()
     await hass.async_block_till_done()
 
@@ -235,7 +216,7 @@ async def test_window_instantiate(hass, hk_driver, cls, events):
     assert acc.char_target_position.value == 0
 
 
-async def test_windowcovering_cover_set_tilt(hass, hk_driver, cls, events):
+async def test_windowcovering_cover_set_tilt(hass, hk_driver, events):
     """Test if accessory and HA update slat tilt accordingly."""
     entity_id = "cover.window"
 
@@ -243,7 +224,7 @@ async def test_windowcovering_cover_set_tilt(hass, hk_driver, cls, events):
         entity_id, STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_TILT_POSITION}
     )
     await hass.async_block_till_done()
-    acc = cls.windowcovering(hass, hk_driver, "Cover", entity_id, 2, None)
+    acc = WindowCovering(hass, hk_driver, "Cover", entity_id, 2, None)
     await acc.run_handler()
     await hass.async_block_till_done()
 
@@ -302,12 +283,12 @@ async def test_windowcovering_cover_set_tilt(hass, hk_driver, cls, events):
     assert events[-1].data[ATTR_VALUE] == 75
 
 
-async def test_windowcovering_open_close(hass, hk_driver, cls, events):
+async def test_windowcovering_open_close(hass, hk_driver, events):
     """Test if accessory and HA are updated accordingly."""
     entity_id = "cover.window"
 
     hass.states.async_set(entity_id, STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: 0})
-    acc = cls.windowcovering_basic(hass, hk_driver, "Cover", entity_id, 2, None)
+    acc = WindowCoveringBasic(hass, hk_driver, "Cover", entity_id, 2, None)
     await acc.run_handler()
     await hass.async_block_till_done()
 
@@ -383,14 +364,14 @@ async def test_windowcovering_open_close(hass, hk_driver, cls, events):
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_windowcovering_open_close_stop(hass, hk_driver, cls, events):
+async def test_windowcovering_open_close_stop(hass, hk_driver, events):
     """Test if accessory and HA are updated accordingly."""
     entity_id = "cover.window"
 
     hass.states.async_set(
         entity_id, STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: SUPPORT_STOP}
     )
-    acc = cls.windowcovering_basic(hass, hk_driver, "Cover", entity_id, 2, None)
+    acc = WindowCoveringBasic(hass, hk_driver, "Cover", entity_id, 2, None)
     await acc.run_handler()
     await hass.async_block_till_done()
 
@@ -431,7 +412,7 @@ async def test_windowcovering_open_close_stop(hass, hk_driver, cls, events):
 
 
 async def test_windowcovering_open_close_with_position_and_stop(
-    hass, hk_driver, cls, events
+    hass, hk_driver, events
 ):
     """Test if accessory and HA are updated accordingly."""
     entity_id = "cover.stop_window"
@@ -441,7 +422,7 @@ async def test_windowcovering_open_close_with_position_and_stop(
         STATE_UNKNOWN,
         {ATTR_SUPPORTED_FEATURES: SUPPORT_STOP | SUPPORT_SET_POSITION},
     )
-    acc = cls.windowcovering(hass, hk_driver, "Cover", entity_id, 2, None)
+    acc = WindowCovering(hass, hk_driver, "Cover", entity_id, 2, None)
     await acc.run_handler()
     await hass.async_block_till_done()
 
@@ -461,7 +442,7 @@ async def test_windowcovering_open_close_with_position_and_stop(
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_windowcovering_basic_restore(hass, hk_driver, cls, events):
+async def test_windowcovering_basic_restore(hass, hk_driver, events):
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
@@ -486,22 +467,20 @@ async def test_windowcovering_basic_restore(hass, hk_driver, cls, events):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
     await hass.async_block_till_done()
 
-    acc = cls.windowcovering_basic(hass, hk_driver, "Cover", "cover.simple", 2, None)
+    acc = WindowCoveringBasic(hass, hk_driver, "Cover", "cover.simple", 2, None)
     assert acc.category == 14
     assert acc.char_current_position is not None
     assert acc.char_target_position is not None
     assert acc.char_position_state is not None
 
-    acc = cls.windowcovering_basic(
-        hass, hk_driver, "Cover", "cover.all_info_set", 2, None
-    )
+    acc = WindowCoveringBasic(hass, hk_driver, "Cover", "cover.all_info_set", 2, None)
     assert acc.category == 14
     assert acc.char_current_position is not None
     assert acc.char_target_position is not None
     assert acc.char_position_state is not None
 
 
-async def test_windowcovering_restore(hass, hk_driver, cls, events):
+async def test_windowcovering_restore(hass, hk_driver, events):
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
@@ -526,20 +505,20 @@ async def test_windowcovering_restore(hass, hk_driver, cls, events):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
     await hass.async_block_till_done()
 
-    acc = cls.windowcovering(hass, hk_driver, "Cover", "cover.simple", 2, None)
+    acc = WindowCovering(hass, hk_driver, "Cover", "cover.simple", 2, None)
     assert acc.category == 14
     assert acc.char_current_position is not None
     assert acc.char_target_position is not None
     assert acc.char_position_state is not None
 
-    acc = cls.windowcovering(hass, hk_driver, "Cover", "cover.all_info_set", 2, None)
+    acc = WindowCovering(hass, hk_driver, "Cover", "cover.all_info_set", 2, None)
     assert acc.category == 14
     assert acc.char_current_position is not None
     assert acc.char_target_position is not None
     assert acc.char_position_state is not None
 
 
-async def test_garage_door_with_linked_obstruction_sensor(hass, hk_driver, cls, events):
+async def test_garage_door_with_linked_obstruction_sensor(hass, hk_driver, events):
     """Test if accessory and HA are updated accordingly with a linked obstruction sensor."""
     linked_obstruction_sensor_entity_id = "binary_sensor.obstruction"
     entity_id = "cover.garage_door"
@@ -547,7 +526,7 @@ async def test_garage_door_with_linked_obstruction_sensor(hass, hk_driver, cls, 
     hass.states.async_set(linked_obstruction_sensor_entity_id, STATE_OFF)
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = cls.garage(
+    acc = GarageDoorOpener(
         hass,
         hk_driver,
         "Garage Door",

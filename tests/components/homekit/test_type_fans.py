@@ -1,8 +1,6 @@
 """Test different accessory types: Fans."""
-from collections import namedtuple
 
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
-import pytest
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
@@ -16,6 +14,7 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
 )
 from homeassistant.components.homekit.const import ATTR_VALUE
+from homeassistant.components.homekit.type_fans import Fan
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -28,27 +27,15 @@ from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry
 
 from tests.common import async_mock_service
-from tests.components.homekit.common import patch_debounce
 
 
-@pytest.fixture(scope="module")
-def cls():
-    """Patch debounce decorator during import of type_fans."""
-    patcher = patch_debounce()
-    patcher.start()
-    _import = __import__("homeassistant.components.homekit.type_fans", fromlist=["Fan"])
-    patcher_tuple = namedtuple("Cls", ["fan"])
-    yield patcher_tuple(fan=_import.Fan)
-    patcher.stop()
-
-
-async def test_fan_basic(hass, hk_driver, cls, events):
+async def test_fan_basic(hass, hk_driver, events):
     """Test fan with char state."""
     entity_id = "fan.demo"
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_SUPPORTED_FEATURES: 0})
     await hass.async_block_till_done()
-    acc = cls.fan(hass, hk_driver, "Fan", entity_id, 1, None)
+    acc = Fan(hass, hk_driver, "Fan", entity_id, 1, None)
     hk_driver.add_accessory(acc)
 
     assert acc.aid == 1
@@ -120,7 +107,7 @@ async def test_fan_basic(hass, hk_driver, cls, events):
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_fan_direction(hass, hk_driver, cls, events):
+async def test_fan_direction(hass, hk_driver, events):
     """Test fan with direction."""
     entity_id = "fan.demo"
 
@@ -130,7 +117,7 @@ async def test_fan_direction(hass, hk_driver, cls, events):
         {ATTR_SUPPORTED_FEATURES: SUPPORT_DIRECTION, ATTR_DIRECTION: DIRECTION_FORWARD},
     )
     await hass.async_block_till_done()
-    acc = cls.fan(hass, hk_driver, "Fan", entity_id, 1, None)
+    acc = Fan(hass, hk_driver, "Fan", entity_id, 1, None)
     hk_driver.add_accessory(acc)
 
     assert acc.char_direction.value == 0
@@ -188,7 +175,7 @@ async def test_fan_direction(hass, hk_driver, cls, events):
     assert events[-1].data[ATTR_VALUE] == DIRECTION_REVERSE
 
 
-async def test_fan_oscillate(hass, hk_driver, cls, events):
+async def test_fan_oscillate(hass, hk_driver, events):
     """Test fan with oscillate."""
     entity_id = "fan.demo"
 
@@ -198,7 +185,7 @@ async def test_fan_oscillate(hass, hk_driver, cls, events):
         {ATTR_SUPPORTED_FEATURES: SUPPORT_OSCILLATE, ATTR_OSCILLATING: False},
     )
     await hass.async_block_till_done()
-    acc = cls.fan(hass, hk_driver, "Fan", entity_id, 1, None)
+    acc = Fan(hass, hk_driver, "Fan", entity_id, 1, None)
     hk_driver.add_accessory(acc)
 
     assert acc.char_swing.value == 0
@@ -257,7 +244,7 @@ async def test_fan_oscillate(hass, hk_driver, cls, events):
     assert events[-1].data[ATTR_VALUE] is True
 
 
-async def test_fan_speed(hass, hk_driver, cls, events):
+async def test_fan_speed(hass, hk_driver, events):
     """Test fan with speed."""
     entity_id = "fan.demo"
 
@@ -270,7 +257,7 @@ async def test_fan_speed(hass, hk_driver, cls, events):
         },
     )
     await hass.async_block_till_done()
-    acc = cls.fan(hass, hk_driver, "Fan", entity_id, 1, None)
+    acc = Fan(hass, hk_driver, "Fan", entity_id, 1, None)
     hk_driver.add_accessory(acc)
 
     # Initial value can be anything but 0. If it is 0, it might cause HomeKit to set the
@@ -336,7 +323,7 @@ async def test_fan_speed(hass, hk_driver, cls, events):
     assert acc.char_active.value == 1
 
 
-async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
+async def test_fan_set_all_one_shot(hass, hk_driver, events):
     """Test fan with speed."""
     entity_id = "fan.demo"
 
@@ -353,7 +340,7 @@ async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
         },
     )
     await hass.async_block_till_done()
-    acc = cls.fan(hass, hk_driver, "Fan", entity_id, 1, None)
+    acc = Fan(hass, hk_driver, "Fan", entity_id, 1, None)
     hk_driver.add_accessory(acc)
 
     # Initial value can be anything but 0. If it is 0, it might cause HomeKit to set the
@@ -529,7 +516,7 @@ async def test_fan_set_all_one_shot(hass, hk_driver, cls, events):
     assert len(call_set_direction) == 2
 
 
-async def test_fan_restore(hass, hk_driver, cls, events):
+async def test_fan_restore(hass, hk_driver, events):
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
@@ -554,14 +541,14 @@ async def test_fan_restore(hass, hk_driver, cls, events):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
     await hass.async_block_till_done()
 
-    acc = cls.fan(hass, hk_driver, "Fan", "fan.simple", 2, None)
+    acc = Fan(hass, hk_driver, "Fan", "fan.simple", 2, None)
     assert acc.category == 3
     assert acc.char_active is not None
     assert acc.char_direction is None
     assert acc.char_speed is None
     assert acc.char_swing is None
 
-    acc = cls.fan(hass, hk_driver, "Fan", "fan.all_info_set", 2, None)
+    acc = Fan(hass, hk_driver, "Fan", "fan.all_info_set", 2, None)
     assert acc.category == 3
     assert acc.char_active is not None
     assert acc.char_direction is not None
