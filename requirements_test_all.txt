@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.homekit
-HAP-python==3.1.0
+HAP-python==3.2.0
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
