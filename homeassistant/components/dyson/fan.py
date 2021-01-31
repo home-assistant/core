@@ -209,9 +209,6 @@ class DysonFanEntity(DysonEntity, FanEntity):
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
-        if percentage is None:
-            # percentage not set, just turn on
-            self._device.set_configuration(fan_mode=FanMode.FAN)
         if percentage == 0:
             self.turn_off()
         else:
@@ -249,6 +246,9 @@ class DysonFanEntity(DysonEntity, FanEntity):
         _LOGGER.debug("Turn on fan %s with percentage %s", self.name, percentage)
         if preset_mode:
             self.set_preset_mode(preset_mode)
+        elif percentage is None:
+            # percentage not set, just turn on
+            self._device.set_configuration(fan_mode=FanMode.FAN)
         else:
             self.set_percentage(percentage)
 
@@ -325,13 +325,22 @@ class DysonPureCoolEntity(DysonFanEntity):
         """Initialize the fan."""
         super().__init__(device, DysonPureCoolV2State)
 
-    def set_percentage(self, percentage: int) -> None:
-        """Set the speed percentage of the fan."""
-        if percentage is None:
+    def turn_on(
+        self,
+        speed: Optional[str] = None,
+        percentage: Optional[int] = None,
+        preset_mode: Optional[str] = None,
+        **kwargs,
+    ) -> None:
+        """Turn on the fan."""
+        _LOGGER.debug("Turn on fan %s with percentage %s", self.name, percentage)
+        if preset_mode:
+            self.set_preset_mode(preset_mode)
+        elif percentage is None:
             # percentage not set, just turn on
             self._device.turn_on()
-            return
-        super().set_percentage(percentage)
+        else:
+            self.set_percentage(percentage)
 
     def turn_off(self, **kwargs):
         """Turn off the fan."""
