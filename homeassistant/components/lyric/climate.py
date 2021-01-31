@@ -198,21 +198,17 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     def min_temp(self) -> float:
         """Identify min_temp in Lyric API or defaults if not available."""
         device: LyricDevice = self.device
-        return (
-            device.minCoolSetpoint
-            if LYRIC_HVAC_MODE_COOL in device.allowedModes
-            else device.minHeatSetpoint
-        )
+        if LYRIC_HVAC_MODE_COOL in device.allowedModes:
+            return device.minCoolSetpoint
+        return device.minHeatSetpoint
 
     @property
     def max_temp(self) -> float:
         """Identify max_temp in Lyric API or defaults if not available."""
         device: LyricDevice = self.device
-        return (
+        if LYRIC_HVAC_MODE_HEAT in device.allowedModes:
             device.maxHeatSetpoint
-            if LYRIC_HVAC_MODE_HEAT in device.allowedModes
-            else device.maxCoolSetpoint
-        )
+        device.maxCoolSetpoint
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
