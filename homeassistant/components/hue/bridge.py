@@ -32,9 +32,9 @@ ATTR_SCENE_NAME = "scene_name"
 ATTR_TRANSITION = "transition"
 SCENE_SCHEMA = vol.Schema(
     {
-         vol.Required(ATTR_GROUP_NAME): cv.string,
-         vol.Required(ATTR_SCENE_NAME): cv.string,
-         vol.Optional(ATTR_TRANSITION, default=DEFAULT_SCENE_TRANSITION): cv.positive_int
+        vol.Required(ATTR_GROUP_NAME): cv.string,
+        vol.Required(ATTR_SCENE_NAME): cv.string,
+        vol.Optional(ATTR_TRANSITION, default=DEFAULT_SCENE_TRANSITION): cv.positive_int
     }
 )
 # How long should we sleep if the hub is busy
