@@ -89,7 +89,6 @@ class ConnectedCarsSensor(Entity):
 
     def __init__(self, coordinator, name, kind, unique_id):
         """Initialize."""
-        self.coordinator = coordinator
         self._name = name
         self._unique_id = unique_id
         self.kind = kind
@@ -103,11 +102,6 @@ class ConnectedCarsSensor(Entity):
     def name(self):
         """Return the name."""
         return f"{self.coordinator.data[ATTR_API_VEHICLE_LICENSEPLATE]} {SENSOR_TYPES[self.kind][ATTR_LABEL]}"
-
-    @property
-    def should_poll(self):
-        """Return the polling requirement of the entity."""
-        return False
 
     @property
     def state(self):
@@ -142,11 +136,6 @@ class ConnectedCarsSensor(Entity):
         return SENSOR_TYPES[self.kind][ATTR_UNIT]
 
     @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
-
-    @property
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this Connected Car."""
         return {
@@ -155,13 +144,3 @@ class ConnectedCarsSensor(Entity):
             ATTR_MANUFACTURER: self.coordinator.data[ATTR_API_VEHICLE_MAKE],
             ATTR_MODEL: self.coordinator.data[ATTR_API_VEHICLE_MODEL],
         }
-
-    async def async_added_to_hass(self):
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update Airly entity."""
-        await self.coordinator.async_request_refresh()

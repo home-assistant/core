@@ -38,7 +38,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor", "device_tracker"]
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 UPDATE_INTERVAL = timedelta(minutes=5)  # Maybe create a config for this
 
 

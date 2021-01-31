@@ -14,9 +14,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("namespace", default=DEFAULT_NAMESPACE): str,
-        vol.Required("username"): str,
-        vol.Required("password"): str,
+        vol.Required(CONF_NAMESPACE, default=DEFAULT_NAMESPACE): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
         vol.Optional("vin"): str,
     }
 )

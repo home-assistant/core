@@ -4,9 +4,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/connectedcars",
   "requirements": ["connectedcars==0.1.4"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": ["@heslegrave"]
 }
