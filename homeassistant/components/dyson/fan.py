@@ -83,7 +83,7 @@ ORDERED_DYSON_SPEEDS = [
     FanSpeed.FAN_SPEED_9.value,
     FanSpeed.FAN_SPEED_10.value,
 ]
-DYSON_SPEED_TO_INT_VALUE = {k: int(v) for k, v in ORDERED_DYSON_SPEEDS}
+DYSON_SPEED_TO_INT_VALUE = {k: int(k) for k in ORDERED_DYSON_SPEEDS}
 INT_VALUE_TO_DYSON_SPEED = {v: k for k, v in DYSON_SPEED_TO_INT_VALUE.items()}
 
 SPEED_LIST_DYSON = list(DYSON_SPEED_TO_INT_VALUE.values())
