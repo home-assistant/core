@@ -1,5 +1,4 @@
 """Tests for the WLED integration."""
-
 import json
 
 from homeassistant.components.wled.const import DOMAIN
