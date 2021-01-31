@@ -133,7 +133,7 @@ from homeassistant.setup import async_setup_component
             },
             2,
             True,
-            [],
+            {},
         ),
         (
             {
@@ -159,11 +159,11 @@ from homeassistant.setup import async_setup_component
             },
             0,
             False,
-            [],
+            {},
         ),
     ],
 )
-async def attempt_import(
+async def test_import(
     hass: HomeAssistantType,
     config: ConfigType,
     expected_calls: int,
@@ -183,7 +183,8 @@ async def attempt_import(
 
     assert len(mock_setup_entry.mock_calls) == expected_calls
 
-    config_flow_user_input = mock_setup_entry.mock_calls[0][1]
-    for key, value in expected_config_flow_user_input.items():
-        assert key in config_flow_user_input
-        assert config_flow_user_input[key] == value
+    if expected_calls > 0:
+        config_flow_user_input = mock_setup_entry.mock_calls[0][1][1].data
+        for key, value in expected_config_flow_user_input.items():
+            assert key in config_flow_user_input
+            assert config_flow_user_input[key] == value
