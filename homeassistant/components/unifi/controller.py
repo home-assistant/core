@@ -447,10 +447,18 @@ class UniFiController:
         """
         self.api.stop_websocket()
 
-        for platform in SUPPORTED_PLATFORMS:
-            await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, platform
+        unload_ok = all(
+            await asyncio.gather(
+                *[
+                    self.hass.config_entries.async_forward_entry_unload(
+                        self.config_entry, platform
+                    )
+                    for platform in SUPPORTED_PLATFORMS
+                ]
             )
+        )
+        if not unload_ok:
+            return False
 
         for unsub_dispatcher in self.listeners:
             unsub_dispatcher()
