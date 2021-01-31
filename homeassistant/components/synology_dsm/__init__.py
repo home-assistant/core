@@ -538,7 +538,7 @@ class SynoApi:
         async_dispatcher_send(self._hass, self.signal_sensor_update)
 
 
-class SynologyDSMBaseEntity:
+class SynologyDSMBaseEntity(Entity):
     """Representation of a Synology NAS entry."""
 
     def __init__(
