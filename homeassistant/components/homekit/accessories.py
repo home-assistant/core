@@ -487,17 +487,17 @@ class HomeBridge(Bridge):
     def setup_message(self):
         """Prevent print of pyhap setup message to terminal."""
 
-    def get_snapshot(self, info):
+    async def async_get_snapshot(self, info):
         """Get snapshot from accessory if supported."""
         acc = self.accessories.get(info["aid"])
         if acc is None:
             raise ValueError("Requested snapshot for missing accessory")
-        if not hasattr(acc, "get_snapshot"):
+        if not hasattr(acc, "async_get_snapshot"):
             raise ValueError(
                 "Got a request for snapshot, but the Accessory "
-                'does not define a "get_snapshot" method'
+                'does not define a "async_get_snapshot" method'
             )
-        return acc.get_snapshot(info)
+        return await acc.async_get_snapshot(info)
 
 
 class HomeDriver(AccessoryDriver):
