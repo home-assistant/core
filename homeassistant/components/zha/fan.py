@@ -56,7 +56,7 @@ SPEED_LIST = [
 SPEED_RANGE = (1, 3)  # off is not included
 PRESET_MODES_TO_NAME = {5: SPEED_AUTO, 6: SPEED_SMART}
 NAME_TO_PRESET_MODE = {v: k for k, v in PRESET_MODES_TO_NAME.items()}
-
+PRESET_MODES = list(NAME_TO_PRESET_MODE)
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, DOMAIN)
 
@@ -104,7 +104,7 @@ class BaseFan(FanEntity):
     @property
     def preset_modes(self) -> str:
         """Return the available preset modes."""
-        return NAME_TO_PRESET_MODE.keys()
+        return PRESET_MODES
 
     @property
     def supported_features(self) -> int:
