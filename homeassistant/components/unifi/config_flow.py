@@ -31,7 +31,6 @@ from .const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
-    CONTROLLER_ID,
     DEFAULT_DPI_RESTRICTIONS,
     DEFAULT_POE_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
@@ -49,15 +48,6 @@ MODEL_PORTS = {
     "UniFi Dream Machine": 443,
     "UniFi Dream Machine Pro": 443,
 }
-
-
-@callback
-def get_controller_id_from_config_entry(config_entry):
-    """Return controller with a matching bridge id."""
-    return CONTROLLER_ID.format(
-        host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
-        site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID],
-    )
 
 
 class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
