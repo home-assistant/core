@@ -24,7 +24,6 @@ from .const import (
     PRESET_VACATION_HOLD,
 )
 
-SCAN_INTERVAL = timedelta(seconds=120)
 PARALLEL_UPDATES = 6
 
 
