@@ -279,7 +279,7 @@ class Recorder(threading.Thread):
         self.enabled = True
 
     def set_enable(self, enable):
-        """Enables or disables recording events and states"""
+        """Enable or disable recording events and states."""
         self.enabled = enable
 
     @callback
