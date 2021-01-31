@@ -1,5 +1,6 @@
 """Test the Lutron Caseta config flow."""
 import asyncio
+import ssl
 from unittest.mock import AsyncMock, patch
 
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY
@@ -20,6 +21,14 @@ from homeassistant.components.zeroconf import ATTR_HOSTNAME
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
+
+EMPTY_MOCK_CONFIG_ENTRY = {
+    CONF_HOST: "",
+    CONF_KEYFILE: "",
+    CONF_CERTFILE: "",
+    CONF_CA_CERTS: "",
+}
+
 
 MOCK_ASYNC_PAIR_SUCCESS = {
     PAIR_KEY: "mock_key",
@@ -115,13 +124,6 @@ async def test_bridge_cannot_connect(hass):
 async def test_bridge_cannot_connect_unknown_error(hass):
     """Test checking for connection and encountering an unknown error."""
 
-    entry_mock_data = {
-        CONF_HOST: "",
-        CONF_KEYFILE: "",
-        CONF_CERTFILE: "",
-        CONF_CA_CERTS: "",
-    }
-
     with patch.object(Smartbridge, "create_tls") as create_tls:
         mock_bridge = MockBridge()
         mock_bridge.connect = AsyncMock(side_effect=asyncio.TimeoutError)
@@ -129,7 +131,27 @@ async def test_bridge_cannot_connect_unknown_error(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=entry_mock_data,
+            data=EMPTY_MOCK_CONFIG_ENTRY,
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == STEP_IMPORT_FAILED
+    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == CasetaConfigFlow.ABORT_REASON_CANNOT_CONNECT
+
+
+async def test_bridge_invalid_ssl_error(hass):
+    """Test checking for connection and encountering invalid ssl certs."""
+
+    with patch.object(Smartbridge, "create_tls", side_effect=ssl.SSLError):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=EMPTY_MOCK_CONFIG_ENTRY,
         )
 
     assert result["type"] == "form"
