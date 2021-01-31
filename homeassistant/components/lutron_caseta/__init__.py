@@ -107,17 +107,17 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.error("Invalid certificate used to connect to bridge at %s.", host)
         return False
 
+    timed_out = True
     try:
         with async_timeout.timeout(BRIDGE_TIMEOUT):
             await bridge.connect()
+            timed_out = False
     except asyncio.TimeoutError:
         _LOGGER.error(
             "Timeout or incorrect certificate used to connect to bridge at %s.", host
         )
-        await bridge.close()
-        return False
 
-    if not bridge.is_connected():
+    if timed_out or not bridge.is_connected():
         await bridge.close()
         _LOGGER.error("Unable to connect to bridge at %s", host)
         raise ConfigEntryNotReady
