@@ -76,6 +76,9 @@ async def async_setup_entry(hass, config_entry):
     for _eqip in equipment[EquipmentType.WATER_HEATER]:
         _eqip.set_update_callback(update_published)
 
+    for _eqip in equipment[EquipmentType.THERMOSTAT]:
+        _eqip.set_update_callback(update_published)
+
     async def resubscribe(now):
         """Resubscribe to the MQTT updates."""
         await hass.async_add_executor_job(api.unsubscribe)

@@ -58,8 +58,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     equipment = hass.data[DOMAIN][EQUIPMENT][entry.entry_id]
     sensors = []
-    all_equipment = equipment[EquipmentType.WATER_HEATER]
-    all_equipment.extend(equipment[EquipmentType.THERMOSTAT])
+    all_equipment = equipment[EquipmentType.WATER_HEATER].copy()
+    all_equipment.extend(equipment[EquipmentType.THERMOSTAT].copy())
 
     for _equip in all_equipment:
         for name, attribute in SENSOR_NAMES_TO_ATTRIBUTES.items():
