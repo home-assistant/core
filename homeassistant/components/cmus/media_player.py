@@ -65,11 +65,11 @@ def setup_platform(hass, config, add_entities, discover_info=None):
     name = config[CONF_NAME]
 
     try:
-        remote = CmusRemote(server=host, port=port, password=password)
+        cmus_remote = CmusRemote(server=host, port=port, password=password)
     except exceptions.InvalidPassword:
         _LOGGER.error("The provided password was rejected by cmus")
         return False
-    add_entities([CmusDevice(remote=remote, name=name, server=host)], True)
+    add_entities([CmusDevice(device=cmus_remote, name=name, server=host)], True)
 
 
 class CmusRemote:
@@ -105,10 +105,10 @@ class CmusDevice(MediaPlayerEntity):
     """Representation of a running cmus."""
 
     # pylint: disable=no-member
-    def __init__(self, remote, name, server):
+    def __init__(self, device, name, server):
         """Initialize the CMUS device."""
 
-        self._remote = remote
+        self._remote = device
         if server:
             auto_name = f"cmus-{server}"
         else:
