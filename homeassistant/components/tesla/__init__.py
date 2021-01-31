@@ -103,6 +103,8 @@ async def async_setup(hass, base_config):
         _update_entry(
             email,
             data={
+                CONF_USERNAME: email,
+                CONF_PASSWORD: password,
                 CONF_ACCESS_TOKEN: info[CONF_ACCESS_TOKEN],
                 CONF_TOKEN: info[CONF_TOKEN],
             },
@@ -136,6 +138,8 @@ async def async_setup_entry(hass, config_entry):
     try:
         controller = TeslaAPI(
             websession,
+            email=config.get(CONF_USERNAME),
+            password=config.get(CONF_PASSWORD),
             refresh_token=config[CONF_TOKEN],
             access_token=config[CONF_ACCESS_TOKEN],
             update_interval=config_entry.options.get(
