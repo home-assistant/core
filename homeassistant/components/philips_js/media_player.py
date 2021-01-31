@@ -65,6 +65,9 @@ PREFIX_CHANNEL = "Channel"
 
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_HOST),
+    cv.deprecated(CONF_NAME),
+    cv.deprecated(CONF_API_VERSION),
+    cv.deprecated(CONF_ON_ACTION),
     PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_HOST): cv.string,
