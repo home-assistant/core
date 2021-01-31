@@ -1,5 +1,7 @@
 """Test the UltraSync config flow."""
 
+from unittest.mock import Mock, patch
+
 from homeassistant import data_entry_flow
 from homeassistant.components.ultrasync import config_flow
 from homeassistant.components.ultrasync.const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -14,7 +16,6 @@ from homeassistant.setup import async_setup_component
 
 from . import ENTRY_CONFIG, USER_INPUT, _patch_async_setup, _patch_async_setup_entry
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 
@@ -50,8 +51,8 @@ async def test_user_form_cannot_connect(hass):
     )
 
     with patch("ultrasync.UltraSync") as mock_api:
-        instance = MagicMock()
-        instance.login = MagicMock(return_value=False)
+        instance = Mock()
+        instance.login = Mock(return_value=False)
         mock_api.return_value = instance
 
         result = await hass.config_entries.flow.async_configure(
@@ -70,8 +71,8 @@ async def test_user_form_unexpected_exception(hass, ultrasync_api):
     )
 
     with patch("ultrasync.UltraSync") as mock_api:
-        instance = MagicMock()
-        instance.login = MagicMock(side_effect=Exception())
+        instance = Mock()
+        instance.login = Mock(side_effect=Exception())
         mock_api.return_value = instance
 
         result = await hass.config_entries.flow.async_configure(

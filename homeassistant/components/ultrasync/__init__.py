@@ -99,15 +99,15 @@ def _async_register_services(
 
     def away(call) -> None:
         """Service call to set alarm system to 'away' mode in UltraSync Hub."""
-        coordinator.hub.set(state=AlarmScene.AWAY)
+        coordinator.hub.set_alarm(state=AlarmScene.AWAY)
 
     def stay(call) -> None:
         """Service call to set alarm system to 'stay' mode in UltraSync Hub."""
-        coordinator.hub.set(state=AlarmScene.STAY)
+        coordinator.hub.set_alarm(state=AlarmScene.STAY)
 
     def disarm(call) -> None:
         """Service call to disable alarm in UltraSync Hub."""
-        coordinator.hub.set(state=AlarmScene.DISARMED)
+        coordinator.hub.set_alarm(state=AlarmScene.DISARMED)
 
     hass.services.async_register(DOMAIN, SERVICE_AWAY, away, schema=vol.Schema({}))
     hass.services.async_register(DOMAIN, SERVICE_STAY, stay, schema=vol.Schema({}))

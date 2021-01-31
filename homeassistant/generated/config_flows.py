@@ -264,6 +264,7 @@ FLOWS = [
     "tuya",
     "twentemilieu",
     "twilio",
+    "twinkly",
     "ultrasync",
     "unifi",
     "upb",

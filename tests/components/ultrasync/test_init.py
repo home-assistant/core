@@ -1,4 +1,6 @@
 """Test the UltraSync config flow."""
+from unittest.mock import patch
+
 from homeassistant.components.ultrasync.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
@@ -8,7 +10,6 @@ from homeassistant.config_entries import (
 
 from . import ENTRY_CONFIG, init_integration
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

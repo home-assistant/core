@@ -1,7 +1,7 @@
 """Define fixtures available for all tests."""
-from pytest import fixture
+from unittest.mock import Mock, patch
 
-from tests.async_mock import MagicMock, patch
+from pytest import fixture
 
 MOCK_AREAS_0 = [
     {"bank": 0, "name": "Area 1", "sequence": 30, "status": "Ready"},
@@ -59,8 +59,8 @@ def ultrasync_api(hass):
 
     with patch("ultrasync.UltraSync") as mock_api:
         instance = mock_api.return_value
-        instance.login = MagicMock(return_value=True)
-        instance.details = MagicMock(side_effect=MOCK_RESPONSES)
-        instance.areas = MagicMock(return_value=list(MOCK_AREAS_0))
-        instance.zones = MagicMock(return_value=list(MOCK_ZONES_0))
+        instance.login = Mock(return_value=True)
+        instance.details = Mock(side_effect=MOCK_RESPONSES)
+        instance.areas = Mock(return_value=list(MOCK_AREAS_0))
+        instance.zones = Mock(return_value=list(MOCK_ZONES_0))
         yield mock_api

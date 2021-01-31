@@ -1,4 +1,6 @@
 """Tests for the UltraSync integration."""
+from unittest.mock import patch
+
 from homeassistant.components.ultrasync.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -8,7 +10,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 ENTRY_CONFIG = {
