@@ -1,4 +1,6 @@
 """Test the ConnectedCars config flow."""
+from unittest.mock import AsyncMock, patch
+
 from connectedcars.client import ConnectedCarsClient
 
 from homeassistant import config_entries, setup
@@ -10,8 +12,6 @@ from homeassistant.components.connectedcars.config_flow import (
 )
 from homeassistant.components.connectedcars.const import CONF_NAMESPACE, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.async_mock import AsyncMock, patch
 
 
 def _get_mock_cc_client(
