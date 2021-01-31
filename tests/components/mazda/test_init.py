@@ -90,23 +90,6 @@ async def test_update_auth_failure(hass: HomeAssistant):
     assert flows[0]["step_id"] == "reauth"
 
 
-async def test_init_unknown_failure(hass: HomeAssistant):
-    """Test unknown error during setup."""
-    with patch(
-        "homeassistant.components.mazda.MazdaAPI.validate_credentials",
-        side_effect=Exception("Unknown error"),
-    ):
-        config_entry = MockConfigEntry(domain=DOMAIN, data=FIXTURE_USER_INPUT)
-        config_entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state == ENTRY_STATE_SETUP_RETRY
-
-
 async def test_unload_config_entry(hass: HomeAssistant) -> None:
     """Test the Mazda configuration entry unloading."""
     entry = await init_integration(hass)

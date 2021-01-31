@@ -19,11 +19,12 @@ FIXTURE_USER_INPUT = {
 }
 
 
-async def init_integration(
-    hass: HomeAssistant,
-) -> MockConfigEntry:
+async def init_integration(hass: HomeAssistant, use_nickname=True) -> MockConfigEntry:
     """Set up the Mazda Connected Services integration in Home Assistant."""
     get_vehicles_fixture = json.loads(load_fixture("mazda/get_vehicles.json"))
+    if not use_nickname:
+        get_vehicles_fixture[0].pop("nickname")
+
     get_vehicle_status_fixture = json.loads(
         load_fixture("mazda/get_vehicle_status.json")
     )

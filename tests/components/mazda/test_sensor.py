@@ -6,28 +6,48 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     LENGTH_KILOMETERS,
+    LENGTH_MILES,
     PERCENTAGE,
     PRESSURE_PSI,
 )
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from tests.components.mazda import init_integration
 
 
-async def test_sensors(hass):
-    """Test creation of the sensors."""
-
-    await init_integration(hass)
+async def test_device_nickname(hass):
+    """Test creation of the device when vehicle has a nickname."""
+    await init_integration(hass, use_nickname=True)
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     reg_device = device_registry.async_get_device(
         identifiers={(DOMAIN, "JM000000000000000")},
     )
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-
     assert reg_device.model == "2021 MAZDA3 2.5 S SE AWD"
     assert reg_device.manufacturer == "Mazda"
     assert reg_device.name == "My Mazda3"
+
+
+async def test_device_no_nickname(hass):
+    """Test creation of the device when vehicle has no nickname."""
+    await init_integration(hass, use_nickname=False)
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    reg_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "JM000000000000000")},
+    )
+
+    assert reg_device.model == "2021 MAZDA3 2.5 S SE AWD"
+    assert reg_device.manufacturer == "Mazda"
+    assert reg_device.name == "2021 MAZDA3 2.5 S SE AWD"
+
+
+async def test_sensors(hass):
+    """Test creation of the sensors."""
+    await init_integration(hass)
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     # Fuel Remaining Percentage
     state = hass.states.get("sensor.my_mazda3_fuel_remaining_percentage")
@@ -119,3 +139,22 @@ async def test_sensors(hass):
     entry = entity_registry.async_get("sensor.my_mazda3_rear_right_tire_pressure")
     assert entry
     assert entry.unique_id == "JM000000000000000_rear_right_tire_pressure"
+
+
+async def test_sensors_imperial_units(hass):
+    """Test that the sensors work properly with imperial units."""
+    hass.config.units = IMPERIAL_SYSTEM
+
+    await init_integration(hass)
+
+    # Fuel Distance Remaining
+    state = hass.states.get("sensor.my_mazda3_fuel_distance_remaining")
+    assert state
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_MILES
+    assert state.state == "237"
+
+    # Odometer
+    state = hass.states.get("sensor.my_mazda3_odometer")
+    assert state
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_MILES
+    assert state.state == "1737"

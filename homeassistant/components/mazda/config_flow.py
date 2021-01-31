@@ -39,7 +39,7 @@ class MazdaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_EMAIL])
+            await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
             self._abort_if_unique_id_configured()
 
             try:
@@ -102,7 +102,7 @@ class MazdaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "Unknown error occurred during Mazda login request: %s", ex
                 )
             else:
-                await self.async_set_unique_id(user_input[CONF_EMAIL])
+                await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
 
                 for entry in self._async_current_entries():
                     if entry.unique_id == self.unique_id:

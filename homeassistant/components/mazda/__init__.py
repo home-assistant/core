@@ -65,9 +65,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     ) as ex:
         _LOGGER.error("Error occurred during Mazda login request: %s", ex)
         raise ConfigEntryNotReady from ex
-    except Exception as ex:
-        _LOGGER.exception("Unknown error occurred during Mazda login request: %s", ex)
-        raise ConfigEntryNotReady from ex
 
     async def async_update_data():
         """Fetch data from Mazda API."""
@@ -108,6 +105,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
 
     # Setup components
     for component in PLATFORMS:
@@ -153,11 +152,6 @@ class MazdaEntity(CoordinatorEntity):
             "manufacturer": "Mazda",
             "model": f"{data['modelYear']} {data['carlineName']}",
         }
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
 
     def get_vehicle_name(self):
         """Return the vehicle name, to be used as a prefix for names of other entities."""
