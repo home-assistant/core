@@ -1,4 +1,10 @@
-"""Config flow for UniFi."""
+"""Config flow for UniFi.
+
+Provides user initiated configuration flow.
+Discovery of controllers hosted on UDM and UDM Pro devices through SSDP.
+Reauthentication when issue with credentials are reported.
+Configuration of options through options flow.
+"""
 import socket
 from urllib.parse import urlparse
 
@@ -197,7 +203,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         return await self.async_step_user()
 
     async def async_step_ssdp(self, discovery_info):
-        """Handle a discovered unifi device."""
+        """Handle a discovered UniFi device."""
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
         model_description = discovery_info[ssdp.ATTR_UPNP_MODEL_DESCRIPTION]
         mac_address = format_mac(discovery_info[ssdp.ATTR_UPNP_SERIAL])
@@ -225,7 +231,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         return await self.async_step_user()
 
     def _host_already_configured(self, host):
-        """See if we already have a unifi entry matching the host."""
+        """See if we already have a UniFi entry matching the host."""
         for entry in self._async_current_entries():
             if not entry.data or CONF_CONTROLLER not in entry.data:
                 continue
