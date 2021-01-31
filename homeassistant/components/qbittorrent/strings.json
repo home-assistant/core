@@ -9,6 +9,10 @@
             "password": "[%key:common::config_flow::data::password%]",
             "url": "[%key:common::config_flow::data::url%]"
           }
+        },
+        "import_confirm": {
+          "title": "Import qbittorret sensor",
+          "description": "A {id} sensor has been discovered in configuration.yaml. This flow will allow you to import it into a config entry."
         }
       },
       "error": {
@@ -16,7 +20,8 @@
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
       },
       "abort": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+        "config_cannot_be_imported": "Config from configuration.yaml can not be imported"
       }
     }
   }

@@ -46,35 +46,35 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the qBittorrent sensors."""
+# def setup_platform(hass, config, add_entities, discovery_info=None):
+#     """Set up the qBittorrent sensors."""
 
-    try:
-        client = create_client(
-            config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
-        )
-    except LoginRequired:
-        _LOGGER.error("Invalid authentication")
-        return
-    except RequestException as err:
-        _LOGGER.error("Connection failed")
-        raise PlatformNotReady from err
+#     try:
+#         client = create_client(
+#             config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
+#         )
+#     except LoginRequired:
+#         _LOGGER.error("Invalid authentication")
+#         return
+#     except RequestException as err:
+#         _LOGGER.error("Connection failed")
+#         raise PlatformNotReady from err
 
-    name = config.get(CONF_NAME)
+#     name = config.get(CONF_NAME)
 
-    variables = SENSOR_TYPES
-    sensors = [
-        QBittorrentSensor(
-            sensor_name,
-            client,
-            name,
-            LoginRequired,
-            None,
-        )
-        for sensor_name in variables
-    ]
+#     variables = SENSOR_TYPES
+#     sensors = [
+#         QBittorrentSensor(
+#             sensor_name,
+#             client,
+#             name,
+#             LoginRequired,
+#             None,
+#         )
+#         for sensor_name in variables
+#     ]
 
-    add_entities(sensors, True)
+#     add_entities(sensors, True)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

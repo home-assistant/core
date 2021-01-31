@@ -1,13 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "config_cannot_be_imported": "Config from configuration.yaml can not be imported"
         },
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication"
         },
         "step": {
+            "import_confirm": {
+                "description": "A {id} sensor has been discovered in configuration.yaml. This flow will allow you to import it into a config entry.",
+                "title": "Import qbittorret sensor"
+            },
             "user": {
                 "data": {
                     "password": "Password",

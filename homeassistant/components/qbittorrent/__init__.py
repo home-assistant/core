@@ -4,10 +4,11 @@ import logging
 from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, SOURCE_IMPORT
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import config_per_platform
 
 from .client import create_client
 from .const import DATA_KEY_CLIENT, DATA_KEY_NAME, DOMAIN
@@ -19,8 +20,21 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Qbittorrent component."""
-    # Make sure coordinator is initialized.
     hass.data.setdefault(DOMAIN, {})
+
+    # Import configuration from sensor platform
+    config_platform = config_per_platform(config, "sensor")
+    for p_type, p_config in config_platform:
+        if p_type != DOMAIN:
+            continue
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=p_config,
+            )
+        )
 
     return True
 

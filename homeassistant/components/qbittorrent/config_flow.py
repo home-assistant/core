@@ -14,6 +14,24 @@ from .const import DOMAIN  # pylint:disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 
+async def validate_input(hass, data):
+    errors = {}
+    try:
+        await hass.async_add_executor_job(
+            create_client,
+            data[CONF_URL],
+            data[CONF_USERNAME],
+            data[CONF_PASSWORD],
+        )
+    except LoginRequired:
+        errors["base"] = "invalid_auth"
+
+    except RequestException as err:
+        errors["base"] = "cannot_connect"
+        _LOGGER.error("Connection failed - %s", err)
+    return errors
+
+
 class QBittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for qbittorrent."""
 
@@ -22,6 +40,42 @@ class QBittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize qbittorrent config flow."""
+        self._data = None
+        self._title = None
+
+    async def async_step_import(self, device_config):
+        """Import a configuration.yaml config."""
+        data = {}
+        errors = {}
+
+        data[CONF_URL] = device_config.get(CONF_URL)
+        data[CONF_USERNAME] = device_config.get(CONF_USERNAME)
+        data[CONF_PASSWORD] = device_config.get(CONF_PASSWORD)
+
+        errors = await validate_input(self.hass, data)
+        if not errors:
+            self._data = data
+            self._title = data[CONF_URL]
+            return await self.async_step_import_confirm()
+        else:
+            return self.async_abort(reason="config_cannot_be_imported")
+
+    async def async_step_import_confirm(self, user_input=None):
+        """Confirm the user wants to import the config entry."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="import_confirm",
+                description_placeholders={"id": self._title},
+            )
+
+        return self.async_create_entry(
+            title=self._data[CONF_URL],
+            data={
+                CONF_USERNAME: self._data[CONF_USERNAME],
+                CONF_PASSWORD: self._data[CONF_PASSWORD],
+                CONF_URL: self._data[CONF_URL],
+            },
+        )
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -35,19 +89,7 @@ class QBittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "Configuring user: %s - Password hidden", user_input[CONF_USERNAME]
             )
 
-            try:
-                await self.hass.async_add_executor_job(
-                    create_client,
-                    user_input[CONF_URL],
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PASSWORD],
-                )
-            except LoginRequired:
-                errors["base"] = "invalid_auth"
-
-            except RequestException as err:
-                errors["base"] = "cannot_connect"
-                _LOGGER.error("Connection failed - %s", err)
+            errors = await validate_input(self.hass, user_input)
 
             if not errors:
                 return self.async_create_entry(
