@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISKS
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import SynologyDSMDeviceEntity, SynologyDSMEntity
+from . import SynologyDSMDeviceEntity, SynologyDSMDispatcherEntity
 from .const import (
     DOMAIN,
     SECURITY_BINARY_SENSORS,
@@ -50,7 +50,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SynoDSMSecurityBinarySensor(SynologyDSMEntity, BinarySensorEntity):
+class SynoDSMSecurityBinarySensor(SynologyDSMDispatcherEntity, BinarySensorEntity):
     """Representation a Synology Security binary sensor."""
 
     @property
@@ -78,7 +78,7 @@ class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, BinarySensorEntity):
         return getattr(self._api.storage, self.entity_type)(self._device_id)
 
 
-class SynoDSMUpgradeBinarySensor(SynologyDSMEntity, BinarySensorEntity):
+class SynoDSMUpgradeBinarySensor(SynologyDSMDispatcherEntity, BinarySensorEntity):
     """Representation a Synology Upgrade binary sensor."""
 
     @property

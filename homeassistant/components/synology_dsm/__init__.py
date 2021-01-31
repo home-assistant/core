@@ -538,7 +538,7 @@ class SynoApi:
         async_dispatcher_send(self._hass, self.signal_sensor_update)
 
 
-class SynologyDSMEntity(Entity):
+class SynologyDSMBaseEntity:
     """Representation of a Synology NAS entry."""
 
     def __init__(
@@ -548,16 +548,14 @@ class SynologyDSMEntity(Entity):
         entity_info: Dict[str, str],
     ):
         """Initialize the Synology DSM entity."""
-        super().__init__()
-
         self._api = api
         self._api_key = entity_type.split(":")[0]
         self.entity_type = entity_type.split(":")[-1]
         self._name = f"{api.network.hostname} {entity_info[ENTITY_NAME]}"
-        self._class = entity_info[ENTITY_CLASS]
-        self._enable_default = entity_info[ENTITY_ENABLE]
-        self._icon = entity_info[ENTITY_ICON]
-        self._unit = entity_info[ENTITY_UNIT]
+        self._class = entity_info.get(ENTITY_CLASS)
+        self._enable_default = entity_info.get(ENTITY_ENABLE, False)
+        self._icon = entity_info.get(ENTITY_ICON)
+        self._unit = entity_info.get(ENTITY_UNIT)
         self._unique_id = f"{self._api.information.serial}_{entity_type}"
 
     @property
@@ -608,6 +606,20 @@ class SynologyDSMEntity(Entity):
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._enable_default
 
+
+class SynologyDSMDispatcherEntity(SynologyDSMBaseEntity, Entity):
+    """Representation of a Synology NAS entry."""
+
+    def __init__(
+        self,
+        api: SynoApi,
+        entity_type: str,
+        entity_info: Dict[str, str],
+    ):
+        """Initialize the Synology DSM entity."""
+        super().__init__(api, entity_type, entity_info)
+        Entity.__init__(self)
+
     @property
     def should_poll(self) -> bool:
         """No polling needed."""
@@ -631,7 +643,7 @@ class SynologyDSMEntity(Entity):
         self.async_on_remove(self._api.subscribe(self._api_key, self.unique_id))
 
 
-class SynologyDSMCoordinatorEntity(CoordinatorEntity):
+class SynologyDSMCoordinatorEntity(SynologyDSMBaseEntity, CoordinatorEntity):
     """Representation of a Synology NAS entry."""
 
     def __init__(
@@ -642,51 +654,11 @@ class SynologyDSMCoordinatorEntity(CoordinatorEntity):
         coordinator: DataUpdateCoordinator,
     ):
         """Initialize the Synology DSM entity."""
-        super().__init__(coordinator)
-
-        self._api = api
-        self._api_key = entity_type.split(":")[0]
-        self.entity_type = entity_type.split(":")[-1]
-        self._name = f"{api.network.hostname} {entity_info[ENTITY_NAME]}"
-        self._class = entity_info.get(ENTITY_CLASS)
-        self._enable_default = entity_info.get(ENTITY_ENABLE, False)
-        self._icon = entity_info.get(ENTITY_ICON)
-        self._unit = entity_info.get(ENTITY_UNIT)
-        self._unique_id = f"{self._api.information.serial}_{entity_type}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
-
-    @property
-    def device_state_attributes(self) -> Dict[str, any]:
-        """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def device_info(self) -> Dict[str, any]:
-        """Return the device information."""
-        return {
-            "identifiers": {(DOMAIN, self._api.information.serial)},
-            "name": "Synology NAS",
-            "manufacturer": "Synology",
-            "model": self._api.information.model,
-            "sw_version": self._api.information.version_string,
-        }
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return self._enable_default
+        super().__init__(api, entity_type, entity_info)
+        CoordinatorEntity.__init__(self, coordinator)
 
 
-class SynologyDSMDeviceEntity(SynologyDSMEntity):
+class SynologyDSMDeviceEntity(SynologyDSMDispatcherEntity):
     """Representation of a Synology NAS disk or volume entry."""
 
     def __init__(
