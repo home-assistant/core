@@ -87,13 +87,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client_id = hass.data[DOMAIN][CONF_CLIENT_ID]
     lyric: Lyric = Lyric(client, client_id)
 
-    try:
-        async with async_timeout.timeout(60):
-            await lyric.get_locations()
-    except (*LYRIC_EXCEPTIONS, TimeoutError) as exception:
-        _LOGGER.warning(exception)
-        raise ConfigEntryNotReady from exception
-
     async def async_update_data() -> Lyric:
         """Fetch data from Lyric."""
         try:
@@ -117,6 +110,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
 
     for component in PLATFORMS:
         hass.async_create_task(
