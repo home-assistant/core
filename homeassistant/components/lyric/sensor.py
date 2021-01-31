@@ -26,6 +26,13 @@ from .const import (
 
 PARALLEL_UPDATES = 6
 
+LYRIC_SETPOINT_STATUS_NAMES = {
+    PRESET_NO_HOLD: "Following Schedule",
+    PRESET_PERMANENT_HOLD: "Held Permanently",
+    PRESET_TEMPORARY_HOLD: "Held Temporarily",
+    PRESET_VACATION_HOLD: "Holiday",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
@@ -239,16 +246,8 @@ class LyricSetpointStatusSensor(LyricSensor):
     def state(self) -> str:
         """Return the state of the sensor."""
         device: LyricDevice = self.device
-        return (
-            "Following Schedule"
-            if device.changeableValues.thermostatSetpointStatus == PRESET_NO_HOLD
-            else f"Held until {device.changeableValues.nextPeriodTime}"
-            if device.changeableValues.thermostatSetpointStatus == PRESET_HOLD_UNTIL
-            else "Held Permanently"
-            if device.changeableValues.thermostatSetpointStatus == PRESET_PERMANENT_HOLD
-            else "Held Temporarily"
-            if device.changeableValues.thermostatSetpointStatus == PRESET_TEMPORARY_HOLD
-            else "Holiday"
-            if device.changeableValues.thermostatSetpointStatus == PRESET_VACATION_HOLD
-            else "Unknown"
+        if device.changeableValues.thermostatSetpointStatus == PRESET_HOLD_UNTIL:
+            return f"Held until {device.changeableValues.nextPeriodTime}"
+        return LYRIC_SETPOINT_STATUS_NAMES.get(
+            device.changeableValues.thermostatSetpointStatus, "Unknown"
         )
