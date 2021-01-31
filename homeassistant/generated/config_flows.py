@@ -121,6 +121,7 @@ FLOWS = [
     "logi_circle",
     "luftdaten",
     "lutron_caseta",
+    "lyric",
     "mailgun",
     "melcloud",
     "met",

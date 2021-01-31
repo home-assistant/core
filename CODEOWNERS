@@ -260,6 +260,7 @@ homeassistant/components/luftdaten/* @fabaff
 homeassistant/components/lupusec/* @majuss
 homeassistant/components/lutron/* @JonGilmore
 homeassistant/components/lutron_caseta/* @swails @bdraco
+homeassistant/components/lyric/* @timmo001
 homeassistant/components/mastodon/* @fabaff
 homeassistant/components/matrix/* @tinloaf
 homeassistant/components/mcp23017/* @jardiamj
