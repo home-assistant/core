@@ -72,19 +72,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload WLED config entry."""
 
     # Unload entities for this entry/device.
-    await asyncio.gather(
-        *(
-            hass.config_entries.async_forward_entry_unload(entry, component)
-            for component in WLED_COMPONENTS
+    unload_ok = all(
+        await asyncio.gather(
+            *(
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in WLED_COMPONENTS
+            )
         )
     )
 
-    # Cleanup
-    del hass.data[DOMAIN][entry.entry_id]
+    if unload_ok:
+        del hass.data[DOMAIN][entry.entry_id]
+
     if not hass.data[DOMAIN]:
         del hass.data[DOMAIN]
 
-    return True
+    return unload_ok
 
 
 def wled_exception_handler(func):
