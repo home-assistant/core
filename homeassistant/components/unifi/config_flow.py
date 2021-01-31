@@ -34,7 +34,6 @@ from .const import (
     DEFAULT_DPI_RESTRICTIONS,
     DEFAULT_POE_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
-    LOGGER,
 )
 from .controller import get_controller
 from .errors import AuthenticationRequired, CannotConnect
@@ -94,13 +93,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
             except CannotConnect:
                 errors["base"] = "service_unavailable"
-
-            except Exception:  # pylint: disable=broad-except
-                LOGGER.error(
-                    "Unknown error connecting with UniFi Controller at %s",
-                    user_input[CONF_HOST],
-                )
-                return self.async_abort(reason="unknown")
 
             else:
                 self.sites = {site["name"]: site["desc"] for site in sites.values()}
