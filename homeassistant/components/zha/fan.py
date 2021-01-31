@@ -1,4 +1,5 @@
 """Fans on Zigbee Home Automation networks."""
+from abc import abstractmethod
 import functools
 import math
 from typing import List, Optional
@@ -105,10 +106,9 @@ class BaseFan(FanEntity):
         fan_mode = NAME_TO_PRESET_MODE.get(preset_mode)
         await self._async_set_fan_mode(fan_mode)
 
+    @abstractmethod
     async def _async_set_fan_mode(self, fan_mode: int) -> None:
         """Set the fan mode for the fan."""
-        await self._fan_channel.async_set_speed(fan_mode)
-        self.async_set_state(0, "fan_mode", fan_mode)
 
     @callback
     def async_set_state(self, attr_id, attr_name, value):
@@ -152,6 +152,11 @@ class ZhaFan(BaseFan, ZhaEntity):
     def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
         self.async_write_ha_state()
+
+    async def _async_set_fan_mode(self, fan_mode: int) -> None:
+        """Set the fan mode for the fan."""
+        await self._fan_channel.async_set_speed(fan_mode)
+        self.async_set_state(0, "fan_mode", fan_mode)
 
 
 @GROUP_MATCH()
