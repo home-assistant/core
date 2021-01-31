@@ -171,13 +171,13 @@ class Scanner:
         session = self.hass.helpers.aiohttp_client.async_get_clientsession()
         try:
             resp = await session.get(xml_location, timeout=5)
-            xml = await resp.text()
+            xml = await resp.text(errors="replace")
 
             # Samsung Smart TV sometimes returns an empty document the
             # first time. Retry once.
             if not xml:
                 resp = await session.get(xml_location, timeout=5)
-                xml = await resp.text()
+                xml = await resp.text(errors="replace")
         except (aiohttp.ClientError, asyncio.TimeoutError) as err:
             _LOGGER.debug("Error fetching %s: %s", xml_location, err)
             return {}
