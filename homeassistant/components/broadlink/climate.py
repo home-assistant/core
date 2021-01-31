@@ -34,6 +34,7 @@ class BroadlinkHysen(ClimateEntity, RestoreEntity):
         self._coordinator = device.update_manager.coordinator
         self._supported_features = SUPPORT_TARGET_TEMPERATURE
         self._hvac_mode = None
+        self._hvac_action = None
 
     @property
     def name(self):
