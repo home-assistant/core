@@ -879,9 +879,6 @@ life360==4.1.1
 # homeassistant.components.lifx_legacy
 liffylights==0.9.4
 
-# homeassistant.components.osramlightify
-lightify==1.0.7.2
-
 # homeassistant.components.lightwave
 lightwave==0.19
 
