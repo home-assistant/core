@@ -1,10 +1,12 @@
 """Component for interacting with a Lutron Caseta system."""
 import asyncio
 import logging
+import ssl
 
 from aiolip import LIP
 from aiolip.data import LIPMode
 from aiolip.protocol import LIP_BUTTON_PRESS
+import async_timeout
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
@@ -29,6 +31,7 @@ from .const import (
     BRIDGE_DEVICE_ID,
     BRIDGE_LEAP,
     BRIDGE_LIP,
+    BRIDGE_TIMEOUT,
     BUTTON_DEVICES,
     CONF_CA_CERTS,
     CONF_CERTFILE,
@@ -94,15 +97,26 @@ async def async_setup_entry(hass, config_entry):
     keyfile = hass.config.path(config_entry.data[CONF_KEYFILE])
     certfile = hass.config.path(config_entry.data[CONF_CERTFILE])
     ca_certs = hass.config.path(config_entry.data[CONF_CA_CERTS])
+    bridge = None
 
-    bridge = Smartbridge.create_tls(
-        hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
-    )
+    try:
+        bridge = Smartbridge.create_tls(
+            hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
+        )
+    except ssl.SSLError:
+        _LOGGER.error("Invalid certificate used to connect to bridge at %s.", host)
+        return False
 
-    await bridge.connect()
-    if not bridge.is_connected():
+    timed_out = True
+    try:
+        with async_timeout.timeout(BRIDGE_TIMEOUT):
+            await bridge.connect()
+            timed_out = False
+    except asyncio.TimeoutError:
+        _LOGGER.error("Timeout while trying to connect to bridge at %s.", host)
+
+    if timed_out or not bridge.is_connected():
         await bridge.close()
-        _LOGGER.error("Unable to connect to Lutron Caseta bridge at %s", host)
         raise ConfigEntryNotReady
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LEAP at %s", host)
