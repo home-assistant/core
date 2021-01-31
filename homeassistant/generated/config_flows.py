@@ -122,6 +122,7 @@ FLOWS = [
     "luftdaten",
     "lutron_caseta",
     "mailgun",
+    "mazda",
     "melcloud",
     "met",
     "meteo_france",
