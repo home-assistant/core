@@ -71,22 +71,26 @@ SET_DYSON_SPEED_SCHEMA = {
 PRESET_MODE_AUTO = "AUTO"
 PRESET_MODES = [PRESET_MODE_AUTO]
 
-SPEED_LIST_DYSON = [
-    int(FanSpeed.FAN_SPEED_1.value),
-    int(FanSpeed.FAN_SPEED_2.value),
-    int(FanSpeed.FAN_SPEED_3.value),
-    int(FanSpeed.FAN_SPEED_4.value),
-    int(FanSpeed.FAN_SPEED_5.value),
-    int(FanSpeed.FAN_SPEED_6.value),
-    int(FanSpeed.FAN_SPEED_7.value),
-    int(FanSpeed.FAN_SPEED_8.value),
-    int(FanSpeed.FAN_SPEED_9.value),
-    int(FanSpeed.FAN_SPEED_10.value),
+ORDERED_DYSON_SPEEDS = [
+    FanSpeed.FAN_SPEED_1.value,
+    FanSpeed.FAN_SPEED_2.value,
+    FanSpeed.FAN_SPEED_3.value,
+    FanSpeed.FAN_SPEED_4.value,
+    FanSpeed.FAN_SPEED_5.value,
+    FanSpeed.FAN_SPEED_6.value,
+    FanSpeed.FAN_SPEED_7.value,
+    FanSpeed.FAN_SPEED_8.value,
+    FanSpeed.FAN_SPEED_9.value,
+    FanSpeed.FAN_SPEED_10.value,
 ]
+DYSON_SPEED_TO_INT_VALUE = {k: int(v) for k, v in ORDERED_DYSON_SPEEDS}
+INT_VALUE_TO_DYSON_SPEED = {v: k for k, v in DYSON_SPEED_TO_INT_VALUE.items()}
+
+SPEED_LIST_DYSON = list(DYSON_SPEED_TO_INT_VALUE.values())
 
 SPEED_RANGE = (
-    int(FanSpeed.FAN_SPEED_1.value),
-    int(FanSpeed.FAN_SPEED_10.value),
+    SPEED_LIST_DYSON[0],
+    SPEED_LIST_DYSON[-1],
 )  # off is not included
 
 
@@ -148,7 +152,9 @@ class DysonFanEntity(DysonEntity, FanEntity):
         """Return the current speed percentage."""
         if self.auto_mode:
             return None
-        return ranged_value_to_percentage(SPEED_RANGE, self._device.state.speed)
+        return INT_VALUE_TO_DYSON_SPEED[
+            ranged_value_to_percentage(SPEED_RANGE, int(self._device.state.speed))
+        ]
 
     @property
     def preset_modes(self):
@@ -211,7 +217,9 @@ class DysonFanEntity(DysonEntity, FanEntity):
         if percentage == 0:
             self.turn_off()
         else:
-            dyson_speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+            dyson_speed = INT_VALUE_TO_DYSON_SPEED[
+                math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+            ]
             self.set_dyson_speed(dyson_speed)
 
     def set_preset_mode(self, preset_mode: str) -> None:
