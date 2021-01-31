@@ -54,6 +54,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.data = {}
         self.lutron_id = None
         self.tls_assets_validated = False
+        self.attempted_tls_validation = False
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -95,10 +96,12 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._configure_tls_assets()
 
         if (
-            await self.hass.async_add_executor_job(self._tls_assets_exist)
+            not self.attempted_tls_validation
+            and await self.hass.async_add_executor_job(self._tls_assets_exist)
             and await self.async_validate_connectable_bridge_config()
         ):
             self.tls_assets_validated = True
+        self.attempted_tls_validation = True
 
         if user_input is not None:
             if self.tls_assets_validated:
@@ -221,20 +224,22 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 certfile=self.hass.config.path(self.data[CONF_CERTFILE]),
                 ca_certs=self.hass.config.path(self.data[CONF_CA_CERTS]),
             )
+        except ssl.SSLError:
+            _LOGGER.error(
+                "Invalid certificate used to connect to bridge at %s.",
+                self.data[CONF_HOST],
+            )
+            return False
+
+        try:
             with async_timeout.timeout(BRIDGE_TIMEOUT):
                 await bridge.connect()
             connected_ok = bridge.is_connected()
             await bridge.close()
             return connected_ok
-        except (asyncio.TimeoutError, ssl.SSLCertVerificationError, ssl.SSLError):
+        except (asyncio.TimeoutError, ssl.SSLCertVerificationError):
             _LOGGER.error(
                 "Incorrect certificate used to connect to bridge at %s.",
-                self.data[CONF_HOST],
-            )
-            return False
-        except ssl.SSLError:
-            _LOGGER.error(
-                "Invalid certificate used to connect to bridge at %s.",
                 self.data[CONF_HOST],
             )
             return False
@@ -245,5 +250,4 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return False
         finally:
-            if bridge:
-                await bridge.close()
+            await bridge.close()

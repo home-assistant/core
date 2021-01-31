@@ -103,17 +103,16 @@ async def async_setup_entry(hass, config_entry):
         bridge = Smartbridge.create_tls(
             hostname=host, keyfile=keyfile, certfile=certfile, ca_certs=ca_certs
         )
+    except ssl.SSLError:
+        _LOGGER.error("Invalid certificate used to connect to bridge at %s.", host)
+        return False
+
+    try:
         with async_timeout.timeout(BRIDGE_TIMEOUT):
             await bridge.connect()
     except (asyncio.TimeoutError, ssl.SSLCertVerificationError):
         _LOGGER.error("Incorrect certificate used to connect to bridge at %s.", host)
-        if bridge:
-            await bridge.close()
-        return False
-    except ssl.SSLError:
-        _LOGGER.error("Invalid certificate used to connect to bridge at %s.", host)
-        if bridge:
-            await bridge.close()
+        await bridge.close()
         return False
 
     if not bridge.is_connected():
