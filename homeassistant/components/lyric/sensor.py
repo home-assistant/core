@@ -24,7 +24,6 @@ from .const import (
     PRESET_VACATION_HOLD,
 )
 
-
 LYRIC_SETPOINT_STATUS_NAMES = {
     PRESET_NO_HOLD: "Following Schedule",
     PRESET_PERMANENT_HOLD: "Held Permanently",
