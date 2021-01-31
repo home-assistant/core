@@ -9,6 +9,7 @@ import homeassistant.components.automation as automation
 from homeassistant.components.automation import (
     ATTR_SOURCE,
     DOMAIN,
+    EVENT_AUTOMATION_FAILED,
     EVENT_AUTOMATION_RELOADED,
     EVENT_AUTOMATION_TRIGGERED,
     SERVICE_TRIGGER,
@@ -29,7 +30,12 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import assert_setup_component, async_mock_service, mock_restore_cache
+from tests.common import (
+    assert_setup_component,
+    async_capture_events,
+    async_mock_service,
+    mock_restore_cache,
+)
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
 
@@ -932,6 +938,7 @@ async def test_automation_bad_trigger(hass, caplog):
 
 async def test_automation_with_error_in_script(hass, caplog):
     """Test automation with an error in script."""
+    failures = async_capture_events(hass, EVENT_AUTOMATION_FAILED)
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -948,6 +955,7 @@ async def test_automation_with_error_in_script(hass, caplog):
     await hass.async_block_till_done()
     assert "Service not found" in caplog.text
     assert "Traceback" not in caplog.text
+    assert len(failures) == 1
 
 
 async def test_automation_with_error_in_script_2(hass, caplog):

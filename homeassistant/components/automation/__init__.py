@@ -56,12 +56,14 @@ from homeassistant.util.dt import parse_datetime
 from .config import PLATFORM_SCHEMA  # noqa
 from .config import async_validate_config_item
 from .const import (
+    ATTR_EXCEPTION,
     CONF_ACTION,
     CONF_CONDITION,
     CONF_INITIAL_STATE,
     CONF_TRIGGER,
     DEFAULT_INITIAL_STATE,
     DOMAIN,
+    EVENT_AUTOMATION_FAILED,
     LOGGER,
 )
 from .helpers import async_get_blueprints
@@ -410,8 +412,16 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                 self.entity_id,
                 err,
             )
-        except Exception:  # pylint: disable=broad-except
+            self.hass.bus.async_fire(
+                EVENT_AUTOMATION_FAILED,
+                {ATTR_ENTITY_ID: self.entity_id, ATTR_EXCEPTION: err},
+            )
+        except Exception as err:  # pylint: disable=broad-except
             self._logger.exception("While executing automation %s", self.entity_id)
+            self.hass.bus.async_fire(
+                EVENT_AUTOMATION_FAILED,
+                {ATTR_ENTITY_ID: self.entity_id, ATTR_EXCEPTION: err},
+            )
 
     async def async_will_remove_from_hass(self):
         """Remove listeners when removing automation from Home Assistant."""

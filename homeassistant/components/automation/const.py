@@ -16,4 +16,8 @@ CONF_INPUT = "input"
 
 DEFAULT_INITIAL_STATE = True
 
+EVENT_AUTOMATION_FAILED = f"{DOMAIN}_failed"
+
+ATTR_EXCEPTION = "exception"
+
 LOGGER = logging.getLogger(__package__)
