@@ -24,6 +24,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .api import async_register_api
 from .const import (
     ATTR_COMMAND_CLASS,
+    ATTR_COMMAND_CLASS_NAME,
     ATTR_ENDPOINT,
     ATTR_HOME_ID,
     ATTR_LABEL,
@@ -161,7 +162,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ATTR_HOME_ID: client.driver.controller.home_id,
                 ATTR_ENDPOINT: notification.endpoint,
                 CONF_DEVICE_ID: device.id,
-                ATTR_COMMAND_CLASS: notification.command_class_name,
+                ATTR_COMMAND_CLASS: notification.command_class,
+                ATTR_COMMAND_CLASS_NAME: notification.command_class_name,
                 ATTR_LABEL: notification.metadata.label
                 or notification.property_key_name
                 or notification.property_name,
