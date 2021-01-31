@@ -13,7 +13,7 @@ from pyeconet.errors import (
     PyeconetError,
 )
 
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -150,6 +150,11 @@ class EcoNetEntity(Entity):
     def unique_id(self):
         """Return the unique ID of the entity."""
         return f"{self._econet.device_id}_{self._econet.device_name}"
+
+    @property
+    def temperature_unit(self):
+        """Return the unit of measurement."""
+        return TEMP_FAHRENHEIT
 
     @property
     def should_poll(self) -> bool:
