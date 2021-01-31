@@ -201,7 +201,7 @@ async def test_homekit_setup(hass, hk_driver, mock_zeroconf):
     hass.states.async_set("light.demo2", "on")
     zeroconf_mock = MagicMock()
     with patch(
-        f"{PATH_HOMEKIT}.accessories.HomeDriver", return_value=hk_driver
+        f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver
     ) as mock_driver, patch("homeassistant.util.get_local_ip") as mock_ip:
         mock_ip.return_value = IP_ADDRESS
         await hass.async_add_executor_job(homekit.setup, zeroconf_mock)
@@ -245,9 +245,7 @@ async def test_homekit_setup_ip_address(hass, hk_driver, mock_zeroconf):
 
     mock_zeroconf = MagicMock()
     path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
-    with patch(
-        f"{PATH_HOMEKIT}.accessories.HomeDriver", return_value=hk_driver
-    ) as mock_driver:
+    with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
         await hass.async_add_executor_job(homekit.setup, mock_zeroconf)
     mock_driver.assert_called_with(
         hass,
@@ -283,9 +281,7 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver, mock_zeroconf):
 
     zeroconf_instance = MagicMock()
     path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
-    with patch(
-        f"{PATH_HOMEKIT}.accessories.HomeDriver", return_value=hk_driver
-    ) as mock_driver:
+    with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
         await hass.async_add_executor_job(homekit.setup, zeroconf_instance)
     mock_driver.assert_called_with(
         hass,
@@ -735,7 +731,7 @@ async def test_homekit_too_many_accessories(hass, hk_driver, caplog, mock_zeroco
     with patch("pyhap.accessory_driver.AccessoryDriver.start_service"), patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory"
     ), patch(f"{PATH_HOMEKIT}.show_setup_message"), patch(
-        f"{PATH_HOMEKIT}.accessories.HomeBridge", _mock_bridge
+        f"{PATH_HOMEKIT}.HomeBridge", _mock_bridge
     ):
         await homekit.async_start()
         await hass.async_block_till_done()
