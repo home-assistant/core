@@ -66,7 +66,6 @@ def setup_platform(hass, config, add_entities, discover_info=None):
 
     try:
         remote = CmusRemote(server=host, port=port, password=password)
-        remote.connect()
     except exceptions.InvalidPassword:
         _LOGGER.error("The provided password was rejected by cmus")
         return False
@@ -82,17 +81,24 @@ class CmusRemote:
         self._server = server
         self._port = port
         self._password = password
+        self.cmus = self.connect()
 
     def connect(self):
         """Connect to the cmus server."""
 
         try:
-            self.cmus = remote.PyCmus(
+            cmus = remote.PyCmus(
                 server=self._server, port=self._port, password=self._password
             )
         except exceptions.InvalidPassword:
             _LOGGER.error("The provided password was rejected by cmus")
-            return False
+
+        return cmus
+
+    def reconnect(self):
+        """Re-connect to the cmus server."""
+
+        self.cmus = self.connect()
 
 
 class CmusDevice(MediaPlayerEntity):
@@ -102,7 +108,7 @@ class CmusDevice(MediaPlayerEntity):
     def __init__(self, remote, name, server):
         """Initialize the CMUS device."""
 
-        self.remote = remote
+        self._remote = remote
         if server:
             auto_name = f"cmus-{server}"
         else:
@@ -113,11 +119,11 @@ class CmusDevice(MediaPlayerEntity):
     def update(self):
         """Get the latest data and update the state."""
         try:
-            status = self.remote.cmus.get_status_dict()
+            status = self._remote.cmus.get_status_dict()
         except BrokenPipeError:
-            self.remote.connect()
+            self._remote.reconnect()
         except exceptions.ConfigurationError:
-            self.remote.connect()
+            self._remote.reconnect()
             _LOGGER.warning("A configuration error occurred")
         if "status" not in locals():
             _LOGGER.warning("Received no status from cmus")
@@ -196,15 +202,15 @@ class CmusDevice(MediaPlayerEntity):
 
     def turn_off(self):
         """Service to send the CMUS the command to stop playing."""
-        self.remote.cmus.player_stop()
+        self._remote.cmus.player_stop()
 
     def turn_on(self):
         """Service to send the CMUS the command to start playing."""
-        self.remote.cmus.player_play()
+        self._remote.cmus.player_play()
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self.remote.cmus.set_volume(int(volume * 100))
+        self._remote.cmus.set_volume(int(volume * 100))
 
     def volume_up(self):
         """Set the volume up."""
@@ -216,7 +222,7 @@ class CmusDevice(MediaPlayerEntity):
             current_volume = left
 
         if current_volume <= 100:
-            self.remote.cmus.set_volume(int(current_volume) + 5)
+            self._remote.cmus.set_volume(int(current_volume) + 5)
 
     def volume_down(self):
         """Set the volume down."""
@@ -228,12 +234,12 @@ class CmusDevice(MediaPlayerEntity):
             current_volume = left
 
         if current_volume <= 100:
-            self.remote.cmus.set_volume(int(current_volume) - 5)
+            self._remote.cmus.set_volume(int(current_volume) - 5)
 
     def play_media(self, media_type, media_id, **kwargs):
         """Send the play command."""
         if media_type in [MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST]:
-            self.remote.cmus.player_play_file(media_id)
+            self._remote.cmus.player_play_file(media_id)
         else:
             _LOGGER.error(
                 "Invalid media type %s. Only %s and %s are supported",
@@ -244,24 +250,24 @@ class CmusDevice(MediaPlayerEntity):
 
     def media_pause(self):
         """Send the pause command."""
-        self.remote.cmus.player_pause()
+        self._remote.cmus.player_pause()
 
     def media_next_track(self):
         """Send next track command."""
-        self.remote.cmus.player_next()
+        self._remote.cmus.player_next()
 
     def media_previous_track(self):
         """Send next track command."""
-        self.remote.cmus.player_prev()
+        self._remote.cmus.player_prev()
 
     def media_seek(self, position):
         """Send seek command."""
-        self.remote.cmus.seek(position)
+        self._remote.cmus.seek(position)
 
     def media_play(self):
         """Send the play command."""
-        self.remote.cmus.player_play()
+        self._remote.cmus.player_play()
 
     def media_stop(self):
         """Send the stop command."""
-        self.remote.cmus.stop()
+        self._remote.cmus.stop()
