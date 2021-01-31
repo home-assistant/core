@@ -187,3 +187,15 @@ def test_object_selector_schema(schema):
 def test_text_selector_schema(schema):
     """Test text selector."""
     selector.validate_selector({"text": schema})
+
+
+@pytest.mark.parametrize(
+    "schema",
+    (
+        {"options": []},
+        {"options": ["red", "green", "blue"]},
+    ),
+)
+def test_select_selector_schema(schema):
+    """Test select selector."""
+    selector.validate_selector({"select": schema})
