@@ -237,17 +237,11 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             connected_ok = bridge.is_connected()
             await bridge.close()
             return connected_ok
-        except (asyncio.TimeoutError, ssl.SSLCertVerificationError):
+        except asyncio.TimeoutError:
             _LOGGER.error(
-                "Incorrect certificate used to connect to bridge at %s.",
+                "Timeout or incorrect certificate used to connect to bridge at %s.",
                 self.data[CONF_HOST],
             )
-            return False
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception(
-                "Unknown exception while checking connectivity to bridge %s",
-                self.data[CONF_HOST],
-            )
-            return False
-        finally:
-            await bridge.close()
+
+        await bridge.close()
+        return False
