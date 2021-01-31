@@ -27,6 +27,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.philips_js import PhilipsTVDataUpdateCoordinator
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     CONF_API_VERSION,
     CONF_HOST,
@@ -176,7 +177,13 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def turn_on(self):
         """Turn on the device."""
         _LOGGER.debug("Firing event to turn on device")
-        self.hass.bus.async_fire(EVENT_TURN_ON, {ATTR_ENTITY_ID: self.entity_id})
+        self.hass.bus.async_fire(
+            EVENT_TURN_ON,
+            {
+                ATTR_ENTITY_ID: self.entity_id,
+                ATTR_DEVICE_ID: self.registry_entry.device_id,
+            },
+        )
 
     def turn_off(self):
         """Turn off the device."""
