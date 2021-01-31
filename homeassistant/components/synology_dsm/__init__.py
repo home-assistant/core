@@ -224,14 +224,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         except SynologyDSMAPIErrorException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-        data = {
-            "cameras": {},
-        }
-        if SynoSurveillanceStation.CAMERA_API_KEY in api.dsm.apis:
-            for camera in surveillance_station.get_all_cameras():
-                data["cameras"][camera.id] = camera
+        if SynoSurveillanceStation.CAMERA_API_KEY not in api.dsm.apis:
+            return
 
-        return data
+        return {
+            "cameras": {
+                camera.id: camera for camera in surveillance_station.get_all_cameras()
+            }
+        }
 
     hass.data[DOMAIN][entry.unique_id][
         COORDINATOR_SURVEILLANCE
