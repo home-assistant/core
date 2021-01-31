@@ -81,7 +81,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(self, discovery_info):
         """Handle a flow initialized by homekit discovery."""
-        await self.async_step_zeroconf(discovery_info)
+        return await self.async_step_zeroconf(discovery_info)
 
     async def async_step_link(self, user_input=None):
         """Handle pairing with the hub."""
