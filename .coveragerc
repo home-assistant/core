@@ -141,7 +141,6 @@ omit =
     homeassistant/components/connectedcars/const.py
     homeassistant/components/connectedcars/device_tracker.py
     homeassistant/components/connectedcars/sensor.py
-    homeassistant/components/connectedcars/translations/*
     homeassistant/components/control4/__init__.py
     homeassistant/components/control4/light.py
     homeassistant/components/control4/const.py
