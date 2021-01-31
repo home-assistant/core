@@ -618,9 +618,10 @@ class HyperionPriorityLight(HyperionBaseLight):
     @classmethod
     def _is_priority_entry_black(cls, priority: dict[str, Any] | None) -> bool:
         """Determine if a given priority entry is the color black."""
-        if not priority:
-            return False
-        if priority.get(const.KEY_COMPONENTID) == const.KEY_COMPONENTID_COLOR:
+        if (
+            priority
+            and priority.get(const.KEY_COMPONENTID) == const.KEY_COMPONENTID_COLOR
+        ):
             rgb_color = priority.get(const.KEY_VALUE, {}).get(const.KEY_RGB)
             if rgb_color is not None and tuple(rgb_color) == COLOR_BLACK:
                 return True

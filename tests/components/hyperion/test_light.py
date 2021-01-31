@@ -382,8 +382,9 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
     assert entity_state
     assert entity_state.attributes["brightness"] == brightness
 
-    # On (=), 100% (=), V4L (!), [0,255,255] (=)
-    effect = const.KEY_COMPONENTID_EXTERNAL_SOURCES[2]  # V4L
+    # On (=), 100% (=), "USB Capture (!), [0,255,255] (=)
+    component = "V4L"
+    effect = const.KEY_COMPONENTID_TO_NAME[component]
     client.async_send_clear = AsyncMock(return_value=True)
     client.async_send_set_component = AsyncMock(return_value=True)
     await hass.services.async_call(
@@ -422,12 +423,12 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
             }
         ),
     ]
-    client.visible_priority = {const.KEY_COMPONENTID: effect}
+    client.visible_priority = {const.KEY_COMPONENTID: component}
     call_registered_callback(client, "priorities-update")
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.attributes["icon"] == hyperion_light.ICON_EXTERNAL_SOURCE
-    assert entity_state.attributes["effect"] == const.KEY_COMPONENTID_TO_NAME[effect]
+    assert entity_state.attributes["effect"] == effect
 
     # On (=), 100% (=), "Warm Blobs" (!), [0,255,255] (=)
     effect = "Warm Blobs"
@@ -505,30 +506,126 @@ async def test_light_async_turn_on(hass: HomeAssistantType) -> None:
     assert not client.async_send_set_effect.called
 
 
-async def test_light_async_turn_on_error_conditions(hass: HomeAssistantType) -> None:
-    """Test error conditions when turning the light on."""
+async def test_light_async_turn_on_fail_async_send_set_component(
+    hass: HomeAssistantType,
+) -> None:
+    """Test set_component failure when turning the light on."""
     client = create_mock_client()
     client.async_send_set_component = AsyncMock(return_value=False)
     client.is_on = Mock(return_value=False)
     await setup_test_config_entry(hass, hyperion_client=client)
-
-    # On (=), 100% (=), solid (=), [255,255,255] (=)
     await hass.services.async_call(
         LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: TEST_ENTITY_ID_1}, blocking=True
     )
-
-    assert client.async_send_set_component.call_args == call(
-        **{
-            const.KEY_COMPONENTSTATE: {
-                const.KEY_COMPONENT: const.KEY_COMPONENTID_ALL,
-                const.KEY_STATE: True,
-            }
-        }
+    assert client.method_calls[-1] == call.async_send_set_component(
+        componentstate={"component": "ALL", "state": True}
     )
 
 
-async def test_light_async_turn_off_error_conditions(hass: HomeAssistantType) -> None:
-    """Test error conditions when turning the light off."""
+async def test_light_async_turn_on_fail_async_send_set_component_source(
+    hass: HomeAssistantType,
+) -> None:
+    """Test async_send_set_component failure when selecting the source."""
+    client = create_mock_client()
+    client.async_send_clear = AsyncMock(return_value=True)
+    client.async_send_set_component = AsyncMock(return_value=False)
+    client.is_on = Mock(return_value=True)
+    await setup_test_config_entry(hass, hyperion_client=client)
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: TEST_ENTITY_ID_1,
+            ATTR_EFFECT: const.KEY_COMPONENTID_TO_NAME["V4L"],
+        },
+        blocking=True,
+    )
+    assert client.method_calls[-1] == call.async_send_set_component(
+        componentstate={"component": "BOBLIGHTSERVER", "state": False}
+    )
+
+
+async def test_light_async_turn_on_fail_async_send_clear_source(
+    hass: HomeAssistantType,
+) -> None:
+    """Test async_send_clear failure when turning the light on."""
+    client = create_mock_client()
+    client.is_on = Mock(return_value=True)
+    client.async_send_clear = AsyncMock(return_value=False)
+    await setup_test_config_entry(hass, hyperion_client=client)
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: TEST_ENTITY_ID_1,
+            ATTR_EFFECT: const.KEY_COMPONENTID_TO_NAME["V4L"],
+        },
+        blocking=True,
+    )
+    assert client.method_calls[-1] == call.async_send_clear(priority=180)
+
+
+async def test_light_async_turn_on_fail_async_send_clear_effect(
+    hass: HomeAssistantType,
+) -> None:
+    """Test async_send_clear failure when turning on an effect."""
+    client = create_mock_client()
+    client.is_on = Mock(return_value=True)
+    client.async_send_clear = AsyncMock(return_value=False)
+    await setup_test_config_entry(hass, hyperion_client=client)
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_EFFECT: "Warm Mood Blobs"},
+        blocking=True,
+    )
+    assert client.method_calls[-1] == call.async_send_clear(priority=180)
+
+
+async def test_light_async_turn_on_fail_async_send_set_effect(
+    hass: HomeAssistantType,
+) -> None:
+    """Test async_send_set_effect failure when turning on the light."""
+    client = create_mock_client()
+    client.is_on = Mock(return_value=True)
+    client.async_send_clear = AsyncMock(return_value=True)
+    client.async_send_set_effect = AsyncMock(return_value=False)
+    await setup_test_config_entry(hass, hyperion_client=client)
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_EFFECT: "Warm Mood Blobs"},
+        blocking=True,
+    )
+    assert client.method_calls[-1] == call.async_send_set_effect(
+        priority=180, effect={"name": "Warm Mood Blobs"}, origin="Home Assistant"
+    )
+
+
+async def test_light_async_turn_on_fail_async_send_set_color(
+    hass: HomeAssistantType,
+) -> None:
+    """Test async_send_set_color failure when turning on the light."""
+    client = create_mock_client()
+    client.is_on = Mock(return_value=True)
+    client.async_send_clear = AsyncMock(return_value=True)
+    client.async_send_set_color = AsyncMock(return_value=False)
+    await setup_test_config_entry(hass, hyperion_client=client)
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID_1, ATTR_HS_COLOR: (240.0, 100.0)},
+        blocking=True,
+    )
+    assert client.method_calls[-1] == call.async_send_set_color(
+        priority=180, color=(0, 0, 255), origin="Home Assistant"
+    )
+
+
+async def test_light_async_turn_off_fail_async_send_set_component(
+    hass: HomeAssistantType,
+) -> None:
+    """Test async_send_set_component failure when turning off the light."""
     client = create_mock_client()
     client.async_send_set_component = AsyncMock(return_value=False)
     await setup_test_config_entry(hass, hyperion_client=client)
@@ -539,15 +636,30 @@ async def test_light_async_turn_off_error_conditions(hass: HomeAssistantType) ->
         {ATTR_ENTITY_ID: TEST_ENTITY_ID_1},
         blocking=True,
     )
-
-    assert client.async_send_set_component.call_args == call(
-        **{
-            const.KEY_COMPONENTSTATE: {
-                const.KEY_COMPONENT: const.KEY_COMPONENTID_LEDDEVICE,
-                const.KEY_STATE: False,
-            }
-        }
+    assert client.method_calls[-1] == call.async_send_set_component(
+        componentstate={"component": "LEDDEVICE", "state": False}
     )
+
+
+async def test_priority_light_async_turn_off_fail_async_send_clear(
+    hass: HomeAssistantType,
+) -> None:
+    """Test async_send_clear failure when turning off a priority light."""
+    client = create_mock_client()
+    client.async_send_clear = AsyncMock(return_value=False)
+    with patch(
+        "homeassistant.components.hyperion.light.HyperionPriorityLight.entity_registry_enabled_default"
+    ) as enabled_by_default_mock:
+        enabled_by_default_mock.return_value = True
+        await setup_test_config_entry(hass, hyperion_client=client)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: TEST_PRIORITY_LIGHT_ENTITY_ID_1},
+        blocking=True,
+    )
+    assert client.method_calls[-1] == call.async_send_clear(priority=180)
 
 
 async def test_light_async_turn_off(hass: HomeAssistantType) -> None:
