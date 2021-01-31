@@ -111,7 +111,7 @@ async def async_setup_entry(hass, config_entry):
         )
         if bridge:
             await bridge.close()
-        return
+        return False
 
     if not bridge.is_connected():
         await bridge.close()
