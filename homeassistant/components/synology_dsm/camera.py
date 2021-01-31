@@ -14,8 +14,11 @@ from . import SynoApi, SynologyDSMCoordinatorEntity
 from .const import (
     COORDINATOR_SURVEILLANCE,
     DOMAIN,
+    ENTITY_CLASS,
     ENTITY_ENABLE,
+    ENTITY_ICON,
     ENTITY_NAME,
+    ENTITY_UNIT,
     SYNO_API,
 )
 
@@ -56,6 +59,9 @@ class SynoDSMCamera(SynologyDSMCoordinatorEntity, Camera):
             {
                 ENTITY_NAME: coordinator.data["cameras"][camera_id].name,
                 ENTITY_ENABLE: coordinator.data["cameras"][camera_id].is_enabled,
+                ENTITY_CLASS: None,
+                ENTITY_ICON: None,
+                ENTITY_UNIT: None,
             },
             coordinator,
         )
