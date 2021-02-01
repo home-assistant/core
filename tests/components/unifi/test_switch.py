@@ -293,10 +293,11 @@ async def test_platform_manually_configured(hass):
     assert UNIFI_DOMAIN not in hass.data
 
 
-async def test_no_clients(hass):
+async def test_no_clients(hass, aioclient_mock):
     """Test the update_clients function when no clients are found."""
     config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock=aioclient_mock,
         options={
             CONF_TRACK_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
@@ -309,10 +310,11 @@ async def test_no_clients(hass):
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_controller_not_client(hass):
+async def test_controller_not_client(hass, aioclient_mock):
     """Test that the controller doesn't become a switch."""
     config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock=aioclient_mock,
         options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
         clients_response=[CONTROLLER_HOST],
         devices_response=[DEVICE_1],
@@ -325,12 +327,13 @@ async def test_controller_not_client(hass):
     assert cloudkey is None
 
 
-async def test_not_admin(hass):
+async def test_not_admin(hass, aioclient_mock):
     """Test that switch platform only work on an admin account."""
     description = deepcopy(DESCRIPTION)
     description[0]["site_role"] = "not admin"
     config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock=aioclient_mock,
         options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
         site_description=description,
         clients_response=[CLIENT_1],
@@ -342,10 +345,11 @@ async def test_not_admin(hass):
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_switches(hass):
+async def test_switches(hass, aioclient_mock):
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock=aioclient_mock,
         options={
             CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]],
             CONF_TRACK_CLIENTS: False,
@@ -432,10 +436,11 @@ async def test_switches(hass):
     }
 
 
-async def test_remove_switches(hass):
+async def test_remove_switches(hass, aioclient_mock):
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock=aioclient_mock,
         options={CONF_BLOCK_CLIENT: [UNBLOCKED["mac"]]},
         clients_response=[CLIENT_1, UNBLOCKED],
         devices_response=[DEVICE_1],
@@ -465,10 +470,11 @@ async def test_remove_switches(hass):
     assert block_switch is None
 
 
-async def test_block_switches(hass):
+async def test_block_switches(hass, aioclient_mock):
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock=aioclient_mock,
         options={
             CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]],
             CONF_TRACK_CLIENTS: False,
@@ -534,10 +540,11 @@ async def test_block_switches(hass):
     }
 
 
-async def test_new_client_discovered_on_block_control(hass):
+async def test_new_client_discovered_on_block_control(hass, aioclient_mock):
     """Test if 2nd update has a new client."""
     config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock=aioclient_mock,
         options={
             CONF_BLOCK_CLIENT: [BLOCKED["mac"]],
             CONF_TRACK_CLIENTS: False,
@@ -574,10 +581,11 @@ async def test_new_client_discovered_on_block_control(hass):
     assert blocked is not None
 
 
-async def test_option_block_clients(hass):
+async def test_option_block_clients(hass, aioclient_mock):
     """Test the changes to option reflects accordingly."""
     config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock=aioclient_mock,
         options={CONF_BLOCK_CLIENT: [BLOCKED["mac"]]},
         clients_all_response=[BLOCKED, UNBLOCKED],
     )
@@ -616,10 +624,11 @@ async def test_option_block_clients(hass):
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_option_remove_switches(hass):
+async def test_option_remove_switches(hass, aioclient_mock):
     """Test removal of DPI switch when options updated."""
     config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock=aioclient_mock,
         options={
             CONF_TRACK_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
@@ -640,10 +649,11 @@ async def test_option_remove_switches(hass):
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_new_client_discovered_on_poe_control(hass):
+async def test_new_client_discovered_on_poe_control(hass, aioclient_mock):
     """Test if 2nd update has a new client."""
     config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock=aioclient_mock,
         options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
         clients_response=[CLIENT_1],
         devices_response=[DEVICE_1],
@@ -701,7 +711,7 @@ async def test_new_client_discovered_on_poe_control(hass):
     }
 
 
-async def test_ignore_multiple_poe_clients_on_same_port(hass):
+async def test_ignore_multiple_poe_clients_on_same_port(hass, aioclient_mock):
     """Ignore when there are multiple POE driven clients on same port.
 
     If there is a non-UniFi switch powered by POE,
@@ -709,6 +719,7 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass):
     """
     config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock=aioclient_mock,
         clients_response=POE_SWITCH_CLIENTS,
         devices_response=[DEVICE_1],
     )
@@ -723,7 +734,7 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass):
     assert switch_2 is None
 
 
-async def test_restoring_client(hass):
+async def test_restoring_client(hass, aioclient_mock):
     """Test the update_items function with some clients."""
     config_entry = config_entries.ConfigEntry(
         version=1,
@@ -755,6 +766,7 @@ async def test_restoring_client(hass):
 
     config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock=aioclient_mock,
         options={
             CONF_BLOCK_CLIENT: ["random mac"],
             CONF_TRACK_CLIENTS: False,

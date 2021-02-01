@@ -71,6 +71,13 @@ SITES = {"Site name": {"desc": "Site name", "name": "site_id", "role": "admin"}}
 DESCRIPTION = [{"name": "username", "site_name": "site_id", "site_role": "admin"}]
 
 
+def mock_default_unifi_requests(aioclient_mock):
+    """Mock default UniFi requests responses."""
+    host = "1.2.3.4"
+
+    aioclient_mock.get(f"https://{host}:1234", status=302)  # Check UniFi OS
+
+
 async def setup_unifi_integration(
     hass,
     config=ENTRY_CONFIG,
@@ -85,6 +92,7 @@ async def setup_unifi_integration(
     dpiapp_response=None,
     known_wireless_clients=None,
     controllers=None,
+    aioclient_mock=None,
 ):
     """Create the UniFi controller."""
     assert await async_setup_component(hass, UNIFI_DOMAIN, {})
@@ -145,16 +153,18 @@ async def setup_unifi_integration(
             return mock_dpiapp_responses.popleft()
         return {}
 
-    with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
-        "aiounifi.Controller.login",
-        return_value=True,
-    ), patch("aiounifi.Controller.sites", return_value=sites), patch(
+    # with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
+    with patch("aiounifi.Controller.login", return_value=True), patch(
+        "aiounifi.Controller.sites", return_value=sites
+    ), patch(
         "aiounifi.Controller.site_description", return_value=site_description
     ), patch(
         "aiounifi.Controller.request", new=mock_request
     ), patch.object(
         aiounifi.websocket.WSClient, "start", return_value=True
     ):
+        if aioclient_mock:
+            mock_default_unifi_requests(aioclient_mock)
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -171,13 +181,15 @@ async def setup_unifi_integration(
     return config_entry
 
 
-async def test_controller_setup(hass):
+async def test_controller_setup(hass, aioclient_mock):
     """Successful setup."""
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
         return_value=True,
     ) as forward_entry_setup:
-        config_entry = await setup_unifi_integration(hass)
+        config_entry = await setup_unifi_integration(
+            hass, aioclient_mock=aioclient_mock
+        )
         controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     entry = controller.config_entry
@@ -209,10 +221,10 @@ async def test_controller_setup(hass):
     assert controller.signal_heartbeat_missed == "unifi-heartbeat-missed"
 
 
-async def test_controller_mac(hass):
+async def test_controller_mac(hass, aioclient_mock):
     """Test that it is possible to identify controller mac."""
     config_entry = await setup_unifi_integration(
-        hass, clients_response=[CONTROLLER_HOST]
+        hass, aioclient_mock=aioclient_mock, clients_response=[CONTROLLER_HOST]
     )
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert controller.mac == CONTROLLER_HOST["mac"]
@@ -249,9 +261,9 @@ async def test_controller_unknown_error(hass):
     assert hass.data[UNIFI_DOMAIN] == {}
 
 
-async def test_reset_after_successful_setup(hass):
+async def test_reset_after_successful_setup(hass, aioclient_mock):
     """Calling reset when the entry has been setup."""
-    config_entry = await setup_unifi_integration(hass)
+    config_entry = await setup_unifi_integration(hass, aioclient_mock=aioclient_mock)
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(controller.listeners) == 6
@@ -263,9 +275,11 @@ async def test_reset_after_successful_setup(hass):
     assert len(controller.listeners) == 0
 
 
-async def test_wireless_client_event_calls_update_wireless_devices(hass):
+async def test_wireless_client_event_calls_update_wireless_devices(
+    hass, aioclient_mock
+):
     """Call update_wireless_devices method when receiving wireless client event."""
-    config_entry = await setup_unifi_integration(hass)
+    config_entry = await setup_unifi_integration(hass, aioclient_mock=aioclient_mock)
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     with patch(
