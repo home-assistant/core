@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.homekit
-HAP-python==3.1.0
+HAP-python==3.2.0
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -117,6 +117,9 @@ aiokafka==0.6.0
 
 # homeassistant.components.lutron_caseta
 aiolip==1.0.1
+
+# homeassistant.components.lyric
+aiolyric==1.0.5
 
 # homeassistant.components.notion
 aionotion==1.1.0
@@ -402,7 +405,7 @@ hole==0.5.1
 holidays==0.10.4
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210127.5
+home-assistant-frontend==20210127.6
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -666,7 +669,7 @@ pyatag==0.3.4.4
 pyatmo==4.2.2
 
 # homeassistant.components.apple_tv
-pyatv==0.7.5
+pyatv==0.7.6
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
@@ -678,7 +681,7 @@ pybotvac==0.0.20
 pycfdns==1.2.1
 
 # homeassistant.components.cast
-pychromecast==7.7.2
+pychromecast==8.0.0
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.4
@@ -838,6 +841,9 @@ pyowm==3.1.1
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
+
+# homeassistant.components.plaato
+pyplaato==0.0.15
 
 # homeassistant.components.point
 pypoint==2.0.0
@@ -1197,4 +1203,4 @@ zigpy-znp==0.3.0
 zigpy==0.32.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.14.1
+zwave-js-server-python==0.15.0
