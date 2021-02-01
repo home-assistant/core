@@ -93,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async with async_timeout.timeout(60):
                 await lyric.get_locations()
             return lyric
-        except (*LYRIC_EXCEPTIONS, asyncio.TimeoutError) as exception:
+        except LYRIC_EXCEPTIONS as exception:
             raise UpdateFailed(exception) from exception
 
     coordinator = DataUpdateCoordinator(
