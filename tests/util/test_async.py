@@ -182,8 +182,6 @@ async def test_shutdown_run_callback_threadsafe():
     with pytest.raises(RuntimeError):
         hasync.run_callback_threadsafe(loop, callback)
 
-    delattr(hasync.run_callback_threadsafe, hasync._SHUTDOWN_RUN_CALLBACK_THREADSAFE)
-
 
 async def test_run_callback_threadsafe(hass):
     """Test run_callback_threadsafe runs code in the event loop."""
