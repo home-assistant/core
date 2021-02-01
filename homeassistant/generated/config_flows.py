@@ -88,6 +88,7 @@ FLOWS = [
     "harmony",
     "heos",
     "hisense_aehw4a1",
+    "hive",
     "hlk_sw16",
     "home_connect",
     "homekit",
