@@ -199,7 +199,7 @@ async def test_run_callback_threadsafe(hass):
 
 async def test_callback_is_always_scheduled(hass):
     """Test run_callback_threadsafe always calls call_soon_threadsafe before checking for shutdown."""
-    # We have to check the shutdown state after the callback is scheduled otherwise
+    # We have to check the shutdown state AFTER the callback is scheduled otherwise
     # the function could continue on and the caller call `future.result()` after
     # the point in the main thread where callbacks are no longer run.
 
