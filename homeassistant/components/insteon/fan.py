@@ -28,15 +28,15 @@ SPEED_TO_VALUE = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Insteon fans from a config entry."""
 
-    def add_entities(discovery_info=None):
+    async def async_add_insteon_fan_entities(discovery_info=None):
         """Add the Insteon entities for the platform."""
-        async_add_insteon_entities(
+        await async_add_insteon_entities(
             hass, FAN_DOMAIN, InsteonFanEntity, async_add_entities, discovery_info
         )
 
     signal = f"{SIGNAL_ADD_ENTITIES}_{FAN_DOMAIN}"
-    async_dispatcher_connect(hass, signal, add_entities)
-    add_entities()
+    async_dispatcher_connect(hass, signal, async_add_insteon_fan_entities)
+    await async_add_insteon_fan_entities()
 
 
 class InsteonFanEntity(InsteonEntity, FanEntity):

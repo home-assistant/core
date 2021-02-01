@@ -377,9 +377,7 @@ def print_aldb_to_log(aldb):
         )
         logger.info(log_msg)
 
-
-@callback
-def async_add_insteon_entities(
+async def async_add_insteon_entities(
     hass, platform, entity_type, async_add_entities, discovery_info
 ):
     """Add Insteon devices to a platform."""
