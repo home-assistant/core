@@ -34,7 +34,7 @@ def get_update_manager(device):
         "SP2": BroadlinkSP2UpdateManager,
         "SP4": BroadlinkSP4UpdateManager,
         "SP4B": BroadlinkSP4UpdateManager,
-        "Hysen heating controller": BroadlinkHysenUpdateManager,
+        "Hysen heating controller": BroadlinkThermostatUpdateManager,
     }
     return update_managers[device.api.type](device)
 
@@ -179,8 +179,8 @@ class BroadlinkSP4UpdateManager(BroadlinkUpdateManager):
         return await self.device.async_request(self.device.api.get_state)
 
 
-class BroadlinkHysenUpdateManager(BroadlinkUpdateManager):
-    """Maneges updates for Broadlink Hysen heating controller."""
+class BroadlinkThermostatUpdateManager(BroadlinkUpdateManager):
+    """Manages updates for thermostats with Broadlink DNA."""
 
     async def async_fetch_data(self):
         """Fetch data from the device."""
