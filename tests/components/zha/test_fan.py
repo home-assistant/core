@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
+from zigpy.exceptions import ZigbeeException
 import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.hvac as hvac
@@ -181,6 +182,12 @@ async def test_fan(hass, zha_device_joined_restored, zigpy_device):
     assert len(cluster.write_attributes.mock_calls) == 1
     assert cluster.write_attributes.call_args == call({"fan_mode": 3})
 
+    # change preset_mode from HA
+    cluster.write_attributes.reset_mock()
+    await async_set_preset_mode(hass, entity_id, preset_mode=PRESET_MODE_ON)
+    assert len(cluster.write_attributes.mock_calls) == 1
+    assert cluster.write_attributes.call_args == call({"fan_mode": 4})
+
     # test adding new fan to the network and HA
     await async_test_rejoin(hass, zigpy_device, [cluster], (1,))
 
@@ -331,6 +338,66 @@ async def test_zha_group_fan_entity(hass, device_fan_1, device_fan_2, coordinato
 
     # test that group fan is now off
     assert hass.states.get(entity_id).state == STATE_OFF
+
+
+@patch(
+    "zigpy.zcl.clusters.hvac.Fan.write_attributes",
+    new=AsyncMock(side_effect=ZigbeeException),
+)
+async def test_zha_group_fan_entity_failure_state(
+    hass, device_fan_1, device_fan_2, coordinator, caplog
+):
+    """Test the fan entity for a ZHA group when writing attributes generates an exception."""
+    zha_gateway = get_zha_gateway(hass)
+    assert zha_gateway is not None
+    zha_gateway.coordinator_zha_device = coordinator
+    coordinator._zha_gateway = zha_gateway
+    device_fan_1._zha_gateway = zha_gateway
+    device_fan_2._zha_gateway = zha_gateway
+    member_ieee_addresses = [device_fan_1.ieee, device_fan_2.ieee]
+    members = [GroupMember(device_fan_1.ieee, 1), GroupMember(device_fan_2.ieee, 1)]
+
+    # test creating a group with 2 members
+    zha_group = await zha_gateway.async_create_zigpy_group("Test Group", members)
+    await hass.async_block_till_done()
+
+    assert zha_group is not None
+    assert len(zha_group.members) == 2
+    for member in zha_group.members:
+        assert member.device.ieee in member_ieee_addresses
+        assert member.group == zha_group
+        assert member.endpoint is not None
+
+    entity_domains = GROUP_PROBE.determine_entity_domains(hass, zha_group)
+    assert len(entity_domains) == 2
+
+    assert LIGHT_DOMAIN in entity_domains
+    assert DOMAIN in entity_domains
+
+    entity_id = async_find_group_entity_id(hass, DOMAIN, zha_group)
+    assert hass.states.get(entity_id) is not None
+
+    group_fan_cluster = zha_group.endpoint[hvac.Fan.cluster_id]
+
+    await async_enable_traffic(hass, [device_fan_1, device_fan_2], enabled=False)
+    await hass.async_block_till_done()
+    # test that the fans were created and that they are unavailable
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, [device_fan_1, device_fan_2])
+
+    # test that the fan group entity was created and is off
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # turn on from HA
+    group_fan_cluster.write_attributes.reset_mock()
+    await async_turn_on(hass, entity_id)
+    await hass.async_block_till_done()
+    assert len(group_fan_cluster.write_attributes.mock_calls) == 1
+    assert group_fan_cluster.write_attributes.call_args[0][0] == {"fan_mode": 2}
+
+    assert "Could not set fan mode" in caplog.text
 
 
 @pytest.mark.parametrize(
