@@ -623,7 +623,6 @@ omit =
     homeassistant/components/norway_air/air_quality.py
     homeassistant/components/notify_events/notify.py
     homeassistant/components/nsw_fuel_station/sensor.py
-    homeassistant/components/nuimo_controller/*
     homeassistant/components/nuki/__init__.py
     homeassistant/components/nuki/const.py
     homeassistant/components/nuki/lock.py
