@@ -34,6 +34,9 @@ async def mock_impl(hass):
 
 async def test_abort_if_no_configuration(hass):
     """Check flow abort when no configuration."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
     flow = config_flow.OAuth2FlowHandler()
     flow.hass = hass
     result = await flow.async_step_user()
