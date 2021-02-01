@@ -15,6 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input(hass, data):
+    """Validate user or import input."""
     errors = {}
     try:
         await hass.async_add_executor_job(
@@ -46,7 +47,6 @@ class QBittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, device_config):
         """Import a configuration.yaml config."""
         data = {}
-        errors = {}
 
         data[CONF_URL] = device_config.get(CONF_URL)
         data[CONF_USERNAME] = device_config.get(CONF_USERNAME)
@@ -68,6 +68,9 @@ class QBittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={"id": self._title},
             )
 
+        await self.async_set_unique_id(self._data[CONF_URL])
+        self._abort_if_unique_id_configured()
+
         return self.async_create_entry(
             title=self._data[CONF_URL],
             data={
@@ -80,9 +83,8 @@ class QBittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
-
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_USERNAME])
+            await self.async_set_unique_id(user_input[CONF_URL])
             self._abort_if_unique_id_configured()
 
             _LOGGER.debug(

@@ -14,11 +14,10 @@ from homeassistant.const import (
     DATA_RATE_KILOBYTES_PER_SECOND,
     STATE_IDLE,
 )
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from .client import create_client, get_main_data_client
+from .client import get_main_data_client
 from .const import (
     DATA_KEY_CLIENT,
     DATA_KEY_NAME,
@@ -44,37 +43,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
     }
 )
-
-
-# def setup_platform(hass, config, add_entities, discovery_info=None):
-#     """Set up the qBittorrent sensors."""
-
-#     try:
-#         client = create_client(
-#             config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
-#         )
-#     except LoginRequired:
-#         _LOGGER.error("Invalid authentication")
-#         return
-#     except RequestException as err:
-#         _LOGGER.error("Connection failed")
-#         raise PlatformNotReady from err
-
-#     name = config.get(CONF_NAME)
-
-#     variables = SENSOR_TYPES
-#     sensors = [
-#         QBittorrentSensor(
-#             sensor_name,
-#             client,
-#             name,
-#             LoginRequired,
-#             None,
-#         )
-#         for sensor_name in variables
-#     ]
-
-#     add_entities(sensors, True)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
