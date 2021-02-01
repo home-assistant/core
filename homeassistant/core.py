@@ -71,7 +71,11 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.util import location, network
-from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
+from homeassistant.util.async_ import (
+    fire_coroutine_threadsafe,
+    run_callback_threadsafe,
+    shutdown_run_callback_threadsafe,
+)
 import homeassistant.util.dt as dt_util
 from homeassistant.util.timeout import TimeoutManager
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
@@ -548,6 +552,14 @@ class HomeAssistant:
         # stage 3
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+
+        # Prevent run_callback_threadsafe from scheduling any additional
+        # callbacks in the event loop as callbacks created on the futures
+        # it returns will never run after the final `self.async_block_till_done`
+        # which will cause the futures to block forever when waiting for
+        # the `result()` which will cause a deadlock when shutting down the executor.
+        shutdown_run_callback_threadsafe(self.loop)
+
         try:
             async with self.timeout.async_timeout(30):
                 await self.async_block_till_done()
