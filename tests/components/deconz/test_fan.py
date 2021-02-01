@@ -1,6 +1,7 @@
 """deCONZ fan platform tests."""
 
 from copy import deepcopy
+from unittest.mock import patch
 
 import pytest
 
@@ -21,8 +22,6 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
-
-from tests.async_mock import patch
 
 FANS = {
     "1": {

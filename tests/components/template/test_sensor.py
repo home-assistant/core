@@ -1,6 +1,7 @@
 """The test for the Template sensor platform."""
 from asyncio import Event
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.components import sensor
@@ -18,7 +19,6 @@ from homeassistant.helpers.template import Template
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component, async_fire_time_changed
 
 

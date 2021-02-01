@@ -1,5 +1,6 @@
 """Tests for the WLED light platform."""
 import json
+from unittest.mock import patch
 
 from wled import Device as WLEDDevice, WLEDConnectionError
 
@@ -37,7 +38,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, load_fixture
 from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker

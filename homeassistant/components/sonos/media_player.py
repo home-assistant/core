@@ -59,6 +59,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.plex.const import PLEX_URI_SCHEME
+from homeassistant.components.plex.services import play_on_sonos
 from homeassistant.const import (
     ATTR_TIME,
     EVENT_HOMEASSISTANT_STOP,
@@ -1186,12 +1188,17 @@ class SonosEntity(MediaPlayerEntity):
         """
         Send the play_media command to the media player.
 
+        If media_id is a Plex payload, attempt Plex->Sonos playback.
+
         If media_type is "playlist", media_id should be a Sonos
         Playlist name.  Otherwise, media_id should be a URI.
 
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
-        if media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
+        if media_id and media_id.startswith(PLEX_URI_SCHEME):
+            media_id = media_id[len(PLEX_URI_SCHEME) :]
+            play_on_sonos(self.hass, media_type, media_id, self.name)
+        elif media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 try:
                     if self.soco.is_spotify_uri(media_id):

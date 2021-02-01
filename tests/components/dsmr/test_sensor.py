@@ -9,6 +9,7 @@ import asyncio
 import datetime
 from decimal import Decimal
 from itertools import chain, repeat
+from unittest.mock import DEFAULT, MagicMock
 
 from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
@@ -20,7 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import DEFAULT, MagicMock
 from tests.common import MockConfigEntry, patch
 
 

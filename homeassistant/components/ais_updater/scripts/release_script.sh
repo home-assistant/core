@@ -8,4 +8,4 @@ curl -o "/data/data/pl.sviete.dom/files/home/.bash_profile" -L  https://raw.gith
 
 curl -o "/sdcard/AisClient.apk" -L https://powiedz.co/ota/android/AisPanelApp-gate-release.apk && su -c "pm install -r /sdcard/AisClient.apk" 
 
-echo "21.01.28" > /data/data/pl.sviete.dom/files/home/AIS/.ais_apt
+echo "21.01.29" > /data/data/pl.sviete.dom/files/home/AIS/.ais_apt

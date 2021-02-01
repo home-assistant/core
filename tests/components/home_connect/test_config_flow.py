@@ -1,4 +1,6 @@
 """Test the Home Connect config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.home_connect.const import (
     DOMAIN,
@@ -7,8 +9,6 @@ from homeassistant.components.home_connect.const import (
 )
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
-
-from tests.async_mock import patch
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"

@@ -398,7 +398,7 @@ class KodiEntity(MediaPlayerEntity):
         version = (await self._kodi.get_application_properties(["version"]))["version"]
         sw_version = f"{version['major']}.{version['minor']}"
         dev_reg = await device_registry.async_get_registry(self.hass)
-        device = dev_reg.async_get_device({(DOMAIN, self.unique_id)}, [])
+        device = dev_reg.async_get_device({(DOMAIN, self.unique_id)})
         dev_reg.async_update_device(device.id, sw_version=sw_version)
 
         self.async_schedule_update_ha_state(True)

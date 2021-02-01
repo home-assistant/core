@@ -1,9 +1,9 @@
 """Test the init file of IFTTT."""
+from unittest.mock import patch
+
 from homeassistant import data_entry_flow
 from homeassistant.components import ifttt
 from homeassistant.core import callback
-
-from tests.async_mock import patch
 
 
 async def test_config_flow_registers_webhook(hass, aiohttp_client):

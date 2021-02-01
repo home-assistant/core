@@ -135,6 +135,7 @@ DEVICE_SENSORS = {
         {"path": "counter.B", "name": "Counter B", "type": SENSOR_TYPE_COUNT},
     ],
     "EF": [],  # "HobbyBoard": special
+    "7E": [],  # "EDS": special
 }
 
 DEVICE_SUPPORT_SYSBUS = ["10", "22", "28", "3B", "42"]
@@ -185,6 +186,34 @@ HOBBYBOARD_EF = {
     ],
 }
 
+# 7E sensors are special sensors by Embedded Data Systems
+
+EDS_SENSORS = {
+    "EDS0068": [
+        {
+            "path": "EDS0068/temperature",
+            "name": "Temperature",
+            "type": SENSOR_TYPE_TEMPERATURE,
+        },
+        {
+            "path": "EDS0068/pressure",
+            "name": "Pressure",
+            "type": SENSOR_TYPE_PRESSURE,
+        },
+        {
+            "path": "EDS0068/light",
+            "name": "Illuminance",
+            "type": SENSOR_TYPE_ILLUMINANCE,
+        },
+        {
+            "path": "EDS0068/humidity",
+            "name": "Humidity",
+            "type": SENSOR_TYPE_HUMIDITY,
+        },
+    ],
+}
+
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAMES): {cv.string: cv.string},
@@ -195,12 +224,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def hb_info_from_type(dev_type="std"):
+def get_sensor_types(device_sub_type):
     """Return the proper info array for the device type."""
-    if "std" in dev_type:
-        return DEVICE_SENSORS
-    if "HobbyBoard" in dev_type:
+    if "HobbyBoard" in device_sub_type:
         return HOBBYBOARD_EF
+    if "EDS" in device_sub_type:
+        return EDS_SENSORS
+    return DEVICE_SENSORS
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -245,12 +275,16 @@ def get_entities(onewirehub: OneWireHub, config):
             family = device["family"]
             device_type = device["type"]
             device_id = os.path.split(os.path.split(device["path"])[0])[1]
-            dev_type = "std"
+            device_sub_type = "std"
+            device_path = device["path"]
             if "EF" in family:
-                dev_type = "HobbyBoard"
+                device_sub_type = "HobbyBoard"
                 family = device_type
+            elif "7E" in family:
+                device_sub_type = "EDS"
+                family = onewirehub.owproxy.read(f"{device_path}device_type").decode()
 
-            if family not in hb_info_from_type(dev_type):
+            if family not in get_sensor_types(device_sub_type):
                 _LOGGER.warning(
                     "Ignoring unknown family (%s) of sensor found for device: %s",
                     family,
@@ -263,19 +297,19 @@ def get_entities(onewirehub: OneWireHub, config):
                 "model": device_type,
                 "name": device_id,
             }
-            for entity_specs in hb_info_from_type(dev_type)[family]:
+            for entity_specs in get_sensor_types(device_sub_type)[family]:
                 if entity_specs["type"] == SENSOR_TYPE_MOISTURE:
                     s_id = entity_specs["path"].split(".")[1]
                     is_leaf = int(
                         onewirehub.owproxy.read(
-                            f"{device['path']}moisture/is_leaf.{s_id}"
+                            f"{device_path}moisture/is_leaf.{s_id}"
                         ).decode()
                     )
                     if is_leaf:
                         entity_specs["type"] = SENSOR_TYPE_WETNESS
                         entity_specs["name"] = f"Wetness {s_id}"
                 entity_path = os.path.join(
-                    os.path.split(device["path"])[0], entity_specs["path"]
+                    os.path.split(device_path)[0], entity_specs["path"]
                 )
                 entities.append(
                     OneWireProxySensor(

@@ -1,6 +1,7 @@
 """Test weather of AccuWeather integration."""
 from datetime import timedelta
 import json
+from unittest.mock import patch
 
 from homeassistant.components.accuweather.const import ATTRIBUTION
 from homeassistant.components.weather import (
@@ -25,7 +26,6 @@ from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, STATE_UNAVAILA
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, load_fixture
 from tests.components.accuweather import init_integration
 

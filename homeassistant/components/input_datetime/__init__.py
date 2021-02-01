@@ -32,8 +32,6 @@ CONF_HAS_DATE = "has_date"
 CONF_HAS_TIME = "has_time"
 CONF_INITIAL = "initial"
 
-DEFAULT_VALUE = "1970-01-01 00:00:00"
-DEFAULT_DATE = py_datetime.date(1970, 1, 1)
 DEFAULT_TIME = py_datetime.time(0, 0, 0)
 
 ATTR_DATETIME = "datetime"
@@ -218,7 +216,9 @@ class InputDatetime(RestoreEntity):
 
         else:
             time = dt_util.parse_time(initial)
-            current_datetime = py_datetime.datetime.combine(DEFAULT_DATE, time)
+            current_datetime = py_datetime.datetime.combine(
+                py_datetime.date.today(), time
+            )
 
         # If the user passed in an initial value with a timezone, convert it to right tz
         if current_datetime.tzinfo is not None:
@@ -246,32 +246,36 @@ class InputDatetime(RestoreEntity):
         if self.state is not None:
             return
 
+        default_value = py_datetime.datetime.today().strftime("%Y-%m-%d 00:00:00")
+
         # Priority 2: Old state
         old_state = await self.async_get_last_state()
         if old_state is None:
-            self._current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
+            self._current_datetime = dt_util.parse_datetime(default_value)
             return
 
         if self.has_date and self.has_time:
             date_time = dt_util.parse_datetime(old_state.state)
             if date_time is None:
-                current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
+                current_datetime = dt_util.parse_datetime(default_value)
             else:
                 current_datetime = date_time
 
         elif self.has_date:
             date = dt_util.parse_date(old_state.state)
             if date is None:
-                current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
+                current_datetime = dt_util.parse_datetime(default_value)
             else:
                 current_datetime = py_datetime.datetime.combine(date, DEFAULT_TIME)
 
         else:
             time = dt_util.parse_time(old_state.state)
             if time is None:
-                current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
+                current_datetime = dt_util.parse_datetime(default_value)
             else:
-                current_datetime = py_datetime.datetime.combine(DEFAULT_DATE, time)
+                current_datetime = py_datetime.datetime.combine(
+                    py_datetime.date.today(), time
+                )
 
         self._current_datetime = current_datetime.replace(
             tzinfo=dt_util.DEFAULT_TIME_ZONE

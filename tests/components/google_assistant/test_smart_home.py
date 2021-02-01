@@ -1,4 +1,6 @@
 """Test Google Smart Home."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import camera
@@ -28,7 +30,6 @@ from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.async_mock import patch
 from tests.common import mock_area_registry, mock_device_registry, mock_registry
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
@@ -159,6 +160,9 @@ async def test_sync_in_area(area_on_device, hass, registries):
 
     device = registries.device.async_get_or_create(
         config_entry_id="1234",
+        manufacturer="Someone",
+        model="Some model",
+        sw_version="Some Version",
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     registries.device.async_update_device(
@@ -247,6 +251,11 @@ async def test_sync_in_area(area_on_device, hass, registries):
                             "temperatureMinK": 2000,
                             "temperatureMaxK": 6535,
                         },
+                    },
+                    "deviceInfo": {
+                        "manufacturer": "Someone",
+                        "model": "Some model",
+                        "swVersion": "Some Version",
                     },
                     "roomHint": "Living Room",
                 }
