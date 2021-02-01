@@ -66,7 +66,10 @@ async def test_disabled_notification_sensor(hass, multisensor_6, integration):
 
     # the part below needs to be fixed
     # the entity state is not available yet after enabling the entity
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-    # state = hass.states.get(NOTIFICATION_MOTION_SENSOR)
-    # assert state == "Motion detection"
-    # assert state.attributes["value"] == "8"
+    state = hass.states.get(NOTIFICATION_MOTION_SENSOR)
+    assert state.state == "Motion detection"
+    assert state.attributes["value"] == 8
