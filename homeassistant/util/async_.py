@@ -81,7 +81,7 @@ def run_callback_threadsafe(
         #    we cannot promise the callback will be executed.
         #
         future.cancel()
-        raise RuntimeError("Shutdown occurred")
+        raise RuntimeError("The event loop is shutting down and cannot accept new callbacks.")
 
     return future
 
