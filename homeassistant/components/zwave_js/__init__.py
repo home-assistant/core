@@ -46,7 +46,7 @@ from .entity import get_device_id
 
 LOGGER = logging.getLogger(__name__)
 CONNECT_TIMEOUT = 10
-DATA_CLIENT_TASK = "client_task"
+DATA_CLIENT_LISTEN_TASK = "client_listen_task"
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -79,45 +79,7 @@ def register_node_in_dev_reg(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Z-Wave JS from a config entry."""
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
-    connected = asyncio.Event()
-    initialized = asyncio.Event()
     dev_reg = await device_registry.async_get_registry(hass)
-
-    async def async_on_connect() -> None:
-        """Handle websocket is (re)connected."""
-        LOGGER.info("Connected to Zwave JS Server")
-        connected.set()
-        async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
-
-    async def async_on_disconnect() -> None:
-        """Handle websocket is disconnected."""
-        LOGGER.info("Disconnected from Zwave JS Server")
-        connected.clear()
-        if initialized.is_set():
-            initialized.clear()
-            # update entity availability
-            async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
-
-    async def async_on_initialized() -> None:
-        """Handle initial full state received."""
-        LOGGER.info("Connection to Zwave JS Server initialized.")
-        initialized.set()
-        # update entity availability
-        async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
-
-        # Check for nodes that no longer exist and remove them
-        stored_devices = device_registry.async_entries_for_config_entry(
-            dev_reg, entry.entry_id
-        )
-        known_devices = [
-            dev_reg.async_get_device({get_device_id(client, node)})
-            for node in client.driver.controller.nodes.values()
-        ]
-
-        # Devices that are in the device registry that are not known by the controller can be removed
-        for device in stored_devices:
-            if device not in known_devices:
-                dev_reg.async_remove_device(device.id)
 
     @callback
     def async_on_node_ready(node: ZwaveNode) -> None:
@@ -212,34 +174,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
         )
 
-    async def handle_ha_shutdown(event: Event) -> None:
-        """Handle HA shutdown."""
-        await disconnect_client(client, client_task)
-
-    # register main event callbacks.
-    unsubs = [
-        client.register_on_initialized(async_on_initialized),
-        client.register_on_disconnect(async_on_disconnect),
-        client.register_on_connect(async_on_connect),
-        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown),
-    ]
-
     # connect and throw error if connection failed
-    client_task = asyncio.create_task(connect_client(hass, entry, client))
     try:
         async with timeout(CONNECT_TIMEOUT):
-            await connected.wait()
-    except asyncio.TimeoutError as err:
-        for unsub in unsubs:
-            unsub()
-        await disconnect_client(client, client_task)
+            await client.connect()
+    except (asyncio.TimeoutError, BaseZwaveJSServerError) as err:
         raise ConfigEntryNotReady from err
+    else:
+        async_on_connect(hass, entry)
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_CLIENT: client,
-        DATA_CLIENT_TASK: client_task,
-        DATA_UNSUBSCRIBE: unsubs,
-    }
+    LOGGER.info("Connection to Zwave JS Server initialized.")
+
+    # Check for nodes that no longer exist and remove them
+    stored_devices = device_registry.async_entries_for_config_entry(
+        dev_reg, entry.entry_id
+    )
+    known_devices = [
+        dev_reg.async_get_device({get_device_id(client, node)})
+        for node in client.driver.controller.nodes.values()
+    ]
+
+    # Devices that are in the device registry that are not known by the controller can be removed
+    for device in stored_devices:
+        if device not in known_devices:
+            dev_reg.async_remove_device(device.id)
+
+    hass.data[DOMAIN][entry.entry_id] = {DATA_CLIENT: client, DATA_UNSUBSCRIBE: []}
 
     # Set up websocket API
     async_register_api(hass)
@@ -253,10 +213,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 for component in PLATFORMS
             ]
         )
-
-        # Wait till we're initialized
-        LOGGER.info("Waiting for Z-Wave to be fully initialized")
-        await initialized.wait()
 
         # run discovery on all ready nodes
         for node in client.driver.controller.nodes.values():
@@ -272,58 +228,57 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "node removed", lambda event: async_on_node_removed(event["node"])
         )
 
+        async def handle_ha_shutdown(event: Event) -> None:
+            """Handle HA shutdown."""
+            await disconnect_client(hass, entry, client, listen_task)
+
+        listen_task = asyncio.create_task(client_listen(hass, entry, client))
+        hass.data[DOMAIN][entry.entry_id][DATA_CLIENT_LISTEN_TASK] = listen_task
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
+
     hass.async_create_task(start_platforms())
 
     return True
 
 
-async def connect_client(
+async def client_listen(
     hass: HomeAssistant, entry: ConfigEntry, client: ZwaveClient
 ) -> None:
-    """Connect and reconnect the client."""
-    connected = False
-    error = False
-    reconnect_time = 1
-    while True:
-        try:
-            if error:
-                await asyncio.sleep(reconnect_time)
-            async with client:
-                connected = True
-                if error:
-                    LOGGER.info("Reconnected client after error")
-                    error = False
-                await client.listen()
-        except asyncio.CancelledError:
-            break
-        except BaseZwaveJSServerError as err:
-            if connected:
-                # If the client has been connected, the entry needs to be reloaded
-                # since a new driver state will be acquired on reconnect.
-                # All model instances will be replaced when the new state is acquired.
-                hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
-                break
-
-            reconnect_time = min(reconnect_time * 2, 600)
-            level = logging.DEBUG
-            if not error:
-                level = logging.ERROR
-                error = True
-            LOGGER.log(
-                level,
-                "Client error: %s. Reconnecting in %s seconds",
-                err,
-                reconnect_time,
-            )
-        else:
-            break
+    """Listen with the client."""
+    try:
+        await client.listen()
+    except BaseZwaveJSServerError:
+        # The entry needs to be reloaded since a new driver state
+        # will be acquired on reconnect.
+        # All model instances will be replaced when the new state is acquired.
+        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
-async def disconnect_client(client: ZwaveClient, client_task: asyncio.Task) -> None:
+async def disconnect_client(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    client: ZwaveClient,
+    listen_task: asyncio.Task,
+) -> None:
     """Disconnect client."""
+    listen_task.cancel()
+    await listen_task
     await client.disconnect()
-    client_task.cancel()
-    await client_task
+    async_on_disconnect(hass, entry)
+
+
+@callback
+def async_on_connect(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle websocket is (re)connected."""
+    LOGGER.info("Connected to Zwave JS Server")
+    async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
+
+
+@callback
+def async_on_disconnect(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle websocket is disconnected."""
+    LOGGER.info("Disconnected from Zwave JS Server")
+    async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -344,7 +299,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for unsub in info[DATA_UNSUBSCRIBE]:
         unsub()
 
-    await disconnect_client(info[DATA_CLIENT], info[DATA_CLIENT_TASK])
+    if DATA_CLIENT_LISTEN_TASK in info:
+        await disconnect_client(
+            hass, entry, info[DATA_CLIENT], info[DATA_CLIENT_LISTEN_TASK]
+        )
 
     return True
 
