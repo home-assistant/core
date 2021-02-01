@@ -122,8 +122,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.data.update({"created": str(datetime.now())})
 
             return self.async_create_entry(title=self.data["username"], data=self.data)
-        else:
-            return self.async_abort(reason="unknown")
+        return self.async_abort(reason="unknown")
 
     async def async_step_reauth(self, user_input=None):
         """Re Authenticate a user."""
