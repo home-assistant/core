@@ -77,6 +77,11 @@ def mock_default_unifi_requests(aioclient_mock):
 
     aioclient_mock.get(f"https://{host}:1234", status=302)  # Check UniFi OS
 
+    aioclient_mock.post(
+        f"https://{host}:1234/api/login",
+        json={"data": "login successful", "meta": {"rc": "ok"}},
+    )
+
 
 async def setup_unifi_integration(
     hass,
@@ -153,14 +158,9 @@ async def setup_unifi_integration(
             return mock_dpiapp_responses.popleft()
         return {}
 
-    # with patch("aiounifi.Controller.check_unifi_os", return_value=True), patch(
-    with patch("aiounifi.Controller.login", return_value=True), patch(
-        "aiounifi.Controller.sites", return_value=sites
-    ), patch(
+    with patch("aiounifi.Controller.sites", return_value=sites), patch(
         "aiounifi.Controller.site_description", return_value=site_description
-    ), patch(
-        "aiounifi.Controller.request", new=mock_request
-    ), patch.object(
+    ), patch("aiounifi.Controller.request", new=mock_request), patch.object(
         aiounifi.websocket.WSClient, "start", return_value=True
     ):
         if aioclient_mock:
