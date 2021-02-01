@@ -162,9 +162,17 @@ DISCOVERY_SCHEMAS = [
             CommandClass.INDICATOR,
             CommandClass.BATTERY,
             CommandClass.NOTIFICATION,
+        },
+        type={"number"},
+    ),
+    ZWaveDiscoverySchema(
+        platform="sensor",
+        hint="numeric_sensor",
+        command_class={
             CommandClass.BASIC,
         },
         type={"number"},
+        property={"currentValue"},
     ),
     # binary switches
     ZWaveDiscoverySchema(

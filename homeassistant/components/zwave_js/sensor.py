@@ -162,3 +162,12 @@ class ZWaveNumericSensor(ZwaveSensorBase):
             str(self.info.primary_value.value)
         )
         return {"label": label}
+
+    @property
+    def name(self) -> str:
+        """Return default name from device name and value name combination."""
+        if self.info.primary_value.command_class == CommandClass.BASIC:
+            node_name = self.info.node.name or self.info.node.device_config.description
+            label = self.info.primary_value.command_class_name
+            return f"{node_name}: {label}"
+        return super().name
