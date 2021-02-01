@@ -1,6 +1,5 @@
 """Support for MyQ-Enabled Garage Doors."""
 import logging
-import time
 
 from pymyq.const import (
     DEVICE_STATE as MYQ_DEVICE_STATE,
@@ -9,6 +8,7 @@ from pymyq.const import (
     KNOWN_MODELS,
     MANUFACTURER,
 )
+from pymyq.errors import MyQError
 
 from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
@@ -17,19 +17,11 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     CoverEntity,
 )
-from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPENING
+from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
 from homeassistant.core import callback
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    DOMAIN,
-    MYQ_COORDINATOR,
-    MYQ_GATEWAY,
-    MYQ_TO_HASS,
-    TRANSITION_COMPLETE_DURATION,
-    TRANSITION_START_DURATION,
-)
+from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,8 +44,6 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
         """Initialize with API object, device id."""
         super().__init__(coordinator)
         self._device = device
-        self._last_action_timestamp = 0
-        self._scheduled_transition_update = None
 
     @property
     def device_class(self):
@@ -82,17 +72,22 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return true if cover is closed, else False."""
-        return MYQ_TO_HASS.get(self._device.state) == STATE_CLOSED
+        return self._device.state == STATE_CLOSED
 
     @property
     def is_closing(self):
         """Return if the cover is closing or not."""
-        return MYQ_TO_HASS.get(self._device.state) == STATE_CLOSING
+        return self._device.state == STATE_CLOSING
+
+    @property
+    def is_open(self):
+        """Return if the cover is opening or not."""
+        return self._device.state == STATE_OPEN
 
     @property
     def is_opening(self):
         """Return if the cover is opening or not."""
-        return MYQ_TO_HASS.get(self._device.state) == STATE_OPENING
+        return self._device.state == STATE_OPENING
 
     @property
     def supported_features(self):
@@ -106,39 +101,48 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs):
         """Issue close command to cover."""
-        self._last_action_timestamp = time.time()
-        if not await self._device.close(wait_for_state=True):
+        if self.is_closing or self.is_closed:
+            return
+
+        try:
+            wait_task = await self._device.close(wait_for_state=False)
+        except MyQError as err:
+            _LOGGER.error(
+                f"Closing of cover {self._device.name} failed with error: {str(err)}"
+            )
+            return
+
+        # Write closing state to HASS
+        self.async_write_ha_state()
+
+        if not await wait_task:
             _LOGGER.error(f"Closing of cover {self._device.name} failed")
-        self._async_schedule_update_for_transition()
+
+        # Write final state to HASS
+        self.async_write_ha_state()
 
     async def async_open_cover(self, **kwargs):
         """Issue open command to cover."""
-        self._last_action_timestamp = time.time()
-        if not await self._device.open(wait_for_state=True):
-            _LOGGER.error(f"Closing of cover {self._device.name} failed")
-        self._async_schedule_update_for_transition()
+        """Issue close command to cover."""
+        if self.is_opening or self.is_open:
+            return
 
-    @callback
-    def _async_schedule_update_for_transition(self):
+        try:
+            wait_task = await self._device.open(wait_for_state=False)
+        except MyQError as err:
+            _LOGGER.error(
+                f"Opening of cover {self._device.name} failed with error: {str(err)}"
+            )
+            return
+
+        # Write opening state to HASS
         self.async_write_ha_state()
 
-        # Cancel any previous updates
-        if self._scheduled_transition_update:
-            self._scheduled_transition_update()
+        if not await wait_task:
+            _LOGGER.error(f"Opening of cover {self._device.name} failed")
 
-        # Schedule an update for when we expect the transition
-        # to be completed so the garage door or gate does not
-        # seem like its closing or opening for a long time
-        self._scheduled_transition_update = async_call_later(
-            self.hass,
-            TRANSITION_COMPLETE_DURATION,
-            self._async_complete_schedule_update,
-        )
-
-    async def _async_complete_schedule_update(self, _):
-        """Update status of the cover via coordinator."""
-        self._scheduled_transition_update = None
-        await self.coordinator.async_request_refresh()
+        # Write final state to HASS
+        self.async_write_ha_state()
 
     @property
     def device_info(self):
@@ -158,11 +162,6 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
 
     @callback
     def _async_consume_update(self):
-        if time.time() - self._last_action_timestamp <= TRANSITION_START_DURATION:
-            # If we just started a transition we need
-            # to prevent a bouncy state
-            return
-
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):
@@ -170,8 +169,3 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
         self.async_on_remove(
             self.coordinator.async_add_listener(self._async_consume_update)
         )
-
-    async def async_will_remove_from_hass(self):
-        """Undo subscription."""
-        if self._scheduled_transition_update:
-            self._scheduled_transition_update()
