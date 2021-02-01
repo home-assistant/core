@@ -169,6 +169,30 @@ async def test_stage_shutdown(hass):
     assert len(test_all) == 2
 
 
+async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_threadsafe(
+    hass,
+):
+    """Ensure shutdown_run_callback_threadsafe is called before the final async_block_till_done."""
+    stop_calls = []
+
+    async def _record_block_till_done():
+        nonlocal stop_calls
+        stop_calls.append("async_block_till_done")
+
+    def _record_shutdown_run_callback_threadsafe(loop):
+        nonlocal stop_calls
+        stop_calls.append(("shutdown_run_callback_threadsafe", loop))
+
+    with patch.object(hass, "async_block_till_done", _record_block_till_done), patch(
+        "homeassistant.core.shutdown_run_callback_threadsafe",
+        _record_shutdown_run_callback_threadsafe,
+    ):
+        await hass.async_stop()
+
+    assert stop_calls[-2] == ("shutdown_run_callback_threadsafe", hass.loop)
+    assert stop_calls[-1] == "async_block_till_done"
+
+
 async def test_pending_sheduler(hass):
     """Add a coro to pending tasks."""
     call_count = []
