@@ -78,8 +78,7 @@ class IcloudAccount:
         hass: HomeAssistantType,
         username: str,
         password: str,
-        icloud_cookies_dir: Store,
-        icloud_session_dir: Store,
+        icloud_dir: Store,
         with_family: bool,
         max_interval: int,
         gps_accuracy_threshold: int,
@@ -94,8 +93,7 @@ class IcloudAccount:
         self._max_interval = max_interval
         self._gps_accuracy_threshold = gps_accuracy_threshold
 
-        self._icloud_cookies_dir = icloud_cookies_dir
-        self._icloud_session_dir = icloud_session_dir
+        self._icloud_dir = icloud_dir
 
         self.api: Optional[PyiCloudService] = None
         self._owner_fullname = None
@@ -112,8 +110,7 @@ class IcloudAccount:
             self.api = PyiCloudService(
                 self._username,
                 self._password,
-                self._icloud_cookies_dir.path,
-                self._icloud_session_dir.path,
+                self._icloud_dir.path,
                 with_family=self._with_family,
             )
 

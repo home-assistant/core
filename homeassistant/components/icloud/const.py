@@ -11,8 +11,7 @@ DEFAULT_MAX_INTERVAL = 30  # min
 DEFAULT_GPS_ACCURACY_THRESHOLD = 500  # meters
 
 # to store the cookie
-STORAGE_KEY_COOKIES = f"{DOMAIN}_cookies"
-STORAGE_KEY_SESSION = f"{DOMAIN}_session"
+STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 2
 
 PLATFORMS = ["device_tracker", "sensor"]

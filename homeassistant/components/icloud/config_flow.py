@@ -21,8 +21,7 @@ from .const import (
     DEFAULT_GPS_ACCURACY_THRESHOLD,
     DEFAULT_MAX_INTERVAL,
     DEFAULT_WITH_FAMILY,
-    STORAGE_KEY_COOKIES,
-    STORAGE_KEY_SESSION,
+    STORAGE_KEY,
     STORAGE_VERSION,
 )
 from .const import DOMAIN  # pylint: disable=unused-import
@@ -115,12 +114,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 PyiCloudService,
                 self._username,
                 self._password,
-                self.hass.helpers.storage.Store(
-                    STORAGE_VERSION, STORAGE_KEY_COOKIES
-                ).path,
-                self.hass.helpers.storage.Store(
-                    STORAGE_VERSION, STORAGE_KEY_SESSION
-                ).path,
+                self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY).path,
                 True,
                 None,
                 self._with_family,
@@ -170,18 +164,10 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
 
-        icloud_cookies_dir = self.hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY_COOKIES
-        )
-        icloud_session_dir = self.hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY_SESSION
-        )
+        icloud_dir = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
-        if not os.path.exists(icloud_cookies_dir.path):
-            await self.hass.async_add_executor_job(os.makedirs, icloud_cookies_dir.path)
-
-        if not os.path.exists(icloud_session_dir.path):
-            await self.hass.async_add_executor_job(os.makedirs, icloud_session_dir.path)
+        if not os.path.exists(icloud_dir.path):
+            await self.hass.async_add_executor_job(os.makedirs, icloud_dir.path)
 
         if user_input is None:
             return self._show_setup_form(user_input, errors)
