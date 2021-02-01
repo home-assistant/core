@@ -1,0 +1,48 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Hive Login",
+        "description": "Enter your Hive login information and configuration.",
+        "data": {
+          "username": "Email Address",
+          "password": "Password",
+          "scan_interval": "Scan Interval (Seconds)",
+          "debug": "Select categories to debug",
+          "add_sensors": "Add additional sensors"
+        }
+      },
+      "2fa": {
+        "title": "Hive Two-factor Authentication.",
+        "description": "Enter your Hive authentication code. \n \n Please enter code 0000 to request another code.",
+        "data": {
+          "2fa": "Two-factor code"
+        }
+      }
+    },
+    "error": {
+      "invalid_username": "Failed to sign into Hive. Your email address is not recognised.",
+      "invalid_password": "Failed to sign into Hive. Incorrect password please try again.",
+      "invalid_code": "Failed to sign into Hive. Your two-factor authentication code was incorrect.",
+      "no_internet_available": "An internet connection is required to connect to Hive."
+    },
+    "abort": {
+      "already_configured": "Hive account is already configured.",
+      "invalid_username": "Failed to sign into Hive. Your email address is not recognised.",
+      "invalid_password": "Failed to sign into Hive. Incorrect password please try again.",
+      "unknown": "Something has gone wrong please try again later."
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "title": "Options for Hive",
+        "description": "Update the scan interval to poll for data more often. This configuration cannot be set lower than 30 seconds",
+        "data": {
+          "scan_interval": "Scan Interval (Seconds)",
+          "debug": "Select categories to debug"
+        }
+      }
+    }
+  }
+}
