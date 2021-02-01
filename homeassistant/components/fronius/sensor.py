@@ -130,6 +130,7 @@ class FroniusAdapter:
         self._name = name
         self._device = device
         self._fetched = {}
+        self._connection_failure = False
 
         self.sensors = set()
         self._registered_sensors = set()
@@ -150,8 +151,14 @@ class FroniusAdapter:
         values = {}
         try:
             values = await self._update()
+            self._connection_failure = False  # reset connection failure
         except ConnectionError:
-            _LOGGER.error("Failed to update: connection error")
+            # fronius devices are often powered by self-produced solar energy
+            # and henced turned off at night.
+            # Therefore we will not print multiple errors when connection fails
+            if not self._connection_failure:
+                self._connection_failure = True
+                _LOGGER.error("Failed to update: connection error")
         except ValueError:
             _LOGGER.error(
                 "Failed to update: invalid response returned."
