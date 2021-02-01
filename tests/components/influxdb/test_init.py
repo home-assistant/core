@@ -132,10 +132,15 @@ async def test_setup_config_full(hass, mock_client, config_ext, get_write_api):
 
 
 @pytest.mark.parametrize(
-    "mock_client, config_ext",
+    "mock_client, config_base, config_ext, expected_client_args",
     [
         (
             influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            {
+                "ssl": True,
+                "verify_ssl": False,
+            },
             {
                 "ssl": True,
                 "verify_ssl": False,
@@ -143,6 +148,11 @@ async def test_setup_config_full(hass, mock_client, config_ext, get_write_api):
         ),
         (
             influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            {
+                "ssl": True,
+                "verify_ssl": True,
+            },
             {
                 "ssl": True,
                 "verify_ssl": True,
@@ -150,53 +160,86 @@ async def test_setup_config_full(hass, mock_client, config_ext, get_write_api):
         ),
         (
             influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
             {
                 "ssl": True,
                 "verify_ssl": True,
                 "ssl_ca_cert": "fake/path/ca.pem",
             },
-        ),
-        (
-            influxdb.DEFAULT_API_VERSION,
             {
                 "ssl": True,
-                "ssl_ca_cert": "fake/path/ca.pem",
+                "verify_ssl": "fake/path/ca.pem",
             },
         ),
         (
             influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            {
+                "ssl": True,
+                "ssl_ca_cert": "fake/path/ca.pem",
+            },
+            {
+                "ssl": True,
+                "verify_ssl": "fake/path/ca.pem",
+            },
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
             {
                 "ssl": True,
                 "verify_ssl": False,
                 "ssl_ca_cert": "fake/path/ca.pem",
             },
-        ),
-        (
-            influxdb.API_VERSION_2,
             {
-                "api_version": influxdb.API_VERSION_2,
+                "ssl": True,
                 "verify_ssl": False,
             },
         ),
         (
             influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
             {
                 "api_version": influxdb.API_VERSION_2,
+                "verify_ssl": False,
+            },
+            {
+                "verify_ssl": False,
+            },
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            {
+                "api_version": influxdb.API_VERSION_2,
+                "verify_ssl": True,
+            },
+            {
                 "verify_ssl": True,
             },
         ),
         (
             influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
             {
                 "api_version": influxdb.API_VERSION_2,
+                "verify_ssl": True,
+                "ssl_ca_cert": "fake/path/ca.pem",
+            },
+            {
                 "verify_ssl": True,
                 "ssl_ca_cert": "fake/path/ca.pem",
             },
         ),
         (
             influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
             {
                 "api_version": influxdb.API_VERSION_2,
+                "verify_ssl": False,
+                "ssl_ca_cert": "fake/path/ca.pem",
+            },
+            {
                 "verify_ssl": False,
                 "ssl_ca_cert": "fake/path/ca.pem",
             },
@@ -204,51 +247,21 @@ async def test_setup_config_full(hass, mock_client, config_ext, get_write_api):
     ],
     indirect=["mock_client"],
 )
-async def test_setup_config_ssl(hass, mock_client, config_ext):
+async def test_setup_config_ssl(
+    hass, mock_client, config_base, config_ext, expected_client_args
+):
     """Test the setup with various verify_ssl values."""
-    config = {
-        "influxdb": BASE_V2_CONFIG
-        if config_ext.get("api_version") == influxdb.API_VERSION_2
-        else BASE_V1_CONFIG
-    }
+    config = {"influxdb": config_base.copy()}
     config["influxdb"].update(config_ext)
 
     with patch("os.access", return_value=True):
-        with patch("os.path.isfile", return_value=True) as mock_isfile:
+        with patch("os.path.isfile", return_value=True):
             assert await async_setup_component(hass, influxdb.DOMAIN, config)
             await hass.async_block_till_done()
 
             assert hass.bus.listen.called
             assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
-
-            if config_ext.get("api_version") == influxdb.API_VERSION_2:
-                for arg in ("ssl_ca_cert", "verify_ssl"):
-                    if arg in config_ext:
-                        assert mock_client.call_args.kwargs.get(arg) == config_ext[arg]
-                    else:
-                        assert arg not in mock_client.call_args.kwargs
-            else:
-                if "ssl" in config_ext:
-                    assert mock_client.call_args.kwargs.get("ssl") == config_ext["ssl"]
-                else:
-                    assert "ssl" not in mock_client.call_args.kwargs
-
-                if "ssl_ca_cert" in config_ext:
-                    mock_isfile.assert_called_with(config_ext["ssl_ca_cert"])
-                    if config_ext.get("verify_ssl", True):
-                        assert (
-                            mock_client.call_args.kwargs.get("verify_ssl")
-                            == config_ext["ssl_ca_cert"]
-                        )
-                    else:
-                        assert (
-                            mock_client.call_args.kwargs.get("verify_ssl")
-                            == config_ext["verify_ssl"]
-                        )
-                else:
-                    assert mock_client.call_args.kwargs.get(
-                        "verify_ssl"
-                    ) == config_ext.get("verify_ssl", True)
+            assert expected_client_args.items() <= mock_client.call_args.kwargs.items()
 
 
 @pytest.mark.parametrize(
