@@ -11,8 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # The 90 day stale policy
-      # Used for: Everything (unless 30 day policy below beats it)
-      - name: 90 days stale policy
+      # Used for:
+      # - Issues & PRs
+      # - No PRs marked as no-stale
+      # - No issues marked as no-stale or help-wanted
+      - name: 90 days stale issues & PRs policy
         uses: actions/stale@v3.0.15
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -46,9 +49,10 @@ jobs:
 
       # The 30 day stale policy for PRS
       # Used for:
-      # - Issues that are pending more information (incomplete issues)
-      # - PRs that are not marked as new-integration
-      - name: 30 days stale policy
+      # - PRs
+      # - No PRs marked as no-stale or new-integrations
+      # - No issues (-1)
+      - name: 30 days stale PRs policy
         uses: actions/stale@v3.0.15
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
