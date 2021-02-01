@@ -62,11 +62,12 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             # Get user from existing entry and abort if already setup
-            if self.root_source != "REAUTH":
-                for entry in self._async_current_entries():
-                    if entry.data.get(CONF_USERNAME) == self.data[CONF_USERNAME]:
-                        return self.async_abort(reason="already_configured")
-
+            for entry in self._async_current_entries():
+                if (
+                    entry.data.get(CONF_USERNAME) == self.data[CONF_USERNAME]
+                    and self.root_source != "REAUTH"
+                ):
+                    return self.async_abort(reason="already_configured")
             # Login to the Hive.
             self.tokens = await self.hive_auth.login()
 

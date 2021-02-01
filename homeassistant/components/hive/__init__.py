@@ -4,6 +4,7 @@ from functools import wraps
 import logging
 
 from aiohttp.web_exceptions import HTTPException
+from pyhiveapi import Hive
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -82,7 +83,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
     """Set up Hive from a config entry."""
     # Store an API object for your platforms to access
     # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
-    from pyhiveapi import Hive
 
     websession = aiohttp_client.async_get_clientsession(hass)
     hive = Hive(websession)
@@ -120,8 +120,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
         elif mode == "off":
             await hive.hotwater.turn_boost_off(device)
 
-    Username = hive_config["options"].get(CONF_USERNAME)
-    Password = hive_config.get(CONF_PASSWORD)
+    username = hive_config["options"].get(CONF_USERNAME)
+    password = hive_config.get(CONF_PASSWORD)
 
     # Update config entry options
     hive_options = hive_options if len(hive_options) > 0 else hive_config["options"]
@@ -140,7 +140,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_REAUTH},
-                data={"username": Username, "password": Password},
+                data={"username": username, "password": password},
             )
         )
 
