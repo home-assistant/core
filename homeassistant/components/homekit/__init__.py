@@ -42,7 +42,21 @@ from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.util import get_local_ip
 
-from .accessories import get_accessory
+# pylint: disable=unused-import
+from . import (  # noqa: F401
+    type_cameras,
+    type_covers,
+    type_fans,
+    type_humidifiers,
+    type_lights,
+    type_locks,
+    type_media_players,
+    type_security_systems,
+    type_sensors,
+    type_switches,
+    type_thermostats,
+)
+from .accessories import HomeBridge, HomeDriver, get_accessory
 from .aidmanager import AccessoryAidStorage
 from .const import (
     AID_STORAGE,
@@ -441,9 +455,6 @@ class HomeKit:
 
     def setup(self, zeroconf_instance):
         """Set up bridge and accessory driver."""
-        # pylint: disable=import-outside-toplevel
-        from .accessories import HomeDriver
-
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         ip_addr = self._ip_address or get_local_ip()
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
@@ -575,20 +586,22 @@ class HomeKit:
 
         bridged_states = []
         for state in self.hass.states.async_all():
-            if not self._filter(state.entity_id):
+            entity_id = state.entity_id
+
+            if not self._filter(entity_id):
                 continue
 
-            ent_reg_ent = ent_reg.async_get(state.entity_id)
+            ent_reg_ent = ent_reg.async_get(entity_id)
             if ent_reg_ent:
                 await self._async_set_device_info_attributes(
-                    ent_reg_ent, dev_reg, state.entity_id
+                    ent_reg_ent, dev_reg, entity_id
                 )
                 self._async_configure_linked_sensors(ent_reg_ent, device_lookup, state)
 
             bridged_states.append(state)
 
         self._async_register_bridge(dev_reg)
-        await self.hass.async_add_executor_job(self._start, bridged_states)
+        await self._async_start(bridged_states)
         _LOGGER.debug("Driver start for %s", self._name)
         self.hass.add_job(self.driver.start_service)
         self.status = STATUS_RUNNING
@@ -612,13 +625,15 @@ class HomeKit:
         connection = (device_registry.CONNECTION_NETWORK_MAC, formatted_mac)
         identifier = (DOMAIN, self._entry_id, BRIDGE_SERIAL_NUMBER)
         self._async_purge_old_bridges(dev_reg, identifier, connection)
+        is_accessory_mode = self._homekit_mode == HOMEKIT_MODE_ACCESSORY
+        hk_mode_name = "Accessory" if is_accessory_mode else "Bridge"
         dev_reg.async_get_or_create(
             config_entry_id=self._entry_id,
             identifiers={identifier},
             connections={connection},
             manufacturer=MANUFACTURER,
             name=self._name,
-            model="Home Assistant HomeKit Bridge",
+            model=f"Home Assistant HomeKit {hk_mode_name}",
         )
 
     @callback
@@ -635,34 +650,20 @@ class HomeKit:
         for device_id in devices_to_purge:
             dev_reg.async_remove_device(device_id)
 
-    def _start(self, bridged_states):
-        # pylint: disable=unused-import, import-outside-toplevel
-        from . import (  # noqa: F401
-            type_cameras,
-            type_covers,
-            type_fans,
-            type_humidifiers,
-            type_lights,
-            type_locks,
-            type_media_players,
-            type_security_systems,
-            type_sensors,
-            type_switches,
-            type_thermostats,
-        )
-
+    async def _async_start(self, entity_states):
+        """Start the accessory."""
         if self._homekit_mode == HOMEKIT_MODE_ACCESSORY:
-            state = bridged_states[0]
+            state = entity_states[0]
             conf = self._config.pop(state.entity_id, {})
             acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
             self.driver.add_accessory(acc)
         else:
-            from .accessories import HomeBridge
-
             self.bridge = HomeBridge(self.hass, self.driver, self._name)
-            for state in bridged_states:
+            for state in entity_states:
                 self.add_bridge_accessory(state)
-            self.driver.add_accessory(self.bridge)
+            acc = self.bridge
+
+        await self.hass.async_add_executor_job(self.driver.add_accessory, acc)
 
         if not self.driver.state.paired:
             show_setup_message(

@@ -79,9 +79,8 @@ def mock_start_addon():
         yield start_addon
 
 
-async def test_user_not_supervisor_create_entry(hass):
+async def test_user_not_supervisor_create_entry(hass, mqtt):
     """Test the user step creates an entry not on Supervisor."""
-    hass.config.components.add("mqtt")
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
@@ -128,9 +127,8 @@ async def test_one_instance_allowed(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_not_addon(hass, supervisor):
+async def test_not_addon(hass, supervisor, mqtt):
     """Test opting out of add-on on Supervisor."""
-    hass.config.components.add("mqtt")
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(

@@ -18,9 +18,8 @@ def has_location(state: State) -> bool:
 
     Async friendly.
     """
-    # type ignore: https://github.com/python/mypy/issues/7207
     return (
-        isinstance(state, State)  # type: ignore
+        isinstance(state, State)
         and isinstance(state.attributes.get(ATTR_LATITUDE), float)
         and isinstance(state.attributes.get(ATTR_LONGITUDE), float)
     )
