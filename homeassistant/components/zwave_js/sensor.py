@@ -153,15 +153,15 @@ class ZWaveListSensor(ZwaveSensorBase):
     """Representation of a Z-Wave Numeric sensor with multiple states."""
 
     @property
-    def state(self) -> str:
+    def state(self) -> Optional[str]:
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
-            return ""
+            return None
         if (
             not str(self.info.primary_value.value)
             in self.info.primary_value.metadata.states
         ):
-            return ""
+            return None
         return str(
             self.info.primary_value.metadata.states[str(self.info.primary_value.value)]
         )
