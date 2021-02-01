@@ -1,4 +1,6 @@
 """Test the devolo Home Network config flow."""
+from unittest.mock import patch
+
 from devolo_plc_api.exceptions.device import DeviceNotFound
 
 from homeassistant import config_entries, setup
@@ -12,8 +14,6 @@ from homeassistant.data_entry_flow import (
 )
 
 from .const import DISCOVERY_INFO, DISCOVERY_INFO_WRONG_DEVICE, IP
-
-from tests.async_mock import patch
 
 
 async def test_form(hass):

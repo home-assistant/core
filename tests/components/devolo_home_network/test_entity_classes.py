@@ -1,4 +1,6 @@
 """Test the devolo Home Network entities."""
+from unittest.mock import AsyncMock, patch
+
 from devolo_plc_api.device import Device
 from devolo_plc_api.device_api.deviceapi import DeviceApi
 from devolo_plc_api.exceptions.device import DeviceUnavailable
@@ -19,8 +21,6 @@ from .const import (
     NEIGHBOR_ACCESS_POINTS,
     PLCNET,
 )
-
-from tests.async_mock import AsyncMock, patch
 
 
 async def test_network_overview_update(hass: HomeAssistant):

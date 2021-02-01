@@ -1,18 +1,16 @@
 """Test the devolo Home Network integration setup."""
-from devolo_plc_api.exceptions.device import DeviceNotFound
-import pytest
+from unittest.mock import patch
 
-from homeassistant.components.devolo_home_network import (
-    async_setup_entry,
-    async_unload_entry,
+from devolo_plc_api.exceptions.device import DeviceNotFound
+
+from homeassistant.config_entries import (
+    ENTRY_STATE_LOADED,
+    ENTRY_STATE_NOT_LOADED,
+    ENTRY_STATE_SETUP_RETRY,
 )
-from homeassistant.components.devolo_home_network.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from . import configure_integration
-
-from tests.async_mock import patch
 
 
 async def test_setup_entry(hass: HomeAssistant, mock_zeroconf):
@@ -23,7 +21,7 @@ async def test_setup_entry(hass: HomeAssistant, mock_zeroconf):
         return_value=True,
     ), patch("homeassistant.core.EventBus.async_listen_once"):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        assert hass.data[DOMAIN]
+        assert entry.state == ENTRY_STATE_LOADED
 
 
 async def test_setup_device_not_found(hass: HomeAssistant):
@@ -31,11 +29,12 @@ async def test_setup_device_not_found(hass: HomeAssistant):
     entry = configure_integration(hass)
     with patch(
         "devolo_plc_api.device.Device.async_connect", side_effect=DeviceNotFound
-    ), pytest.raises(ConfigEntryNotReady):
-        await async_setup_entry(hass, entry)
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state == ENTRY_STATE_SETUP_RETRY
 
 
-async def test_unload_entry(hass: HomeAssistant):
+async def test_unload_entry(hass: HomeAssistant, mock_zeroconf):
     """Test unload entry."""
     entry = configure_integration(hass)
     with patch("devolo_plc_api.device.Device.async_connect"), patch(
@@ -43,5 +42,5 @@ async def test_unload_entry(hass: HomeAssistant):
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert await async_unload_entry(hass, entry)
-        assert not hass.data[DOMAIN]
+        await hass.config_entries.async_unload(entry.entry_id)
+        assert entry.state == ENTRY_STATE_NOT_LOADED
