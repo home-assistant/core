@@ -116,7 +116,10 @@ def climate_radio_thermostat_ct100_plus_state_fixture():
     scope="session",
 )
 def climate_radio_thermostat_ct100_plus_different_endpoints_state_fixture():
-    """Load the climate radio thermostat ct100 plus node with values on different endpoints state fixture data."""
+    """Load the thermostat fixture state with values on different endpoints.
+
+    This device is a radio thermostat ct100.
+    """
     return json.loads(
         load_fixture(
             "zwave_js/climate_radio_thermostat_ct100_plus_different_endpoints_state.json"
