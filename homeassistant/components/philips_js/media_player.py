@@ -27,8 +27,6 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.philips_js import PhilipsTVDataUpdateCoordinator
 from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    ATTR_ENTITY_ID,
     CONF_API_VERSION,
     CONF_HOST,
     CONF_NAME,
@@ -41,7 +39,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LOGGER as _LOGGER
-from .const import DOMAIN, EVENT_TURN_ON
+from .const import DOMAIN
 
 SUPPORT_PHILIPS_JS = (
     SUPPORT_TURN_OFF
@@ -114,7 +112,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         self._coordinator = coordinator
         self._sources = {}
         self._channels = {}
-        self._supports = SUPPORT_PHILIPS_JS | SUPPORT_TURN_ON
+        self._supports = SUPPORT_PHILIPS_JS
         self._system = coordinator.system
         super().__init__(coordinator)
         self._update_from_coordinator()
@@ -131,7 +129,10 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return self._supports
+        supports = self._supports
+        if self._coordinator.turn_on_actions:
+            supports |= SUPPORT_TURN_ON
+        return supports
 
     @property
     def state(self):
@@ -177,16 +178,9 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         """Boolean if volume is currently muted."""
         return self._tv.muted
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn on the device."""
-        _LOGGER.debug("Firing event to turn on device")
-        self.hass.bus.async_fire(
-            EVENT_TURN_ON,
-            {
-                ATTR_ENTITY_ID: self.entity_id,
-                ATTR_DEVICE_ID: self.registry_entry.device_id,
-            },
-        )
+        await self._coordinator.async_turn_on(self._context)
 
     def turn_off(self):
         """Turn off the device."""

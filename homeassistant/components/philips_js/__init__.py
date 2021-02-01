@@ -6,9 +6,10 @@ from typing import Any, Dict
 
 from haphilipsjs import ConnectionFailure, PhilipsTV
 
+from homeassistant.components.automation import AutomationActionType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_VERSION, CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -64,6 +65,32 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     api: PhilipsTV
     system: Dict[str, Any]
+    turn_on_actions: Dict[Any, AutomationActionType] = {}
+
+    @callback
+    def async_attach_turn_on_action(
+        self, action: AutomationActionType, variables: dict
+    ):
+        """Attach a device trigger for turn on."""
+
+        def _update():
+            for update_callback in self._listeners:
+                update_callback()
+
+        @callback
+        def _remove():
+            del self.turn_on_actions[_remove]
+            _update()
+
+        self.turn_on_actions[_remove] = (action, variables)
+        _update()
+
+        return _remove
+
+    async def async_turn_on(self, context):
+        """Run all turn on triggers."""
+        for action, variables in self.turn_on_actions.values():
+            await action(variables, context)
 
     def __init__(self, hass, api: PhilipsTV, system: Dict[str, Any]) -> None:
         """Set up the coordinator."""

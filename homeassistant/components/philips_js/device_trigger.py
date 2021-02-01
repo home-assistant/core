@@ -5,18 +5,13 @@ import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
-from homeassistant.components.homeassistant.triggers import event as event_trigger
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    CONF_DEVICE_ID,
-    CONF_DOMAIN,
-    CONF_PLATFORM,
-    CONF_TYPE,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers.device_registry import DeviceRegistry, async_get_registry
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, EVENT_TURN_ON
+from . import LOGGER, PhilipsTVDataUpdateCoordinator
+from .const import DOMAIN
 
 TRIGGER_TYPES = {"turn_on"}
 TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
@@ -48,13 +43,24 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    event_config = {
-        event_trigger.CONF_PLATFORM: "event",
-        event_trigger.CONF_EVENT_TYPE: EVENT_TURN_ON,
-        event_trigger.CONF_EVENT_DATA: {ATTR_DEVICE_ID: config[CONF_DEVICE_ID]},
+    registry: DeviceRegistry = await async_get_registry(hass)
+    device = registry.async_get(config[CONF_DEVICE_ID])
+    if device is None:
+        LOGGER.error(
+            "Unable to find device %s for device trigger", config[CONF_DEVICE_ID]
+        )
+        return
+
+    variables = {
+        "trigger": {
+            "platform": config[CONF_PLATFORM],
+            "description": f"trigger '{config[CONF_TYPE]}'",
+        }
     }
 
-    event_config = event_trigger.TRIGGER_SCHEMA(event_config)
-    return await event_trigger.async_attach_trigger(
-        hass, event_config, action, automation_info, platform_type="device"
-    )
+    for config_entry_id in device.config_entries:
+        coordinator: PhilipsTVDataUpdateCoordinator = hass.data[DOMAIN].get(
+            config_entry_id
+        )
+        if coordinator:
+            return coordinator.async_attach_turn_on_action(action, variables)
