@@ -51,7 +51,6 @@ from .const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
-    CONTROLLER_ID,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
@@ -109,8 +108,9 @@ class UniFiController:
 
     def load_config_entry_options(self):
         """Store attributes to avoid property call overhead since they are called frequently."""
-        # Device tracker options
         options = self.config_entry.options
+
+        # Device tracker options
 
         # Config entry option to not track clients.
         self.option_track_clients = options.get(
@@ -156,11 +156,6 @@ class UniFiController:
         self.option_allow_uptime_sensors = options.get(
             CONF_ALLOW_UPTIME_SENSORS, DEFAULT_ALLOW_UPTIME_SENSORS
         )
-
-    @property
-    def controller_id(self):
-        """Return the controller ID."""
-        return CONTROLLER_ID.format(host=self.host, site=self.site)
 
     @property
     def host(self):
@@ -260,25 +255,25 @@ class UniFiController:
     @property
     def signal_reachable(self) -> str:
         """Integration specific event to signal a change in connection status."""
-        return f"unifi-reachable-{self.controller_id}"
+        return f"unifi-reachable-{self.config_entry.entry_id}"
 
     @property
-    def signal_update(self):
+    def signal_update(self) -> str:
         """Event specific per UniFi entry to signal new data."""
-        return f"unifi-update-{self.controller_id}"
+        return f"unifi-update-{self.config_entry.entry_id}"
 
     @property
-    def signal_remove(self):
+    def signal_remove(self) -> str:
         """Event specific per UniFi entry to signal removal of entities."""
-        return f"unifi-remove-{self.controller_id}"
+        return f"unifi-remove-{self.config_entry.entry_id}"
 
     @property
-    def signal_options_update(self):
+    def signal_options_update(self) -> str:
         """Event specific per UniFi entry to signal new options."""
-        return f"unifi-options-{self.controller_id}"
+        return f"unifi-options-{self.config_entry.entry_id}"
 
     @property
-    def signal_heartbeat_missed(self):
+    def signal_heartbeat_missed(self) -> str:
         """Event specific per UniFi device tracker to signal new heartbeat missed."""
         return "unifi-heartbeat-missed"
 
@@ -309,14 +304,7 @@ class UniFiController:
             await self.api.initialize()
 
             sites = await self.api.sites()
-
-            for site in sites.values():
-                if self.site == site["name"]:
-                    self._site_name = site["desc"]
-                    break
-
             description = await self.api.site_description()
-            self._site_role = description[0]["site_role"]
 
         except CannotConnect as err:
             raise ConfigEntryNotReady from err
@@ -330,6 +318,13 @@ class UniFiController:
                 )
             )
             return False
+
+        for site in sites.values():
+            if self.site == site["name"]:
+                self._site_name = site["desc"]
+                break
+
+        self._site_role = description[0]["site_role"]
 
         # Restore clients that is not a part of active clients list.
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
@@ -452,10 +447,18 @@ class UniFiController:
         """
         self.api.stop_websocket()
 
-        for platform in SUPPORTED_PLATFORMS:
-            await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, platform
+        unload_ok = all(
+            await asyncio.gather(
+                *[
+                    self.hass.config_entries.async_forward_entry_unload(
+                        self.config_entry, platform
+                    )
+                    for platform in SUPPORTED_PLATFORMS
+                ]
             )
+        )
+        if not unload_ok:
+            return False
 
         for unsub_dispatcher in self.listeners:
             unsub_dispatcher()

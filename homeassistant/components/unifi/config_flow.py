@@ -1,4 +1,10 @@
-"""Config flow for UniFi."""
+"""Config flow for UniFi.
+
+Provides user initiated configuration flow.
+Discovery of controllers hosted on UDM and UDM Pro devices through SSDP.
+Reauthentication when issue with credentials are reported.
+Configuration of options through options flow.
+"""
 import socket
 from urllib.parse import urlparse
 
@@ -31,11 +37,9 @@ from .const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
-    CONTROLLER_ID,
     DEFAULT_DPI_RESTRICTIONS,
     DEFAULT_POE_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
-    LOGGER,
 )
 from .controller import get_controller
 from .errors import AuthenticationRequired, CannotConnect
@@ -49,15 +53,6 @@ MODEL_PORTS = {
     "UniFi Dream Machine": 443,
     "UniFi Dream Machine Pro": 443,
 }
-
-
-@callback
-def get_controller_id_from_config_entry(config_entry):
-    """Return controller with a matching bridge id."""
-    return CONTROLLER_ID.format(
-        host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
-        site=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID],
-    )
 
 
 class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
@@ -86,19 +81,26 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
         if user_input is not None:
 
+            self.config = {
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_PORT: user_input.get(CONF_PORT),
+                CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL),
+                CONF_SITE_ID: DEFAULT_SITE_ID,
+            }
+
             try:
-                self.config = {
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_PORT: user_input.get(CONF_PORT),
-                    CONF_VERIFY_SSL: user_input.get(CONF_VERIFY_SSL),
-                    CONF_SITE_ID: DEFAULT_SITE_ID,
-                }
-
                 controller = await get_controller(self.hass, **self.config)
-
                 sites = await controller.sites()
+
+            except AuthenticationRequired:
+                errors["base"] = "faulty_credentials"
+
+            except CannotConnect:
+                errors["base"] = "service_unavailable"
+
+            else:
                 self.sites = {site["name"]: site["desc"] for site in sites.values()}
 
                 if self.reauth_config.get(CONF_SITE_ID) in self.sites:
@@ -107,19 +109,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                     )
 
                 return await self.async_step_site()
-
-            except AuthenticationRequired:
-                errors["base"] = "faulty_credentials"
-
-            except CannotConnect:
-                errors["base"] = "service_unavailable"
-
-            except Exception:  # pylint: disable=broad-except
-                LOGGER.error(
-                    "Unknown error connecting with UniFi Controller at %s",
-                    user_input[CONF_HOST],
-                )
-                return self.async_abort(reason="unknown")
 
         host = self.config.get(CONF_HOST)
         if not host and await async_discover_unifi(self.hass):
@@ -214,7 +203,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         return await self.async_step_user()
 
     async def async_step_ssdp(self, discovery_info):
-        """Handle a discovered unifi device."""
+        """Handle a discovered UniFi device."""
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
         model_description = discovery_info[ssdp.ATTR_UPNP_MODEL_DESCRIPTION]
         mac_address = format_mac(discovery_info[ssdp.ATTR_UPNP_SERIAL])
@@ -232,7 +221,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         # pylint: disable=no-member
         self.context["title_placeholders"] = {
             CONF_HOST: self.config[CONF_HOST],
-            CONF_SITE_ID: "default",
+            CONF_SITE_ID: DEFAULT_SITE_ID,
         }
 
         port = MODEL_PORTS.get(model_description)
@@ -242,7 +231,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         return await self.async_step_user()
 
     def _host_already_configured(self, host):
-        """See if we already have a unifi entry matching the host."""
+        """See if we already have a UniFi entry matching the host."""
         for entry in self._async_current_entries():
             if not entry.data or CONF_CONTROLLER not in entry.data:
                 continue
@@ -271,7 +260,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_simple_options()
 
     async def async_step_simple_options(self, user_input=None):
-        """For simple Jack."""
+        """For users without advanced settings enabled."""
         if user_input is not None:
             self.options.update(user_input)
             return await self._update_options()
