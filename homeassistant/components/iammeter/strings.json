@@ -5,15 +5,15 @@
             "user": {
                 "title": "Define your IamMeter connection",
                 "data": {
-                    "host": "The IP of your device",
-                    "port": "Port"
+                    "host": "[%key:common::config_flow::data::host%]",
+                    "port": "[%key:common::config_flow::data::port%]"
                 }
             }
         },
         "error": {
-            "already_configured": "This device had configured already.",
-            "cannot_connect": "Can't connect to this device"
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
         },
-        "abort": {"already_configured": "This device had configured already."}
+        "abort": {"already_configured": "[%key:common::config_flow::abort::already_configured_device%]"}
     }
 }
