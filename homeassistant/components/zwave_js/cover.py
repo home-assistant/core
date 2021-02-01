@@ -21,6 +21,8 @@ from .entity import ZWaveBaseEntity
 
 LOGGER = logging.getLogger(__name__)
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
+PRESS_BUTTON = True
+RELEASE_BUTTON = False
 
 
 async def async_setup_entry(
@@ -77,10 +79,17 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        target_value = self.get_zwave_value("targetValue")
-        await self.info.node.async_set_value(target_value, 99)
+        target_value = self.get_zwave_value("Open")
+        await self.info.node.async_set_value(target_value, PRESS_BUTTON)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        target_value = self.get_zwave_value("targetValue")
-        await self.info.node.async_set_value(target_value, 0)
+        target_value = self.get_zwave_value("Close")
+        await self.info.node.async_set_value(target_value, PRESS_BUTTON)
+
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Stop cover."""
+        target_value = self.get_zwave_value("Open")
+        await self.info.node.async_set_value(target_value, RELEASE_BUTTON)
+        target_value = self.get_zwave_value("Close")
+        await self.info.node.async_set_value(target_value, RELEASE_BUTTON)
