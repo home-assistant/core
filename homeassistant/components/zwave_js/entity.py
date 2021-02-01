@@ -130,7 +130,7 @@ class ZWaveBaseEntity(Entity):
             command_class = self.info.primary_value.command_class
 
         # Build partial event data dictionary so we can change the endpoint later
-        event_data = {
+        partial_evt_data = {
             "commandClass": command_class,
             "property": value_property,
             "propertyKeyName": value_property_key_name,
@@ -139,7 +139,10 @@ class ZWaveBaseEntity(Entity):
         # lookup value by value_id
         value_id = get_value_id(
             self.info.node,
-            {**event_data, "endpoint": endpoint or self.info.primary_value.endpoint},
+            {
+                **partial_evt_data,
+                "endpoint": endpoint or self.info.primary_value.endpoint,
+            },
         )
         return_value = self.info.node.values.get(value_id)
 
@@ -150,7 +153,8 @@ class ZWaveBaseEntity(Entity):
             for endpoint_ in self.info.node.endpoints:
                 if endpoint_.index != self.info.primary_value.endpoint:
                     value_id = get_value_id(
-                        self.info.node, {**event_data, "endpoint": endpoint_.index}
+                        self.info.node,
+                        {**partial_evt_data, "endpoint": endpoint_.index},
                     )
                     return_value = self.info.node.values.get(value_id)
                     if return_value:
