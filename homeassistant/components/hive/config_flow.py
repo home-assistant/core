@@ -78,14 +78,14 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_password"
             elif self.tokens == "CONNECTION_ERROR":
                 errors["base"] = "no_internet_available"
-            else:
-                # Check if SMS 2fa is required.
-                if self.tokens.get("ChallengeName") == "SMS_MFA":
-                    # Complete SMS 2FA.
-                    return await self.async_step_2fa()
-                else:
-                    # Complete the entry setup.
-                    return await self.async_step_finish()
+           
+            # Check if SMS 2fa is required.
+            if self.tokens.get("ChallengeName") == "SMS_MFA":
+                # Complete SMS 2FA.
+                return await self.async_step_2fa()
+            
+            # Complete the entry setup.
+            return await self.async_step_finish()
 
         # Show User Input form.
         return await self._show_setup_form(errors=errors)
