@@ -168,3 +168,36 @@ async def test_gather_with_concurrency():
     )
 
     assert results == [2, 2, -1, -1]
+
+
+async def test_shutdown_run_callback_threadsafe():
+    """Test we can shutdown run_callback_threadsafe.
+
+    This test modifys global state because it
+    """
+    hasync.shutdown_run_callback_threadsafe()
+    callback = MagicMock()
+    loop = MagicMock()
+
+    with pytest.raises(RuntimeError):
+        hasync.run_callback_threadsafe(loop, callback)
+
+    delattr(hasync.run_callback_threadsafe, hasync._SHUTDOWN_RUN_CALLBACK_THREADSAFE)
+
+
+async def test_run_callback_threadsafe(hass):
+    """Test run_callback_threadsafe runs code in the event loop."""
+    loop = asyncio.get_running_loop()
+    it_ran = False
+
+    def callback():
+        nonlocal it_ran
+        it_ran = True
+
+    assert hasync.run_callback_threadsafe(loop, callback)
+    assert it_ran is False
+
+    # Verify that async_block_till_done will flush
+    # out the callback
+    await hass.async_block_till_done()
+    assert it_ran is True
