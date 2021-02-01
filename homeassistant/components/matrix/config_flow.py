@@ -28,7 +28,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     except MatrixRequestError:
         raise InvalidAuth
 
-    return {"title": "MatrixServer"}
+    return {"title": f"{data[CONF_USERNAME]} at {data[CONF_HOMESERVER]}"}
 
 
 class MatrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -48,6 +48,9 @@ class MatrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_USERNAME])
+            self._abort_if_unique_id_configured()
+
             try:
                 info = await validate_input(self.hass, user_input)
 
@@ -61,6 +64,10 @@ class MatrixConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )
+
+    async def async_step_import(self, import_config):
+        """Import a config entry from configuration.yaml."""
+        return await self.async_step_user(import_config)
 
 
 class InvalidAuth(exceptions.HomeAssistantError):

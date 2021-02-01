@@ -7,6 +7,7 @@ from matrix_client.client import MatrixClient, MatrixRequestError
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TARGET
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -51,6 +52,10 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
+                vol.Optional(CONF_HOMESERVER): cv.url,
+                vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+                vol.Optional(CONF_USERNAME): cv.matches_regex("@[^:]*:.*"),
+                vol.Optional(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_ROOMS, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
@@ -77,6 +82,21 @@ async def async_setup(hass, config):
         CONF_ROOMS: matrix_config[CONF_ROOMS],
         CONF_COMMANDS: matrix_config[CONF_COMMANDS],
     }
+
+    if CONF_HOMESERVER not in matrix_config:
+        return True
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_HOMESERVER: matrix_config[CONF_HOMESERVER],
+                CONF_USERNAME: matrix_config[CONF_USERNAME],
+                CONF_PASSWORD: matrix_config[CONF_PASSWORD],
+                CONF_VERIFY_SSL: matrix_config[CONF_VERIFY_SSL],
+            },
+        )
+    )
     return True
 
 
