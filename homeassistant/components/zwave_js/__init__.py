@@ -180,7 +180,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     @callback
     def async_on_notification(notification: Notification) -> None:
-        """Relay stateless value notification events from Z-Wave nodes to hass."""
+        """Relay stateless notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
         hass.bus.async_fire(
             ZWAVE_JS_EVENT,
