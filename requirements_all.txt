@@ -1615,6 +1615,9 @@ pypck==0.7.9
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
 
+# homeassistant.components.plaato
+pyplaato==0.0.15
+
 # homeassistant.components.point
 pypoint==2.0.0
 
