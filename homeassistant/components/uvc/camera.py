@@ -1,4 +1,5 @@
 """Support for Ubiquiti's UVC cameras."""
+from datetime import datetime
 import logging
 import re
 
@@ -110,14 +111,37 @@ class UnifiVideoCamera(Camera):
         return 0
 
     @property
+    def state_attributes(self):
+        """Return the camera state attributes."""
+        attr = super().state_attributes
+        if self.motion_detection_enabled:
+            attr["last_recording_start_time"] = timestamp_ms_to_date(
+                self._caminfo["lastRecordingStartTime"]
+            )
+        return attr
+
+    @property
     def is_recording(self):
         """Return true if the camera is recording."""
-        return self._caminfo["recordingSettings"]["fullTimeRecordEnabled"]
+        recording_state = "DISABLED"
+        if "recordingIndicator" in self._caminfo.keys():
+            recording_state = self._caminfo["recordingIndicator"]
+
+        return (
+            self._caminfo["recordingSettings"]["fullTimeRecordEnabled"]
+            or recording_state == "MOTION_INPROGRESS"
+            or recording_state == "MOTION_FINISHED"
+        )
 
     @property
     def motion_detection_enabled(self):
         """Camera Motion Detection Status."""
         return self._caminfo["recordingSettings"]["motionRecordEnabled"]
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this client."""
+        return self._uuid
 
     @property
     def brand(self):
@@ -230,3 +254,9 @@ class UnifiVideoCamera(Camera):
     def update(self):
         """Update the info."""
         self._caminfo = self._nvr.get_camera(self._uuid)
+
+
+def timestamp_ms_to_date(epoch_ms) -> datetime or None:
+    """Convert millisecond timestamp to datetime."""
+    if epoch_ms:
+        return datetime.fromtimestamp(epoch_ms / 1000)

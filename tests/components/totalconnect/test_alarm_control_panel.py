@@ -1,4 +1,6 @@
 """Tests for the TotalConnect alarm control panel device."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
@@ -23,8 +25,6 @@ from .common import (
     RESPONSE_DISARMED,
     setup_platform,
 )
-
-from tests.async_mock import patch
 
 ENTITY_ID = "alarm_control_panel.test"
 CODE = "-1"

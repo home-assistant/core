@@ -1,11 +1,11 @@
 """Tests for the Hisense AEH-W4A1 init file."""
+from unittest.mock import patch
+
 from pyaehw4a1 import exceptions
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import hisense_aehw4a1
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 async def test_creating_entry_sets_up_climate_discovery(hass):

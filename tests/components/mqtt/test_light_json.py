@@ -88,6 +88,7 @@ light:
   brightness_scale: 99
 """
 import json
+from unittest.mock import call, patch
 
 import pytest
 
@@ -125,7 +126,6 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.async_mock import call, patch
 from tests.common import async_fire_mqtt_message
 from tests.components.light import common
 

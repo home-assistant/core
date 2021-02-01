@@ -75,7 +75,9 @@ CONST_FAN_HIGH = "HIGH"
 
 
 # When we change the temperature setting, we need an overlay mode
-CONST_OVERLAY_TADO_MODE = "TADO_MODE"  # wait until tado changes the mode automatic
+CONST_OVERLAY_TADO_MODE = (
+    "NEXT_TIME_BLOCK"  # wait until tado changes the mode automatic
+)
 CONST_OVERLAY_MANUAL = "MANUAL"  # the user has change the temperature or mode manually
 CONST_OVERLAY_TIMER = "TIMER"  # the temperature will be reset after a timespan
 
@@ -150,3 +152,15 @@ DEFAULT_NAME = "Tado"
 TADO_ZONE = "Zone"
 
 UPDATE_LISTENER = "update_listener"
+
+# Constants for Temperature Offset
+INSIDE_TEMPERATURE_MEASUREMENT = "INSIDE_TEMPERATURE_MEASUREMENT"
+TEMP_OFFSET = "temperatureOffset"
+TADO_OFFSET_CELSIUS = "celsius"
+HA_OFFSET_CELSIUS = "offset_celsius"
+TADO_OFFSET_FAHRENHEIT = "fahrenheit"
+HA_OFFSET_FAHRENHEIT = "offset_fahrenheit"
+TADO_TO_HA_OFFSET_MAP = {
+    TADO_OFFSET_CELSIUS: HA_OFFSET_CELSIUS,
+    TADO_OFFSET_FAHRENHEIT: HA_OFFSET_FAHRENHEIT,
+}

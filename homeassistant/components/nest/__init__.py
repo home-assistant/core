@@ -30,14 +30,7 @@ from homeassistant.helpers import (
 )
 
 from . import api, config_flow
-from .const import (
-    API_URL,
-    DATA_SDM,
-    DATA_SUBSCRIBER,
-    DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
-)
+from .const import DATA_SDM, DATA_SUBSCRIBER, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
 
@@ -128,7 +121,7 @@ class SignalUpdateCallback:
             return
         _LOGGER.debug("Event Update %s", events.keys())
         device_registry = await self._hass.helpers.device_registry.async_get_registry()
-        device_entry = device_registry.async_get_device({(DOMAIN, device_id)}, ())
+        device_entry = device_registry.async_get_device({(DOMAIN, device_id)})
         if not device_entry:
             return
         for event in events:
@@ -161,7 +154,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     auth = api.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass),
         session,
-        API_URL,
+        config[CONF_CLIENT_ID],
+        config[CONF_CLIENT_SECRET],
     )
     subscriber = GoogleNestSubscriber(
         auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]

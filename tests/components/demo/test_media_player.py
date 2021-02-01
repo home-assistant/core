@@ -1,4 +1,6 @@
 """The tests for the Demo Media player platform."""
+from unittest.mock import patch
+
 import pytest
 import voluptuous as vol
 
@@ -13,8 +15,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import DATA_CLIENTSESSION
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 TEST_ENTITY_ID = "media_player.walkman"
 

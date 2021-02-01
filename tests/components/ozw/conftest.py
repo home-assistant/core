@@ -1,11 +1,11 @@
 """Helpers for tests."""
 import json
+from unittest.mock import patch
 
 import pytest
 
 from .common import MQTTMessage
 
-from tests.async_mock import patch
 from tests.common import load_fixture
 from tests.components.light.conftest import mock_light_profiles  # noqa
 
@@ -14,6 +14,12 @@ from tests.components.light.conftest import mock_light_profiles  # noqa
 def generic_data_fixture():
     """Load generic MQTT data and return it."""
     return load_fixture("ozw/generic_network_dump.csv")
+
+
+@pytest.fixture(name="migration_data", scope="session")
+def migration_data_fixture():
+    """Load migration MQTT data and return it."""
+    return load_fixture("ozw/migration_fixture.csv")
 
 
 @pytest.fixture(name="fan_data", scope="session")

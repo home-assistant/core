@@ -1,8 +1,8 @@
 """Test the Coolmaster config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries
 from homeassistant.components.coolmaster.const import AVAILABLE_MODES, DOMAIN
-
-from tests.async_mock import patch
 
 
 def _flow_data():

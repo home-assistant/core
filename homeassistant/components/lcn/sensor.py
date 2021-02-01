@@ -57,7 +57,8 @@ class LcnVariableSensor(LcnEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        await self.device_connection.activate_status_request_handler(self.variable)
+        if not self.device_connection.is_group:
+            await self.device_connection.activate_status_request_handler(self.variable)
 
     @property
     def state(self):
@@ -98,7 +99,8 @@ class LcnLedLogicSensor(LcnEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        await self.device_connection.activate_status_request_handler(self.source)
+        if not self.device_connection.is_group:
+            await self.device_connection.activate_status_request_handler(self.source)
 
     @property
     def state(self):

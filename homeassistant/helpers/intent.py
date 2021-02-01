@@ -169,10 +169,13 @@ def _fuzzymatch(name: str, items: Iterable[T], key: Callable[[T], str]) -> Optio
     for idx, item in enumerate(items):
         match = regex.search(key(item))
         if match:
-            # Add index so we pick first match in case same group and start
-            matches.append((len(match.group()), match.start(), idx, item))
+            # Add key length so we prefer shorter keys with the same group and start.
+            # Add index so we pick first match in case same group, start, and key length.
+            matches.append(
+                (len(match.group()), match.start(), len(key(item)), idx, item)
+            )
 
-    return sorted(matches)[0][3] if matches else None
+    return sorted(matches)[0][4] if matches else None
 
 
 class ServiceIntentHandler(IntentHandler):

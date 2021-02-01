@@ -1,6 +1,7 @@
 """The test for the data filter sensor platform."""
 from datetime import timedelta
 from os import path
+from unittest.mock import patch
 
 from pytest import fixture
 
@@ -20,7 +21,6 @@ import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component, async_init_recorder_component
 
 

@@ -87,7 +87,7 @@ from homeassistant.helpers import (
     template as template_helper,
 )
 from homeassistant.helpers.logging import KeywordStyleAdapter
-from homeassistant.util import sanitize_path, slugify as util_slugify
+from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
 # pylint: disable=invalid-name
@@ -118,8 +118,10 @@ def path(value: Any) -> str:
     if not isinstance(value, str):
         raise vol.Invalid("Expected a string")
 
-    if sanitize_path(value) != value:
-        raise vol.Invalid("Invalid path")
+    try:
+        raise_if_invalid_path(value)
+    except ValueError as err:
+        raise vol.Invalid("Invalid path") from err
 
     return value
 
@@ -556,7 +558,7 @@ def template(value: Optional[Any]) -> template_helper.Template:
     template_value = template_helper.Template(str(value))  # type: ignore
 
     try:
-        template_value.ensure_valid()  # type: ignore[no-untyped-call]
+        template_value.ensure_valid()
         return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
@@ -574,7 +576,7 @@ def dynamic_template(value: Optional[Any]) -> template_helper.Template:
 
     template_value = template_helper.Template(str(value))  # type: ignore
     try:
-        template_value.ensure_valid()  # type: ignore[no-untyped-call]
+        template_value.ensure_valid()
         return template_value
     except TemplateError as ex:
         raise vol.Invalid(f"invalid template ({ex})") from ex
@@ -916,18 +918,18 @@ SERVICE_SCHEMA = vol.All(
     has_at_least_one_key(CONF_SERVICE, CONF_SERVICE_TEMPLATE),
 )
 
+NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
+    vol.Coerce(float), vol.All(str, entity_domain("input_number"))
+)
+
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_CONDITION): "numeric_state",
             vol.Required(CONF_ENTITY_ID): entity_ids,
             vol.Optional(CONF_ATTRIBUTE): str,
-            CONF_BELOW: vol.Any(
-                vol.Coerce(float), vol.All(str, entity_domain("input_number"))
-            ),
-            CONF_ABOVE: vol.Any(
-                vol.Coerce(float), vol.All(str, entity_domain("input_number"))
-            ),
+            CONF_BELOW: NUMERIC_STATE_THRESHOLD_SCHEMA,
+            CONF_ABOVE: NUMERIC_STATE_THRESHOLD_SCHEMA,
             vol.Optional(CONF_VALUE_TEMPLATE): template,
         }
     ),

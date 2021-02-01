@@ -129,7 +129,7 @@ async def async_aiohttp_proxy_stream(
     await response.prepare(request)
 
     try:
-        while True:
+        while hass.is_running:
             with async_timeout.timeout(timeout):
                 data = await stream.read(buffer_size)
 

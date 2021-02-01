@@ -1,5 +1,6 @@
 """Test the Xiaomi Aqara config flow."""
 from socket import gaierror
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -7,8 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_aqara import config_flow, const
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
-
-from tests.async_mock import Mock, patch
 
 ZEROCONF_NAME = "name"
 ZEROCONF_PROP = "properties"
