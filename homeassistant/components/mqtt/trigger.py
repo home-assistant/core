@@ -1,5 +1,6 @@
 """Offer MQTT listening automation rules."""
 import json
+import logging
 
 import voluptuous as vol
 
@@ -28,6 +29,8 @@ TRIGGER_SCHEMA = vol.Schema(
         ),
     }
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_attach_trigger(hass, config, action, automation_info):
@@ -67,6 +70,10 @@ async def async_attach_trigger(hass, config, action, automation_info):
                 pass
 
             hass.async_run_hass_job(job, {"trigger": data})
+
+    _LOGGER.debug(
+        "Attaching MQTT trigger for topic: '%s', payload: '%s'", topic, payload
+    )
 
     remove = await mqtt.async_subscribe(
         hass, topic, mqtt_automation_listener, encoding=encoding, qos=qos

@@ -322,7 +322,10 @@ class Template:
         limited: bool = False,
         **kwargs: Any,
     ) -> Any:
-        """Render given template."""
+        """Render given template.
+
+        If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
+        """
         if self.is_static:
             if self.hass.config.legacy_templates or not parse_result:
                 return self.template
@@ -344,6 +347,8 @@ class Template:
         """Render given template.
 
         This method must be run in the event loop.
+
+        If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
         """
         if self.is_static:
             if self.hass.config.legacy_templates or not parse_result:
