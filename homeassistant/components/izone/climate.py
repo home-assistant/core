@@ -332,9 +332,7 @@ class ControllerDevice(ClimateEntity):
         if self._supported_features & SUPPORT_TARGET_TEMPERATURE:
             return None
         zone_ctrl = self._controller.zone_ctrl
-        zone = next(
-            (z for z in self.zones.values() if z.zone_index == zone_ctrl), None
-        )
+        zone = next((z for z in self.zones.values() if z.zone_index == zone_ctrl), None)
         if zone is None:
             return None
         return zone.name
@@ -345,9 +343,7 @@ class ControllerDevice(ClimateEntity):
         if self._supported_features & SUPPORT_TARGET_TEMPERATURE:
             return None
         zone_ctrl = self._controller.zone_ctrl
-        zone = next(
-            (z for z in self.zones.values() if z.zone_index == zone_ctrl), None
-        )
+        zone = next((z for z in self.zones.values() if z.zone_index == zone_ctrl), None)
         if zone is None:
             return None
         return zone.target_temperature
