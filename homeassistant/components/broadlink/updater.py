@@ -8,9 +8,7 @@ import broadlink as blk
 from broadlink.exceptions import (
     AuthorizationError,
     BroadlinkException,
-    CommandNotSupportedError,
     NetworkTimeoutError,
-    StorageError,
 )
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -32,6 +30,9 @@ def get_update_manager(device):
         "RM4": BroadlinkRMUpdateManager,
         "SP1": BroadlinkSP1UpdateManager,
         "SP2": BroadlinkSP2UpdateManager,
+        "SP2S": BroadlinkSP2UpdateManager,
+        "SP3": BroadlinkSP2UpdateManager,
+        "SP3S": BroadlinkSP2UpdateManager,
         "SP4": BroadlinkSP4UpdateManager,
         "SP4B": BroadlinkSP4UpdateManager,
     }
@@ -151,14 +152,14 @@ class BroadlinkSP2UpdateManager(BroadlinkUpdateManager):
 
     async def async_fetch_data(self):
         """Fetch data from the device."""
+        device = self.device
+
         data = {}
-        data["state"] = await self.device.async_request(self.device.api.check_power)
-        try:
-            data["load_power"] = await self.device.async_request(
-                self.device.api.get_energy
-            )
-        except (CommandNotSupportedError, StorageError):
-            data["load_power"] = None
+        data["pwr"] = await device.async_request(device.api.check_power)
+
+        if hasattr(device.api, "get_energy"):
+            data["power"] = await device.async_request(device.api.get_energy)
+
         return data
 
 
