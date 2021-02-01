@@ -87,7 +87,7 @@ async def test_config_mqtt(hass: HomeAssistantType):
 async def test_config_serial(hass: HomeAssistantType):
     """Test configuring a gateway via serial."""
     step = await get_form(hass, CONF_GATEWAY_TYPE_SERIAL, "gw_serial")
-    flowid = step["flow_id"]
+    flow_id = step["flow_id"]
 
     with patch(  # mock is_serial_port because otherwise the test will be platform dependent (/dev/ttyACMx vs COMx)
         "homeassistant.components.mysensors.config_flow.is_serial_port",
@@ -101,7 +101,7 @@ async def test_config_serial(hass: HomeAssistantType):
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            flowid,
+            flow_id,
             {
                 CONF_BAUD_RATE: 115200,
                 CONF_DEVICE: "/dev/ttyACM0",
@@ -126,7 +126,7 @@ async def test_config_serial(hass: HomeAssistantType):
 async def test_config_tcp(hass: HomeAssistantType):
     """Test configuring a gateway via tcp."""
     step = await get_form(hass, CONF_GATEWAY_TYPE_TCP, "gw_tcp")
-    flowid = step["flow_id"]
+    flow_id = step["flow_id"]
 
     with patch(
         "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
@@ -137,7 +137,7 @@ async def test_config_tcp(hass: HomeAssistantType):
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            flowid,
+            flow_id,
             {
                 CONF_TCP_PORT: 5003,
                 CONF_DEVICE: "127.0.0.1",
@@ -162,7 +162,7 @@ async def test_config_tcp(hass: HomeAssistantType):
 async def test_fail_to_connect(hass: HomeAssistantType):
     """Test configuring a gateway via tcp."""
     step = await get_form(hass, CONF_GATEWAY_TYPE_TCP, "gw_tcp")
-    flowid = step["flow_id"]
+    flow_id = step["flow_id"]
 
     with patch(
         "homeassistant.components.mysensors.config_flow.try_connect", return_value=False
@@ -173,7 +173,7 @@ async def test_fail_to_connect(hass: HomeAssistantType):
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            flowid,
+            flow_id,
             {
                 CONF_TCP_PORT: 5003,
                 CONF_DEVICE: "127.0.0.1",
@@ -316,7 +316,7 @@ async def test_config_invalid(
 ):
     """Perform a test that is expected to generate an error."""
     step = await get_form(hass, gateway_type, expected_step_id)
-    flowid = step["flow_id"]
+    flow_id = step["flow_id"]
 
     with patch(
         "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
@@ -327,7 +327,7 @@ async def test_config_invalid(
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            flowid,
+            flow_id,
             user_input,
         )
         await hass.async_block_till_done()
