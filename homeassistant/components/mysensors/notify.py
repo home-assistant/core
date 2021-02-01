@@ -1,5 +1,4 @@
 """MySensors notification service."""
-
 from homeassistant.components import mysensors
 from homeassistant.components.notify import ATTR_TARGET, DOMAIN, BaseNotificationService
 

@@ -179,7 +179,6 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         schema[vol.Optional(CONF_TOPIC_OUT_PREFIX)] = str
 
         schema = vol.Schema(schema)
-        _LOGGER.debug("mysconfigflow mqtt errors: %s", errors)
         return self.async_show_form(
             step_id="gw_mqtt", data_schema=schema, errors=errors
         )
@@ -195,11 +194,11 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors.update(_validate_version(user_input.get(CONF_VERSION)))
 
             if gw_type != CONF_GATEWAY_TYPE_MQTT:
-                verification_func = (
-                    is_socket_address
-                    if gw_type == CONF_GATEWAY_TYPE_TCP
-                    else is_serial_port
-                )
+                if gw_type == CONF_GATEWAY_TYPE_TCP:
+                    verification_func = is_socket_address
+                else:
+                    verification_func = is_serial_port
+
                 try:
                     await self.hass.async_add_executor_job(
                         verification_func, user_input.get(CONF_DEVICE)

@@ -36,7 +36,7 @@ def discover_mysensors_platform(
     hass, gateway_id: GatewayId, platform: str, new_devices: List[DevId]
 ) -> None:
     """Discover a MySensors platform."""
-    _LOGGER.debug("discovering platform %s with devIds: %s", platform, new_devices)
+    _LOGGER.debug("Discovering platform %s with devIds: %s", platform, new_devices)
     async_dispatcher_send(
         hass,
         MYSENSORS_DISCOVERY.format(gateway_id, platform),

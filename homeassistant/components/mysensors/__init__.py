@@ -132,7 +132,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the MySensors component."""
     if DOMAIN not in config or bool(hass.config_entries.async_entries(DOMAIN)):
         return True
@@ -189,8 +189,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id] = gateway
 
     async def finish():
-        for platform in SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT:
-            await hass.config_entries.async_forward_entry_setup(entry, platform)
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+                for platform in SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT
+            ]
+        )
         await finish_setup(hass, entry, gateway)
 
     hass.async_create_task(finish())
