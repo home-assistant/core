@@ -51,9 +51,9 @@ SENSOR_TYPES = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Insteon binary sensors from a config entry."""
 
-    def add_entities(discovery_info=None):
+    async def async_add_insteon_binary_sensor_entities(discovery_info=None):
         """Add the Insteon entities for the platform."""
-        async_add_insteon_entities(
+        await async_add_insteon_entities(
             hass,
             BINARY_SENSOR_DOMAIN,
             InsteonBinarySensorEntity,
@@ -62,8 +62,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
     signal = f"{SIGNAL_ADD_ENTITIES}_{BINARY_SENSOR_DOMAIN}"
-    async_dispatcher_connect(hass, signal, add_entities)
-    add_entities()
+    async_dispatcher_connect(hass, signal, async_add_insteon_binary_sensor_entities)
+    await async_add_insteon_binary_sensor_entities()
 
 
 class InsteonBinarySensorEntity(InsteonEntity, BinarySensorEntity):
