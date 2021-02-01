@@ -39,9 +39,6 @@ ECONET_STATE_TO_HA = {
 }
 HA_STATE_TO_ECONET = {value: key for key, value in ECONET_STATE_TO_HA.items()}
 
-# TODO: How to handle medlo and medhi
-#    ThermostatFanMode.MEDHI: FAN_HIGH,
-#    ThermostatFanMode.MEDLO: FAN_MEDIUM,
 ECONET_FAN_STATE_TO_HA = {
     ThermostatFanMode.AUTO: FAN_AUTO,
     ThermostatFanMode.LOW: FAN_LOW,
@@ -110,7 +107,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_COOL:
             return self.thermostat.cool_set_point
-        elif self.hvac_mode == HVAC_MODE_HEAT:
+        if self.hvac_mode == HVAC_MODE_HEAT:
             return self.thermostat.heat_set_point
         return None
 
@@ -135,10 +132,10 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         if target_temp:
             self.thermostat.set_set_point(target_temp, None, None)
-        elif target_temp_low or target_temp_high:
+            return
+        if target_temp_low or target_temp_high:
             self.thermostat.set_set_point(None, target_temp_high, target_temp_low)
-        else:
-            _LOGGER.error("Something went wrong")
+            return
 
     @property
     def is_aux_heat(self):
