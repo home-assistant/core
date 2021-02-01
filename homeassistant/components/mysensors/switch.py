@@ -51,36 +51,36 @@ async def async_setup_entry(
             async_add_entities=async_add_entities,
         )
 
-        async def async_send_ir_code_service(service):
-            """Set IR code as device state attribute."""
-            entity_ids = service.data.get(ATTR_ENTITY_ID)
-            ir_code = service.data.get(ATTR_IR_CODE)
-            devices = mysensors.get_mysensors_devices(hass, DOMAIN)
+    async def async_send_ir_code_service(service):
+        """Set IR code as device state attribute."""
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        ir_code = service.data.get(ATTR_IR_CODE)
+        devices = mysensors.get_mysensors_devices(hass, DOMAIN)
 
-            if entity_ids:
-                _devices = [
-                    device
-                    for device in devices.values()
-                    if isinstance(device, MySensorsIRSwitch)
-                    and device.entity_id in entity_ids
-                ]
-            else:
-                _devices = [
-                    device
-                    for device in devices.values()
-                    if isinstance(device, MySensorsIRSwitch)
-                ]
+        if entity_ids:
+            _devices = [
+                device
+                for device in devices.values()
+                if isinstance(device, MySensorsIRSwitch)
+                and device.entity_id in entity_ids
+            ]
+        else:
+            _devices = [
+                device
+                for device in devices.values()
+                if isinstance(device, MySensorsIRSwitch)
+            ]
 
-            kwargs = {ATTR_IR_CODE: ir_code}
-            for device in _devices:
-                await device.async_turn_on(**kwargs)
+        kwargs = {ATTR_IR_CODE: ir_code}
+        for device in _devices:
+            await device.async_turn_on(**kwargs)
 
-        hass.services.async_register(
-            MYSENSORS_DOMAIN,
-            SERVICE_SEND_IR_CODE,
-            async_send_ir_code_service,
-            schema=SEND_IR_CODE_SERVICE_SCHEMA,
-        )
+    hass.services.async_register(
+        MYSENSORS_DOMAIN,
+        SERVICE_SEND_IR_CODE,
+        async_send_ir_code_service,
+        schema=SEND_IR_CODE_SERVICE_SCHEMA,
+    )
 
     await on_unload(
         hass,

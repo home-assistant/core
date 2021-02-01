@@ -73,10 +73,6 @@ class MySensorsDevice:
             if platform_str in self.hass.data[DOMAIN]:
                 platform_dict = self.hass.data[DOMAIN][platform_str]
                 if self.dev_id in platform_dict:
-                    if platform_dict[self.dev_id] is not self:
-                        self._logger.warning(
-                            "possible duplicate device: %s", self.dev_id
-                        )
                     del platform_dict[self.dev_id]
                     self._logger.debug(
                         "deleted %s from platform %s", self.dev_id, platform
