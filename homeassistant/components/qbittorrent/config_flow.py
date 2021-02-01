@@ -57,8 +57,8 @@ class QBittorrentConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._data = data
             self._title = data[CONF_URL]
             return await self.async_step_import_confirm()
-        else:
-            return self.async_abort(reason="config_cannot_be_imported")
+
+        return self.async_abort(reason="config_cannot_be_imported")
 
     async def async_step_import_confirm(self, user_input=None):
         """Confirm the user wants to import the config entry."""
