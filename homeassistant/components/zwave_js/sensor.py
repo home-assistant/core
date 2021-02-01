@@ -9,6 +9,7 @@ from zwave_js_server.const import CommandClass
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DOMAIN as SENSOR_DOMAIN,
 )
@@ -67,11 +68,15 @@ class ZwaveSensorBase(ZWaveBaseEntity):
         if self.info.primary_value.command_class == CommandClass.BATTERY:
             return DEVICE_CLASS_BATTERY
         if self.info.primary_value.command_class == CommandClass.METER:
-            if self.info.primary_value.property_key_name == "kWh_Consumed":
+            if self.info.primary_value.metadata.unit == "kWh":
                 return DEVICE_CLASS_ENERGY
             return DEVICE_CLASS_POWER
-        if self.info.primary_value.property_ == "Air temperature":
+        if "temperature" in self.info.primary_value.property_.lower():
             return DEVICE_CLASS_TEMPERATURE
+        if self.info.primary_value.metadata.unit == "W":
+            return DEVICE_CLASS_POWER
+        if self.info.primary_value.metadata.unit == "Lux":
+            return DEVICE_CLASS_ILLUMINANCE
         return None
 
     @property
