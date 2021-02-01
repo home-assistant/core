@@ -1,9 +1,6 @@
 # Home Assistant Core, full dependency set
 -r requirements.txt
 
-# homeassistant.components.nuimo_controller
-# --only-binary=all nuimo==0.1.0
-
 # homeassistant.components.dht
 # Adafruit-DHT==1.4.0
 

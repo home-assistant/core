@@ -28,7 +28,6 @@ COMMENT_REQUIREMENTS = (
     "evdev",
     "face_recognition",
     "i2csense",
-    "nuimo",
     "opencv-python-headless",
     "py_noaa",
     "pybluez",
