@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any, Callable, Dict
 
 from haphilipsjs import ConnectionFailure, PhilipsTV
 
@@ -60,42 +60,55 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
+class PluggableAction:
+    """A pluggable action handler."""
+
+    _actions: Dict[Any, AutomationActionType] = {}
+
+    def __init__(self, update: Callable[[], None]):
+        """Initialize."""
+        self._update = update
+
+    def __bool__(self):
+        """Return if we have something attached."""
+        return bool(self._actions)
+
+    @callback
+    def async_attach(self, action: AutomationActionType, variables: dict):
+        """Attach a device trigger for turn on."""
+
+        @callback
+        def _remove():
+            del self._actions[_remove]
+            self._update()
+
+        self._actions[_remove] = (action, variables)
+        self._update()
+
+        return _remove
+
+    async def async_run(self, context):
+        """Run all turn on triggers."""
+        for action, variables in self._actions.values():
+            await action(variables, context)
+
+
 class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinator to update data."""
 
     api: PhilipsTV
     system: Dict[str, Any]
-    turn_on_actions: Dict[Any, AutomationActionType] = {}
-
-    @callback
-    def async_attach_turn_on_action(
-        self, action: AutomationActionType, variables: dict
-    ):
-        """Attach a device trigger for turn on."""
-
-        def _update():
-            for update_callback in self._listeners:
-                update_callback()
-
-        @callback
-        def _remove():
-            del self.turn_on_actions[_remove]
-            _update()
-
-        self.turn_on_actions[_remove] = (action, variables)
-        _update()
-
-        return _remove
-
-    async def async_turn_on(self, context):
-        """Run all turn on triggers."""
-        for action, variables in self.turn_on_actions.values():
-            await action(variables, context)
 
     def __init__(self, hass, api: PhilipsTV, system: Dict[str, Any]) -> None:
         """Set up the coordinator."""
         self.api = api
         self.system = system
+
+        def _update_listeners():
+            for update_callback in self._listeners:
+                update_callback()
+
+        self.turn_on = PluggableAction(_update_listeners)
 
         def _update():
             try:

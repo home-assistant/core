@@ -63,4 +63,4 @@ async def async_attach_trigger(
             config_entry_id
         )
         if coordinator:
-            return coordinator.async_attach_turn_on_action(action, variables)
+            return coordinator.turn_on.async_attach(action, variables)

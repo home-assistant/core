@@ -130,7 +130,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def supported_features(self):
         """Flag media player features that are supported."""
         supports = self._supports
-        if self._coordinator.turn_on_actions:
+        if self._coordinator.turn_on:
             supports |= SUPPORT_TURN_ON
         return supports
 
@@ -180,7 +180,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     async def async_turn_on(self):
         """Turn on the device."""
-        await self._coordinator.async_turn_on(self._context)
+        await self._coordinator.turn_on.async_run(self._context)
 
     def turn_off(self):
         """Turn off the device."""
