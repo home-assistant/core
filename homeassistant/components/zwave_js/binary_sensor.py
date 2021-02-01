@@ -352,15 +352,10 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
     @property
     def name(self) -> str:
         """Return default name from device name and value name combination."""
-        base_name = super().name
-        value_label = self.info.primary_value.metadata.states.get(
-            str(self.info.primary_value.value)
-        )
-        # Strip "on location" / "at location" from name
-        # Note: We're assuming that we don't retrieve 2 values with different location
-        value_label = value_label.split(" on ")[0]
-        value_label = value_label.split(" at ")[0]
-        return f"{base_name}: {value_label}"
+        node_name = self.info.node.name or self.info.node.device_config.description
+        property_name = self.info.primary_value.property_name
+        property_key_name = self.info.primary_value.property_key_name
+        return f"{node_name}: {property_name}: {property_key_name}"
 
     @property
     def device_class(self) -> Optional[str]:
