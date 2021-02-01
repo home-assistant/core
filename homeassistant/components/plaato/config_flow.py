@@ -36,7 +36,6 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize."""
         self._init_info = {}
-        self._errors = {}
 
     async def async_step_user(self, user_input=None):
         """Handle user step."""
@@ -63,7 +62,6 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): vol.In(list(PlaatoDeviceType)),
                 }
             ),
-            errors=self._errors,
         )
 
     async def async_step_api_method(self, user_input=None):
@@ -71,20 +69,19 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         device_type = self._init_info[CONF_DEVICE_TYPE]
 
-        if user_input is None:
-            return await self._show_api_method_form(device_type)
+        if user_input is not None:
+            token = user_input.get(CONF_TOKEN, None)
+            use_webhook = user_input.get(CONF_USE_WEBHOOK, False)
 
-        token = user_input.get(CONF_TOKEN, None)
-        use_webhook = user_input.get(CONF_USE_WEBHOOK, False)
+            if not token and not use_webhook:
+                errors = {"base": PlaatoConfigFlow._get_error(device_type)}
+                return await self._show_api_method_form(device_type, errors)
 
-        if not token and not use_webhook:
-            self._errors["base"] = PlaatoConfigFlow._get_error(device_type)
-            return await self._show_api_method_form(device_type)
+            self._init_info[CONF_USE_WEBHOOK] = use_webhook
+            self._init_info[CONF_TOKEN] = token
+            return await self.async_step_webhook()
 
-        self._init_info[CONF_USE_WEBHOOK] = use_webhook
-        self._init_info[CONF_TOKEN] = token
-        self._errors = {}
-        return await self.async_step_webhook()
+        return await self._show_api_method_form(device_type)
 
     async def async_step_webhook(self, user_input=None):
         """Validate config step."""
@@ -98,7 +95,6 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_show_form(
                 step_id="webhook",
-                errors=self._errors,
                 description_placeholders={
                     PLACEHOLDER_WEBHOOK_URL: webhook_url,
                     PLACEHOLDER_DOCS_URL: DOCS_URL,
@@ -129,7 +125,9 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _show_api_method_form(self, device_type: PlaatoDeviceType):
+    async def _show_api_method_form(
+        self, device_type: PlaatoDeviceType, errors: dict = None
+    ):
         data_scheme = vol.Schema({vol.Optional(CONF_TOKEN, default=""): str})
 
         if device_type == PlaatoDeviceType.Airlock:
@@ -140,7 +138,7 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="api_method",
             data_schema=data_scheme,
-            errors=self._errors,
+            errors=errors,
             description_placeholders={PLACEHOLDER_DEVICE_TYPE: device_type.name},
         )
 

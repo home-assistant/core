@@ -94,7 +94,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Configure based on config entry."""
 
-    use_webhook = entry.data.get(CONF_USE_WEBHOOK, False)
+    use_webhook = entry.data[CONF_USE_WEBHOOK]
 
     if use_webhook:
         async_setup_webhook(hass, entry)

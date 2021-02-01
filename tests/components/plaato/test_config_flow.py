@@ -178,7 +178,7 @@ async def test_show_config_form_no_cloud_webhook(hass, webhook_id):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "webhook"
-    assert len(result["errors"]) == 0
+    assert result["errors"] is None
 
 
 async def test_show_config_form_api_method_no_auth_token(hass, webhook_id):
