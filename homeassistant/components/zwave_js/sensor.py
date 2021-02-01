@@ -96,6 +96,16 @@ class ZWaveStringSensor(ZwaveSensorBase):
     """Representation of a Z-Wave String sensor."""
 
     @property
+    def name(self) -> str:
+        """Return alternate name for notification sensors."""
+        if self.info.primary_value.command_class == CommandClass.NOTIFICATION:
+            node_name = self.info.node.name or self.info.node.device_config.description
+            property_name = self.info.primary_value.property_name
+            property_key_name = self.info.primary_value.property_key_name
+            return f"{node_name}: {property_name}: {property_key_name}"
+        return super().name
+
+    @property
     def state(self) -> Optional[str]:
         """Return state of the sensor."""
         if self.info.primary_value.value is None:

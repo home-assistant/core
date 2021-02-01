@@ -351,7 +351,7 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
 
     @property
     def name(self) -> str:
-        """Return default name from device name and value name combination."""
+        """Return name with property name and property key name."""
         node_name = self.info.node.name or self.info.node.device_config.description
         property_name = self.info.primary_value.property_name
         property_key_name = self.info.primary_value.property_key_name
