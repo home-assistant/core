@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_STATE,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -232,7 +233,6 @@ async def async_setup_entry(hass, config_entry):
             update_method=async_update_data,
         )
 
-        hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id] = coordinator
         async_sync_geo_coordinator_update_intervals(
             hass, config_entry.data[CONF_API_KEY]
         )
@@ -262,9 +262,11 @@ async def async_setup_entry(hass, config_entry):
             update_method=async_update_data,
         )
 
-        hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id] = coordinator
-
     await coordinator.async_refresh()
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
+
+    hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id] = coordinator
 
     for component in PLATFORMS:
         hass.async_create_task(
