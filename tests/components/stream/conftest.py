@@ -35,12 +35,14 @@ class WorkerSync:
         self._event.set()
 
     def blocking_finish(self, stream: Stream):
-        """Proxy StreamOutput.finish, intercepted for test to pause worker."""
+        """Intercept call to pause stream worker."""
         # Worker is ending the stream, which clears all output buffers.
         # Block the worker thread until the test has a chance to verify
         # the segments under test.
-        logging.info("blocking_finish")
+        logging.debug("blocking worker")
         self._event.wait()
+
+        # Forward to actual Stream._worker_finished
         self._finish_original(stream)
 
 

@@ -150,13 +150,10 @@ def stream_worker(hass, stream, quit_event):
                 )  # Some streams declare an audio stream and never send any packets
                 audio_stream = None
 
-        except av.AVError as ex:
+        except (av.AVError, StopIteration) as ex:
             _LOGGER.error(
                 "Error demuxing stream while finding first packet: %s", str(ex)
             )
-            return False
-        except StopIteration:
-            _LOGGER.error("Stream has ended")
             return False
         return True
 
@@ -214,11 +211,8 @@ def stream_worker(hass, stream, quit_event):
                 missing_dts += 1
                 continue
             missing_dts = 0
-        except av.AVError as ex:
+        except (av.AVError, StopIteration) as ex:
             _LOGGER.error("Error demuxing stream: %s", str(ex))
-            break
-        except StopIteration:
-            _LOGGER.error("Stream has ended")
             break
 
         # Discard packet if dts is not monotonic

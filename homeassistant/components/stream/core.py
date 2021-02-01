@@ -8,7 +8,7 @@ from aiohttp import web
 import attr
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
 
@@ -37,35 +37,40 @@ class Segment:
 
 
 class IdleTimer:
-    """Invokes a callback after an inactivity timeout."""
+    """Invoke a callback after an inactivity timeout.
 
-    def __init__(self, hass, timeout, callback):
+    The IdleTimer invokes the callback after some timeout has passed. The awake() method
+    resets the internal alarm, extending the inactivity time.
+    """
+
+    def __init__(self, hass: HomeAssistant, timeout: int, callback: Callable[[], None]):
         """Initialize IdleTimer."""
         self._hass = hass
-        self._unsub = None
         self._timeout = timeout
         self._callback = callback
+        self._unsub = None
         self.idle = False
 
     def start(self):
         """Start the idle timer if not already started."""
         self.idle = False
         if self._unsub is None:
-            self._unsub = async_call_later(self._hass, self._timeout, self._fire)
+            self._unsub = async_call_later(self._hass, self._timeout, self.fire)
 
-    def alive(self):
-        """Reset the idle timeout."""
+    def awake(self):
+        """Keep the idle time alive by resetting the timeout."""
         self.idle = False
         # Reset idle timeout
         self.clear()
-        self._unsub = async_call_later(self._hass, self._timeout, self._fire)
+        self._unsub = async_call_later(self._hass, self._timeout, self.fire)
 
     def clear(self):
         """Clear and disable the timer."""
         if self._unsub is not None:
             self._unsub()
 
-    def _fire(self, now=None):
+    def fire(self, _now=None):
+        """Invoke the idle timeout callback, called when the alarm fires."""
         self.idle = True
         self._unsub = None
         self._callback()
@@ -74,7 +79,7 @@ class IdleTimer:
 class StreamOutput:
     """Represents a stream output."""
 
-    def __init__(self, hass, idle_timer) -> None:
+    def __init__(self, hass: HomeAssistant, idle_timer: IdleTimer) -> None:
         """Initialize a stream output."""
         self._hass = hass
         self._idle_timer = idle_timer
@@ -128,7 +133,7 @@ class StreamOutput:
 
     def get_segment(self, sequence: int = None) -> Any:
         """Retrieve a specific segment, or the whole list."""
-        self._idle_timer.alive()
+        self._idle_timer.awake()
 
         if not sequence:
             return self._segments
@@ -164,14 +169,10 @@ class StreamOutput:
         self._event.set()
         self._event.clear()
 
-    def finish(self):
-        """End the stream and cleanup."""
-        self._event.set()
-        self._idle_timer.clear()
-        self.cleanup()
-
     def cleanup(self):
         """Handle cleanup."""
+        self._event.set()
+        self._idle_timer.clear()
         self._segments = deque(maxlen=MAX_SEGMENTS)
 
 

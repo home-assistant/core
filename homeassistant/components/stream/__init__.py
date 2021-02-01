@@ -21,8 +21,8 @@ from .const import (
     CONF_STREAM_SOURCE,
     DOMAIN,
     MAX_SEGMENTS,
+    OUTPUT_IDLE_TIMEOUT,
     SERVICE_RECORD,
-    STREAM_IDLE_TIMEOUT,
     STREAM_RESTART_INCREMENT,
     STREAM_RESTART_RESET_TIME,
 )
@@ -146,36 +146,35 @@ class Stream:
         # without concern about self._outputs being modified from another thread.
         return MappingProxyType(self._outputs.copy())
 
-    def add_provider(self, fmt, timeout=STREAM_IDLE_TIMEOUT):
+    def add_provider(self, fmt, timeout=OUTPUT_IDLE_TIMEOUT):
         """Add provider output stream."""
         if not self._outputs.get(fmt):
-            # Set up idle timeout
+
             @callback
             def idle_callback():
-                self._idle_timeout(fmt)
+                if not self.keepalive and fmt in self._outputs:
+                    self.remove_provider(self._outputs[fmt])
+                self.check_idle()
 
-            idle_timer = IdleTimer(self.hass, timeout, idle_callback)
-
-            provider = PROVIDERS[fmt](self.hass, idle_timer)
+            provider = PROVIDERS[fmt](
+                self.hass, IdleTimer(self.hass, timeout, idle_callback)
+            )
             self._outputs[fmt] = provider
         return self._outputs[fmt]
 
-    def _idle_timeout(self, fmt):
-        """Idle timeout."""
-        provider = self._outputs.get(fmt)
-        if not provider:
-            return
-        if not self.keepalive:
-            provider.cleanup()
-            del self._outputs[fmt]
+    def remove_provider(self, provider):
+        """Remove provider output stream."""
+        if provider.name in self._outputs:
+            self._outputs[provider.name].cleanup()
+            del self._outputs[provider.name]
 
-            # Stop the stream entirely if this was the last output
-            if not self._outputs:
-                self.stop()
-        else:
-            # Revoke the access token if this was the last active provider
-            if all([p.idle for p in self._outputs.values()]):
-                self.access_token = None
+        if not self._outputs:
+            self.stop()
+
+    def check_idle(self):
+        """Reset access token if all providers are idle."""
+        if all([p.idle for p in self._outputs.values()]):
+            self.access_token = None
 
     def start(self):
         """Start a stream."""
@@ -221,20 +220,25 @@ class Stream:
 
     def _worker_finished(self):
         """Schedule cleanup of all outputs."""
-        self.hass.loop.call_soon_threadsafe(self._cleanup)
 
-    @callback
-    def _cleanup(self):
-        # Mark outputs as finished
-        for fmt in self.outputs:
-            self.outputs[fmt].finish()
+        @callback
+        def remove_outputs():
+            for provider in self.outputs.values():
+                self.remove_provider(provider)
+
+        self.hass.loop.call_soon_threadsafe(remove_outputs)
 
     def stop(self):
         """Remove outputs and access token."""
         self._outputs = {}
         self.access_token = None
 
-        if not self.keepalive and self._thread is not None:
+        if not self.keepalive:
+            self._stop()
+
+    def _stop(self):
+        """Stop worker thread."""
+        if self._thread is not None:
             self._thread_quit.set()
             self._thread.join()
             self._thread = None
