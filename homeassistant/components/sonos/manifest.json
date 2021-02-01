@@ -3,7 +3,8 @@
   "name": "Sonos",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sonos",
-  "requirements": ["pysonos==0.0.35"],
+  "requirements": ["pysonos==0.0.40"],
+  "after_dependencies": ["plex"],
   "ssdp": [
     {
       "st": "urn:schemas-upnp-org:device:ZonePlayer:1"

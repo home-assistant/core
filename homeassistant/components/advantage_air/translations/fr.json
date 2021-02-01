@@ -6,7 +6,6 @@
         "error": {
             "cannot_connect": "\u00c9chec de connexion"
         },
-        "flow_title": "Configuration d\u2019Advantage Air",
         "step": {
             "user": {
                 "data": {
@@ -17,6 +16,5 @@
                 "title": "Connecter"
             }
         }
-    },
-    "title": "Advantage Air"
+    }
 }

@@ -2,9 +2,7 @@
     "config": {
         "abort": {
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
-            "invalid_credentials": "Neplatn\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje",
-            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba",
-            "user_already_configured": "\u00da\u010det je ji\u017e nastaven"
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "create_entry": {
             "default": "Chcete-li nastavit pokro\u010dil\u00e9 mo\u017enosti, pod\u00edvejte se do [dokumentace Life360]({docs_url})."
@@ -12,10 +10,8 @@
         "error": {
             "already_configured": "\u00da\u010det je ji\u017e nastaven",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
-            "invalid_credentials": "Neplatn\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje",
             "invalid_username": "Neplatn\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no",
-            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba",
-            "user_already_configured": "\u00da\u010det je ji\u017e nastaven"
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
             "user": {

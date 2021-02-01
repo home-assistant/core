@@ -14,6 +14,10 @@
                 "description": "",
                 "title": "Konnected seade on valmis"
             },
+            "import_confirm": {
+                "description": "Configuration.yaml kirjest leiti Konnected Alarm Panel ID-ga {id}. See voog v\u00f5imaldabl selle importida seadistusikirjesse.",
+                "title": "Konnektedi seadme import"
+            },
             "user": {
                 "data": {
                     "host": "IP aadress",
@@ -81,6 +85,7 @@
                 "data": {
                     "api_host": "Alista API hosti URL (valikuline)",
                     "blink": "Vilguts paneeli LEDi oleku muudatuse saatmisel",
+                    "discovery": "V\u00f5rgus esitatud tuvastusp\u00e4ringutele vastamine",
                     "override_api_host": "Alista Home Assistanti API hostipaneeli vaikimisi URL"
                 },
                 "description": "Vali oma paneeli jaoks soovitud k\u00e4itumine",
@@ -90,6 +95,7 @@
                 "data": {
                     "activation": "V\u00e4ljund sissel\u00fclitatuna",
                     "momentary": "Impulsi kestus (ms) (valikuline)",
+                    "more_states": "Selle tsooni t\u00e4iendavate olekute konfigureerimine",
                     "name": "Nimi (valikuline)",
                     "pause": "Paus impulsside vahel (ms) (valikuline)",
                     "repeat": "Korduste arv (-1 = l\u00f5pmatu) (valikuline)"

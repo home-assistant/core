@@ -2,6 +2,7 @@
 from datetime import timedelta
 import os
 import sqlite3
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -11,7 +12,6 @@ from homeassistant.util import dt as dt_util
 
 from .common import wait_recording_done
 
-from tests.async_mock import MagicMock, patch
 from tests.common import get_test_home_assistant, init_recorder_component
 
 

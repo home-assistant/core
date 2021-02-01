@@ -27,6 +27,7 @@ from .error import Disconnect
 from .messages import message_to_json
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
+_WS_LOGGER = logging.getLogger(f"{__name__}.connection")
 
 
 class WebsocketAPIView(HomeAssistantView):
@@ -41,6 +42,14 @@ class WebsocketAPIView(HomeAssistantView):
         return await WebSocketHandler(request.app["hass"], request).async_handle()
 
 
+class WebSocketAdapter(logging.LoggerAdapter):
+    """Add connection id to websocket messages."""
+
+    def process(self, msg, kwargs):
+        """Add connid to websocket log messages."""
+        return f'[{self.extra["connid"]}] {msg}', kwargs
+
+
 class WebSocketHandler:
     """Handle an active websocket client connection."""
 
@@ -52,7 +61,7 @@ class WebSocketHandler:
         self._to_write: asyncio.Queue = asyncio.Queue(maxsize=MAX_PENDING_MSG)
         self._handle_task = None
         self._writer_task = None
-        self._logger = logging.getLogger("{}.connection.{}".format(__name__, id(self)))
+        self._logger = WebSocketAdapter(_WS_LOGGER, {"connid": id(self)})
         self._peak_checker_unsub = None
 
     async def _writer(self):

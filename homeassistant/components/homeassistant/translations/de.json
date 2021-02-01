@@ -1,3 +1,10 @@
 {
-    "title": "Home Assistant"
+    "system_health": {
+        "info": {
+            "docker": "Docker",
+            "docker_version": "Docker",
+            "hassio": "Supervisor",
+            "host_os": "Home Assistant OS"
+        }
+    }
 }

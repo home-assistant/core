@@ -2,14 +2,13 @@
     "config": {
         "abort": {
             "already_configured_device": "Apparat ass scho konfigur\u00e9iert",
+            "cannot_connect": "Feeler beim verbannen",
             "updated_entry": "D\u00ebs Entr\u00e9e ass scho konfigur\u00e9iert mee d\u00e9i defin\u00e9ierten Numm an/oder Optiounen an der Konfiguratioun st\u00ebmmen net mat deene virdrun import\u00e9ierten Optiounen iwwereneen, esou gouf d'Entr\u00e9e deementspriechend aktualis\u00e9iert."
         },
         "error": {
             "cannot_connect": "Feeler beim verbannen",
             "complete_pairing_failed": "Feeler beim ofschl\u00e9isse vun der Kopplung. Iwwerpr\u00e9if dass de PIN korrekt an da de Fernsee nach \u00ebmmer ugeschalt a mam Netzwierk verbonnen ass ier de n\u00e4chste Versuch gestart g\u00ebtt.",
-            "existing_config_entry_found": "Eng bestoend VIZIO SmartCast Konfiguratioun Entr\u00e9e mat der selwechter Seriennummer ass scho konfigur\u00e9iert. Du musst d\u00e9i existent Entr\u00e9e l\u00e4sche fir d\u00ebs k\u00ebnnen ze konfigur\u00e9ieren.",
-            "host_exists": "VIZIO Apparat mat d\u00ebsem Host ass scho konfigur\u00e9iert.",
-            "name_exists": "VIZIO Apparat mat d\u00ebsen Numm ass scho konfigur\u00e9iert."
+            "existing_config_entry_found": "Eng bestoend VIZIO SmartCast Konfiguratioun Entr\u00e9e mat der selwechter Seriennummer ass scho konfigur\u00e9iert. Du musst d\u00e9i existent Entr\u00e9e l\u00e4sche fir d\u00ebs k\u00ebnnen ze konfigur\u00e9ieren."
         },
         "step": {
             "pair_tv": {

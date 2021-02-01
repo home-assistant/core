@@ -18,8 +18,7 @@
                     "port": "\ud3ec\ud2b8",
                     "ssl": "Sonarr \ub294 SSL \uc778\uc99d\uc11c\ub97c \uc0ac\uc6a9\ud558\uace0 \uc788\uc2b5\ub2c8\ub2e4",
                     "verify_ssl": "Sonarr \ub294 \uc62c\ubc14\ub978 \uc778\uc99d\uc11c\ub97c \uc0ac\uc6a9\ud558\uace0 \uc788\uc2b5\ub2c8\ub2e4"
-                },
-                "title": "Sonarr \uc5d0 \uc5f0\uacb0\ud558\uae30"
+                }
             }
         }
     },
@@ -32,6 +31,5 @@
                 }
             }
         }
-    },
-    "title": "Sonarr"
+    }
 }

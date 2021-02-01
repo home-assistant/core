@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindungsfehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Name"
+                }
+            }
+        }
+    }
+}

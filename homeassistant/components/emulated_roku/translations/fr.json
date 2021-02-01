@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
-            "name_exists": "Ce nom est d\u00e9j\u00e0 utilis\u00e9"
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
         },
         "step": {
             "user": {

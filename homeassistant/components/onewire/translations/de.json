@@ -1,6 +1,16 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_path": "Verzeichnis nicht gefunden."
+        },
         "step": {
+            "owserver": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            },
             "user": {
                 "data": {
                     "type": "Verbindungstyp"

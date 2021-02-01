@@ -2,15 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "bad_config_file": "Fehlerhafte Daten aus der Konfigurationsdatei",
             "link_local_address": "Link-local Adressen werden nicht unterst\u00fctzt",
             "not_axis_device": "Erkanntes Ger\u00e4t ist kein Axis-Ger\u00e4t"
         },
         "error": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf f\u00fcr das Ger\u00e4t wird bereits ausgef\u00fchrt.",
-            "device_unavailable": "Ger\u00e4t ist nicht verf\u00fcgbar",
-            "faulty_credentials": "Ung\u00fcltige Anmeldeinformationen"
+            "cannot_connect": "Verbindungsfehler"
         },
         "flow_title": "Achsenger\u00e4t: {name} ({host})",
         "step": {

@@ -10,8 +10,7 @@
             "invalid_host": "Nieprawid\u0142owa nazwa hosta lub adres IP, po pomoc w rozwi\u0105zaniu problemu kliknij [tutaj]({https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem)}",
             "invalid_interface": "Nieprawid\u0142owy interfejs sieciowy",
             "invalid_key": "Nieprawid\u0142owy klucz bramki",
-            "invalid_mac": "Nieprawid\u0142owy adres MAC",
-            "not_found_error": "Nie mo\u017cna odnale\u017a\u0107 wykrytej bramki, aby uzyska\u0107 niezb\u0119dne informacje, spr\u00f3buj u\u017cy\u0107 adresu IP urz\u0105dzenia, na kt\u00f3rym pracuje Home Assistant jako interfejsu."
+            "invalid_mac": "Nieprawid\u0142owy adres MAC"
         },
         "flow_title": "Bramka Xiaomi Aqara: {name}",
         "step": {

@@ -5,7 +5,6 @@
             "already_in_progress": "El flujo de configuraci\u00f3n para el puente ya est\u00e1 en progreso.",
             "no_bridges": "No se descubrieron puentes deCONZ",
             "not_deconz_bridge": "No es un puente deCONZ",
-            "one_instance_only": "El componente solo admite una instancia deCONZ",
             "updated_instance": "Instancia deCONZ actualizada con nueva direcci\u00f3n de host"
         },
         "error": {

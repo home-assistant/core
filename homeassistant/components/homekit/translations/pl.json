@@ -35,13 +35,6 @@
                 "description": "Sprawd\u017a, czy wszystkie kamery obs\u0142uguj\u0105 kodek H.264. Je\u015bli kamera nie wysy\u0142a strumienia skompresowanego kodekiem H.264, system b\u0119dzie transkodowa\u0142 wideo do H.264 dla HomeKit. Transkodowanie wymaga wydajnego procesora i jest ma\u0142o prawdopodobne, aby dzia\u0142a\u0142o na komputerach jednop\u0142ytkowych.",
                 "title": "Wyb\u00f3r kodeka wideo kamery"
             },
-            "exclude": {
-                "data": {
-                    "exclude_entities": "Wykluczone encje"
-                },
-                "description": "Wybierz encje, kt\u00f3rych NIE chcesz zmostkowa\u0107.",
-                "title": "Wykluczenie encji z wybranych domen"
-            },
             "include_exclude": {
                 "data": {
                     "entities": "Encje",
@@ -63,6 +56,5 @@
                 "title": "Dostosowywanie opcji HomeKit"
             }
         }
-    },
-    "title": "Mostek HomeKit"
+    }
 }

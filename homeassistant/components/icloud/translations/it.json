@@ -7,7 +7,6 @@
         },
         "error": {
             "invalid_auth": "Autenticazione non valida",
-            "login": "Errore di accesso: si prega di controllare la tua e-mail e la password",
             "send_verification_code": "Impossibile inviare il codice di verifica",
             "validate_verification_code": "Impossibile verificare il codice di verifica, scegliere un dispositivo attendibile e riavviare la verifica"
         },

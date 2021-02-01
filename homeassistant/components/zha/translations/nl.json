@@ -17,6 +17,7 @@
             "port_config": {
                 "data": {
                     "baudrate": "poort snelheid",
+                    "flow_control": "gegevensstroombeheer",
                     "path": "Serieel apparaatpad"
                 },
                 "description": "Voer poortspecifieke instellingen in",

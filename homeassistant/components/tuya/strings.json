@@ -23,6 +23,9 @@
     }
   },
   "options": {
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "step": {
       "init": {
         "title": "Configure Tuya Options",
@@ -47,8 +50,7 @@
           "temp_divider": "Temperature values divider (0 = use default)",
           "curr_temp_divider": "Current Temperature value divider (0 = use default)",
           "min_temp": "Min target temperature (use min and max = 0 for default)",
-          "max_temp": "Max target temperature (use min and max = 0 for default)",
-          "ext_temp_sensor": "Sensor for current temperature"
+          "max_temp": "Max target temperature (use min and max = 0 for default)"
         }
       }
     },

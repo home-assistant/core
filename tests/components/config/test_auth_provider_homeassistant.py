@@ -4,24 +4,19 @@ import pytest
 from homeassistant.auth.providers import homeassistant as prov_ha
 from homeassistant.components.config import auth_provider_homeassistant as auth_ha
 
-from tests.common import CLIENT_ID, MockUser, register_auth_provider
+from tests.common import CLIENT_ID, MockUser
 
 
 @pytest.fixture(autouse=True)
-def setup_config(hass):
-    """Fixture that sets up the auth provider homeassistant module."""
-    hass.loop.run_until_complete(
-        register_auth_provider(hass, {"type": "homeassistant"})
-    )
-    hass.loop.run_until_complete(auth_ha.async_setup(hass))
+async def setup_config(hass, local_auth):
+    """Fixture that sets up the auth provider ."""
+    await auth_ha.async_setup(hass)
 
 
 @pytest.fixture
-async def auth_provider(hass):
+async def auth_provider(local_auth):
     """Hass auth provider."""
-    provider = hass.auth.auth_providers[0]
-    await provider.async_initialize()
-    return provider
+    return local_auth
 
 
 @pytest.fixture
@@ -34,8 +29,8 @@ async def owner_access_token(hass, hass_owner_user):
 
 
 @pytest.fixture
-async def test_user_credential(hass, auth_provider):
-    """Add a test user."""
+async def hass_admin_credential(hass, auth_provider):
+    """Overload credentials to admin user."""
     await hass.async_add_executor_job(
         auth_provider.data.add_auth, "test-user", "test-pass"
     )
@@ -124,7 +119,7 @@ async def test_create_auth(hass, hass_ws_client, hass_storage):
             "id": 5,
             "type": "config/auth_provider/homeassistant/create",
             "user_id": user.id,
-            "username": "test-user",
+            "username": "test-user2",
             "password": "test-pass",
         }
     )
@@ -135,10 +130,10 @@ async def test_create_auth(hass, hass_ws_client, hass_storage):
     creds = user.credentials[0]
     assert creds.auth_provider_type == "homeassistant"
     assert creds.auth_provider_id is None
-    assert creds.data == {"username": "test-user"}
+    assert creds.data == {"username": "test-user2"}
     assert prov_ha.STORAGE_KEY in hass_storage
-    entry = hass_storage[prov_ha.STORAGE_KEY]["data"]["users"][0]
-    assert entry["username"] == "test-user"
+    entry = hass_storage[prov_ha.STORAGE_KEY]["data"]["users"][1]
+    assert entry["username"] == "test-user2"
 
 
 async def test_create_auth_duplicate_username(hass, hass_ws_client, hass_storage):
@@ -242,7 +237,7 @@ async def test_delete_unknown_auth(hass, hass_ws_client):
         {
             "id": 5,
             "type": "config/auth_provider/homeassistant/delete",
-            "username": "test-user",
+            "username": "test-user2",
         }
     )
 
@@ -251,12 +246,8 @@ async def test_delete_unknown_auth(hass, hass_ws_client):
     assert result["error"]["code"] == "auth_not_found"
 
 
-async def test_change_password(
-    hass, hass_ws_client, hass_admin_user, auth_provider, test_user_credential
-):
+async def test_change_password(hass, hass_ws_client, auth_provider):
     """Test that change password succeeds with valid password."""
-    await hass.auth.async_link_user(hass_admin_user, test_user_credential)
-
     client = await hass_ws_client(hass)
     await client.send_json(
         {
@@ -273,10 +264,9 @@ async def test_change_password(
 
 
 async def test_change_password_wrong_pw(
-    hass, hass_ws_client, hass_admin_user, auth_provider, test_user_credential
+    hass, hass_ws_client, hass_admin_user, auth_provider
 ):
     """Test that change password fails with invalid password."""
-    await hass.auth.async_link_user(hass_admin_user, test_user_credential)
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -290,13 +280,14 @@ async def test_change_password_wrong_pw(
 
     result = await client.receive_json()
     assert not result["success"], result
-    assert result["error"]["code"] == "invalid_password"
+    assert result["error"]["code"] == "invalid_current_password"
     with pytest.raises(prov_ha.InvalidAuth):
         await auth_provider.async_validate_login("test-user", "new-pass")
 
 
-async def test_change_password_no_creds(hass, hass_ws_client):
+async def test_change_password_no_creds(hass, hass_ws_client, hass_admin_user):
     """Test that change password fails with no credentials."""
+    hass_admin_user.credentials.clear()
     client = await hass_ws_client(hass)
 
     await client.send_json(
@@ -313,9 +304,7 @@ async def test_change_password_no_creds(hass, hass_ws_client):
     assert result["error"]["code"] == "credentials_not_found"
 
 
-async def test_admin_change_password_not_owner(
-    hass, hass_ws_client, auth_provider, test_user_credential
-):
+async def test_admin_change_password_not_owner(hass, hass_ws_client, auth_provider):
     """Test that change password fails when not owner."""
     client = await hass_ws_client(hass)
 
@@ -358,6 +347,8 @@ async def test_admin_change_password_no_cred(
     hass, hass_ws_client, owner_access_token, hass_admin_user
 ):
     """Test that change password fails with unknown credential."""
+
+    hass_admin_user.credentials.clear()
     client = await hass_ws_client(hass, owner_access_token)
 
     await client.send_json(
@@ -379,12 +370,9 @@ async def test_admin_change_password(
     hass_ws_client,
     owner_access_token,
     auth_provider,
-    test_user_credential,
     hass_admin_user,
 ):
     """Test that owners can change any password."""
-    await hass.auth.async_link_user(hass_admin_user, test_user_credential)
-
     client = await hass_ws_client(hass, owner_access_token)
 
     await client.send_json(

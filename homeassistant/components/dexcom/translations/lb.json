@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kont ass scho konfigur\u00e9iert",
-            "already_configured_account": "Kont ass scho konfigur\u00e9iert"
+            "already_configured": "Kont ass scho konfigur\u00e9iert"
         },
         "error": {
-            "account_error": "Ong\u00eblteg Authentifikatioun",
             "cannot_connect": "Feeler beim verbannen",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
-            "session_error": "Feeler beim verbannen",
             "unknown": "Onerwaarte"
         },
         "step": {
@@ -18,6 +15,7 @@
                     "server": "Server",
                     "username": "Benotzernumm"
                 },
+                "description": "F\u00ebll deng Desxcom Share Umeldungs Informatiounen aus",
                 "title": "Dexcom Integration ariichten"
             }
         }

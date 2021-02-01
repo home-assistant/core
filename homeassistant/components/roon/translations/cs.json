@@ -10,16 +10,15 @@
         },
         "step": {
             "link": {
+                "description": "Mus\u00edte povolit Home Assistant v Roon. Po kliknut\u00ed na Odeslat p\u0159ejd\u011bte do aplikace Roon Core, otev\u0159ete Nastaven\u00ed a na z\u00e1lo\u017ece Roz\u0161\u00ed\u0159en\u00ed povolte Home Assistant.",
                 "title": "Autorizujte HomeAssistant v Roon"
             },
             "user": {
                 "data": {
                     "host": "Hostitel"
                 },
-                "description": "Zadejte pros\u00edm n\u00e1zev hostitele nebo IP adresu va\u0161eho Roon serveru.",
-                "title": "Nastaven\u00ed serveru Roon"
+                "description": "Zadejte pros\u00edm n\u00e1zev hostitele nebo IP adresu va\u0161eho Roon serveru."
             }
         }
-    },
-    "title": "Roon"
+    }
 }

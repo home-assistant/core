@@ -5,7 +5,23 @@
         },
         "error": {
             "invalid_url": "Sobimatu URL",
+            "syncthru_not_supported": "Seade ei toeta SyncThru-d",
             "unknown_state": "Printeri olek teadmata, kontrolli URL-i ja v\u00f5rgu\u00fchendust"
+        },
+        "flow_title": "",
+        "step": {
+            "confirm": {
+                "data": {
+                    "name": "",
+                    "url": "Veebiliidese URL"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "Nimi",
+                    "url": "Veebiliidese URL"
+                }
+            }
         }
     }
 }

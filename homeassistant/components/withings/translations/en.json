@@ -10,9 +10,7 @@
             "default": "Successfully authenticated with Withings."
         },
         "error": {
-            "already_configured": "Account is already configured",
-            "already_configured_account": "Account is already configured",
-            "profile_exists": "User profile is already configured. Please provide a unique profile name."
+            "already_configured": "Account is already configured"
         },
         "flow_title": "Withings: {profile}",
         "step": {

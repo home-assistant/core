@@ -10,7 +10,8 @@
         },
         "step": {
             "link": {
-                "description": "Pead Roonis koduabilise volitama. Kui oled kl\u00f5psanud nuppu Esita, mine rakendusse Roon Core, ava Seaded ja luba vahekaardil Laiendused Home Assistant."
+                "description": "Pead Roonis koduabilise volitama. Kui oled kl\u00f5psanud nuppu Esita, mine rakendusse Roon Core, ava Seaded ja luba vahekaardil Laiendused Home Assistant.",
+                "title": "Volita HomeAssistant Roonis"
             },
             "user": {
                 "data": {
@@ -19,6 +20,5 @@
                 "description": "Sisesta oma Rooni serveri hostinimi v\u00f5i IP."
             }
         }
-    },
-    "title": "[VOID]\n"
+    }
 }

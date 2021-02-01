@@ -1,5 +1,6 @@
 """The tests for the hassio component."""
 import os
+from unittest.mock import patch
 
 import pytest
 
@@ -7,8 +8,6 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend
 from homeassistant.components.hassio import STORAGE_KEY
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
 
@@ -45,6 +44,14 @@ def mock_all(aioclient_mock):
         json={"result": "ok", "data": {"version_latest": "1.0.0"}},
     )
     aioclient_mock.get(
+        "http://127.0.0.1/os/info",
+        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/info",
+        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
+    )
+    aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
 
@@ -55,7 +62,7 @@ async def test_setup_api_ping(hass, aioclient_mock):
         result = await async_setup_component(hass, "hassio", {})
         assert result
 
-    assert aioclient_mock.call_count == 7
+    assert aioclient_mock.call_count == 9
     assert hass.components.hassio.get_core_info()["version_latest"] == "1.0.0"
     assert hass.components.hassio.is_hassio()
 
@@ -94,7 +101,7 @@ async def test_setup_api_push_api_data(hass, aioclient_mock):
         )
         assert result
 
-    assert aioclient_mock.call_count == 7
+    assert aioclient_mock.call_count == 9
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 9999
     assert aioclient_mock.mock_calls[1][2]["watchdog"]
@@ -110,7 +117,7 @@ async def test_setup_api_push_api_data_server_host(hass, aioclient_mock):
         )
         assert result
 
-    assert aioclient_mock.call_count == 7
+    assert aioclient_mock.call_count == 9
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 9999
     assert not aioclient_mock.mock_calls[1][2]["watchdog"]
@@ -122,7 +129,7 @@ async def test_setup_api_push_api_data_default(hass, aioclient_mock, hass_storag
         result = await async_setup_component(hass, "hassio", {"http": {}, "hassio": {}})
         assert result
 
-    assert aioclient_mock.call_count == 7
+    assert aioclient_mock.call_count == 9
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 8123
     refresh_token = aioclient_mock.mock_calls[1][2]["refresh_token"]
@@ -169,7 +176,7 @@ async def test_setup_api_existing_hassio_user(hass, aioclient_mock, hass_storage
         result = await async_setup_component(hass, "hassio", {"http": {}, "hassio": {}})
         assert result
 
-    assert aioclient_mock.call_count == 7
+    assert aioclient_mock.call_count == 9
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 8123
     assert aioclient_mock.mock_calls[1][2]["refresh_token"] == token.token
@@ -183,7 +190,7 @@ async def test_setup_core_push_timezone(hass, aioclient_mock):
         result = await async_setup_component(hass, "hassio", {"hassio": {}})
         assert result
 
-    assert aioclient_mock.call_count == 7
+    assert aioclient_mock.call_count == 9
     assert aioclient_mock.mock_calls[2][2]["timezone"] == "testzone"
 
     with patch("homeassistant.util.dt.set_default_time_zone"):
@@ -200,7 +207,7 @@ async def test_setup_hassio_no_additional_data(hass, aioclient_mock):
         result = await async_setup_component(hass, "hassio", {"hassio": {}})
         assert result
 
-    assert aioclient_mock.call_count == 7
+    assert aioclient_mock.call_count == 9
     assert aioclient_mock.mock_calls[-1][3]["X-Hassio-Key"] == "123456"
 
 

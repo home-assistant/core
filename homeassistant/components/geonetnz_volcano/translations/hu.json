@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "A hely m\u00e1r regisztr\u00e1lt"
-        },
         "step": {
             "user": {
                 "data": {

@@ -6,7 +6,6 @@
             "no_bridges": "Ingen deCONZ broer oppdaget",
             "no_hardware_available": "Ingen radiomaskinvare koblet til deCONZ",
             "not_deconz_bridge": "Ikke en deCONZ bro",
-            "one_instance_only": "Komponenten st\u00f8tter bare \u00e9n deCONZ forekomst",
             "updated_instance": "Oppdatert deCONZ forekomst med ny vertsadresse"
         },
         "error": {

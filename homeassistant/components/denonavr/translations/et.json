@@ -4,9 +4,13 @@
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "cannot_connect": "\u00dchenduse loomine nurjus. Vooluv\u00f5rgust ja LAN v\u00f5rgust eemaldamine ja taas\u00fchendamine v\u00f5ib aidata",
-            "connection_error": "\u00dchenduse loomine nurjus. Vooluv\u00f5rgust ja LAN v\u00f5rgust eemaldamine ja taas\u00fchendamine v\u00f5ib aidata"
+            "not_denonavr_manufacturer": "Pole Denoni AVR Network Receiver, avastatud tootja pole \u00f5ige",
+            "not_denonavr_missing": "Pole Denoni AVR Network Receiver, avastamisteave pole t\u00e4ielik"
         },
-        "flow_title": "Denon AVR v\u00f5rguvastuv\u00f5tja: {nimi}",
+        "error": {
+            "discovery_error": "Denon AVR Network Receiver'i avastamine nurjus"
+        },
+        "flow_title": "Denon AVR v\u00f5rguvastuv\u00f5tja: {name}",
         "step": {
             "confirm": {
                 "description": "Palun kinnita vastuv\u00f5tja lisamine",
@@ -14,7 +18,7 @@
             },
             "select": {
                 "data": {
-                    "select_host": "Ressiiveri IP"
+                    "select_host": "Ressiiveri IP aadress"
                 },
                 "description": "Kui soovid t\u00e4iendavaid vastuv\u00f5tjaid \u00fchendada, k\u00e4ivitad seadistamine uuesti",
                 "title": "Valivastuv\u00f5tja, millega soovid \u00fchenduda"

@@ -16,7 +16,8 @@
             "user": {
                 "data": {
                     "host": ""
-                }
+                },
+                "description": "Sisesta oma Roku teave."
             }
         }
     }

@@ -1,20 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "create_entry": {
             "default": "\u6210\u529f\u9023\u7dda\u81f3 AlarmDecoder\u3002"
         },
         "error": {
-            "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "service_unavailable": "\u9023\u7dda\u5931\u6557"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "step": {
             "protocol": {
                 "data": {
-                    "device_baudrate": "\u8a2d\u5099\u901a\u8a0a\u7387",
-                    "device_path": "\u8a2d\u5099\u8def\u5f91",
+                    "device_baudrate": "\u88dd\u7f6e\u901a\u8a0a\u7387",
+                    "device_path": "\u88dd\u7f6e\u8def\u5f91",
                     "host": "\u4e3b\u6a5f\u7aef",
                     "port": "\u901a\u8a0a\u57e0"
                 },

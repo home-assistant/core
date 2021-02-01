@@ -35,13 +35,6 @@
                 "description": "Iwwerpr\u00e9if all Kamera op nativ H.264 \u00cbnnerst\u00ebtzung. Falls d'Kamera keng H.264 Stream Ausgab huet, transkod\u00e9iert de System de Video op H.264 fir Homekit. Transkod\u00e9iere ben\u00e9idegt eng performant CPU an w\u00e4ert net anst\u00e4nneg op Single Board Computer funktion\u00e9ieren.",
                 "title": "Kamera Video Codec auswielen."
             },
-            "exclude": {
-                "data": {
-                    "exclude_entities": "Entit\u00e9iten d\u00e9i ausgeschloss solle ginn"
-                },
-                "description": "Wiel d'Entit\u00e9iten aus d\u00e9i NET sollen iwwerbr\u00e9ckt ginn.",
-                "title": "Entit\u00e9iten aus den ausgewielten Domaine vun der Bridge ausschl\u00e9issen"
-            },
             "include_exclude": {
                 "data": {
                     "entities": "Entit\u00e9iten",
@@ -63,6 +56,5 @@
                 "title": "HomeKit Optioune ajust\u00e9ieren"
             }
         }
-    },
-    "title": "HomeKit Bridge"
+    }
 }

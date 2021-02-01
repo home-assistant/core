@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
@@ -25,6 +25,5 @@
                 }
             }
         }
-    },
-    "title": "Omnilogic"
+    }
 }

@@ -4,7 +4,6 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "cannot_connect": "Impossibile connettersi, riprovare, scollegare l'alimentazione della rete elettrica e i cavi ethernet e ricollegarli potrebbe essere d'aiuto",
-            "connection_error": "Impossibile connettersi, si prega di riprovare, pu\u00f2 essere utile scollegare i cavi di alimentazione ed i cavi Ethernet e ricollegarli",
             "not_denonavr_manufacturer": "Non \u00e8 un ricevitore di rete Denon AVR, il produttore rilevato non corrisponde",
             "not_denonavr_missing": "Non \u00e8 un ricevitore di rete Denon AVR, le informazioni di rilevamento non sono complete"
         },

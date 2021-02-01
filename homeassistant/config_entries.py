@@ -2,7 +2,7 @@
 import asyncio
 import functools
 import logging
-from types import MappingProxyType
+from types import MappingProxyType, MethodType
 from typing import Any, Callable, Dict, List, Optional, Set, Union, cast
 import weakref
 
@@ -13,12 +13,12 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.event import Event
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.setup import async_process_deps_reqs, async_setup_component
 from homeassistant.util.decorator import Registry
 import homeassistant.util.uuid as uuid_util
 
 _LOGGER = logging.getLogger(__name__)
-_UNDEF: dict = {}
 
 SOURCE_DISCOVERY = "discovery"
 SOURCE_HASSIO = "hassio"
@@ -29,6 +29,7 @@ SOURCE_MQTT = "mqtt"
 SOURCE_SSDP = "ssdp"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
+SOURCE_DHCP = "dhcp"
 
 # If a user wants to hide a discovery from the UI they can "Ignore" it. The config_entries/ignore_flow
 # websocket command creates a config entry with this source and while it exists normal discoveries
@@ -88,6 +89,8 @@ CONN_CLASS_LOCAL_PUSH = "local_push"
 CONN_CLASS_LOCAL_POLL = "local_poll"
 CONN_CLASS_ASSUMED = "assumed"
 CONN_CLASS_UNKNOWN = "unknown"
+
+RELOAD_AFTER_UPDATE_DELAY = 30
 
 
 class ConfigError(HomeAssistantError):
@@ -178,7 +181,9 @@ class ConfigEntry:
         self.supports_unload = False
 
         # Listeners to call on update
-        self.update_listeners: List[weakref.ReferenceType[UpdateListenerType]] = []
+        self.update_listeners: List[
+            Union[weakref.ReferenceType[UpdateListenerType], weakref.WeakMethod]
+        ] = []
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Optional[Callable[[], Any]] = None
@@ -243,7 +248,8 @@ class ConfigEntry:
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
             _LOGGER.warning(
-                "Config entry for %s not ready yet. Retrying in %d seconds",
+                "Config entry '%s' for %s integration not ready yet. Retrying in %d seconds",
+                self.title,
                 self.domain,
                 wait_time,
             )
@@ -410,7 +416,12 @@ class ConfigEntry:
 
         Returns function to unlisten.
         """
-        weak_listener = weakref.ref(listener)
+        weak_listener: Any
+        # weakref.ref is not applicable to a bound method, e.g. method of a class instance, as reference will die immediately
+        if hasattr(listener, "__self__"):
+            weak_listener = weakref.WeakMethod(cast(MethodType, listener))
+        else:
+            weak_listener = weakref.ref(listener)
         self.update_listeners.append(weak_listener)
 
         return lambda: self.update_listeners.remove(weak_listener)
@@ -758,12 +769,11 @@ class ConfigEntries:
         self,
         entry: ConfigEntry,
         *,
-        # pylint: disable=dangerous-default-value # _UNDEFs not modified
-        unique_id: Union[str, dict, None] = _UNDEF,
-        title: Union[str, dict] = _UNDEF,
-        data: dict = _UNDEF,
-        options: dict = _UNDEF,
-        system_options: dict = _UNDEF,
+        unique_id: Union[str, dict, None, UndefinedType] = UNDEFINED,
+        title: Union[str, dict, UndefinedType] = UNDEFINED,
+        data: Union[dict, UndefinedType] = UNDEFINED,
+        options: Union[dict, UndefinedType] = UNDEFINED,
+        system_options: Union[dict, UndefinedType] = UNDEFINED,
     ) -> bool:
         """Update a config entry.
 
@@ -775,24 +785,24 @@ class ConfigEntries:
         """
         changed = False
 
-        if unique_id is not _UNDEF and entry.unique_id != unique_id:
+        if unique_id is not UNDEFINED and entry.unique_id != unique_id:
             changed = True
             entry.unique_id = cast(Optional[str], unique_id)
 
-        if title is not _UNDEF and entry.title != title:
+        if title is not UNDEFINED and entry.title != title:
             changed = True
             entry.title = cast(str, title)
 
-        if data is not _UNDEF and entry.data != data:  # type: ignore
+        if data is not UNDEFINED and entry.data != data:  # type: ignore
             changed = True
             entry.data = MappingProxyType(data)
 
-        if options is not _UNDEF and entry.options != options:  # type: ignore
+        if options is not UNDEFINED and entry.options != options:  # type: ignore
             changed = True
             entry.options = MappingProxyType(options)
 
         if (
-            system_options is not _UNDEF
+            system_options is not UNDEFINED
             and entry.system_options.as_dict() != system_options
         ):
             changed = True
@@ -909,6 +919,9 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                         self.hass.async_create_task(
                             self.hass.config_entries.async_reload(entry.entry_id)
                         )
+                # Allow ignored entries to be configured on manual user step
+                if entry.source == SOURCE_IGNORE and self.source == SOURCE_USER:
+                    continue
                 raise data_entry_flow.AbortFlow("already_configured")
 
     async def async_set_unique_id(
@@ -971,7 +984,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     async def async_step_ignore(self, user_input: Dict[str, Any]) -> Dict[str, Any]:
         """Ignore this config flow."""
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
-        return self.async_create_entry(title="Ignored", data={})
+        return self.async_create_entry(title=user_input["title"], data={})
 
     async def async_step_unignore(self, user_input: Dict[str, Any]) -> Dict[str, Any]:
         """Rediscover a config entry by it's unique_id."""
@@ -1041,6 +1054,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     async_step_mqtt = async_step_discovery
     async_step_ssdp = async_step_discovery
     async_step_zeroconf = async_step_discovery
+    async_step_dhcp = async_step_discovery
 
 
 class OptionsFlowManager(data_entry_flow.FlowManager):
@@ -1075,6 +1089,9 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         """
         flow = cast(OptionsFlow, flow)
 
+        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            return result
+
         entry = self.hass.config_entries.async_get_entry(flow.handler)
         if entry is None:
             raise UnknownEntry(flow.handler)
@@ -1108,8 +1125,6 @@ class SystemOptions:
 
 class EntityRegistryDisabledHandler:
     """Handler to handle when entities related to config entries updating disabled_by."""
-
-    RELOAD_AFTER_UPDATE_DELAY = 30
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the handler."""
@@ -1167,7 +1182,7 @@ class EntityRegistryDisabledHandler:
             self._remove_call_later()
 
         self._remove_call_later = self.hass.helpers.event.async_call_later(
-            self.RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
+            RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
         )
 
     async def _handle_reload(self, _now: Any) -> None:

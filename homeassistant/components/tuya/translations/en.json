@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "auth_failed": "Invalid authentication",
             "cannot_connect": "Failed to connect",
-            "conn_error": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
-            "auth_failed": "Invalid authentication",
             "invalid_auth": "Invalid authentication"
         },
         "flow_title": "Tuya configuration",
@@ -26,6 +23,9 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Failed to connect"
+        },
         "error": {
             "dev_multi_type": "Multiple selected devices to configure must be of the same type",
             "dev_not_config": "Device type not configurable",
@@ -36,7 +36,6 @@
                 "data": {
                     "brightness_range_mode": "Brightness range used by device",
                     "curr_temp_divider": "Current Temperature value divider (0 = use default)",
-                    "ext_temp_sensor": "Sensor for current temperature",
                     "max_kelvin": "Max color temperature supported in kelvin",
                     "max_temp": "Max target temperature (use min and max = 0 for default)",
                     "min_kelvin": "Min color temperature supported in kelvin",

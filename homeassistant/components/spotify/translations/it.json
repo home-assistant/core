@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "\u00c8 possibile configurare un solo account di Spotify.",
             "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione",
             "missing_configuration": "L'integrazione di Spotify non \u00e8 configurata. Si prega di seguire la documentazione.",
             "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})",
@@ -18,6 +17,11 @@
                 "description": "L'integrazione di Spotify deve essere nuovamente autenticata con Spotify per l'account: {account}",
                 "title": "Reautenticare l'integrazione"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Endpoint API Spotify raggiungibile"
         }
     }
 }

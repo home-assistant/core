@@ -13,10 +13,8 @@
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
-                },
-                "description": "Sisesta oma Smart Meter Texas'e konto kasutajanimi ja salas\u00f5na."
+                }
             }
         }
-    },
-    "title": ""
+    }
 }

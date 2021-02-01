@@ -1,11 +1,11 @@
 """The tests for the mFi switch platform."""
+import unittest.mock as mock
+
 import pytest
 
 import homeassistant.components.mfi.switch as mfi
 import homeassistant.components.switch as switch_component
 from homeassistant.setup import async_setup_component
-
-import tests.async_mock as mock
 
 PLATFORM = mfi
 COMPONENT = switch_component
@@ -28,10 +28,13 @@ async def test_setup_adds_proper_devices(hass):
     with mock.patch(
         "homeassistant.components.mfi.switch.MFiClient"
     ) as mock_client, mock.patch(
-        "homeassistant.components.mfi.switch.MfiSwitch"
+        "homeassistant.components.mfi.switch.MfiSwitch", side_effect=mfi.MfiSwitch
     ) as mock_switch:
         ports = {
-            i: mock.MagicMock(model=model) for i, model in enumerate(mfi.SWITCH_MODELS)
+            i: mock.MagicMock(
+                model=model, label=f"Port {i}", output=False, data={}, ident=f"abcd-{i}"
+            )
+            for i, model in enumerate(mfi.SWITCH_MODELS)
         }
         ports["bad"] = mock.MagicMock(model="notaswitch")
         print(ports["bad"].model)

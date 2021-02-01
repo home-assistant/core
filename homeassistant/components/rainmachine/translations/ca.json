@@ -4,9 +4,7 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
-            "identifier_exists": "El compte ja ha estat configurat",
-            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
-            "invalid_credentials": "Credencials inv\u00e0lides"
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "step": {
             "user": {

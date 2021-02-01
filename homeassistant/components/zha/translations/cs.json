@@ -14,6 +14,7 @@
                 "title": "Nastaven\u00ed"
             },
             "user": {
+                "description": "Vyberte s\u00e9riov\u00fd port pro r\u00e1dio Zigbee",
                 "title": "ZHA"
             }
         }

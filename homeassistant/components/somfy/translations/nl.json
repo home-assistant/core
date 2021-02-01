@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "U kunt slechts \u00e9\u00e9n Somfy-account configureren.",
             "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
             "missing_configuration": "Het Somfy-component is niet geconfigureerd. Gelieve de documentatie te volgen.",
             "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."

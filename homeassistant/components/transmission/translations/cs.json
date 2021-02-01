@@ -6,8 +6,7 @@
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
-            "name_exists": "Jm\u00e9no already exists",
-            "wrong_credentials": "Neplatn\u00e9 u\u017eivatelsk\u00e9 jm\u00e9no nebo heslo"
+            "name_exists": "Jm\u00e9no already exists"
         },
         "step": {
             "user": {
@@ -26,6 +25,7 @@
             "init": {
                 "data": {
                     "limit": "Limit",
+                    "order": "Po\u0159ad\u00ed",
                     "scan_interval": "Frekvence aktualizac\u00ed"
                 },
                 "title": "Nakonfigurujte mo\u017enosti pro Transmission"

@@ -1,6 +1,7 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
 import asyncio
 from asyncio import CancelledError
+from datetime import timedelta
 from functools import partial
 import logging
 from typing import Dict
@@ -22,6 +23,7 @@ from homeassistant.core import CoreState, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import Throttle
 
 from .const import (
     CONF_DSMR_VERSION,
@@ -29,11 +31,13 @@ from .const import (
     CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
+    CONF_TIME_BETWEEN_UPDATE,
     DATA_TASK,
     DEFAULT_DSMR_VERSION,
     DEFAULT_PORT,
     DEFAULT_PRECISION,
     DEFAULT_RECONNECT_INTERVAL,
+    DEFAULT_TIME_BETWEEN_UPDATE,
     DEVICE_NAME_ENERGY,
     DEVICE_NAME_GAS,
     DOMAIN,
@@ -50,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
-            cv.string, vol.In(["5B", "5", "4", "2.2"])
+            cv.string, vol.In(["5L", "5B", "5", "4", "2.2"])
         ),
         vol.Optional(CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL): int,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
@@ -71,10 +75,8 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the DSMR sensor."""
-    # Suppress logging
-    logging.getLogger("dsmr_parser").setLevel(logging.ERROR)
-
     config = entry.data
+    options = entry.options
 
     dsmr_version = config[CONF_DSMR_VERSION]
 
@@ -83,7 +85,6 @@ async def async_setup_entry(
         ["Power Consumption", obis_ref.CURRENT_ELECTRICITY_USAGE],
         ["Power Production", obis_ref.CURRENT_ELECTRICITY_DELIVERY],
         ["Power Tariff", obis_ref.ELECTRICITY_ACTIVE_TARIFF],
-        ["Energy Consumption (total)", obis_ref.ELECTRICITY_IMPORTED_TOTAL],
         ["Energy Consumption (tarif 1)", obis_ref.ELECTRICITY_USED_TARIFF_1],
         ["Energy Consumption (tarif 2)", obis_ref.ELECTRICITY_USED_TARIFF_2],
         ["Energy Production (tarif 1)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_1],
@@ -110,6 +111,24 @@ async def async_setup_entry(
         ["Current Phase L3", obis_ref.INSTANTANEOUS_CURRENT_L3],
     ]
 
+    if dsmr_version == "5L":
+        obis_mapping.extend(
+            [
+                [
+                    "Energy Consumption (total)",
+                    obis_ref.LUXEMBOURG_ELECTRICITY_USED_TARIFF_GLOBAL,
+                ],
+                [
+                    "Energy Production (total)",
+                    obis_ref.LUXEMBOURG_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,
+                ],
+            ]
+        )
+    else:
+        obis_mapping.extend(
+            [["Energy Consumption (total)", obis_ref.ELECTRICITY_IMPORTED_TOTAL]]
+        )
+
     # Generate device entities
     devices = [
         DSMREntity(name, DEVICE_NAME_ENERGY, config[CONF_SERIAL_ID], obis, config)
@@ -118,7 +137,7 @@ async def async_setup_entry(
 
     # Protocol version specific obis
     if CONF_SERIAL_ID_GAS in config:
-        if dsmr_version in ("4", "5"):
+        if dsmr_version in ("4", "5", "5L"):
             gas_obis = obis_ref.HOURLY_GAS_METER_READING
         elif dsmr_version in ("5B",):
             gas_obis = obis_ref.BELGIUM_HOURLY_GAS_METER_READING
@@ -145,6 +164,11 @@ async def async_setup_entry(
 
     async_add_entities(devices)
 
+    min_time_between_updates = timedelta(
+        seconds=options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
+    )
+
+    @Throttle(min_time_between_updates)
     def update_entities_telegram(telegram):
         """Update entities with latest telegram and trigger state update."""
         # Make all device entities aware of new telegram
@@ -173,6 +197,10 @@ async def async_setup_entry(
 
     async def connect_and_reconnect():
         """Connect to DSMR and keep reconnecting until Home Assistant stops."""
+        stop_listener = None
+        transport = None
+        protocol = None
+
         while hass.state != CoreState.stopping:
             # Start DSMR asyncio.Protocol reader
             try:
@@ -187,10 +215,9 @@ async def async_setup_entry(
                     # Wait for reader to close
                     await protocol.wait_closed()
 
-                # Unexpected disconnect
-                if transport:
-                    # remove listener
-                    stop_listener()
+                    # Unexpected disconnect
+                    if not hass.is_stopping:
+                        stop_listener()
 
                 transport = None
                 protocol = None
@@ -210,7 +237,7 @@ async def async_setup_entry(
                 protocol = None
             except CancelledError:
                 if stop_listener:
-                    stop_listener()
+                    stop_listener()  # pylint: disable=not-callable
 
                 if transport:
                     transport.close()
@@ -245,7 +272,7 @@ class DSMREntity(Entity):
     def update_data(self, telegram):
         """Update data."""
         self.telegram = telegram
-        if self.hass:
+        if self.hass and self._obis in self.telegram:
             self.async_write_ha_state()
 
     def get_dsmr_object_attr(self, attribute):

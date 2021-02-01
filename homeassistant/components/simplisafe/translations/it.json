@@ -7,7 +7,6 @@
         "error": {
             "identifier_exists": "Account gi\u00e0 registrato",
             "invalid_auth": "Autenticazione non valida",
-            "invalid_credentials": "Credenziali non valide",
             "still_awaiting_mfa": "Ancora in attesa del clic sull'email MFA",
             "unknown": "Errore imprevisto"
         },

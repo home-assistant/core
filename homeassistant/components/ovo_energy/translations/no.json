@@ -2,12 +2,18 @@
     "config": {
         "error": {
             "already_configured": "Kontoen er allerede konfigurert",
-            "authorization_error": "Autoriseringsfeil. Sjekk legitimasjonsbeskrivelsen.",
             "cannot_connect": "Tilkobling mislyktes",
-            "connection_error": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning"
         },
+        "flow_title": "OVO Energy: {username}",
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Godkjenning mislyktes for OVO Energy. Vennligst skriv inn din n\u00e5v\u00e6rende legitimasjon.",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            },
             "user": {
                 "data": {
                     "password": "Passord",

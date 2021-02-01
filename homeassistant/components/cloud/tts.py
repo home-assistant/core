@@ -1,7 +1,7 @@
 """Support for the cloud for text to speech service."""
 
 from hass_nabucasa import Cloud
-from hass_nabucasa.voice import VoiceError
+from hass_nabucasa.voice import MAP_VOICE, VoiceError
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
@@ -10,17 +10,37 @@ from .const import DOMAIN
 
 CONF_GENDER = "gender"
 
-SUPPORT_LANGUAGES = ["en-US", "de-DE", "es-ES"]
-SUPPORT_GENDER = ["male", "female"]
+SUPPORT_LANGUAGES = list({key[0] for key in MAP_VOICE})
 
-DEFAULT_LANG = "en-US"
-DEFAULT_GENDER = "female"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
-        vol.Optional(CONF_GENDER, default=DEFAULT_GENDER): vol.In(SUPPORT_GENDER),
-    }
+def validate_lang(value):
+    """Validate chosen gender or language."""
+    lang = value.get(CONF_LANG)
+
+    if lang is None:
+        return value
+
+    gender = value.get(CONF_GENDER)
+
+    if gender is None:
+        gender = value[CONF_GENDER] = next(
+            (chk_gender for chk_lang, chk_gender in MAP_VOICE if chk_lang == lang), None
+        )
+
+    if (lang, gender) not in MAP_VOICE:
+        raise vol.Invalid("Unsupported language and gender specified.")
+
+    return value
+
+
+PLATFORM_SCHEMA = vol.All(
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_LANG): str,
+            vol.Optional(CONF_GENDER): str,
+        }
+    ),
+    validate_lang,
 )
 
 
@@ -29,8 +49,8 @@ async def async_get_engine(hass, config, discovery_info=None):
     cloud: Cloud = hass.data[DOMAIN]
 
     if discovery_info is not None:
-        language = DEFAULT_LANG
-        gender = DEFAULT_GENDER
+        language = None
+        gender = None
     else:
         language = config[CONF_LANG]
         gender = config[CONF_GENDER]
@@ -47,6 +67,16 @@ class CloudProvider(Provider):
         self.name = "Cloud"
         self._language = language
         self._gender = gender
+
+        if self._language is not None:
+            return
+
+        self._language, self._gender = cloud.client.prefs.tts_default_voice
+        cloud.client.prefs.async_listen_updates(self._sync_prefs)
+
+    async def _sync_prefs(self, prefs):
+        """Sync preferences."""
+        self._language, self._gender = prefs.tts_default_voice
 
     @property
     def default_language(self):

@@ -2,12 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "connection_error": "P\u0159ipojen\u00ed k za\u0159\u00edzen\u00ed Elgato Key Light se nezda\u0159ilo."
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "error": {
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "connection_error": "P\u0159ipojen\u00ed k za\u0159\u00edzen\u00ed Elgato Key Light se nezda\u0159ilo."
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "flow_title": "Elgato Key Light: {serial_number}",
         "step": {
@@ -19,7 +17,7 @@
                 "description": "Nastavte Elgato Key Light k integraci s Home Assistant."
             },
             "zeroconf_confirm": {
-                "description": "Chcete p\u0159idat Elgato Key Light se s\u00e9riov\u00fdm \u010d\u00edslem \"{serial_number}\" do Home Assistant?",
+                "description": "Chcete p\u0159idat Elgato Key Light se s\u00e9riov\u00fdm \u010d\u00edslem `{serial_number}` do Home Assistant?",
                 "title": "Objeven\u00e9 za\u0159\u00edzen\u00ed Elgato Key Light"
             }
         }

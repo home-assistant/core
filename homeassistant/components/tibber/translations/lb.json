@@ -5,7 +5,6 @@
         },
         "error": {
             "cannot_connect": "Feeler beim verbannen",
-            "connection_error": "Feeler beim verbannen",
             "invalid_access_token": "Ong\u00ebltegen Acc\u00e8s Jeton",
             "timeout": "Z\u00e4it Iwwerschreidung beim verbannen mat Tibber"
         },
@@ -18,6 +17,5 @@
                 "title": "Tibber"
             }
         }
-    },
-    "title": "Tibber"
+    }
 }

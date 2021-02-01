@@ -1,7 +1,7 @@
 """Tests for the Google Assistant integration."""
-from homeassistant.components.google_assistant import helpers
+from unittest.mock import MagicMock
 
-from tests.async_mock import MagicMock
+from homeassistant.components.google_assistant import helpers
 
 
 def mock_google_config_store(agent_user_ids=None):
@@ -136,14 +136,29 @@ DEMO_DEVICES = [
     {
         "id": "cover.living_room_window",
         "name": {"name": "Living Room Window"},
-        "traits": ["action.devices.traits.OpenClose"],
+        "traits": [
+            "action.devices.traits.StartStop",
+            "action.devices.traits.OpenClose",
+        ],
+        "type": "action.devices.types.BLINDS",
+        "willReportState": False,
+    },
+    {
+        "id": "cover.pergola_roof",
+        "name": {"name": "Pergola Roof"},
+        "traits": [
+            "action.devices.traits.OpenClose",
+        ],
         "type": "action.devices.types.BLINDS",
         "willReportState": False,
     },
     {
         "id": "cover.hall_window",
         "name": {"name": "Hall Window"},
-        "traits": ["action.devices.traits.OpenClose"],
+        "traits": [
+            "action.devices.traits.StartStop",
+            "action.devices.traits.OpenClose",
+        ],
         "type": "action.devices.types.BLINDS",
         "willReportState": False,
     },
@@ -157,7 +172,10 @@ DEMO_DEVICES = [
     {
         "id": "cover.kitchen_window",
         "name": {"name": "Kitchen Window"},
-        "traits": ["action.devices.traits.OpenClose"],
+        "traits": [
+            "action.devices.traits.StartStop",
+            "action.devices.traits.OpenClose",
+        ],
         "type": "action.devices.types.BLINDS",
         "willReportState": False,
     },
@@ -224,6 +242,27 @@ DEMO_DEVICES = [
         "id": "fan.ceiling_fan",
         "name": {"name": "Ceiling Fan"},
         "traits": ["action.devices.traits.FanSpeed", "action.devices.traits.OnOff"],
+        "type": "action.devices.types.FAN",
+        "willReportState": False,
+    },
+    {
+        "id": "fan.percentage_full_fan",
+        "name": {"name": "Percentage Full Fan"},
+        "traits": ["action.devices.traits.FanSpeed", "action.devices.traits.OnOff"],
+        "type": "action.devices.types.FAN",
+        "willReportState": False,
+    },
+    {
+        "id": "fan.percentage_limited_fan",
+        "name": {"name": "Percentage Limited Fan"},
+        "traits": ["action.devices.traits.FanSpeed", "action.devices.traits.OnOff"],
+        "type": "action.devices.types.FAN",
+        "willReportState": False,
+    },
+    {
+        "id": "fan.preset_only_limited_fan",
+        "name": {"name": "Preset Only Limited Fan"},
+        "traits": ["action.devices.traits.OnOff"],
         "type": "action.devices.types.FAN",
         "willReportState": False,
     },

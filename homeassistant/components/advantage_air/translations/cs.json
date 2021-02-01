@@ -6,7 +6,6 @@
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
-        "flow_title": "Nastaven\u00ed Advantage Air",
         "step": {
             "user": {
                 "data": {
@@ -17,6 +16,5 @@
                 "title": "P\u0159ipojit"
             }
         }
-    },
-    "title": "Advantage Air"
+    }
 }

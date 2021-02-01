@@ -1,9 +1,5 @@
 {
     "config": {
-        "abort": {
-            "not_internet_accessible": "Ihre Home Assistant-Instanz muss \u00fcber das Internet erreichbar sein, um Mailgun-Nachrichten empfangen zu k\u00f6nnen.",
-            "one_instance_allowed": "Nur eine einzige Instanz ist notwendig."
-        },
         "create_entry": {
             "default": "Um Ereignisse an den Home Assistant zu senden, musst [Webhooks mit Mailgun]({mailgun_url}) einrichten. \n\n F\u00fclle die folgenden Informationen aus: \n\n - URL: `{webhook_url}` \n - Methode: POST \n - Inhaltstyp: application/json \n\nLies in der [Dokumentation]({docs_url}) wie du Automationen f\u00fcr die Verarbeitung eingehender Daten konfigurierst."
         },

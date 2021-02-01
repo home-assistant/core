@@ -98,6 +98,7 @@ def gen_data_entry_schema(
         },
         vol.Optional("error"): {str: cv.string_with_no_html},
         vol.Optional("abort"): {str: cv.string_with_no_html},
+        vol.Optional("progress"): {str: cv.string_with_no_html},
         vol.Optional("create_entry"): {str: cv.string_with_no_html},
     }
     if flow_title == REQUIRED:
@@ -137,6 +138,9 @@ def gen_strings_schema(config: Config, integration: Integration):
                 cv.schema_with_slug_keys(str, slug_validator=lowercase_validator),
                 slug_validator=vol.Any("_", cv.slug),
             ),
+            vol.Optional("system_health"): {
+                vol.Optional("info"): {str: cv.string_with_no_html}
+            },
         }
     )
 

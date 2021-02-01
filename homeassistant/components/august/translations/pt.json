@@ -1,15 +1,27 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Conta j\u00e1 configurada",
+            "reauth_successful": "Reautentica\u00e7\u00e3o bem sucedida"
+        },
         "error": {
+            "cannot_connect": "Falha na liga\u00e7\u00e3o",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
             "unknown": "Erro inesperado"
         },
         "step": {
             "user": {
                 "data": {
+                    "login_method": "M\u00e9todo de login",
                     "password": "Palavra-passe",
                     "username": "Nome de Utilizador"
                 },
                 "description": "Se o m\u00e9todo de login for 'email', Nome do utilizador \u00e9 o endere\u00e7o de email. Se o m\u00e9todo de login for 'telefone', Nome do utilizador ser\u00e1 o n\u00famero de telefone no formato '+NNNNNNNNN'."
+            },
+            "validation": {
+                "data": {
+                    "code": "C\u00f3digo de verifica\u00e7\u00e3o"
+                }
             }
         }
     }

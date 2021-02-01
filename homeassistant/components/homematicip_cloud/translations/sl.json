@@ -6,7 +6,6 @@
             "unknown": "Pri\u0161lo je do neznane napake"
         },
         "error": {
-            "invalid_pin": "Neveljaven PIN, poskusite znova.",
             "invalid_sgtin_or_pin": "Neveljavna koda PIN, poskusite znova.",
             "press_the_button": "Prosimo, pritisnite modri gumb.",
             "register_failed": "Registracija ni uspela, poskusite znova",

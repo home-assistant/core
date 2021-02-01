@@ -1,5 +1,6 @@
 """The tests for the sun automation."""
 from datetime import datetime
+from unittest.mock import patch
 
 import pytest
 
@@ -16,8 +17,8 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, async_mock_service, mock_component
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
 

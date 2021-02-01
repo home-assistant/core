@@ -80,4 +80,4 @@ class ServiceNotFound(HomeAssistantError):
 
     def __str__(self) -> str:
         """Return string representation."""
-        return f"Unable to find service {self.domain}/{self.service}"
+        return f"Unable to find service {self.domain}.{self.service}"

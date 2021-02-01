@@ -5,13 +5,9 @@
             "cannot_connect": "Impossibile connettersi"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi",
-            "one": "uno",
-            "other": "altri"
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
-            "one": "uno",
-            "other": "altri",
             "setup_network": {
                 "data": {
                     "host": "Host",
@@ -39,7 +35,6 @@
             }
         }
     },
-    "one": "uno",
     "options": {
         "error": {
             "already_configured_device": "Il dispositivo \u00e8 gi\u00e0 configurato",
@@ -74,7 +69,5 @@
                 "title": "Configurare le opzioni del dispositivo"
             }
         }
-    },
-    "other": "altri",
-    "title": "Rfxtrx"
+    }
 }

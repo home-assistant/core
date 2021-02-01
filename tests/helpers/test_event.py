@@ -2,6 +2,7 @@
 # pylint: disable=protected-access
 import asyncio
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
 from astral import Astral
 import jinja2
@@ -39,7 +40,6 @@ from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 DEFAULT_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
@@ -91,6 +91,38 @@ async def test_track_point_in_time(hass):
     async_fire_time_changed(hass, after_birthday)
     await hass.async_block_till_done()
     assert len(runs) == 2
+
+
+async def test_track_point_in_time_drift_rearm(hass):
+    """Test tasks with the time rolling backwards."""
+    specific_runs = []
+
+    now = dt_util.utcnow()
+
+    time_that_will_not_match_right_away = datetime(
+        now.year + 1, 5, 24, 21, 59, 55, tzinfo=dt_util.UTC
+    )
+
+    async_track_point_in_utc_time(
+        hass,
+        callback(lambda x: specific_runs.append(x)),
+        time_that_will_not_match_right_away,
+    )
+
+    async_fire_time_changed(
+        hass,
+        datetime(now.year + 1, 5, 24, 21, 59, 00, tzinfo=dt_util.UTC),
+        fire_all=True,
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 0
+
+    async_fire_time_changed(
+        hass,
+        datetime(now.year + 1, 5, 24, 21, 59, 55, tzinfo=dt_util.UTC),
+    )
+    await hass.async_block_till_done()
+    assert len(specific_runs) == 1
 
 
 async def test_track_state_change_from_to_state_match(hass):
@@ -874,6 +906,33 @@ async def test_track_template_error_can_recover(hass, caplog):
     caplog.clear()
 
     assert "UndefinedError" not in caplog.text
+
+
+async def test_track_template_time_change(hass, caplog):
+    """Test tracking template with time change."""
+    template_error = Template("{{ utcnow().minute % 2 == 0 }}", hass)
+    calls = []
+
+    @ha.callback
+    def error_callback(entity_id, old_state, new_state):
+        calls.append((entity_id, old_state, new_state))
+
+    start_time = dt_util.utcnow() + timedelta(hours=24)
+    time_that_will_not_match_right_away = start_time.replace(minute=1, second=0)
+    with patch(
+        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
+    ):
+        async_track_template(hass, template_error, error_callback)
+        await hass.async_block_till_done()
+        assert not calls
+
+    first_time = start_time.replace(minute=2, second=0)
+    with patch("homeassistant.util.dt.utcnow", return_value=first_time):
+        async_fire_time_changed(hass, first_time)
+        await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0] == (None, None, None)
 
 
 async def test_track_template_result(hass):
@@ -2762,7 +2821,7 @@ async def test_periodic_task_clock_rollback(hass):
         fire_all=True,
     )
     await hass.async_block_till_done()
-    assert len(specific_runs) == 2
+    assert len(specific_runs) == 1
 
     async_fire_time_changed(
         hass,
@@ -2770,13 +2829,13 @@ async def test_periodic_task_clock_rollback(hass):
         fire_all=True,
     )
     await hass.async_block_till_done()
-    assert len(specific_runs) == 3
+    assert len(specific_runs) == 1
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999, tzinfo=dt_util.UTC)
     )
     await hass.async_block_till_done()
-    assert len(specific_runs) == 4
+    assert len(specific_runs) == 2
 
     unsub()
 
@@ -2784,7 +2843,7 @@ async def test_periodic_task_clock_rollback(hass):
         hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999, tzinfo=dt_util.UTC)
     )
     await hass.async_block_till_done()
-    assert len(specific_runs) == 4
+    assert len(specific_runs) == 2
 
 
 async def test_periodic_task_duplicate_time(hass):

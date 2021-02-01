@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "auth_failed": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "conn_error": "Nepoda\u0159ilo se p\u0159ipojit",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
             "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
         },
         "error": {
-            "auth_failed": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
         },
         "flow_title": "Konfigurace Tuya",
@@ -26,6 +23,9 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
         "error": {
             "dev_multi_type": "V\u00edce vybran\u00fdch za\u0159\u00edzen\u00ed k nastaven\u00ed mus\u00ed b\u00fdt stejn\u00e9ho typu",
             "dev_not_config": "Typ za\u0159\u00edzen\u00ed nelze nastavit",
@@ -35,7 +35,6 @@
             "device": {
                 "data": {
                     "brightness_range_mode": "Rozsah jasu pou\u017e\u00edvan\u00fd za\u0159\u00edzen\u00edm",
-                    "ext_temp_sensor": "Senzor aktu\u00e1ln\u00ed teploty",
                     "max_kelvin": "Maxim\u00e1ln\u00ed podporovan\u00e1 teplota barev v kelvinech",
                     "max_temp": "Maxim\u00e1ln\u00ed c\u00edlov\u00e1 teplota (pou\u017eijte min a max = 0 jako v\u00fdchoz\u00ed)",
                     "min_kelvin": "Maxim\u00e1ln\u00ed podporovan\u00e1 teplota barev v kelvinech",

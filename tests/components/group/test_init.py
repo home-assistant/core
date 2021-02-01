@@ -1,6 +1,7 @@
 """The tests for the Group components."""
 # pylint: disable=protected-access
 from collections import OrderedDict
+from unittest.mock import patch
 
 import homeassistant.components.group as group
 from homeassistant.const import (
@@ -19,7 +20,6 @@ from homeassistant.core import CoreState
 from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component
 from tests.components.group import common
 

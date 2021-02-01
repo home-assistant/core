@@ -6,7 +6,6 @@
         },
         "error": {
             "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
-            "connect_error": "\u8fde\u63a5\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5",
             "no_device_selected": "\u672a\u9009\u62e9\u8bbe\u5907\uff0c\u8bf7\u9009\u62e9\u4e00\u4e2a\u8bbe\u5907\u3002"
         },
         "flow_title": "Xiaomi Miio: {name}",

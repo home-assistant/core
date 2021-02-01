@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "name_exists": "Nazwa ju\u017c istnieje"
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "step": {
             "user": {

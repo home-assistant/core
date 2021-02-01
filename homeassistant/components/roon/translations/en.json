@@ -17,10 +17,8 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Please enter your Roon server Hostname or IP.",
-                "title": "Configure Roon Server"
+                "description": "Please enter your Roon server Hostname or IP."
             }
         }
-    },
-    "title": "Roon"
+    }
 }

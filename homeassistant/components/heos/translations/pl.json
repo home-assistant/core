@@ -1,12 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja. B\u0119dzie ona obs\u0142ugiwa\u0107 wszystkie urz\u0105dzenia w sieci.",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "connection_failure": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z okre\u015blonym hostem"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "user": {

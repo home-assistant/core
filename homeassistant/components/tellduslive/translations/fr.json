@@ -7,7 +7,6 @@
             "unknown": "Une erreur inconnue s'est produite"
         },
         "error": {
-            "auth_error": "Erreur d'authentification, veuillez r\u00e9essayer.",
             "invalid_auth": "Authentification invalide"
         },
         "step": {

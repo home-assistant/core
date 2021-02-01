@@ -27,6 +27,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Clientes con acceso controlado a la red",
+                    "dpi_restrictions": "Permitir el control de los grupos de restricci\u00f3n de DPI",
                     "poe_clients": "Permitir control PoE de clientes"
                 },
                 "description": "Configurar controles de cliente\n\nCrea conmutadores para los n\u00fameros de serie para los que deseas controlar el acceso a la red.",

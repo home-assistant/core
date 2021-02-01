@@ -3,9 +3,7 @@
         "error": {
             "already_configured": "Le service est d\u00e9j\u00e0 configur\u00e9",
             "cannot_connect": "\u00c9chec de connexion",
-            "communication_error": "Impossible de communiquer avec l'API Luftdaten",
-            "invalid_sensor": "Capteur non disponible ou invalide",
-            "sensor_exists": "Capteur d\u00e9j\u00e0 enregistr\u00e9"
+            "invalid_sensor": "Capteur non disponible ou invalide"
         },
         "step": {
             "user": {

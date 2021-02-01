@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "auth_failed": "Ugyldig godkjenning",
             "cannot_connect": "Tilkobling mislyktes",
-            "conn_error": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
-            "auth_failed": "Ugyldig godkjenning",
             "invalid_auth": "Ugyldig godkjenning"
         },
         "flow_title": "Tuya konfigurasjon",
@@ -26,6 +23,9 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
         "error": {
             "dev_multi_type": "Flere valgte enheter som skal konfigureres, m\u00e5 v\u00e6re av samme type",
             "dev_not_config": "Enhetstype kan ikke konfigureres",
@@ -36,7 +36,6 @@
                 "data": {
                     "brightness_range_mode": "Lysstyrkeomr\u00e5de som brukes av enheten",
                     "curr_temp_divider": "N\u00e5v\u00e6rende temperaturverdi (0 = bruk standard)",
-                    "ext_temp_sensor": "Sensor for gjeldende temperatur",
                     "max_kelvin": "Maks fargetemperatur st\u00f8ttet i kelvin",
                     "max_temp": "Maks m\u00e5ltemperatur (bruk min og maks = 0 for standard)",
                     "min_kelvin": "Min fargetemperatur st\u00f8ttet i kelvin",

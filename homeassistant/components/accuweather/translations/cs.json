@@ -31,5 +31,11 @@
                 "title": "Mo\u017enosti AccuWeather"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Lze kontaktovat AccuWeather server",
+            "remaining_requests": "Zb\u00fdvaj\u00edc\u00ed povolen\u00e9 \u017e\u00e1dosti"
+        }
     }
 }

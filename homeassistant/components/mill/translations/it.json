@@ -4,8 +4,7 @@
             "already_configured": "L'account \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi",
-            "connection_error": "Impossibile connettersi"
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
             "user": {

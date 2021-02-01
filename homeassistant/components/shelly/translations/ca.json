@@ -5,7 +5,6 @@
             "unsupported_firmware": "El dispositiu utilitza una versi\u00f3 de programari no compatible."
         },
         "error": {
-            "auth_not_supported": "Actualment els dispositius Shelly amb autenticaci\u00f3 no son compatibles.",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "unknown": "Error inesperat"
@@ -13,7 +12,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm_discovery": {
-                "description": "Vols configurar {model} a {host}? \n\nAbans de configurar-lo, el dispositiu amb bateria ha d'estar despert, prem el bot\u00f3 del dispositiu per despertar-lo."
+                "description": "Vols configurar el {model} a {host}? \n\nAbans de configurar-lo, els dispositius amb bateria s'han de desperar prement el bot\u00f3 del dispositiu."
             },
             "credentials": {
                 "data": {
@@ -25,9 +24,8 @@
                 "data": {
                     "host": "Amfitri\u00f3"
                 },
-                "description": "Abans de configurar-lo, el dispositiu amb bateria ha d'estar despert, prem el bot\u00f3 del dispositiu per despertar-lo."
+                "description": "Abans de configurar-lo, els dispositius amb bateria s'han de desperar prement el bot\u00f3 del dispositiu."
             }
         }
-    },
-    "title": "Shelly"
+    }
 }

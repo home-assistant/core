@@ -2,6 +2,7 @@
 from datetime import datetime
 import math
 import random
+from unittest.mock import patch
 
 import pytest
 import pytz
@@ -22,8 +23,6 @@ from homeassistant.helpers import template
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
-
-from tests.async_mock import patch
 
 
 def _set_up_units(hass):
@@ -346,7 +345,7 @@ def test_tan(hass):
         (0, 0.0),
         (math.pi, -0.0),
         (math.pi / 180 * 45, 1.0),
-        (math.pi / 180 * 90, 1.633123935319537e16),
+        (math.pi / 180 * 90, "1.633123935319537e+16"),
         (math.pi / 180 * 135, -1.0),
         ("'error'", "error"),
     ]
@@ -2416,5 +2415,22 @@ async def test_parse_result(hass):
         ('{{ "{{}}" }}', "{{}}"),
         ("not-something", "not-something"),
         ("2a", "2a"),
+        ("123E5", "123E5"),
+        ("1j", "1j"),
+        ("1e+100", "1e+100"),
+        ("0xface", "0xface"),
+        ("123", 123),
+        ("10", 10),
+        ("123.0", 123.0),
+        (".5", 0.5),
+        ("0.5", 0.5),
+        ("-1", -1),
+        ("-1.0", -1.0),
+        ("+1", 1),
+        ("5.", 5.0),
+        ("123_123_123", "123_123_123"),
+        # ("+48100200300", "+48100200300"),  # phone number
+        ("010", "010"),
+        ("0011101.00100001010001", "0011101.00100001010001"),
     ):
         assert template.Template(tpl, hass).async_render() == result

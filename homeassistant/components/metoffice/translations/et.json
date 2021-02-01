@@ -10,10 +10,12 @@
         "step": {
             "user": {
                 "data": {
+                    "api_key": "API v\u00f5ti",
                     "latitude": "Laiuskraad",
                     "longitude": "Pikkuskraad"
                 },
-                "description": "Laius- ja pikkuskraadi kasutatakse l\u00e4hima ilmajaama leidmiseks."
+                "description": "Laius- ja pikkuskraadi kasutatakse l\u00e4hima ilmajaama leidmiseks.",
+                "title": "\u00dchendu UKMet Office'iga"
             }
         }
     }

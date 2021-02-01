@@ -2,11 +2,10 @@
     "config": {
         "abort": {
             "existing_instance_updated": "\u5df2\u66f4\u65b0\u73fe\u6709\u8a2d\u5b9a\u3002",
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
-            "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "connection_error": "\u9023\u7dda\u5931\u6557\u3002"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "step": {
             "hassio_confirm": {

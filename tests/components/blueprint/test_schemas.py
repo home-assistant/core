@@ -31,6 +31,26 @@ _LOGGER = logging.getLogger(__name__)
                 },
             }
         },
+        # With selector
+        {
+            "blueprint": {
+                "name": "Test Name",
+                "domain": "automation",
+                "input": {
+                    "some_placeholder": {"selector": {"entity": {}}},
+                },
+            }
+        },
+        # With min version
+        {
+            "blueprint": {
+                "name": "Test Name",
+                "domain": "automation",
+                "homeassistant": {
+                    "min_version": "1000000.0.0",
+                },
+            }
+        },
     ),
 )
 def test_blueprint_schema(blueprint):
@@ -63,9 +83,32 @@ def test_blueprint_schema(blueprint):
                 "input": {"some_placeholder": {"non_existing": "bla"}},
             }
         },
+        # Invalid version
+        {
+            "blueprint": {
+                "name": "Test Name",
+                "domain": "automation",
+                "homeassistant": {
+                    "min_version": "1000000.invalid.0",
+                },
+            }
+        },
     ),
 )
 def test_blueprint_schema_invalid(blueprint):
     """Test different schemas."""
     with pytest.raises(vol.Invalid):
         schemas.BLUEPRINT_SCHEMA(blueprint)
+
+
+@pytest.mark.parametrize(
+    "bp_instance",
+    (
+        {"path": "hello.yaml"},
+        {"path": "hello.yaml", "input": {}},
+        {"path": "hello.yaml", "input": {"hello": None}},
+    ),
+)
+def test_blueprint_instance_fields(bp_instance):
+    """Test blueprint instance fields."""
+    schemas.BLUEPRINT_INSTANCE_FIELDS({"use_blueprint": bp_instance})

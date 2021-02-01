@@ -4,8 +4,7 @@
             "already_configured": "Kont ass scho registr\u00e9iert."
         },
         "error": {
-            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
-            "invalid_credentials": "Ong\u00eblteg Tile Login Informatioune uginn."
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
         },
         "step": {
             "user": {

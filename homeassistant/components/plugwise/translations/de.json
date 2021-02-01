@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Service ist bereits konfiguriert"
+        },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
             "unknown": "Unerwarteter Fehler"
@@ -8,17 +11,15 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Verbindungstyp",
-                    "host": "Smile IP-Adresse",
-                    "password": "Smile ID"
+                    "flow_type": "Verbindungstyp"
                 },
-                "description": "Details",
-                "title": "Stellen Sie eine Verbindung zu Smile her"
+                "description": "Details"
             },
             "user_gateway": {
                 "data": {
                     "port": "Port"
-                }
+                },
+                "description": "Bitte eingeben"
             }
         }
     },

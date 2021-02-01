@@ -3,11 +3,7 @@
         "abort": {
             "access_token": "Erreur inconnue lors de la g\u00e9n\u00e9ration d'un jeton d'acc\u00e8s.",
             "already_configured": "Le compte a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9",
-            "already_configured_account": "Le compte a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9",
-            "already_setup": "Le compte Ambiclimate est configur\u00e9.",
-            "missing_configuration": "Le composant n'est pas configur\u00e9. Veuillez suivre la documentation.",
-            "no_config": "Vous devez configurer Ambiclimate avant de pouvoir vous authentifier aupr\u00e8s de celui-ci. [Veuillez lire les instructions] (https://www.home-assistant.io/components/ambiclimate/).",
-            "oauth2_missing_configuration": "Le composant n'est pas configur\u00e9. Veuillez suivre la documentation."
+            "missing_configuration": "Le composant n'est pas configur\u00e9. Veuillez suivre la documentation."
         },
         "create_entry": {
             "default": "Authentifi\u00e9 avec succ\u00e8s avec Ambiclimate"

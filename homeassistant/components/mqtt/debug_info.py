@@ -123,7 +123,7 @@ async def info_for_device(hass, device_id):
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     entries = hass.helpers.entity_registry.async_entries_for_device(
-        entity_registry, device_id
+        entity_registry, device_id, include_disabled_entities=True
     )
     mqtt_debug_info = hass.data.setdefault(
         DATA_MQTT_DEBUG_INFO, {"entities": {}, "triggers": {}}

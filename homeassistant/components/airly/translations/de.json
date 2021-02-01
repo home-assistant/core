@@ -4,7 +4,6 @@
             "already_configured": "Die Airly-Integration ist f\u00fcr diese Koordinaten bereits konfiguriert."
         },
         "error": {
-            "auth": "Der API-Schl\u00fcssel ist nicht korrekt.",
             "wrong_location": "Keine Airly Luftmessstation an diesem Ort"
         },
         "step": {
@@ -18,6 +17,11 @@
                 "description": "Einrichtung der Airly-Luftqualit\u00e4t Integration. Um einen API-Schl\u00fcssel zu generieren, registriere dich auf https://developer.airly.eu/register",
                 "title": "Airly"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Airly Server erreichen"
         }
     }
 }

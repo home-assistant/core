@@ -1,9 +1,9 @@
 """Define fixtures available for all tests."""
+from unittest.mock import MagicMock, patch
+
 from pytest import fixture
 
 from . import MOCK_HISTORY, MOCK_STATUS, MOCK_VERSION
-
-from tests.async_mock import MagicMock, patch
 
 
 @fixture

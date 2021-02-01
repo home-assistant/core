@@ -8,16 +8,12 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockEntity
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_TOKEN
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.helpers import config_validation as cv, entity_platform
 
-from . import DOMAIN
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_PORT = 8080
-DEFAULT_TIMEOUT = 20
 
 ATTR_BATTERY_CRITICAL = "battery_critical"
 ATTR_NUKI_ID = "nuki_id"
@@ -27,8 +23,6 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=5)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
 NUKI_DATA = "nuki"
-
-SERVICE_LOCK_N_GO = "lock_n_go"
 
 ERROR_STATES = (0, 254, 255)
 
@@ -40,46 +34,45 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-LOCK_N_GO_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Optional(ATTR_UNLATCH, default=False): cv.boolean,
-    }
-)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Nuki lock platform."""
-    bridge = NukiBridge(
-        config[CONF_HOST],
-        config[CONF_TOKEN],
-        config[CONF_PORT],
-        True,
-        DEFAULT_TIMEOUT,
+    _LOGGER.warning(
+        "Loading Nuki by lock platform configuration is deprecated and will be removed in the future"
     )
 
-    devices = [NukiLockEntity(lock) for lock in bridge.locks]
 
-    def service_handler(service):
-        """Service handler for nuki services."""
-        entity_ids = extract_entity_ids(hass, service)
-        unlatch = service.data[ATTR_UNLATCH]
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Nuki lock platform."""
+    config = config_entry.data
 
-        for lock in devices:
-            if lock.entity_id not in entity_ids:
-                continue
-            lock.lock_n_go(unlatch=unlatch)
+    def get_entities():
+        bridge = NukiBridge(
+            config[CONF_HOST],
+            config[CONF_TOKEN],
+            config[CONF_PORT],
+            True,
+            DEFAULT_TIMEOUT,
+        )
 
-    hass.services.register(
-        DOMAIN,
-        SERVICE_LOCK_N_GO,
-        service_handler,
-        schema=LOCK_N_GO_SERVICE_SCHEMA,
+        entities = [NukiLockEntity(lock) for lock in bridge.locks]
+        entities.extend([NukiOpenerEntity(opener) for opener in bridge.openers])
+        return entities
+
+    entities = await hass.async_add_executor_job(get_entities)
+
+    async_add_entities(entities)
+
+    platform = entity_platform.current_platform.get()
+    assert platform is not None
+
+    platform.async_register_entity_service(
+        "lock_n_go",
+        {
+            vol.Optional(ATTR_UNLATCH, default=False): cv.boolean,
+        },
+        "lock_n_go",
     )
-
-    devices.extend([NukiOpenerEntity(opener) for opener in bridge.openers])
-
-    add_entities(devices)
 
 
 class NukiDeviceEntity(LockEntity, ABC):
@@ -172,13 +165,13 @@ class NukiLockEntity(NukiDeviceEntity):
         """Open the door latch."""
         self._nuki_device.unlatch()
 
-    def lock_n_go(self, unlatch=False, **kwargs):
+    def lock_n_go(self, unlatch):
         """Lock and go.
 
         This will first unlock the door, then wait for 20 seconds (or another
         amount of time depending on the lock settings) and relock.
         """
-        self._nuki_device.lock_n_go(unlatch, kwargs)
+        self._nuki_device.lock_n_go(unlatch)
 
 
 class NukiOpenerEntity(NukiDeviceEntity):
@@ -200,3 +193,6 @@ class NukiOpenerEntity(NukiDeviceEntity):
     def open(self, **kwargs):
         """Buzz open the door."""
         self._nuki_device.electric_strike_actuation()
+
+    def lock_n_go(self, unlatch):
+        """Stub service."""

@@ -1,20 +1,15 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "\ud558\ub098\uc758 \uc778\uc2a4\ud134\uc2a4\ub9cc \ud544\uc694\ud569\ub2c8\ub2e4.",
             "wrong_server_id": "\uc11c\ubc84 ID \uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "step": {
             "user": {
-                "description": "SpeedTest \ub97c \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
-                "title": "SpeedTest \uc124\uc815\ud558\uae30"
+                "description": "SpeedTest \ub97c \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?"
             }
         }
     },
     "options": {
-        "error": {
-            "retrive_error": "\uc11c\ubc84 \ubaa9\ub85d\uc744 \uac80\uc0c9\ud558\ub294 \uc911 \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
-        },
         "step": {
             "init": {
                 "data": {

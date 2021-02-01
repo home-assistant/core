@@ -11,9 +11,7 @@
         },
         "error": {
             "authentication_error": "Nepravilna koda HomeKit. Preverite in poskusite znova.",
-            "busy_error": "Naprava je zavrnila seznanjanje, saj se \u017ee povezuje z drugim krmilnikom.",
             "max_peers_error": "Naprava je zavrnila seznanjanje, saj nima prostega pomnilnika za seznanjanje.",
-            "max_tries_error": "Napravaje zavrnila seznanjanje, saj je prejela ve\u010d kot 100 neuspe\u0161nih poskusov overjanja.",
             "pairing_failed": "Med poskusom seznanitev s to napravo je pri\u0161lo do napake. To je lahko za\u010dasna napaka ali pa va\u0161a naprava trenutno ni podprta.",
             "unable_to_pair": "Ni mogo\u010de seznaniti. Poskusite znova.",
             "unknown_error": "Naprava je sporo\u010dila neznano napako. Seznanjanje ni uspelo."
@@ -26,9 +24,6 @@
                 },
                 "description": "\u010ce \u017eeli\u0161 uporabiti to dodatno opremo, vnesi HomeKit kodo.",
                 "title": "Seznanite s HomeKit Opremo"
-            },
-            "try_pair_later": {
-                "title": "Seznanjanje ni na voljo"
             },
             "user": {
                 "data": {

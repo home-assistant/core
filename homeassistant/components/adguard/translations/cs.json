@@ -5,8 +5,7 @@
             "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
         },
         "error": {
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "connection_error": "Nepoda\u0159ilo se p\u0159ipojit."
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
             "hassio_confirm": {
