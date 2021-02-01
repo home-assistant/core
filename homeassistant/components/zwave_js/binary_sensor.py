@@ -300,7 +300,7 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return if the sensor is on or off."""
-        return self.info.primary_value.value is int(self.state_key)
+        return int(self.info.primary_value.value) == int(self.state_key)
 
     @property
     def name(self) -> str:
