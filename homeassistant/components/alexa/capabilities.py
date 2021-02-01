@@ -46,7 +46,6 @@ from .const import (
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_PRESETS,
     DATE_FORMAT,
-    PERCENTAGE_FAN_MAP,
     Inputs,
 )
 from .errors import UnsupportedProperty
@@ -668,9 +667,7 @@ class AlexaPercentageController(AlexaCapability):
             raise UnsupportedProperty(name)
 
         if self.entity.domain == fan.DOMAIN:
-            speed = self.entity.attributes.get(fan.ATTR_SPEED)
-
-            return PERCENTAGE_FAN_MAP.get(speed, 0)
+            return self.entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
 
         if self.entity.domain == cover.DOMAIN:
             return self.entity.attributes.get(cover.ATTR_CURRENT_POSITION, 0)
@@ -1155,9 +1152,7 @@ class AlexaPowerLevelController(AlexaCapability):
             raise UnsupportedProperty(name)
 
         if self.entity.domain == fan.DOMAIN:
-            speed = self.entity.attributes.get(fan.ATTR_SPEED)
-
-            return PERCENTAGE_FAN_MAP.get(speed)
+            return self.entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
 
         return None
 
