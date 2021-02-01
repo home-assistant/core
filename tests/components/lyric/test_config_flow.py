@@ -37,9 +37,6 @@ async def test_abort_if_no_configuration(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    flow = config_flow.OAuth2FlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "missing_configuration"
 
