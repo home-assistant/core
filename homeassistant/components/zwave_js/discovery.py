@@ -146,7 +146,6 @@ DISCOVERY_SCHEMAS = [
             CommandClass.ALARM,
             CommandClass.SENSOR_ALARM,
             CommandClass.INDICATOR,
-            CommandClass.NOTIFICATION,
         },
         type={"string"},
     ),
