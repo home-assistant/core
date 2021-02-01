@@ -82,7 +82,11 @@ async def async_setup_entry(
 
     for location in coordinator.data.locations:
         for device in location.devices:
-            entities.append(LyricClimate(coordinator, location, device))
+            entities.append(
+                LyricClimate(
+                    coordinator, location, device, hass.config.units.temperature_unit
+                )
+            )
 
     async_add_entities(entities, True)
 
@@ -103,9 +107,10 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         coordinator: DataUpdateCoordinator,
         location: LyricLocation,
         device: LyricDevice,
+        temperature_unit: str,
     ) -> None:
         """Initialize Honeywell Lyric climate entity."""
-        self._temperature_unit = self.hass.config.units.temperature_unit
+        self._temperature_unit = temperature_unit
 
         # Setup supported hvac modes
         self._hvac_modes = [HVAC_MODE_OFF]
