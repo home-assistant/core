@@ -55,7 +55,14 @@ async def async_setup_entry(
                 if device.changeableValues.thermostatSetpointStatus:
                     cls_list.append(LyricSetpointStatusSensor)
             for cls in cls_list:
-                entities.append(cls(hass, coordinator, location, device))
+                entities.append(
+                    cls(
+                        coordinator,
+                        location,
+                        device,
+                        hass.config.units.temperature_unit,
+                    )
+                )
 
     async_add_entities(entities, True)
 
@@ -96,10 +103,10 @@ class LyricIndoorTemperatureSensor(LyricSensor):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
         coordinator: DataUpdateCoordinator,
         location: LyricLocation,
         device: LyricDevice,
+        unit_of_measurement: str = None,
     ) -> None:
         """Initialize Honeywell Lyric sensor."""
 
@@ -111,7 +118,7 @@ class LyricIndoorTemperatureSensor(LyricSensor):
             "Indoor Temperature",
             None,
             DEVICE_CLASS_TEMPERATURE,
-            hass.config.units.temperature_unit,
+            unit_of_measurement,
         )
 
     @property
@@ -125,10 +132,10 @@ class LyricOutdoorTemperatureSensor(LyricSensor):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
         coordinator: DataUpdateCoordinator,
         location: LyricLocation,
         device: LyricDevice,
+        unit_of_measurement: str = None,
     ) -> None:
         """Initialize Honeywell Lyric sensor."""
 
@@ -140,7 +147,7 @@ class LyricOutdoorTemperatureSensor(LyricSensor):
             "Outdoor Temperature",
             None,
             DEVICE_CLASS_TEMPERATURE,
-            hass.config.units.temperature_unit,
+            unit_of_measurement,
         )
 
     @property
@@ -154,10 +161,10 @@ class LyricOutdoorHumiditySensor(LyricSensor):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
         coordinator: DataUpdateCoordinator,
         location: LyricLocation,
         device: LyricDevice,
+        unit_of_measurement: str = None,
     ) -> None:
         """Initialize Honeywell Lyric sensor."""
 
@@ -183,10 +190,10 @@ class LyricNextPeriodSensor(LyricSensor):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
         coordinator: DataUpdateCoordinator,
         location: LyricLocation,
         device: LyricDevice,
+        unit_of_measurement: str = None,
     ) -> None:
         """Initialize Honeywell Lyric sensor."""
 
@@ -203,7 +210,7 @@ class LyricNextPeriodSensor(LyricSensor):
     @property
     def state(self) -> datetime:
         """Return the state of the sensor."""
-        device: LyricDevice = self.device
+        device = self.device
         time = dt_util.parse_time(device.changeableValues.nextPeriodTime)
         now = dt_util.utcnow()
         if time <= now.time():
@@ -216,10 +223,10 @@ class LyricSetpointStatusSensor(LyricSensor):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
         coordinator: DataUpdateCoordinator,
         location: LyricLocation,
         device: LyricDevice,
+        unit_of_measurement: str = None,
     ) -> None:
         """Initialize Honeywell Lyric sensor."""
 
@@ -236,7 +243,7 @@ class LyricSetpointStatusSensor(LyricSensor):
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        device: LyricDevice = self.device
+        device = self.device
         if device.changeableValues.thermostatSetpointStatus == PRESET_HOLD_UNTIL:
             return f"Held until {device.changeableValues.nextPeriodTime}"
         return LYRIC_SETPOINT_STATUS_NAMES.get(
