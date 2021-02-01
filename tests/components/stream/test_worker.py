@@ -33,27 +33,31 @@ STREAM_SOURCE = "some-stream-source"
 STREAM_OUTPUT_FORMAT = "hls"
 AUDIO_STREAM_FORMAT = "mp3"
 VIDEO_STREAM_FORMAT = "h264"
-PACKET_DURATION = fractions.Fraction(1, 12)
-SEGMENT_DURATION = math.ceil(MIN_SEGMENT_DURATION / PACKET_DURATION) * PACKET_DURATION
+VIDEO_FRAME_RATE = 12
+AUDIO_SAMPLE_RATE = 11025
+PACKET_DURATION = fractions.Fraction(1, VIDEO_FRAME_RATE)  # in seconds
+SEGMENT_DURATION = (
+    math.ceil(MIN_SEGMENT_DURATION / PACKET_DURATION) * PACKET_DURATION
+)  # in seconds
 PACKETS_TO_SEGMENTS = SEGMENT_DURATION / PACKET_DURATION
-TEST_SEQUENCE_LENGTH = 5 * 12
-LONGER_TEST_SEQUENCE_LENGTH = 20 * 12
-OUT_OF_ORDER_PACKET_INDEX = 3 * 12
+TEST_SEQUENCE_LENGTH = 5 * VIDEO_FRAME_RATE
+LONGER_TEST_SEQUENCE_LENGTH = 20 * VIDEO_FRAME_RATE
+OUT_OF_ORDER_PACKET_INDEX = 3 * VIDEO_FRAME_RATE
 PACKETS_TO_SEGMENTS = PACKET_DURATION / SEGMENT_DURATION
 
 
 class FakePyAvStream:
     """A fake pyav Stream."""
 
-    def __init__(self, name):
+    def __init__(self, name, rate):
         """Initialize the stream."""
         self.name = name
-        self.time_base = fractions.Fraction(1, 1)
+        self.time_base = fractions.Fraction(1, rate)
         self.profile = "ignored-profile"
 
 
-VIDEO_STREAM = FakePyAvStream(VIDEO_STREAM_FORMAT)
-AUDIO_STREAM = FakePyAvStream(AUDIO_STREAM_FORMAT)
+VIDEO_STREAM = FakePyAvStream(VIDEO_STREAM_FORMAT, VIDEO_FRAME_RATE)
+AUDIO_STREAM = FakePyAvStream(AUDIO_STREAM_FORMAT, AUDIO_SAMPLE_RATE)
 
 
 class PacketSequence:
@@ -82,12 +86,12 @@ class PacketSequence:
         self.packet += 1
 
         class FakePacket:
-            dts = self.packet * PACKET_DURATION
-            pts = self.packet * PACKET_DURATION
-            duration = PACKET_DURATION
+            time_base = fractions.Fraction(1, VIDEO_FRAME_RATE)
+            dts = self.packet * PACKET_DURATION / time_base
+            pts = self.packet * PACKET_DURATION / time_base
+            duration = PACKET_DURATION / time_base
             stream = VIDEO_STREAM
             is_keyframe = True
-            time_base = fractions.Fraction(1, 1)
 
         return FakePacket()
 
@@ -428,11 +432,11 @@ async def test_audio_is_first_packet(hass):
     packets = list(PacketSequence(num_packets))
     # Pair up an audio packet for each video packet
     packets[0].stream = AUDIO_STREAM
-    packets[0].dts = packets[1].dts
-    packets[0].pts = packets[1].pts
+    packets[0].dts = packets[1].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
+    packets[0].pts = packets[1].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
     packets[2].stream = AUDIO_STREAM
-    packets[2].dts = packets[3].dts
-    packets[2].pts = packets[3].pts
+    packets[2].dts = packets[3].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
+    packets[2].pts = packets[3].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
 
     decoded_stream = await async_decode_stream(hass, iter(packets), py_av=py_av)
     assert decoded_stream.finished
@@ -450,8 +454,8 @@ async def test_audio_packets_found(hass):
     num_packets = PACKETS_TO_WAIT_FOR_AUDIO + 1
     packets = list(PacketSequence(num_packets))
     packets[1].stream = AUDIO_STREAM
-    packets[1].dts = packets[0].dts
-    packets[1].pts = packets[0].pts
+    packets[1].dts = packets[0].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
+    packets[1].pts = packets[0].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
 
     decoded_stream = await async_decode_stream(hass, iter(packets), py_av=py_av)
     assert decoded_stream.finished
