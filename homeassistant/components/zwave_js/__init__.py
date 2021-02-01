@@ -26,6 +26,8 @@ from .const import (
     ATTR_HOME_ID,
     ATTR_LABEL,
     ATTR_NODE_ID,
+    ATTR_PROPERTY_KEY_NAME,
+    ATTR_PROPERTY_NAME,
     ATTR_TYPE,
     ATTR_VALUE,
     CONF_INTEGRATION_CREATED_ADDON,
@@ -163,9 +165,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ATTR_DEVICE_ID: device.id,
                 ATTR_COMMAND_CLASS: notification.command_class,
                 ATTR_COMMAND_CLASS_NAME: notification.command_class_name,
-                ATTR_LABEL: notification.metadata.label
-                or notification.property_key_name
-                or notification.property_name,
+                ATTR_LABEL: notification.metadata.label,
+                ATTR_PROPERTY_NAME: notification.property_name,
+                ATTR_PROPERTY_KEY_NAME: notification.property_key_name,
                 ATTR_VALUE: value,
             },
         )
