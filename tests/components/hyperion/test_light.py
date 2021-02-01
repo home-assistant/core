@@ -17,12 +17,26 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.config_entries import (
+    ENTRY_STATE_SETUP_ERROR,
+    SOURCE_REAUTH,
+    ConfigEntry,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SOURCE,
+    CONF_TOKEN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
+    TEST_AUTH_NOT_REQUIRED_RESP,
+    TEST_AUTH_REQUIRED_RESP,
     TEST_CONFIG_ENTRY_OPTIONS,
     TEST_ENTITY_ID_1,
     TEST_ENTITY_ID_2,
@@ -206,10 +220,38 @@ async def test_setup_config_entry(hass: HomeAssistantType) -> None:
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
 
 
-async def test_setup_config_entry_not_ready(hass: HomeAssistantType) -> None:
+async def test_setup_config_entry_not_ready_connect_fail(
+    hass: HomeAssistantType,
+) -> None:
     """Test the component not being ready."""
     client = create_mock_client()
     client.async_client_connect = AsyncMock(return_value=False)
+    await setup_test_config_entry(hass, hyperion_client=client)
+    assert hass.states.get(TEST_ENTITY_ID_1) is None
+
+
+async def test_setup_config_entry_not_ready_switch_instance_fail(
+    hass: HomeAssistantType,
+) -> None:
+    """Test the component not being ready."""
+    client = create_mock_client()
+    client.async_client_switch_instance = AsyncMock(return_value=False)
+    await setup_test_config_entry(hass, hyperion_client=client)
+    assert hass.states.get(TEST_ENTITY_ID_1) is None
+
+
+async def test_setup_config_entry_not_ready_load_state_fail(
+    hass: HomeAssistantType,
+) -> None:
+    """Test the component not being ready."""
+    client = create_mock_client()
+    client.async_get_serverinfo = AsyncMock(
+        return_value={
+            "command": "serverinfo",
+            "success": False,
+        }
+    )
+
     await setup_test_config_entry(hass, hyperion_client=client)
     assert hass.states.get(TEST_ENTITY_ID_1) is None
 
@@ -724,7 +766,7 @@ async def test_unload_entry(hass: HomeAssistantType) -> None:
     client = create_mock_client()
     await setup_test_config_entry(hass, hyperion_client=client)
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
-    assert client.async_client_connect.called
+    assert client.async_client_connect.call_count == 2
     assert not client.async_client_disconnect.called
     entry = _get_config_entry_from_unique_id(hass, TEST_SYSINFO_ID)
     assert entry
@@ -749,3 +791,44 @@ async def test_version_no_log_warning(caplog, hass: HomeAssistantType) -> None: 
     await setup_test_config_entry(hass, hyperion_client=client)
     assert hass.states.get(TEST_ENTITY_ID_1) is not None
     assert "Please consider upgrading" not in caplog.text
+
+
+async def test_setup_entry_no_token_reauth(hass: HomeAssistantType) -> None:
+    """Verify a reauth flow when auth is required but no token provided."""
+    client = create_mock_client()
+    config_entry = add_test_config_entry(hass)
+    client.async_is_auth_required = AsyncMock(return_value=TEST_AUTH_REQUIRED_RESP)
+
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        mock_flow_init.assert_called_once_with(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_REAUTH},
+            data=config_entry.data,
+        )
+        assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+
+
+async def test_setup_entry_bad_token_reauth(hass: HomeAssistantType) -> None:
+    """Verify a reauth flow when a bad token is provided."""
+    client = create_mock_client()
+    config_entry = add_test_config_entry(
+        hass,
+        data={CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT, CONF_TOKEN: "expired_token"},
+    )
+    client.async_is_auth_required = AsyncMock(return_value=TEST_AUTH_NOT_REQUIRED_RESP)
+
+    # Fail to log in.
+    client.async_client_login = AsyncMock(return_value=False)
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        mock_flow_init.assert_called_once_with(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_REAUTH},
+            data=config_entry.data,
+        )
+        assert config_entry.state == ENTRY_STATE_SETUP_ERROR

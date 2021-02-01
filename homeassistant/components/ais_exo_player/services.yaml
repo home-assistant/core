@@ -1,43 +1,23 @@
 # Describes the format for available exo player services
-join:
-  description: Group player together.
-  fields:
-    master:
-      description: Entity ID of the player that should become the coordinator of the group.
-      example: 'media_player.wbudowany_glosnik'
-    entity_id:
-      description: Entitie that will coordinate the grouping.
-      example: 'media_player.mobile_1'
-
-unjoin:
-  description: Unjoin the player from a group.
-  fields:
-    entity_id:
-      description: Entitie that will be unjoined from their group.
-      example: 'media_player.mobile_1'
-
-update_attributes:
-  description: Update the player IP.
-  fields:
-    entity_id:
-      description: Entitie that will be unjoined from their group.
-      example: 'media_player.mobile_1'
-    ip_address:
-      description: IP Address of the player
-      example: 'media_player.mobile_1'
-
-player_status_ask:
-  description: Send gate player status to all players in network
-
 redirect_media:
-  description: Send current media from gate to selected player
+  description: Send current media from current player to selected player
   fields:
     entity_id:
       description: Entitie of the selected media player to play current media
-      example: 'media_player.mobile_1'
+      example: 'media_player.ai_speaker_player'
+
+redirect_camera_stream:
+  description: Send stream url from selected camera directly to selected media player
+  fields:
+    camera_entity_id:
+      description: Entitie of the camera
+      example: 'camera.domek'
+    player_entity_id:
+      description: Entitie of the AIS media player
+      example: 'media_player.ai_speaker_player'
 
 play_text_or_url:
-  description: Send the text or media url to play on media players group
+  description: Send the text or media url to play on main media player
   fields:
     text:
       description: Text to send

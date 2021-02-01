@@ -77,14 +77,13 @@ echo "  base_topic: zigbee2mqtt" >> /data/data/pl.sviete.dom/files/home/zigbee2m
 echo "  server: 'mqtt://localhost'" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
 echo "serial:" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
 echo "  port: /dev/ttyACM0" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
+echo "frontend:" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
+echo "  port: 8099" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
 echo "advanced:" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
 echo "  log_level: info" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
 echo "  log_output:" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
 echo "    - console" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
-echo "frontend:" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
-echo "  port: 8099" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
-echo "experimental:" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
-echo "  new_api: true" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
+echo "  channel: 11" >> /data/data/pl.sviete.dom/files/home/zigbee2mqtt/data/configuration.yaml
 
 # 12. delete img galery
 rm -rf /data/data/pl.sviete.dom/files/home/AIS/www/img/*
@@ -113,4 +112,3 @@ else
   # to prevent the kill form Android, 7z have to be limited to 2 threads only (mmt=2)
   7za a -m0=lzma2 /sdcard/files.tar.7z /data/data/pl.sviete.dom/files -mmt=2
 fi
-

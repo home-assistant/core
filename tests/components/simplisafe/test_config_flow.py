@@ -72,6 +72,7 @@ async def test_options_flow(hass):
     with patch(
         "homeassistant.components.simplisafe.async_setup_entry", return_value=True
     ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

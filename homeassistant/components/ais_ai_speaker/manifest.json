@@ -1,0 +1,8 @@
+{
+    "domain": "ais_ai_speaker",
+    "name": "AIS Speaker",
+    "config_flow": true,
+    "documentation": "https://www.ai-speaker.com",
+    "requirements": ["aisapi==0.1.0"],
+    "codeowners": ["@asystentka-jolka"]
+}

@@ -1,4 +1,11 @@
 # Describes the format for available AIS cloud services
+cec_command:
+  description: Wysłanie komendy HDMI-CEC, dostpne komendy https://www.cec-o-matic.com
+  fields:
+    command:
+      description: komenda, np. 0x40 0x04 (One Touch Play from Playback 1 to TV), 0x40 0x36 (System Standby from Playback 1 to TV),
+      example: '0x40 0x04'
+
 change_host_name:
   description: Zmiana nazwy hosta urządzenia
   fields:
@@ -47,3 +54,10 @@ set_io_scheduler:
     scheduler:
       description: Tryb zarządzania I/O. Domyślnie noop, inne możliwe wartości to deadline cfq.
       example: 'noop'
+
+restart_pm2_service:
+  description: Restart serwisu PM2 (ais, ftp, mqtt, tunnel, webssh...)
+  fields:
+    service:
+      description: Serwis do restartu
+      example: 'tunnel'

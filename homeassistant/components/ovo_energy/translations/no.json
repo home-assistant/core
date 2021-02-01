@@ -11,8 +11,8 @@
                 "data": {
                     "password": "Passord"
                 },
-                "description": "Autentisering mislyktes for OVO Energy. Vennligst skriv inn din n\u00e5v\u00e6rende legitimasjon.",
-                "title": "Reautorisasjon"
+                "description": "Godkjenning mislyktes for OVO Energy. Vennligst skriv inn din n\u00e5v\u00e6rende legitimasjon.",
+                "title": "Godkjenne integrering p\u00e5 nytt"
             },
             "user": {
                 "data": {

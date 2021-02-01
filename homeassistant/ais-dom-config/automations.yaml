@@ -12,8 +12,6 @@
    - service: ais_files.get_db_log_settings_info
      data:
        on_system_start: true
-   - service: ais_cloud.get_players
-     data: {}
    - service: ais_ai_service.publish_command_to_frame
      data:
        key: WifiConnectionInfo
@@ -60,7 +58,6 @@
      data:
        payload: 1
        topic: cmnd/dom/SetOption19
-   - service: ais_shell_command.scan_network_for_ais_players
    - service: mqtt.publish
      data:
        payload: 0
@@ -224,7 +221,7 @@
   initial_state: True
   trigger:
     platform: time
-    at: '04:12:00'
+    at: '05:15:00'
   action:
     - service: ais_shell_command.flush_logs
 

@@ -1,5 +1,4 @@
 """Support for interface with a Gree climate systems."""
-from datetime import timedelta
 import logging
 from typing import List
 
@@ -10,7 +9,6 @@ from greeclimate.device import (
     TemperatureUnits,
     VerticalSwing,
 )
-from greeclimate.exceptions import DeviceTimeoutError
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -45,21 +43,19 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    COORDINATOR,
     DOMAIN,
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
-    MAX_ERRORS,
     MAX_TEMP,
     MIN_TEMP,
     TARGET_TEMPERATURE_STEP,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=60)
-PARALLEL_UPDATES = 0
 
 HVAC_MODES = {
     Mode.Auto: HVAC_MODE_AUTO,
@@ -101,85 +97,21 @@ SUPPORTED_FEATURES = (
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Gree HVAC device from a config entry."""
     async_add_entities(
-        GreeClimateEntity(device) for device in hass.data[DOMAIN].pop("pending")
+        [
+            GreeClimateEntity(coordinator)
+            for coordinator in hass.data[DOMAIN][COORDINATOR]
+        ]
     )
 
 
-class GreeClimateEntity(ClimateEntity):
+class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
     """Representation of a Gree HVAC device."""
 
-    def __init__(self, device):
+    def __init__(self, coordinator):
         """Initialize the Gree device."""
-        self._device = device
-        self._name = device.device_info.name
-        self._mac = device.device_info.mac
-        self._available = False
-        self._error_count = 0
-
-    async def async_update(self):
-        """Update the state of the device."""
-        try:
-            await self._device.update_state()
-
-            if not self._available and self._error_count:
-                _LOGGER.warning(
-                    "Device is available: %s (%s)",
-                    self._name,
-                    str(self._device.device_info),
-                )
-
-            self._available = True
-            self._error_count = 0
-        except DeviceTimeoutError:
-            self._error_count += 1
-
-            # Under normal conditions GREE units timeout every once in a while
-            if self._available and self._error_count >= MAX_ERRORS:
-                self._available = False
-                _LOGGER.warning(
-                    "Device is unavailable: %s (%s)",
-                    self._name,
-                    self._device.device_info,
-                )
-        except Exception:  # pylint: disable=broad-except
-            # Under normal conditions GREE units timeout every once in a while
-            if self._available:
-                self._available = False
-                _LOGGER.exception(
-                    "Unknown exception caught during update by gree device: %s (%s)",
-                    self._name,
-                    self._device.device_info,
-                )
-
-    async def _push_state_update(self):
-        """Send state updates to the physical device."""
-        try:
-            return await self._device.push_state_update()
-        except DeviceTimeoutError:
-            self._error_count += 1
-
-            # Under normal conditions GREE units timeout every once in a while
-            if self._available and self._error_count >= MAX_ERRORS:
-                self._available = False
-                _LOGGER.warning(
-                    "Device timedout while sending state update: %s (%s)",
-                    self._name,
-                    self._device.device_info,
-                )
-        except Exception:  # pylint: disable=broad-except
-            # Under normal conditions GREE units timeout every once in a while
-            if self._available:
-                self._available = False
-                _LOGGER.exception(
-                    "Unknown exception caught while sending state update to: %s (%s)",
-                    self._name,
-                    self._device.device_info,
-                )
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return self._available
+        super().__init__(coordinator)
+        self._name = coordinator.device.device_info.name
+        self._mac = coordinator.device.device_info.mac
 
     @property
     def name(self) -> str:
@@ -204,7 +136,7 @@ class GreeClimateEntity(ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the temperature units for the device."""
-        units = self._device.temperature_units
+        units = self.coordinator.device.temperature_units
         return TEMP_CELSIUS if units == TemperatureUnits.C else TEMP_FAHRENHEIT
 
     @property
@@ -220,7 +152,7 @@ class GreeClimateEntity(ClimateEntity):
     @property
     def target_temperature(self) -> float:
         """Return the target temperature for the device."""
-        return self._device.target_temperature
+        return self.coordinator.device.target_temperature
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -234,8 +166,9 @@ class GreeClimateEntity(ClimateEntity):
             self._name,
         )
 
-        self._device.target_temperature = round(temperature)
-        await self._push_state_update()
+        self.coordinator.device.target_temperature = round(temperature)
+        await self.coordinator.push_state_update()
+        self.async_write_ha_state()
 
     @property
     def min_temp(self) -> float:
@@ -255,10 +188,10 @@ class GreeClimateEntity(ClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return the current HVAC mode for the device."""
-        if not self._device.power:
+        if not self.coordinator.device.power:
             return HVAC_MODE_OFF
 
-        return HVAC_MODES.get(self._device.mode)
+        return HVAC_MODES.get(self.coordinator.device.mode)
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
@@ -272,15 +205,17 @@ class GreeClimateEntity(ClimateEntity):
         )
 
         if hvac_mode == HVAC_MODE_OFF:
-            self._device.power = False
-            await self._push_state_update()
+            self.coordinator.device.power = False
+            await self.coordinator.push_state_update()
+            self.async_write_ha_state()
             return
 
-        if not self._device.power:
-            self._device.power = True
+        if not self.coordinator.device.power:
+            self.coordinator.device.power = True
 
-        self._device.mode = HVAC_MODES_REVERSE.get(hvac_mode)
-        await self._push_state_update()
+        self.coordinator.device.mode = HVAC_MODES_REVERSE.get(hvac_mode)
+        await self.coordinator.push_state_update()
+        self.async_write_ha_state()
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -292,13 +227,13 @@ class GreeClimateEntity(ClimateEntity):
     @property
     def preset_mode(self) -> str:
         """Return the current preset mode for the device."""
-        if self._device.steady_heat:
+        if self.coordinator.device.steady_heat:
             return PRESET_AWAY
-        if self._device.power_save:
+        if self.coordinator.device.power_save:
             return PRESET_ECO
-        if self._device.sleep:
+        if self.coordinator.device.sleep:
             return PRESET_SLEEP
-        if self._device.turbo:
+        if self.coordinator.device.turbo:
             return PRESET_BOOST
         return PRESET_NONE
 
@@ -313,21 +248,22 @@ class GreeClimateEntity(ClimateEntity):
             self._name,
         )
 
-        self._device.steady_heat = False
-        self._device.power_save = False
-        self._device.turbo = False
-        self._device.sleep = False
+        self.coordinator.device.steady_heat = False
+        self.coordinator.device.power_save = False
+        self.coordinator.device.turbo = False
+        self.coordinator.device.sleep = False
 
         if preset_mode == PRESET_AWAY:
-            self._device.steady_heat = True
+            self.coordinator.device.steady_heat = True
         elif preset_mode == PRESET_ECO:
-            self._device.power_save = True
+            self.coordinator.device.power_save = True
         elif preset_mode == PRESET_BOOST:
-            self._device.turbo = True
+            self.coordinator.device.turbo = True
         elif preset_mode == PRESET_SLEEP:
-            self._device.sleep = True
+            self.coordinator.device.sleep = True
 
-        await self._push_state_update()
+        await self.coordinator.push_state_update()
+        self.async_write_ha_state()
 
     @property
     def preset_modes(self) -> List[str]:
@@ -337,7 +273,7 @@ class GreeClimateEntity(ClimateEntity):
     @property
     def fan_mode(self) -> str:
         """Return the current fan mode for the device."""
-        speed = self._device.fan_speed
+        speed = self.coordinator.device.fan_speed
         return FAN_MODES.get(speed)
 
     async def async_set_fan_mode(self, fan_mode):
@@ -345,8 +281,9 @@ class GreeClimateEntity(ClimateEntity):
         if fan_mode not in FAN_MODES_REVERSE:
             raise ValueError(f"Invalid fan mode: {fan_mode}")
 
-        self._device.fan_speed = FAN_MODES_REVERSE.get(fan_mode)
-        await self._push_state_update()
+        self.coordinator.device.fan_speed = FAN_MODES_REVERSE.get(fan_mode)
+        await self.coordinator.push_state_update()
+        self.async_write_ha_state()
 
     @property
     def fan_modes(self) -> List[str]:
@@ -356,8 +293,8 @@ class GreeClimateEntity(ClimateEntity):
     @property
     def swing_mode(self) -> str:
         """Return the current swing mode for the device."""
-        h_swing = self._device.horizontal_swing == HorizontalSwing.FullSwing
-        v_swing = self._device.vertical_swing == VerticalSwing.FullSwing
+        h_swing = self.coordinator.device.horizontal_swing == HorizontalSwing.FullSwing
+        v_swing = self.coordinator.device.vertical_swing == VerticalSwing.FullSwing
 
         if h_swing and v_swing:
             return SWING_BOTH
@@ -378,14 +315,15 @@ class GreeClimateEntity(ClimateEntity):
             self._name,
         )
 
-        self._device.horizontal_swing = HorizontalSwing.Center
-        self._device.vertical_swing = VerticalSwing.FixedMiddle
+        self.coordinator.device.horizontal_swing = HorizontalSwing.Center
+        self.coordinator.device.vertical_swing = VerticalSwing.FixedMiddle
         if swing_mode in (SWING_BOTH, SWING_HORIZONTAL):
-            self._device.horizontal_swing = HorizontalSwing.FullSwing
+            self.coordinator.device.horizontal_swing = HorizontalSwing.FullSwing
         if swing_mode in (SWING_BOTH, SWING_VERTICAL):
-            self._device.vertical_swing = VerticalSwing.FullSwing
+            self.coordinator.device.vertical_swing = VerticalSwing.FullSwing
 
-        await self._push_state_update()
+        await self.coordinator.push_state_update()
+        self.async_write_ha_state()
 
     @property
     def swing_modes(self) -> List[str]:

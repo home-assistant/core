@@ -4,16 +4,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import light
-from homeassistant.components.mqtt import ATTR_DISCOVERY_HASH
-from homeassistant.components.mqtt.discovery import (
-    MQTT_DISCOVERY_NEW,
-    clear_discovery_hash,
-)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .. import DOMAIN, PLATFORMS
+from .. import ATTR_DISCOVERY_HASH, DOMAIN, PLATFORMS
+from ..discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
 from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import PLATFORM_SCHEMA_BASIC, async_setup_entity_basic
 from .schema_json import PLATFORM_SCHEMA_JSON, async_setup_entity_json

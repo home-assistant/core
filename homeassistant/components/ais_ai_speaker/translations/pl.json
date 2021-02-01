@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "description": "Dodajemy połączenie z odtwarzaczem AI-Speaker w Twojej sieci lokalnej.\n\n ![logo](https://ai-speaker.com/images/brands/logo_ais_im_listening.png)\n\nAby połączyć się z odtwarzaczem, należy podać jego adres IP lub nazwę hosta w sieci lokalnej, w której działa bramka AIS,  [Szczegóły w dokumentacji ](https://www.ai-speaker.com)\n\n Wpisz adres odtwarzacza i kliknij przycisk **ZATWIERDŹ**.",
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    },
+    "title": "AIS Speaker"
+}

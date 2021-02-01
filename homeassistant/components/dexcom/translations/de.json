@@ -4,6 +4,7 @@
             "already_configured": "Konto ist bereits konfiguriert"
         },
         "error": {
+            "cannot_connect": "Verbindungsfehler",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {

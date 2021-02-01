@@ -54,7 +54,7 @@ from homeassistant.helpers import (
     storage,
 )
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as date_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -797,6 +797,19 @@ def init_recorder_component(hass, add_config=None):
 
     with patch("homeassistant.components.recorder.migration.migrate_schema"):
         assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
+        assert recorder.DOMAIN in hass.config.components
+    _LOGGER.info("In-memory recorder successfully started")
+
+
+async def async_init_recorder_component(hass, add_config=None):
+    """Initialize the recorder asynchronously."""
+    config = dict(add_config) if add_config else {}
+    config[recorder.CONF_DB_URL] = "sqlite://"
+
+    with patch("homeassistant.components.recorder.migration.migrate_schema"):
+        assert await async_setup_component(
+            hass, recorder.DOMAIN, {recorder.DOMAIN: config}
+        )
         assert recorder.DOMAIN in hass.config.components
     _LOGGER.info("In-memory recorder successfully started")
 

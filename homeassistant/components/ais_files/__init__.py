@@ -10,12 +10,13 @@ import logging
 import os
 
 from PIL import Image
-from aiohttp.web import Request, Response
+from aiohttp.web import FileResponse, Request, Response
 from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
 
 import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.const import HTTP_BAD_REQUEST
 
 from . import sensor
 from .const import DOMAIN
@@ -80,6 +81,8 @@ async def async_setup(hass, config):
     )
 
     hass.http.register_view(FileUpladView)
+    hass.http.register_view(FileReadView)
+    hass.http.register_view(FileWriteView)
 
     return True
 
@@ -486,3 +489,45 @@ class FileUpladView(HomeAssistantView):
         hass = request.app["hass"]
         hass.async_add_job(hass.services.async_call(DOMAIN, "refresh_files"))
         hass.async_add_job(hass.services.async_call(DOMAIN, "pick_file", {"idx": 0}))
+
+
+class FileReadView(HomeAssistantView):
+    """View to fetch the file."""
+
+    url = "/api/ais_file/read"
+    name = "api:ais_file:read"
+
+    async def post(self, request):
+        """Retrieve the file."""
+        try:
+            data = await request.json()
+        except ValueError:
+            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
+        file_path = data["filePath"]
+        if file_path == "/data/data/pl.sviete.dom/files/home/AIS/ais_welcome.txt":
+            if not os.path.isfile(file_path):
+                # create empty file
+                os.mknod(file_path)
+        response = FileResponse(path=file_path)
+        return response
+
+
+class FileWriteView(HomeAssistantView):
+    """View to write the file."""
+
+    url = "/api/ais_file/write"
+    name = "api:ais_file:write"
+
+    async def post(self, request):
+        """Retrieve the file."""
+        try:
+            data = await request.json()
+        except ValueError:
+            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
+
+        file_path = data["filePath"]
+        file_body = data["fileBody"]
+
+        with open(file_path, "w") as f:
+            f.write(file_body)
+            f.close()

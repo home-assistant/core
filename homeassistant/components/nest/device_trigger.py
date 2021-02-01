@@ -54,7 +54,7 @@ async def async_get_device_trigger_types(
 
     # Determine the set of event types based on the supported device traits
     trigger_types = []
-    for trait in nest_device.traits.keys():
+    for trait in nest_device.traits:
         trigger_type = DEVICE_TRAIT_TRIGGER_MAP.get(trait)
         if trigger_type:
             trigger_types.append(trigger_type)

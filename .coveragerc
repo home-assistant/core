@@ -73,8 +73,6 @@ omit =
     homeassistant/components/aurora_abb_powerone/sensor.py
     homeassistant/components/avea/light.py
     homeassistant/components/avion/light.py
-    homeassistant/components/avri/const.py
-    homeassistant/components/avri/sensor.py
     homeassistant/components/azure_devops/__init__.py
     homeassistant/components/azure_devops/const.py
     homeassistant/components/azure_devops/sensor.py
@@ -102,7 +100,12 @@ omit =
     homeassistant/components/bme280/sensor.py
     homeassistant/components/bme680/sensor.py
     homeassistant/components/bmp280/sensor.py
-    homeassistant/components/bmw_connected_drive/*
+    homeassistant/components/bmw_connected_drive/__init__.py
+    homeassistant/components/bmw_connected_drive/binary_sensor.py
+    homeassistant/components/bmw_connected_drive/device_tracker.py
+    homeassistant/components/bmw_connected_drive/lock.py
+    homeassistant/components/bmw_connected_drive/notify.py
+    homeassistant/components/bmw_connected_drive/sensor.py
     homeassistant/components/braviatv/__init__.py
     homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
@@ -386,7 +389,6 @@ omit =
     homeassistant/components/hvv_departures/sensor.py
     homeassistant/components/hvv_departures/__init__.py
     homeassistant/components/hydrawise/*
-    homeassistant/components/hyperion/light.py
     homeassistant/components/iammeter/sensor.py
     homeassistant/components/iaqualink/binary_sensor.py
     homeassistant/components/iaqualink/climate.py
@@ -568,6 +570,8 @@ omit =
     homeassistant/components/n26/*
     homeassistant/components/nad/media_player.py
     homeassistant/components/nanoleaf/light.py
+    homeassistant/components/neato/__init__.py
+    homeassistant/components/neato/api.py
     homeassistant/components/neato/camera.py
     homeassistant/components/neato/sensor.py
     homeassistant/components/neato/switch.py
@@ -578,14 +582,9 @@ omit =
     homeassistant/components/nest/api.py
     homeassistant/components/nest/binary_sensor.py
     homeassistant/components/nest/camera.py
-    homeassistant/components/nest/camera_legacy.py
-    homeassistant/components/nest/camera_sdm.py
     homeassistant/components/nest/climate.py
-    homeassistant/components/nest/climate_legacy.py
-    homeassistant/components/nest/climate_sdm.py
-    homeassistant/components/nest/local_auth.py
+    homeassistant/components/nest/legacy/*
     homeassistant/components/nest/sensor.py
-    homeassistant/components/nest/sensor_legacy.py
     homeassistant/components/netatmo/__init__.py
     homeassistant/components/netatmo/api.py
     homeassistant/components/netatmo/camera.py
@@ -834,8 +833,9 @@ omit =
     homeassistant/components/solaredge_local/sensor.py
     homeassistant/components/solarlog/*
     homeassistant/components/solax/sensor.py
-    homeassistant/components/soma/cover.py
     homeassistant/components/soma/__init__.py
+    homeassistant/components/soma/cover.py
+    homeassistant/components/soma/sensor.py
     homeassistant/components/somfy/*
     homeassistant/components/somfy_mylink/*
     homeassistant/components/sonos/*
@@ -1015,7 +1015,6 @@ omit =
     homeassistant/components/watson_tts/tts.py
     homeassistant/components/waze_travel_time/sensor.py
     homeassistant/components/webostv/*
-    homeassistant/components/wemo/*
     homeassistant/components/whois/sensor.py
     homeassistant/components/wiffi/*
     homeassistant/components/wink/*

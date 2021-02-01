@@ -1,0 +1,26 @@
+{   "title": "AIS MQTT Bridge",
+    "config": {
+        "step": {
+            "info": {
+                "description": "Dostęp do AIS MQTT Bridge wymaga autoryzacji w **Portalu Integratora AIS**.\n\n ###### ![AIS logo](https://ai-speaker.com/images/brands/ais_mqtt_bridge/ais_mqtt_bridge.png?v=8) \n\n Kliknij **ZATWIERDŹ** aby przejść do formatki z logowaniem.",
+                "title": "Logowanie do AI-Speaker."
+            },
+            "authentication": {
+                "title": "Logowanie do AI-Speaker",
+                "description": "Aby uzyskać połączenie z AIS MQTT Bridge należy się zalogować w **Portalu Integratora AIS**,  [Szczegóły w dokumentacji ](https://www.ai-speaker.com/docs/ais_dom_cloud_index)\n\n Wypełnij poniższy formularz i kliknij **ZATWIERDŹ**.",
+                "data": {
+                    "username": "Username",
+                    "password": "Password"
+                }
+            }
+        },
+        "error": {
+          "oauth_error": "Invalid oAuth data",
+          "token_error": "Invalid code"
+        },
+        "abort": {
+            "abort_by_error": "Przerwane z powodu błędu:\n\n {error_info}",
+            "single_instance_allowed": "Masz już skonfigurowaną integrację z AIS MQTT Bridge.\n\n Jeśli chcesz skonfigurować ponownie to najpierw usuń bieżącą integrację."
+        }
+    }
+}

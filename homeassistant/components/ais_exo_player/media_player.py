@@ -1,11 +1,13 @@
 """
-Support to interact with a ExoPlayer on Android via HTTO and MQTT.
+Support to interact with a ExoPlayer on Android via HTTP and MQTT.
 
 """
 import asyncio
 import json
 import logging
 from typing import Optional
+
+from aisapi.ws import AisWebService
 
 import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.components.media_player import (
@@ -34,8 +36,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
-    STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import aiohttp_client
 import homeassistant.util.dt as dt_util
 
 from .media_browser import browse_media
@@ -59,10 +61,6 @@ SUPPORT_EXO = (
     | SUPPORT_BROWSE_MEDIA
 )
 
-DEFAULT_NAME = "AIS Dom Odtwarzacz"
-ATTR_AIS_GROUP = "ais_exo_player_group"
-ATTR_MASTER = "master"
-
 
 def _publish_command_to_frame(hass, device_ip, key, val):
     if device_ip == "localhost":
@@ -71,97 +69,7 @@ def _publish_command_to_frame(hass, device_ip, key, val):
             "publish_command_to_frame",
             {"key": key, "val": val, "ip": "localhost"},
         )
-        # set command to group
-        for s in ais_global.G_SPEAKERS_GROUP_LIST:
-            if s != "media_player.wbudowany_glosnik":
-                attr = hass.states.get(s).attributes
-                if "device_ip" in attr:
-                    # exo player
-                    ip = attr["device_ip"]
-                    if ip != "localhost":
-                        hass.services.call(
-                            "ais_ai_service",
-                            "publish_command_to_frame",
-                            {"key": key, "val": val, "ip": ip},
-                        )
-                else:
-                    state = hass.states.get(s).state
-                    if state not in (STATE_UNAVAILABLE, STATE_OFF):
-                        # other player (not exo)
-                        if key == "setVolume":
-                            hass.services.call(
-                                "media_player",
-                                "volume_set",
-                                {"entity_id": s, "volume_level": val},
-                            )
-                        elif key == "setPlayerShuffle":
-                            hass.services.call(
-                                "media_player",
-                                "shuffle_set",
-                                {"entity_id": s, "shuffle": val},
-                            )
-                        elif key == "seekTo":
-                            hass.services.call(
-                                "media_player",
-                                "media_seek",
-                                {"entity_id": s, "seek_position": val},
-                            )
-                        elif key == "upVolume":
-                            hass.services.call(
-                                "media_player", "volume_up", {"entity_id": s}
-                            )
-                        elif key == "downVolume":
-                            hass.services.call(
-                                "media_player", "volume_down", {"entity_id": s}
-                            )
-                        elif key == "pauseAudio":
-                            if val:
-                                hass.services.call(
-                                    "media_player", "media_pause", {"entity_id": s}
-                                )
-                            else:
-                                hass.services.call(
-                                    "media_player", "media_play", {"entity_id": s}
-                                )
-                        elif key == "playAudio":
-                            hass.services.call(
-                                "media_player",
-                                "play_media",
-                                {
-                                    "entity_id": s,
-                                    "media_content_id": val,
-                                    "media_content_type": "music",
-                                },
-                            )
-                        elif key == "playAudioFullInfo":
-                            hass.services.call(
-                                "media_player",
-                                "play_media",
-                                {
-                                    "entity_id": s,
-                                    "media_content_id": val["media_content_id"],
-                                    "media_content_type": "music",
-                                },
-                            )
 
-        # set setAudioInfo to all ais speakers
-        if key in ("setAudioInfo", "playAudioFullInfo"):
-            for entity in hass.states.async_all():
-                if entity.entity_id.startswith("media_player."):
-                    if (
-                        "device_ip" in entity.attributes
-                        and entity.attributes["device_ip"] != "localhost"
-                    ):
-                        if entity.entity_id not in ais_global.G_SPEAKERS_GROUP_LIST:
-                            hass.services.call(
-                                "ais_ai_service",
-                                "publish_command_to_frame",
-                                {
-                                    "key": "setAudioInfoNoPlay",
-                                    "val": val,
-                                    "ip": entity.attributes["device_ip"],
-                                },
-                            )
     else:
         hass.services.call(
             "ais_ai_service",
@@ -170,101 +78,11 @@ def _publish_command_to_frame(hass, device_ip, key, val):
         )
 
 
-def _update_state(hass):
-    # to keep groups in sync with player
-    state = hass.states.get("media_player.wbudowany_glosnik").state
-    attributes = hass.states.get("media_player.wbudowany_glosnik").attributes
-    new_attr = {}
-    list_idx = -1
-    for itm in attributes:
-        list_idx = list_idx + 1
-        new_attr[list_idx] = attributes[itm]
-    new_attr["ais_exo_player_group"] = ais_global.G_SPEAKERS_GROUP_LIST
-    hass.states.async_set("media_player.wbudowany_glosnik", state, new_attr)
-
-
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the ExoPlayer platform."""
 
-    # register services
-    def join(service):
-        def j(entity_id):
-            if entity_id not in ais_global.G_SPEAKERS_GROUP_LIST:
-                ais_global.G_SPEAKERS_GROUP_LIST.append(entity_id)
-
-        player = service.data["entity_id"]
-        if type(player) is str:
-            j(player)
-        if type(player) is list:
-            for e in player:
-                j(e)
-        _update_state(hass)
-
-    def unjoin(service):
-        player = None
-        if "entity_id" in service.data:
-            if type(service.data["entity_id"]) is str:
-                player = service.data["entity_id"]
-            if type(service.data["entity_id"]) is list:
-                player = None
-
-        if player is None:
-            ais_global.G_SPEAKERS_GROUP_LIST = ["media_player.wbudowany_glosnik"]
-        else:
-            if player in ais_global.G_SPEAKERS_GROUP_LIST:
-                ais_global.G_SPEAKERS_GROUP_LIST.remove(player)
-        _update_state(hass)
-
-    def update_attributes(service):
-        entity_id = service.data["entity_id"]
-        ip = service.data[CONF_IP_ADDRESS]
-
-        # update state
-        state = hass.states.get("media_player." + entity_id).state
-        attributes = hass.states.get("media_player." + entity_id).attributes
-        new_attr = {}
-        list_idx = -1
-        for itm in attributes:
-            list_idx = list_idx + 1
-            new_attr[list_idx] = attributes[itm]
-        new_attr[CONF_IP_ADDRESS] = ip
-        hass.states.async_set("media_player." + entity_id, state, new_attr)
-
-    def player_status_ask(service):
-        # get player info and sent to all in network
-        attributes = hass.states.get("media_player.wbudowany_glosnik").attributes
-        j_media_info = {
-            "media_title": attributes.get("media_title", ""),
-            "media_source": attributes.get("source", ""),
-            "media_stream_image": attributes.get("media_stream_image", ""),
-            "media_album_name": attributes.get("media_album_name", ""),
-            "setPlayerShuffle": attributes.get("shuffle", ""),
-            "setMediaPosition": attributes.get("media_position", ""),
-        }
-        _LOGGER.info("j_media_info: " + str(j_media_info))
-        for entity in hass.states.async_all():
-            if entity.entity_id.startswith("media_player."):
-                if (
-                    "device_ip" in entity.attributes
-                    and entity.attributes["device_ip"] != "localhost"
-                ):
-                    _LOGGER.info(
-                        "publish_command_to_frame: "
-                        + str(entity.attributes["device_ip"])
-                    )
-                    hass.services.call(
-                        "ais_ai_service",
-                        "publish_command_to_frame",
-                        {
-                            "key": "setAudioInfoNoPlay",
-                            "val": j_media_info,
-                            "ip": entity.attributes["device_ip"],
-                        },
-                    )
-
-    def redirect_media(service):
-        # ais_cloud.send_audio_to_speaker
+    async def async_redirect_media(service):
         if "entity_id" not in service.data:
             return
 
@@ -274,40 +92,24 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         media_content_id = attr.get("media_content_id")
         if media_content_id is None:
             return
+        # 0. push media info to ais to share with client
+        j_media_info = {
+            "media_title": device.media_title,
+            "media_source": device.source,
+            "media_stream_image": device.media_stream_image,
+            "media_album_name": device.media_album_name,
+            "media_content_id": device.media_content_id,
+        }
+        await ais_gate.async_share_media_full_info(j_media_info)
 
         # 1. pause internal player
-        hass.services.call(
+        await hass.services.async_call(
             "media_player",
             "media_pause",
             {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID},
         )
-
-        # 2. play on selected player
-        # TODO
-        # selected_player_state = hass.states.get(entity_id)
-        # selected_player_attr = selected_player_state.attributes
-        # if "device_ip" in selected_player_attr:
-        #     # full info to exo player
-        #     j_media_info = {
-        #         "media_title": attr.get("media_title", ""),
-        #         "media_source": attr.get("source", ""),
-        #         "media_stream_image": attr.get("media_stream_image", ""),
-        #         "media_album_name": attr.get("media_album_name", ""),
-        #         "media_content_id": attr.get("media_content_id", ""),
-        #         "setPlayerShuffle": attr.get("shuffle", ""),
-        #         "setMediaPosition": attr.get("media_position", ""),
-        #     }
-        #     hass.services.call(
-        #         "media_player",
-        #         "play_media",
-        #         {
-        #             "entity_id": entity_id,
-        #             "media_content_type": "music",
-        #             "media_content_id": json.dumps(j_media_info),
-        #         },
-        #     )
-        # else:
-        hass.services.call(
+        # 2. redirect media to player
+        await hass.services.async_call(
             "media_player",
             "play_media",
             {
@@ -317,16 +119,34 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             },
         )
 
+    async def async_redirect_camera_stream(service):
+        if "camera_entity_id" not in service.data:
+            return
+        if "player_entity_id" not in service.data:
+            return
+        camera_entity_id = service.data["camera_entity_id"]
+        camera_component = hass.data.get("camera")
+        camera = camera_component.get_entity(camera_entity_id)
+        stream_source = await camera.stream_source()
+
+        player_entity_id = service.data["player_entity_id"]
+        player_state = hass.states.get(player_entity_id)
+        player_attr = player_state.attributes
+        speaker_ws_url = player_attr.get("ais_ws_url")
+
+        await ais_gate.async_redirect_camera_stream(
+            speaker_ws_url, stream_source, camera_entity_id
+        )
+
     def play_text_or_url(service):
         # text
         text = service.data["text"].strip()
-        # TODO parse url better
-        if text.startswith("http"):
+        if text.lower().startswith(("http:", "https:", "rtsp:", "mms:")):
             hass.services.call(
                 "media_player",
                 "play_media",
                 {
-                    "entity_id": "",
+                    "entity_id": "media_player.wbudowany_glosnik",
                     "media_content_type": "music",
                     "media_content_id": text,
                 },
@@ -335,28 +155,22 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             # nothing special here - just say (grouping is done in say_it service)
             hass.services.call("ais_ai_service", "say_it", {"text": text})
 
-    if discovery_info is not None:
-        name = discovery_info.get(CONF_NAME)
-        _ip = discovery_info.get(CONF_IP_ADDRESS)
-        _unique_id = discovery_info.get("unique_id")
-    else:
-        name = config.get(CONF_NAME)
-        _ip = config.get(CONF_IP_ADDRESS)
-        _unique_id = config.get("unique_id")
-        hass.services.async_register("ais_exo_player", "join", join)
-        hass.services.async_register("ais_exo_player", "unjoin", unjoin)
-        hass.services.async_register(
-            "ais_exo_player", "update_attributes", update_attributes
-        )
-        hass.services.async_register(
-            "ais_exo_player", "player_status_ask", player_status_ask
-        )
-        hass.services.async_register("ais_exo_player", "redirect_media", redirect_media)
-        hass.services.async_register(
-            "ais_exo_player", "play_text_or_url", play_text_or_url
-        )
+    hass.services.async_register(
+        "ais_exo_player", "redirect_media", async_redirect_media
+    )
+    hass.services.async_register("ais_exo_player", "play_text_or_url", play_text_or_url)
+    hass.services.async_register(
+        "ais_exo_player", "redirect_camera_stream", async_redirect_camera_stream
+    )
 
-    device = ExoPlayerDevice(_ip, _unique_id, name)
+    name = config.get(CONF_NAME)
+    _ip = config.get(CONF_IP_ADDRESS)
+    _unique_id = config.get("unique_id")
+
+    web_session = aiohttp_client.async_get_clientsession(hass)
+    ais_gate = AisWebService(web_session, _ip)
+
+    device = ExoPlayerDevice(_ip, _unique_id, name, ais_gate)
     _LOGGER.info("device: " + str(device))
     async_add_devices([device], True)
 
@@ -365,8 +179,10 @@ class ExoPlayerDevice(MediaPlayerEntity):
     """Representation of a ExoPlayer ."""
 
     # pylint: disable=no-member
-    def __init__(self, device_ip, unique_id, name):
+    def __init__(self, device_ip, unique_id, name, ais_gate_instance):
         """Initialize the ExoPlayer device."""
+
+        self._ais_gate = ais_gate_instance
         self._device_ip = device_ip
         self._unique_id = unique_id
         self._name = name
@@ -401,6 +217,9 @@ class ExoPlayerDevice(MediaPlayerEntity):
             self._is_master = True
         else:
             self._is_master = False
+
+    def set_repeat(self, repeat):
+        pass
 
     def turn_on(self):
         pass
@@ -544,10 +363,6 @@ class ExoPlayerDevice(MediaPlayerEntity):
         if self._playing is False:
             return STATE_PAUSED
         else:
-            # STATE_IDLE == 1
-            # STATE_BUFFERING == 2
-            # Player.STATE_READY == 3
-            # STATE_ENDED == 4
             if self._status == 1:
                 return STATE_IDLE
             if self._status == 2:
@@ -609,16 +424,8 @@ class ExoPlayerDevice(MediaPlayerEntity):
             "device_ip": self._device_ip,
             "unique_id": self._unique_id,
             "media_stream_image": self._stream_image,
+            "friendly_name": "Podłączony głośnik",
         }
-        """List members in group."""
-        attr[ATTR_AIS_GROUP] = ais_global.G_SPEAKERS_GROUP_LIST
-
-        if self._device_ip == "localhost":
-            attr["friendly_name"] = "Podłączony głośnik"
-        else:
-            attr["friendly_name"] = self._name
-        attr[ATTR_MASTER] = self._is_master
-
         return attr
 
     @property
@@ -697,7 +504,7 @@ class ExoPlayerDevice(MediaPlayerEntity):
             if "ALBUM_NAME" in j_info:
                 self._album_name = j_info["ALBUM_NAME"]
             else:
-                self._album_name = 0
+                self._album_name = ""
             if "DURATION" in j_info:
                 self._duration = j_info["DURATION"]
 
@@ -874,6 +681,17 @@ class ExoPlayerDevice(MediaPlayerEntity):
             _publish_command_to_frame(
                 self.hass, self._device_ip, "playAudio", media_content_id
             )
+
+        # 0. push media info to ais to share with mobile clients
+        j_media_info = {
+            "media_title": self._media_title,
+            "media_source": self._media_source,
+            "media_stream_image": self._stream_image,
+            "media_album_name": self._album_name,
+            "media_content_id": self._media_content_id,
+            "gate_id": ais_global.get_sercure_android_id_dom(),
+        }
+        self._ais_gate.share_media_full_info(j_media_info)
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""

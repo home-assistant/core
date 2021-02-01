@@ -54,7 +54,7 @@ def create_device_traits(event_trait):
     }
 
 
-def create_event(event_type, device_id=DEVICE_ID):
+def create_event(event_type, device_id=DEVICE_ID, timestamp=None):
     """Create an EventMessage for a single event type."""
     events = {
         event_type: {
@@ -65,12 +65,14 @@ def create_event(event_type, device_id=DEVICE_ID):
     return create_events(events=events, device_id=device_id)
 
 
-def create_events(events, device_id=DEVICE_ID):
+def create_events(events, device_id=DEVICE_ID, timestamp=None):
     """Create an EventMessage for events."""
+    if not timestamp:
+        timestamp = utcnow()
     return EventMessage(
         {
             "eventId": "some-event-id",
-            "timestamp": utcnow().isoformat(timespec="seconds"),
+            "timestamp": timestamp.isoformat(timespec="seconds"),
             "resourceUpdate": {
                 "name": device_id,
                 "events": events,
@@ -102,15 +104,18 @@ async def test_doorbell_chime_event(hass):
     assert device.model == "Doorbell"
     assert device.identifiers == {("nest", DEVICE_ID)}
 
+    timestamp = utcnow()
     await subscriber.async_receive_event(
-        create_event("sdm.devices.events.DoorbellChime.Chime")
+        create_event("sdm.devices.events.DoorbellChime.Chime", timestamp=timestamp)
     )
     await hass.async_block_till_done()
 
+    event_time = timestamp.replace(microsecond=0)
     assert len(events) == 1
     assert events[0].data == {
         "device_id": entry.device_id,
         "type": "doorbell_chime",
+        "timestamp": event_time,
     }
 
 
@@ -126,15 +131,18 @@ async def test_camera_motion_event(hass):
     entry = registry.async_get("camera.front")
     assert entry is not None
 
+    timestamp = utcnow()
     await subscriber.async_receive_event(
-        create_event("sdm.devices.events.CameraMotion.Motion")
+        create_event("sdm.devices.events.CameraMotion.Motion", timestamp=timestamp)
     )
     await hass.async_block_till_done()
 
+    event_time = timestamp.replace(microsecond=0)
     assert len(events) == 1
     assert events[0].data == {
         "device_id": entry.device_id,
         "type": "camera_motion",
+        "timestamp": event_time,
     }
 
 
@@ -150,15 +158,18 @@ async def test_camera_sound_event(hass):
     entry = registry.async_get("camera.front")
     assert entry is not None
 
+    timestamp = utcnow()
     await subscriber.async_receive_event(
-        create_event("sdm.devices.events.CameraSound.Sound")
+        create_event("sdm.devices.events.CameraSound.Sound", timestamp=timestamp)
     )
     await hass.async_block_till_done()
 
+    event_time = timestamp.replace(microsecond=0)
     assert len(events) == 1
     assert events[0].data == {
         "device_id": entry.device_id,
         "type": "camera_sound",
+        "timestamp": event_time,
     }
 
 
@@ -174,15 +185,18 @@ async def test_camera_person_event(hass):
     entry = registry.async_get("camera.front")
     assert entry is not None
 
+    timestamp = utcnow()
     await subscriber.async_receive_event(
-        create_event("sdm.devices.events.CameraPerson.Person")
+        create_event("sdm.devices.events.CameraPerson.Person", timestamp=timestamp)
     )
     await hass.async_block_till_done()
 
+    event_time = timestamp.replace(microsecond=0)
     assert len(events) == 1
     assert events[0].data == {
         "device_id": entry.device_id,
         "type": "camera_person",
+        "timestamp": event_time,
     }
 
 
@@ -209,17 +223,21 @@ async def test_camera_multiple_event(hass):
         },
     }
 
-    await subscriber.async_receive_event(create_events(event_map))
+    timestamp = utcnow()
+    await subscriber.async_receive_event(create_events(event_map, timestamp=timestamp))
     await hass.async_block_till_done()
 
+    event_time = timestamp.replace(microsecond=0)
     assert len(events) == 2
     assert events[0].data == {
         "device_id": entry.device_id,
         "type": "camera_motion",
+        "timestamp": event_time,
     }
     assert events[1].data == {
         "device_id": entry.device_id,
         "type": "camera_person",
+        "timestamp": event_time,
     }
 
 

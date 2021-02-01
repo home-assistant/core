@@ -12,5 +12,10 @@
                 "title": "Izberite na\u010din preverjanja pristnosti"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Kon\u010dna to\u010dka Spotify API je dosegljiva"
+        }
     }
 }

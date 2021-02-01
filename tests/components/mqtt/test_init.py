@@ -781,6 +781,18 @@ async def test_custom_birth_message(hass, mqtt_client_mock, mqtt_mock):
         mqtt_client_mock.publish.assert_called_with("birth", "birth", 0, False)
 
 
+@pytest.mark.parametrize(
+    "mqtt_config",
+    [
+        {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_BIRTH_MESSAGE: {
+                mqtt.ATTR_TOPIC: "homeassistant/status",
+                mqtt.ATTR_PAYLOAD: "online",
+            },
+        }
+    ],
+)
 async def test_default_birth_message(hass, mqtt_client_mock, mqtt_mock):
     """Test sending birth message."""
     birth = asyncio.Event()

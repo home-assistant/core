@@ -31,5 +31,11 @@
                 "title": "Opcje AccuWeather"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Dost\u0119p do serwera AccuWeather",
+            "remaining_requests": "Pozosta\u0142o dozwolonych \u017c\u0105da\u0144"
+        }
     }
 }

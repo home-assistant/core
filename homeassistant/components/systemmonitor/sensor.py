@@ -268,7 +268,7 @@ class SystemMonitorSensor(Entity):
                         return
                 except psutil.NoSuchProcess as err:
                     _LOGGER.warning(
-                        "Failed to load process with id: %s, old name: %s",
+                        "Failed to load process with ID: %s, old name: %s",
                         err.pid,
                         err.name,
                     )

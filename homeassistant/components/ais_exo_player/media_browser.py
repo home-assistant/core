@@ -326,7 +326,6 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
             can_expand=True,
             can_play=False,
             children=ais_authors,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/book-music.svg",
         )
         return root
     elif media_content_id.count("/") == 1:
@@ -362,7 +361,6 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
             can_expand=True,
             can_play=False,
             children=ais_books,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/book-music.svg",
         )
         return root
     else:
@@ -400,7 +398,6 @@ async def ais_audio_books_library(hass, media_content_id) -> BrowseMedia:
                     can_expand=True,
                     can_play=False,
                     children=ais_book_chapters,
-                    thumbnail="http://www.ai-speaker.com/images/media-browser/book-music.svg",
                 )
                 return root
 
@@ -471,7 +468,6 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
             can_expand=True,
             can_play=False,
             children=ais_podcast_types,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/podcast.svg",
         )
         return root
     elif media_content_id.count("/") == 1:
@@ -505,7 +501,6 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
             can_expand=True,
             can_play=False,
             children=ais_radio_stations,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/podcast.svg",
         )
         return root
     else:
@@ -544,7 +539,6 @@ async def ais_podcast_library(hass, media_content_id) -> BrowseMedia:
                     media_content_type=MEDIA_TYPE_CHANNELS,
                     can_expand=True,
                     can_play=False,
-                    thumbnail="http://www.ai-speaker.com/images/media-browser/podcast.svg",
                     children=ais_podcast_episodes,
                 )
                 return root
@@ -611,7 +605,6 @@ def ais_radio_library(hass, media_content_id) -> BrowseMedia:
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/radio.svg",
             children=ais_radio_types,
         )
         return root
@@ -641,7 +634,6 @@ def ais_radio_library(hass, media_content_id) -> BrowseMedia:
             media_content_type=MEDIA_TYPE_APP,
             can_expand=True,
             can_play=False,
-            thumbnail="http://www.ai-speaker.com/images/media-browser/radio.svg",
             children=ais_radio_stations,
         )
         return root
@@ -688,7 +680,6 @@ def ais_bookmarks_library(hass) -> BrowseMedia:
         media_content_type=MEDIA_TYPE_APP,
         can_expand=True,
         can_play=False,
-        thumbnail="http://www.ai-speaker.com/images/media-browser/bookmarks.svg",
         children=ais_bookmarks,
     )
 
@@ -731,7 +722,6 @@ def ais_favorites_library(hass) -> BrowseMedia:
         media_content_type=MEDIA_TYPE_APP,
         can_expand=True,
         can_play=False,
-        thumbnail="http://www.ai-speaker.com/images/media-browser/heart.svg",
         children=ais_favorites,
     )
 
@@ -1050,7 +1040,6 @@ async def ais_tunein_library(hass, media_content_id) -> BrowseMedia:
                     can_expand=True,
                     can_play=False,
                     children=tunein_types,
-                    # thumbnail="http://www.ai-speaker.com/images/media-browser/tunein.svg",
                 )
                 return root
 
@@ -1140,7 +1129,6 @@ async def ais_tunein_library(hass, media_content_id) -> BrowseMedia:
                     can_expand=True,
                     can_play=False,
                     children=tunein_items,
-                    # thumbnail="http://www.ai-speaker.com/images/media-browser/tunein.svg",
                 )
                 return root
 

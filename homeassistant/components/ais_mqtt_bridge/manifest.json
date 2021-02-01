@@ -1,0 +1,9 @@
+{
+  "domain": "ais_mqtt_bridge",
+  "name": "AIS MQTT BRIDGE",
+  "documentation": "https://ai-speaker.com",
+  "config_flow": true,
+  "requirements": ["paho-mqtt>=1.5.1"],
+  "after_dependencies": ["mqtt"],
+  "codeowners": ["@asystentka-jolka"]
+}

@@ -26,7 +26,6 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_IP_ADDRESS,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_TOGGLE,
@@ -2214,55 +2213,10 @@ async def async_process_json_from_frame(hass, json_req):
     else:
         hot_word_on = False
     if topic == "ais/player_auto_discovery":
-        # parse the json storing the result on the response object
-        model = payload["Model"]
-        manufacturer = payload["Manufacturer"]
-        ip = payload["IPAddressIPv4"]
-        # add the device to the speakers lists
-        hass.async_add_job(
-            hass.services.async_call(
-                "ais_cloud",
-                "get_players",
-                {
-                    "device_name": model + " " + manufacturer,
-                    CONF_IP_ADDRESS: ip,
-                    "ais_gate_client_id": ais_gate_client_id,
-                },
-            )
-        )
-    elif topic == "ais/player_status":
-        # try to get current volume
-        try:
-            ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL = (
-                payload.get("currentVolume", 0) / 100
-            )
-        except Exception:
-            _LOGGER.info(
-                "ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL: "
-                + str(ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL)
-            )
-        # find the correct player
-        for entity in hass.states.async_all():
-            if entity.entity_id.startswith("media_player."):
-                if "unique_id" in entity.attributes:
-                    if ais_gate_client_id == entity.attributes["unique_id"]:
-                        json_string = json.dumps(payload)
-                        hass.async_run_job(
-                            hass.services.async_call(
-                                "media_player",
-                                "play_media",
-                                {
-                                    "entity_id": entity.entity_id,
-                                    "media_content_type": "exo_info",
-                                    "media_content_id": json_string,
-                                },
-                            )
-                        )
-    elif topic == "ais/player_status_ask":
-        hass.async_add_job(
-            hass.services.async_call("ais_exo_player", "player_status_ask")
-        )
-    elif topic == "ais/speech_command":
+        # AppDiscoveryMode on mobile is ON
+        # TODO discovery AI Speaker
+        pass
+    if topic == "ais/speech_command":
         try:
             # TODO add info if the intent is media player type - to publish
             intent_resp = await _async_process(
@@ -2302,15 +2256,13 @@ async def async_process_json_from_frame(hass, json_req):
             )
         )
 
-        res = {
-            CONF_WEBHOOK_ID: payload[CONF_WEBHOOK_ID],
-        }
+        res = {CONF_WEBHOOK_ID: payload[CONF_WEBHOOK_ID]}
 
     elif topic == "ais/event":
         # tag_scanned event
         hass.bus.async_fire(payload["event_type"], payload["event_data"])
 
-    # add player satus for some topics
+    # add player staus for some topics
     if topic in ("ais/player_status", "ais/player_auto_discovery", "ais/media_player"):
         attributes = hass.states.get("media_player.wbudowany_glosnik").attributes
         j_media_info = {
@@ -2320,6 +2272,7 @@ async def async_process_json_from_frame(hass, json_req):
             "media_album_name": attributes.get("media_album_name", ""),
         }
         res["player_status"] = j_media_info
+    res["gate_id"] = ais_global.get_sercure_android_id_dom()
     return json_response(res)
 
 
@@ -2419,32 +2372,69 @@ async def async_setup(hass, config):
     async def set_context(service):
         """Set the context in app."""
         context = service.data[ATTR_TEXT]
-        for idx, menu in enumerate(GROUP_ENTITIES, start=0):
-            context_key_words = menu["context_key_words"]
-            if context_key_words is not None:
-                context_key_words = context_key_words.split(",")
-                if context in context_key_words:
-                    set_curr_group(hass, menu)
-                    set_curr_entity(hass, None)
-                    if context == "spotify":
-                        await hass.services.async_call(
-                            "input_select",
-                            "select_option",
-                            {
-                                "entity_id": "input_select.ais_music_service",
-                                "option": "Spotify",
-                            },
-                        )
-                    elif context == "youtube":
-                        await hass.services.async_call(
-                            "input_select",
-                            "select_option",
-                            {
-                                "entity_id": "input_select.ais_music_service",
-                                "option": "YouTube",
-                            },
-                        )
-                    break
+        if context == "ais_tv":
+            hass.states.async_set("sensor.ais_player_mode", "ais_tv")
+        elif context == "ais_tv_on":
+            hass.states.async_set("sensor.ais_tv_mode", "tv_on")
+            hass.states.async_set("sensor.ais_tv_activity", "")
+            _say_it(hass, "Sterowanie na monitorze")
+            await _publish_command_to_frame(hass, "goToActivity", "ActivityMenu")
+        elif context == "ais_tv_off":
+            hass.states.async_set("sensor.ais_tv_mode", "tv_off")
+            hass.states.async_set("sensor.ais_tv_activity", "")
+            _say_it(hass, "Sterowanie bez monitora")
+            await _publish_command_to_frame(
+                hass, "goToActivity", "SplashScreenActivity"
+            )
+        elif context == "ais_tv_youtube":
+            hass.states.async_set("sensor.ais_tv_activity", "youtube")
+            _say_it(hass, "Odtwarzacz wideo")
+            await _publish_command_to_frame(hass, "goToActivity", "ExoPlayerActivity")
+        elif context == "ais_tv_spotify":
+            hass.states.async_set("sensor.ais_tv_activity", "spotify")
+            _say_it(hass, "Odtwarzacz Spotify")
+            await _publish_command_to_frame(hass, "goToActivity", "SpotifyActivity")
+        elif context == "ais_tv_cameras":
+            hass.states.async_set("sensor.ais_tv_activity", "camera")
+            _say_it(hass, "Podgląd z kamery")
+        elif context == "ais_tv_show_camera":
+            hass.states.async_set("sensor.ais_tv_activity", "camera")
+            cam_id = service.data["entity_id"]
+            cam_attr = hass.states.get(cam_id).attributes
+            cam_name = cam_attr.get("friendly_name", "")
+            _say_it(hass, "Podgląd z kamery " + cam_name)
+            await _publish_command_to_frame(hass, "showCamera", cam_id)
+        elif context == "ais_tv_settings":
+            hass.states.async_set("sensor.ais_tv_activity", "settings")
+            _say_it(hass, "Ustawienia aplikacji")
+            await _publish_command_to_frame(hass, "goToActivity", "SettingsActivity")
+        else:
+            for idx, menu in enumerate(GROUP_ENTITIES, start=0):
+                context_key_words = menu["context_key_words"]
+                if context_key_words is not None:
+                    context_key_words = context_key_words.split(",")
+                    if context in context_key_words:
+                        set_curr_group(hass, menu)
+                        set_curr_entity(hass, None)
+                        if context == "spotify":
+                            await hass.services.async_call(
+                                "input_select",
+                                "select_option",
+                                {
+                                    "entity_id": "input_select.ais_music_service",
+                                    "option": "Spotify",
+                                },
+                            )
+                        elif context == "youtube":
+                            await hass.services.async_call(
+                                "input_select",
+                                "select_option",
+                                {
+                                    "entity_id": "input_select.ais_music_service",
+                                    "option": "YouTube",
+                                },
+                            )
+                        break
 
     async def check_local_ip(service):
         """Set the local ip in app."""
@@ -3100,8 +3090,10 @@ async def async_setup(hass, config):
     return True
 
 
-async def _publish_command_to_frame(hass, key, val, ip):
+async def _publish_command_to_frame(hass, key, val, ip=None):
     # sent the command to the android frame via http
+    if ip is None:
+        ip = "localhost"
     url = ais_global.G_HTTP_REST_SERVICE_BASE_URL.format(ip)
 
     if key == "WifiConnectToSid":
@@ -3176,6 +3168,11 @@ async def _publish_command_to_frame(hass, key, val, ip):
             "IotName": name,
             "bsssid": bssid,
         }
+    elif key == "showCamera":
+        component = hass.data.get("camera")
+        camera = component.get_entity(val)
+        stream_source = await camera.stream_source()
+        requests_json = {"showCamera": {"streamUrl": stream_source, "haCamId": val}}
     else:
         requests_json = {key: val, "ip": ip}
     try:
@@ -3578,25 +3575,6 @@ def _post_message(
         )
     except Exception as e:
         pass
-    # do the same for speakers in the group
-    for s in ais_global.G_SPEAKERS_GROUP_LIST:
-        if s != "media_player.wbudowany_glosnik":
-            attr = hass.states.get(s).attributes
-            if "unique_id" in attr and attr["unique_id"] not in (
-                str(exclude_say_it),
-                "1111111111111111111",
-            ):
-                try:
-                    requests.post(
-                        ais_global.G_HTTP_REST_SERVICE_BASE_URL.format(
-                            attr["device_ip"]
-                        )
-                        + "/text_to_speech",
-                        json=j_data,
-                        timeout=1,
-                    )
-                except Exception:
-                    pass
 
 
 def _beep_it(hass, tone):
@@ -3718,11 +3696,7 @@ def _process_code(hass, data):
     CURR_BUTTON_CODE = code
     # show the code in web app
     hass.states.set("binary_sensor.ais_remote_button", code)
-    event_data = {
-        "action": action,
-        "code": code,
-        "long": CURR_BUTTON_LONG_PRESS,
-    }
+    event_data = {"action": action, "code": code, "long": CURR_BUTTON_LONG_PRESS}
     hass.bus.fire("ais_key_event", event_data)
 
     # remove selected action
@@ -4162,9 +4136,7 @@ class ToggleIntent(intent.IntentHandler):
                 success = True
             else:
                 await hass.services.async_call(
-                    entity.domain,
-                    SERVICE_TOGGLE,
-                    {ATTR_ENTITY_ID: entity.entity_id},
+                    entity.domain, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity.entity_id}
                 )
                 msg = f"OK, przełączono {entity.name}"
                 success = True

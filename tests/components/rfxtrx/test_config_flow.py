@@ -29,7 +29,7 @@ def serial_connect_fail(self):
 
 def com_port():
     """Mock of a serial port."""
-    port = serial.tools.list_ports_common.ListPortInfo()
+    port = serial.tools.list_ports_common.ListPortInfo("/dev/ttyUSB1234")
     port.serial_number = "1234"
     port.manufacturer = "Virtual serial port"
     port.device = "/dev/ttyUSB1234"

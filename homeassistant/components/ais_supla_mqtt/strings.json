@@ -1,0 +1,18 @@
+{   "title": "AIS SUPLA MQTT",
+    "config": {
+        "step": {
+            "oauth": {
+                "description": "Access to SUPLA MQTT requires authorization in SUPLA Cloud.\n\n ###### ![AIS logo](https://ai-speaker.com/images/brands/ais_supla_mqtt/mqtt_broker_ais_supla.png?v=2) \n\n Click the **SUBMIT** below to start the authorization process",
+                "title": "Authentication the access in SUPLA Cloud"
+            }
+        },
+        "error": {
+          "oauth_error": "Invalid oAuth data",
+          "token_error": "Invalid code"
+        },
+        "abort": {
+            "abort_by_error": "Discontinued due to an error:\n\n {error_info}",
+            "single_instance_allowed": "You already have the integration to SUPLA MQTT set up.\n\n If you want to reconfigure, remove the current integration first."
+        }
+    }
+}
