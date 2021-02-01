@@ -59,6 +59,7 @@ def verify_version(value: str):
         AwesomeVersionStrategy.SEMVER,
         AwesomeVersionStrategy.SIMPLEVER,
         AwesomeVersionStrategy.BUILDVER,
+        AwesomeVersionStrategy.PEP440,
     ]:
         raise vol.Invalid(
             f"'{version}' is not a valid version. This will cause a future version of Home Assistant to block this integration.",
