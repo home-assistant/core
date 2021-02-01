@@ -10,7 +10,7 @@ from typing import Any, Awaitable, Callable, Coroutine, TypeVar
 
 _LOGGER = logging.getLogger(__name__)
 
-_SHUTDOWN_RUN_CALLBACK_THREADSAFE = "_shutdown"
+_SHUTDOWN_RUN_CALLBACK_THREADSAFE = "_shutdown_run_callback_threadsafe"
 
 T = TypeVar("T")
 
@@ -61,7 +61,7 @@ def run_callback_threadsafe(
 
     loop.call_soon_threadsafe(run_callback)
 
-    if hasattr(run_callback_threadsafe, _SHUTDOWN_RUN_CALLBACK_THREADSAFE):
+    if hasattr(loop, _SHUTDOWN_RUN_CALLBACK_THREADSAFE):
         #
         # If the final `HomeAssistant.async_block_till_done` in
         # `HomeAssistant.async_stop` has already been called, the callback
@@ -166,7 +166,7 @@ async def gather_with_concurrency(
     )
 
 
-def shutdown_run_callback_threadsafe() -> None:
+def shutdown_run_callback_threadsafe(loop: AbstractEventLoop) -> None:
     """Call when run_callback_threadsafe should prevent creating new futures.
 
     We must finish all callbacks before the executor is shutdown
@@ -180,4 +180,4 @@ def shutdown_run_callback_threadsafe() -> None:
     be called when Home Assistant is going to shutdown and
     python is going to exit.
     """
-    setattr(run_callback_threadsafe, _SHUTDOWN_RUN_CALLBACK_THREADSAFE, True)
+    setattr(loop, _SHUTDOWN_RUN_CALLBACK_THREADSAFE, True)

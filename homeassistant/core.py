@@ -554,10 +554,11 @@ class HomeAssistant:
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
 
         # Prevent run_callback_threadsafe from scheduling any additional
-        # callbacks in the event loop since they will block forever after
-        # the final `self.async_block_till_done` is called which will result
-        # in a deadlock when shutting down the executor.
-        shutdown_run_callback_threadsafe()
+        # callbacks in the event loop as callbacks created on the futures
+        # it returns will never run after the final `self.async_block_till_done`
+        # which will cause the futures to block forever when waiting for
+        # the `result()` which will cause a deadlock when shutting down the executor.
+        shutdown_run_callback_threadsafe(self.loop)
 
         try:
             async with self.timeout.async_timeout(30):
