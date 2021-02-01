@@ -128,6 +128,8 @@ class ZWaveBaseEntity(Entity):
         return_value = None
         if command_class is None:
             command_class = self.info.primary_value.command_class
+        if endpoint is None:
+            endpoint = self.info.primary_value.endpoint
 
         # Build partial event data dictionary so we can change the endpoint later
         partial_evt_data = {
@@ -138,18 +140,13 @@ class ZWaveBaseEntity(Entity):
 
         # lookup value by value_id
         value_id = get_value_id(
-            self.info.node,
-            {
-                **partial_evt_data,
-                "endpoint": endpoint or self.info.primary_value.endpoint,
-            },
+            self.info.node, {**partial_evt_data, "endpoint": endpoint}
         )
         return_value = self.info.node.values.get(value_id)
 
-        # If we haven't found a value, the endpoint was not provided, and we want to
-        # search for the value on additional endpoints, return the next value that
-        # can be found, if any
-        if return_value == endpoint is None and check_all_endpoints:
+        # If we haven't found a value and check_all_endpoints is True, we should
+        # return the first value we can find on any other endpoint
+        if return_value is None and check_all_endpoints:
             for endpoint_ in self.info.node.endpoints:
                 if endpoint_.index != self.info.primary_value.endpoint:
                     value_id = get_value_id(
