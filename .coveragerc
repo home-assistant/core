@@ -702,7 +702,11 @@ omit =
     homeassistant/components/ping/device_tracker.py
     homeassistant/components/pioneer/media_player.py
     homeassistant/components/pjlink/media_player.py
-    homeassistant/components/plaato/*
+    homeassistant/components/plaato/__init__.py
+    homeassistant/components/plaato/binary_sensor.py
+    homeassistant/components/plaato/const.py
+    homeassistant/components/plaato/entity.py
+    homeassistant/components/plaato/sensor.py
     homeassistant/components/plex/media_player.py
     homeassistant/components/plum_lightpad/light.py
     homeassistant/components/pocketcasts/sensor.py
