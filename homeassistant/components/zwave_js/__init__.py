@@ -29,6 +29,7 @@ from .const import (
     ATTR_HOME_ID,
     ATTR_LABEL,
     ATTR_NODE_ID,
+    ATTR_TYPE,
     ATTR_VALUE,
     CONF_INTEGRATION_CREATED_ADDON,
     DATA_CLIENT,
@@ -117,7 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # add listener for stateless node events (value notification)
         node.on(
             "value notification",
-            lambda event: async_on_value_notification(event["notification"]),
+            lambda event: async_on_value_notification(event["value_notification"]),
         )
 
     @callback
@@ -151,12 +152,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def async_on_value_notification(notification: ValueNotification) -> None:
         """Relay stateless value notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
-        value = notification.value or notification.data.get("newValue")
+        value = notification.value
         if notification.metadata.states:
             value = notification.metadata.states.get(str(value), value)
         hass.bus.async_fire(
             ZWAVE_JS_EVENT,
             {
+                ATTR_TYPE: "value_notification",
                 CONF_DOMAIN: DOMAIN,
                 ATTR_NODE_ID: notification.node.node_id,
                 ATTR_HOME_ID: client.driver.controller.home_id,
