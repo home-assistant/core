@@ -1,9 +1,6 @@
 # Home Assistant Core, full dependency set
 -r requirements.txt
 
-# homeassistant.components.nuimo_controller
-# --only-binary=all nuimo==0.1.0
-
 # homeassistant.components.dht
 # Adafruit-DHT==1.4.0
 
@@ -2381,4 +2378,4 @@ zigpy==0.32.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.14.2
+zwave-js-server-python==0.15.0
