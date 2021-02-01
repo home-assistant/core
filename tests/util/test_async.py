@@ -172,10 +172,7 @@ async def test_gather_with_concurrency():
 
 
 async def test_shutdown_run_callback_threadsafe(hass):
-    """Test we can shutdown run_callback_threadsafe.
-
-    This test modifys global state because it
-    """
+    """Test we can shutdown run_callback_threadsafe."""
     hasync.shutdown_run_callback_threadsafe(hass.loop)
     callback = MagicMock()
 
