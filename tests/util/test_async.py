@@ -50,7 +50,8 @@ def test_fire_coroutine_threadsafe_from_inside_event_loop(
 def test_run_callback_threadsafe_from_inside_event_loop(mock_ident, _):
     """Testing calling run_callback_threadsafe from inside an event loop."""
     callback = MagicMock()
-    loop = MagicMock()
+
+    loop = Mock(spec=["call_soon_threadsafe"])
 
     loop._thread_ident = None
     mock_ident.return_value = 5
@@ -170,29 +171,27 @@ async def test_gather_with_concurrency():
     assert results == [2, 2, -1, -1]
 
 
-async def test_shutdown_run_callback_threadsafe():
+async def test_shutdown_run_callback_threadsafe(hass):
     """Test we can shutdown run_callback_threadsafe.
 
     This test modifys global state because it
     """
-    hasync.shutdown_run_callback_threadsafe()
+    hasync.shutdown_run_callback_threadsafe(hass.loop)
     callback = MagicMock()
-    loop = MagicMock()
 
     with pytest.raises(RuntimeError):
-        hasync.run_callback_threadsafe(loop, callback)
+        hasync.run_callback_threadsafe(hass.loop, callback)
 
 
 async def test_run_callback_threadsafe(hass):
     """Test run_callback_threadsafe runs code in the event loop."""
-    loop = asyncio.get_running_loop()
     it_ran = False
 
     def callback():
         nonlocal it_ran
         it_ran = True
 
-    assert hasync.run_callback_threadsafe(loop, callback)
+    assert hasync.run_callback_threadsafe(hass.loop, callback)
     assert it_ran is False
 
     # Verify that async_block_till_done will flush
