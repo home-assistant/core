@@ -55,7 +55,7 @@ BOOST_HOT_WATER_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass, config):
-    """Set up the Hive Component."""
+    """Set up the Hive Integration."""
     hass.data[DOMAIN] = {}
 
     if DOMAIN not in config:
