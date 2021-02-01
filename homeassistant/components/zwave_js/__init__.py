@@ -1,11 +1,11 @@
 """The Z-Wave JS integration."""
 import asyncio
 import logging
-from typing import Tuple
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.node import Node as ZwaveNode
+from zwave_js_server.model.value import ValueNotification
 
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.config_entries import ConfigEntry
@@ -18,14 +18,28 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .api import async_register_api
 from .const import (
+    ATTR_COMMAND_CLASS,
+    ATTR_COMMAND_CLASS_NAME,
+    ATTR_DEVICE_ID,
+    ATTR_DOMAIN,
+    ATTR_ENDPOINT,
+    ATTR_HOME_ID,
+    ATTR_LABEL,
+    ATTR_NODE_ID,
+    ATTR_PROPERTY_KEY_NAME,
+    ATTR_PROPERTY_NAME,
+    ATTR_TYPE,
+    ATTR_VALUE,
     CONF_INTEGRATION_CREATED_ADDON,
     DATA_CLIENT,
     DATA_UNSUBSCRIBE,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     PLATFORMS,
+    ZWAVE_JS_EVENT,
 )
 from .discovery import async_discover_values
+from .entity import get_device_id
 
 LOGGER = logging.getLogger(__name__)
 CONNECT_TIMEOUT = 10
@@ -35,12 +49,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Z-Wave JS component."""
     hass.data[DOMAIN] = {}
     return True
-
-
-@callback
-def get_device_id(client: ZwaveClient, node: ZwaveNode) -> Tuple[str, str]:
-    """Get device registry identifier for Z-Wave node."""
-    return (DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")
 
 
 @callback
@@ -106,6 +114,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async_dispatcher_send(
                 hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
             )
+        # add listener for stateless node events (value notification)
+        node.on(
+            "value notification",
+            lambda event: async_on_value_notification(event["value_notification"]),
+        )
 
     @callback
     def async_on_node_added(node: ZwaveNode) -> None:
@@ -133,6 +146,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device = dev_reg.async_get_device({dev_id})
         # note: removal of entity registry is handled by core
         dev_reg.async_remove_device(device.id)
+
+    @callback
+    def async_on_value_notification(notification: ValueNotification) -> None:
+        """Relay stateless value notification events from Z-Wave nodes to hass."""
+        device = dev_reg.async_get_device({get_device_id(client, notification.node)})
+        value = notification.value
+        if notification.metadata.states:
+            value = notification.metadata.states.get(str(value), value)
+        hass.bus.async_fire(
+            ZWAVE_JS_EVENT,
+            {
+                ATTR_TYPE: "value_notification",
+                ATTR_DOMAIN: DOMAIN,
+                ATTR_NODE_ID: notification.node.node_id,
+                ATTR_HOME_ID: client.driver.controller.home_id,
+                ATTR_ENDPOINT: notification.endpoint,
+                ATTR_DEVICE_ID: device.id,
+                ATTR_COMMAND_CLASS: notification.command_class,
+                ATTR_COMMAND_CLASS_NAME: notification.command_class_name,
+                ATTR_LABEL: notification.metadata.label,
+                ATTR_PROPERTY_NAME: notification.property_name,
+                ATTR_PROPERTY_KEY_NAME: notification.property_key_name,
+                ATTR_VALUE: value,
+            },
+        )
 
     async def handle_ha_shutdown(event: Event) -> None:
         """Handle HA shutdown."""
