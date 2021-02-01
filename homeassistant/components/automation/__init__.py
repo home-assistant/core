@@ -564,6 +564,18 @@ async def _async_process_config(
             else:
                 cond_func = None
 
+            # Add trigger variables to variables
+            variables = None
+            if CONF_TRIGGER_VARIABLES in config_block:
+                variables = ScriptVariables(
+                    dict(config_block[CONF_TRIGGER_VARIABLES].as_dict())
+                )
+            if CONF_VARIABLES in config_block:
+                if variables:
+                    variables.variables.update(config_block[CONF_VARIABLES].as_dict())
+                else:
+                    variables = config_block[CONF_VARIABLES]
+
             entity = AutomationEntity(
                 automation_id,
                 name,
@@ -571,7 +583,7 @@ async def _async_process_config(
                 cond_func,
                 action_script,
                 initial_state,
-                config_block.get(CONF_VARIABLES),
+                variables,
                 config_block.get(CONF_TRIGGER_VARIABLES),
             )
 
