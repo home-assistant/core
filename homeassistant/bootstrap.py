@@ -315,7 +315,11 @@ def async_enable_logging(
     )
     threading.excepthook = lambda args: logging.getLogger(None).exception(
         "Uncaught thread exception",
-        exc_info=(args.exc_type, args.exc_value, args.exc_traceback),  # type: ignore[arg-type]
+        exc_info=(
+            args.exc_type,
+            args.exc_value,
+            args.exc_traceback,
+        ),  # type: ignore[arg-type]
     )
 
     # AIS dom fix
