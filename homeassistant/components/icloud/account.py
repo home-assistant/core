@@ -162,7 +162,7 @@ class IcloudAccount:
         if self.api is None:
             return
 
-        if not self.api.is_trusted_session:
+        if not self.api.is_trusted_session or self.api.requires_2fa:
             self._require_reauth()
             return
 
