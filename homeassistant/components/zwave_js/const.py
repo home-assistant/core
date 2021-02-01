@@ -18,6 +18,7 @@ DATA_UNSUBSCRIBE = "unsubs"
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
 
+# constants for events
 ZWAVE_JS_EVENT = f"{DOMAIN}_event"
 ATTR_NODE_ID = "node_id"
 ATTR_HOME_ID = "home_id"
@@ -26,3 +27,4 @@ ATTR_LABEL = "label"
 ATTR_VALUE = "value"
 ATTR_COMMAND_CLASS = "command_class"
 ATTR_COMMAND_CLASS_NAME = "command_class_name"
+ATTR_TYPE = "type"
