@@ -168,7 +168,7 @@ async def setup_unifi_integration(
     controller.mock_wlans_responses = mock_wlans_responses
     controller.mock_requests = mock_requests
 
-    return controller
+    return config_entry
 
 
 async def test_controller_setup(hass):
@@ -177,7 +177,8 @@ async def test_controller_setup(hass):
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
         return_value=True,
     ) as forward_entry_setup:
-        controller = await setup_unifi_integration(hass)
+        config_entry = await setup_unifi_integration(hass)
+        controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     entry = controller.config_entry
     assert len(forward_entry_setup.mock_calls) == len(SUPPORTED_PLATFORMS)
@@ -210,7 +211,10 @@ async def test_controller_setup(hass):
 
 async def test_controller_mac(hass):
     """Test that it is possible to identify controller mac."""
-    controller = await setup_unifi_integration(hass, clients_response=[CONTROLLER_HOST])
+    config_entry = await setup_unifi_integration(
+        hass, clients_response=[CONTROLLER_HOST]
+    )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert controller.mac == CONTROLLER_HOST["mac"]
 
 
@@ -247,7 +251,8 @@ async def test_controller_unknown_error(hass):
 
 async def test_reset_after_successful_setup(hass):
     """Calling reset when the entry has been setup."""
-    controller = await setup_unifi_integration(hass)
+    config_entry = await setup_unifi_integration(hass)
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(controller.listeners) == 6
 
@@ -260,7 +265,8 @@ async def test_reset_after_successful_setup(hass):
 
 async def test_wireless_client_event_calls_update_wireless_devices(hass):
     """Call update_wireless_devices method when receiving wireless client event."""
-    controller = await setup_unifi_integration(hass)
+    config_entry = await setup_unifi_integration(hass)
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     with patch(
         "homeassistant.components.unifi.controller.UniFiController.update_wireless_clients",

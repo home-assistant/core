@@ -340,12 +340,12 @@ async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
 
 async def test_reauth_flow_update_configuration(hass, aioclient_mock):
     """Verify reauth flow can update controller configuration."""
-    controller = await setup_unifi_integration(hass)
+    config_entry = await setup_unifi_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": SOURCE_REAUTH},
-        data=controller.config_entry,
+        data=config_entry,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -381,14 +381,14 @@ async def test_reauth_flow_update_configuration(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
-    assert controller.host == "1.2.3.4"
-    assert controller.config_entry.data[CONF_CONTROLLER][CONF_USERNAME] == "new_name"
-    assert controller.config_entry.data[CONF_CONTROLLER][CONF_PASSWORD] == "new_pass"
+    assert config_entry.data[CONF_CONTROLLER][CONF_HOST] == "1.2.3.4"
+    assert config_entry.data[CONF_CONTROLLER][CONF_USERNAME] == "new_name"
+    assert config_entry.data[CONF_CONTROLLER][CONF_PASSWORD] == "new_pass"
 
 
 async def test_advanced_option_flow(hass):
     """Test advanced config flow options."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         clients_response=CLIENTS,
         devices_response=DEVICES,
@@ -398,7 +398,7 @@ async def test_advanced_option_flow(hass):
     )
 
     result = await hass.config_entries.options.async_init(
-        controller.config_entry.entry_id, context={"show_advanced_options": True}
+        config_entry.entry_id, context={"show_advanced_options": True}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -459,7 +459,7 @@ async def test_advanced_option_flow(hass):
 
 async def test_simple_option_flow(hass):
     """Test simple config flow options."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         clients_response=CLIENTS,
         wlans_response=WLANS,
@@ -468,7 +468,7 @@ async def test_simple_option_flow(hass):
     )
 
     result = await hass.config_entries.options.async_init(
-        controller.config_entry.entry_id, context={"show_advanced_options": False}
+        config_entry.entry_id, context={"show_advanced_options": False}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

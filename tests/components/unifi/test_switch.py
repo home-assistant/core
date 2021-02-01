@@ -295,7 +295,7 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_clients(hass):
     """Test the update_clients function when no clients are found."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         options={
             CONF_TRACK_CLIENTS: False,
@@ -303,6 +303,7 @@ async def test_no_clients(hass):
             CONF_DPI_RESTRICTIONS: False,
         },
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
@@ -310,12 +311,13 @@ async def test_no_clients(hass):
 
 async def test_controller_not_client(hass):
     """Test that the controller doesn't become a switch."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
         clients_response=[CONTROLLER_HOST],
         devices_response=[DEVICE_1],
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
@@ -327,13 +329,14 @@ async def test_not_admin(hass):
     """Test that switch platform only work on an admin account."""
     description = deepcopy(DESCRIPTION)
     description[0]["site_role"] = "not admin"
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
         site_description=description,
         clients_response=[CLIENT_1],
         devices_response=[DEVICE_1],
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
@@ -341,7 +344,7 @@ async def test_not_admin(hass):
 
 async def test_switches(hass):
     """Test the update_items function with some clients."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         options={
             CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]],
@@ -354,6 +357,7 @@ async def test_switches(hass):
         dpigroup_response=DPI_GROUPS,
         dpiapp_response=DPI_APPS,
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 4
@@ -430,12 +434,13 @@ async def test_switches(hass):
 
 async def test_remove_switches(hass):
     """Test the update_items function with some clients."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         options={CONF_BLOCK_CLIENT: [UNBLOCKED["mac"]]},
         clients_response=[CLIENT_1, UNBLOCKED],
         devices_response=[DEVICE_1],
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
 
     poe_switch = hass.states.get("switch.poe_client_1")
@@ -462,7 +467,7 @@ async def test_remove_switches(hass):
 
 async def test_block_switches(hass):
     """Test the update_items function with some clients."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         options={
             CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]],
@@ -472,6 +477,7 @@ async def test_block_switches(hass):
         clients_response=[UNBLOCKED],
         clients_all_response=[BLOCKED],
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
 
@@ -530,7 +536,7 @@ async def test_block_switches(hass):
 
 async def test_new_client_discovered_on_block_control(hass):
     """Test if 2nd update has a new client."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         options={
             CONF_BLOCK_CLIENT: [BLOCKED["mac"]],
@@ -539,6 +545,7 @@ async def test_new_client_discovered_on_block_control(hass):
             CONF_DPI_RESTRICTIONS: False,
         },
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
@@ -569,7 +576,7 @@ async def test_new_client_discovered_on_block_control(hass):
 
 async def test_option_block_clients(hass):
     """Test the changes to option reflects accordingly."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         options={CONF_BLOCK_CLIENT: [BLOCKED["mac"]]},
         clients_all_response=[BLOCKED, UNBLOCKED],
@@ -578,7 +585,7 @@ async def test_option_block_clients(hass):
 
     # Add a second switch
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]]},
     )
     await hass.async_block_till_done()
@@ -586,7 +593,7 @@ async def test_option_block_clients(hass):
 
     # Remove the second switch again
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_BLOCK_CLIENT: [BLOCKED["mac"]]},
     )
     await hass.async_block_till_done()
@@ -594,7 +601,7 @@ async def test_option_block_clients(hass):
 
     # Enable one and remove another one
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_BLOCK_CLIENT: [UNBLOCKED["mac"]]},
     )
     await hass.async_block_till_done()
@@ -602,7 +609,7 @@ async def test_option_block_clients(hass):
 
     # Remove one
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_BLOCK_CLIENT: []},
     )
     await hass.async_block_till_done()
@@ -611,7 +618,7 @@ async def test_option_block_clients(hass):
 
 async def test_option_remove_switches(hass):
     """Test removal of DPI switch when options updated."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         options={
             CONF_TRACK_CLIENTS: False,
@@ -626,7 +633,7 @@ async def test_option_remove_switches(hass):
 
     # Disable DPI Switches
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_DPI_RESTRICTIONS: False, CONF_POE_CLIENTS: False},
     )
     await hass.async_block_till_done()
@@ -635,12 +642,13 @@ async def test_option_remove_switches(hass):
 
 async def test_new_client_discovered_on_poe_control(hass):
     """Test if 2nd update has a new client."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
         clients_response=[CLIENT_1],
         devices_response=[DEVICE_1],
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
@@ -699,11 +707,12 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass):
     If there is a non-UniFi switch powered by POE,
     clients will be transparently marked as having POE as well.
     """
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         clients_response=POE_SWITCH_CLIENTS,
         devices_response=[DEVICE_1],
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
@@ -744,7 +753,7 @@ async def test_restoring_client(hass):
         config_entry=config_entry,
     )
 
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         options={
             CONF_BLOCK_CLIENT: ["random mac"],
@@ -755,6 +764,7 @@ async def test_restoring_client(hass):
         devices_response=[DEVICE_1],
         clients_all_response=[CLIENT_1],
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2

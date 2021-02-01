@@ -171,7 +171,8 @@ async def test_no_clients(hass):
 
 async def test_tracked_wireless_clients(hass):
     """Test the update_items function with some clients."""
-    controller = await setup_unifi_integration(hass, clients_response=[CLIENT_1])
+    config_entry = await setup_unifi_integration(hass, clients_response=[CLIENT_1])
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -229,12 +230,13 @@ async def test_tracked_clients(hass):
     client_4_copy = copy(CLIENT_4)
     client_4_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
 
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         options={CONF_SSID_FILTER: ["ssid"]},
         clients_response=[CLIENT_1, CLIENT_2, CLIENT_3, CLIENT_5, client_4_copy],
         known_wireless_clients=(CLIENT_4["mac"],),
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 4
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -271,10 +273,11 @@ async def test_tracked_clients(hass):
 
 async def test_tracked_devices(hass):
     """Test the update_items function with some devices."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         devices_response=[DEVICE_1, DEVICE_2],
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
 
     device_1 = hass.states.get("device_tracker.device_1")
@@ -340,9 +343,10 @@ async def test_tracked_devices(hass):
 
 async def test_remove_clients(hass):
     """Test the remove_items function with some clients."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass, clients_response=[CLIENT_1, CLIENT_2]
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -369,11 +373,12 @@ async def test_remove_clients(hass):
 
 async def test_controller_state_change(hass):
     """Verify entities state reflect on controller becoming unavailable."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         clients_response=[CLIENT_1],
         devices_response=[DEVICE_1],
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -407,7 +412,7 @@ async def test_controller_state_change(hass):
 
 async def test_option_track_clients(hass):
     """Test the tracking of clients can be turned off."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         clients_response=[CLIENT_1, CLIENT_2],
         devices_response=[DEVICE_1],
@@ -424,7 +429,7 @@ async def test_option_track_clients(hass):
     assert device_1 is not None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_TRACK_CLIENTS: False},
     )
     await hass.async_block_till_done()
@@ -439,7 +444,7 @@ async def test_option_track_clients(hass):
     assert device_1 is not None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_TRACK_CLIENTS: True},
     )
     await hass.async_block_till_done()
@@ -456,7 +461,7 @@ async def test_option_track_clients(hass):
 
 async def test_option_track_wired_clients(hass):
     """Test the tracking of wired clients can be turned off."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         clients_response=[CLIENT_1, CLIENT_2],
         devices_response=[DEVICE_1],
@@ -473,7 +478,7 @@ async def test_option_track_wired_clients(hass):
     assert device_1 is not None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_TRACK_WIRED_CLIENTS: False},
     )
     await hass.async_block_till_done()
@@ -488,7 +493,7 @@ async def test_option_track_wired_clients(hass):
     assert device_1 is not None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_TRACK_WIRED_CLIENTS: True},
     )
     await hass.async_block_till_done()
@@ -505,7 +510,7 @@ async def test_option_track_wired_clients(hass):
 
 async def test_option_track_devices(hass):
     """Test the tracking of devices can be turned off."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         clients_response=[CLIENT_1, CLIENT_2],
         devices_response=[DEVICE_1],
@@ -522,7 +527,7 @@ async def test_option_track_devices(hass):
     assert device_1 is not None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_TRACK_DEVICES: False},
     )
     await hass.async_block_till_done()
@@ -537,7 +542,7 @@ async def test_option_track_devices(hass):
     assert device_1 is None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_TRACK_DEVICES: True},
     )
     await hass.async_block_till_done()
@@ -561,9 +566,10 @@ async def test_option_ssid_filter(hass):
     client_1_copy = copy(CLIENT_1)
     client_1_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
 
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass, clients_response=[client_1_copy, CLIENT_3]
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -574,7 +580,7 @@ async def test_option_ssid_filter(hass):
 
     # Setting SSID filter will remove clients outside of filter
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_SSID_FILTER: ["ssid"]},
     )
     await hass.async_block_till_done()
@@ -609,7 +615,7 @@ async def test_option_ssid_filter(hass):
 
     # Remove SSID filter
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_SSID_FILTER: []},
     )
     await hass.async_block_till_done()
@@ -664,7 +670,10 @@ async def test_wireless_client_go_wired_issue(hass):
     client_1_client = copy(CLIENT_1)
     client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
 
-    controller = await setup_unifi_integration(hass, clients_response=[client_1_client])
+    config_entry = await setup_unifi_integration(
+        hass, clients_response=[client_1_client]
+    )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
 
     # Client is wireless
@@ -722,9 +731,10 @@ async def test_option_ignore_wired_bug(hass):
     client_1_client = copy(CLIENT_1)
     client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
 
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass, options={CONF_IGNORE_WIRED_BUG: True}, clients_response=[client_1_client]
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
 
     # Client is wireless
@@ -821,7 +831,7 @@ async def test_restoring_client(hass):
 
 async def test_dont_track_clients(hass):
     """Test don't track clients config works."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         options={CONF_TRACK_CLIENTS: False},
         clients_response=[CLIENT_1],
@@ -836,7 +846,7 @@ async def test_dont_track_clients(hass):
     assert device_1 is not None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_TRACK_CLIENTS: True},
     )
     await hass.async_block_till_done()
@@ -852,7 +862,7 @@ async def test_dont_track_clients(hass):
 
 async def test_dont_track_devices(hass):
     """Test don't track devices config works."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         options={CONF_TRACK_DEVICES: False},
         clients_response=[CLIENT_1],
@@ -867,7 +877,7 @@ async def test_dont_track_devices(hass):
     assert device_1 is None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_TRACK_DEVICES: True},
     )
     await hass.async_block_till_done()
@@ -883,7 +893,7 @@ async def test_dont_track_devices(hass):
 
 async def test_dont_track_wired_clients(hass):
     """Test don't track wired clients config works."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
         options={CONF_TRACK_WIRED_CLIENTS: False},
         clients_response=[CLIENT_1, CLIENT_2],
@@ -897,7 +907,7 @@ async def test_dont_track_wired_clients(hass):
     assert client_2 is None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_TRACK_WIRED_CLIENTS: True},
     )
     await hass.async_block_till_done()

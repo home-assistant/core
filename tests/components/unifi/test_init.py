@@ -66,8 +66,8 @@ async def test_controller_no_mac(hass):
 
 async def test_unload_entry(hass):
     """Test being able to unload an entry."""
-    controller = await setup_unifi_integration(hass)
+    config_entry = await setup_unifi_integration(hass)
     assert hass.data[UNIFI_DOMAIN]
 
-    assert await unifi.async_unload_entry(hass, controller.config_entry)
+    assert await unifi.async_unload_entry(hass, config_entry)
     assert not hass.data[UNIFI_DOMAIN]
