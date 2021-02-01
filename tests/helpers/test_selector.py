@@ -191,10 +191,7 @@ def test_text_selector_schema(schema):
 
 @pytest.mark.parametrize(
     "schema",
-    (
-        {"options": []},
-        {"options": ["red", "green", "blue"]},
-    ),
+    ({"options": ["red", "green", "blue"]},),
 )
 def test_select_selector_schema(schema):
     """Test select selector."""
