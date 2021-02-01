@@ -324,3 +324,12 @@ async def test_thermostat_v2(
             },
             blocking=True,
         )
+
+
+async def test_thermostat_different_endpoints(
+    hass, client, climate_radio_thermostat_ct100_plus_different_endpoints, integration
+):
+    """Test an entity with values on a different endpoint from the primary value."""
+    state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
+
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
