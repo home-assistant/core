@@ -142,7 +142,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             add_to_watched_value_ids=True,
             check_all_endpoints=True,
         )
-        _LOGGER.error(self._current_temp)
         self._set_modes_and_presets()
 
     def _setpoint_value(self, setpoint_type: ThermostatSetpointType) -> ZwaveValue:
