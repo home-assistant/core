@@ -143,7 +143,6 @@ DISCOVERY_SCHEMAS = [
         platform="sensor",
         hint="string_sensor",
         command_class={
-            CommandClass.ALARM,
             CommandClass.SENSOR_ALARM,
             CommandClass.INDICATOR,
         },
@@ -156,14 +155,22 @@ DISCOVERY_SCHEMAS = [
         command_class={
             CommandClass.SENSOR_MULTILEVEL,
             CommandClass.METER,
-            CommandClass.ALARM,
             CommandClass.SENSOR_ALARM,
             CommandClass.INDICATOR,
             CommandClass.BATTERY,
+        },
+        type={"number"},
+    ),
+    # special list sensors (Notification CC)
+    ZWaveDiscoverySchema(
+        platform="sensor",
+        hint="list_sensor",
+        command_class={
             CommandClass.NOTIFICATION,
         },
         type={"number"},
     ),
+    # sensor for basic CC
     ZWaveDiscoverySchema(
         platform="sensor",
         hint="numeric_sensor",
