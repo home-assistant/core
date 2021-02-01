@@ -1,28 +1,39 @@
 """Support for the Hive binary sensors."""
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OPENING,
-    BinarySensorEntity,
-)
+from datetime import timedelta
 
-from . import DATA_HIVE, DOMAIN, HiveEntity
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
-DEVICETYPE_DEVICE_CLASS = {
-    "motionsensor": DEVICE_CLASS_MOTION,
-    "contactsensor": DEVICE_CLASS_OPENING,
+from . import DOMAIN, HiveEntity
+
+DEVICETYPE = {
+    "contactsensor": {"type": "opening"},
+    "motionsensor": {"type": "motion"},
+    "GLASS_BREAK": {"icon": "mdi:dock-window", "type": "sound"},
+    "SMOKE_CO": {"icon": "mdi:smoke-detector", "type": "smoke"},
+    "DOG_BARK": {"icon": "mdi:dog", "type": "sound"},
+    "Connectivity": {"icon": "mdi:switch", "type": "connectivity"},
 }
+PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Hive sensor devices."""
-    if discovery_info is None:
-        return
+async def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Hive Binary Sensor.
 
-    session = hass.data.get(DATA_HIVE)
+    No longer in use.
+    """
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Hive Binary Sensor based on a config entry."""
+
+    hive = hass.data[DOMAIN][entry.entry_id]
+    devices = hive.devices.get("binary_sensor")
     devs = []
-    for dev in discovery_info:
-        devs.append(HiveBinarySensorEntity(session, dev))
-    add_entities(devs)
+    if devices:
+        for dev in devices:
+            devs.append(HiveBinarySensorEntity(hive, dev))
+    async_add_entities(devs, True)
 
 
 class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
@@ -36,17 +47,36 @@ class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
     @property
     def device_info(self):
         """Return device information."""
-        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
+        return {
+            "identifiers": {(DOMAIN, self.device["device_id"])},
+            "name": self.device["device_name"],
+            "model": self.device["deviceData"]["model"],
+            "manufacturer": self.device["deviceData"]["manufacturer"],
+            "sw_version": self.device["deviceData"]["version"],
+            "via_device": (DOMAIN, self.device["parentDevice"]),
+        }
 
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return DEVICETYPE_DEVICE_CLASS.get(self.node_device_type)
+        return DEVICETYPE.get(self.device["hiveType"])["type"]
+
+    @property
+    def icon(self):
+        """Return the class of this sensor."""
+        return DEVICETYPE.get(self.device["hiveType"]).get("icon", None)
 
     @property
     def name(self):
         """Return the name of the binary sensor."""
-        return self.node_name
+        return self.device["haName"]
+
+    @property
+    def available(self):
+        """Return if the device is available."""
+        if self.device["hiveType"] != "Connectivity":
+            return self.device["deviceData"]["online"]
+        return True
 
     @property
     def device_state_attributes(self):
@@ -56,9 +86,10 @@ class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self.session.sensor.get_state(self.node_id, self.node_device_type)
+        return self.device["status"]["state"]
 
-    def update(self):
+    async def async_update(self):
         """Update all Node data from Hive."""
-        self.session.core.update_data(self.node_id)
-        self.attributes = self.session.attributes.state_attributes(self.node_id)
+        await self.hive.session.updateData(self.device)
+        self.device = await self.hive.sensor.get_sensor(self.device)
+        self.attributes = self.device.get("attributes", {})
