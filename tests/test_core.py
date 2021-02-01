@@ -179,9 +179,9 @@ async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_thread
         nonlocal stop_calls
         stop_calls.append("async_block_till_done")
 
-    def _record_shutdown_run_callback_threadsafe():
+    def _record_shutdown_run_callback_threadsafe(loop):
         nonlocal stop_calls
-        stop_calls.append("shutdown_run_callback_threadsafe")
+        stop_calls.append(("shutdown_run_callback_threadsafe", loop))
 
     with patch.object(hass, "async_block_till_done", _record_block_till_done), patch(
         "homeassistant.core.shutdown_run_callback_threadsafe",
@@ -189,7 +189,7 @@ async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_thread
     ):
         await hass.async_stop()
 
-    assert stop_calls[-2] == "shutdown_run_callback_threadsafe"
+    assert stop_calls[-2] == ("shutdown_run_callback_threadsafe", hass.loop)
     assert stop_calls[-1] == "async_block_till_done"
 
 
