@@ -42,6 +42,7 @@ SEGMENT_DURATION = (
 TEST_SEQUENCE_LENGTH = 5 * VIDEO_FRAME_RATE
 LONGER_TEST_SEQUENCE_LENGTH = 20 * VIDEO_FRAME_RATE
 OUT_OF_ORDER_PACKET_INDEX = 3 * VIDEO_FRAME_RATE
+PACKETS_PER_SEGMENT = SEGMENT_DURATION / PACKET_DURATION
 PACKETS_TO_SEGMENTS = PACKET_DURATION / SEGMENT_DURATION
 
 
@@ -249,7 +250,7 @@ async def test_skip_out_of_order_packet(hass):
     # If skipped packet would have been the first packet of a segment, the previous
     # segment will be longer by a packet duration
     # We also may possibly lose a segment due to the shifting pts boundary
-    if OUT_OF_ORDER_PACKET_INDEX % PACKETS_TO_SEGMENTS == 0:
+    if OUT_OF_ORDER_PACKET_INDEX % PACKETS_PER_SEGMENT == 0:
         # Check duration of affected segment and remove it
         longer_segment_index = int(
             (OUT_OF_ORDER_PACKET_INDEX - 1) * PACKETS_TO_SEGMENTS
@@ -471,7 +472,7 @@ async def test_pts_out_of_order(hass):
     # Create a sequence of packets with some out of order pts
     packets = list(PacketSequence(TEST_SEQUENCE_LENGTH))
     for i, _ in enumerate(packets):
-        if i % PACKETS_TO_SEGMENTS == 1:
+        if i % PACKETS_PER_SEGMENT == 1:
             packets[i].pts = packets[i - 1].pts - 1
             packets[i].is_keyframe = False
 
