@@ -69,4 +69,4 @@ async def test_notification_sensor(hass, multisensor_6, integration):
 
     state = hass.states.get(NOTIFICATION_MOTION_SENSOR)
     assert state == "Motion detection"
-    assert state.attributes["Value"] == "8"
+    assert state.attributes["value"] == "8"
