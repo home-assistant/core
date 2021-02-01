@@ -43,7 +43,7 @@ async def system_health_info(hass: HomeAssistant):
     information = {
         "host_os": host_info.get("operating_system"),
         "update_channel": info.get("channel"),
-        "supervisor_version": info.get("supervisor"),
+        "supervisor_version": f"supervisor-{info.get('supervisor')}",
         "docker_version": info.get("docker"),
         "disk_total": f"{host_info.get('disk_total')} GB",
         "disk_used": f"{host_info.get('disk_used')} GB",

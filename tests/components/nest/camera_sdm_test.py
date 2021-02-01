@@ -59,20 +59,22 @@ GENERATE_IMAGE_URL_RESPONSE = {
 IMAGE_AUTHORIZATION_HEADERS = {"Authorization": "Basic g.0.eventToken"}
 
 
-def make_motion_event(timestamp: datetime.datetime = None) -> EventMessage:
+def make_motion_event(
+    event_id: str = MOTION_EVENT_ID, timestamp: datetime.datetime = None
+) -> EventMessage:
     """Create an EventMessage for a motion event."""
     if not timestamp:
         timestamp = utcnow()
     return EventMessage(
         {
-            "eventId": "some-event-id",
+            "eventId": "some-event-id",  # Ignored; we use the resource updated event id below
             "timestamp": timestamp.isoformat(timespec="seconds"),
             "resourceUpdate": {
                 "name": DEVICE_ID,
                 "events": {
                     "sdm.devices.events.CameraMotion.Motion": {
                         "eventSessionId": "CjY5Y3VKaTZwR3o4Y19YbTVfMF...",
-                        "eventId": MOTION_EVENT_ID,
+                        "eventId": event_id,
                     },
                 },
             },
@@ -127,7 +129,7 @@ async def fire_alarm(hass, point_in_time):
 async def async_get_image(hass):
     """Get image from the camera, a wrapper around camera.async_get_image."""
     # Note: this patches ImageFrame to simulate decoding an image from a live
-    # stream, however the test may not use it.  Tests assert on the image
+    # stream, however the test may not use it. Tests assert on the image
     # contents to determine if the image came from the live stream or event.
     with patch(
         "homeassistant.components.ffmpeg.ImageFrame.get_image",
@@ -306,11 +308,7 @@ async def test_stream_response_already_expired(hass, auth):
 
 async def test_camera_removed(hass, auth):
     """Test case where entities are removed and stream tokens expired."""
-    auth.responses = [
-        make_stream_url_response(),
-        aiohttp.web.json_response({"results": {}}),
-    ]
-    await async_setup_camera(
+    subscriber = await async_setup_camera(
         hass,
         DEVICE_TRAITS,
         auth=auth,
@@ -321,8 +319,23 @@ async def test_camera_removed(hass, auth):
     assert cam is not None
     assert cam.state == STATE_IDLE
 
+    # Start a stream, exercising cleanup on remove
+    auth.responses = [
+        make_stream_url_response(),
+        aiohttp.web.json_response({"results": {}}),
+    ]
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
+
+    # Fetch an event image, exercising cleanup on remove
+    await subscriber.async_receive_event(make_motion_event())
+    await hass.async_block_till_done()
+    auth.responses = [
+        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
+    ]
+    image = await async_get_image(hass)
+    assert image.content == IMAGE_BYTES_FROM_EVENT
 
     for config_entry in hass.config_entries.async_entries(DOMAIN):
         await hass.config_entries.async_remove(config_entry.entry_id)
@@ -363,7 +376,7 @@ async def test_refresh_expired_stream_failure(hass, auth):
 
 async def test_camera_image_from_last_event(hass, auth):
     """Test an image generated from an event."""
-    # The subscriber receives a message related to an image event.  The camera
+    # The subscriber receives a message related to an image event. The camera
     # holds on to the event message. When the test asks for a capera snapshot
     # it exchanges the event id for an image url and fetches the image.
     subscriber = await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
@@ -464,7 +477,7 @@ async def test_event_image_expired(hass, auth):
 
     # Simulate a pubsub message has already expired
     event_timestamp = utcnow() - datetime.timedelta(seconds=40)
-    await subscriber.async_receive_event(make_motion_event(event_timestamp))
+    await subscriber.async_receive_event(make_motion_event(timestamp=event_timestamp))
     await hass.async_block_till_done()
 
     # Fallback to a stream url since the event message is expired.
@@ -472,3 +485,78 @@ async def test_event_image_expired(hass, auth):
 
     image = await async_get_image(hass)
     assert image.content == IMAGE_BYTES_FROM_STREAM
+
+
+async def test_event_image_becomes_expired(hass, auth):
+    """Test fallback for an event event image that has been cleaned up on expiration."""
+    subscriber = await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("camera.my_camera")
+
+    event_timestamp = utcnow()
+    await subscriber.async_receive_event(make_motion_event(timestamp=event_timestamp))
+    await hass.async_block_till_done()
+
+    auth.responses = [
+        # Fake response from API that returns url image
+        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+        # Fake response for the image content fetch
+        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
+        # Image is refetched after being cleared by expiration alarm
+        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+        aiohttp.web.Response(body=b"updated image bytes"),
+    ]
+
+    image = await async_get_image(hass)
+    assert image.content == IMAGE_BYTES_FROM_EVENT
+
+    # Event image is still valid before expiration
+    next_update = event_timestamp + datetime.timedelta(seconds=25)
+    await fire_alarm(hass, next_update)
+
+    image = await async_get_image(hass)
+    assert image.content == IMAGE_BYTES_FROM_EVENT
+
+    # Fire an alarm well after expiration, removing image from cache
+    # Note: This test does not override the "now" logic within the underlying
+    # python library that tracks active events. Instead, it exercises the
+    # alarm behavior only. That is, the library may still think the event is
+    # active even though Home Assistant does not due to patching time.
+    next_update = event_timestamp + datetime.timedelta(seconds=180)
+    await fire_alarm(hass, next_update)
+
+    image = await async_get_image(hass)
+    assert image.content == b"updated image bytes"
+
+
+async def test_multiple_event_images(hass, auth):
+    """Test fallback for an event event image that has been cleaned up on expiration."""
+    subscriber = await async_setup_camera(hass, DEVICE_TRAITS, auth=auth)
+    assert len(hass.states.async_all()) == 1
+    assert hass.states.get("camera.my_camera")
+
+    event_timestamp = utcnow()
+    await subscriber.async_receive_event(make_motion_event(timestamp=event_timestamp))
+    await hass.async_block_till_done()
+
+    auth.responses = [
+        # Fake response from API that returns url image
+        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+        # Fake response for the image content fetch
+        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
+        # Image is refetched after being cleared by expiration alarm
+        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+        aiohttp.web.Response(body=b"updated image bytes"),
+    ]
+
+    image = await async_get_image(hass)
+    assert image.content == IMAGE_BYTES_FROM_EVENT
+
+    next_event_timestamp = event_timestamp + datetime.timedelta(seconds=25)
+    await subscriber.async_receive_event(
+        make_motion_event(event_id="updated-event-id", timestamp=next_event_timestamp)
+    )
+    await hass.async_block_till_done()
+
+    image = await async_get_image(hass)
+    assert image.content == b"updated image bytes"

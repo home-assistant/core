@@ -173,6 +173,8 @@ class WebDavCalendarData:
         event_list = []
         for event in vevent_list:
             vevent = event.instance.vevent
+            if not self.is_matching(vevent, self.search):
+                continue
             uid = None
             if hasattr(vevent, "uid"):
                 uid = vevent.uid.value

@@ -70,3 +70,8 @@ INPUTS_EVENTS_SUBTYPES = {
     "button2": 2,
     "button3": 3,
 }
+
+# Kelvin value for colorTemp
+KELVIN_MAX_VALUE = 6500
+KELVIN_MIN_VALUE = 2700
+KELVIN_MIN_VALUE_SHBLB_1 = 3000

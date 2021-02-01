@@ -224,7 +224,7 @@ def _stream_worker_internal(hass, stream, quit_event):
         if not stream.keepalive:
             # End of stream, clear listeners and stop thread
             for fmt in stream.outputs:
-                hass.loop.call_soon_threadsafe(stream.outputs[fmt].put, None)
+                stream.outputs[fmt].put(None)
 
     if not peek_first_pts():
         container.close()
@@ -275,8 +275,7 @@ def _stream_worker_internal(hass, stream, quit_event):
                 for fmt, (buffer, _) in outputs.items():
                     buffer.output.close()
                     if stream.outputs.get(fmt):
-                        hass.loop.call_soon_threadsafe(
-                            stream.outputs[fmt].put,
+                        stream.outputs[fmt].put(
                             Segment(
                                 sequence,
                                 buffer.segment,

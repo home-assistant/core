@@ -15,6 +15,7 @@ from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
 from huawei_lte_api.exceptions import (
+    ResponseErrorException,
     ResponseErrorLoginRequiredException,
     ResponseErrorNotSupportedException,
 )
@@ -206,6 +207,14 @@ class Router:
                 return
             _LOGGER.info(
                 "%s requires authorization, excluding from future updates", key
+            )
+            self.subscriptions.pop(key)
+        except ResponseErrorException as exc:
+            if exc.code != -1:
+                raise
+            _LOGGER.info(
+                "%s apparently not supported by device, excluding from future updates",
+                key,
             )
             self.subscriptions.pop(key)
         except Timeout:

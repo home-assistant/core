@@ -21,8 +21,6 @@ class MockDevice(Device):
         igd_device = object()
         super().__init__(igd_device)
         self._udn = udn
-        self.added_port_mappings = []
-        self.removed_port_mappings = []
 
     @classmethod
     async def async_create_device(cls, hass, ssdp_location):
@@ -53,18 +51,6 @@ class MockDevice(Device):
     def device_type(self) -> str:
         """Get the device type."""
         return "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
-
-    async def _async_add_port_mapping(
-        self, external_port: int, local_ip: str, internal_port: int
-    ) -> None:
-        """Add a port mapping."""
-        entry = [external_port, local_ip, internal_port]
-        self.added_port_mappings.append(entry)
-
-    async def _async_delete_port_mapping(self, external_port: int) -> None:
-        """Remove a port mapping."""
-        entry = external_port
-        self.removed_port_mappings.append(entry)
 
     async def async_get_traffic_data(self) -> Mapping[str, any]:
         """Get traffic data."""

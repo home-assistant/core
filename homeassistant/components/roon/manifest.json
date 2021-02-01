@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/roon",
   "requirements": [
-    "roonapi==0.0.30"
+    "roonapi==0.0.31"
   ],
   "codeowners": [
     "@pavoni"

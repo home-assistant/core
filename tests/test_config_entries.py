@@ -792,7 +792,7 @@ async def test_update_entry_options_and_trigger_listener(hass, manager):
 
 async def test_setup_raise_not_ready(hass, caplog):
     """Test a setup raising not ready."""
-    entry = MockConfigEntry(domain="test")
+    entry = MockConfigEntry(title="test_title", domain="test")
 
     mock_setup_entry = AsyncMock(side_effect=ConfigEntryNotReady)
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
@@ -802,7 +802,7 @@ async def test_setup_raise_not_ready(hass, caplog):
         await entry.async_setup(hass)
 
     assert len(mock_call.mock_calls) == 1
-    assert "Config entry for test not ready yet" in caplog.text
+    assert "Config entry 'test_title' for test integration not ready yet" in caplog.text
     p_hass, p_wait_time, p_setup = mock_call.mock_calls[0][1]
 
     assert p_hass is hass
@@ -1523,7 +1523,7 @@ async def test_unique_id_ignore(hass, manager):
         result2 = await manager.flow.async_init(
             "comp",
             context={"source": config_entries.SOURCE_IGNORE},
-            data={"unique_id": "mock-unique-id"},
+            data={"unique_id": "mock-unique-id", "title": "Ignored Title"},
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -1537,6 +1537,7 @@ async def test_unique_id_ignore(hass, manager):
 
     assert entry.source == "ignore"
     assert entry.unique_id == "mock-unique-id"
+    assert entry.title == "Ignored Title"
 
 
 async def test_manual_add_overrides_ignored_entry(hass, manager):
@@ -1605,7 +1606,7 @@ async def test_unignore_step_form(hass, manager):
         result = await manager.flow.async_init(
             "comp",
             context={"source": config_entries.SOURCE_IGNORE},
-            data={"unique_id": "mock-unique-id"},
+            data={"unique_id": "mock-unique-id", "title": "Ignored Title"},
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
@@ -1613,6 +1614,7 @@ async def test_unignore_step_form(hass, manager):
         assert entry.source == "ignore"
         assert entry.unique_id == "mock-unique-id"
         assert entry.domain == "comp"
+        assert entry.title == "Ignored Title"
 
         await manager.async_remove(entry.entry_id)
 
@@ -1649,7 +1651,7 @@ async def test_unignore_create_entry(hass, manager):
         result = await manager.flow.async_init(
             "comp",
             context={"source": config_entries.SOURCE_IGNORE},
-            data={"unique_id": "mock-unique-id"},
+            data={"unique_id": "mock-unique-id", "title": "Ignored Title"},
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
@@ -1657,6 +1659,7 @@ async def test_unignore_create_entry(hass, manager):
         assert entry.source == "ignore"
         assert entry.unique_id == "mock-unique-id"
         assert entry.domain == "comp"
+        assert entry.title == "Ignored Title"
 
         await manager.async_remove(entry.entry_id)
 
@@ -1690,7 +1693,7 @@ async def test_unignore_default_impl(hass, manager):
         result = await manager.flow.async_init(
             "comp",
             context={"source": config_entries.SOURCE_IGNORE},
-            data={"unique_id": "mock-unique-id"},
+            data={"unique_id": "mock-unique-id", "title": "Ignored Title"},
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
@@ -1698,6 +1701,7 @@ async def test_unignore_default_impl(hass, manager):
         assert entry.source == "ignore"
         assert entry.unique_id == "mock-unique-id"
         assert entry.domain == "comp"
+        assert entry.title == "Ignored Title"
 
         await manager.async_remove(entry.entry_id)
         await hass.async_block_till_done()
