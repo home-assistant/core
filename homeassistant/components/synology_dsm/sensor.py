@@ -19,6 +19,7 @@ from . import SynoApi, SynologyDSMDeviceEntity, SynologyDSMDispatcherEntity
 from .const import (
     CONF_VOLUMES,
     DOMAIN,
+    ENTITY_UNIT_LOAD,
     INFORMATION_SENSORS,
     STORAGE_DISK_SENSORS,
     STORAGE_VOL_SENSORS,
@@ -87,6 +88,10 @@ class SynoDSMUtilSensor(SynologyDSMDispatcherEntity):
         # Network
         if self._unit == DATA_RATE_KILOBYTES_PER_SECOND:
             return round(attr / 1024.0, 1)
+
+        # CPU load average
+        if self._unit == ENTITY_UNIT_LOAD:
+            return round(attr / 100, 2)
 
         return attr
 
