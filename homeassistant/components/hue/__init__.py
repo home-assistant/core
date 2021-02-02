@@ -101,20 +101,6 @@ async def async_setup_entry(
         data.pop(CONF_ALLOW_HUE_GROUPS)
         hass.config_entries.async_update_entry(entry, data=data, options=options)
 
-    # Migrate default_scene_transition from config entry data to config entry options
-    if (
-        CONF_SCENE_TRANSITION not in entry.options
-        and CONF_SCENE_TRANSITION in entry.data
-        and entry.data[CONF_SCENE_TRANSITION] != DEFAULT_SCENE_TRANSITION
-    ):
-        options = {
-            **entry.options,
-            CONF_SCENE_TRANSITION: entry.data[CONF_SCENE_TRANSITION],
-        }
-        data = entry.data.copy()
-        data.pop(CONF_SCENE_TRANSITION)
-        hass.config_entries.async_update_entry(entry, data=data, options=options)
-
     bridge = HueBridge(hass, entry)
 
     if not await bridge.async_setup():
