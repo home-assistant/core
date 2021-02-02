@@ -2,7 +2,7 @@
 
 from homeassistant.const import ATTR_ICON, ATTR_NAME
 
-DOMAIN = "faadelays"
+DOMAIN = "faa_delays"
 
 FAA_BINARY_SENSORS = {
     "GROUND_DELAY": {

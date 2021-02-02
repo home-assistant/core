@@ -5,7 +5,7 @@ from aiohttp import ClientConnectionError
 import faadelays
 
 from homeassistant import config_entries, setup
-from homeassistant.components.faadelays.const import DOMAIN
+from homeassistant.components.faa_delays.const import DOMAIN
 from homeassistant.const import CONF_ID
 from homeassistant.exceptions import HomeAssistantError
 
@@ -25,9 +25,9 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch.object(faadelays.Airport, "update", new=mock_valid_airport), patch(
-        "homeassistant.components.faadelays.async_setup", return_value=True
+        "homeassistant.components.faa_delays.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.faadelays.async_setup_entry",
+        "homeassistant.components.faa_delays.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(

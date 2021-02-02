@@ -19,7 +19,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             FAABinarySensor(coordinator, kind, name, icon, entry.entry_id)
         )
 
-    async_add_entities(binary_sensors, True)
+    async_add_entities(binary_sensors)
 
 
 class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
@@ -49,7 +49,7 @@ class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
         return self._icon
 
     @property
-    def state(self):
+    def is_on(self):
         """Return the status of the sensor."""
         if self._sensor_type == "GROUND_DELAY":
             self._state = self.coordinator.data.ground_delay.status

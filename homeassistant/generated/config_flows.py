@@ -61,7 +61,7 @@ FLOWS = [
     "enocean",
     "epson",
     "esphome",
-    "faadelays",
+    "faa_delays",
     "fireservicerota",
     "flick_electric",
     "flo",
