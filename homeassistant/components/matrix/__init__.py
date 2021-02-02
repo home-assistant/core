@@ -90,10 +90,10 @@ async def async_setup(hass, config):
             DOMAIN,
             context={"source": SOURCE_IMPORT},
             data={
-                CONF_HOMESERVER: matrix_config[CONF_HOMESERVER],
-                CONF_USERNAME: matrix_config[CONF_USERNAME],
-                CONF_PASSWORD: matrix_config[CONF_PASSWORD],
-                CONF_VERIFY_SSL: matrix_config[CONF_VERIFY_SSL],
+                CONF_HOMESERVER: matrix_config.get(CONF_HOMESERVER, ""),
+                CONF_USERNAME: matrix_config.get(CONF_USERNAME, ""),
+                CONF_PASSWORD: matrix_config.get(CONF_PASSWORD, ""),
+                CONF_VERIFY_SSL: matrix_config.get(CONF_VERIFY_SSL, True),
             },
         )
     )
