@@ -181,7 +181,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (asyncio.TimeoutError, BaseZwaveJSServerError) as err:
         raise ConfigEntryNotReady from err
     else:
-        async_on_connect(hass, entry)
+        LOGGER.info("Connected to Zwave JS Server")
+        async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
 
     LOGGER.info("Connection to Zwave JS Server initialized.")
 
@@ -264,19 +265,7 @@ async def disconnect_client(
     listen_task.cancel()
     await listen_task
     await client.disconnect()
-    async_on_disconnect(hass, entry)
 
-
-@callback
-def async_on_connect(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle websocket is (re)connected."""
-    LOGGER.info("Connected to Zwave JS Server")
-    async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
-
-
-@callback
-def async_on_disconnect(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle websocket is disconnected."""
     LOGGER.info("Disconnected from Zwave JS Server")
     async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
 
