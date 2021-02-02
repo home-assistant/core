@@ -95,8 +95,8 @@ class ZWaveBaseEntity(Entity):
         return (
             self.client.connected
             and bool(self.info.node.ready)
-            # a None value indicates something wrong with the device, such as partial interview
-            # set availability to unavailable so user has a clue something is wrong.
+            # a None value indicates something wrong with the device,
+            # or the value is simply not yet there (it will arrive later).
             and self.info.primary_value.value is not None
         )
 
