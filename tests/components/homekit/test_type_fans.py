@@ -45,7 +45,7 @@ async def test_fan_basic(hass, hk_driver, events):
     # If there are no speed_list values, then HomeKit speed is unsupported
     assert acc.char_speed is None
 
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
     assert acc.char_active.value == 1
 
@@ -122,7 +122,7 @@ async def test_fan_direction(hass, hk_driver, events):
 
     assert acc.char_direction.value == 0
 
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
     assert acc.char_direction.value == 0
 
@@ -190,7 +190,7 @@ async def test_fan_oscillate(hass, hk_driver, events):
 
     assert acc.char_swing.value == 0
 
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
     assert acc.char_swing.value == 0
 
@@ -264,7 +264,7 @@ async def test_fan_speed(hass, hk_driver, events):
     # speed to 100 when turning on a fan on a freshly booted up server.
     assert acc.char_speed.value != 0
 
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_PERCENTAGE: 100})
@@ -346,7 +346,7 @@ async def test_fan_set_all_one_shot(hass, hk_driver, events):
     # Initial value can be anything but 0. If it is 0, it might cause HomeKit to set the
     # speed to 100 when turning on a fan on a freshly booted up server.
     assert acc.char_speed.value != 0
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     hass.states.async_set(

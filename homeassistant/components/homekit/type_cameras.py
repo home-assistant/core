@@ -240,7 +240,7 @@ class Camera(HomeAccessory, PyhapCamera):
 
                 self._async_update_doorbell_state(state)
 
-    async def run_handler(self):
+    async def run(self):
         """Handle accessory driver started event.
 
         Run inside the Home Assistant event loop.
@@ -259,7 +259,7 @@ class Camera(HomeAccessory, PyhapCamera):
                 self._async_update_doorbell_state_event,
             )
 
-        await super().run_handler()
+        await super().run()
 
     @callback
     def _async_update_motion_state_event(self, event):
