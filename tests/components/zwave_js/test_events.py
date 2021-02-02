@@ -40,7 +40,6 @@ async def test_scenes(hass, hank_binary_switch, integration, client):
     # wait for the event
     await hass.async_block_till_done()
     assert len(events) == 1
-    # assert events[0].data["type"] == "value notification"
     assert events[0].data["home_id"] == client.driver.controller.home_id
     assert events[0].data["node_id"] == 32
     assert events[0].data["endpoint"] == 0
