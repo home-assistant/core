@@ -402,7 +402,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
         return supported_features
 
-    def open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs):
         """Move the cover up.
 
         This method is a coroutine.
@@ -424,7 +424,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 )
             self.async_write_ha_state()
 
-    def close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Move the cover down.
 
         This method is a coroutine.
@@ -446,7 +446,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 )
             self.async_write_ha_state()
 
-    def stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs):
         """Stop the device.
 
         This method is a coroutine.
@@ -459,7 +459,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._config[CONF_RETAIN],
         )
 
-    def open_cover_tilt(self, **kwargs):
+    async def async_open_cover_tilt(self, **kwargs):
         """Tilt the cover open."""
         mqtt.async_publish(
             self.hass,
@@ -474,7 +474,7 @@ class MqttCover(MqttEntity, CoverEntity):
             )
             self.async_write_ha_state()
 
-    def close_cover_tilt(self, **kwargs):
+    async def async_close_cover_tilt(self, **kwargs):
         """Tilt the cover closed."""
         mqtt.async_publish(
             self.hass,
@@ -489,7 +489,7 @@ class MqttCover(MqttEntity, CoverEntity):
             )
             self.async_write_ha_state()
 
-    def set_cover_tilt_position(self, **kwargs):
+    async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
         position = kwargs[ATTR_TILT_POSITION]
 
@@ -504,7 +504,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._config[CONF_RETAIN],
         )
 
-    def set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         set_position_template = self._config.get(CONF_SET_POSITION_TEMPLATE)
         position = kwargs[ATTR_POSITION]
@@ -530,7 +530,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._position = percentage_position
             self.async_write_ha_state()
 
-    def toggle_tilt(self, **kwargs):
+    async def async_toggle_tilt(self, **kwargs):
         """Toggle the entity."""
         if self.is_tilt_closed():
             self.open_cover_tilt(**kwargs)

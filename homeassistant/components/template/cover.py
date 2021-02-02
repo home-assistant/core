@@ -196,6 +196,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             icon_template=icon_template,
             entity_picture_template=entity_picture_template,
         )
+        CoverEntity.__init__(self)
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass
         )

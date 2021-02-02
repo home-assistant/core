@@ -269,21 +269,23 @@ class CoverEntity(Entity):
 
     def toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""
-        if SUPPORT_STOP | self.supported_features and (
-            self.is_closing or self.is_opening
-        ):
-            self.stop_cover(**kwargs)
-        elif self.is_closed:
-            self.open_cover(**kwargs)
-        else:
-            if self.is_last_toggle_direction_open:
-                self.close_cover(**kwargs)
-            else:
-                self.open_cover(**kwargs)
+        fns = {
+            "open": self.open_cover,
+            "close": self.close_cover,
+            "stop": self.stop_cover,
+        }
+        fn = self._get_toggle_function(fns)
+        fn(**kwargs)
 
     async def async_toggle(self, **kwargs):
         """Toggle the entity."""
-        await self.hass.async_add_executor_job(ft.partial(self.toggle, **kwargs))
+        fns = {
+            "open": self.async_open_cover,
+            "close": self.async_close_cover,
+            "stop": self.async_stop_cover,
+        }
+        fn = self._get_toggle_function(fns)
+        await fn(**kwargs)
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
@@ -346,7 +348,10 @@ class CoverEntity(Entity):
 
     async def async_toggle_tilt(self, **kwargs):
         """Toggle the entity."""
-        await self.hass.async_add_executor_job(ft.partial(self.toggle_tilt, **kwargs))
+        if self.current_cover_tilt_position == 0:
+            await self.async_open_cover_tilt(**kwargs)
+        else:
+            await self.async_close_cover_tilt(**kwargs)
 
     def async_write_ha_state(self) -> None:
         """Set last toggle direction when writing ha state."""
@@ -355,9 +360,20 @@ class CoverEntity(Entity):
             self._is_last_toggle_direction_open = True
         elif self.state == STATE_CLOSING:
             self._is_last_toggle_direction_open = False
+        # do nothing on all other states
+
+    def _get_toggle_function(self, fns):
+        if SUPPORT_STOP | self.supported_features and (
+            self.is_closing or self.is_opening
+        ):
+            return fns["stop"]
+        elif self.is_closed:
+            return fns["open"]
         else:
-            # do nothing on all other states
-            pass
+            if self.is_last_toggle_direction_open:
+                return fns["close"]
+            else:
+                return fns["open"]
 
 
 class CoverDevice(CoverEntity):
