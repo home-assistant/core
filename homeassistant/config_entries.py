@@ -417,6 +417,7 @@ class ConfigEntry:
         Returns function to unlisten.
         """
         weak_listener: Any
+        # weakref.ref is not applicable to a bound method, e.g. method of a class instance, as reference will die immediately
         if hasattr(listener, "__self__"):
             weak_listener = weakref.WeakMethod(cast(MethodType, listener))
         else:
