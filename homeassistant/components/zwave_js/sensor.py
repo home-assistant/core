@@ -9,6 +9,7 @@ from zwave_js_server.const import CommandClass
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DOMAIN as SENSOR_DOMAIN,
 )
@@ -39,6 +40,8 @@ async def async_setup_entry(
             entities.append(ZWaveStringSensor(config_entry, client, info))
         elif info.platform_hint == "numeric_sensor":
             entities.append(ZWaveNumericSensor(config_entry, client, info))
+        elif info.platform_hint == "list_sensor":
+            entities.append(ZWaveListSensor(config_entry, client, info))
         else:
             LOGGER.warning(
                 "Sensor not implemented for %s/%s",
@@ -67,11 +70,15 @@ class ZwaveSensorBase(ZWaveBaseEntity):
         if self.info.primary_value.command_class == CommandClass.BATTERY:
             return DEVICE_CLASS_BATTERY
         if self.info.primary_value.command_class == CommandClass.METER:
-            if self.info.primary_value.property_key_name == "kWh_Consumed":
+            if self.info.primary_value.metadata.unit == "kWh":
                 return DEVICE_CLASS_ENERGY
             return DEVICE_CLASS_POWER
-        if self.info.primary_value.property_ == "Air temperature":
+        if "temperature" in self.info.primary_value.property_.lower():
             return DEVICE_CLASS_TEMPERATURE
+        if self.info.primary_value.metadata.unit == "W":
+            return DEVICE_CLASS_POWER
+        if self.info.primary_value.metadata.unit == "Lux":
+            return DEVICE_CLASS_ILLUMINANCE
         return None
 
     @property
@@ -133,17 +140,42 @@ class ZWaveNumericSensor(ZwaveSensorBase):
         return str(self.info.primary_value.metadata.unit)
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, str]]:
-        """Return the device specific state attributes."""
+    def name(self) -> str:
+        """Return default name from device name and value name combination."""
+        if self.info.primary_value.command_class == CommandClass.BASIC:
+            node_name = self.info.node.name or self.info.node.device_config.description
+            label = self.info.primary_value.command_class_name
+            return f"{node_name}: {label}"
+        return super().name
+
+
+class ZWaveListSensor(ZwaveSensorBase):
+    """Representation of a Z-Wave Numeric sensor with multiple states."""
+
+    @property
+    def state(self) -> Optional[str]:
+        """Return state of the sensor."""
+        if self.info.primary_value.value is None:
+            return None
         if (
-            self.info.primary_value.value is None
-            or not self.info.primary_value.metadata.states
+            not str(self.info.primary_value.value)
+            in self.info.primary_value.metadata.states
         ):
             return None
-        # add the value's label as property for multi-value (list) items
-        label = self.info.primary_value.metadata.states.get(
-            self.info.primary_value.value
-        ) or self.info.primary_value.metadata.states.get(
-            str(self.info.primary_value.value)
+        return str(
+            self.info.primary_value.metadata.states[str(self.info.primary_value.value)]
         )
-        return {"label": label}
+
+    @property
+    def device_state_attributes(self) -> Optional[Dict[str, str]]:
+        """Return the device specific state attributes."""
+        # add the value's int value as property for multi-value (list) items
+        return {"value": self.info.primary_value.value}
+
+    @property
+    def name(self) -> str:
+        """Return default name from device name and value name combination."""
+        node_name = self.info.node.name or self.info.node.device_config.description
+        prop_name = self.info.primary_value.property_name
+        prop_key_name = self.info.primary_value.property_key_name
+        return f"{node_name}: {prop_name} - {prop_key_name}"

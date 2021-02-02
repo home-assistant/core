@@ -79,6 +79,9 @@ class ZWaveBaseEntity(Entity):
             or self.info.primary_value.property_key_name
             or self.info.primary_value.property_name
         )
+        # append endpoint if > 1
+        if self.info.primary_value.endpoint > 1:
+            value_name += f" ({self.info.primary_value.endpoint})"
         return f"{node_name}: {value_name}"
 
     @property
