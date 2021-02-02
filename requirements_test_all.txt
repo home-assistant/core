@@ -293,7 +293,7 @@ elgato==1.0.0
 elkm1-lib==0.8.10
 
 # homeassistant.components.mobile_app
-emoji==0.5.4
+emoji==1.2.0
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
@@ -1151,7 +1151,7 @@ vultr==0.1.2
 wakeonlan==1.1.6
 
 # homeassistant.components.folder_watcher
-watchdog==0.8.3
+watchdog==1.0.2
 
 # homeassistant.components.wiffi
 wiffi==1.0.1

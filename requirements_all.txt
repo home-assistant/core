@@ -541,7 +541,7 @@ eliqonline==1.2.2
 elkm1-lib==0.8.10
 
 # homeassistant.components.mobile_app
-emoji==0.5.4
+emoji==1.2.0
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
@@ -878,6 +878,9 @@ life360==4.1.1
 
 # homeassistant.components.lifx_legacy
 liffylights==0.9.4
+
+# homeassistant.components.osramlightify
+lightify==1.0.7.3
 
 # homeassistant.components.lightwave
 lightwave==0.19
@@ -2278,7 +2281,7 @@ wakeonlan==1.1.6
 waqiasync==1.0.0
 
 # homeassistant.components.folder_watcher
-watchdog==0.8.3
+watchdog==1.0.2
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
