@@ -213,12 +213,14 @@ class HueLight(CoordinatorEntity, LightEntity):
             self.is_osram = False
             self.is_philips = False
             self.is_innr = False
+            self.is_livarno= False
             self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
             self.gamut = None
         else:
             self.is_osram = light.manufacturername == "OSRAM"
             self.is_philips = light.manufacturername == "Philips"
             self.is_innr = light.manufacturername == "innr"
+            self.is_livarno = light.manufacturername == "_TZ3000_49qchf10"
             self.gamut_typ = self.light.colorgamuttype
             self.gamut = self.light.colorgamut
             _LOGGER.debug("Color gamut of %s: %s", self.name, str(self.gamut))
@@ -314,6 +316,9 @@ class HueLight(CoordinatorEntity, LightEntity):
 
         max_mireds = self.light.controlcapabilities.get("ct", {}).get("max")
 
+        if self.is_livarno:
+            max_mireds=500
+            
         if not max_mireds:
             return super().max_mireds
 
@@ -402,7 +407,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         elif flash == FLASH_SHORT:
             command["alert"] = "select"
             del command["on"]
-        elif not self.is_innr:
+        elif not self.is_innr and not self.is_livarno:
             command["alert"] = "none"
 
         if ATTR_EFFECT in kwargs:
@@ -441,7 +446,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         elif flash == FLASH_SHORT:
             command["alert"] = "select"
             del command["on"]
-        elif not self.is_innr:
+        elif not self.is_innr and not self.is_livarno:
             command["alert"] = "none"
 
         if self.is_group:
