@@ -36,6 +36,7 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.host = None
+        self.api = None
 
     def _host_in_configuration_exists(self, host) -> bool:
         """Return True if host exists in configuration."""
@@ -46,7 +47,7 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _test_connection(self, host, port):
         with async_timeout.timeout(PLATFORM_TIMEOUT):
             try:
-                await iammeter.real_time_api(host, port)
+                self.api = await iammeter.real_time_api(host, port)
                 return True
             except (IamMeterError, asyncio.TimeoutError) as err:
                 _LOGGER.error("Device is not ready!")
@@ -67,20 +68,24 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             url = ParseResult("http", netloc, path, *url[3:])
             host = netloc
 
-            if self._host_in_configuration_exists(name):
-                errors[CONF_NAME] = "already_configured"
-            if not errors:
-                connect_ok = False
-                try:
-                    connect_ok = await self._test_connection(host, port)
-                except (IamMeterError, asyncio.TimeoutError):
-                    _LOGGER.error("IamMeterError!")
-                if not connect_ok:
-                    errors[CONF_NAME] = "cannot_connect"
-                else:
+            connect_ok = False
+            try:
+                connect_ok = await self._test_connection(host, port)
+            except (IamMeterError, asyncio.TimeoutError):
+                _LOGGER.error("IamMeterError!")
+            if not connect_ok:
+                errors[CONF_NAME] = "cannot_connect"
+            else:
+                if self._host_in_configuration_exists(self.api.iammeter.serial_number):
+                    errors[CONF_NAME] = "already_configured"
+                if not errors:
                     return self.async_create_entry(
                         title=name,
-                        data={CONF_NAME: name, CONF_HOST: host, CONF_PORT: port},
+                        data={
+                            CONF_NAME: self.api.iammeter.serial_number,
+                            CONF_HOST: host,
+                            CONF_PORT: port,
+                        },
                     )
 
         else:
