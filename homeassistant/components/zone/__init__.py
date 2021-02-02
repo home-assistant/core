@@ -25,7 +25,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity,
     entity_component,
-    entity_registry,
     service,
     storage,
 )
@@ -205,18 +204,6 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
-    async def _collection_changed(change_type: str, item_id: str, config: Dict) -> None:
-        """Handle a collection change: clean up entity registry on removals."""
-        if change_type != collection.CHANGE_REMOVED:
-            return
-
-        ent_reg = await entity_registry.async_get_registry(hass)
-        ent_reg.async_remove(
-            cast(str, ent_reg.async_get_entity_id(DOMAIN, DOMAIN, item_id))
-        )
-
-    storage_collection.async_add_listener(_collection_changed)
-
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all zones and load new ones from config."""
         conf = await component.async_prepare_reload(skip_reset=True)
@@ -302,6 +289,7 @@ class Zone(entity.Entity):
         """Return entity instance initialized from yaml storage."""
         zone = cls(config)
         zone.editable = False
+        zone._generate_attrs()
         return zone
 
     @property
