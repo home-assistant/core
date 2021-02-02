@@ -13,7 +13,8 @@ from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_MAC_ADDRESS, DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN  # pylint:disable=unused-import
+from .util import hash_dict
 
 
 class RakoConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -44,17 +45,18 @@ class RakoConfigFlow(ConfigFlow, domain=DOMAIN):
         except (RakoBridgeError, asyncio.TimeoutError):
             return self._show_setup_form(errors={CONF_BASE: "cannot_connect"})
 
+        bridge_info_hash = hash_dict(bridge_info.__dict__)
+
         await self.async_set_unique_id(
-            unique_id=bridge_info.hostMAC, raise_on_progress=True
+            unique_id=bridge_info_hash, raise_on_progress=True
         )
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=f"Rako Bridge: {bridge_info.hostMAC}",
+            title=f"Rako Bridge ({bridge_info_hash})",
             data={
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: user_input[CONF_PORT],
-                CONF_MAC_ADDRESS: bridge_info.hostMAC,
             },
         )
 

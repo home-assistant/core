@@ -15,16 +15,14 @@ from homeassistant.components.rako import (
 )
 from homeassistant.components.rako.bridge import RakoBridge
 
-from . import MOCK_ENTITY_ID, MOCK_HOST, MOCK_MAC
+from . import MOCK_ENTITY_ID, MOCK_HOST
 
 
 @pytest.fixture
 def rako_bridge(hass):
     """Bridge fixture."""
     hass.data[DOMAIN] = {}
-    bridge = RakoBridge(
-        MOCK_HOST, RAKO_BRIDGE_DEFAULT_PORT, MOCK_MAC, MOCK_ENTITY_ID, hass
-    )
+    bridge = RakoBridge(MOCK_HOST, RAKO_BRIDGE_DEFAULT_PORT, MOCK_ENTITY_ID, hass)
     hass.data[DOMAIN][MOCK_ENTITY_ID] = {
         DATA_RAKO_BRIDGE_CLIENT: bridge,
         DATA_RAKO_LIGHT_MAP: {},

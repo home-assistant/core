@@ -7,10 +7,11 @@ import pytest
 from python_rako import RAKO_BRIDGE_DEFAULT_PORT
 
 from homeassistant import data_entry_flow
-from homeassistant.components.rako import CONF_MAC_ADDRESS, config_flow
+from homeassistant.components.rako import config_flow
+from homeassistant.components.rako.util import hash_dict
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PORT, CONF_UNIQUE_ID
 
-from . import MOCK_HOST, MOCK_MAC
+from . import MOCK_HOST
 
 
 @pytest.fixture
@@ -88,17 +89,18 @@ async def test_user_config_flow_good_ip(hass, rako_flow):
         return_value=MOCK_HOST,
     ) as discover_bridge_mock:
         with patch("homeassistant.components.rako.config_flow.Bridge") as MockBridge:
-            MockBridge().get_info = AsyncMock(
-                return_value=SimpleNamespace(hostMAC=MOCK_MAC)
-            )
+            bridge_info = SimpleNamespace(hostMAC="whatever")
+            expected_unique_id = hash_dict(bridge_info.__dict__)
+
+            MockBridge().get_info = AsyncMock(return_value=bridge_info)
             result = await rako_flow.async_step_user(
                 {CONF_HOST: MOCK_HOST, CONF_PORT: RAKO_BRIDGE_DEFAULT_PORT}
             )
 
             discover_bridge_mock.assert_not_awaited()
             assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-            assert MOCK_MAC in result["title"]
+            assert expected_unique_id in result["title"]
             assert result["data"][CONF_HOST] == MOCK_HOST
             assert result["data"][CONF_PORT] == RAKO_BRIDGE_DEFAULT_PORT
-            assert result["data"][CONF_MAC_ADDRESS] == MOCK_MAC
-            assert rako_flow.context[CONF_UNIQUE_ID] == MOCK_MAC
+            assert rako_flow.context[CONF_UNIQUE_ID] == expected_unique_id
+            assert rako_flow.unique_id == expected_unique_id

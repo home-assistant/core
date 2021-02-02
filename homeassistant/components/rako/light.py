@@ -75,7 +75,7 @@ class RakoLight(LightEntity):
     def unique_id(self) -> Optional[str]:
         """Light's unique ID."""
         return create_unique_id(
-            self.bridge.mac_address, self._light.room_id, self._light.channel_id
+            self.bridge.entry_id, self._light.room_id, self._light.channel_id
         )
 
     @property

@@ -7,7 +7,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .const import (
-    CONF_MAC_ADDRESS,
     DATA_RAKO_BRIDGE_CLIENT,
     DATA_RAKO_LIGHT_MAP,
     DATA_RAKO_LISTENER_TASK,
@@ -29,7 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     bridge = RakoBridge(
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
-        entry.data[CONF_MAC_ADDRESS],
         entry.entry_id,
         hass,
     )

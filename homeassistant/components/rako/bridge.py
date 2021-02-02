@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def _state_update(bridge, status_message: StatusMessage):
     light_unique_id = create_unique_id(
-        bridge.mac_address, status_message.room, status_message.channel
+        bridge.entry_id, status_message.room, status_message.channel
     )
     brightness = 0
     if isinstance(status_message, ChannelStatusMessage):
@@ -46,10 +46,9 @@ async def listen_for_state_updates(bridge):
 class RakoBridge(Bridge):
     """Represents a Rako Bridge."""
 
-    def __init__(self, host, port, mac_address, entry_id, hass):
+    def __init__(self, host, port, entry_id, hass):
         """Init subclass of python_rako Bridge."""
         super().__init__(host, port)
-        self.mac_address = mac_address
         self.entry_id = entry_id
         self.hass = hass
 
