@@ -825,7 +825,7 @@ ihcsdk==2.7.0
 incomfort-client==0.4.0
 
 # homeassistant.components.influxdb
-influxdb-client==1.8.0
+influxdb-client==1.14.0
 
 # homeassistant.components.influxdb
 influxdb==5.2.3
@@ -2103,7 +2103,7 @@ spotipy==2.16.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.3.22
+sqlalchemy==1.3.23
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.2
