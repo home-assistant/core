@@ -541,7 +541,9 @@ omit =
     homeassistant/components/mailgun/notify.py
     homeassistant/components/map/*
     homeassistant/components/mastodon/notify.py
-    homeassistant/components/matrix/*
+    homeassistant/components/matrix/__init__.py
+    homeassistant/components/matrix/const.py
+    homeassistant/components/matrix/notify.py
     homeassistant/components/maxcube/*
     homeassistant/components/mcp23017/*
     homeassistant/components/media_extractor/*
