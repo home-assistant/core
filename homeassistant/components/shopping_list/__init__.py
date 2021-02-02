@@ -25,9 +25,9 @@ PERSISTENCE = ".shopping_list.json"
 
 SERVICE_ADD_ITEM = "add_item"
 SERVICE_COMPLETE_ITEM = "complete_item"
-SERVICE_UNCOMPLETE_ITEM = "uncomplete_item"
+SERVICE_INCOMPLETE_ITEM = "incomplete_item"
 SERVICE_COMPLETE_ALL = "complete_all"
-SERVICE_UNCOMPLETE_ALL = "uncomplete_all"
+SERVICE_INCOMPLETE_ALL = "incomplete_all"
 SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): vol.Any(None, cv.string)})
 SERVICE_LIST_SCHEMA = vol.Schema({})
 
@@ -96,7 +96,7 @@ async def async_setup_entry(hass, config_entry):
         else:
             await data.async_update(item["id"], {"name": name, "complete": True})
 
-    async def uncomplete_item_service(call):
+    async def incomplete_item_service(call):
         """Mark the item provided via `name` as incomplete."""
         data = hass.data[DOMAIN]
         name = call.data.get(ATTR_NAME)
@@ -113,7 +113,7 @@ async def async_setup_entry(hass, config_entry):
         """Mark all items in the list as complete."""
         await data.async_update_list({"complete": True})
 
-    async def uncomplete_all_service(call):
+    async def incomplete_all_service(call):
         """Mark all items in the list as incomplete."""
         await data.async_update_list({"complete": False})
 
@@ -128,8 +128,8 @@ async def async_setup_entry(hass, config_entry):
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_UNCOMPLETE_ITEM,
-        uncomplete_item_service,
+        SERVICE_INCOMPLETE_ITEM,
+        incomplete_item_service,
         schema=SERVICE_ITEM_SCHEMA,
     )
     hass.services.async_register(
@@ -140,8 +140,8 @@ async def async_setup_entry(hass, config_entry):
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_UNCOMPLETE_ALL,
-        uncomplete_all_service,
+        SERVICE_INCOMPLETE_ALL,
+        incomplete_all_service,
         schema=SERVICE_LIST_SCHEMA,
     )
 

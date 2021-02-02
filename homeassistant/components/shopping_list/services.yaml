@@ -10,7 +10,7 @@ complete_item:
     name:
       description: The name of the item to mark as completed.
       example: Beer
-uncomplete_item:
+incomplete_item:
   description: Marks an item as incomplete in the shopping list.
   fields:
     name:
@@ -18,5 +18,5 @@ uncomplete_item:
       example: Beer
 complete_all:
   description: Marks all items as completed in the shopping list. It does not remove the items.
-uncomplete_all:
+incomplete_all:
   description: Marks all items as incomplete in the shopping list.
