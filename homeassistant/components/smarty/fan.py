@@ -112,4 +112,4 @@ class SmartyFan(FanEntity):
         """Call update method."""
         _LOGGER.debug("Updating state")
         self._smarty_fan_speed = self._smarty.fan_speed
-        self.async_write_has_state()
+        self.async_write_ha_state()
