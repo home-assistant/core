@@ -40,6 +40,9 @@ EVENTS = {
         "humidity_high",
         "humidity_dropped_normal",
     ),
+    "motion": ( # pir_motion when motion detected
+        "pir_motion", ""
+    ),
     "sound": (  # On means sound detected, Off means no sound (clear)
         "avg_sound_high",
         "sound_level_dropped_normal",
