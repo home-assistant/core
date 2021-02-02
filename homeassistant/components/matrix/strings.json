@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "homeserver": "[%key:common::config_flow::data::host%]",
-                    "verify_ssl": "Server uses a SSL certificate",
+                    "verify_ssl": "Validate server SSL certificate",
                     "password": "[%key:common::config_flow::data::password%]",
                     "username": "[%key:common::config_flow::data::username%]"
                 }
