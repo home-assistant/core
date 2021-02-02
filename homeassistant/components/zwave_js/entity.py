@@ -92,7 +92,13 @@ class ZWaveBaseEntity(Entity):
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        return self.client.connected and bool(self.info.node.ready)
+        return (
+            self.client.connected
+            and bool(self.info.node.ready)
+            # a None value indicates something wrong with the device, such as partial interview
+            # set availability to unavailable so user has a clue something is wrong.
+            and self.info.primary_value.value is not None
+        )
 
     @callback
     def _value_changed(self, event_data: dict) -> None:
