@@ -280,13 +280,12 @@ async def disconnect_client(
     platform_task: asyncio.Task,
 ) -> None:
     """Disconnect client."""
-    listen_task.cancel()
-    await listen_task
-
-    platform_task.cancel()
-    await platform_task
-
     await client.disconnect()
+
+    listen_task.cancel()
+    platform_task.cancel()
+
+    await asyncio.gather(listen_task, platform_task)
 
     LOGGER.info("Disconnected from Zwave JS Server")
 
