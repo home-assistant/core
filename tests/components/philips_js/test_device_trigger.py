@@ -50,7 +50,7 @@ async def test_if_fires_on_turn_on_request(hass, calls, mock_entity, mock_device
                     },
                     "action": {
                         "service": "test.automation",
-                        "data_template": {"some": "{{ trigger.event.data.entity_id }}"},
+                        "data_template": {"some": "{{ trigger.device_id }}"},
                     },
                 }
             ]
@@ -66,4 +66,4 @@ async def test_if_fires_on_turn_on_request(hass, calls, mock_entity, mock_device
 
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == mock_entity
+    assert calls[0].data["some"] == mock_device.id

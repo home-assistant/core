@@ -180,7 +180,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     async def async_turn_on(self):
         """Turn on the device."""
-        await self._coordinator.turn_on.async_run(self._context)
+        await self._coordinator.turn_on.async_run(self.hass, self._context)
 
     def turn_off(self):
         """Turn off the device."""

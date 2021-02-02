@@ -53,8 +53,10 @@ async def async_attach_trigger(
 
     variables = {
         "trigger": {
-            "platform": config[CONF_PLATFORM],
-            "description": f"trigger '{config[CONF_TYPE]}'",
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": config[CONF_DEVICE_ID],
+            "description": f"philips_js '{config[CONF_TYPE]}' event",
         }
     }
 

@@ -2,14 +2,14 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Optional
 
 from haphilipsjs import ConnectionFailure, PhilipsTV
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_VERSION, CONF_HOST
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -74,7 +74,7 @@ class PluggableAction:
         return bool(self._actions)
 
     @callback
-    def async_attach(self, action: AutomationActionType, variables: dict):
+    def async_attach(self, action: AutomationActionType, variables: Dict[str, Any]):
         """Attach a device trigger for turn on."""
 
         @callback
@@ -82,15 +82,17 @@ class PluggableAction:
             del self._actions[_remove]
             self._update()
 
-        self._actions[_remove] = (action, variables)
+        job = HassJob(action)
+
+        self._actions[_remove] = (job, variables)
         self._update()
 
         return _remove
 
-    async def async_run(self, context):
+    async def async_run(self, hass, context: Optional[Context] = None):
         """Run all turn on triggers."""
-        for action, variables in self._actions.values():
-            await action(variables, context)
+        for job, variables in self._actions.values():
+            hass.async_run_hass_job(job, variables, context)
 
 
 class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
