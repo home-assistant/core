@@ -155,7 +155,6 @@ class InputBoolean(ToggleEntity, RestoreEntity):
         input_bool = cls(config)
         input_bool.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_bool._editable = False
-        _LOGGER.error("InputBoolean from_yaml editable: %s", input_bool._editable)
         return input_bool
 
     @property
