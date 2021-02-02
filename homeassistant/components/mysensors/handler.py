@@ -60,29 +60,29 @@ async def handle_heartbeat(
 
 @HANDLERS.register("I_SKETCH_NAME")
 async def handle_sketch_name(
-    hass: HomeAssistantType, gatway_id: GatewayId, msg: Message
+    hass: HomeAssistantType, gateway_id: GatewayId, msg: Message
 ) -> None:
     """Handle an internal sketch name message."""
-    _handle_node_update(hass, gatway_id, msg)
+    _handle_node_update(hass, gateway_id, msg)
 
 
 @HANDLERS.register("I_SKETCH_VERSION")
 async def handle_sketch_version(
-    hass: HomeAssistantType, gatway_id: GatewayId, msg: Message
+    hass: HomeAssistantType, gateway_id: GatewayId, msg: Message
 ) -> None:
     """Handle an internal sketch version message."""
-    _handle_node_update(hass, gatway_id, msg)
+    _handle_node_update(hass, gateway_id, msg)
 
 
 @HANDLERS.register("I_GATEWAY_READY")
 async def handle_gateway_ready(
-    hass: HomeAssistantType, gatway_id: GatewayId, msg: Message
+    hass: HomeAssistantType, gateway_id: GatewayId, msg: Message
 ) -> None:
     """Handle an internal gateway ready message.
 
     Set asyncio future result if gateway is ready.
     """
-    gateway_ready = hass.data.get(MYSENSORS_GATEWAY_READY.format(gatway_id))
+    gateway_ready = hass.data.get(MYSENSORS_GATEWAY_READY.format(gateway_id))
     if gateway_ready is None or gateway_ready.cancelled():
         return
     gateway_ready.set_result(True)
@@ -90,7 +90,7 @@ async def handle_gateway_ready(
 
 @callback
 def _handle_child_update(
-    hass: HomeAssistantType, gatway_id: GatewayId, validated: Dict[str, List[DevId]]
+    hass: HomeAssistantType, gateway_id: GatewayId, validated: Dict[str, List[DevId]]
 ):
     """Handle a child update."""
     signals: List[str] = []
@@ -106,7 +106,7 @@ def _handle_child_update(
             else:
                 new_dev_ids.append(dev_id)
         if new_dev_ids:
-            discover_mysensors_platform(hass, gatway_id, platform, new_dev_ids)
+            discover_mysensors_platform(hass, gateway_id, platform, new_dev_ids)
     for signal in set(signals):
         # Only one signal per device is needed.
         # A device can have multiple platforms, ie multiple schemas.
