@@ -13,7 +13,7 @@ defusedxml==0.6.0
 distro==1.5.0
 emoji==1.2.0
 hass-nabucasa==0.41.0
-home-assistant-frontend==20210127.6
+home-assistant-frontend==20210127.7
 httpx==0.16.1
 jinja2>=2.11.3
 netdisco==2.8.2
