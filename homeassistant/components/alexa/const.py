@@ -53,10 +53,13 @@ CONF_SUPPORTED_LOCALES = (
     "en-US",
     "es-ES",
     "es-MX",
+    "es-US",
     "fr-CA",
     "fr-FR",
+    "hi-IN",
     "it-IT",
     "ja-JP",
+    "pt-BR",
 )
 
 API_TEMP_UNITS = {TEMP_FAHRENHEIT: "FAHRENHEIT", TEMP_CELSIUS: "CELSIUS"}
