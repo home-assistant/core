@@ -1391,6 +1391,7 @@ async def test_fan_speed(hass):
                     fan.SPEED_HIGH,
                 ],
                 "speed": "low",
+                "percentage": 33,
             },
         ),
         BASIC_CONFIG,
@@ -1438,11 +1439,13 @@ async def test_fan_speed(hass):
             ],
         },
         "reversible": False,
+        "supportsFanSpeedPercent": True,
     }
 
     assert trt.query_attributes() == {
         "currentFanSpeedSetting": "low",
         "on": True,
+        "currentFanSpeedPercent": 33,
     }
 
     assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeed": "medium"})
@@ -1452,6 +1455,14 @@ async def test_fan_speed(hass):
 
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": "fan.living_room_fan", "speed": "medium"}
+
+    assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeedPercent": 10})
+
+    calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_SET_PERCENTAGE)
+    await trt.execute(trait.COMMAND_FANSPEED, BASIC_DATA, {"fanSpeedPercent": 10}, {})
+
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "fan.living_room_fan", "percentage": 10}
 
 
 async def test_climate_fan_speed(hass):
@@ -1495,6 +1506,7 @@ async def test_climate_fan_speed(hass):
             ],
         },
         "reversible": False,
+        "supportsFanSpeedPercent": True,
     }
 
     assert trt.query_attributes() == {
