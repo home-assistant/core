@@ -329,7 +329,4 @@ async def test_removed_device(hass, client, multiple_devices, integration):
         ent_reg, integration.entry_id
     )
     assert len(entity_entries) == 9
-    assert (
-        dev_reg.async_get_device({get_device_id(client, old_node)})
-        not in device_entries
-    )
+    assert dev_reg.async_get_device({get_device_id(client, old_node)}) is None
