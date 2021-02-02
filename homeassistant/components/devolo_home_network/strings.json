@@ -1,21 +1,16 @@
 {
-  
   "config": {
     "flow_title": "{product} ({name})",
     "step": {
       "user": {
         "description": "[%key:common::config_flow::description::confirm_setup%]",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "password":"[%key:common::config_flow::data::password%]"
+          "ip_address": "[%key:common::config_flow::data::ip%]"
         }
       },
       "zeroconf_confirm": {
         "description": "Do you want to add the devolo home network device with the hostname `{host_name}` to Home Assistant?",
-        "title": "Discovered devolo home network device",
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        }
+        "title": "Discovered devolo home network device"
     }
   },
     "error": {
