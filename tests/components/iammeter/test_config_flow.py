@@ -26,7 +26,10 @@ async def test_form(hass, test_connect):
 
     with patch(
         "homeassistant.components.iammeter.async_setup", return_value=True
-    ), patch("iammeter.real_time_api", return_value=True), patch(
+    ), patch(
+        "iammeter.real_time_api",
+        return_value=RealTimeAPI(IamMeter(HOST, PORT, "MOCKUPSN")),
+    ), patch(
         "homeassistant.components.iammeter.async_setup_entry",
         return_value=True,
     ):
@@ -87,7 +90,8 @@ async def test_connect_exception(hass):
             context={"source": SOURCE_USER},
             data={CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT},
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    # assert result["errors"] == {CONF_NAME: "cannot_connect"}
 
 
 async def test_import(hass, test_connect):
@@ -112,16 +116,22 @@ async def test_import(hass, test_connect):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
 
-async def test_abort_if_already_setup(hass, test_connect):
+async def test_abort_if_already_setup(hass):
     """Test we abort if the device is already setup."""
-    MockConfigEntry(
-        domain="iammeter", data={CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT}
-    ).add_to_hass(hass)
-
     with patch(
-        "homeassistant.components.iammeter.config_flow.IammeterConfigFlow._host_in_configuration_exists",
-        return_value=True,
+        "iammeter.real_time_api",
+        return_value=RealTimeAPI(IamMeter(HOST, PORT, "MOCKUPSN")),
     ):
+        MockConfigEntry(
+            domain="iammeter", data={CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT}
+        ).add_to_hass(hass)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT},
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
