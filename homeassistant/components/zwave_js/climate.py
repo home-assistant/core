@@ -142,6 +142,12 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             add_to_watched_value_ids=True,
             check_all_endpoints=True,
         )
+        self._current_humidity = self.get_zwave_value(
+            "Humidity",
+            command_class=CommandClass.SENSOR_MULTILEVEL,
+            add_to_watched_value_ids=True,
+            check_all_endpoints=True,
+        )
         self._set_modes_and_presets()
 
     def _setpoint_value(self, setpoint_type: ThermostatSetpointType) -> ZwaveValue:
@@ -206,6 +212,11 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if not self._operating_state:
             return None
         return HVAC_CURRENT_MAP.get(int(self._operating_state.value))
+
+    @property
+    def current_humidity(self) -> Optional[int]:
+        """Return the current humidity level."""
+        return self._current_humidity.value if self._current_humidity else None
 
     @property
     def current_temperature(self) -> Optional[float]:
