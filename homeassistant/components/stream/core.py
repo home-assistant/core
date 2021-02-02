@@ -43,11 +43,13 @@ class IdleTimer:
     resets the internal alarm, extending the inactivity time.
     """
 
-    def __init__(self, hass: HomeAssistant, timeout: int, callback: Callable[[], None]):
+    def __init__(
+        self, hass: HomeAssistant, timeout: int, idle_callback: Callable[[], None]
+    ):
         """Initialize IdleTimer."""
         self._hass = hass
         self._timeout = timeout
-        self._callback = callback
+        self._callback = idle_callback
         self._unsub = None
         self.idle = False
 
