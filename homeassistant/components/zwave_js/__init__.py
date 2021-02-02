@@ -5,6 +5,7 @@ import logging
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.node import Node as ZwaveNode
+from zwave_js_server.model.notification import Notification
 from zwave_js_server.model.value import ValueNotification
 
 from homeassistant.components.hassio.handler import HassioAPIError
@@ -26,6 +27,7 @@ from .const import (
     ATTR_HOME_ID,
     ATTR_LABEL,
     ATTR_NODE_ID,
+    ATTR_PARAMETERS,
     ATTR_PROPERTY_KEY_NAME,
     ATTR_PROPERTY_NAME,
     ATTR_TYPE,
@@ -114,10 +116,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async_dispatcher_send(
                 hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
             )
-        # add listener for stateless node events (value notification)
+        # add listener for stateless node value notification events
         node.on(
             "value notification",
             lambda event: async_on_value_notification(event["value_notification"]),
+        )
+        # add listener for stateless node notification events
+        node.on(
+            "notification", lambda event: async_on_notification(event["notification"])
         )
 
     @callback
@@ -169,6 +175,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ATTR_PROPERTY_NAME: notification.property_name,
                 ATTR_PROPERTY_KEY_NAME: notification.property_key_name,
                 ATTR_VALUE: value,
+            },
+        )
+
+    @callback
+    def async_on_notification(notification: Notification) -> None:
+        """Relay stateless notification events from Z-Wave nodes to hass."""
+        device = dev_reg.async_get_device({get_device_id(client, notification.node)})
+        hass.bus.async_fire(
+            ZWAVE_JS_EVENT,
+            {
+                ATTR_TYPE: "notification",
+                ATTR_DOMAIN: DOMAIN,
+                ATTR_NODE_ID: notification.node.node_id,
+                ATTR_HOME_ID: client.driver.controller.home_id,
+                ATTR_DEVICE_ID: device.id,
+                ATTR_LABEL: notification.notification_label,
+                ATTR_PARAMETERS: notification.parameters,
             },
         )
 

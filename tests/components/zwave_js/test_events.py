@@ -128,3 +128,31 @@ async def test_scenes(hass, hank_binary_switch, integration, client):
     assert events[2].data["command_class_name"] == "Central Scene"
     assert events[2].data["label"] == "Scene 001"
     assert events[2].data["value"] == "KeyPressed3x"
+
+
+async def test_notifications(hass, hank_binary_switch, integration, client):
+    """Test notification events."""
+    # just pick a random node to fake the value notification events
+    node = hank_binary_switch
+    events = async_capture_events(hass, "zwave_js_event")
+
+    # Publish fake Basic Set value notification
+    event = Event(
+        type="notification",
+        data={
+            "source": "node",
+            "event": "notification",
+            "nodeId": 23,
+            "notificationLabel": "Keypad lock operation",
+            "parameters": {"userId": 1},
+        },
+    )
+    node.receive_event(event)
+    # wait for the event
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    assert events[0].data["type"] == "notification"
+    assert events[0].data["home_id"] == client.driver.controller.home_id
+    assert events[0].data["node_id"] == 32
+    assert events[0].data["label"] == "Keypad lock operation"
+    assert events[0].data["parameters"]["userId"] == 1
