@@ -3,6 +3,7 @@ import pytest
 from zwave_js_server.event import Event
 
 from homeassistant.components.climate.const import (
+    ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
@@ -42,6 +43,7 @@ async def test_thermostat_v2(
         HVAC_MODE_COOL,
         HVAC_MODE_HEAT_COOL,
     ]
+    assert state.attributes[ATTR_CURRENT_HUMIDITY] == 30
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.2
     assert state.attributes[ATTR_TEMPERATURE] == 22.2
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
