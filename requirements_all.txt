@@ -2284,7 +2284,7 @@ wakeonlan==1.1.6
 waqiasync==1.0.0
 
 # homeassistant.components.folder_watcher
-watchdog==0.8.3
+watchdog==1.0.2
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
