@@ -91,9 +91,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             data["sleep_period"] = get_device_sleep_period(device.settings)
             data["model"] = device.settings["device"]["type"]
             hass.config_entries.async_update_entry(entry, data=data)
-            entry.data = data
 
-        hass.loop.create_task(async_device_setup(hass, entry, device))
+        hass.async_create_task(async_device_setup(hass, entry, device))
 
     if sleep_period == 0:
         # Not a sleeping device, finish setup
