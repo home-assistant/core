@@ -1,6 +1,7 @@
 """Support for Hyperion-NG remotes."""
 from __future__ import annotations
 
+import functools
 import logging
 from types import MappingProxyType
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
@@ -401,7 +402,7 @@ class HyperionBaseLight(LightEntity):
             async_dispatcher_connect(
                 self.hass,
                 SIGNAL_ENTITY_REMOVE.format(self._unique_id),
-                self.async_remove,
+                functools.partial(self.async_remove, force_remove=True),
             )
         )
 
