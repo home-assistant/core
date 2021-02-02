@@ -223,4 +223,7 @@ class ShellySleepingSensor(ShellySleepingBlockAttributeEntity):
     @property
     def state(self):
         """Return value of sensor."""
-        return self.attribute_value
+        if self.block is not None:
+            return self.attribute_value
+
+        return self.last_state

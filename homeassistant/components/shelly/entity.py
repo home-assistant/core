@@ -409,18 +409,6 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
             self._unique_id = entry.unique_id
             self._name = entry.original_name
 
-    @property
-    def attribute_value(self):
-        """Value of sensor."""
-        if self.block is not None:
-            return super().attribute_value
-
-        return self.last_state
-
-    def set_last_state(self, last_state):
-        """Set the last state of the attribute."""
-        self.last_state = last_state
-
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -428,21 +416,26 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
         last_state = await self.async_get_last_state()
 
         if last_state is not None:
-            self.set_last_state(last_state.state)
+            self.last_state = last_state.state
 
     @callback
     def _update_callback(self):
         """Handle device update."""
-        if self.block is None and self.wrapper.device.initialized:
-            for block in self.wrapper.device.blocks:
-                for sensor_id in block.sensor_ids:
-                    unique_id = f"{self.wrapper.mac}-{block.description}-{sensor_id}"
-                    if unique_id == self.unique_id:
-                        self.block = block
-                        _LOGGER.debug("Entity %s attached to block", self.name)
-                        break
-                else:
-                    continue
-                break
+        if self.block is not None:
+            super()._update_callback()
+            return
 
-        super()._update_callback()
+        _, entity_block, entity_sensor = self.unique_id.split("-")
+
+        for block in self.wrapper.device.blocks:
+            if block.description != entity_block:
+                continue
+
+            for sensor_id in block.sensor_ids:
+                if sensor_id != entity_sensor:
+                    continue
+
+                self.block = block
+                _LOGGER.debug("Entity %s attached to block", self.name)
+                super()._update_callback()
+                return

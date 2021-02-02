@@ -147,8 +147,7 @@ class ShellySleepingBinarySensor(
     @property
     def is_on(self):
         """Return true if sensor state is on."""
-        return bool(self.attribute_value)
+        if self.block is not None:
+            return bool(self.attribute_value)
 
-    def set_last_state(self, last_state):
-        """Set the last state of the attribute."""
-        super().set_last_state(last_state == STATE_ON)
+        return self.last_state == STATE_ON
