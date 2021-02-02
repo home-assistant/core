@@ -68,18 +68,17 @@ class FAADataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, code):
         """Initialize the coordinator."""
+        super().__init__(
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=1)
+        )
         self.session = aiohttp_client.async_get_clientsession(hass)
         self.data = Airport(code, self.session)
         self.code = code
 
-        super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=1)
-        )
-
     async def _async_update_data(self):
         try:
             with timeout(10):
-                self.data.update()
+                await self.data.update()
         except ClientConnectionError as err:
             raise UpdateFailed(err) from err
         return self.data
