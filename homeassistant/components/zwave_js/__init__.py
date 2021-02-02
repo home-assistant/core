@@ -48,6 +48,7 @@ from .entity import get_device_id
 LOGGER = logging.getLogger(__name__)
 CONNECT_TIMEOUT = 10
 DATA_CLIENT_LISTEN_TASK = "client_listen_task"
+DATA_START_PLATFORM_TASK = "start_platform_task"
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -183,23 +184,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     else:
         LOGGER.info("Connected to Zwave JS Server")
-        async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
-
-    LOGGER.info("Connection to Zwave JS Server initialized")
-
-    # Check for nodes that no longer exist and remove them
-    stored_devices = device_registry.async_entries_for_config_entry(
-        dev_reg, entry.entry_id
-    )
-    known_devices = [
-        dev_reg.async_get_device({get_device_id(client, node)})
-        for node in client.driver.controller.nodes.values()
-    ]
-
-    # Devices that are in the device registry that are not known by the controller can be removed
-    for device in stored_devices:
-        if device not in known_devices:
-            dev_reg.async_remove_device(device.id)
 
     unsubscribe_callbacks: List[Callable] = []
     hass.data[DOMAIN][entry.entry_id] = {
@@ -220,6 +204,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ]
         )
 
+        driver_ready = asyncio.Event()
+
+        async def handle_ha_shutdown(event: Event) -> None:
+            """Handle HA shutdown."""
+            await disconnect_client(hass, entry, client, listen_task, platform_task)
+
+        listen_task = asyncio.create_task(
+            client_listen(hass, entry, client, driver_ready)
+        )
+        hass.data[DOMAIN][entry.entry_id][DATA_CLIENT_LISTEN_TASK] = listen_task
+        unsubscribe_callbacks.append(
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
+        )
+
+        await driver_ready.wait()
+
+        LOGGER.info("Connection to Zwave JS Server initialized")
+        async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
+
+        # Check for nodes that no longer exist and remove them
+        stored_devices = device_registry.async_entries_for_config_entry(
+            dev_reg, entry.entry_id
+        )
+        known_devices = [
+            dev_reg.async_get_device({get_device_id(client, node)})
+            for node in client.driver.controller.nodes.values()
+        ]
+
+        # Devices that are in the device registry that are not known by the controller can be removed
+        for device in stored_devices:
+            if device not in known_devices:
+                dev_reg.async_remove_device(device.id)
+
         # run discovery on all ready nodes
         for node in client.driver.controller.nodes.values():
             async_on_node_added(node)
@@ -234,27 +251,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "node removed", lambda event: async_on_node_removed(event["node"])
         )
 
-        async def handle_ha_shutdown(event: Event) -> None:
-            """Handle HA shutdown."""
-            await disconnect_client(hass, entry, client, listen_task)
-
-        listen_task = asyncio.create_task(client_listen(hass, entry, client))
-        hass.data[DOMAIN][entry.entry_id][DATA_CLIENT_LISTEN_TASK] = listen_task
-        unsubscribe_callbacks.append(
-            hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
-        )
-
-    hass.async_create_task(start_platforms())
+    platform_task = hass.async_create_task(start_platforms())
+    hass.data[DOMAIN][entry.entry_id][DATA_START_PLATFORM_TASK] = platform_task
 
     return True
 
 
 async def client_listen(
-    hass: HomeAssistant, entry: ConfigEntry, client: ZwaveClient
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    client: ZwaveClient,
+    driver_ready: asyncio.Event,
 ) -> None:
     """Listen with the client."""
     try:
-        await client.listen()
+        await client.listen(driver_ready)
     except BaseZwaveJSServerError:
         # The entry needs to be reloaded since a new driver state
         # will be acquired on reconnect.
@@ -267,10 +278,15 @@ async def disconnect_client(
     entry: ConfigEntry,
     client: ZwaveClient,
     listen_task: asyncio.Task,
+    platform_task: asyncio.Task,
 ) -> None:
     """Disconnect client."""
     listen_task.cancel()
     await listen_task
+
+    platform_task.cancel()
+    await platform_task
+
     await client.disconnect()
 
     LOGGER.info("Disconnected from Zwave JS Server")
@@ -297,7 +313,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if DATA_CLIENT_LISTEN_TASK in info:
         await disconnect_client(
-            hass, entry, info[DATA_CLIENT], info[DATA_CLIENT_LISTEN_TASK]
+            hass,
+            entry,
+            info[DATA_CLIENT],
+            info[DATA_CLIENT_LISTEN_TASK],
+            platform_task=info[DATA_START_PLATFORM_TASK],
         )
 
     return True
