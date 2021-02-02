@@ -76,17 +76,19 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not connect_ok:
                 errors[CONF_NAME] = "cannot_connect"
             else:
-                if self._host_in_configuration_exists(self.api.iammeter.serial_number):
-                    errors[CONF_NAME] = "already_configured"
-                if not errors:
-                    return self.async_create_entry(
-                        title=name,
-                        data={
-                            CONF_NAME: self.api.iammeter.serial_number,
-                            CONF_HOST: host,
-                            CONF_PORT: port,
-                        },
-                    )
+                if self.api:
+                    sn = self.api.iammeter.serial_number
+                    if self._host_in_configuration_exists(sn):
+                        errors[CONF_NAME] = "already_configured"
+                    if not errors:
+                        return self.async_create_entry(
+                            title=name,
+                            data={
+                                CONF_NAME: sn,
+                                CONF_HOST: host,
+                                CONF_PORT: port,
+                            },
+                        )
 
         else:
             user_input = {}
