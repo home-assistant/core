@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_CODE,
     ATTR_SUPPORTED_FEATURES,
     CONF_NAME,
+    CONF_PORT,
     CONF_TYPE,
     TEMP_CELSIUS,
 )
@@ -445,7 +446,7 @@ def _get_test_socket():
     return test_socket
 
 
-def port_is_available(port: int):
+def port_is_available(port: int) -> bool:
     """Check to see if a port is available."""
     test_socket = _get_test_socket()
     try:
@@ -456,10 +457,24 @@ def port_is_available(port: int):
     return True
 
 
-def find_next_available_port(start_port: int):
+async def async_find_next_available_port(hass: HomeAssistant, start_port: int) -> int:
+    """Find the next available port not assigned to a config entry."""
+    exclude_ports = set()
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if CONF_PORT in entry.data:
+            exclude_ports.add(entry.data[CONF_PORT])
+
+    return await hass.async_add_executor_job(
+        _find_next_available_port, start_port, exclude_ports
+    )
+
+
+def _find_next_available_port(start_port: int, exclude_ports: set) -> int:
     """Find the next available port starting with the given port."""
     test_socket = _get_test_socket()
     for port in range(start_port, MAX_PORT):
+        if port in exclude_ports:
+            continue
         try:
             test_socket.bind(("", port))
             return port
@@ -469,7 +484,7 @@ def find_next_available_port(start_port: int):
             continue
 
 
-def pid_is_alive(pid):
+def pid_is_alive(pid) -> bool:
     """Check to see if a process is alive."""
     try:
         os.kill(pid, 0)
