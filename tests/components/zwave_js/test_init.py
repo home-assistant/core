@@ -7,6 +7,7 @@ from zwave_js_server.model.node import Node
 
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zwave_js.const import DOMAIN
+from homeassistant.components.zwave_js.entity import get_device_id
 from homeassistant.config_entries import (
     CONN_CLASS_LOCAL_PUSH,
     ENTRY_STATE_LOADED,
@@ -14,6 +15,7 @@ from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_RETRY,
 )
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.helpers import device_registry, entity_registry
 
 from .common import AIR_TEMPERATURE_SENSOR
 
@@ -75,6 +77,7 @@ async def test_availability_reflect_connection_status(
     """Test we handle disconnect and reconnect."""
     on_initialized = client.register_on_initialized.call_args[0][0]
     on_disconnect = client.register_on_disconnect.call_args[0][0]
+
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
     assert state
@@ -290,3 +293,44 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
     assert entry.state == ENTRY_STATE_NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to uninstall the Z-Wave JS add-on" in caplog.text
+
+
+async def test_removed_device(hass, client, multiple_devices, integration):
+    """Test that the device registry gets updated when a device gets removed."""
+    nodes = multiple_devices
+
+    # Verify how many nodes are available
+    assert len(client.driver.controller.nodes) == 2
+
+    # Make sure there are the same number of devices
+    dev_reg = await device_registry.async_get_registry(hass)
+    device_entries = device_registry.async_entries_for_config_entry(
+        dev_reg, integration.entry_id
+    )
+    assert len(device_entries) == 2
+
+    # Check how many entities there are
+    ent_reg = await entity_registry.async_get_registry(hass)
+    entity_entries = entity_registry.async_entries_for_config_entry(
+        ent_reg, integration.entry_id
+    )
+    assert len(entity_entries) == 18
+
+    # Remove a node and reload the entry
+    old_node = nodes.pop(13)
+    await hass.config_entries.async_reload(integration.entry_id)
+
+    # Assert that the node and all of it's entities were removed from the device and
+    # entity registry
+    device_entries = device_registry.async_entries_for_config_entry(
+        dev_reg, integration.entry_id
+    )
+    assert len(device_entries) == 1
+    entity_entries = entity_registry.async_entries_for_config_entry(
+        ent_reg, integration.entry_id
+    )
+    assert len(entity_entries) == 9
+    assert (
+        dev_reg.async_get_device({get_device_id(client, old_node)})
+        not in device_entries
+    )

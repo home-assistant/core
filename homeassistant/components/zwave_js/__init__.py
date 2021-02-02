@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -78,6 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     connected = asyncio.Event()
     initialized = asyncio.Event()
     dev_reg = await device_registry.async_get_registry(hass)
+    ent_reg = await entity_registry.async_get_registry(hass)
 
     async def async_on_connect() -> None:
         """Handle websocket is (re)connected."""
@@ -99,6 +100,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         initialized.set()
         # update entity availability
         async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
+
+        # Check for nodes that no longer exist and remove them
+        stored_devices = device_registry.async_entries_for_config_entry(
+            dev_reg, entry.entry_id
+        )
+        known_devices = [
+            dev_reg.async_get_device({get_device_id(client, node)})
+            for node in client.driver.controller.nodes.values()
+        ]
+
+        # Devices that are in the device registry that are not known by the controller can be removed
+        for device in stored_devices:
+            if device not in known_devices:
+                for entity in entity_registry.async_entries_for_device(
+                    ent_reg, device.id, include_disabled_entities=True
+                ):
+                    ent_reg.async_remove(entity.entity_id)
+                dev_reg.async_remove_device(device.id)
 
     @callback
     def async_on_node_ready(node: ZwaveNode) -> None:
