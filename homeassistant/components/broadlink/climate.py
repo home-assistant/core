@@ -35,6 +35,8 @@ class BroadlinkThermostat(ClimateEntity, RestoreEntity):
         self._supported_features = SUPPORT_TARGET_TEMPERATURE
         self._hvac_mode = None
         self._hvac_action = None
+        self._current_temperature = None
+        self._target_temperature = None
 
     @property
     def name(self):
@@ -107,7 +109,10 @@ class BroadlinkThermostat(ClimateEntity, RestoreEntity):
         """Call when the climate device is added to hass."""
         if self._hvac_mode is None:
             state = await self.async_get_last_state()
-            self._hvac_mode = state is not None and state.state != "unknown"
+            if state.state:
+                self._hvac_mode = HVAC_MODE_HEAT
+            else:
+                self._hvac_mode = HVAC_MODE_OFF
         self.async_on_remove(self._coordinator.async_add_listener(self.update_data))
 
     async def async_update(self):
