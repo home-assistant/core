@@ -190,7 +190,7 @@ async def test_hue_activate_scene(hass, mock_api):
     assert len(mock_api.mock_requests) == 3
     assert mock_api.mock_requests[2]["json"]["scene"] == "scene_1"
     assert mock_api.mock_requests[2]["path"] == "groups/group_1/action"
-    
+
 
 async def test_hue_activate_scene_transition(hass, mock_api):
     """Test successful hue_activate_scene with transition."""
