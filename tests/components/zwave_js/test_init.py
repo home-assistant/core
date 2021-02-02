@@ -77,7 +77,6 @@ async def test_availability_reflect_connection_status(
     """Test we handle disconnect and reconnect."""
     on_initialized = client.register_on_initialized.call_args[0][0]
     on_disconnect = client.register_on_disconnect.call_args[0][0]
-
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
     assert state
