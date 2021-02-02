@@ -102,6 +102,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # update entity availability
         async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
 
+        # Check for nodes that no longer exist and remove them
+        stored_devices = device_registry.async_entries_for_config_entry(
+            dev_reg, entry.entry_id
+        )
+        known_devices = [
+            dev_reg.async_get_device({get_device_id(client, node)})
+            for node in client.driver.controller.nodes.values()
+        ]
+
+        # Devices that are in the device registry that are not known by the controller can be removed
+        for device in stored_devices:
+            if device not in known_devices:
+                dev_reg.async_remove_device(device.id)
+
     @callback
     def async_on_node_ready(node: ZwaveNode) -> None:
         """Handle node ready event."""
