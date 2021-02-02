@@ -521,6 +521,7 @@ omit =
     homeassistant/components/lyric/__init__.py
     homeassistant/components/lyric/api.py
     homeassistant/components/lyric/climate.py
+    homeassistant/components/lyric/sensor.py
     homeassistant/components/magicseaweed/sensor.py
     homeassistant/components/mailgun/notify.py
     homeassistant/components/map/*
