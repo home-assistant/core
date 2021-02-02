@@ -590,7 +590,7 @@ async def test_unload_config_entry(hass, config_entry, config, controller):
     """Test the player is removed when the config entry is unloaded."""
     await setup_platform(hass, config_entry, config)
     await config_entry.async_unload(hass)
-    assert not hass.states.get("media_player.test_player")
+    assert hass.states.get("media_player.test_player").state == STATE_UNAVAILABLE
 
 
 async def test_play_media_url(hass, config_entry, config, controller, caplog):

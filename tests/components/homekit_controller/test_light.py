@@ -220,8 +220,8 @@ async def test_light_unloaded(hass, utcnow):
     unload_result = await helper.config_entry.async_unload(hass)
     assert unload_result is True
 
-    # Make sure entity is unloaded
-    assert hass.states.get(helper.entity_id) is None
+    # Make sure entity is set to unavailable state
+    assert hass.states.get(helper.entity_id).state == "unavailable"
 
     # Make sure HKDevice is no longer set to poll this accessory
     conn = hass.data[KNOWN_DEVICES]["00:00:00:00:00:00"]
