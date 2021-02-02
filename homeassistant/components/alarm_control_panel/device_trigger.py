@@ -25,6 +25,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
