@@ -317,7 +317,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         max_mireds = self.light.controlcapabilities.get("ct", {}).get("max")
 
         if self.is_livarno:
-            max_mireds=500
+            max_mireds = 500
             
         if not max_mireds:
             return super().max_mireds
