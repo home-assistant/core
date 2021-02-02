@@ -221,7 +221,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await driver_ready.wait()
 
         LOGGER.info("Connection to Zwave JS Server initialized")
-        async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
 
         # Check for nodes that no longer exist and remove them
         stored_devices = device_registry.async_entries_for_config_entry(
@@ -290,7 +289,6 @@ async def disconnect_client(
     await client.disconnect()
 
     LOGGER.info("Disconnected from Zwave JS Server")
-    async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_connection_state")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
