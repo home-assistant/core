@@ -1358,6 +1358,7 @@ class ServiceRegistry:
         blocking: bool = False,
         context: Optional[Context] = None,
         limit: Optional[float] = SERVICE_CALL_LIMIT,
+        target: Optional[Dict] = None,
     ) -> Optional[bool]:
         """
         Call a service.
@@ -1365,7 +1366,9 @@ class ServiceRegistry:
         See description of async_call for details.
         """
         return asyncio.run_coroutine_threadsafe(
-            self.async_call(domain, service, service_data, blocking, context, limit),
+            self.async_call(
+                domain, service, service_data, blocking, context, limit, target
+            ),
             self._hass.loop,
         ).result()
 
@@ -1377,6 +1380,7 @@ class ServiceRegistry:
         blocking: bool = False,
         context: Optional[Context] = None,
         limit: Optional[float] = SERVICE_CALL_LIMIT,
+        target: Optional[Dict] = None,
     ) -> Optional[bool]:
         """
         Call a service.
@@ -1417,6 +1421,9 @@ class ServiceRegistry:
                 raise
         else:
             processed_data = service_data
+
+        if target:
+            processed_data.update(target)
 
         service_call = ServiceCall(domain, service, processed_data, context)
 
