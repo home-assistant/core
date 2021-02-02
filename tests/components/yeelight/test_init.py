@@ -11,7 +11,7 @@ from homeassistant.components.yeelight import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
@@ -50,8 +50,8 @@ async def test_setup_discovery(hass: HomeAssistant):
 
     # Unload
     assert await hass.config_entries.async_unload(config_entry.entry_id)
-    assert hass.states.get(ENTITY_BINARY_SENSOR) is None
-    assert hass.states.get(ENTITY_LIGHT) is None
+    assert hass.states.get(ENTITY_BINARY_SENSOR).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
 
 
 async def test_setup_import(hass: HomeAssistant):

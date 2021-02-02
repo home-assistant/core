@@ -10,7 +10,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
@@ -139,7 +139,9 @@ async def test_power_plugs(hass):
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
-    assert len(hass.states.async_all()) == 0
+    states = hass.states.async_all()
+    for state in states:
+        assert state.state == STATE_UNAVAILABLE
 
 
 async def test_sirens(hass):
@@ -202,4 +204,6 @@ async def test_sirens(hass):
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
-    assert len(hass.states.async_all()) == 0
+    states = hass.states.async_all()
+    for state in states:
+        assert state.state == STATE_UNAVAILABLE

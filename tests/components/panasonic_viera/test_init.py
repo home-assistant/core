@@ -17,7 +17,7 @@ from homeassistant.components.panasonic_viera.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -258,4 +258,4 @@ async def test_setup_unload_entry(hass):
 
     state = hass.states.get("media_player.panasonic_viera_tv")
 
-    assert state is None
+    assert state.state == STATE_UNAVAILABLE

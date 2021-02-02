@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_ERROR,
     ConfigEntry,
 )
-from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -147,7 +147,7 @@ async def test_unload_entry(hass: HomeAssistant):
         entities = hass.states.async_entity_ids("sensor")
         assert len(entities) == 14
         for entity in entities:
-            assert entity.state == "unavailable"
+            assert hass.states.get(entity).state == STATE_UNAVAILABLE
 
         # Assert mocks are called
         assert len(mock_authenticate.mock_calls) == 1

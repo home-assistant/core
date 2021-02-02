@@ -31,6 +31,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.setup import async_setup_component
 
@@ -296,7 +297,9 @@ async def test_lights_and_groups(hass):
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
-    assert len(hass.states.async_all()) == 0
+    states = hass.states.async_all()
+    for state in states:
+        assert state.state == STATE_UNAVAILABLE
 
 
 async def test_disable_light_groups(hass):

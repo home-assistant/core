@@ -586,8 +586,8 @@ async def test_select_input_command_error(
     assert "Unable to select source: Failure (1)" in caplog.text
 
 
-async def test_unload_config_entry(hass, config_entry, config, controller):
-    """Test the player is removed when the config entry is unloaded."""
+async def test_unload_remove_config_entry(hass, config_entry, config, controller):
+    """Test the player lifecycle when the config entry is unloaded and removed."""
     await setup_platform(hass, config_entry, config)
     await config_entry.async_unload(hass)
     assert hass.states.get("media_player.test_player").state == STATE_UNAVAILABLE

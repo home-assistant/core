@@ -39,7 +39,12 @@ from homeassistant.components.deconz.const import (
     DOMAIN as DECONZ_DOMAIN,
 )
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_OFF
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_OFF,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
@@ -361,7 +366,9 @@ async def test_climate_device_without_cooling_support(hass):
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
-    assert len(hass.states.async_all()) == 0
+    states = hass.states.async_all()
+    for state in states:
+        assert state.state == STATE_UNAVAILABLE
 
 
 async def test_climate_device_with_cooling_support(hass):

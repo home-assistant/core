@@ -4,7 +4,13 @@ from unittest.mock import Mock, call
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
@@ -73,4 +79,4 @@ async def test_unload(hass: HomeAssistantType, fritz: Mock):
     assert fritz().logout.call_count == 1
     assert entry.state == ENTRY_STATE_NOT_LOADED
     state = hass.states.get(entity_id)
-    assert state is None
+    assert state.state == STATE_UNAVAILABLE

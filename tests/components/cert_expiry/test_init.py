@@ -5,7 +5,12 @@ from unittest.mock import patch
 from homeassistant.components.cert_expiry.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_START
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_START,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -94,4 +99,4 @@ async def test_unload_config_entry(mock_now, hass):
 
     assert entry.state == ENTRY_STATE_NOT_LOADED
     state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
-    assert state is None
+    assert state.state == STATE_UNAVAILABLE

@@ -3,6 +3,7 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
+from homeassistant.const import STATE_UNAVAILABLE
 
 from tests.components.homekit_controller.common import setup_test_component
 
@@ -221,7 +222,7 @@ async def test_light_unloaded(hass, utcnow):
     assert unload_result is True
 
     # Make sure entity is set to unavailable state
-    assert hass.states.get(helper.entity_id).state == "unavailable"
+    assert hass.states.get(helper.entity_id).state == STATE_UNAVAILABLE
 
     # Make sure HKDevice is no longer set to poll this accessory
     conn = hass.data[KNOWN_DEVICES]["00:00:00:00:00:00"]

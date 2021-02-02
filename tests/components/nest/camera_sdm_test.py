@@ -15,6 +15,7 @@ import pytest
 
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_IDLE
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.dt import utcnow
 
@@ -339,7 +340,9 @@ async def test_camera_removed(hass, auth):
 
     for config_entry in hass.config_entries.async_entries(DOMAIN):
         await hass.config_entries.async_remove(config_entry.entry_id)
-    assert len(hass.states.async_all()) == 0
+    states = hass.states.async_all()
+    for state in states:
+        assert state.state == STATE_UNAVAILABLE
 
 
 async def test_refresh_expired_stream_failure(hass, auth):

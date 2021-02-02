@@ -6,6 +6,7 @@ import serial.tools.list_ports
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.rfxtrx import DOMAIN, config_flow
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
     async_get_registry as async_get_device_registry,
@@ -637,7 +638,7 @@ async def test_options_add_remove_device(hass):
     assert "0b1100cd0213c7f230010f71" not in entry.data["devices"]
 
     state = hass.states.get("binary_sensor.ac_213c7f2_48")
-    assert not state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_options_replace_sensor_device(hass):
@@ -974,9 +975,9 @@ async def test_options_remove_multiple_devices(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.ac_213c7f2_48")
-    assert not state
+    assert state.state == STATE_UNAVAILABLE
     state = hass.states.get("binary_sensor.ac_118cdea_2")
-    assert not state
+    assert state.state == STATE_UNAVAILABLE
     state = hass.states.get("binary_sensor.ac_1118cdea_2")
     assert state
 
