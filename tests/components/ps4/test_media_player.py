@@ -32,8 +32,8 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_TOKEN,
     STATE_IDLE,
+    STATE_OFF,
     STATE_PLAYING,
-    STATE_STANDBY,
     STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
@@ -177,13 +177,13 @@ async def test_media_player_is_setup_correctly_with_entry(hass):
     assert mock_state == STATE_UNKNOWN
 
 
-async def test_state_standby_is_set(hass):
-    """Test that state is set to standby."""
+async def test_state_off_is_set(hass):
+    """Test that state is set to off."""
     mock_entity_id = await setup_mock_component(hass)
 
     await mock_ddp_response(hass, MOCK_STATUS_STANDBY)
 
-    assert hass.states.get(mock_entity_id).state == STATE_STANDBY
+    assert hass.states.get(mock_entity_id).state == STATE_OFF
 
 
 async def test_state_playing_is_set(hass):
@@ -305,7 +305,7 @@ async def test_device_info_is_set_from_status_correctly(hass, patch_get_status):
 
     mock_d_entries = mock_d_registry.devices
     mock_entry = mock_d_registry.async_get_device(identifiers={(DOMAIN, MOCK_HOST_ID)})
-    assert mock_state == STATE_STANDBY
+    assert mock_state == STATE_OFF
 
     assert len(mock_d_entries) == 1
     assert mock_entry.name == MOCK_HOST_NAME
