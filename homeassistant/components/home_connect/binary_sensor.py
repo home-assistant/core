@@ -39,10 +39,10 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
         self._type = sensor_type
         if self._type == "door":
             self._update_key = BSH_DOOR_STATE
-            self._false_value_list = [
+            self._false_value_list = (
                 "BSH.Common.EnumType.DoorState.Closed",
                 "BSH.Common.EnumType.DoorState.Locked",
-            ]
+            )
             self._true_value_list = ["BSH.Common.EnumType.DoorState.Open"]
         elif self._type == "remote_control":
             self._update_key = BSH_REMOTE_CONTROL_ACTIVATION_STATE

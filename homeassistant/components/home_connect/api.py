@@ -161,7 +161,7 @@ class DeviceWithOpState(HomeConnectDevice):
     """Device that has an operation state sensor."""
 
     def get_opstate_sensor(self):
-        """Get a dictionary with info about operation state sensor."""
+        """Get a list with info about operation state sensors."""
 
         return [
             {
