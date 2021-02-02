@@ -115,6 +115,7 @@ DISCOVERY_SCHEMAS = [
             "Binary Tunable Color Light",
             "Multilevel Remote Switch",
             "Multilevel Power Switch",
+            "Multilevel Scene Switch",
         },
         command_class={CommandClass.SWITCH_MULTILEVEL},
         property={"currentValue"},
