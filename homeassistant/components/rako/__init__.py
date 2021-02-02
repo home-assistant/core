@@ -6,6 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
+from .bridge import RakoBridge
 from .const import (
     DATA_RAKO_BRIDGE_CLIENT,
     DATA_RAKO_LIGHT_MAP,
@@ -23,7 +24,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Rako from a config entry."""
-    from .bridge import RakoBridge  # pylint:disable=import-outside-toplevel
 
     bridge = RakoBridge(
         entry.data[CONF_HOST],
