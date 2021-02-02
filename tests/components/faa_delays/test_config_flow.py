@@ -4,10 +4,12 @@ from unittest.mock import patch
 from aiohttp import ClientConnectionError
 import faadelays
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.faa_delays.const import DOMAIN
 from homeassistant.const import CONF_ID
 from homeassistant.exceptions import HomeAssistantError
+
+from tests.common import MockConfigEntry
 
 
 async def mock_valid_airport(self, *args, **kwargs):
@@ -45,6 +47,20 @@ async def test_form(hass):
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_duplicate_error(hass):
+    """Test that we handle a duplicate configuration."""
+    conf = {CONF_ID: "test"}
+
+    MockConfigEntry(domain=DOMAIN, unique_id="test", data=conf).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_form_invalid_airport(hass):
