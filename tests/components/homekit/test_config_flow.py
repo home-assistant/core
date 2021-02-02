@@ -49,7 +49,7 @@ async def test_setup_in_bridge_mode(hass):
     assert result2["step_id"] == "bridge_mode"
 
     with patch(
-        "homeassistant.components.homekit.config_flow.find_next_available_port",
+        "homeassistant.components.homekit.config_flow.async_find_next_available_port",
         return_value=12345,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -108,7 +108,7 @@ async def test_setup_in_accessory_mode(hass):
     assert result2["step_id"] == "accessory_mode"
 
     with patch(
-        "homeassistant.components.homekit.config_flow.find_next_available_port",
+        "homeassistant.components.homekit.config_flow.async_find_next_available_port",
         return_value=12345,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -629,7 +629,7 @@ async def test_converting_bridge_to_accessory_mode(hass):
     assert result2["step_id"] == "bridge_mode"
 
     with patch(
-        "homeassistant.components.homekit.config_flow.find_next_available_port",
+        "homeassistant.components.homekit.config_flow.async_find_next_available_port",
         return_value=12345,
     ):
         result3 = await hass.config_entries.flow.async_configure(
