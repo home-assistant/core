@@ -73,7 +73,10 @@ class ZwaveSensorBase(ZWaveBaseEntity):
             if self.info.primary_value.metadata.unit == "kWh":
                 return DEVICE_CLASS_ENERGY
             return DEVICE_CLASS_POWER
-        if "temperature" in self.info.primary_value.property_.lower():
+        if (
+            isinstance(self.info.primary_value.property_, str)
+            and "temperature" in self.info.primary_value.property_.lower()
+        ):
             return DEVICE_CLASS_TEMPERATURE
         if self.info.primary_value.metadata.unit == "W":
             return DEVICE_CLASS_POWER
