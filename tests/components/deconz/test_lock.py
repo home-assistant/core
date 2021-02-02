@@ -110,5 +110,10 @@ async def test_locks(hass):
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
+    assert len(hass.states.async_all()) == 1
     for state in states:
         assert state.state == STATE_UNAVAILABLE
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0

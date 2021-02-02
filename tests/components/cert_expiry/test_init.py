@@ -100,3 +100,8 @@ async def test_unload_config_entry(mock_now, hass):
     assert entry.state == ENTRY_STATE_NOT_LOADED
     state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
     assert state.state == STATE_UNAVAILABLE
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.cert_expiry_timestamp_example_com")
+    assert state is None

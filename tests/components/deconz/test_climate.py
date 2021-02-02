@@ -367,8 +367,13 @@ async def test_climate_device_without_cooling_support(hass):
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
+    assert len(hass.states.async_all()) == 2
     for state in states:
         assert state.state == STATE_UNAVAILABLE
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
 
 
 async def test_climate_device_with_cooling_support(hass):

@@ -123,6 +123,12 @@ async def test_deconz_events(hass):
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
+    assert len(hass.states.async_all()) == 3
     for state in states:
         assert state.state == STATE_UNAVAILABLE
+    assert len(gateway.events) == 0
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
     assert len(gateway.events) == 0

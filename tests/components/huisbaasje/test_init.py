@@ -149,6 +149,12 @@ async def test_unload_entry(hass: HomeAssistant):
         for entity in entities:
             assert hass.states.get(entity).state == STATE_UNAVAILABLE
 
+        # Remove config entry
+        await hass.config_entries.async_remove(config_entry.entry_id)
+        await hass.async_block_till_done()
+        entities = hass.states.async_entity_ids("sensor")
+        assert len(entities) == 0
+
         # Assert mocks are called
         assert len(mock_authenticate.mock_calls) == 1
         assert len(mock_is_authenticated.mock_calls) == 1

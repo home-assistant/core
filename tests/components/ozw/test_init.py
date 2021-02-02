@@ -4,7 +4,7 @@ from unittest.mock import patch
 from homeassistant import config_entries
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.ozw import DOMAIN, PLATFORMS, const
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_RESTORED, STATE_UNAVAILABLE
 
 from .common import setup_ozw
 
@@ -81,6 +81,7 @@ async def test_unload_entry(hass, generic_data, switch_msg, caplog):
     assert len(entities) == 1
     for entity in entities:
         assert hass.states.get(entity).state == STATE_UNAVAILABLE
+        assert hass.states.get(entity).attributes.get(ATTR_RESTORED)
 
     # Send a message for a switch from the broker to check that
     # all entity topic subscribers are unsubscribed.
@@ -88,6 +89,9 @@ async def test_unload_entry(hass, generic_data, switch_msg, caplog):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids("switch")) == 1
+    for entity in entities:
+        assert hass.states.get(entity).state == STATE_UNAVAILABLE
+        assert hass.states.get(entity).attributes.get(ATTR_RESTORED)
 
     # Load the integration again and check that there are no errors when
     # adding the entities.

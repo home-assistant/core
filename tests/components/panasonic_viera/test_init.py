@@ -253,9 +253,11 @@ async def test_setup_unload_entry(hass):
         await hass.async_block_till_done()
 
     await hass.config_entries.async_unload(mock_entry.entry_id)
-
     assert mock_entry.state == ENTRY_STATE_NOT_LOADED
-
     state = hass.states.get("media_player.panasonic_viera_tv")
-
     assert state.state == STATE_UNAVAILABLE
+
+    await hass.config_entries.async_remove(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    state = hass.states.get("media_player.panasonic_viera_tv")
+    assert state is None

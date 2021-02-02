@@ -167,8 +167,13 @@ async def test_sensors(hass):
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
+    assert len(hass.states.async_all()) == 5
     for state in states:
         assert state.state == STATE_UNAVAILABLE
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
 
 
 async def test_allow_clip_sensors(hass):

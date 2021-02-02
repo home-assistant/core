@@ -113,6 +113,10 @@ async def test_binary_sensors(hass):
 
     assert hass.states.get("binary_sensor.presence_sensor").state == STATE_UNAVAILABLE
 
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
+
 
 async def test_allow_clip_sensor(hass):
     """Test that CLIP sensors can be allowed."""

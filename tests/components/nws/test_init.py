@@ -31,3 +31,7 @@ async def test_unload_entry(hass, mock_simple_nws):
     for entity in entities:
         assert hass.states.get(entity).state == STATE_UNAVAILABLE
     assert DOMAIN not in hass.data
+
+    assert await hass.config_entries.async_remove(entries[0].entry_id)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(WEATHER_DOMAIN)) == 0

@@ -210,8 +210,8 @@ async def test_light_becomes_unavailable_but_recovers(hass, utcnow):
     assert state.attributes["color_temp"] == 400
 
 
-async def test_light_unloaded(hass, utcnow):
-    """Test entity and HKDevice are correctly unloaded."""
+async def test_light_unloaded_removed(hass, utcnow):
+    """Test entity and HKDevice are correctly unloaded and removed."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_color_temp)
 
     # Initial state is that the light is off
@@ -227,3 +227,9 @@ async def test_light_unloaded(hass, utcnow):
     # Make sure HKDevice is no longer set to poll this accessory
     conn = hass.data[KNOWN_DEVICES]["00:00:00:00:00:00"]
     assert not conn.pollable_characteristics
+
+    await helper.config_entry.async_remove(hass)
+    await hass.async_block_till_done()
+
+    # Make sure entity is removed
+    assert hass.states.get(helper.entity_id).state == STATE_UNAVAILABLE

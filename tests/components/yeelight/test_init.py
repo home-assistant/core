@@ -53,6 +53,12 @@ async def test_setup_discovery(hass: HomeAssistant):
     assert hass.states.get(ENTITY_BINARY_SENSOR).state == STATE_UNAVAILABLE
     assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
 
+    # Remove
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_BINARY_SENSOR) is None
+    assert hass.states.get(ENTITY_LIGHT) is None
+
 
 async def test_setup_import(hass: HomeAssistant):
     """Test import from yaml."""

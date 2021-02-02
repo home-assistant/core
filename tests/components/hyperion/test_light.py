@@ -26,7 +26,6 @@ from homeassistant.const import (
     CONF_TOKEN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_UNAVAILABLE,
 )
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import HomeAssistantType
@@ -156,7 +155,7 @@ async def test_setup_config_entry_dynamic_instances(hass: HomeAssistantType) -> 
         )
         await hass.async_block_till_done()
 
-    assert hass.states.get(TEST_ENTITY_ID_1).state is STATE_UNAVAILABLE
+    assert hass.states.get(TEST_ENTITY_ID_1) is None
     assert hass.states.get(TEST_ENTITY_ID_2) is not None
     assert hass.states.get(TEST_ENTITY_ID_3) is not None
 
