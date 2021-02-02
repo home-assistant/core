@@ -313,7 +313,7 @@ async def test_removed_device(hass, client, multiple_devices, integration):
     entity_entries = entity_registry.async_entries_for_config_entry(
         ent_reg, integration.entry_id
     )
-    assert len(entity_entries) == 18
+    assert len(entity_entries) == 24
 
     # Remove a node and reload the entry
     old_node = nodes.pop(13)
@@ -329,5 +329,5 @@ async def test_removed_device(hass, client, multiple_devices, integration):
     entity_entries = entity_registry.async_entries_for_config_entry(
         ent_reg, integration.entry_id
     )
-    assert len(entity_entries) == 9
+    assert len(entity_entries) == 15
     assert dev_reg.async_get_device({get_device_id(client, old_node)}) is None
