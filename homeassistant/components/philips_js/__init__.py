@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_VERSION, CONF_HOST
 from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_SYSTEM, DOMAIN
@@ -89,7 +90,9 @@ class PluggableAction:
 
         return _remove
 
-    async def async_run(self, hass, context: Optional[Context] = None):
+    async def async_run(
+        self, hass: HomeAssistantType, context: Optional[Context] = None
+    ):
         """Run all turn on triggers."""
         for job, variables in self._actions.values():
             hass.async_run_hass_job(job, variables, context)
@@ -112,14 +115,11 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         self.turn_on = PluggableAction(_update_listeners)
 
-        def _update():
+        async def _async_update():
             try:
-                self.api.update()
+                self.hass.async_add_executor_job(self.api.update)
             except ConnectionFailure:
                 pass
-
-        async def _async_update() -> None:
-            await self.hass.async_add_executor_job(_update)
 
         super().__init__(
             hass,
