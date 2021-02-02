@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -78,7 +78,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     connected = asyncio.Event()
     initialized = asyncio.Event()
     dev_reg = await device_registry.async_get_registry(hass)
-    ent_reg = await entity_registry.async_get_registry(hass)
 
     async def async_on_connect() -> None:
         """Handle websocket is (re)connected."""
