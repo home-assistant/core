@@ -1,7 +1,7 @@
 """Config flow to configure the Freebox integration."""
 import logging
 
-from aiofreepybox.exceptions import AuthorizationError, HttpRequestError
+from freebox_api.exceptions import AuthorizationError, HttpRequestError
 import voluptuous as vol
 
 from homeassistant import config_entries

@@ -93,9 +93,6 @@ aioesphomeapi==2.6.4
 # homeassistant.components.flo
 aioflo==0.4.1
 
-# homeassistant.components.freebox
-aiofreepybox==0.0.8
-
 # homeassistant.components.guardian
 aioguardian==1.0.4
 
@@ -312,6 +309,9 @@ fnvhash==0.1.0
 
 # homeassistant.components.foobot
 foobot_async==1.0.0
+
+# homeassistant.components.freebox
+freebox-api==0.0.9
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor

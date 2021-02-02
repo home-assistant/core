@@ -156,9 +156,6 @@ aioesphomeapi==2.6.4
 # homeassistant.components.flo
 aioflo==0.4.1
 
-# homeassistant.components.freebox
-aiofreepybox==0.0.8
-
 # homeassistant.components.yi
 aioftp==0.12.0
 
@@ -612,6 +609,9 @@ foobot_async==1.0.0
 
 # homeassistant.components.fortios
 fortiosapi==0.10.8
+
+# homeassistant.components.freebox
+freebox-api==0.0.9
 
 # homeassistant.components.free_mobile
 freesms==0.1.2
