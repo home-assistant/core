@@ -42,7 +42,7 @@ async def test_light_basic(hass, hk_driver, events):
     assert acc.category == 5  # Lightbulb
     assert acc.char_on.value
 
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
     assert acc.char_on.value == 1
 
@@ -117,7 +117,7 @@ async def test_light_brightness(hass, hk_driver, events):
     char_on_iid = acc.char_on.to_HAP()[HAP_REPR_IID]
     char_brightness_iid = acc.char_brightness.to_HAP()[HAP_REPR_IID]
 
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 100
 
@@ -231,7 +231,7 @@ async def test_light_color_temperature(hass, hk_driver, events):
 
     assert acc.char_color_temperature.value == 190
 
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
     assert acc.char_color_temperature.value == 190
 
@@ -285,14 +285,14 @@ async def test_light_color_temperature_and_rgb_color(hass, hk_driver, events):
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_COLOR_TEMP: 224})
     await hass.async_block_till_done()
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
     assert acc.char_hue.value == 27
     assert acc.char_saturation.value == 27
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_COLOR_TEMP: 352})
     await hass.async_block_till_done()
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
     assert acc.char_hue.value == 28
     assert acc.char_saturation.value == 61
@@ -314,7 +314,7 @@ async def test_light_rgb_color(hass, hk_driver, events):
     assert acc.char_hue.value == 260
     assert acc.char_saturation.value == 90
 
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
     assert acc.char_hue.value == 260
     assert acc.char_saturation.value == 90
@@ -407,7 +407,7 @@ async def test_light_set_brightness_and_color(hass, hk_driver, events):
     char_hue_iid = acc.char_hue.to_HAP()[HAP_REPR_IID]
     char_saturation_iid = acc.char_saturation.to_HAP()[HAP_REPR_IID]
 
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 100
 
@@ -482,7 +482,7 @@ async def test_light_set_brightness_and_color_temp(hass, hk_driver, events):
     char_brightness_iid = acc.char_brightness.to_HAP()[HAP_REPR_IID]
     char_color_temperature_iid = acc.char_color_temperature.to_HAP()[HAP_REPR_IID]
 
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
     assert acc.char_brightness.value == 100
 

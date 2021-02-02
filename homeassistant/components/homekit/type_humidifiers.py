@@ -143,7 +143,7 @@ class HumidifierDehumidifier(HomeAccessory):
             if humidity_state:
                 self._async_update_current_humidity(humidity_state)
 
-    async def run_handler(self):
+    async def run(self):
         """Handle accessory driver started event.
 
         Run inside the Home Assistant event loop.
@@ -155,7 +155,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 self.async_update_current_humidity_event,
             )
 
-        await super().run_handler()
+        await super().run()
 
     @callback
     def async_update_current_humidity_event(self, event):
@@ -201,7 +201,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 )
 
         if CHAR_ACTIVE in char_values:
-            self.call_service(
+            self.async_call_service(
                 DOMAIN,
                 SERVICE_TURN_ON if char_values[CHAR_ACTIVE] else SERVICE_TURN_OFF,
                 {ATTR_ENTITY_ID: self.entity_id},
@@ -210,7 +210,7 @@ class HumidifierDehumidifier(HomeAccessory):
 
         if self._target_humidity_char_name in char_values:
             humidity = round(char_values[self._target_humidity_char_name])
-            self.call_service(
+            self.async_call_service(
                 DOMAIN,
                 SERVICE_SET_HUMIDITY,
                 {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: humidity},
