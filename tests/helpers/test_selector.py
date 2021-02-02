@@ -191,7 +191,15 @@ def test_text_selector_schema(schema):
 
 @pytest.mark.parametrize(
     "schema",
-    ({"options": ["red", "green", "blue"]},),
+    (
+        {"options": ["red", "green", "blue"]},
+        pytest.param(
+            {"options": []},
+            marks=pytest.mark.xfail(
+                reason="Cannot provide an empty options list to the selector."
+            ),
+        ),
+    ),
 )
 def test_select_selector_schema(schema):
     """Test select selector."""
