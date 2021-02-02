@@ -63,8 +63,7 @@ async def test_disabled_notification_sensor(hass, multisensor_6, integration):
     assert updated_entry != entity_entry
     assert updated_entry.disabled is False
 
-    # the part below needs to be fixed
-    # the entity state is not available yet after enabling the entity
+    # reload integration and check if entity is correctly there
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
