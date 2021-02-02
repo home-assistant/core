@@ -1276,6 +1276,7 @@ class FanSpeedTrait(_Trait):
         return {
             "availableFanSpeeds": {"speeds": speeds, "ordered": True},
             "reversible": reversible,
+            "supportsFanSpeedPercent": True,
         }
 
     def query_attributes(self):
@@ -1289,9 +1290,11 @@ class FanSpeedTrait(_Trait):
                 response["currentFanSpeedSetting"] = speed
         if domain == fan.DOMAIN:
             speed = attrs.get(fan.ATTR_SPEED)
+            percent = attrs.get(fan.ATTR_PERCENTAGE) or 0
             if speed is not None:
                 response["on"] = speed != fan.SPEED_OFF
                 response["currentFanSpeedSetting"] = speed
+                response["currentFanSpeedPercent"] = percent
         return response
 
     async def execute(self, command, data, params, challenge):
@@ -1309,13 +1312,20 @@ class FanSpeedTrait(_Trait):
                 context=data.context,
             )
         if domain == fan.DOMAIN:
+            service_params = {
+                ATTR_ENTITY_ID: self.state.entity_id,
+            }
+            if "fanSpeedPercent" in params:
+                service = fan.SERVICE_SET_PERCENTAGE
+                service_params[fan.ATTR_PERCENTAGE] = params["fanSpeedPercent"]
+            else:
+                service = fan.SERVICE_SET_SPEED
+                service_params[fan.ATTR_SPEED] = params["fanSpeed"]
+
             await self.hass.services.async_call(
                 fan.DOMAIN,
-                fan.SERVICE_SET_SPEED,
-                {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    fan.ATTR_SPEED: params["fanSpeed"],
-                },
+                service,
+                service_params,
                 blocking=True,
                 context=data.context,
             )
