@@ -9,7 +9,6 @@ from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -52,14 +51,6 @@ class ZWaveBaseEntity(Entity):
         # Add value_changed callbacks.
         self.async_on_remove(
             self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed)
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self.config_entry.entry_id}_connection_state",
-                self.async_write_ha_state,
-            )
         )
 
     @property
