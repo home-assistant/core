@@ -17,10 +17,9 @@ from homeassistant.components.cover import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    STATE_UNAVAILABLE,
 )
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
