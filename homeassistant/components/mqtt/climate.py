@@ -352,7 +352,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         value_templates = {}
         for key in VALUE_TEMPLATE_KEYS:
-            value_templates[key] = lambda value: value
+            value_templates[key] = lambda value, variables: value
         if CONF_VALUE_TEMPLATE in config:
             value_template = config.get(CONF_VALUE_TEMPLATE)
             value_template.hass = self.hass
