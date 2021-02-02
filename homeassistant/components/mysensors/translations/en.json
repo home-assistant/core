@@ -22,7 +22,7 @@
                 "data": {
                 "optimistic": "optimistic",
                 "persistence": "persistence",
-                "gateway_type_mqtt": "MQTT"
+                "gateway_type": "Gateway type"
                 },
                 "description": "Choose connection method to the gateway"
             },
