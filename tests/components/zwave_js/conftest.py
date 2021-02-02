@@ -1,6 +1,7 @@
 """Provide common Z-Wave JS fixtures."""
+import asyncio
 import json
-from unittest.mock import DEFAULT, Mock, patch
+from unittest.mock import DEFAULT, AsyncMock, patch
 
 import pytest
 from zwave_js_server.event import Event
@@ -149,35 +150,25 @@ def in_wall_smart_fan_control_state_fixture():
 def mock_client_fixture(controller_state, version_state):
     """Mock a client."""
 
-    def mock_callback():
-        callbacks = []
-
-        def add_callback(cb):
-            callbacks.append(cb)
-            return DEFAULT
-
-        return callbacks, Mock(side_effect=add_callback)
-
     with patch(
         "homeassistant.components.zwave_js.ZwaveClient", autospec=True
     ) as client_class:
         client = client_class.return_value
 
-        connect_callback, client.register_on_connect = mock_callback()
-        initialized_callback, client.register_on_initialized = mock_callback()
-
         async def connect():
-            for cb in connect_callback:
-                await cb()
+            await asyncio.sleep(0)
+            client.state = "connected"
 
-            for cb in initialized_callback:
-                await cb()
+        async def disconnect():
+            client.state = "disconnected"
 
-        client.connect = Mock(side_effect=connect)
+        client.connect = AsyncMock(side_effect=connect)
+        client.disconnect = AsyncMock(side_effect=disconnect)
         client.driver = Driver(client, controller_state)
+
         client.version = VersionInfo.from_message(version_state)
         client.ws_server_url = "ws://test:3000/zjs"
-        client.state = "connected"
+
         yield client
 
 
