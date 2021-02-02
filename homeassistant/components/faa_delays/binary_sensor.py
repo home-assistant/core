@@ -34,7 +34,6 @@ class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._icon = icon
         self._name = name
         self._sensor_type = sensor_type
-        self._state = None
         self._id = self.coordinator.data.iata
         self._attrs = {}
 
@@ -52,16 +51,15 @@ class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
     def is_on(self):
         """Return the status of the sensor."""
         if self._sensor_type == "GROUND_DELAY":
-            self._state = self.coordinator.data.ground_delay.status
+            return self.coordinator.data.ground_delay.status
         elif self._sensor_type == "GROUND_STOP":
-            self._state = self.coordinator.data.ground_stop.status
+            return self.coordinator.data.ground_stop.status
         elif self._sensor_type == "DEPART_DELAY":
-            self._state = self.coordinator.data.depart_delay.status
+            return self.coordinator.data.depart_delay.status
         elif self._sensor_type == "ARRIVE_DELAY":
-            self._state = self.coordinator.data.arrive_delay.status
+            return self.coordinator.data.arrive_delay.status
         elif self._sensor_type == "CLOSURE":
-            self._state = self.coordinator.data.closure.status
-        return self._state
+            return self.coordinator.data.closure.status
 
     @property
     def unique_id(self):

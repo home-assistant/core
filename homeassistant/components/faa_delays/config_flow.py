@@ -32,14 +32,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             websession = aiohttp_client.async_get_clientsession(self.hass)
 
+            data = faadelays.Airport(user_input[CONF_ID], websession)
+
             try:
-                data = faadelays.Airport(user_input[CONF_ID], websession)
                 await data.update()
-                _LOGGER.debug(
-                    "Creating entry with id: %s, name: %s",
-                    user_input[CONF_ID],
-                    data.name,
-                )
 
             except faadelays.InvalidAirport:
                 _LOGGER.error("Airport code %s is invalid", user_input[CONF_ID])
@@ -54,6 +50,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if not errors:
+                _LOGGER.debug(
+                    "Creating entry with id: %s, name: %s",
+                    user_input[CONF_ID],
+                    data.name,
+                )
                 return self.async_create_entry(title=data.name, data=user_input)
 
         return self.async_show_form(
