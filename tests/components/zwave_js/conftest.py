@@ -382,3 +382,15 @@ def ge_12730_fixture(client, ge_12730_state):
     node = Node(client, copy.deepcopy(ge_12730_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
+
+
+@pytest.fixture(name="multiple_devices")
+def multiple_devices_fixture(
+    client, climate_radio_thermostat_ct100_plus_state, lock_schlage_be469_state
+):
+    """Mock a client with multiple devices."""
+    node = Node(client, climate_radio_thermostat_ct100_plus_state)
+    client.driver.controller.nodes[node.node_id] = node
+    node = Node(client, lock_schlage_be469_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return client.driver.controller.nodes
