@@ -5,7 +5,7 @@ import logging
 
 from aiohttp import ClientConnectionError
 from async_timeout import timeout
-from faadelays import Airport, get_airport_delays
+from faadelays import Airport
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
@@ -79,7 +79,7 @@ class FAADataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         try:
             with timeout(10):
-                self.data = await get_airport_delays(self.code, self.session)
+                self.data.update()
         except ClientConnectionError as err:
             raise UpdateFailed(err) from err
         return self.data
