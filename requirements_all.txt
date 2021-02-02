@@ -1,9 +1,6 @@
 # Home Assistant Core, full dependency set
 -r requirements.txt
 
-# homeassistant.components.nuimo_controller
-# --only-binary=all nuimo==0.1.0
-
 # homeassistant.components.dht
 # Adafruit-DHT==1.4.0
 
@@ -17,7 +14,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==3.1.0
+HAP-python==3.2.0
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -81,7 +78,7 @@ RtmAPI==0.7.2
 TravisPy==0.3.5
 
 # homeassistant.components.twitter
-TwitterAPI==2.6.3
+TwitterAPI==2.6.5
 
 # homeassistant.components.tof
 # VL53L1X2==0.1.5
@@ -159,9 +156,6 @@ aioesphomeapi==2.6.4
 # homeassistant.components.flo
 aioflo==0.4.1
 
-# homeassistant.components.freebox
-aiofreepybox==0.0.8
-
 # homeassistant.components.yi
 aioftp==0.12.0
 
@@ -198,6 +192,9 @@ aiolifx_effects==0.2.2
 
 # homeassistant.components.lutron_caseta
 aiolip==1.0.1
+
+# homeassistant.components.lyric
+aiolyric==1.0.5
 
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
@@ -383,7 +380,7 @@ bravia-tv==1.0.8
 broadlink==0.16.0
 
 # homeassistant.components.brother
-brother==0.1.20
+brother==0.2.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -431,7 +428,7 @@ coinbase==2.1.0
 coinmarketcap==5.0.3
 
 # homeassistant.scripts.check_config
-colorlog==4.6.2
+colorlog==4.7.2
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -541,7 +538,7 @@ eliqonline==1.2.2
 elkm1-lib==0.8.10
 
 # homeassistant.components.mobile_app
-emoji==0.5.4
+emoji==1.2.0
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
@@ -612,6 +609,9 @@ foobot_async==1.0.0
 
 # homeassistant.components.fortios
 fortiosapi==0.10.8
+
+# homeassistant.components.freebox
+freebox-api==0.0.9
 
 # homeassistant.components.free_mobile
 freesms==0.1.2
@@ -765,7 +765,7 @@ hole==0.5.1
 holidays==0.10.4
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210127.6
+home-assistant-frontend==20210127.7
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -825,7 +825,7 @@ ihcsdk==2.7.0
 incomfort-client==0.4.0
 
 # homeassistant.components.influxdb
-influxdb-client==1.8.0
+influxdb-client==1.14.0
 
 # homeassistant.components.influxdb
 influxdb==5.2.3
@@ -878,6 +878,9 @@ life360==4.1.1
 
 # homeassistant.components.lifx_legacy
 liffylights==0.9.4
+
+# homeassistant.components.osramlightify
+lightify==1.0.7.3
 
 # homeassistant.components.lightwave
 lightwave==0.19
@@ -1283,7 +1286,7 @@ pyatmo==4.2.2
 pyatome==0.1.1
 
 # homeassistant.components.apple_tv
-pyatv==0.7.5
+pyatv==0.7.6
 
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
@@ -1307,7 +1310,7 @@ pycfdns==1.2.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==7.7.2
+pychromecast==8.0.0
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.0
@@ -1614,6 +1617,9 @@ pypck==0.7.9
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
+
+# homeassistant.components.plaato
+pyplaato==0.0.15
 
 # homeassistant.components.point
 pypoint==2.0.0
@@ -2100,7 +2106,7 @@ spotipy==2.16.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.3.22
+sqlalchemy==1.3.23
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.2
@@ -2275,7 +2281,7 @@ wakeonlan==1.1.6
 waqiasync==1.0.0
 
 # homeassistant.components.folder_watcher
-watchdog==0.8.3
+watchdog==1.0.2
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
@@ -2378,4 +2384,4 @@ zigpy==0.32.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.14.1
+zwave-js-server-python==0.16.0

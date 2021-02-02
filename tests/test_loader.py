@@ -131,10 +131,10 @@ async def test_custom_component_name(hass):
 async def test_log_warning_custom_component(hass, caplog):
     """Test that we log a warning when loading a custom component."""
     hass.components.test_standalone
-    assert "You are using a custom integration for test_standalone" in caplog.text
+    assert "You are using a custom integration test_standalone" in caplog.text
 
     await loader.async_get_integration(hass, "test")
-    assert "You are using a custom integration for test " in caplog.text
+    assert "You are using a custom integration test " in caplog.text
 
 
 async def test_get_integration(hass):
