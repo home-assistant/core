@@ -389,17 +389,17 @@ class HueOneLightChangeView(HomeAssistantView):
                 except ValueError:
                     _LOGGER.error("Unable to parse data (2): %s", request_json)
                     return self.json_message("Bad request", HTTP_BAD_REQUEST)
-            if HUE_API_STATE_XY in request_json:
-                try:
-                    parsed[STATE_XY] = tuple(
-                        (
-                            float(request_json[HUE_API_STATE_XY][0]),
-                            float(request_json[HUE_API_STATE_XY][1]),
-                        )
+        if HUE_API_STATE_XY in request_json:
+            try:
+                parsed[STATE_XY] = tuple(
+                    (
+                        float(request_json[HUE_API_STATE_XY][0]),
+                        float(request_json[HUE_API_STATE_XY][1]),
                     )
-                except ValueError:
-                    _LOGGER.error("Unable to parse data (2): %s", request_json)
-                    return self.json_message("Bad request", HTTP_BAD_REQUEST)
+                )
+            except ValueError:
+                _LOGGER.error("Unable to parse data (2): %s", request_json)
+                return self.json_message("Bad request", HTTP_BAD_REQUEST)
 
         if HUE_API_STATE_BRI in request_json:
             if entity.domain == light.DOMAIN:
