@@ -669,7 +669,7 @@ pyatag==0.3.4.4
 pyatmo==4.2.2
 
 # homeassistant.components.apple_tv
-pyatv==0.7.5
+pyatv==0.7.6
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
@@ -681,7 +681,7 @@ pybotvac==0.0.20
 pycfdns==1.2.1
 
 # homeassistant.components.cast
-pychromecast==7.7.2
+pychromecast==8.0.0
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.4
@@ -872,7 +872,7 @@ pysignalclirestapi==0.3.4
 pysma==0.3.5
 
 # homeassistant.components.smappee
-pysmappee==0.2.13
+pysmappee==0.2.16
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.3
@@ -1017,7 +1017,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.6.2
+simplisafe-python==9.6.4
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -1197,4 +1197,4 @@ zigpy-znp==0.3.0
 zigpy==0.32.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.14.1
+zwave-js-server-python==0.15.0

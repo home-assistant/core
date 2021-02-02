@@ -121,6 +121,7 @@ class ZWaveBaseEntity(Entity):
         endpoint: Optional[int] = None,
         value_property_key_name: Optional[str] = None,
         add_to_watched_value_ids: bool = True,
+        check_all_endpoints: bool = False,
     ) -> Optional[ZwaveValue]:
         """Return specific ZwaveValue on this ZwaveNode."""
         # use commandclass and endpoint from primary value if omitted
@@ -129,17 +130,33 @@ class ZWaveBaseEntity(Entity):
             command_class = self.info.primary_value.command_class
         if endpoint is None:
             endpoint = self.info.primary_value.endpoint
+
+        # Build partial event data dictionary so we can change the endpoint later
+        partial_evt_data = {
+            "commandClass": command_class,
+            "property": value_property,
+            "propertyKeyName": value_property_key_name,
+        }
+
         # lookup value by value_id
         value_id = get_value_id(
-            self.info.node,
-            {
-                "commandClass": command_class,
-                "endpoint": endpoint,
-                "property": value_property,
-                "propertyKeyName": value_property_key_name,
-            },
+            self.info.node, {**partial_evt_data, "endpoint": endpoint}
         )
         return_value = self.info.node.values.get(value_id)
+
+        # If we haven't found a value and check_all_endpoints is True, we should
+        # return the first value we can find on any other endpoint
+        if return_value is None and check_all_endpoints:
+            for endpoint_ in self.info.node.endpoints:
+                if endpoint_.index != self.info.primary_value.endpoint:
+                    value_id = get_value_id(
+                        self.info.node,
+                        {**partial_evt_data, "endpoint": endpoint_.index},
+                    )
+                    return_value = self.info.node.values.get(value_id)
+                    if return_value:
+                        break
+
         # add to watched_ids list so we will be triggered when the value updates
         if (
             return_value

@@ -111,6 +111,22 @@ def climate_radio_thermostat_ct100_plus_state_fixture():
     )
 
 
+@pytest.fixture(
+    name="climate_radio_thermostat_ct100_plus_different_endpoints_state",
+    scope="session",
+)
+def climate_radio_thermostat_ct100_plus_different_endpoints_state_fixture():
+    """Load the thermostat fixture state with values on different endpoints.
+
+    This device is a radio thermostat ct100.
+    """
+    return json.loads(
+        load_fixture(
+            "zwave_js/climate_radio_thermostat_ct100_plus_different_endpoints_state.json"
+        )
+    )
+
+
 @pytest.fixture(name="nortek_thermostat_state", scope="session")
 def nortek_thermostat_state_fixture():
     """Load the nortek thermostat node state fixture data."""
@@ -227,6 +243,16 @@ def climate_radio_thermostat_ct100_plus_fixture(
 ):
     """Mock a climate radio thermostat ct100 plus node."""
     node = Node(client, climate_radio_thermostat_ct100_plus_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_radio_thermostat_ct100_plus_different_endpoints")
+def climate_radio_thermostat_ct100_plus_different_endpoints_fixture(
+    client, climate_radio_thermostat_ct100_plus_different_endpoints_state
+):
+    """Mock a climate radio thermostat ct100 plus node with values on different endpoints."""
+    node = Node(client, climate_radio_thermostat_ct100_plus_different_endpoints_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
 
