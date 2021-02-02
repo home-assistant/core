@@ -24,7 +24,7 @@ class WorkerSync:
     def __init__(self):
         """Initialize WorkerSync."""
         self._event = None
-        self._finish_original = Stream._worker_finished
+        self._original = Stream._worker_finished
 
     def pause(self):
         """Pause the worker before it finalizes the stream."""
@@ -42,8 +42,8 @@ class WorkerSync:
         logging.debug("blocking worker")
         self._event.wait()
 
-        # Forward to actual Stream._worker_finished
-        self._finish_original(stream)
+        # Forward to actual implementation
+        self._original(stream)
 
 
 @pytest.fixture()
