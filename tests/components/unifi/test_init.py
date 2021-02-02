@@ -11,7 +11,7 @@ from tests.common import MockConfigEntry, mock_coro
 
 
 async def test_setup_with_no_config(hass):
-    """Test that we do not discover anything or try to set up a bridge."""
+    """Test that we do not discover anything or try to set up a controller."""
     assert await async_setup_component(hass, UNIFI_DOMAIN, {}) is True
     assert UNIFI_DOMAIN not in hass.data
 
@@ -44,7 +44,6 @@ async def test_controller_no_mac(hass):
                 "site": "default",
                 "verify_ssl": True,
             },
-            "poe_control": True,
         },
     )
     entry.add_to_hass(hass)

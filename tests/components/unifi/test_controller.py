@@ -39,9 +39,12 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
+DEFAULT_HOST = "1.2.3.4"
+DEFAULT_SITE = "site_id"
+
 CONTROLLER_HOST = {
     "hostname": "controller_host",
-    "ip": "1.2.3.4",
+    "ip": DEFAULT_HOST,
     "is_wired": True,
     "last_seen": 1562600145,
     "mac": "10:00:00:00:00:01",
@@ -55,11 +58,11 @@ CONTROLLER_HOST = {
 }
 
 CONTROLLER_DATA = {
-    CONF_HOST: "1.2.3.4",
+    CONF_HOST: DEFAULT_HOST,
     CONF_USERNAME: "username",
     CONF_PASSWORD: "password",
     CONF_PORT: 1234,
-    CONF_SITE_ID: "site_id",
+    CONF_SITE_ID: DEFAULT_SITE,
     CONF_VERIFY_SSL: False,
 }
 
@@ -74,19 +77,18 @@ DESCRIPTION = [{"name": "username", "site_name": "site_id", "site_role": "admin"
 
 def mock_default_unifi_requests(
     aioclient_mock,
-    site_id="site_id",
+    host,
+    site_id,
     sites=None,
     description=None,
     clients_response=None,
-    devices_response=None,
     clients_all_response=None,
-    wlans_response=None,
-    dpigroup_response=None,
+    devices_response=None,
     dpiapp_response=None,
+    dpigroup_response=None,
+    wlans_response=None,
 ):
     """Mock default UniFi requests responses."""
-    host = "1.2.3.4"
-
     aioclient_mock.get(f"https://{host}:1234", status=302)  # Check UniFi OS
 
     aioclient_mock.post(
@@ -143,17 +145,17 @@ async def setup_unifi_integration(
     hass,
     config=ENTRY_CONFIG,
     options=ENTRY_OPTIONS,
+    aioclient_mock=None,
     sites=SITE,
     site_description=DESCRIPTION,
     clients_response=None,
-    devices_response=None,
     clients_all_response=None,
-    wlans_response=None,
-    dpigroup_response=None,
+    devices_response=None,
     dpiapp_response=None,
+    dpigroup_response=None,
+    wlans_response=None,
     known_wireless_clients=None,
     controllers=None,
-    aioclient_mock=None,
 ):
     """Create the UniFi controller."""
     assert await async_setup_component(hass, UNIFI_DOMAIN, {})
@@ -174,13 +176,15 @@ async def setup_unifi_integration(
     if aioclient_mock:
         mock_default_unifi_requests(
             aioclient_mock,
+            host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
+            site_id=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID],
             sites=sites,
             description=site_description,
             clients_response=clients_response,
-            devices_response=devices_response,
             clients_all_response=clients_all_response,
-            dpigroup_response=dpigroup_response,
+            devices_response=devices_response,
             dpiapp_response=dpiapp_response,
+            dpigroup_response=dpigroup_response,
             wlans_response=wlans_response,
         )
 
