@@ -71,9 +71,12 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.util import location, network
-from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
+from homeassistant.util.async_ import (
+    fire_coroutine_threadsafe,
+    run_callback_threadsafe,
+    shutdown_run_callback_threadsafe,
+)
 import homeassistant.util.dt as dt_util
-from homeassistant.util.thread import fix_threading_exception_logging
 from homeassistant.util.timeout import TimeoutManager
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 import homeassistant.util.uuid as uuid_util
@@ -86,7 +89,6 @@ if TYPE_CHECKING:
 
 
 block_async_io.enable()
-fix_threading_exception_logging()
 
 T = TypeVar("T")
 _UNDEF: dict = {}  # Internal; not helpers.typing.UNDEFINED due to circular dependency
@@ -118,7 +120,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def split_entity_id(entity_id: str) -> List[str]:
-    """Split a state entity_id into domain, object_id."""
+    """Split a state entity ID into domain and object ID."""
     return entity_id.split(".", 1)
 
 
@@ -207,7 +209,7 @@ class CoreState(enum.Enum):
 
     def __str__(self) -> str:  # pylint: disable=invalid-str-returned
         """Return the event."""
-        return self.value  # type: ignore
+        return self.value
 
 
 class HomeAssistant:
@@ -306,7 +308,7 @@ class HomeAssistant:
             _LOGGER.warning(
                 "Something is blocking Home Assistant from wrapping up the "
                 "start up phase. We're going to continue anyway. Please "
-                "report the following info at http://bit.ly/2ogP58T : %s",
+                "report the following info at https://github.com/home-assistant/core/issues: %s",
                 ", ".join(self.config.components),
             )
 
@@ -550,6 +552,14 @@ class HomeAssistant:
         # stage 3
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+
+        # Prevent run_callback_threadsafe from scheduling any additional
+        # callbacks in the event loop as callbacks created on the futures
+        # it returns will never run after the final `self.async_block_till_done`
+        # which will cause the futures to block forever when waiting for
+        # the `result()` which will cause a deadlock when shutting down the executor.
+        shutdown_run_callback_threadsafe(self.loop)
+
         try:
             async with self.timeout.async_timeout(30):
                 await self.async_block_till_done()
@@ -573,7 +583,7 @@ class Context:
     parent_id: Optional[str] = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> Dict[str, Optional[str]]:
         """Return a dictionary representation of the context."""
         return {"id": self.id, "parent_id": self.parent_id, "user_id": self.user_id}
 
@@ -586,7 +596,7 @@ class EventOrigin(enum.Enum):
 
     def __str__(self) -> str:  # pylint: disable=invalid-str-returned
         """Return the event."""
-        return self.value  # type: ignore
+        return self.value
 
 
 class Event:
@@ -614,7 +624,7 @@ class Event:
         # The only event type that shares context are the TIME_CHANGED
         return hash((self.event_type, self.context.id, self.time_fired))
 
-    def as_dict(self) -> Dict:
+    def as_dict(self) -> Dict[str, Any]:
         """Create a dict representation of this Event.
 
         Async friendly.
@@ -684,7 +694,7 @@ class EventBus:
     def async_fire(
         self,
         event_type: str,
-        event_data: Optional[Dict] = None,
+        event_data: Optional[Dict[str, Any]] = None,
         origin: EventOrigin = EventOrigin.local,
         context: Optional[Context] = None,
         time_fired: Optional[datetime.datetime] = None,
@@ -846,7 +856,7 @@ class State:
         self,
         entity_id: str,
         state: str,
-        attributes: Optional[Mapping] = None,
+        attributes: Optional[Mapping[str, Any]] = None,
         last_changed: Optional[datetime.datetime] = None,
         last_updated: Optional[datetime.datetime] = None,
         context: Optional[Context] = None,
@@ -1093,7 +1103,7 @@ class StateMachine:
         self,
         entity_id: str,
         new_state: str,
-        attributes: Optional[Dict] = None,
+        attributes: Optional[Mapping[str, Any]] = None,
         force_update: bool = False,
         context: Optional[Context] = None,
     ) -> None:
@@ -1142,7 +1152,7 @@ class StateMachine:
         self,
         entity_id: str,
         new_state: str,
-        attributes: Optional[Dict] = None,
+        attributes: Optional[Mapping[str, Any]] = None,
         force_update: bool = False,
         context: Optional[Context] = None,
     ) -> None:

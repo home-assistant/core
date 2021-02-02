@@ -1,5 +1,6 @@
 """The sensor tests for the Ruckus Unleashed platform."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.components.ruckus_unleashed import API_MAC, DOMAIN
 from homeassistant.components.ruckus_unleashed.const import API_AP, API_ID, API_NAME
@@ -8,7 +9,6 @@ from homeassistant.helpers import entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.util import utcnow
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.ruckus_unleashed import (
     DEFAULT_AP_INFO,

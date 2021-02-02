@@ -46,6 +46,7 @@ HM_DEVICE_TYPES = {
         "Switch",
         "SwitchPowermeter",
         "IOSwitch",
+        "IOSwitchNoInhibit",
         "IPSwitch",
         "RFSiren",
         "IPSwitchPowermeter",
@@ -115,6 +116,10 @@ HM_DEVICE_TYPES = {
         "IPRemoteMotionV2",
         "HBUNISenWEA",
         "PresenceIPW",
+        "IPRainSensor",
+        "ValveBox",
+        "IPKeyBlind",
+        "IPKeyBlindTilt",
     ],
     DISCOVER_CLIMATE: [
         "Thermostat",
@@ -158,6 +163,7 @@ HM_DEVICE_TYPES = {
         "IPWInputDevice",
         "IPWMotionDection",
         "IPAlarmSensor",
+        "IPRainSensor",
     ],
     DISCOVER_COVER: [
         "Blind",

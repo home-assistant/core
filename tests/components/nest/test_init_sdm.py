@@ -6,6 +6,7 @@ and failure modes.
 """
 
 import logging
+from unittest.mock import patch
 
 from google_nest_sdm.exceptions import AuthException, GoogleNestException
 
@@ -18,10 +19,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.setup import async_setup_component
 
-from .common import CONFIG, CONFIG_ENTRY_DATA, async_setup_sdm_platform
-
-from tests.async_mock import patch
-from tests.common import MockConfigEntry
+from .common import CONFIG, async_setup_sdm_platform, create_config_entry
 
 PLATFORM = "sensor"
 
@@ -39,7 +37,7 @@ async def test_setup_success(hass, caplog):
 
 async def async_setup_sdm(hass, config=CONFIG):
     """Prepare test setup."""
-    MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA).add_to_hass(hass)
+    create_config_entry(hass)
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
     ):

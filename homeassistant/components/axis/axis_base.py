@@ -30,7 +30,7 @@ class AxisEntityBase(Entity):
     @property
     def device_info(self):
         """Return a device description for device registry."""
-        return {"identifiers": {(AXIS_DOMAIN, self.device.serial)}}
+        return {"identifiers": {(AXIS_DOMAIN, self.device.unique_id)}}
 
     @callback
     def update_callback(self, no_delay=None):
@@ -73,4 +73,4 @@ class AxisEventBase(AxisEntityBase):
     @property
     def unique_id(self):
         """Return a unique identifier for this device."""
-        return f"{self.device.serial}-{self.event.topic}-{self.event.id}"
+        return f"{self.device.unique_id}-{self.event.topic}-{self.event.id}"

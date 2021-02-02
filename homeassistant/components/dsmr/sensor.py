@@ -197,6 +197,10 @@ async def async_setup_entry(
 
     async def connect_and_reconnect():
         """Connect to DSMR and keep reconnecting until Home Assistant stops."""
+        stop_listener = None
+        transport = None
+        protocol = None
+
         while hass.state != CoreState.stopping:
             # Start DSMR asyncio.Protocol reader
             try:
@@ -211,10 +215,9 @@ async def async_setup_entry(
                     # Wait for reader to close
                     await protocol.wait_closed()
 
-                # Unexpected disconnect
-                if transport:
-                    # remove listener
-                    stop_listener()
+                    # Unexpected disconnect
+                    if not hass.is_stopping:
+                        stop_listener()
 
                 transport = None
                 protocol = None
@@ -234,7 +237,7 @@ async def async_setup_entry(
                 protocol = None
             except CancelledError:
                 if stop_listener:
-                    stop_listener()
+                    stop_listener()  # pylint: disable=not-callable
 
                 if transport:
                     transport.close()

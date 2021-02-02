@@ -58,11 +58,11 @@ def handle_subscribe_events(hass, connection, msg):
     """Handle subscribe events command."""
     # Circular dep
     # pylint: disable=import-outside-toplevel
-    from .permissions import SUBSCRIBE_WHITELIST
+    from .permissions import SUBSCRIBE_ALLOWLIST
 
     event_type = msg["event_type"]
 
-    if event_type not in SUBSCRIBE_WHITELIST and not connection.user.is_admin:
+    if event_type not in SUBSCRIBE_ALLOWLIST and not connection.user.is_admin:
         raise Unauthorized
 
     if event_type == EVENT_STATE_CHANGED:
@@ -156,6 +156,10 @@ async def handle_call_service(hass, connection, msg):
                     msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err)
                 )
             )
+    except vol.Invalid as err:
+        connection.send_message(
+            messages.error_message(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+        )
     except HomeAssistantError as err:
         connection.logger.exception(err)
         connection.send_message(

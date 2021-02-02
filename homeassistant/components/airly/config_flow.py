@@ -10,12 +10,17 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
+    HTTP_NOT_FOUND,
     HTTP_UNAUTHORIZED,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, NO_AIRLY_SENSORS  # pylint:disable=unused-import
+from .const import (  # pylint:disable=unused-import
+    CONF_USE_NEAREST,
+    DOMAIN,
+    NO_AIRLY_SENSORS,
+)
 
 
 class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -27,6 +32,7 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         errors = {}
+        use_nearest = False
 
         websession = async_get_clientsession(self.hass)
 
@@ -36,23 +42,32 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             self._abort_if_unique_id_configured()
             try:
-                location_valid = await test_location(
+                location_point_valid = await test_location(
                     websession,
                     user_input["api_key"],
                     user_input["latitude"],
                     user_input["longitude"],
                 )
+                if not location_point_valid:
+                    await test_location(
+                        websession,
+                        user_input["api_key"],
+                        user_input["latitude"],
+                        user_input["longitude"],
+                        use_nearest=True,
+                    )
             except AirlyError as err:
                 if err.status_code == HTTP_UNAUTHORIZED:
                     errors["base"] = "invalid_api_key"
-            else:
-                if not location_valid:
+                if err.status_code == HTTP_NOT_FOUND:
                     errors["base"] = "wrong_location"
-
-                if not errors:
-                    return self.async_create_entry(
-                        title=user_input[CONF_NAME], data=user_input
-                    )
+            else:
+                if not location_point_valid:
+                    use_nearest = True
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME],
+                    data={**user_input, CONF_USE_NEAREST: use_nearest},
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -74,13 +89,17 @@ class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-async def test_location(client, api_key, latitude, longitude):
+async def test_location(client, api_key, latitude, longitude, use_nearest=False):
     """Return true if location is valid."""
     airly = Airly(api_key, client)
-    measurements = airly.create_measurements_session_point(
-        latitude=latitude, longitude=longitude
-    )
-
+    if use_nearest:
+        measurements = airly.create_measurements_session_nearest(
+            latitude=latitude, longitude=longitude, max_distance_km=5
+        )
+    else:
+        measurements = airly.create_measurements_session_point(
+            latitude=latitude, longitude=longitude
+        )
     with async_timeout.timeout(10):
         await measurements.update()
 

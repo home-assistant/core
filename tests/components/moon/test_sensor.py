@@ -1,5 +1,6 @@
 """The test for the moon sensor platform."""
 from datetime import datetime
+from unittest.mock import patch
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
@@ -8,8 +9,6 @@ from homeassistant.components.homeassistant import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-
-from tests.async_mock import patch
 
 DAY1 = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
 DAY2 = datetime(2017, 1, 18, 1, tzinfo=dt_util.UTC)

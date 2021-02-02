@@ -1,5 +1,6 @@
 """Tests for gree component."""
 from datetime import timedelta
+from unittest.mock import DEFAULT as DEFAULT_MOCK, AsyncMock, patch
 
 from greeclimate.device import HorizontalSwing, VerticalSwing
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
@@ -60,7 +61,6 @@ import homeassistant.util.dt as dt_util
 
 from .common import build_device_mock
 
-from tests.async_mock import DEFAULT as DEFAULT_MOCK, AsyncMock, patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake_device_1"

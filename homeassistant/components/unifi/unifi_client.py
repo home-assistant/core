@@ -12,11 +12,7 @@ class UniFiClient(UniFiBase):
         super().__init__(client, controller)
 
         self._is_wired = client.mac not in controller.wireless_clients
-
-    @property
-    def client(self):
-        """Wrap item."""
-        return self._item
+        self.client = self._item
 
     @property
     def is_wired(self):
@@ -29,6 +25,7 @@ class UniFiClient(UniFiBase):
 
         if self.controller.option_ignore_wired_bug:
             return self.client.is_wired
+
         return self._is_wired
 
     @property

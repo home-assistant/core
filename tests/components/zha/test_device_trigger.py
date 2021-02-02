@@ -87,7 +87,7 @@ async def test_triggers(hass, mock_devices):
     ieee_address = str(zha_device.ieee)
 
     ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     triggers = await async_get_device_automations(hass, "trigger", reg_device.id)
 
@@ -145,7 +145,7 @@ async def test_no_triggers(hass, mock_devices):
     ieee_address = str(zha_device.ieee)
 
     ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     triggers = await async_get_device_automations(hass, "trigger", reg_device.id)
     assert triggers == [
@@ -174,7 +174,7 @@ async def test_if_fires_on_event(hass, mock_devices, calls):
 
     ieee_address = str(zha_device.ieee)
     ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     assert await async_setup_component(
         hass,
@@ -283,7 +283,7 @@ async def test_exception_no_triggers(hass, mock_devices, calls, caplog):
 
     ieee_address = str(zha_device.ieee)
     ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     await async_setup_component(
         hass,
@@ -325,7 +325,7 @@ async def test_exception_bad_trigger(hass, mock_devices, calls, caplog):
 
     ieee_address = str(zha_device.ieee)
     ha_device_registry = await async_get_registry(hass)
-    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)}, set())
+    reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     await async_setup_component(
         hass,

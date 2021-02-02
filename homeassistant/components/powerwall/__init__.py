@@ -5,9 +5,8 @@ import logging
 
 import requests
 from tesla_powerwall import MissingAttributeError, Powerwall, PowerwallUnreachableError
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -32,10 +31,7 @@ from .const import (
     UPDATE_INTERVAL,
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_IP_ADDRESS): cv.string})},
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = ["binary_sensor", "sensor"]
 
@@ -45,18 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Tesla Powerwall component."""
     hass.data.setdefault(DOMAIN, {})
-    conf = config.get(DOMAIN)
 
-    if not conf:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=conf,
-        )
-    )
     return True
 
 

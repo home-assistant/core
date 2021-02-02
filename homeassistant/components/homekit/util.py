@@ -1,5 +1,4 @@
 """Collection of useful functions for the HomeKit component."""
-from collections import OrderedDict, namedtuple
 import io
 import ipaddress
 import logging
@@ -11,11 +10,12 @@ import socket
 import pyqrcode
 import voluptuous as vol
 
-from homeassistant.components import binary_sensor, fan, media_player, sensor
+from homeassistant.components import binary_sensor, media_player, sensor
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_SUPPORTED_FEATURES,
     CONF_NAME,
+    CONF_PORT,
     CONF_TYPE,
     TEMP_CELSIUS,
 )
@@ -310,56 +310,6 @@ def validate_media_player_features(state, feature_list):
     return True
 
 
-SpeedRange = namedtuple("SpeedRange", ("start", "target"))
-SpeedRange.__doc__ += """ Maps Home Assistant speed \
-values to percentage based HomeKit speeds.
-start: Start of the range (inclusive).
-target: Percentage to use to determine HomeKit percentages \
-from HomeAssistant speed.
-"""
-
-
-class HomeKitSpeedMapping:
-    """Supports conversion between Home Assistant and HomeKit fan speeds."""
-
-    def __init__(self, speed_list):
-        """Initialize a new SpeedMapping object."""
-        if speed_list[0] != fan.SPEED_OFF:
-            _LOGGER.warning(
-                "%s does not contain the speed setting "
-                "%s as its first element. "
-                "Assuming that %s is equivalent to 'off'",
-                speed_list,
-                fan.SPEED_OFF,
-                speed_list[0],
-            )
-        self.speed_ranges = OrderedDict()
-        list_size = len(speed_list)
-        for index, speed in enumerate(speed_list):
-            # By dividing by list_size -1 the following
-            # desired attributes hold true:
-            # * index = 0 => 0%, equal to "off"
-            # * index = len(speed_list) - 1 => 100 %
-            # * all other indices are equally distributed
-            target = index * 100 / (list_size - 1)
-            start = index * 100 / list_size
-            self.speed_ranges[speed] = SpeedRange(start, target)
-
-    def speed_to_homekit(self, speed):
-        """Map Home Assistant speed state to HomeKit speed."""
-        if speed is None:
-            return None
-        speed_range = self.speed_ranges[speed]
-        return round(speed_range.target)
-
-    def speed_to_states(self, speed):
-        """Map HomeKit speed to Home Assistant speed state."""
-        for state, speed_range in reversed(self.speed_ranges.items()):
-            if speed_range.start <= speed:
-                return state
-        return list(self.speed_ranges)[0]
-
-
 def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
     """Display persistent notification with setup information."""
     pin = pincode.decode()
@@ -496,7 +446,7 @@ def _get_test_socket():
     return test_socket
 
 
-def port_is_available(port: int):
+def port_is_available(port: int) -> bool:
     """Check to see if a port is available."""
     test_socket = _get_test_socket()
     try:
@@ -507,10 +457,24 @@ def port_is_available(port: int):
     return True
 
 
-def find_next_available_port(start_port: int):
+async def async_find_next_available_port(hass: HomeAssistant, start_port: int) -> int:
+    """Find the next available port not assigned to a config entry."""
+    exclude_ports = set()
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if CONF_PORT in entry.data:
+            exclude_ports.add(entry.data[CONF_PORT])
+
+    return await hass.async_add_executor_job(
+        _find_next_available_port, start_port, exclude_ports
+    )
+
+
+def _find_next_available_port(start_port: int, exclude_ports: set) -> int:
     """Find the next available port starting with the given port."""
     test_socket = _get_test_socket()
     for port in range(start_port, MAX_PORT):
+        if port in exclude_ports:
+            continue
         try:
             test_socket.bind(("", port))
             return port
@@ -520,7 +484,7 @@ def find_next_available_port(start_port: int):
             continue
 
 
-def pid_is_alive(pid):
+def pid_is_alive(pid) -> bool:
     """Check to see if a process is alive."""
     try:
         os.kill(pid, 0)

@@ -3,6 +3,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.homekit.const import (
+    BRIDGE_NAME,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_SENSOR,
@@ -21,13 +22,11 @@ from homeassistant.components.homekit.const import (
     TYPE_VALVE,
 )
 from homeassistant.components.homekit.util import (
-    HomeKitSpeedMapping,
-    SpeedRange,
+    async_find_next_available_port,
     cleanup_name_for_homekit,
     convert_to_float,
     density_to_air_quality,
     dismiss_setup_message,
-    find_next_available_port,
     format_sw_version,
     port_is_available,
     show_setup_message,
@@ -45,6 +44,7 @@ from homeassistant.const import (
     ATTR_CODE,
     ATTR_SUPPORTED_FEATURES,
     CONF_NAME,
+    CONF_PORT,
     CONF_TYPE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
@@ -54,7 +54,7 @@ from homeassistant.core import State
 
 from .util import async_init_integration
 
-from tests.common import async_mock_service
+from tests.common import MockConfigEntry, async_mock_service
 
 
 def test_validate_entity_config():
@@ -251,69 +251,28 @@ async def test_dismiss_setup_msg(hass):
     assert call_dismiss_notification[0].data[ATTR_NOTIFICATION_ID] == "entry_id"
 
 
-def test_homekit_speed_mapping():
-    """Test if the SpeedRanges from a speed_list are as expected."""
-    # A standard 2-speed fan
-    speed_mapping = HomeKitSpeedMapping(["off", "low", "high"])
-    assert speed_mapping.speed_ranges == {
-        "off": SpeedRange(0, 0),
-        "low": SpeedRange(100 / 3, 50),
-        "high": SpeedRange(200 / 3, 100),
-    }
-
-    # A standard 3-speed fan
-    speed_mapping = HomeKitSpeedMapping(["off", "low", "medium", "high"])
-    assert speed_mapping.speed_ranges == {
-        "off": SpeedRange(0, 0),
-        "low": SpeedRange(100 / 4, 100 / 3),
-        "medium": SpeedRange(200 / 4, 200 / 3),
-        "high": SpeedRange(300 / 4, 100),
-    }
-
-    # a Dyson-like fan with 10 speeds
-    speed_mapping = HomeKitSpeedMapping([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-    assert speed_mapping.speed_ranges == {
-        0: SpeedRange(0, 0),
-        1: SpeedRange(10, 100 / 9),
-        2: SpeedRange(20, 200 / 9),
-        3: SpeedRange(30, 300 / 9),
-        4: SpeedRange(40, 400 / 9),
-        5: SpeedRange(50, 500 / 9),
-        6: SpeedRange(60, 600 / 9),
-        7: SpeedRange(70, 700 / 9),
-        8: SpeedRange(80, 800 / 9),
-        9: SpeedRange(90, 100),
-    }
-
-
-def test_speed_to_homekit():
-    """Test speed conversion from HA to Homekit."""
-    speed_mapping = HomeKitSpeedMapping(["off", "low", "high"])
-    assert speed_mapping.speed_to_homekit(None) is None
-    assert speed_mapping.speed_to_homekit("off") == 0
-    assert speed_mapping.speed_to_homekit("low") == 50
-    assert speed_mapping.speed_to_homekit("high") == 100
-
-
-def test_speed_to_states():
-    """Test speed conversion from Homekit to HA."""
-    speed_mapping = HomeKitSpeedMapping(["off", "low", "high"])
-    assert speed_mapping.speed_to_states(-1) == "off"
-    assert speed_mapping.speed_to_states(0) == "off"
-    assert speed_mapping.speed_to_states(33) == "off"
-    assert speed_mapping.speed_to_states(34) == "low"
-    assert speed_mapping.speed_to_states(50) == "low"
-    assert speed_mapping.speed_to_states(66) == "low"
-    assert speed_mapping.speed_to_states(67) == "high"
-    assert speed_mapping.speed_to_states(100) == "high"
-
-
 async def test_port_is_available(hass):
     """Test we can get an available port and it is actually available."""
-    next_port = await hass.async_add_executor_job(
-        find_next_available_port, DEFAULT_CONFIG_FLOW_PORT
-    )
+    next_port = await async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
+
     assert next_port
+
+    assert await hass.async_add_executor_job(port_is_available, next_port)
+
+
+async def test_port_is_available_skips_existing_entries(hass):
+    """Test we can get an available port and it is actually available."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_CONFIG_FLOW_PORT},
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    next_port = await async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
+
+    assert next_port
+    assert next_port != DEFAULT_CONFIG_FLOW_PORT
 
     assert await hass.async_add_executor_job(port_is_available, next_port)
 
