@@ -34,9 +34,9 @@ async def mock_impl(hass):
 
 async def test_abort_if_no_configuration(hass):
     """Check flow abort when no configuration."""
-    flow = config_flow.OAuth2FlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "missing_configuration"
 
@@ -114,8 +114,14 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_abort_if_authorization_timeout(hass, mock_impl):
+async def test_abort_if_authorization_timeout(
+    hass, mock_impl, current_request_with_host
+):
     """Check Somfy authorization timeout."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
     flow = config_flow.OAuth2FlowHandler()
     flow.hass = hass
 
