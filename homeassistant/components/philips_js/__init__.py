@@ -14,7 +14,7 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_SYSTEM, DOMAIN
+from .const import DOMAIN
 
 PLATFORMS = ["media_player"]
 
@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     tvapi = PhilipsTV(entry.data[CONF_HOST], entry.data[CONF_API_VERSION])
 
-    coordinator = PhilipsTVDataUpdateCoordinator(hass, tvapi, entry.data[CONF_SYSTEM])
+    coordinator = PhilipsTVDataUpdateCoordinator(hass, tvapi)
 
     await coordinator.async_refresh()
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -102,12 +102,10 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinator to update data."""
 
     api: PhilipsTV
-    system: Dict[str, Any]
 
-    def __init__(self, hass, api: PhilipsTV, system: Dict[str, Any]) -> None:
+    def __init__(self, hass, api: PhilipsTV) -> None:
         """Set up the coordinator."""
         self.api = api
-        self.system = system
 
         def _update_listeners():
             for update_callback in self._listeners:

@@ -1,4 +1,6 @@
 """Media Player component to integrate TVs exposing the Joint Space API."""
+from typing import Any, Dict
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -39,7 +41,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LOGGER as _LOGGER
-from .const import DOMAIN
+from .const import CONF_SYSTEM, DOMAIN
 
 SUPPORT_PHILIPS_JS = (
     SUPPORT_TURN_OFF
@@ -99,21 +101,24 @@ async def async_setup_entry(
 ):
     """Set up the configuration entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([PhilipsTVMediaPlayer(coordinator)])
+    async_add_entities(
+        [PhilipsTVMediaPlayer(coordinator, config_entry.data[CONF_SYSTEM])]
+    )
 
 
 class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
 
-    def __init__(self, coordinator: PhilipsTVDataUpdateCoordinator):
+    def __init__(
+        self, coordinator: PhilipsTVDataUpdateCoordinator, system: Dict[str, Any]
+    ):
         """Initialize the Philips TV."""
         self._tv = coordinator.api
-        self._name = coordinator.system["name"]
         self._coordinator = coordinator
         self._sources = {}
         self._channels = {}
         self._supports = SUPPORT_PHILIPS_JS
-        self._system = coordinator.system
+        self._system = system
         super().__init__(coordinator)
         self._update_from_coordinator()
 
@@ -124,7 +129,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def name(self):
         """Return the device name."""
-        return self._name
+        return self._system["name"]
 
     @property
     def supported_features(self):
