@@ -1,6 +1,7 @@
 """The Z-Wave JS integration."""
 import asyncio
 import logging
+from typing import Callable, List
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
@@ -200,7 +201,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if device not in known_devices:
             dev_reg.async_remove_device(device.id)
 
-    hass.data[DOMAIN][entry.entry_id] = {DATA_CLIENT: client, DATA_UNSUBSCRIBE: []}
+    unsubscribe_callbacks: List[Callable] = []
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_CLIENT: client,
+        DATA_UNSUBSCRIBE: unsubscribe_callbacks,
+    }
 
     # Set up websocket API
     async_register_api(hass)
@@ -235,7 +240,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         listen_task = asyncio.create_task(client_listen(hass, entry, client))
         hass.data[DOMAIN][entry.entry_id][DATA_CLIENT_LISTEN_TASK] = listen_task
-        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
+        unsubscribe_callbacks.append(
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
+        )
 
     hass.async_create_task(start_platforms())
 
