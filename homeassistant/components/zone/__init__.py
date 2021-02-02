@@ -293,7 +293,7 @@ class Zone(entity.Entity):
     def __init__(self, config: Dict):
         """Initialize the zone."""
         self._config = config
-        self._editable = True
+        self.editable = True
         self._attrs: Optional[Dict] = None
         self._generate_attrs()
 
@@ -301,7 +301,7 @@ class Zone(entity.Entity):
     def from_yaml(cls, config: Dict) -> "Zone":
         """Return entity instance initialized from yaml storage."""
         zone = cls(config)
-        zone._editable = False
+        zone.editable = False
         return zone
 
     @property
@@ -350,5 +350,5 @@ class Zone(entity.Entity):
             ATTR_LONGITUDE: self._config[CONF_LONGITUDE],
             ATTR_RADIUS: self._config[CONF_RADIUS],
             ATTR_PASSIVE: self._config[CONF_PASSIVE],
-            ATTR_EDITABLE: self._editable,
+            ATTR_EDITABLE: self.editable,
         }

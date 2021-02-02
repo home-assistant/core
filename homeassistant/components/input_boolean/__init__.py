@@ -146,7 +146,7 @@ class InputBoolean(ToggleEntity, RestoreEntity):
     def __init__(self, config: typing.Optional[dict]):
         """Initialize a boolean input."""
         self._config = config
-        self._editable = True
+        self.editable = True
         self._state = config.get(CONF_INITIAL)
 
     @classmethod
@@ -154,7 +154,7 @@ class InputBoolean(ToggleEntity, RestoreEntity):
         """Return entity instance initialized from yaml storage."""
         input_bool = cls(config)
         input_bool.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
-        input_bool._editable = False
+        input_bool.editable = False
         return input_bool
 
     @property
@@ -170,7 +170,7 @@ class InputBoolean(ToggleEntity, RestoreEntity):
     @property
     def state_attributes(self):
         """Return the state attributes of the entity."""
-        return {ATTR_EDITABLE: self._editable}
+        return {ATTR_EDITABLE: self.editable}
 
     @property
     def icon(self):

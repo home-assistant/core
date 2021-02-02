@@ -359,7 +359,7 @@ class Person(RestoreEntity):
     def __init__(self, config):
         """Set up person."""
         self._config = config
-        self._editable = True
+        self.editable = True
         self._latitude = None
         self._longitude = None
         self._gps_accuracy = None
@@ -371,7 +371,7 @@ class Person(RestoreEntity):
     def from_yaml(cls, config):
         """Return entity instance initialized from yaml storage."""
         person = cls(config)
-        person._editable = False
+        person.editable = False
         return person
 
     @property
@@ -400,7 +400,7 @@ class Person(RestoreEntity):
     @property
     def state_attributes(self):
         """Return the state attributes of the person."""
-        data = {ATTR_EDITABLE: self._editable, ATTR_ID: self.unique_id}
+        data = {ATTR_EDITABLE: self.editable, ATTR_ID: self.unique_id}
         if self._latitude is not None:
             data[ATTR_LATITUDE] = self._latitude
         if self._longitude is not None:
