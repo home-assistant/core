@@ -126,11 +126,6 @@ class LGDevice(MediaPlayerEntity):
         return False
 
     @property
-    def unique_id(self):
-        """Return the device's unique ID."""
-        return self._hostname
-
-    @property
     def name(self):
         """Return the name of the device."""
         return self._name
