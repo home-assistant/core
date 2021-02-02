@@ -533,8 +533,12 @@ class Entity(ABC):
     async def async_remove(self, *, force_remove: bool = False) -> None:
         """Remove entity from Home Assistant.
 
-        Pass in force_remove=True to skip writing unavailable state
-        when the entity still exists in the entity registry.
+        If the entity has a non disabled entry in the entity registry,
+        the entity's state will be set to unavailable, in the same way
+        as when the entity registry is loaded.
+
+        If the entity doesn't have a non disabled entry in the entity registry,
+        or if force_remove=True, its state will be removed.
         """
         assert self.hass is not None
 
@@ -552,12 +556,13 @@ class Entity(ABC):
         await self.async_internal_will_remove_from_hass()
         await self.async_will_remove_from_hass()
 
-        # Check if entry still exists in entity registry (ie unloading config entry)
+        # Check if entry still exists in entity registry (e.g. unloading config entry)
         if (
             not force_remove
             and self.registry_entry
             and not self.registry_entry.disabled
         ):
+            # Set the entity's state will to unavailable + ATTR_RESTORED: True
             self.registry_entry.write_unavailable_state(self.hass)
         else:
             self.hass.states.async_remove(self.entity_id, context=self._context)

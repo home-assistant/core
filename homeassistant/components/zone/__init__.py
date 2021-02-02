@@ -183,8 +183,8 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     yaml_collection = collection.IDLessCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
-    collection.attach_entity_component_collection(
-        component, yaml_collection, lambda conf: Zone(conf, False)
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, yaml_collection, Zone.from_yaml
     )
 
     storage_collection = ZoneStorageCollection(
@@ -192,8 +192,8 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
         logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
-    collection.attach_entity_component_collection(
-        component, storage_collection, lambda conf: Zone(conf, True)
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, storage_collection, Zone
     )
 
     if config[DOMAIN]:
@@ -235,10 +235,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     if component.get_entity("zone.home"):
         return True
 
-    home_zone = Zone(
-        _home_conf(hass),
-        True,
-    )
+    home_zone = Zone(_home_conf(hass))
     home_zone.entity_id = ENTITY_ID_HOME
     await component.async_add_entities([home_zone])
 
@@ -293,12 +290,19 @@ async def async_unload_entry(
 class Zone(entity.Entity):
     """Representation of a Zone."""
 
-    def __init__(self, config: Dict, editable: bool):
+    def __init__(self, config: Dict):
         """Initialize the zone."""
         self._config = config
-        self._editable = editable
+        self._editable = True
         self._attrs: Optional[Dict] = None
         self._generate_attrs()
+
+    @classmethod
+    def from_yaml(cls, config: Dict) -> "Zone":
+        """Return entity instance initialized from yaml storage."""
+        zone = cls(config)
+        zone._editable = False
+        return zone
 
     @property
     def state(self) -> str:
