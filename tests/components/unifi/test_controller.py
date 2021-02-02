@@ -1,5 +1,5 @@
 """Test UniFi Controller."""
-from collections import deque
+
 from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import patch
@@ -33,6 +33,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    CONTENT_TYPE_JSON,
 )
 from homeassistant.setup import async_setup_component
 
@@ -67,11 +68,22 @@ ENTRY_OPTIONS = {}
 
 CONFIGURATION = []
 
-SITES = {"Site name": {"desc": "Site name", "name": "site_id", "role": "admin"}}
+SITE = [{"desc": "Site name", "name": "site_id", "role": "admin"}]
 DESCRIPTION = [{"name": "username", "site_name": "site_id", "site_role": "admin"}]
 
 
-def mock_default_unifi_requests(aioclient_mock):
+def mock_default_unifi_requests(
+    aioclient_mock,
+    site_id="site_id",
+    sites=None,
+    description=None,
+    clients_response=None,
+    devices_response=None,
+    clients_all_response=None,
+    wlans_response=None,
+    dpigroup_response=None,
+    dpiapp_response=None,
+):
     """Mock default UniFi requests responses."""
     host = "1.2.3.4"
 
@@ -80,6 +92,50 @@ def mock_default_unifi_requests(aioclient_mock):
     aioclient_mock.post(
         f"https://{host}:1234/api/login",
         json={"data": "login successful", "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+
+    aioclient_mock.get(
+        f"https://{host}:1234/api/self/sites",
+        json={"data": sites or [], "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+
+    aioclient_mock.get(
+        f"https://{host}:1234/api/s/{site_id}/self",
+        json={"data": description or [], "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+
+    aioclient_mock.get(
+        f"https://{host}:1234/api/s/{site_id}/stat/sta",
+        json={"data": clients_response or [], "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+    aioclient_mock.get(
+        f"https://{host}:1234/api/s/{site_id}/rest/user",
+        json={"data": clients_all_response or [], "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+    aioclient_mock.get(
+        f"https://{host}:1234/api/s/{site_id}/stat/device",
+        json={"data": devices_response or [], "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+    aioclient_mock.get(
+        f"https://{host}:1234/api/s/{site_id}/rest/dpiapp",
+        json={"data": dpiapp_response or [], "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+    aioclient_mock.get(
+        f"https://{host}:1234/api/s/{site_id}/rest/dpigroup",
+        json={"data": dpigroup_response or [], "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+    aioclient_mock.get(
+        f"https://{host}:1234/api/s/{site_id}/rest/wlanconf",
+        json={"data": wlans_response or [], "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
 
@@ -87,7 +143,7 @@ async def setup_unifi_integration(
     hass,
     config=ENTRY_CONFIG,
     options=ENTRY_OPTIONS,
-    sites=SITES,
+    sites=SITE,
     site_description=DESCRIPTION,
     clients_response=None,
     devices_response=None,
@@ -115,68 +171,25 @@ async def setup_unifi_integration(
             known_wireless_clients, config_entry
         )
 
-    mock_client_responses = deque()
-    if clients_response:
-        mock_client_responses.append(clients_response)
+    if aioclient_mock:
+        mock_default_unifi_requests(
+            aioclient_mock,
+            sites=sites,
+            description=site_description,
+            clients_response=clients_response,
+            devices_response=devices_response,
+            clients_all_response=clients_all_response,
+            dpigroup_response=dpigroup_response,
+            dpiapp_response=dpiapp_response,
+            wlans_response=wlans_response,
+        )
 
-    mock_device_responses = deque()
-    if devices_response:
-        mock_device_responses.append(devices_response)
-
-    mock_client_all_responses = deque()
-    if clients_all_response:
-        mock_client_all_responses.append(clients_all_response)
-
-    mock_wlans_responses = deque()
-    if wlans_response:
-        mock_wlans_responses.append(wlans_response)
-
-    mock_dpigroup_responses = deque()
-    if dpigroup_response:
-        mock_dpigroup_responses.append(dpigroup_response)
-
-    mock_dpiapp_responses = deque()
-    if dpiapp_response:
-        mock_dpiapp_responses.append(dpiapp_response)
-
-    mock_requests = []
-
-    async def mock_request(self, method, path, json=None):
-        mock_requests.append({"method": method, "path": path, "json": json})
-
-        if path == "/stat/sta" and mock_client_responses:
-            return mock_client_responses.popleft()
-        if path == "/stat/device" and mock_device_responses:
-            return mock_device_responses.popleft()
-        if path == "/rest/user" and mock_client_all_responses:
-            return mock_client_all_responses.popleft()
-        if path == "/rest/wlanconf" and mock_wlans_responses:
-            return mock_wlans_responses.popleft()
-        if path == "/rest/dpigroup" and mock_dpigroup_responses:
-            return mock_dpigroup_responses.popleft()
-        if path == "/rest/dpiapp" and mock_dpiapp_responses:
-            return mock_dpiapp_responses.popleft()
-        return {}
-
-    with patch("aiounifi.Controller.sites", return_value=sites), patch(
-        "aiounifi.Controller.site_description", return_value=site_description
-    ), patch("aiounifi.Controller.request", new=mock_request), patch.object(
-        aiounifi.websocket.WSClient, "start", return_value=True
-    ):
-        if aioclient_mock:
-            mock_default_unifi_requests(aioclient_mock)
+    with patch.object(aiounifi.websocket.WSClient, "start", return_value=True):
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     if config_entry.entry_id not in hass.data[UNIFI_DOMAIN]:
         return None
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-
-    controller.mock_client_responses = mock_client_responses
-    controller.mock_device_responses = mock_device_responses
-    controller.mock_client_all_responses = mock_client_all_responses
-    controller.mock_wlans_responses = mock_wlans_responses
-    controller.mock_requests = mock_requests
 
     return config_entry
 
@@ -200,8 +213,8 @@ async def test_controller_setup(hass, aioclient_mock):
 
     assert controller.host == CONTROLLER_DATA[CONF_HOST]
     assert controller.site == CONTROLLER_DATA[CONF_SITE_ID]
-    assert controller.site_name in SITES
-    assert controller.site_role == SITES[controller.site_name]["role"]
+    assert controller.site_name == SITE[0]["desc"]
+    assert controller.site_role == SITE[0]["role"]
 
     assert controller.option_allow_bandwidth_sensors == DEFAULT_ALLOW_BANDWIDTH_SENSORS
     assert controller.option_allow_uptime_sensors == DEFAULT_ALLOW_UPTIME_SENSORS

@@ -295,7 +295,7 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_clients(hass, aioclient_mock):
     """Test the update_clients function when no clients are found."""
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
         aioclient_mock=aioclient_mock,
         options={
@@ -304,24 +304,21 @@ async def test_no_clients(hass, aioclient_mock):
             CONF_DPI_RESTRICTIONS: False,
         },
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(controller.mock_requests) == 6
+    assert aioclient_mock.call_count == 10
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
 async def test_controller_not_client(hass, aioclient_mock):
     """Test that the controller doesn't become a switch."""
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
         aioclient_mock=aioclient_mock,
         options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
         clients_response=[CONTROLLER_HOST],
         devices_response=[DEVICE_1],
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
     cloudkey = hass.states.get("switch.cloud_key")
     assert cloudkey is None
@@ -331,7 +328,7 @@ async def test_not_admin(hass, aioclient_mock):
     """Test that switch platform only work on an admin account."""
     description = deepcopy(DESCRIPTION)
     description[0]["site_role"] = "not admin"
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
         aioclient_mock=aioclient_mock,
         options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
@@ -339,9 +336,7 @@ async def test_not_admin(hass, aioclient_mock):
         clients_response=[CLIENT_1],
         devices_response=[DEVICE_1],
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
@@ -363,7 +358,6 @@ async def test_switches(hass, aioclient_mock):
     )
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 4
 
     switch_1 = hass.states.get("switch.poe_client_1")
@@ -389,25 +383,35 @@ async def test_switches(hass, aioclient_mock):
     assert dpi_switch is not None
     assert dpi_switch.state == "on"
 
+    # Block and unblock client
+
+    aioclient_mock.post(
+        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
+    )
+
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 7
-    assert controller.mock_requests[6] == {
-        "json": {"mac": "00:00:00:00:01:01", "cmd": "block-sta"},
-        "method": "post",
-        "path": "/cmd/stamgr",
+    assert aioclient_mock.call_count == 11
+    assert aioclient_mock.mock_calls[10][2] == {
+        "mac": "00:00:00:00:01:01",
+        "cmd": "block-sta",
     }
 
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 8
-    assert controller.mock_requests[7] == {
-        "json": {"mac": "00:00:00:00:01:01", "cmd": "unblock-sta"},
-        "method": "post",
-        "path": "/cmd/stamgr",
+    assert aioclient_mock.call_count == 12
+    assert aioclient_mock.mock_calls[11][2] == {
+        "mac": "00:00:00:00:01:01",
+        "cmd": "unblock-sta",
     }
+
+    # Enable and disable DPI
+
+    aioclient_mock.put(
+        f"https://{controller.host}:1234/api/s/{controller.site}/rest/dpiapp/5f976f62e3c58f018ec7e17d",
+    )
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -415,12 +419,8 @@ async def test_switches(hass, aioclient_mock):
         {"entity_id": "switch.block_media_streaming"},
         blocking=True,
     )
-    assert len(controller.mock_requests) == 9
-    assert controller.mock_requests[8] == {
-        "json": {"enabled": False},
-        "method": "put",
-        "path": "/rest/dpiapp/5f976f62e3c58f018ec7e17d",
-    }
+    assert aioclient_mock.call_count == 13
+    assert aioclient_mock.mock_calls[12][2] == {"enabled": False}
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -428,12 +428,8 @@ async def test_switches(hass, aioclient_mock):
         {"entity_id": "switch.block_media_streaming"},
         blocking=True,
     )
-    assert len(controller.mock_requests) == 10
-    assert controller.mock_requests[9] == {
-        "json": {"enabled": True},
-        "method": "put",
-        "path": "/rest/dpiapp/5f976f62e3c58f018ec7e17d",
-    }
+    assert aioclient_mock.call_count == 14
+    assert aioclient_mock.mock_calls[13][2] == {"enabled": True}
 
 
 async def test_remove_switches(hass, aioclient_mock):
@@ -519,24 +515,26 @@ async def test_block_switches(hass, aioclient_mock):
     assert blocked is not None
     assert blocked.state == "off"
 
+    aioclient_mock.post(
+        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
+    )
+
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 7
-    assert controller.mock_requests[6] == {
-        "json": {"mac": "00:00:00:00:01:01", "cmd": "block-sta"},
-        "method": "post",
-        "path": "/cmd/stamgr",
+    assert aioclient_mock.call_count == 11
+    assert aioclient_mock.mock_calls[10][2] == {
+        "mac": "00:00:00:00:01:01",
+        "cmd": "block-sta",
     }
 
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 8
-    assert controller.mock_requests[7] == {
-        "json": {"mac": "00:00:00:00:01:01", "cmd": "unblock-sta"},
-        "method": "post",
-        "path": "/cmd/stamgr",
+    assert aioclient_mock.call_count == 12
+    assert aioclient_mock.mock_calls[11][2] == {
+        "mac": "00:00:00:00:01:01",
+        "cmd": "unblock-sta",
     }
 
 
@@ -554,7 +552,6 @@ async def test_new_client_discovered_on_block_control(hass, aioclient_mock):
     )
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
     blocked = hass.states.get("switch.block_client_1")
@@ -660,7 +657,6 @@ async def test_new_client_discovered_on_poe_control(hass, aioclient_mock):
     )
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
     controller.api.websocket._data = {
@@ -683,31 +679,25 @@ async def test_new_client_discovered_on_poe_control(hass, aioclient_mock):
     switch_2 = hass.states.get("switch.poe_client_2")
     assert switch_2 is not None
 
+    aioclient_mock.put(
+        f"https://{controller.host}:1234/api/s/{controller.site}/rest/device/mock-id",
+    )
+
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {"entity_id": "switch.poe_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 7
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
-    assert controller.mock_requests[6] == {
-        "json": {
-            "port_overrides": [{"port_idx": 1, "portconf_id": "1a1", "poe_mode": "off"}]
-        },
-        "method": "put",
-        "path": "/rest/device/mock-id",
+    assert aioclient_mock.call_count == 11
+    assert aioclient_mock.mock_calls[10][2] == {
+        "port_overrides": [{"port_idx": 1, "portconf_id": "1a1", "poe_mode": "off"}]
     }
 
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {"entity_id": "switch.poe_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 8
-    assert controller.mock_requests[7] == {
-        "json": {
-            "port_overrides": [
-                {"port_idx": 1, "portconf_id": "1a1", "poe_mode": "auto"}
-            ]
-        },
-        "method": "put",
-        "path": "/rest/device/mock-id",
+    assert aioclient_mock.call_count == 12
+    assert aioclient_mock.mock_calls[11][2] == {
+        "port_overrides": [{"port_idx": 1, "portconf_id": "1a1", "poe_mode": "auto"}]
     }
 
 
@@ -717,15 +707,13 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass, aioclient_mock):
     If there is a non-UniFi switch powered by POE,
     clients will be transparently marked as having POE as well.
     """
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
         aioclient_mock=aioclient_mock,
         clients_response=POE_SWITCH_CLIENTS,
         devices_response=[DEVICE_1],
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
 
     switch_1 = hass.states.get("switch.poe_client_1")
@@ -764,7 +752,7 @@ async def test_restoring_client(hass, aioclient_mock):
         config_entry=config_entry,
     )
 
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
         aioclient_mock=aioclient_mock,
         options={
@@ -776,9 +764,7 @@ async def test_restoring_client(hass, aioclient_mock):
         devices_response=[DEVICE_1],
         clients_all_response=[CLIENT_1],
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
 
     device_1 = hass.states.get("switch.client_1")

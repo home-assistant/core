@@ -63,7 +63,7 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_clients(hass, aioclient_mock):
     """Test the update_clients function when no clients are found."""
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
         aioclient_mock=aioclient_mock,
         options={
@@ -71,9 +71,7 @@ async def test_no_clients(hass, aioclient_mock):
             CONF_ALLOW_UPTIME_SENSORS: True,
         },
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
 
 
@@ -92,7 +90,6 @@ async def test_sensors(hass, aioclient_mock):
     )
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
 
     wired_client_rx = hass.states.get("sensor.wired_client_name_rx")
