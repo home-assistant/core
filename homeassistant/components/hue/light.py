@@ -213,7 +213,7 @@ class HueLight(CoordinatorEntity, LightEntity):
             self.is_osram = False
             self.is_philips = False
             self.is_innr = False
-            self.is_livarno= False
+            self.is_livarno = False
             self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
             self.gamut = None
         else:
@@ -318,7 +318,7 @@ class HueLight(CoordinatorEntity, LightEntity):
 
         if self.is_livarno:
             max_mireds = 500
-            
+
         if not max_mireds:
             return super().max_mireds
 
