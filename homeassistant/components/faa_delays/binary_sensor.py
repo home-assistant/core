@@ -52,13 +52,13 @@ class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
         """Return the status of the sensor."""
         if self._sensor_type == "GROUND_DELAY":
             return self.coordinator.data.ground_delay.status
-        elif self._sensor_type == "GROUND_STOP":
+        if self._sensor_type == "GROUND_STOP":
             return self.coordinator.data.ground_stop.status
-        elif self._sensor_type == "DEPART_DELAY":
+        if self._sensor_type == "DEPART_DELAY":
             return self.coordinator.data.depart_delay.status
-        elif self._sensor_type == "ARRIVE_DELAY":
+        if self._sensor_type == "ARRIVE_DELAY":
             return self.coordinator.data.arrive_delay.status
-        elif self._sensor_type == "CLOSURE":
+        if self._sensor_type == "CLOSURE":
             return self.coordinator.data.closure.status
 
     @property
