@@ -113,10 +113,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Devices that are in the device registry that are not known by the controller can be removed
         for device in stored_devices:
             if device not in known_devices:
-                for entity in entity_registry.async_entries_for_device(
-                    ent_reg, device.id, include_disabled_entities=True
-                ):
-                    ent_reg.async_remove(entity.entity_id)
                 dev_reg.async_remove_device(device.id)
 
     @callback

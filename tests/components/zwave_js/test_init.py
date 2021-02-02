@@ -318,6 +318,7 @@ async def test_removed_device(hass, client, multiple_devices, integration):
     # Remove a node and reload the entry
     old_node = nodes.pop(13)
     await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
 
     # Assert that the node and all of it's entities were removed from the device and
     # entity registry
