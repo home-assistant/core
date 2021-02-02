@@ -60,6 +60,7 @@ class FAABinarySensor(CoordinatorEntity, BinarySensorEntity):
             return self.coordinator.data.arrive_delay.status
         if self._sensor_type == "CLOSURE":
             return self.coordinator.data.closure.status
+        return None
 
     @property
     def unique_id(self):
