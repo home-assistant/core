@@ -72,7 +72,6 @@ NOTIFICATION_SENSOR_MAPPINGS: List[NotificationSensorMapping] = [
     },
     {
         # NotificationType 1: Smoke Alarm - All other State Id's
-        # Create as disabled sensors
         "type": NOTIFICATION_SMOKE_ALARM,
         "device_class": DEVICE_CLASS_PROBLEM,
     },
