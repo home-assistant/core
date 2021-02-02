@@ -238,12 +238,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     port = conf[CONF_PORT]
     _LOGGER.debug("Begin setup HomeKit for %s", name)
 
-    # If the previous instance hasn't cleaned up yet
-    # we need to wait a bit
-    if not await hass.async_add_executor_job(port_is_available, port):
-        _LOGGER.warning("The local port %s is in use", port)
-        raise ConfigEntryNotReady
-
     if CONF_ENTRY_INDEX in conf and conf[CONF_ENTRY_INDEX] == 0:
         _LOGGER.debug("Migrating legacy HomeKit data for %s", name)
         hass.async_add_executor_job(
@@ -275,7 +269,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.entry_id,
     )
     zeroconf_instance = await zeroconf.async_get_instance(hass)
-    await hass.async_add_executor_job(homekit.setup, zeroconf_instance)
+
+    # If the previous instance hasn't cleaned up yet
+    # we need to wait a bit
+    try:
+        await hass.async_add_executor_job(homekit.setup, zeroconf_instance)
+    except (OSError, AttributeError) as ex:
+        _LOGGER.warning(
+            "%s could not be setup because the local port %s is in use", name, port
+        )
+        raise ConfigEntryNotReady from ex
 
     undo_listener = entry.add_update_listener(_async_update_listener)
 
