@@ -2,6 +2,7 @@
 from datetime import timedelta
 import functools as ft
 import logging
+import math
 from typing import List, Optional
 
 import voluptuous as vol
@@ -54,6 +55,7 @@ DIRECTION_REVERSE = "reverse"
 
 ATTR_SPEED = "speed"
 ATTR_PERCENTAGE = "percentage"
+ATTR_PERCENTAGE_STEP = "percentage_step"
 ATTR_SPEED_LIST = "speed_list"
 ATTR_OSCILLATING = "oscillating"
 ATTR_DIRECTION = "direction"
@@ -400,6 +402,13 @@ class FanEntity(ToggleEntity):
         return 0
 
     @property
+    def percentage_step(self) -> Optional[float]:
+        """Return the step size for percentage."""
+        if not self._implemented_percentage:
+            return round(math.ceil(10000 / len(self.speed_list)) / 100)
+        return 1
+
+    @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
         speeds = []
@@ -511,6 +520,7 @@ class FanEntity(ToggleEntity):
         if supported_features & SUPPORT_SET_SPEED:
             data[ATTR_SPEED] = self.speed
             data[ATTR_PERCENTAGE] = self.percentage
+            data[ATTR_PERCENTAGE_STEP] = self.percentage_step
 
         if (
             supported_features & SUPPORT_PRESET_MODE
