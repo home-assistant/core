@@ -274,8 +274,8 @@ class CoverEntity(Entity):
             "close": self.close_cover,
             "stop": self.stop_cover,
         }
-        fn = self._get_toggle_function(fns)
-        fn(**kwargs)
+        function = self._get_toggle_function(fns)
+        function(**kwargs)
 
     async def async_toggle(self, **kwargs):
         """Toggle the entity."""
@@ -284,8 +284,8 @@ class CoverEntity(Entity):
             "close": self.async_close_cover,
             "stop": self.async_stop_cover,
         }
-        fn = self._get_toggle_function(fns)
-        await fn(**kwargs)
+        function = self._get_toggle_function(fns)
+        await function(**kwargs)
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
@@ -367,13 +367,12 @@ class CoverEntity(Entity):
             self.is_closing or self.is_opening
         ):
             return fns["stop"]
-        elif self.is_closed:
+        if self.is_closed:
             return fns["open"]
+        if self.is_last_toggle_direction_open:
+            return fns["close"]
         else:
-            if self.is_last_toggle_direction_open:
-                return fns["close"]
-            else:
-                return fns["open"]
+            return fns["open"]
 
 
 class CoverDevice(CoverEntity):
