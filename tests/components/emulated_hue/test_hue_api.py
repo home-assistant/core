@@ -28,6 +28,7 @@ from homeassistant.components.emulated_hue.hue_api import (
     HUE_API_STATE_HUE,
     HUE_API_STATE_ON,
     HUE_API_STATE_SAT,
+    HUE_API_STATE_TRANSITION,
     HUE_API_STATE_XY,
     HUE_API_USERNAME,
     HueAllGroupsStateView,
@@ -40,6 +41,7 @@ from homeassistant.components.emulated_hue.hue_api import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     CONTENT_TYPE_JSON,
     HTTP_NOT_FOUND,
     HTTP_OK,
@@ -52,7 +54,11 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed, get_test_instance_port
+from tests.common import (
+    async_fire_time_changed,
+    async_mock_service,
+    get_test_instance_port,
+)
 
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
@@ -734,6 +740,30 @@ async def test_put_light_state(hass, hass_hue, hue_client):
         == 50
     )
 
+    # mock light.turn_on call
+    hass.states.async_set(
+        "light.ceiling_lights", STATE_ON, {ATTR_SUPPORTED_FEATURES: 55}
+    )
+    call_turn_on = async_mock_service(hass, "light", "turn_on")
+
+    # update light state through api
+    await perform_put_light_state(
+        hass_hue,
+        hue_client,
+        "light.ceiling_lights",
+        True,
+        brightness=99,
+        xy=((0.488, 0.48)),
+        transitiontime=60,
+    )
+
+    await hass.async_block_till_done()
+    assert call_turn_on[0]
+    # assert call_turn_on[0].data[ATTR_ENTITY_ID] == "light.ceiling_lights"
+    assert call_turn_on[0].data[light.ATTR_BRIGHTNESS] == 99
+    assert call_turn_on[0].data[light.ATTR_XY_COLOR] == ((0.488, 0.48))
+    assert call_turn_on[0].data[light.ATTR_TRANSITION] == 6
+
 
 async def test_put_light_state_script(hass, hass_hue, hue_client):
     """Test the setting of script variables."""
@@ -1194,6 +1224,7 @@ async def perform_put_light_state(
     color_temp=None,
     with_state=True,
     xy=None,
+    transitiontime=None,
 ):
     """Test the setting of a light state."""
     req_headers = {"Content-Type": content_type}
@@ -1213,6 +1244,8 @@ async def perform_put_light_state(
         data[HUE_API_STATE_XY] = xy
     if color_temp is not None:
         data[HUE_API_STATE_CT] = color_temp
+    if transitiontime is not None:
+        data[HUE_API_STATE_TRANSITION] = transitiontime
 
     entity_number = ENTITY_NUMBERS_BY_ID[entity_id]
     result = await client.put(
