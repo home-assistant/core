@@ -189,6 +189,7 @@ ATTR_DRY = "dry"
 ATTR_ACTUAL_MOTOR_SPEED = "actual_speed"
 ATTR_FAHRENHEIT = "fahrenheit"
 ATTR_FAULT = "fault"
+ATTR_WATER_LEVEL = "water_level"
 
 # Air Fresh
 ATTR_CO2 = "co2"
@@ -345,6 +346,7 @@ AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA4 = {
     ATTR_DRY: "dry",
     ATTR_FAHRENHEIT: "fahrenheit",
     ATTR_MOTOR_SPEED: "motor_speed",
+    ATTR_WATER_LEVEL: "water_level"
 }
 
 AVAILABLE_ATTRIBUTES_AIRFRESH = {
