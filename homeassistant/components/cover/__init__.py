@@ -371,8 +371,7 @@ class CoverEntity(Entity):
             return fns["open"]
         if self.is_last_toggle_direction_open:
             return fns["close"]
-        else:
-            return fns["open"]
+        return fns["open"]
 
 
 class CoverDevice(CoverEntity):
