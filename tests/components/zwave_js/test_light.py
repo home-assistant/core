@@ -395,5 +395,5 @@ async def test_v4_dimmer_light(hass, client, eaton_rf9640_dimmer, integration):
 
     assert state
     assert state.state == STATE_ON
-    # the light should pick targetvalue which has zwave value 20
-    assert state.attributes[ATTR_BRIGHTNESS] == 52
+    # the light should pick currentvalue which has zwave value 22
+    assert state.attributes[ATTR_BRIGHTNESS] == 57
