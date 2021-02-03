@@ -4,6 +4,8 @@ import inspect
 import logging
 from typing import Any, Callable, Dict, Optional
 
+from ..helpers.frame import get_integration_frame, MissingIntegrationFrame
+
 
 def deprecated_substitute(substitute_name: str) -> Callable[..., Callable]:
     """Help migrate properties to new names.
@@ -86,11 +88,20 @@ def deprecated_function(replacement: str) -> Callable[..., Callable]:
         def deprecated_func(*args: tuple, **kwargs: Dict[str, Any]) -> Any:
             """Wrap for the original function."""
             logger = logging.getLogger(func.__module__)
-            logger.warning(
-                "%s is a deprecated function. Use %s instead",
-                func.__name__,
-                replacement,
-            )
+            try:
+                _, integration, _ = get_integration_frame()
+                logger.warning(
+                    "%s was called from %s, this is a deprecated function. Use %s instead",
+                    func.__name__,
+                    integration,
+                    replacement,
+                )
+            except MissingIntegrationFrame:
+                logger.warning(
+                    "%s is a deprecated function. Use %s instead",
+                    func.__name__,
+                    replacement,
+                )
             return func(*args, **kwargs)
 
         return deprecated_func
