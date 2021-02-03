@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il sito del Controller \u00e8 gi\u00e0 configurato"
+            "already_configured": "Il sito del Controller \u00e8 gi\u00e0 configurato",
+            "configuration_updated": "Configurazione aggiornata.",
+            "reauth_successful": "La riautenticazione ha avuto successo"
         },
         "error": {
             "faulty_credentials": "Autenticazione non valida",
             "service_unavailable": "Impossibile connettersi",
             "unknown_client_mac": "Nessun client disponibile su quell'indirizzo MAC"
         },
+        "flow_title": "Rete UniFi {site} ({host})",
         "step": {
             "user": {
                 "data": {

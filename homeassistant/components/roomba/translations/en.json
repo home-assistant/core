@@ -1,51 +1,62 @@
 {
-  "config": {
-    "flow_title": "iRobot {name} ({host})",
-    "step": {
-      "init": {
-        "title": "Automaticlly connect to the device",
-        "description": "Select a Roomba or Braava.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "not_irobot_device": "Discovered device is not an iRobot device"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "iRobot {name} ({host})",
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Select a Roomba or Braava.",
+                "title": "Automaticlly connect to the device"
+            },
+            "link": {
+                "description": "Press and hold the Home button on {name} until the device generates a sound (about two seconds).",
+                "title": "Retrieve Password"
+            },
+            "link_manual": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "The password could not be retrivied from the device automatically. Please follow the steps outlined in the documentation at: {auth_help_url}",
+                "title": "Enter Password"
+            },
+            "manual": {
+                "data": {
+                    "blid": "BLID",
+                    "host": "Host"
+                },
+                "description": "No Roomba or Braava have been discovered on your network. The BLID is the portion of the device hostname after `iRobot-`. Please follow the steps outlined in the documentation at: {auth_help_url}",
+                "title": "Manually connect to the device"
+            },
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "continuous": "Continuous",
+                    "delay": "Delay",
+                    "host": "Host",
+                    "password": "Password"
+                },
+                "description": "Currently retrieving the BLID and password is a manual process. Please follow the steps outlined in the documentation at: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+                "title": "Connect to the device"
+            }
         }
-      },
-      "manual": {
-        "title": "Manually connect to the device",
-        "description": "No Roomba or Braava have been discovered on your network. The BLID is the portion of the device hostname after `iRobot-`. Please follow the steps outlined in the documentation at: {auth_help_url}",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "blid": "BLID"
-        }
-      },      
-      "link": {
-        "title": "Retrieve Password",
-        "description": "Press and hold the Home button on {name} until the device generates a sound (about two seconds)."
-      },
-      "link_manual": {
-        "title": "Enter Password",
-        "description": "The password could not be retrivied from the device automatically. Please follow the steps outlined in the documentation at: {auth_help_url}",
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }          
     },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    },
-    "abort": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "not_irobot_device": "Discovered device not an iRobot device"
-    }    
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "continuous": "Continuous",
-          "delay": "Delay"
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Continuous",
+                    "delay": "Delay"
+                }
+            }
         }
-      }
     }
-  }
 }

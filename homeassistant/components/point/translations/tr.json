@@ -1,0 +1,11 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr.",
+            "unknown_authorize_url_generation": "Yetkilendirme url'si olu\u015fturulurken bilinmeyen hata."
+        },
+        "error": {
+            "no_token": "Eri\u015fim Belirteci"
+        }
+    }
+}
