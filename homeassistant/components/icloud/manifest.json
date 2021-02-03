@@ -4,5 +4,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/icloud",
   "requirements": ["pyicloud==0.10.2"],
-  "codeowners": ["@Quentame"]
+  "codeowners": ["@Quentame", "@nzapponi"]
 }
