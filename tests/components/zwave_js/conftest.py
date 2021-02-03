@@ -88,7 +88,7 @@ def bulb_6_multi_color_state_fixture():
 
 @pytest.fixture(name="eaton_rf9640_dimmer_state", scope="session")
 def eaton_rf9640_dimmer_state_fixture():
-    """Load the bulb 6 multi-color node state fixture data."""
+    """Load the eaton rf9640 dimmer node state fixture data."""
     return json.loads(load_fixture("zwave_js/eaton_rf9640_dimmer_state.json"))
 
 
@@ -128,6 +128,18 @@ def climate_radio_thermostat_ct100_plus_different_endpoints_state_fixture():
     )
 
 
+@pytest.fixture(name="climate_danfoss_lc_13_state", scope="session")
+def climate_danfoss_lc_13_state_fixture():
+    """Load the climate Danfoss (LC-13) electronic radiator thermostat node state fixture data."""
+    return json.loads(load_fixture("zwave_js/climate_danfoss_lc_13_state.json"))
+
+
+@pytest.fixture(name="climate_heatit_z_trm3_state", scope="session")
+def climate_heatit_z_trm3_state_fixture():
+    """Load the climate HEATIT Z-TRM3 thermostat node state fixture data."""
+    return json.loads(load_fixture("zwave_js/climate_heatit_z_trm3_state.json"))
+
+
 @pytest.fixture(name="nortek_thermostat_state", scope="session")
 def nortek_thermostat_state_fixture():
     """Load the nortek thermostat node state fixture data."""
@@ -157,14 +169,14 @@ def mock_client_fixture(controller_state, version_state):
 
         async def connect():
             await asyncio.sleep(0)
-            client.state = "connected"
             client.connected = True
 
         async def listen(driver_ready: asyncio.Event) -> None:
             driver_ready.set()
+            await asyncio.sleep(30)
+            assert False, "Listen wasn't canceled!"
 
         async def disconnect():
-            client.state = "disconnected"
             client.connected = False
 
         client.connect = AsyncMock(side_effect=connect)
@@ -250,6 +262,22 @@ def climate_radio_thermostat_ct100_plus_different_endpoints_fixture(
 ):
     """Mock a climate radio thermostat ct100 plus node with values on different endpoints."""
     node = Node(client, climate_radio_thermostat_ct100_plus_different_endpoints_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_danfoss_lc_13")
+def climate_danfoss_lc_13_fixture(client, climate_danfoss_lc_13_state):
+    """Mock a climate radio danfoss LC-13 node."""
+    node = Node(client, climate_danfoss_lc_13_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_heatit_z_trm3")
+def climate_heatit_z_trm3_fixture(client, climate_heatit_z_trm3_state):
+    """Mock a climate radio HEATIT Z-TRM3 node."""
+    node = Node(client, climate_heatit_z_trm3_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
 

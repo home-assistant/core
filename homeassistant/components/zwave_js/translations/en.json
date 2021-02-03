@@ -44,6 +44,11 @@
                     "usb_path": "USB Device Path"
                 },
                 "title": "Enter the Z-Wave JS add-on configuration"
+            },
+            "user": {
+                "data": {
+                    "url": "URL"
+                }
             }
         }
     },

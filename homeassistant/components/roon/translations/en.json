@@ -17,7 +17,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Please enter your Roon server Hostname or IP."
+                "description": "Could not discover Roon server, please enter your the Hostname or IP."
             }
         }
     }
