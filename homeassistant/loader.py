@@ -26,6 +26,10 @@ from typing import (
     cast,
 )
 
+from awesomeversion import AwesomeVersion
+from awesomeversion.strategy import AwesomeVersionStrategy
+
+from homeassistant.const import CONF_VERSION
 from homeassistant.generated.dhcp import DHCP
 from homeassistant.generated.mqtt import MQTT
 from homeassistant.generated.ssdp import SSDP
@@ -52,7 +56,21 @@ CUSTOM_WARNING = (
     "You are using a custom integration %s which has not "
     "been tested by Home Assistant. This component might "
     "cause stability problems, be sure to disable it if you "
-    "experience issues with Home Assistant."
+    "experience issues with Home Assistant"
+)
+CUSTOM_WARNING_VERSION_MISSING = (
+    "No 'version' key in the manifest file for "
+    "custom integration '%s'. This will cause a "
+    "future version of Home Assistant to block "
+    "this custom integration. "
+    "Please report this to the maintainer of %s"
+)
+CUSTOM_WARNING_VERSION_TYPE = (
+    "'%s' is not a valid version for "
+    "custom integration '%s'. This will cause a "
+    "future version of Home Assistant to block "
+    "this custom integration. "
+    "Please report this to the maintainer of %s"
 )
 _UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular dependency
 
@@ -83,6 +101,7 @@ class Manifest(TypedDict, total=False):
     dhcp: List[Dict[str, str]]
     homekit: Dict[str, List[str]]
     is_built_in: bool
+    version: Optional[str]
     codeowners: List[str]
 
 
@@ -514,6 +533,18 @@ async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integrati
     integration = (await async_get_custom_components(hass)).get(domain)
     if integration is not None:
         _LOGGER.warning(CUSTOM_WARNING, domain)
+        if integration.manifest.get("version") is None:
+            _LOGGER.warning(CUSTOM_WARNING_VERSION_MISSING, domain, domain)
+        else:
+            if not validate_custom_integration_version(
+                integration.manifest[CONF_VERSION]
+            ):
+                _LOGGER.warning(
+                    CUSTOM_WARNING_VERSION_TYPE,
+                    domain,
+                    integration.manifest[CONF_VERSION],
+                    domain,
+                )
         cache[domain] = integration
         event.set()
         return integration
@@ -756,3 +787,14 @@ def _lookup_path(hass: "HomeAssistant") -> List[str]:
     if hass.config.safe_mode:
         return [PACKAGE_BUILTIN]
     return [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
+
+
+def validate_custom_integration_version(version: str) -> bool:
+    """Validate the version of custom integrations."""
+    return AwesomeVersion(version).strategy in (
+        AwesomeVersionStrategy.CALVER,
+        AwesomeVersionStrategy.SEMVER,
+        AwesomeVersionStrategy.SIMPLEVER,
+        AwesomeVersionStrategy.BUILDVER,
+        AwesomeVersionStrategy.PEP440,
+    )
