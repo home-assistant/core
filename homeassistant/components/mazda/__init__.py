@@ -23,6 +23,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util.async_ import gather_with_concurrency
 
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
@@ -68,13 +69,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def async_update_data():
         """Fetch data from Mazda API."""
-        try:
+
+        async def with_timeout(task):
             async with async_timeout.timeout(10):
-                vehicles = await mazda_client.get_vehicles()
-                for vehicle in vehicles:
-                    status = await mazda_client.get_vehicle_status(vehicle["id"])
-                    vehicle["status"] = status
-                return vehicles
+                return await task
+
+        try:
+            vehicles = await with_timeout(mazda_client.get_vehicles())
+
+            vehicle_status_tasks = [
+                with_timeout(mazda_client.get_vehicle_status(vehicle["id"]))
+                for vehicle in vehicles
+            ]
+            statuses = await gather_with_concurrency(5, *vehicle_status_tasks)
+
+            for vehicle, status in zip(vehicles, statuses):
+                vehicle["status"] = status
+
+            return vehicles
         except MazdaAuthenticationException as ex:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(

@@ -40,7 +40,6 @@ class MazdaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
-            self._abort_if_unique_id_configured()
 
             try:
                 websession = aiohttp_client.async_get_clientsession(self.hass)
@@ -75,12 +74,7 @@ class MazdaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Perform reauth if the user credentials have changed."""
         errors = {}
 
-        if (
-            user_input is not None
-            and user_input.get(CONF_EMAIL) is not None
-            and user_input.get(CONF_PASSWORD) is not None
-            and user_input.get(CONF_REGION) is not None
-        ):
+        if user_input is not None:
             try:
                 websession = aiohttp_client.async_get_clientsession(self.hass)
                 mazda_client = MazdaAPI(

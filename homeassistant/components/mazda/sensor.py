@@ -17,15 +17,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
 
-    if coordinator.data is not None:
-        for index, _ in enumerate(coordinator.data):
-            entities.append(MazdaFuelRemainingSensor(coordinator, index))
-            entities.append(MazdaFuelDistanceSensor(coordinator, index))
-            entities.append(MazdaOdometerSensor(coordinator, index))
-            entities.append(MazdaFrontLeftTirePressureSensor(coordinator, index))
-            entities.append(MazdaFrontRightTirePressureSensor(coordinator, index))
-            entities.append(MazdaRearLeftTirePressureSensor(coordinator, index))
-            entities.append(MazdaRearRightTirePressureSensor(coordinator, index))
+    for index, _ in enumerate(coordinator.data):
+        entities.append(MazdaFuelRemainingSensor(coordinator, index))
+        entities.append(MazdaFuelDistanceSensor(coordinator, index))
+        entities.append(MazdaOdometerSensor(coordinator, index))
+        entities.append(MazdaFrontLeftTirePressureSensor(coordinator, index))
+        entities.append(MazdaFrontRightTirePressureSensor(coordinator, index))
+        entities.append(MazdaRearLeftTirePressureSensor(coordinator, index))
+        entities.append(MazdaRearRightTirePressureSensor(coordinator, index))
 
     async_add_entities(entities)
 
