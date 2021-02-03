@@ -91,7 +91,11 @@ async def coap_wrapper(hass):
     """Setups a coap wrapper with mocked device."""
     await async_setup_component(hass, "shelly", {})
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"sleep_period": 0, "model": "SHSW-25"},
+        unique_id="12345678",
+    )
     config_entry.add_to_hass(hass)
 
     device = Mock(
@@ -99,6 +103,7 @@ async def coap_wrapper(hass):
         settings=MOCK_SETTINGS,
         shelly=MOCK_SHELLY,
         update=AsyncMock(),
+        initialized=True,
     )
 
     hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
