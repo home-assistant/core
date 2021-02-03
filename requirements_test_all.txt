@@ -918,7 +918,7 @@ python-velbus==2.1.2
 python_awair==0.2.1
 
 # homeassistant.components.rako
-python_rako==0.0.5
+python_rako==0.0.6
 
 # homeassistant.components.tile
 pytile==4.0.0

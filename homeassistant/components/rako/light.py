@@ -35,7 +35,12 @@ async def async_setup_entry(
     hass_lights = []
     session = async_get_clientsession(hass)
 
-    bridge.level_cache, bridge.scene_cache = await bridge.get_cache_state()
+    try:
+        bridge.level_cache, bridge.scene_cache = await asyncio.wait_for(
+            bridge.get_cache_state(), timeout=3.0
+        )
+    except asyncio.TimeoutError:
+        _LOGGER.warning("Rako Bridge didn't respond with the cached light levels")
 
     async for light in bridge.discover_lights(session):
         if isinstance(light, python_rako.ChannelLight):
