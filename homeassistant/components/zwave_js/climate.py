@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, List, Optional
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
     THERMOSTAT_CURRENT_TEMP_PROPERTY,
+    THERMOSTAT_MODE_PROPERTY,
     THERMOSTAT_MODE_SETPOINT_MAP,
     THERMOSTAT_MODES,
     THERMOSTAT_OPERATING_STATE_PROPERTY,
@@ -42,7 +43,7 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN, THERMOSTAT_MODE_PROPERTY
+from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
