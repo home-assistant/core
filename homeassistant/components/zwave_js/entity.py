@@ -1,14 +1,14 @@
 """Generic Z-Wave Entity Class."""
 
 import logging
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -17,6 +17,12 @@ from .discovery import ZwaveDiscoveryInfo
 LOGGER = logging.getLogger(__name__)
 
 EVENT_VALUE_UPDATED = "value updated"
+
+
+@callback
+def get_device_id(client: ZwaveClient, node: ZwaveNode) -> Tuple[str, str]:
+    """Get device registry identifier for Z-Wave node."""
+    return (DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")
 
 
 class ZWaveBaseEntity(Entity):
@@ -47,25 +53,12 @@ class ZWaveBaseEntity(Entity):
             self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed)
         )
 
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self.config_entry.entry_id}_connection_state",
-                self.async_write_ha_state,
-            )
-        )
-
     @property
     def device_info(self) -> dict:
         """Return device information for the device registry."""
         # device is precreated in main handler
         return {
-            "identifiers": {
-                (
-                    DOMAIN,
-                    f"{self.client.driver.controller.home_id}-{self.info.node.node_id}",
-                )
-            },
+            "identifiers": {get_device_id(self.client, self.info.node)},
         }
 
     @property
@@ -77,6 +70,9 @@ class ZWaveBaseEntity(Entity):
             or self.info.primary_value.property_key_name
             or self.info.primary_value.property_name
         )
+        # append endpoint if > 1
+        if self.info.primary_value.endpoint > 1:
+            value_name += f" ({self.info.primary_value.endpoint})"
         return f"{node_name}: {value_name}"
 
     @property
@@ -87,7 +83,13 @@ class ZWaveBaseEntity(Entity):
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        return self.client.connected and bool(self.info.node.ready)
+        return (
+            self.client.connected
+            and bool(self.info.node.ready)
+            # a None value indicates something wrong with the device,
+            # or the value is simply not yet there (it will arrive later).
+            and self.info.primary_value.value is not None
+        )
 
     @callback
     def _value_changed(self, event_data: dict) -> None:
