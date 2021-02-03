@@ -45,7 +45,7 @@ from .const import (
 from .discovery import async_discover_values
 from .entity import get_device_id
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__package__)
 CONNECT_TIMEOUT = 10
 DATA_CLIENT_LISTEN_TASK = "client_listen_task"
 DATA_START_PLATFORM_TASK = "start_platform_task"
@@ -263,13 +263,20 @@ async def client_listen(
     driver_ready: asyncio.Event,
 ) -> None:
     """Listen with the client."""
+    should_reload = True
     try:
         await client.listen(driver_ready)
+    except asyncio.CancelledError:
+        should_reload = False
     except BaseZwaveJSServerError:
-        # The entry needs to be reloaded since a new driver state
-        # will be acquired on reconnect.
-        # All model instances will be replaced when the new state is acquired.
-        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+        pass
+
+    # The entry needs to be reloaded since a new driver state
+    # will be acquired on reconnect.
+    # All model instances will be replaced when the new state is acquired.
+    if should_reload:
+        LOGGER.info("Disconnected from server. Reloading integration")
+        asyncio.create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
 async def disconnect_client(
@@ -280,14 +287,14 @@ async def disconnect_client(
     platform_task: asyncio.Task,
 ) -> None:
     """Disconnect client."""
-    await client.disconnect()
-
     listen_task.cancel()
     platform_task.cancel()
 
     await asyncio.gather(listen_task, platform_task)
 
-    LOGGER.info("Disconnected from Zwave JS Server")
+    if client.connected:
+        await client.disconnect()
+        LOGGER.info("Disconnected from Zwave JS Server")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

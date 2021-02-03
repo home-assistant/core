@@ -51,7 +51,7 @@ def websocket_network_status(
     data = {
         "client": {
             "ws_server_url": client.ws_server_url,
-            "state": client.state,
+            "state": "connected" if client.connected else "disconnected",
             "driver_version": client.version.driver_version,
             "server_version": client.version.server_version,
         },

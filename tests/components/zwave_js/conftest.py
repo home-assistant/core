@@ -157,14 +157,14 @@ def mock_client_fixture(controller_state, version_state):
 
         async def connect():
             await asyncio.sleep(0)
-            client.state = "connected"
             client.connected = True
 
         async def listen(driver_ready: asyncio.Event) -> None:
             driver_ready.set()
+            await asyncio.sleep(30)
+            assert False, "Listen wasn't canceled!"
 
         async def disconnect():
-            client.state = "disconnected"
             client.connected = False
 
         client.connect = AsyncMock(side_effect=connect)
