@@ -47,6 +47,16 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Shelly component."""
     hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
+
+    querier = aioshelly.MulticastQuerier()
+    querier.start()
+
+    @callback
+    def stop_querier_thread(ev):
+        querier.stop()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_querier_thread)
+
     return True
 
 
