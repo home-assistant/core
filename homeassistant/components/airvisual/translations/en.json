@@ -19,6 +19,15 @@
                 "description": "Use the AirVisual cloud API to monitor a geographical location.",
                 "title": "Configure a Geography"
             },
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "API Key",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "description": "Use the AirVisual cloud API to monitor a geographical location.",
+                "title": "Configure a Geography"
+            },
             "node_pro": {
                 "data": {
                     "ip_address": "Host",
