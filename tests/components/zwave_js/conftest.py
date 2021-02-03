@@ -88,7 +88,7 @@ def bulb_6_multi_color_state_fixture():
 
 @pytest.fixture(name="eaton_rf9640_dimmer_state", scope="session")
 def eaton_rf9640_dimmer_state_fixture():
-    """Load the bulb 6 multi-color node state fixture data."""
+    """Load the eaton rf9640 dimmer node state fixture data."""
     return json.loads(load_fixture("zwave_js/eaton_rf9640_dimmer_state.json"))
 
 
