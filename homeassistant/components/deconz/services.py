@@ -132,7 +132,7 @@ async def async_configure_service(hass, data):
         except KeyError:
             LOGGER.error("Could not find the entity %s", entity_id)
             return
-
+    print(field)
     await gateway.api.request("put", field, json=data)
 
 

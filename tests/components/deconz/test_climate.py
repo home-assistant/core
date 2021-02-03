@@ -1,7 +1,6 @@
 """deCONZ climate platform tests."""
 
 from copy import deepcopy
-from unittest.mock import patch
 
 import pytest
 
@@ -47,7 +46,11 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+from .test_gateway import (
+    DECONZ_WEB_REQUEST,
+    mock_deconz_put_request,
+    setup_deconz_integration,
+)
 
 SENSORS = {
     "1": {
@@ -86,13 +89,13 @@ async def test_platform_manually_configured(hass):
     assert DECONZ_DOMAIN not in hass.data
 
 
-async def test_no_sensors(hass):
+async def test_no_sensors(hass, aioclient_mock):
     """Test that no sensors in deconz results in no climate entities."""
-    await setup_deconz_integration(hass)
+    await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
 
 
-async def test_simple_climate_device(hass):
+async def test_simple_climate_device(hass, aioclient_mock):
     """Test successful creation of climate entities.
 
     This is a simple water heater that only supports setting temperature and on and off.
@@ -130,7 +133,9 @@ async def test_simple_climate_device(hass):
             "uniqueid": "14:b4:57:ff:fe:d5:4e:77-01-0201",
         }
     }
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 2
@@ -174,37 +179,31 @@ async def test_simple_climate_device(hass):
 
     # Verify service calls
 
-    thermostat_device = gateway.api.sensors["0"]
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/sensors/0/config")
 
     # Service turn on thermostat
 
-    with patch.object(thermostat_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVAC_MODE_HEAT},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/sensors/0/config", json={"on": True})
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVAC_MODE_HEAT},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[1][2] == {"on": True}
 
     # Service turn on thermostat
 
-    with patch.object(thermostat_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVAC_MODE_OFF},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/sensors/0/config", json={"on": False})
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVAC_MODE_OFF},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[2][2] == {"on": False}
 
     # Service set HVAC mode to unsupported value
 
-    with patch.object(
-        thermostat_device, "_request", return_value=True
-    ) as set_callback, pytest.raises(ValueError):
+    with pytest.raises(ValueError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
@@ -213,11 +212,13 @@ async def test_simple_climate_device(hass):
         )
 
 
-async def test_climate_device_without_cooling_support(hass):
+async def test_climate_device_without_cooling_support(hass, aioclient_mock):
     """Test successful creation of sensor entities."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 2
@@ -280,54 +281,41 @@ async def test_climate_device_without_cooling_support(hass):
 
     # Verify service calls
 
-    thermostat_device = gateway.api.sensors["1"]
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/sensors/1/config")
 
     # Service set HVAC mode to auto
 
-    with patch.object(thermostat_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVAC_MODE_AUTO},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with(
-            "put", "/sensors/1/config", json={"mode": "auto"}
-        )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVAC_MODE_AUTO},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[1][2] == {"mode": "auto"}
 
     # Service set HVAC mode to heat
 
-    with patch.object(thermostat_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVAC_MODE_HEAT},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with(
-            "put", "/sensors/1/config", json={"mode": "heat"}
-        )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVAC_MODE_HEAT},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[2][2] == {"mode": "heat"}
 
     # Service set HVAC mode to off
 
-    with patch.object(thermostat_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVAC_MODE_OFF},
-            blocking=True,
-        )
-        set_callback.assert_called_with(
-            "put", "/sensors/1/config", json={"mode": "off"}
-        )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVAC_MODE_OFF},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[3][2] == {"mode": "off"}
 
     # Service set HVAC mode to unsupported value
 
-    with patch.object(
-        thermostat_device, "_request", return_value=True
-    ) as set_callback, pytest.raises(ValueError):
+    with pytest.raises(ValueError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
@@ -337,22 +325,17 @@ async def test_climate_device_without_cooling_support(hass):
 
     # Service set temperature to 20
 
-    with patch.object(thermostat_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: "climate.thermostat", ATTR_TEMPERATURE: 20},
-            blocking=True,
-        )
-        set_callback.assert_called_with(
-            "put", "/sensors/1/config", json={"heatsetpoint": 2000.0}
-        )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_TEMPERATURE: 20},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[4][2] == {"heatsetpoint": 2000.0}
 
     # Service set temperature without providing temperature attribute
 
-    with patch.object(
-        thermostat_device, "_request", return_value=True
-    ) as set_callback, pytest.raises(ValueError):
+    with pytest.raises(ValueError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -376,7 +359,7 @@ async def test_climate_device_without_cooling_support(hass):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_climate_device_with_cooling_support(hass):
+async def test_climate_device_with_cooling_support(hass, aioclient_mock):
     """Test successful creation of sensor entities."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = {
@@ -406,7 +389,9 @@ async def test_climate_device_with_cooling_support(hass):
             "uniqueid": "00:24:46:00:00:11:6f:56-01-0201",
         }
     }
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 2
@@ -438,23 +423,20 @@ async def test_climate_device_with_cooling_support(hass):
 
     # Verify service calls
 
-    thermostat_device = gateway.api.sensors["0"]
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/sensors/0/config")
 
     # Service set temperature to 20
 
-    with patch.object(thermostat_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: "climate.zen_01", ATTR_TEMPERATURE: 20},
-            blocking=True,
-        )
-        set_callback.assert_called_with(
-            "put", "/sensors/0/config", json={"coolsetpoint": 2000.0}
-        )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.zen_01", ATTR_TEMPERATURE: 20},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[1][2] == {"coolsetpoint": 2000.0}
 
 
-async def test_climate_device_with_fan_support(hass):
+async def test_climate_device_with_fan_support(hass, aioclient_mock):
     """Test successful creation of sensor entities."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = {
@@ -484,7 +466,9 @@ async def test_climate_device_with_fan_support(hass):
             "uniqueid": "00:24:46:00:00:11:6f:56-01-0201",
         }
     }
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 2
@@ -546,39 +530,31 @@ async def test_climate_device_with_fan_support(hass):
 
     # Verify service calls
 
-    thermostat_device = gateway.api.sensors["0"]
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/sensors/0/config")
 
     # Service set fan mode to off
 
-    with patch.object(thermostat_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: "climate.zen_01", ATTR_FAN_MODE: FAN_OFF},
-            blocking=True,
-        )
-        set_callback.assert_called_with(
-            "put", "/sensors/0/config", json={"fanmode": "off"}
-        )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: "climate.zen_01", ATTR_FAN_MODE: FAN_OFF},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[1][2] == {"fanmode": "off"}
 
     # Service set fan mode to custom deCONZ mode smart
 
-    with patch.object(thermostat_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: "climate.zen_01", ATTR_FAN_MODE: DECONZ_FAN_SMART},
-            blocking=True,
-        )
-        set_callback.assert_called_with(
-            "put", "/sensors/0/config", json={"fanmode": "smart"}
-        )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: "climate.zen_01", ATTR_FAN_MODE: DECONZ_FAN_SMART},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[2][2] == {"fanmode": "smart"}
 
     # Service set fan mode to unsupported value
 
-    with patch.object(
-        thermostat_device, "_request", return_value=True
-    ) as set_callback, pytest.raises(ValueError):
+    with pytest.raises(ValueError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
@@ -587,7 +563,7 @@ async def test_climate_device_with_fan_support(hass):
         )
 
 
-async def test_climate_device_with_preset(hass):
+async def test_climate_device_with_preset(hass, aioclient_mock):
     """Test successful creation of sensor entities."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = {
@@ -618,7 +594,9 @@ async def test_climate_device_with_preset(hass):
             "uniqueid": "00:24:46:00:00:11:6f:56-01-0201",
         }
     }
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 2
@@ -671,41 +649,31 @@ async def test_climate_device_with_preset(hass):
 
     # Verify service calls
 
-    thermostat_device = gateway.api.sensors["0"]
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/sensors/0/config")
 
     # Service set preset to HASS preset
 
-    with patch.object(thermostat_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: "climate.zen_01", ATTR_PRESET_MODE: PRESET_COMFORT},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with(
-            "put", "/sensors/0/config", json={"preset": "comfort"}
-        )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: "climate.zen_01", ATTR_PRESET_MODE: PRESET_COMFORT},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[1][2] == {"preset": "comfort"}
 
     # Service set preset to custom deCONZ preset
 
-    with patch.object(thermostat_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: "climate.zen_01", ATTR_PRESET_MODE: DECONZ_PRESET_MANUAL},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with(
-            "put", "/sensors/0/config", json={"preset": "manual"}
-        )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: "climate.zen_01", ATTR_PRESET_MODE: DECONZ_PRESET_MANUAL},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[2][2] == {"preset": "manual"}
 
     # Service set preset to unsupported value
 
-    with patch.object(
-        thermostat_device, "_request", return_value=True
-    ) as set_callback, pytest.raises(ValueError):
+    with pytest.raises(ValueError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
@@ -714,12 +682,13 @@ async def test_climate_device_with_preset(hass):
         )
 
 
-async def test_clip_climate_device(hass):
+async def test_clip_climate_device(hass, aioclient_mock):
     """Test successful creation of sensor entities."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
     config_entry = await setup_deconz_integration(
         hass,
+        aioclient_mock,
         options={CONF_ALLOW_CLIP_SENSOR: True},
         get_state_response=data,
     )
@@ -751,11 +720,13 @@ async def test_clip_climate_device(hass):
     assert hass.states.get("climate.clip_thermostat").state == HVAC_MODE_HEAT
 
 
-async def test_verify_state_update(hass):
+async def test_verify_state_update(hass, aioclient_mock):
     """Test that state update properly."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert hass.states.get("climate.thermostat").state == HVAC_MODE_AUTO
@@ -774,9 +745,9 @@ async def test_verify_state_update(hass):
     assert gateway.api.sensors["1"].changed_keys == {"state", "r", "t", "on", "e", "id"}
 
 
-async def test_add_new_climate_device(hass):
+async def test_add_new_climate_device(hass, aioclient_mock):
     """Test that adding a new climate device works."""
-    config_entry = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
     gateway = get_gateway_from_config_entry(hass, config_entry)
     assert len(hass.states.async_all()) == 0
 

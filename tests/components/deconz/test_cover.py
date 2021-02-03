@@ -1,7 +1,6 @@
 """deCONZ cover platform tests."""
 
 from copy import deepcopy
-from unittest.mock import patch
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_TILT_POSITION,
@@ -27,7 +26,11 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+from .test_gateway import (
+    DECONZ_WEB_REQUEST,
+    mock_deconz_put_request,
+    setup_deconz_integration,
+)
 
 COVERS = {
     "1": {
@@ -83,17 +86,19 @@ async def test_platform_manually_configured(hass):
     assert DECONZ_DOMAIN not in hass.data
 
 
-async def test_no_covers(hass):
+async def test_no_covers(hass, aioclient_mock):
     """Test that no cover entities are created."""
-    await setup_deconz_integration(hass)
+    await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
 
 
-async def test_cover(hass):
+async def test_cover(hass, aioclient_mock):
     """Test that all supported cover entities are created."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["lights"] = deepcopy(COVERS)
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 5
@@ -119,123 +124,47 @@ async def test_cover(hass):
 
     # Verify service calls for cover
 
-    windows_covering_device = gateway.api.lights["2"]
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/2/state")
 
     # Service open cover
 
-    with patch.object(
-        windows_covering_device, "_request", return_value=True
-    ) as set_callback:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.window_covering_device"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/2/state", json={"open": True})
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: "cover.window_covering_device"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[1][2] == {"open": True}
 
     # Service close cover
 
-    with patch.object(
-        windows_covering_device, "_request", return_value=True
-    ) as set_callback:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.window_covering_device"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/2/state", json={"open": False})
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: "cover.window_covering_device"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[2][2] == {"open": False}
 
     # Service set cover position
 
-    with patch.object(
-        windows_covering_device, "_request", return_value=True
-    ) as set_callback:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_SET_COVER_POSITION,
-            {ATTR_ENTITY_ID: "cover.window_covering_device", ATTR_POSITION: 40},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/2/state", json={"lift": 60})
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: "cover.window_covering_device", ATTR_POSITION: 40},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[3][2] == {"lift": 60}
 
     # Service stop cover movement
 
-    with patch.object(
-        windows_covering_device, "_request", return_value=True
-    ) as set_callback:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: "cover.window_covering_device"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/2/state", json={"stop": True})
-
-    # Verify service calls for legacy cover
-
-    level_controllable_cover_device = gateway.api.lights["1"]
-
-    # Service open cover
-
-    with patch.object(
-        level_controllable_cover_device, "_request", return_value=True
-    ) as set_callback:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: "cover.level_controllable_cover"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/1/state", json={"on": False})
-
-    # Service close cover
-
-    with patch.object(
-        level_controllable_cover_device, "_request", return_value=True
-    ) as set_callback:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: "cover.level_controllable_cover"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/1/state", json={"on": True})
-
-    # Service set cover position
-
-    with patch.object(
-        level_controllable_cover_device, "_request", return_value=True
-    ) as set_callback:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_SET_COVER_POSITION,
-            {ATTR_ENTITY_ID: "cover.level_controllable_cover", ATTR_POSITION: 40},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/1/state", json={"bri": 152})
-
-    # Service stop cover movement
-
-    with patch.object(
-        level_controllable_cover_device, "_request", return_value=True
-    ) as set_callback:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_STOP_COVER,
-            {ATTR_ENTITY_ID: "cover.level_controllable_cover"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/1/state", json={"bri_inc": 0})
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: "cover.window_covering_device"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[4][2] == {"stop": True}
 
     # Test that a reported cover position of 255 (deconz-rest-api < 2.05.73) is interpreted correctly.
     assert hass.states.get("cover.deconz_old_brightness_cover").state == STATE_OPEN
@@ -266,7 +195,7 @@ async def test_cover(hass):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_tilt_cover(hass):
+async def test_tilt_cover(hass, aioclient_mock):
     """Test that tilting a cover works."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["lights"] = {
@@ -290,54 +219,55 @@ async def test_tilt_cover(hass):
             "uniqueid": "00:24:46:00:00:12:34:56-01",
         }
     }
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
-    gateway = get_gateway_from_config_entry(hass, config_entry)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
 
     assert len(hass.states.async_all()) == 1
     entity = hass.states.get("cover.covering_device")
     assert entity.state == STATE_OPEN
     assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 100
 
-    covering_device = gateway.api.lights["0"]
+    # Verify service calls for tilting cover
 
-    with patch.object(covering_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_SET_COVER_TILT_POSITION,
-            {ATTR_ENTITY_ID: "cover.covering_device", ATTR_TILT_POSITION: 40},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/0/state", json={"tilt": 60})
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/0/state")
 
-    with patch.object(covering_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_OPEN_COVER_TILT,
-            {ATTR_ENTITY_ID: "cover.covering_device"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/0/state", json={"tilt": 0})
+    # Service set tilt cover
 
-    with patch.object(covering_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_CLOSE_COVER_TILT,
-            {ATTR_ENTITY_ID: "cover.covering_device"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/0/state", json={"tilt": 100})
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: "cover.covering_device", ATTR_TILT_POSITION: 40},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[1][2] == {"tilt": 60}
+
+    # Service open tilt cover
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.covering_device"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[2][2] == {"tilt": 0}
+
+    # Service close tilt cover
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.covering_device"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[3][2] == {"tilt": 100}
 
     # Service stop cover movement
 
-    with patch.object(covering_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_STOP_COVER_TILT,
-            {ATTR_ENTITY_ID: "cover.covering_device"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/0/state", json={"stop": True})
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.covering_device"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[4][2] == {"stop": True}
