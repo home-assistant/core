@@ -201,7 +201,10 @@ def async_prepare_call_from_config(
             raise HomeAssistantError(f"Error rendering data template: {ex}") from ex
 
     if CONF_SERVICE_ENTITY_ID in config:
-        service_data[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
+        if target:
+            target[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
+        else:
+            target = {ATTR_ENTITY_ID: config[CONF_SERVICE_ENTITY_ID]}
 
     return {
         "domain": domain,
