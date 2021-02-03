@@ -25,7 +25,8 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 
-CLIMATE_RADIO_THERMOSTAT_ENTITY = "climate.z_wave_thermostat_thermostat_mode"
+CLIMATE_RADIO_THERMOSTAT_ENTITY = "climate.z_wave_thermostat_heating"
+CLIMATE_DANFOSS_LC13_ENTITY = "climate.living_connect_z_thermostat_heating"
 
 
 async def test_thermostat_v2(
@@ -335,3 +336,80 @@ async def test_thermostat_different_endpoints(
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
 
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
+
+
+async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integration):
+    """Test a setpoint thermostat command class entity."""
+    node = climate_danfoss_lc_13
+    state = hass.states.get(CLIMATE_DANFOSS_LC13_ENTITY)
+
+    assert state
+    assert state.state == HVAC_MODE_HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 25
+    assert state.attributes[ATTR_HVAC_MODES] == []
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+    client.async_send_command.reset_mock()
+
+    # Test setting temperature
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
+            ATTR_TEMPERATURE: 21.5,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 5
+    assert args["valueId"] == {
+        "endpoint": 0,
+        "commandClass": 67,
+        "commandClassName": "Thermostat Setpoint",
+        "property": "setpoint",
+        "propertyName": "setpoint",
+        "propertyKeyName": "Heating",
+        "ccVersion": 2,
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "unit": "\u00b0C",
+            "ccSpecific": {"setpointType": 1},
+        },
+        "value": 25,
+    }
+    assert args["value"] == 21.5
+
+    client.async_send_command.reset_mock()
+
+    # Test setpoint mode update from value updated event
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 5,
+            "args": {
+                "commandClassName": "Thermostat Setpoint",
+                "commandClass": 67,
+                "endpoint": 0,
+                "property": "setpoint",
+                "propertyName": "setpoint",
+                "propertyKeyName": "Heating",
+                "newValue": 23,
+                "prevValue": 21.5,
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(CLIMATE_DANFOSS_LC13_ENTITY)
+    assert state.state == HVAC_MODE_HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 23
+
+    client.async_send_command.reset_mock()

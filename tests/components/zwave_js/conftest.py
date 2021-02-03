@@ -128,6 +128,12 @@ def climate_radio_thermostat_ct100_plus_different_endpoints_state_fixture():
     )
 
 
+@pytest.fixture(name="climate_danfoss_lc_13_state", scope="session")
+def climate_danfoss_lc_13_state_fixture():
+    """Load the climate Danfoss (LC-13) electronic radiator thermostat node state fixture data."""
+    return json.loads(load_fixture("zwave_js/climate_danfoss_lc_13_state.json"))
+
+
 @pytest.fixture(name="nortek_thermostat_state", scope="session")
 def nortek_thermostat_state_fixture():
     """Load the nortek thermostat node state fixture data."""
@@ -250,6 +256,14 @@ def climate_radio_thermostat_ct100_plus_different_endpoints_fixture(
 ):
     """Mock a climate radio thermostat ct100 plus node with values on different endpoints."""
     node = Node(client, climate_radio_thermostat_ct100_plus_different_endpoints_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_danfoss_lc_13")
+def climate_danfoss_lc_13_fixture(client, climate_danfoss_lc_13_state):
+    """Mock a climate radio thermostat ct100 plus node."""
+    node = Node(client, climate_danfoss_lc_13_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
 

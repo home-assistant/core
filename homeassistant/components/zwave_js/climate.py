@@ -42,7 +42,7 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
+from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN, THERMOSTAT_MODE_PROPERTY
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 
@@ -117,9 +117,11 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         super().__init__(config_entry, client, info)
         self._hvac_modes: Dict[str, Optional[int]] = {}
         self._hvac_presets: Dict[str, Optional[int]] = {}
-        self._unit_value: ZwaveValue = None
 
-        self._current_mode = self.info.primary_value
+        self._current_mode = self.get_zwave_value(
+            THERMOSTAT_MODE_PROPERTY, command_class=CommandClass.THERMOSTAT_MODE
+        )
+        self._unit_value: ZwaveValue = self.info.primary_value
         self._setpoint_values: Dict[ThermostatSetpointType, ZwaveValue] = {}
         for enum in ThermostatSetpointType:
             self._setpoint_values[enum] = self.get_zwave_value(
@@ -128,9 +130,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
                 value_property_key_name=enum.value,
                 add_to_watched_value_ids=True,
             )
-            # Use the first found setpoint value to always determine the temperature unit
-            if self._setpoint_values[enum] and not self._unit_value:
-                self._unit_value = self._setpoint_values[enum]
         self._operating_state = self.get_zwave_value(
             THERMOSTAT_OPERATING_STATE_PROPERTY,
             command_class=CommandClass.THERMOSTAT_OPERATING_STATE,
@@ -165,10 +164,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
         # Z-Wave uses one list for both modes and presets.
         # Iterate over all Z-Wave ThermostatModes and extract the hvac modes and presets.
-        current_mode = self._current_mode
-        if not current_mode:
+        if self._current_mode is None:
             return
-        for mode_id, mode_name in current_mode.metadata.states.items():
+        for mode_id, mode_name in self._current_mode.metadata.states.items():
             mode_id = int(mode_id)
             if mode_id in THERMOSTAT_MODES:
                 # treat value as hvac mode
@@ -184,6 +182,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def _current_mode_setpoint_enums(self) -> List[Optional[ThermostatSetpointType]]:
         """Return the list of enums that are relevant to the current thermostat mode."""
+        if self._current_mode is None:
+            # Thermostat(valve) with no support for setting a mode is considered heating-only
+            return [ThermostatSetpointType.HEATING]
         return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])  # type: ignore
 
     @property
