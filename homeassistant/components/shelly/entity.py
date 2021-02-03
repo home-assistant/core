@@ -1,24 +1,49 @@
 """Shelly entity helper."""
 from dataclasses import dataclass
+import logging
 from typing import Any, Callable, Optional, Union
 
 import aioshelly
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
-from homeassistant.helpers import device_registry, entity, update_coordinator
+from homeassistant.helpers import (
+    device_registry,
+    entity,
+    entity_registry,
+    update_coordinator,
+)
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import ShellyDeviceRestWrapper, ShellyDeviceWrapper
 from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN, REST
 from .utils import async_remove_shelly_entity, get_entity_name
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry_attribute_entities(
     hass, config_entry, async_add_entities, sensors, sensor_class
 ):
-    """Set up entities for block attributes."""
+    """Set up entities for attributes."""
     wrapper: ShellyDeviceWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
         config_entry.entry_id
     ][COAP]
+
+    if wrapper.device.initialized:
+        await async_setup_block_attribute_entities(
+            hass, async_add_entities, wrapper, sensors, sensor_class
+        )
+    else:
+        await async_restore_block_attribute_entities(
+            hass, config_entry, async_add_entities, wrapper, sensor_class
+        )
+
+
+async def async_setup_block_attribute_entities(
+    hass, async_add_entities, wrapper, sensors, sensor_class
+):
+    """Set up entities for block attributes."""
     blocks = []
 
     for block in wrapper.device.blocks:
@@ -36,9 +61,7 @@ async def async_setup_entry_attribute_entities(
                 wrapper.device.settings, block
             ):
                 domain = sensor_class.__module__.split(".")[-1]
-                unique_id = sensor_class(
-                    wrapper, block, sensor_id, description
-                ).unique_id
+                unique_id = f"{wrapper.mac}-{block.description}-{sensor_id}"
                 await async_remove_shelly_entity(hass, domain, unique_id)
             else:
                 blocks.append((block, sensor_id, description))
@@ -52,6 +75,39 @@ async def async_setup_entry_attribute_entities(
             for block, sensor_id, description in blocks
         ]
     )
+
+
+async def async_restore_block_attribute_entities(
+    hass, config_entry, async_add_entities, wrapper, sensor_class
+):
+    """Restore block attributes entities."""
+    entities = []
+
+    ent_reg = await entity_registry.async_get_registry(hass)
+    entries = entity_registry.async_entries_for_config_entry(
+        ent_reg, config_entry.entry_id
+    )
+
+    domain = sensor_class.__module__.split(".")[-1]
+
+    for entry in entries:
+        if entry.domain != domain:
+            continue
+
+        attribute = entry.unique_id.split("-")[-1]
+        description = BlockAttributeDescription(
+            name="",
+            icon=entry.original_icon,
+            unit=entry.unit_of_measurement,
+            device_class=entry.device_class,
+        )
+
+        entities.append(sensor_class(wrapper, None, attribute, description, entry))
+
+    if not entities:
+        return
+
+    async_add_entities(entities)
 
 
 async def async_setup_entry_rest(
@@ -163,7 +219,7 @@ class ShellyBlockEntity(entity.Entity):
 
 
 class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
-    """Switch that controls a relay block on Shelly devices."""
+    """Helper class to represent a block attribute."""
 
     def __init__(
         self,
@@ -176,12 +232,11 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
         super().__init__(wrapper, block)
         self.attribute = attribute
         self.description = description
-        self.info = block.info(attribute)
 
         unit = self.description.unit
 
         if callable(unit):
-            unit = unit(self.info)
+            unit = unit(block.info(attribute))
 
         self._unit = unit
         self._unique_id = f"{super().unique_id}-{self.attribute}"
@@ -320,3 +375,67 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
             return None
 
         return self.description.device_state_attributes(self.wrapper.device.status)
+
+
+class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEntity):
+    """Represent a shelly sleeping block attribute entity."""
+
+    # pylint: disable=super-init-not-called
+    def __init__(
+        self,
+        wrapper: ShellyDeviceWrapper,
+        block: aioshelly.Block,
+        attribute: str,
+        description: BlockAttributeDescription,
+        entry: Optional[ConfigEntry] = None,
+    ) -> None:
+        """Initialize the sleeping sensor."""
+        self.last_state = None
+        self.wrapper = wrapper
+        self.attribute = attribute
+        self.block = block
+        self.description = description
+        self._unit = self.description.unit
+
+        if block is not None:
+            if callable(self._unit):
+                self._unit = self._unit(block.info(attribute))
+
+            self._unique_id = f"{self.wrapper.mac}-{block.description}-{attribute}"
+            self._name = get_entity_name(
+                self.wrapper.device, block, self.description.name
+            )
+        else:
+            self._unique_id = entry.unique_id
+            self._name = entry.original_name
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+
+        last_state = await self.async_get_last_state()
+
+        if last_state is not None:
+            self.last_state = last_state.state
+
+    @callback
+    def _update_callback(self):
+        """Handle device update."""
+        if self.block is not None:
+            super()._update_callback()
+            return
+
+        _, entity_block, entity_sensor = self.unique_id.split("-")
+
+        for block in self.wrapper.device.blocks:
+            if block.description != entity_block:
+                continue
+
+            for sensor_id in block.sensor_ids:
+                if sensor_id != entity_sensor:
+                    continue
+
+                self.block = block
+                _LOGGER.debug("Entity %s attached to block", self.name)
+                super()._update_callback()
+                return
