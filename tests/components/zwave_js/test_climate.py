@@ -347,7 +347,7 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
     assert state
     assert state.state == HVAC_MODE_HEAT
     assert state.attributes[ATTR_TEMPERATURE] == 25
-    assert state.attributes[ATTR_HVAC_MODES] == []
+    assert state.attributes[ATTR_HVAC_MODES] == [HVAC_MODE_HEAT]
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
 
     client.async_send_command.reset_mock()
@@ -419,7 +419,6 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
 
 async def test_thermostat_heatit(hass, client, climate_heatit_z_trm3, integration):
     """Test a thermostat v2 command class entity."""
-    _ = climate_heatit_z_trm3
     state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
 
     assert state
