@@ -10,6 +10,7 @@ from homeassistant.util import decorator
 
 from .const import (
     CHILD_CALLBACK,
+    DOMAIN,
     MYSENSORS_GATEWAY_READY,
     NODE_CALLBACK,
     DevId,
@@ -82,7 +83,7 @@ async def handle_gateway_ready(
 
     Set asyncio future result if gateway is ready.
     """
-    gateway_ready = hass.data.get(MYSENSORS_GATEWAY_READY.format(gateway_id))
+    gateway_ready = hass.data[DOMAIN].get(MYSENSORS_GATEWAY_READY.format(gateway_id))
     if gateway_ready is None or gateway_ready.cancelled():
         return
     gateway_ready.set_result(True)
