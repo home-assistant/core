@@ -1,13 +1,13 @@
 """Test the DSMR config flow."""
 import asyncio
 from itertools import chain, repeat
+from unittest.mock import DEFAULT, AsyncMock, patch
 
 import serial
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.dsmr import DOMAIN
 
-from tests.async_mock import DEFAULT, AsyncMock, patch
 from tests.common import MockConfigEntry
 
 SERIAL_DATA = {"serial_id": "12345678", "serial_id_gas": "123456789"}

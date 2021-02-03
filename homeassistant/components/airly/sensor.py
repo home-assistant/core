@@ -67,7 +67,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     sensors = []
     for sensor in SENSOR_TYPES:
-        sensors.append(AirlySensor(coordinator, name, sensor))
+        # When we use the nearest method, we are not sure which sensors are available
+        if coordinator.data.get(sensor):
+            sensors.append(AirlySensor(coordinator, name, sensor))
 
     async_add_entities(sensors, False)
 

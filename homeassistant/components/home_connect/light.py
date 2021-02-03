@@ -90,6 +90,16 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
     async def async_turn_on(self, **kwargs):
         """Switch the light on, change brightness, change color."""
         if self._ambient:
+            _LOGGER.debug("Switching ambient light on for: %s", self.name)
+            try:
+                await self.hass.async_add_executor_job(
+                    self.device.appliance.set_setting,
+                    self._key,
+                    True,
+                )
+            except HomeConnectError as err:
+                _LOGGER.error("Error while trying to turn on ambient light: %s", err)
+                return
             if ATTR_BRIGHTNESS in kwargs or ATTR_HS_COLOR in kwargs:
                 try:
                     await self.hass.async_add_executor_job(
@@ -119,18 +129,6 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                             _LOGGER.error(
                                 "Error while trying setting the color: %s", err
                             )
-            else:
-                _LOGGER.debug("Switching ambient light on for: %s", self.name)
-                try:
-                    await self.hass.async_add_executor_job(
-                        self.device.appliance.set_setting,
-                        self._key,
-                        True,
-                    )
-                except HomeConnectError as err:
-                    _LOGGER.error(
-                        "Error while trying to turn on ambient light: %s", err
-                    )
 
         elif ATTR_BRIGHTNESS in kwargs:
             _LOGGER.debug("Changing brightness for: %s", self.name)

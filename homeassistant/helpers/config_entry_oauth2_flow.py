@@ -329,6 +329,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     async_step_ssdp = async_step_discovery
     async_step_zeroconf = async_step_discovery
     async_step_homekit = async_step_discovery
+    async_step_dhcp = async_step_discovery
 
     @classmethod
     def async_register_implementation(

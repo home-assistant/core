@@ -162,3 +162,17 @@ class ActionSelector(Selector):
     """Selector of an action sequence (script syntax)."""
 
     CONFIG_SCHEMA = vol.Schema({})
+
+
+@SELECTORS.register("object")
+class ObjectSelector(Selector):
+    """Selector for an arbitrary object."""
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+
+@SELECTORS.register("text")
+class StringSelector(Selector):
+    """Selector for a multi-line text string."""
+
+    CONFIG_SCHEMA = vol.Schema({vol.Optional("multiline", default=False): bool})

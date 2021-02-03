@@ -8,7 +8,7 @@
             "auth_required_error": "Impossibile determinare se \u00e8 necessaria l'autorizzazione",
             "cannot_connect": "Impossibile connettersi",
             "no_id": "L'istanza Hyperion Ambilight non ha segnalato il suo ID",
-            "reauth_successful": "Ri-autenticazione completata con successo"
+            "reauth_successful": "La riautenticazione ha avuto successo"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",

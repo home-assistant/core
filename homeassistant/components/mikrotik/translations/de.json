@@ -1,10 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Mikrotik ist bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "name_exists": "Name vorhanden"
         },
         "step": {
@@ -25,7 +26,7 @@
         "step": {
             "device_tracker": {
                 "data": {
-                    "arp_ping": "ARP Ping aktivieren",
+                    "arp_ping": "ARP-Ping aktivieren",
                     "force_dhcp": "Erzwingen Sie das Scannen \u00fcber DHCP"
                 }
             }

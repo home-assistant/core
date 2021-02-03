@@ -404,6 +404,12 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             await self.action_script.async_run(
                 variables, trigger_context, started_action
             )
+        except (vol.Invalid, HomeAssistantError) as err:
+            self._logger.error(
+                "Error while executing automation %s: %s",
+                self.entity_id,
+                err,
+            )
         except Exception:  # pylint: disable=broad-except
             self._logger.exception("While executing automation %s", self.entity_id)
 
@@ -462,8 +468,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
     ) -> Optional[Callable[[], None]]:
         """Set up the triggers."""
 
-        def log_cb(level, msg):
-            self._logger.log(level, "%s %s", msg, self._name)
+        def log_cb(level, msg, **kwargs):
+            self._logger.log(level, "%s %s", msg, self._name, **kwargs)
 
         return await async_initialize_triggers(
             cast(HomeAssistant, self.hass),

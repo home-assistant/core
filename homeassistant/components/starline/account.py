@@ -15,6 +15,7 @@ from .const import (
     DATA_SLNET_TOKEN,
     DATA_USER_ID,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SCAN_OBD_INTERVAL,
     DOMAIN,
 )
 
@@ -27,17 +28,19 @@ class StarlineAccount:
         self._hass: HomeAssistant = hass
         self._config_entry: ConfigEntry = config_entry
         self._update_interval: int = DEFAULT_SCAN_INTERVAL
+        self._update_obd_interval: int = DEFAULT_SCAN_OBD_INTERVAL
         self._unsubscribe_auto_updater: Optional[Callable] = None
+        self._unsubscribe_auto_obd_updater: Optional[Callable] = None
         self._api: StarlineApi = StarlineApi(
             config_entry.data[DATA_USER_ID], config_entry.data[DATA_SLNET_TOKEN]
         )
 
-    def _check_slnet_token(self) -> None:
+    def _check_slnet_token(self, interval: int) -> None:
         """Check SLNet token expiration and update if needed."""
         now = datetime.now().timestamp()
         slnet_token_expires = self._config_entry.data[DATA_EXPIRES]
 
-        if now + self._update_interval > slnet_token_expires:
+        if now + interval > slnet_token_expires:
             self._update_slnet_token()
 
     def _update_slnet_token(self) -> None:
@@ -64,8 +67,13 @@ class StarlineAccount:
 
     def _update_data(self):
         """Update StarLine data."""
-        self._check_slnet_token()
+        self._check_slnet_token(self._update_interval)
         self._api.update()
+
+    def _update_obd_data(self):
+        """Update StarLine OBD data."""
+        self._check_slnet_token(self._update_obd_interval)
+        self._api.update_obd()
 
     @property
     def api(self) -> StarlineApi:
@@ -75,6 +83,10 @@ class StarlineAccount:
     async def update(self, unused=None):
         """Update StarLine data."""
         await self._hass.async_add_executor_job(self._update_data)
+
+    async def update_obd(self, unused=None):
+        """Update StarLine OBD data."""
+        await self._hass.async_add_executor_job(self._update_obd_data)
 
     def set_update_interval(self, interval: int) -> None:
         """Set StarLine API update interval."""
@@ -88,12 +100,27 @@ class StarlineAccount:
             self._hass, self.update, delta
         )
 
+    def set_update_obd_interval(self, interval: int) -> None:
+        """Set StarLine API OBD update interval."""
+        _LOGGER.debug("Setting OBD update interval: %ds", interval)
+        self._update_obd_interval = interval
+        if self._unsubscribe_auto_obd_updater is not None:
+            self._unsubscribe_auto_obd_updater()
+
+        delta = timedelta(seconds=interval)
+        self._unsubscribe_auto_obd_updater = async_track_time_interval(
+            self._hass, self.update_obd, delta
+        )
+
     def unload(self):
         """Unload StarLine API."""
         _LOGGER.debug("Unloading StarLine API.")
         if self._unsubscribe_auto_updater is not None:
             self._unsubscribe_auto_updater()
             self._unsubscribe_auto_updater = None
+        if self._unsubscribe_auto_obd_updater is not None:
+            self._unsubscribe_auto_obd_updater()
+            self._unsubscribe_auto_obd_updater = None
 
     @staticmethod
     def device_info(device: StarlineDevice) -> Dict[str, Any]:
@@ -140,3 +167,8 @@ class StarlineAccount:
             "autostart": device.car_state.get("r_start"),
             "ignition": device.car_state.get("run"),
         }
+
+    @staticmethod
+    def errors_attrs(device: StarlineDevice) -> Dict[str, Any]:
+        """Attributes for errors sensor."""
+        return {"errors": device.errors.get("errors")}

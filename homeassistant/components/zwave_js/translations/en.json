@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Failed to get Z-Wave JS add-on discovery info.",
+            "addon_info_failed": "Failed to get Z-Wave JS add-on info.",
+            "addon_install_failed": "Failed to install the Z-Wave JS add-on.",
+            "addon_missing_discovery_info": "Missing Z-Wave JS add-on discovery info.",
+            "addon_set_config_failed": "Failed to set Z-Wave JS configuration.",
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect"
+        },
+        "error": {
+            "addon_start_failed": "Failed to start the Z-Wave JS add-on. Check the configuration.",
+            "cannot_connect": "Failed to connect",
+            "invalid_ws_url": "Invalid websocket URL",
+            "unknown": "Unexpected error"
+        },
+        "progress": {
+            "install_addon": "Please wait while the Z-Wave JS add-on installation finishes. This can take several minutes."
+        },
+        "step": {
+            "hassio_confirm": {
+                "title": "Set up Z-Wave JS integration with the Z-Wave JS add-on"
+            },
+            "install_addon": {
+                "title": "The Z-Wave JS add-on installation has started"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Use the Z-Wave JS Supervisor add-on"
+                },
+                "description": "Do you want to use the Z-Wave JS Supervisor add-on?",
+                "title": "Select connection method"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "Network Key",
+                    "usb_path": "USB Device Path"
+                },
+                "title": "Enter the Z-Wave JS add-on configuration"
+            },
+            "user": {
+                "data": {
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "title": "Z-Wave JS"
+}

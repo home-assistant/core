@@ -1,6 +1,7 @@
 """Test ZHA Core channels."""
 import asyncio
 from unittest import mock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import zigpy.profiles.zha
@@ -14,7 +15,6 @@ import homeassistant.components.zha.core.registries as registries
 
 from .common import get_zha_gateway, make_zcl_header
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import async_capture_events
 
 

@@ -1,11 +1,11 @@
 """Tests for Wake On LAN component."""
+from unittest.mock import patch
+
 import pytest
 import voluptuous as vol
 
 from homeassistant.components.wake_on_lan import DOMAIN, SERVICE_SEND_MAGIC_PACKET
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 async def test_send_magic_packet(hass):

@@ -1,5 +1,7 @@
 """The tests for the AsusWrt sensor platform."""
 
+from unittest.mock import AsyncMock, patch
+
 from aioasuswrt.asuswrt import Device
 
 from homeassistant.components import sensor
@@ -15,8 +17,6 @@ from homeassistant.components.asuswrt import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import AsyncMock, patch
 
 VALID_CONFIG_ROUTER_SSH = {
     DOMAIN: {

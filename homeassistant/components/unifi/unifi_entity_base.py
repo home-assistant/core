@@ -39,7 +39,7 @@ class UniFiBase(Entity):
             self.key,
         )
         for signal, method in (
-            (self.controller.signal_reachable, self.async_update_callback),
+            (self.controller.signal_reachable, self.async_signal_reachable_callback),
             (self.controller.signal_options_update, self.options_updated),
             (self.controller.signal_remove, self.remove_item),
         ):
@@ -56,6 +56,11 @@ class UniFiBase(Entity):
         )
         self._item.remove_callback(self.async_update_callback)
         self.controller.entities[self.DOMAIN][self.TYPE].remove(self.key)
+
+    @callback
+    def async_signal_reachable_callback(self) -> None:
+        """Call when controller connection state change."""
+        self.async_update_callback()
 
     @callback
     def async_update_callback(self) -> None:
