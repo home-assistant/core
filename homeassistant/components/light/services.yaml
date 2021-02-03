@@ -2,19 +2,30 @@
 
 turn_on:
   description: Turn a light on.
+  target:
+    name: Target
+    description: What to turn on
+    example: "light.kitchen"
+    selector:
+      target:
+        entity:
+          domain: light
   fields:
-    entity_id:
-      description: Name(s) of entities to turn on
-      example: "light.kitchen"
     transition:
+      name: Transition
       description: Duration in seconds it takes to get to next state
       example: 60
+      selector:
+        number:
+          min: 0
+          max: 3600
     rgb_color:
       description: Color for the light in RGB-format.
       example: "[255, 100, 100]"
     color_name:
       description: A human readable color name.
       example: "red"
+      selector:
     hs_color:
       description: Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
       example: "[300, 70]"
@@ -22,8 +33,13 @@ turn_on:
       description: Color for the light in XY-format.
       example: "[0.52, 0.43]"
     color_temp:
+      name: Color temperature
       description: Color temperature for the light in mireds.
       example: 250
+      selector:
+        number:
+          min: 0
+          max: 3600
     kelvin:
       description: Color temperature for the light in Kelvin.
       example: 4000
