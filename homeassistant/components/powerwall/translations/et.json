@@ -8,6 +8,7 @@
             "unknown": "Ootamatu t\u00f5rge",
             "wrong_version": "Teie Powerwall kasutab tarkvaraversiooni, mida ei toetata. Kaaluge tarkvara uuendamist v\u00f5i probleemist teavitamist, et see saaks lahendatud."
         },
+        "flow_title": "Tesla Powerwall ( {ip_address} )",
         "step": {
             "user": {
                 "data": {

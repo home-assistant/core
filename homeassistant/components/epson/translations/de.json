@@ -1,12 +1,14 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Verbindungsfehler"
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "user": {
                 "data": {
-                    "name": "Name"
+                    "host": "Host",
+                    "name": "Name",
+                    "port": "Port"
                 }
             }
         }

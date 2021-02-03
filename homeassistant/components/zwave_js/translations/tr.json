@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Z-Wave JS eklenti ke\u015fif bilgileri al\u0131namad\u0131.",
+            "addon_info_failed": "Z-Wave JS eklenti bilgileri al\u0131namad\u0131.",
+            "addon_install_failed": "Z-Wave JS eklentisi y\u00fcklenemedi.",
+            "addon_missing_discovery_info": "Eksik Z-Wave JS eklenti bulma bilgileri.",
+            "addon_set_config_failed": "Z-Wave JS yap\u0131land\u0131rmas\u0131 ayarlanamad\u0131.",
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "error": {
+            "addon_start_failed": "Z-Wave JS eklentisi ba\u015flat\u0131lamad\u0131. Yap\u0131land\u0131rmay\u0131 kontrol edin.",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_ws_url": "Ge\u00e7ersiz websocket URL'si",
+            "unknown": "Beklenmeyen hata"
+        },
+        "progress": {
+            "install_addon": "L\u00fctfen Z-Wave JS eklenti kurulumu bitene kadar bekleyin. Bu birka\u00e7 dakika s\u00fcrebilir."
+        },
+        "step": {
+            "hassio_confirm": {
+                "title": "Z-Wave JS eklentisiyle Z-Wave JS entegrasyonunu ayarlay\u0131n"
+            },
+            "install_addon": {
+                "title": "Z-Wave JS eklenti kurulumu ba\u015flad\u0131"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Z-Wave JS Supervisor eklentisini kullan\u0131n"
+                },
+                "description": "Z-Wave JS Supervisor eklentisini kullanmak istiyor musunuz?",
+                "title": "Ba\u011flant\u0131 y\u00f6ntemini se\u00e7in"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "A\u011f Anahtar\u0131",
+                    "usb_path": "USB Ayg\u0131t Yolu"
+                },
+                "title": "Z-Wave JS eklenti yap\u0131land\u0131rmas\u0131na girin"
+            },
+            "user": {
+                "data": {
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "title": "Z-Wave JS"
+}

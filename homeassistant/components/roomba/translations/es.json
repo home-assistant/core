@@ -1,9 +1,41 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "cannot_connect": "No se pudo conectar",
+            "not_irobot_device": "El dispositivo descubierto no es un dispositivo iRobot"
+        },
         "error": {
             "cannot_connect": "No se pudo conectar"
         },
+        "flow_title": "iRobot {name} ({host})",
         "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Selecciona una Roomba o Braava.",
+                "title": "Conectar autom\u00e1ticamente con el dispositivo"
+            },
+            "link": {
+                "description": "Mant\u00e9n pulsado el bot\u00f3n Inicio en {name} hasta que el dispositivo genere un sonido (aproximadamente dos segundos).",
+                "title": "Recuperar la contrase\u00f1a"
+            },
+            "link_manual": {
+                "data": {
+                    "password": "Contrase\u00f1a"
+                },
+                "description": "No se pudo recuperar la contrase\u00f1a desde el dispositivo de forma autom\u00e1tica. Por favor, sigue los pasos descritos en la documentaci\u00f3n en: {auth_help_url}",
+                "title": "Escribe la contrase\u00f1a"
+            },
+            "manual": {
+                "data": {
+                    "blid": "BLID",
+                    "host": "Host"
+                },
+                "description": "No se ha descubierto ning\u00fan dispositivo Roomba ni Braava en tu red. El BLID es la parte del nombre de host del dispositivo despu\u00e9s de 'iRobot-'. Por favor, sigue los pasos descritos en la documentaci\u00f3n en: {auth_help_url}",
+                "title": "Conectar manualmente con el dispositivo"
+            },
             "user": {
                 "data": {
                     "blid": "BLID",

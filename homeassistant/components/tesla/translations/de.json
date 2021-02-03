@@ -1,7 +1,9 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Verbindungsfehler"
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "step": {
             "user": {
@@ -18,6 +20,7 @@
         "step": {
             "init": {
                 "data": {
+                    "enable_wake_on_start": "Aufwachen des Autos beim Start erzwingen",
                     "scan_interval": "Sekunden zwischen den Scans"
                 }
             }

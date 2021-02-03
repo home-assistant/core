@@ -31,17 +31,17 @@
     "device_automation": {
         "trigger_subtype": {
             "button": "Button",
-			"button1": "First button",
+            "button1": "First button",
             "button2": "Second button",
             "button3": "Third button"
         },
-		"trigger_type": {
-			"single": "{subtype} single clicked",
-			"double": "{subtype} double clicked",
-			"triple": "{subtype} triple clicked",
-			"long":" {subtype} long clicked",
-			"single_long": "{subtype} single clicked and then long clicked",
-			"long_single": "{subtype} long clicked and then single clicked"
+        "trigger_type": {
+            "double": "{subtype} double clicked",
+            "long": " {subtype} long clicked",
+            "long_single": "{subtype} long clicked and then single clicked",
+            "single": "{subtype} single clicked",
+            "single_long": "{subtype} single clicked and then long clicked",
+            "triple": "{subtype} triple clicked"
         }
     }
 }

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "no_devices_found": "Es wurden keine TP-Link-Ger\u00e4te im Netzwerk gefunden.",
-            "single_instance_allowed": "Es ist nur eine einzige Konfiguration erforderlich."
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "step": {
             "confirm": {

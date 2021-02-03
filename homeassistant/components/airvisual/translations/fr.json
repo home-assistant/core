@@ -6,8 +6,8 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "general_error": "Une erreur inconnue est survenue.",
-            "invalid_api_key": "La cl\u00e9 API fournie n'est pas valide."
+            "general_error": "Erreur inattendue",
+            "invalid_api_key": "Cl\u00e9 API invalide"
         },
         "step": {
             "geography": {
@@ -21,11 +21,11 @@
             },
             "node_pro": {
                 "data": {
-                    "ip_address": "Adresse IP / nom d'h\u00f4te de l'unit\u00e9",
+                    "ip_address": "H\u00f4te",
                     "password": "Mot de passe"
                 },
-                "description": "Surveillez une unit\u00e9 AirVisual personnelle. Le mot de passe peut \u00eatre r\u00e9cup\u00e9r\u00e9 dans l'interface utilisateur de l'unit\u00e9.",
-                "title": "Configurer un AirVisual Node/Pro"
+                "description": "Surveillez une unit\u00e9 personnelle AirVisual. Le mot de passe peut \u00eatre r\u00e9cup\u00e9r\u00e9 dans l'interface utilisateur de l'unit\u00e9.",
+                "title": "Configurer un noeud AirVisual Pro"
             },
             "reauth_confirm": {
                 "data": {

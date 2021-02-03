@@ -1,0 +1,43 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te"
+                }
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Echec de connection"
+        },
+        "step": {
+            "entity_config": {
+                "data": {
+                    "reverse": "La couverture est invers\u00e9e"
+                },
+                "title": "Configurez une entit\u00e9 sp\u00e9cifique"
+            },
+            "init": {
+                "data": {
+                    "default_reverse": "Statut d'inversion par d\u00e9faut pour les couvertures non configur\u00e9es",
+                    "entity_id": "Configurez une entit\u00e9 sp\u00e9cifique.",
+                    "target_id": "Configurez les options pour la couverture."
+                },
+                "title": "Configurer les options MyLink"
+            },
+            "target_config": {
+                "data": {
+                    "reverse": "La couverture est invers\u00e9e"
+                },
+                "description": "Configurer les options pour \u00ab {target_name} \u00bb",
+                "title": "Configurer la couverture MyLink"
+            }
+        }
+    },
+    "title": "Somfy MyLink"
+}

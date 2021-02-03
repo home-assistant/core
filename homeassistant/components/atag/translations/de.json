@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieses Ger\u00e4t wurde bereits zu HomeAssistant hinzugef\u00fcgt"
+            "already_configured": "Dieses Ger\u00e4t wurde bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindungsfehler"
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "user": {
                 "data": {
-                    "email": "Email (Optional)",
+                    "email": "E-Mail",
                     "host": "Host",
                     "port": "Port"
                 },

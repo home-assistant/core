@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ein Tibber-Konto ist bereits konfiguriert."
+            "already_configured": "Der Dienst ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindungsfehler",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_access_token": "Ung\u00fcltiger Zugriffs-Token",
             "timeout": "Zeit\u00fcberschreitung beim Verbinden mit Tibber"
         },

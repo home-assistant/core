@@ -1,6 +1,9 @@
 {
     "config": {
         "step": {
+            "confirm": {
+                "description": "\u60a8\u5373\u5c06\u6dfb\u52a0 Apple TV (\u540d\u79f0\u4e3a\u201c{name}\u201d)\u5230 Home Assistant\u3002 \n\n **\u8981\u5b8c\u6210\u6b64\u8fc7\u7a0b\uff0c\u53ef\u80fd\u9700\u8981\u8f93\u5165\u591a\u4e2a PIN \u7801\u3002** \n\n\u8bf7\u6ce8\u610f\uff0c\u6b64\u96c6\u6210*\u4e0d\u80fd*\u5173\u95ed Apple TV \u7684\u7535\u6e90\uff0c\u53ea\u4f1a\u5173\u95ed Home Assistant \u4e2d\u7684\u5a92\u4f53\u64ad\u653e\u5668\uff01"
+            },
             "pair_no_pin": {
                 "title": "\u914d\u5bf9\u4e2d"
             },
@@ -8,6 +11,20 @@
                 "data": {
                     "pin": "PIN\u7801"
                 }
+            },
+            "user": {
+                "description": "\u8981\u5f00\u59cb\uff0c\u8bf7\u8f93\u5165\u8981\u6dfb\u52a0\u7684 Apple TV \u7684\u8bbe\u5907\u540d\u79f0\u6216 IP \u5730\u5740\u3002\u5728\u7f51\u7edc\u4e0a\u81ea\u52a8\u53d1\u73b0\u7684\u8bbe\u5907\u4f1a\u663e\u793a\u5728\u4e0b\u65b9\u3002 \n\n\u5982\u679c\u6ca1\u6709\u53d1\u73b0\u8bbe\u5907\u6216\u9047\u5230\u4efb\u4f55\u95ee\u9898\uff0c\u8bf7\u5c1d\u8bd5\u6307\u5b9a\u8bbe\u5907 IP \u5730\u5740\u3002 \n\n {devices}",
+                "title": "\u8bbe\u7f6e\u65b0\u7684 Apple TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "start_off": "\u542f\u52a8 Home Assistant \u65f6\u4e0d\u6253\u5f00\u8bbe\u5907"
+                },
+                "description": "\u914d\u7f6e\u8bbe\u5907\u901a\u7528\u8bbe\u7f6e"
             }
         }
     },

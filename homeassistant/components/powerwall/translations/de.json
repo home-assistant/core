@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Die Powerwall ist bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "unknown": "Unerwarteter Fehler"
         },
+        "flow_title": "Tesla Powerwall ({ip_address})",
         "step": {
             "user": {
                 "data": {

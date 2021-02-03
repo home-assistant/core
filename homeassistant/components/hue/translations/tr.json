@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "error": {
+            "linking": "Beklenmeyen hata"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Ana Bilgisayar"
+                }
+            },
+            "manual": {
+                "data": {
+                    "host": "Ana Bilgisayar"
+                },
+                "title": "Bir Hue k\u00f6pr\u00fcs\u00fcn\u00fc manuel olarak yap\u0131land\u0131rma"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "\u0130lk d\u00fc\u011fme",
+            "button_2": "\u0130kinci d\u00fc\u011fme",
+            "button_3": "\u00dc\u00e7\u00fcnc\u00fc d\u00fc\u011fme",
+            "button_4": "D\u00f6rd\u00fcnc\u00fc d\u00fc\u011fme",
+            "double_buttons_1_3": "Birinci ve \u00dc\u00e7\u00fcnc\u00fc d\u00fc\u011fmeler",
+            "double_buttons_2_4": "\u0130kinci ve D\u00f6rd\u00fcnc\u00fc d\u00fc\u011fmeler",
+            "turn_off": "Kapat",
+            "turn_on": "A\u00e7"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Hue gruplar\u0131na izin ver",
+                    "allow_unreachable": "Ula\u015f\u0131lamayan ampullerin durumlar\u0131n\u0131 do\u011fru \u015fekilde bildirmesine izin verin"
+                }
+            }
+        }
+    }
+}

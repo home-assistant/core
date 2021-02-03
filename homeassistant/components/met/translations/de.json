@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "already_configured": "Der Dienst ist bereits konfiguriert"
+        },
         "step": {
             "user": {
                 "data": {

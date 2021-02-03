@@ -2,10 +2,10 @@
     "config": {
         "abort": {
             "existing_instance_updated": "Bestehende Konfiguration wurde aktualisiert.",
-            "single_instance_allowed": "Es ist nur eine einzige Konfiguration von AdGuard Home zul\u00e4ssig."
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "error": {
-            "cannot_connect": "Verbindungsfehler"
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "hassio_confirm": {
@@ -19,7 +19,7 @@
                     "port": "Port",
                     "ssl": "AdGuard Home verwendet ein SSL-Zertifikat",
                     "username": "Benutzername",
-                    "verify_ssl": "AdGuard Home verwendet ein richtiges Zertifikat"
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },
                 "description": "Richte deine AdGuard Home-Instanz ein um sie zu \u00dcberwachen und zu Steuern."
             }

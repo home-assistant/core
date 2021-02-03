@@ -1,11 +1,16 @@
 {
     "config": {
+        "abort": {
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+        },
         "error": {
-            "cannot_connect": "Verbindungsfehler"
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel"
         },
         "step": {
             "user": {
                 "data": {
+                    "api_key": "API-Schl\u00fcssel",
                     "latitude": "Breitengrad",
                     "longitude": "L\u00e4ngengrad",
                     "name": "Name"
@@ -25,7 +30,7 @@
     },
     "system_health": {
         "info": {
-            "can_reach_server": "AccuWeather Server erreichen",
+            "can_reach_server": "AccuWeather-Server erreichen",
             "remaining_requests": "Verbleibende erlaubte Anfragen"
         }
     }

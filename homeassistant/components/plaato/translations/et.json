@@ -1,16 +1,53 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Kasutaja on juba seadistatud",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
             "webhook_not_internet_accessible": "Veebikonksu s\u00f5numite vastuv\u00f5tmiseks peab Home Assistant olema Interneti kaudu juurdep\u00e4\u00e4setav."
         },
         "create_entry": {
-            "default": "S\u00fcndmuste saatmiseks Home Assistantile pead seadistama Plaatoo Airlock'i veebihaagi. \n\n Sisesta j\u00e4rgmine teave: \n\n - URL: \" {webhook_url} \" \n - Meetod: POST \n \n Lisateavet leiad [documentation] ( {docs_url} )."
+            "default": "{device_type} Plaato  seade nimega **{device_name}** on edukalt seadistatud!"
+        },
+        "error": {
+            "invalid_webhook_device": "Oled valinud seadme, mis ei toeta andmete saatmist veebihaagile. See on saadaval ainult Airlocki jaoks",
+            "no_api_method": "Pead lisama autentimisloa v\u00f5i valima veebihaagi",
+            "no_auth_token": "Pead lisama autentimisloa"
         },
         "step": {
+            "api_method": {
+                "data": {
+                    "token": "Aseta Auth Token siia",
+                    "use_webhook": "Kasuta veebihaaki"
+                },
+                "description": "API p\u00e4ringu esitamiseks on vajalik \"auth_token\", mille saad j\u00e4rgides [neid] (https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) juhiseid \n\n Valitud seade: ** {device_type} ** \n\n Kui kasutad pigem sisseehitatud veebihaagi meetodit (ainult Airlock), m\u00e4rgi palun allolev ruut ja j\u00e4ta Auth Token t\u00fchjaks",
+                "title": "Vali API meetod"
+            },
             "user": {
+                "data": {
+                    "device_name": "Pang oma seadmele nimi",
+                    "device_type": "Plaato seadme t\u00fc\u00fcp"
+                },
                 "description": "Kas alustan seadistamist?",
-                "title": "Plaato Webhooki seadistamine"
+                "title": "Plaato seadmete h\u00e4\u00e4lestamine"
+            },
+            "webhook": {
+                "description": "S\u00fcndmuste saatmiseks Home Assistanti pead seadistama Plaato Airlocki veebihaagi. \n\n Sisesta j\u00e4rgmine teave: \n\n - URL: \" {webhook_url} \"\n - Meetod: POST \n\n Lisateavet leiad [dokumentatsioonist] ( {docs_url} ).",
+                "title": "Kasutatav veebihaak"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "update_interval": "V\u00e4rskendamise intervall (minutites)"
+                },
+                "description": "M\u00e4\u00e4ra v\u00e4rskendamise intervall (minutites)",
+                "title": "Plaato valikud"
+            },
+            "webhook": {
+                "description": "Veebihaagi teave: \n\n - URL: `{webhook_url}`\n - Meetod: POST\n\n",
+                "title": "Plaato Airlocki valikud"
             }
         }
     }

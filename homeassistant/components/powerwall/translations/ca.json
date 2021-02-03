@@ -8,6 +8,7 @@
             "unknown": "Error inesperat",
             "wrong_version": "El teu Powerwall utilitza una versi\u00f3 de programari no compatible. L'hauries d'actualitzar o informar d'aquest problema perqu\u00e8 sigui solucionat."
         },
+        "flow_title": "Tesla Powerwall ({ip_address})",
         "step": {
             "user": {
                 "data": {

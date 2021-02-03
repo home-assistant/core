@@ -27,5 +27,21 @@
                 "description": "\u958b\u59cb\u8a2d\u5b9a\u524d\uff0c\u5fc5\u9808\u6309\u4e0b\u88dd\u7f6e\u4e0a\u7684\u6309\u9215\u4ee5\u559a\u9192\u96fb\u6c60\u4f9b\u96fb\u88dd\u7f6e\u3002"
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "\u6309\u9215",
+            "button1": "\u7b2c\u4e00\u500b\u6309\u9215",
+            "button2": "\u7b2c\u4e8c\u500b\u6309\u9215",
+            "button3": "\u7b2c\u4e09\u500b\u6309\u9215"
+        },
+        "trigger_type": {
+            "double": "{subtype} \u96d9\u64ca",
+            "long": "{subtype} \u9577\u6309",
+            "long_single": "{subtype} \u9577\u6309\u5f8c\u55ae\u64ca",
+            "single": "{subtype} \u55ae\u64ca",
+            "single_long": "{subtype} \u55ae\u64ca\u5f8c\u9577\u6309",
+            "triple": "{subtype} \u4e09\u9023\u64ca"
+        }
     }
 }

@@ -38,13 +38,13 @@
             "turn_on": "Zapnout"
         },
         "trigger_type": {
-            "button_double_press": "Dvakr\u00e1t stisknuto \"{subtype}\"",
+            "button_double_press": "\"{subtype}\" stisknuto dvakr\u00e1t",
             "button_long_release": "Uvoln\u011bno \"{subtype}\" po dlouh\u00e9m stisku",
-            "button_quadruple_press": "\u010cty\u0159ikr\u00e1t stisknuto \"{subtype}\"",
-            "button_quintuple_press": "P\u011btkr\u00e1t stisknuto \"{subtype}\"",
-            "button_short_press": "Stiknuto \"{subtype}\"",
+            "button_quadruple_press": "\"{subtype}\" stisknuto \u010dty\u0159ikr\u00e1t",
+            "button_quintuple_press": "\"{subtype}\" stisknuto \u010dty\u0159ikr\u00e1t",
+            "button_short_press": "\"{subtype}\" stisknuto",
             "button_short_release": "Uvoln\u011bno \"{subtype}\"",
-            "button_triple_press": "T\u0159ikr\u00e1t stisknuto \"{subtype}\""
+            "button_triple_press": "\"{subtype}\" stisknuto t\u0159ikr\u00e1t"
         }
     },
     "options": {

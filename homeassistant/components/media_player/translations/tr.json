@@ -1,4 +1,10 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_idle": "{entity_name} bo\u015fta",
+            "is_off": "{entity_name} kapal\u0131"
+        }
+    },
     "state": {
         "_": {
             "idle": "Bo\u015fta",

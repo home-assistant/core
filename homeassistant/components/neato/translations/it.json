@@ -2,14 +2,14 @@
     "config": {
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
-            "authorize_url_timeout": "Timeout nella generazione dell'URL di autorizzazione.",
+            "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
             "invalid_auth": "Autenticazione non valida",
-            "missing_configuration": "Questo componente non \u00e8 configurato. Per favore segui la documentazione.",
-            "no_url_available": "Nessun URL disponibile. Per altre informazioni su questo errore, [controlla la sezione di aiuto]({docs_url})",
-            "reauth_successful": "Ri-autenticazione completata con successo"
+            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
+            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})",
+            "reauth_successful": "La riautenticazione ha avuto successo"
         },
         "create_entry": {
-            "default": "Autenticato con successo"
+            "default": "Autenticazione riuscita"
         },
         "error": {
             "invalid_auth": "Autenticazione non valida",
@@ -17,10 +17,10 @@
         },
         "step": {
             "pick_implementation": {
-                "title": "Scegli un metodo di autenticazione"
+                "title": "Scegli il metodo di autenticazione"
             },
             "reauth_confirm": {
-                "title": "Vuoi cominciare la configurazione?"
+                "title": "Vuoi iniziare la configurazione?"
             },
             "user": {
                 "data": {

@@ -7,5 +7,15 @@
             "one": "",
             "other": "Autre"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Temps minimum entre les mises \u00e0 jour des entit\u00e9s"
+                },
+                "title": "Options DSMR"
+            }
+        }
     }
 }

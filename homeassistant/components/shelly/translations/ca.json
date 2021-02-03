@@ -27,5 +27,21 @@
                 "description": "Abans de configurar-lo, els dispositius amb bateria s'han de desperar prement el bot\u00f3 del dispositiu."
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Bot\u00f3",
+            "button1": "Primer bot\u00f3",
+            "button2": "Segon bot\u00f3",
+            "button3": "Tercer bot\u00f3"
+        },
+        "trigger_type": {
+            "double": "{subtype} clicat dues vegades",
+            "long": "{subtype} clicat durant una estona",
+            "long_single": "{subtype} clicat durant una estona i despr\u00e9s r\u00e0pid",
+            "single": "{subtype} clicat una vegada",
+            "single_long": "{subtype} clicat r\u00e0pid i, despr\u00e9s, durant una estona",
+            "triple": "{subtype} clicat tres vegades"
+        }
     }
 }

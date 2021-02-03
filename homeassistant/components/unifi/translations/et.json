@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontroller on juba seadistatud"
+            "already_configured": "Kontroller on juba seadistatud",
+            "configuration_updated": "Seaded on v\u00e4rskendatud.",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "faulty_credentials": "Tuvastamine nurjus",
             "service_unavailable": "\u00dchendamine nurjus",
             "unknown_client_mac": "Sellel MAC-aadressil pole \u00fchtegi klienti saadaval"
         },
+        "flow_title": "UniFi Network {site} ( {host} )",
         "step": {
             "user": {
                 "data": {
