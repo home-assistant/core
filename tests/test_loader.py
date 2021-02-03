@@ -137,6 +137,47 @@ async def test_log_warning_custom_component(hass, caplog):
     assert "You are using a custom integration test " in caplog.text
 
 
+async def test_custom_integration_missing_version(hass, caplog):
+    """Test that we log a warning when custom integrations are missing a version."""
+    test_integration = loader.Integration(
+        hass, "custom_components.test", None, {"domain": "test"}
+    )
+
+    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
+        mock_get.return_value = {"test": test_integration}
+
+        await loader.async_get_integration(hass, "test")
+        assert (
+            "No 'version' key in the manifest file for custom integration 'test'."
+            in caplog.text
+        )
+
+
+async def test_no_version_warning_for_none_custom_integrations(hass, caplog):
+    """Test that we do not log a warning when core integrations are missing a version."""
+    await loader.async_get_integration(hass, "test")
+    assert (
+        "No 'version' key in the manifest file for custom integration 'test'."
+        not in caplog.text
+    )
+
+
+async def test_custom_integration_version_not_valid(hass, caplog):
+    """Test that we log a warning when custom integrations have a invalid version."""
+    test_integration = loader.Integration(
+        hass, "custom_components.test", None, {"domain": "test", "version": "test"}
+    )
+
+    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
+        mock_get.return_value = {"test": test_integration}
+
+        await loader.async_get_integration(hass, "test")
+        assert (
+            "'test' is not a valid version for custom integration 'test'."
+            in caplog.text
+        )
+
+
 async def test_get_integration(hass):
     """Test resolving integration."""
     integration = await loader.async_get_integration(hass, "hue")
@@ -154,7 +195,6 @@ async def test_get_integration_legacy(hass):
 async def test_get_integration_custom_component(hass, enable_custom_integrations):
     """Test resolving integration."""
     integration = await loader.async_get_integration(hass, "test_package")
-    print(integration)
     assert integration.get_component().DOMAIN == "test_package"
     assert integration.name == "Test Package"
 
@@ -189,6 +229,7 @@ def test_integration_properties(hass):
                 {"manufacturer": "Signify", "modelName": "Philips hue bridge 2015"},
             ],
             "mqtt": ["hue/discovery"],
+            "version": "1.0.0",
         },
     )
     assert integration.name == "Philips Hue"
@@ -215,6 +256,7 @@ def test_integration_properties(hass):
     assert integration.dependencies == ["test-dep"]
     assert integration.requirements == ["test-req==1.0.0"]
     assert integration.is_built_in is True
+    assert integration.version == "1.0.0"
 
     integration = loader.Integration(
         hass,
@@ -233,6 +275,7 @@ def test_integration_properties(hass):
     assert integration.dhcp is None
     assert integration.ssdp is None
     assert integration.mqtt is None
+    assert integration.version is None
 
     integration = loader.Integration(
         hass,

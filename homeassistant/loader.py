@@ -437,6 +437,13 @@ class Integration:
         return self.pkg_path.startswith(PACKAGE_BUILTIN)
 
     @property
+    def version(self) -> Optional[AwesomeVersion]:
+        """Retrun the version of the integration."""
+        if CONF_VERSION not in self.manifest:
+            return None
+        return AwesomeVersion(self.manifest[CONF_VERSION])
+
+    @property
     def all_dependencies(self) -> Set[str]:
         """Return all dependencies including sub-dependencies."""
         if self._all_dependencies is None:
@@ -531,9 +538,10 @@ async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integrati
     # Instead of using resolve_from_root we use the cache of custom
     # components to find the integration.
     integration = (await async_get_custom_components(hass)).get(domain)
+    _LOGGER.critical(integration)
     if integration is not None:
         _LOGGER.warning(CUSTOM_WARNING, domain)
-        if integration.manifest.get("version") is None:
+        if integration.manifest.get(CONF_VERSION) is None:
             _LOGGER.warning(CUSTOM_WARNING_VERSION_MISSING, domain, domain)
         else:
             if not validate_custom_integration_version(
