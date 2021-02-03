@@ -21,7 +21,7 @@ DEFAULT_QOS = 0
 TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): mqtt.DOMAIN,
-        vol.Required(CONF_TOPIC): cv.template,
+        vol.Required(CONF_TOPIC): mqtt.util.valid_subscribe_topic_template,
         vol.Optional(CONF_PAYLOAD): cv.template,
         vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
         vol.Optional(CONF_QOS, default=DEFAULT_QOS): vol.All(
@@ -44,13 +44,14 @@ async def async_attach_trigger(hass, config, action, automation_info):
     if automation_info:
         variables = automation_info.get("variables")
 
+    template.attach(hass, payload)
     if payload:
-        template.attach(hass, payload)
         payload = payload.async_render(variables, limited=True)
 
     template.attach(hass, topic)
-    topic = topic.async_render(variables, limited=True)
-    topic = mqtt.util.valid_subscribe_topic(topic)
+    if isinstance(topic, template.Template):
+        topic = topic.async_render(variables, limited=True)
+        topic = mqtt.util.valid_subscribe_topic(topic)
 
     @callback
     def mqtt_automation_listener(mqttmsg):
