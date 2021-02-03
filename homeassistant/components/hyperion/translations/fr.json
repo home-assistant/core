@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "auth_new_token_not_work_error": "\u00c9chec de l'authentification \u00e0 l'aide du jeton nouvellement cr\u00e9\u00e9",
+            "cannot_connect": "Echec de connection"
+        },
         "step": {
             "user": {
                 "data": {

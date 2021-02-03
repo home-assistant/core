@@ -62,9 +62,9 @@
             "doorbell": "Zvonek"
         },
         "trigger_type": {
-            "double_press": "Dvakr\u00e1t stisknuto \"{subtype}\"",
-            "long_press": "Stisknuto a podr\u017eeno \"{subtype}\"",
-            "single_press": "Stisknuto \"{subtype}\""
+            "double_press": "\"{subtype}\" stisknuto dvakr\u00e1t",
+            "long_press": "\"{subtype}\" stisknuto a podr\u017eeno",
+            "single_press": "\"{subtype}\" stisknuto"
         }
     },
     "title": "HomeKit ovlada\u010d"
