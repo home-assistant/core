@@ -956,13 +956,13 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         assert self.hass is not None
         config_entries = self.hass.config_entries.async_entries(self.handler)
 
-        if include_ignore:
+        if include_ignore or self.source != SOURCE_USER:
             return config_entries
 
         return [
             entry
             for entry in config_entries
-            if self.source != SOURCE_USER or entry.source != SOURCE_IGNORE
+            if entry.source != SOURCE_IGNORE
         ]
 
     @callback
