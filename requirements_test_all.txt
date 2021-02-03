@@ -402,7 +402,7 @@ hole==0.5.1
 holidays==0.10.4
 
 # homeassistant.components.frontend
-ais-dom-frontend==20210127.6
+ais-dom-frontend==20210127.7
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1197,4 +1197,4 @@ zigpy-znp==0.3.0
 zigpy==0.32.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.15.0
+zwave-js-server-python==0.16.0
