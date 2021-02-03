@@ -13,6 +13,7 @@ from homeassistant.components.mysensors import (
     CONF_RETAIN,
     CONF_TCP_PORT,
     CONF_VERSION,
+    DEFAULT_VERSION,
     DOMAIN,
 )
 from homeassistant.components.mysensors.const import (
@@ -94,7 +95,6 @@ from homeassistant.setup import async_setup_component
                             CONF_TOPIC_OUT_PREFIX: "outtopic",
                         }
                     ],
-                    CONF_VERSION: "2.4",
                     CONF_PERSISTENCE: False,
                     CONF_RETAIN: False,
                 }
@@ -104,7 +104,7 @@ from homeassistant.setup import async_setup_component
             {
                 CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_MQTT,
                 CONF_DEVICE: "mqtt",
-                CONF_VERSION: "2.4",
+                CONF_VERSION: DEFAULT_VERSION,
                 CONF_TOPIC_OUT_PREFIX: "outtopic",
                 CONF_TOPIC_IN_PREFIX: "intopic",
             },
@@ -115,7 +115,27 @@ from homeassistant.setup import async_setup_component
                     CONF_GATEWAYS: [
                         {
                             CONF_DEVICE: "mqtt",
+                            CONF_BAUD_RATE: 115200,
+                            CONF_TCP_PORT: 5003,
+                        }
+                    ],
+                    CONF_PERSISTENCE: False,
+                    CONF_RETAIN: False,
+                }
+            },
+            0,
+            True,
+            {},
+        ),
+        (
+            {
+                DOMAIN: {
+                    CONF_GATEWAYS: [
+                        {
+                            CONF_DEVICE: "mqtt",
                             CONF_PERSISTENCE_FILE: "bla.json",
+                            CONF_TOPIC_OUT_PREFIX: "out",
+                            CONF_TOPIC_IN_PREFIX: "in",
                             CONF_BAUD_RATE: 115200,
                             CONF_TCP_PORT: 5003,
                         },
@@ -159,6 +179,26 @@ from homeassistant.setup import async_setup_component
             },
             0,
             False,
+            {},
+        ),
+        (
+            {
+                DOMAIN: {
+                    CONF_GATEWAYS: [
+                        {
+                            CONF_DEVICE: "COMx",
+                            CONF_PERSISTENCE_FILE: "bla.json",
+                            CONF_BAUD_RATE: 115200,
+                            CONF_TCP_PORT: 5003,
+                        },
+                    ],
+                    CONF_VERSION: "2.4",
+                    CONF_PERSISTENCE: False,
+                    CONF_RETAIN: False,
+                }
+            },
+            0,
+            True,
             {},
         ),
     ],

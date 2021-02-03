@@ -1,5 +1,5 @@
 """Test the MySensors config flow."""
-from typing import Dict
+from typing import Dict, Optional, Tuple
 from unittest.mock import patch
 
 import pytest
@@ -23,6 +23,8 @@ from homeassistant.components.mysensors.const import (
     ConfGatewayType,
 )
 from homeassistant.helpers.typing import HomeAssistantType
+
+from tests.common import MockConfigEntry
 
 
 async def get_form(
@@ -304,6 +306,18 @@ async def test_fail_to_connect(hass: HomeAssistantType):
             CONF_TOPIC_OUT_PREFIX,
             "invalid_publish_topic",
         ),
+        (
+            CONF_GATEWAY_TYPE_MQTT,
+            "gw_mqtt",
+            {
+                CONF_RETAIN: True,
+                CONF_TOPIC_IN_PREFIX: "asdf",
+                CONF_TOPIC_OUT_PREFIX: "asdf",
+                CONF_VERSION: "2.4",
+            },
+            CONF_TOPIC_OUT_PREFIX,
+            "same_topic",
+        ),
     ],
 )
 async def test_config_invalid(
@@ -397,3 +411,270 @@ async def test_import(hass: HomeAssistantType, user_input: Dict):
         await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
+
+
+@pytest.mark.parametrize(
+    "first_input, second_input, expected_result",
+    [
+        (
+            {
+                CONF_DEVICE: "mqtt",
+                CONF_VERSION: "2.3",
+                CONF_TOPIC_IN_PREFIX: "same1",
+                CONF_TOPIC_OUT_PREFIX: "same2",
+            },
+            {
+                CONF_DEVICE: "mqtt",
+                CONF_VERSION: "2.3",
+                CONF_TOPIC_IN_PREFIX: "same1",
+                CONF_TOPIC_OUT_PREFIX: "same2",
+            },
+            (CONF_TOPIC_IN_PREFIX, "duplicate_topic"),
+        ),
+        (
+            {
+                CONF_DEVICE: "mqtt",
+                CONF_VERSION: "2.3",
+                CONF_TOPIC_IN_PREFIX: "different1",
+                CONF_TOPIC_OUT_PREFIX: "different2",
+            },
+            {
+                CONF_DEVICE: "mqtt",
+                CONF_VERSION: "2.3",
+                CONF_TOPIC_IN_PREFIX: "different3",
+                CONF_TOPIC_OUT_PREFIX: "different4",
+            },
+            None,
+        ),
+        (
+            {
+                CONF_DEVICE: "mqtt",
+                CONF_VERSION: "2.3",
+                CONF_TOPIC_IN_PREFIX: "same1",
+                CONF_TOPIC_OUT_PREFIX: "different2",
+            },
+            {
+                CONF_DEVICE: "mqtt",
+                CONF_VERSION: "2.3",
+                CONF_TOPIC_IN_PREFIX: "same1",
+                CONF_TOPIC_OUT_PREFIX: "different4",
+            },
+            (CONF_TOPIC_IN_PREFIX, "duplicate_topic"),
+        ),
+        (
+            {
+                CONF_DEVICE: "mqtt",
+                CONF_VERSION: "2.3",
+                CONF_TOPIC_IN_PREFIX: "same1",
+                CONF_TOPIC_OUT_PREFIX: "different2",
+            },
+            {
+                CONF_DEVICE: "mqtt",
+                CONF_VERSION: "2.3",
+                CONF_TOPIC_IN_PREFIX: "different1",
+                CONF_TOPIC_OUT_PREFIX: "same1",
+            },
+            (CONF_TOPIC_OUT_PREFIX, "duplicate_topic"),
+        ),
+        (
+            {
+                CONF_DEVICE: "mqtt",
+                CONF_VERSION: "2.3",
+                CONF_TOPIC_IN_PREFIX: "same1",
+                CONF_TOPIC_OUT_PREFIX: "different2",
+            },
+            {
+                CONF_DEVICE: "mqtt",
+                CONF_VERSION: "2.3",
+                CONF_TOPIC_IN_PREFIX: "same1",
+                CONF_TOPIC_OUT_PREFIX: "different1",
+            },
+            (CONF_TOPIC_IN_PREFIX, "duplicate_topic"),
+        ),
+        (
+            {
+                CONF_DEVICE: "127.0.0.1",
+                CONF_PERSISTENCE_FILE: "same.json",
+                CONF_TCP_PORT: 343,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE: False,
+                CONF_RETAIN: False,
+            },
+            {
+                CONF_DEVICE: "192.168.1.2",
+                CONF_PERSISTENCE_FILE: "same.json",
+                CONF_TCP_PORT: 343,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE: False,
+                CONF_RETAIN: False,
+            },
+            ("persistence_file", "duplicate_persistence_file"),
+        ),
+        (
+            {
+                CONF_DEVICE: "192.168.1.2",
+                CONF_PERSISTENCE_FILE: "different1.json",
+                CONF_TCP_PORT: 343,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE: False,
+                CONF_RETAIN: False,
+            },
+            {
+                CONF_DEVICE: "192.168.1.2",
+                CONF_PERSISTENCE_FILE: "different2.json",
+                CONF_TCP_PORT: 343,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE: False,
+                CONF_RETAIN: False,
+            },
+            ("base", "already_configured"),
+        ),
+        (
+            {
+                CONF_DEVICE: "192.168.1.2",
+                CONF_PERSISTENCE_FILE: "different1.json",
+                CONF_TCP_PORT: 343,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE: False,
+                CONF_RETAIN: False,
+            },
+            {
+                CONF_DEVICE: "192.168.1.2",
+                CONF_PERSISTENCE_FILE: "different2.json",
+                CONF_TCP_PORT: 5003,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE: False,
+                CONF_RETAIN: False,
+            },
+            None,
+        ),
+        (
+            {
+                CONF_DEVICE: "192.168.1.2",
+                CONF_TCP_PORT: 5003,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE: False,
+                CONF_RETAIN: False,
+            },
+            {
+                CONF_DEVICE: "192.168.1.3",
+                CONF_TCP_PORT: 5003,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE: False,
+                CONF_RETAIN: False,
+            },
+            None,
+        ),
+        (
+            {
+                CONF_DEVICE: "COM5",
+                CONF_TCP_PORT: 5003,
+                CONF_RETAIN: True,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE_FILE: "different1.json",
+            },
+            {
+                CONF_DEVICE: "COM5",
+                CONF_TCP_PORT: 5003,
+                CONF_RETAIN: True,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE_FILE: "different2.json",
+            },
+            ("base", "already_configured"),
+        ),
+        (
+            {
+                CONF_DEVICE: "COM6",
+                CONF_BAUD_RATE: 57600,
+                CONF_RETAIN: True,
+                CONF_VERSION: "2.3",
+            },
+            {
+                CONF_DEVICE: "COM5",
+                CONF_TCP_PORT: 5003,
+                CONF_RETAIN: True,
+                CONF_VERSION: "2.3",
+            },
+            None,
+        ),
+        (
+            {
+                CONF_DEVICE: "COM5",
+                CONF_BAUD_RATE: 115200,
+                CONF_RETAIN: True,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE_FILE: "different1.json",
+            },
+            {
+                CONF_DEVICE: "COM5",
+                CONF_BAUD_RATE: 57600,
+                CONF_RETAIN: True,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE_FILE: "different2.json",
+            },
+            ("base", "already_configured"),
+        ),
+        (
+            {
+                CONF_DEVICE: "COM5",
+                CONF_BAUD_RATE: 115200,
+                CONF_RETAIN: True,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE_FILE: "same.json",
+            },
+            {
+                CONF_DEVICE: "COM6",
+                CONF_BAUD_RATE: 57600,
+                CONF_RETAIN: True,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE_FILE: "same.json",
+            },
+            ("persistence_file", "duplicate_persistence_file"),
+        ),
+        (
+            {
+                CONF_DEVICE: "mqtt",
+                CONF_PERSISTENCE_FILE: "bla.json",
+                CONF_BAUD_RATE: 115200,
+                CONF_TCP_PORT: 5003,
+                CONF_VERSION: "1.4",
+            },
+            {
+                CONF_DEVICE: "COM6",
+                CONF_PERSISTENCE_FILE: "bla2.json",
+                CONF_BAUD_RATE: 115200,
+                CONF_TCP_PORT: 5003,
+                CONF_VERSION: "1.4",
+            },
+            None,
+        ),
+    ],
+)
+async def test_duplicate(
+    hass: HomeAssistantType,
+    first_input: Dict,
+    second_input: Dict,
+    expected_result: Optional[Tuple[str, str]],
+):
+    """Test duplicate detection."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch("sys.platform", "win32"), patch(
+        "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
+    ), patch(
+        "homeassistant.components.mysensors.async_setup_entry",
+        return_value=True,
+    ):
+        MockConfigEntry(domain=DOMAIN, data=first_input).add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, data=second_input, context={"source": config_entries.SOURCE_IMPORT}
+        )
+        await hass.async_block_till_done()
+        if expected_result is None:
+            assert result["type"] == "create_entry"
+        else:
+            assert result["type"] == "form"
+            assert "errors" in result
+            assert expected_result[0] in result["errors"]
+            assert result["errors"][expected_result[0]] == expected_result[1]

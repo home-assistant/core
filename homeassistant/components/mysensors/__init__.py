@@ -143,8 +143,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
             CONF_DEVICE: gw[CONF_DEVICE],
             CONF_BAUD_RATE: gw[CONF_BAUD_RATE],
             CONF_TCP_PORT: gw[CONF_TCP_PORT],
-            CONF_TOPIC_OUT_PREFIX: gw.get(CONF_TOPIC_OUT_PREFIX),
-            CONF_TOPIC_IN_PREFIX: gw.get(CONF_TOPIC_IN_PREFIX),
+            CONF_TOPIC_OUT_PREFIX: gw.get(CONF_TOPIC_OUT_PREFIX, ""),
+            CONF_TOPIC_IN_PREFIX: gw.get(CONF_TOPIC_IN_PREFIX, ""),
             CONF_RETAIN: config[CONF_RETAIN],
             CONF_VERSION: config[CONF_VERSION],
             CONF_PERSISTENCE_FILE: gw.get(CONF_PERSISTENCE_FILE)
