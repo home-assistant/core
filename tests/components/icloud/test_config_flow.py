@@ -495,7 +495,7 @@ async def test_validate_2fa_code_failed(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == CONF_TRUSTED_DEVICE
+    assert result["step_id"] == CONF_VERIFICATION_CODE
     assert result["errors"] == {"base": "validate_verification_code"}
 
 
