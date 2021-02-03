@@ -438,7 +438,7 @@ class Integration:
 
     @property
     def version(self) -> Optional[AwesomeVersion]:
-        """Retrun the version of the integration."""
+        """Return the version of the integration."""
         if CONF_VERSION not in self.manifest:
             return None
         return AwesomeVersion(self.manifest[CONF_VERSION])
