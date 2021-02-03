@@ -4,7 +4,7 @@ import inspect
 import logging
 from typing import Any, Callable, Dict, Optional
 
-from ..helpers.frame import get_integration_frame, MissingIntegrationFrame
+from ..helpers.frame import MissingIntegrationFrame, get_integration_frame
 
 
 def deprecated_substitute(substitute_name: str) -> Callable[..., Callable]:
