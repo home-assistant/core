@@ -2,11 +2,12 @@
 
 COAP = "coap"
 DATA_CONFIG_ENTRY = "config_entry"
+DEVICE = "device"
 DOMAIN = "shelly"
 REST = "rest"
 
-# Used to calculate the timeout in "_async_update_data" used for polling data from devices.
-POLLING_TIMEOUT_MULTIPLIER = 1.2
+# Used in "_async_update_data" as timeout for polling data from devices.
+POLLING_TIMEOUT_SEC = 18
 
 # Refresh interval for REST sensors
 REST_SENSORS_UPDATE_INTERVAL = 60
