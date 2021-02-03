@@ -267,14 +267,32 @@ class MqttCover(MqttEntity, CoverEntity):
             if template is not None:
                 payload = template.async_render_with_possible_json_value(payload)
 
-            if payload == self._config[CONF_STATE_OPEN]:
-                self._state = STATE_OPEN
+            if (
+                payload == self._config[CONF_STATE_OPEN]
+                or str(payload).upper() == DEFAULT_PAYLOAD_OPEN
+            ):
+                if SUPPORT_STOP | self.supported_features:
+                    self._state = STATE_OPENING
+                else:
+                    self._state = STATE_OPEN
             elif payload == self._config[CONF_STATE_OPENING]:
                 self._state = STATE_OPENING
-            elif payload == self._config[CONF_STATE_CLOSED]:
-                self._state = STATE_CLOSED
+            elif (
+                payload == self._config[CONF_STATE_CLOSED]
+                or str(payload).upper() == DEFAULT_PAYLOAD_CLOSE
+            ):
+                if SUPPORT_STOP | self.supported_features:
+                    self._state = STATE_CLOSING
+                else:
+                    self._state = STATE_CLOSED
             elif payload == self._config[CONF_STATE_CLOSING]:
                 self._state = STATE_CLOSING
+            elif payload == self._config[CONF_PAYLOAD_STOP]:
+                self._state = (
+                    STATE_CLOSED
+                    if self._position == DEFAULT_POSITION_CLOSED
+                    else STATE_OPEN
+                )
             else:
                 _LOGGER.warning(
                     "Payload is not supported (e.g. open, closed, opening, closing): %s",
@@ -407,7 +425,6 @@ class MqttCover(MqttEntity, CoverEntity):
 
         This method is a coroutine.
         """
-        self._state = STATE_OPENING
         mqtt.async_publish(
             self.hass,
             self._config.get(CONF_COMMAND_TOPIC),
@@ -429,7 +446,6 @@ class MqttCover(MqttEntity, CoverEntity):
 
         This method is a coroutine.
         """
-        self._state = STATE_CLOSING
         mqtt.async_publish(
             self.hass,
             self._config.get(CONF_COMMAND_TOPIC),
