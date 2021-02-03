@@ -246,12 +246,13 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_verification_code(self, user_input=None):
+    async def async_step_verification_code(self, user_input=None, errors=None):
         """Ask the verification code to the user."""
-        errors = {}
+        if errors is None:
+            errors = {}
 
         if user_input is None:
-            return await self._show_verification_code_form(user_input)
+            return await self._show_verification_code_form(user_input, errors)
 
         self._verification_code = user_input[CONF_VERIFICATION_CODE]
 
@@ -275,7 +276,27 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._verification_code = None
             errors["base"] = "validate_verification_code"
 
-            return await self.async_step_trusted_device(None, errors)
+            if self.api.requires_2fa:
+                try:
+                    self.api = await self.hass.async_add_executor_job(
+                        PyiCloudService,
+                        self._username,
+                        self._password,
+                        self.hass.helpers.storage.Store(
+                            STORAGE_VERSION, STORAGE_KEY
+                        ).path,
+                        True,
+                        None,
+                        self._with_family,
+                    )
+                    return await self.async_step_verification_code(None, errors)
+                except PyiCloudFailedLoginException as error:
+                    _LOGGER.error("Error logging into iCloud service: %s", error)
+                    self.api = None
+                    errors = {CONF_PASSWORD: "invalid_auth"}
+                    return self._show_setup_form(user_input, errors, "user")
+            else:
+                return await self.async_step_trusted_device(None, errors)
 
         return await self.async_step_user(
             {
@@ -287,11 +308,11 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-    async def _show_verification_code_form(self, user_input=None):
+    async def _show_verification_code_form(self, user_input=None, errors=None):
         """Show the verification_code form to the user."""
 
         return self.async_show_form(
             step_id=CONF_VERIFICATION_CODE,
             data_schema=vol.Schema({vol.Required(CONF_VERIFICATION_CODE): str}),
-            errors=None,
+            errors=errors or {},
         )
