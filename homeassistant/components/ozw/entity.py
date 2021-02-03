@@ -268,7 +268,7 @@ class ZWaveDeviceEntity(Entity):
         if not self.values:
             return  # race condition: delete already requested
         if values_id == self.values.values_id:
-            await self.async_remove()
+            await self.async_remove(force_remove=True)
 
 
 def create_device_name(node: OZWNode):
