@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "connect": {
+                "data": {
+                    "api_key": "Cl\u00e9 API"
+                },
+                "description": "Vous aurez besoin de la cl\u00e9 API de 16 caract\u00e8res, voir https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key pour les instructions"
+            },
+            "select": {
+                "data": {
+                    "select_ip": "Adresse IP"
+                }
+            }
+        }
+    }
+}

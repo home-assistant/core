@@ -2,9 +2,9 @@
     "system_health": {
         "info": {
             "alexa_enabled": "Alexa activada",
-            "can_reach_cert_server": "Servidor de certificaci\u00f3 accessible",
-            "can_reach_cloud": "Home Assistant Cloud accessible",
-            "can_reach_cloud_auth": "Servidor d'autenticaci\u00f3 accessible",
+            "can_reach_cert_server": "Acc\u00e9s al servidor de certificaci\u00f3",
+            "can_reach_cloud": "Acc\u00e9s a Home Assistant Cloud",
+            "can_reach_cloud_auth": "Acc\u00e9s al servidor d'autenticaci\u00f3",
             "google_enabled": "Google activat",
             "logged_in": "Sessi\u00f3 iniciada",
             "relayer_connected": "Encaminador connectat",
