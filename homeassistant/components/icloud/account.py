@@ -114,7 +114,7 @@ class IcloudAccount:
                 with_family=self._with_family,
             )
 
-            if not self.api.is_trusted_session:
+            if not self.api.is_trusted_session or self.api.requires_2fa:
                 # Session is no longer trusted
                 # Trigger a new log in to ensure the user enters the 2FA code again.
                 raise PyiCloudFailedLoginException
