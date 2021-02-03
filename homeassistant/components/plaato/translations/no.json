@@ -1,16 +1,48 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
             "webhook_not_internet_accessible": "Home Assistant forekomsten din m\u00e5 v\u00e6re tilgjengelig fra internett for \u00e5 kunne motta webhook meldinger"
         },
         "create_entry": {
             "default": "For \u00e5 sende hendelser til Home Assistant, m\u00e5 du sette opp webhook-funksjonen i Plaato Airlock. \n\n Fyll ut f\u00f8lgende informasjon: \n\n - URL: `{webhook_url}` \n - Metode: POST \n\n Se [dokumentasjonen]({docs_url}) for ytterligere detaljer."
         },
+        "error": {
+            "invalid_webhook_device": "Du har valgt en enhet som ikke st\u00f8tter sending av data til en webhook. Den er kun tilgjengelig for Airlock",
+            "no_api_method": "Du m\u00e5 legge til et godkjenningstoken eller velge webhook",
+            "no_auth_token": "Du m\u00e5 legge til et godkjenningstoken"
+        },
         "step": {
+            "api_method": {
+                "title": "Velg API-metode"
+            },
             "user": {
+                "data": {
+                    "device_name": "Navngi enheten din",
+                    "device_type": "Type Platon-enhet"
+                },
                 "description": "Vil du starte oppsettet?",
                 "title": "Sett opp Plaato Webhook"
+            },
+            "webhook": {
+                "description": "For \u00e5 sende hendelser til Home Assistant, m\u00e5 du sette opp webhook-funksjonen i Plaato Airlock. \n\n Fyll ut f\u00f8lgende informasjon: \n\n - URL: `{webhook_url}` \n - Metode: POST \n\n Se [dokumentasjonen]({docs_url}) for ytterligere detaljer.",
+                "title": "Webhook \u00e5 bruke"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "update_interval": "Oppdateringsintervall (minutter)"
+                },
+                "description": "Still inn oppdateringsintervallet (minutter)",
+                "title": "Alternativer for Plaato"
+            },
+            "webhook": {
+                "description": "Webhook info:\n\n- URL-adresse: {webhook_url}\n- Metode: POST\n\n",
+                "title": "Alternativer for Plaato Airlock"
             }
         }
     }
