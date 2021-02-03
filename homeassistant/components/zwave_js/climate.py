@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, List, Optional
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
     THERMOSTAT_CURRENT_TEMP_PROPERTY,
+    THERMOSTAT_MODE_PROPERTY,
     THERMOSTAT_MODE_SETPOINT_MAP,
     THERMOSTAT_MODES,
     THERMOSTAT_OPERATING_STATE_PROPERTY,
@@ -119,7 +120,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         self._hvac_presets: Dict[str, Optional[int]] = {}
         self._unit_value: ZwaveValue = None
 
-        self._current_mode = self.info.primary_value
+        self._current_mode = self.get_zwave_value(
+            THERMOSTAT_MODE_PROPERTY, command_class=CommandClass.THERMOSTAT_MODE
+        )
         self._setpoint_values: Dict[ThermostatSetpointType, ZwaveValue] = {}
         for enum in ThermostatSetpointType:
             self._setpoint_values[enum] = self.get_zwave_value(
@@ -165,10 +168,12 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
         # Z-Wave uses one list for both modes and presets.
         # Iterate over all Z-Wave ThermostatModes and extract the hvac modes and presets.
-        current_mode = self._current_mode
-        if not current_mode:
+        if self._current_mode is None:
+            self._hvac_modes = {
+                ZW_HVAC_MODE_MAP[ThermostatMode.HEAT]: ThermostatMode.HEAT
+            }
             return
-        for mode_id, mode_name in current_mode.metadata.states.items():
+        for mode_id, mode_name in self._current_mode.metadata.states.items():
             mode_id = int(mode_id)
             if mode_id in THERMOSTAT_MODES:
                 # treat value as hvac mode
@@ -184,6 +189,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def _current_mode_setpoint_enums(self) -> List[Optional[ThermostatSetpointType]]:
         """Return the list of enums that are relevant to the current thermostat mode."""
+        if self._current_mode is None:
+            # Thermostat(valve) with no support for setting a mode is considered heating-only
+            return [ThermostatSetpointType.HEATING]
         return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])  # type: ignore
 
     @property

@@ -56,6 +56,8 @@ class ZWaveDiscoverySchema:
     type: Optional[Set[str]] = None
 
 
+# For device class mapping see:
+# https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/deviceClasses.json
 DISCOVERY_SCHEMAS = [
     # locks
     ZWaveDiscoverySchema(
@@ -103,6 +105,18 @@ DISCOVERY_SCHEMAS = [
         },
         command_class={CommandClass.THERMOSTAT_MODE},
         property={"mode"},
+        type={"number"},
+    ),
+    # climate
+    # setpoint thermostats
+    ZWaveDiscoverySchema(
+        platform="climate",
+        device_class_generic={"Thermostat"},
+        device_class_specific={
+            "Setpoint Thermostat",
+        },
+        command_class={CommandClass.THERMOSTAT_SETPOINT},
+        property={"setpoint"},
         type={"number"},
     ),
     # lights
