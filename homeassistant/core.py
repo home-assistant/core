@@ -1408,6 +1408,9 @@ class ServiceRegistry:
         except KeyError:
             raise ServiceNotFound(domain, service) from None
 
+        if target:
+            service_data.update(target)
+
         if handler.schema:
             try:
                 processed_data = handler.schema(service_data)
@@ -1421,9 +1424,6 @@ class ServiceRegistry:
                 raise
         else:
             processed_data = service_data
-
-        if target:
-            processed_data.update(target)
 
         service_call = ServiceCall(domain, service, processed_data, context)
 
