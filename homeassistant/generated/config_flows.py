@@ -123,6 +123,7 @@ FLOWS = [
     "lutron_caseta",
     "lyric",
     "mailgun",
+    "mazda",
     "melcloud",
     "met",
     "meteo_france",
