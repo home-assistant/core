@@ -29,7 +29,6 @@ from typing import (
 from awesomeversion import AwesomeVersion
 from awesomeversion.strategy import AwesomeVersionStrategy
 
-from homeassistant.const import CONF_VERSION
 from homeassistant.generated.dhcp import DHCP
 from homeassistant.generated.mqtt import MQTT
 from homeassistant.generated.ssdp import SSDP
@@ -101,7 +100,7 @@ class Manifest(TypedDict, total=False):
     dhcp: List[Dict[str, str]]
     homekit: Dict[str, List[str]]
     is_built_in: bool
-    version: Optional[str]
+    version: str
     codeowners: List[str]
 
 
@@ -439,9 +438,9 @@ class Integration:
     @property
     def version(self) -> Optional[AwesomeVersion]:
         """Return the version of the integration."""
-        if CONF_VERSION not in self.manifest:
+        if "version" not in self.manifest:
             return None
-        return AwesomeVersion(self.manifest[CONF_VERSION])
+        return AwesomeVersion(self.manifest["version"])
 
     @property
     def all_dependencies(self) -> Set[str]:
@@ -541,16 +540,14 @@ async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integrati
     _LOGGER.critical(integration)
     if integration is not None:
         _LOGGER.warning(CUSTOM_WARNING, domain)
-        if integration.manifest.get(CONF_VERSION) is None:
+        if integration.manifest.get("version") is None:
             _LOGGER.warning(CUSTOM_WARNING_VERSION_MISSING, domain, domain)
         else:
-            if not validate_custom_integration_version(
-                integration.manifest[CONF_VERSION]
-            ):
+            if not validate_custom_integration_version(integration.manifest["version"]):
                 _LOGGER.warning(
                     CUSTOM_WARNING_VERSION_TYPE,
                     domain,
-                    integration.manifest[CONF_VERSION],
+                    integration.manifest["version"],
                     domain,
                 )
         cache[domain] = integration
