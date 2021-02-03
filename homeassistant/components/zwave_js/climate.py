@@ -117,11 +117,11 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         super().__init__(config_entry, client, info)
         self._hvac_modes: Dict[str, Optional[int]] = {}
         self._hvac_presets: Dict[str, Optional[int]] = {}
+        self._unit_value: ZwaveValue = None
 
         self._current_mode = self.get_zwave_value(
             THERMOSTAT_MODE_PROPERTY, command_class=CommandClass.THERMOSTAT_MODE
         )
-        self._unit_value: ZwaveValue = self.info.primary_value
         self._setpoint_values: Dict[ThermostatSetpointType, ZwaveValue] = {}
         for enum in ThermostatSetpointType:
             self._setpoint_values[enum] = self.get_zwave_value(
@@ -130,6 +130,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
                 value_property_key_name=enum.value,
                 add_to_watched_value_ids=True,
             )
+            # Use the first found setpoint value to always determine the temperature unit
+            if self._setpoint_values[enum] and not self._unit_value:
+                self._unit_value = self._setpoint_values[enum]
         self._operating_state = self.get_zwave_value(
             THERMOSTAT_OPERATING_STATE_PROPERTY,
             command_class=CommandClass.THERMOSTAT_OPERATING_STATE,
