@@ -139,16 +139,31 @@ async def test_log_warning_custom_component(hass, caplog):
 
 async def test_custom_integration_missing_version(hass, caplog):
     """Test that we log a warning when custom integrations are missing a version."""
-    test_integration = loader.Integration(
-        hass, "custom_components.test", None, {"domain": "test"}
+    test_integration_1 = loader.Integration(
+        hass, "custom_components.test1", None, {"domain": "test1"}
+    )
+    test_integration_2 = loader.Integration(
+        hass,
+        "custom_components.test2",
+        None,
+        loader.manifest_from_legacy_module("test2", "custom_components.test2"),
     )
 
     with patch("homeassistant.loader.async_get_custom_components") as mock_get:
-        mock_get.return_value = {"test": test_integration}
+        mock_get.return_value = {
+            "test1": test_integration_1,
+            "test2": test_integration_2,
+        }
 
-        await loader.async_get_integration(hass, "test")
+        await loader.async_get_integration(hass, "test1")
         assert (
-            "No 'version' key in the manifest file for custom integration 'test'."
+            "No 'version' key in the manifest file for custom integration 'test1'."
+            in caplog.text
+        )
+
+        await loader.async_get_integration(hass, "test2")
+        assert (
+            "No 'version' key in the manifest file for custom integration 'test2'."
             in caplog.text
         )
 
