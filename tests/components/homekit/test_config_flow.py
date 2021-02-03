@@ -492,6 +492,18 @@ async def test_options_flow_include_mode_with_cameras(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
+    assert result["data_schema"]({}) == {
+        "domains": ["fan", "vacuum", "climate", "camera"],
+        "mode": "bridge",
+    }
+    schema = result["data_schema"].schema
+    assert _get_schema_default(schema, "domains") == [
+        "fan",
+        "vacuum",
+        "climate",
+        "camera",
+    ]
+    assert _get_schema_default(schema, "mode") == "bridge"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -500,6 +512,16 @@ async def test_options_flow_include_mode_with_cameras(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "include_exclude"
+    assert result["data_schema"]({}) == {
+        "entities": ["camera.native_h264", "camera.transcode_h264"],
+        "include_exclude_mode": "include",
+    }
+    schema = result["data_schema"].schema
+    assert _get_schema_default(schema, "entities") == [
+        "camera.native_h264",
+        "camera.transcode_h264",
+    ]
+    assert _get_schema_default(schema, "include_exclude_mode") == "include"
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -510,6 +532,9 @@ async def test_options_flow_include_mode_with_cameras(hass):
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "cameras"
+    assert result2["data_schema"]({}) == {"camera_copy": ["camera.native_h264"]}
+    schema = result2["data_schema"].schema
+    assert _get_schema_default(schema, "camera_copy") == ["camera.native_h264"]
 
     result3 = await hass.config_entries.options.async_configure(
         result2["flow_id"],
@@ -519,14 +544,14 @@ async def test_options_flow_include_mode_with_cameras(hass):
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
         "auto_start": True,
-        "mode": "bridge",
+        "entity_config": {"camera.native_h264": {}},
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old", "camera.excluded"],
             "include_domains": ["fan", "vacuum", "climate", "camera"],
             "include_entities": [],
         },
-        "entity_config": {},
+        "mode": "bridge",
     }
 
 
@@ -586,6 +611,17 @@ async def test_options_flow_include_mode_basic_accessory(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
+    assert result["data_schema"]({}) == {
+        "domains": [
+            "fan",
+            "humidifier",
+            "vacuum",
+            "media_player",
+            "climate",
+            "alarm_control_panel",
+        ],
+        "mode": "bridge",
+    }
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -594,6 +630,7 @@ async def test_options_flow_include_mode_basic_accessory(hass):
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "include_exclude"
+    assert _get_schema_default(result2["data_schema"].schema, "entities") == []
 
     result3 = await hass.config_entries.options.async_configure(
         result2["flow_id"],
@@ -612,7 +649,7 @@ async def test_options_flow_include_mode_basic_accessory(hass):
     }
 
 
-async def test_converting_bridge_to_accessory_mode(hass):
+async def test_converting_bridge_to_accessory_mode(hass, hk_driver):
     """Test we can convert a bridge to accessory mode."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -639,12 +676,12 @@ async def test_converting_bridge_to_accessory_mode(hass):
         assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result3["step_id"] == "pairing"
 
+    # We need to actually setup the config entry or the data
+    # will not get migrated to options
     with patch(
-        "homeassistant.components.homekit.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.homekit.async_setup_entry",
+        "homeassistant.components.homekit.HomeKit.async_start",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_async_start:
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
             {},
@@ -665,8 +702,7 @@ async def test_converting_bridge_to_accessory_mode(hass):
         "name": bridge_name,
         "port": 12345,
     }
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_async_start.mock_calls) == 1
 
     config_entry = result4["result"]
 
@@ -681,6 +717,9 @@ async def test_converting_bridge_to_accessory_mode(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
+    schema = result["data_schema"].schema
+    assert _get_schema_default(schema, "mode") == "bridge"
+    assert _get_schema_default(schema, "domains") == ["light"]
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -714,3 +753,11 @@ async def test_converting_bridge_to_accessory_mode(hass):
             "include_entities": ["camera.tv"],
         },
     }
+
+
+def _get_schema_default(schema, key_name):
+    """Iterate schema to find a key."""
+    for schema_key in schema:
+        if schema_key == key_name:
+            return schema_key.default()
+    raise KeyError(f"{key_name} not found in schema")
