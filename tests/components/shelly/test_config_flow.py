@@ -13,7 +13,8 @@ from tests.common import MockConfigEntry
 
 MOCK_SETTINGS = {
     "name": "Test name",
-    "device": {"mac": "test-mac", "hostname": "test-host"},
+    "device": {"mac": "test-mac", "hostname": "test-host", "type": "SHSW-1"},
+    "sleep_period": 0,
 }
 DISCOVERY_INFO = {
     "host": "1.1.1.1",
@@ -57,6 +58,8 @@ async def test_form(hass):
     assert result2["title"] == "Test name"
     assert result2["data"] == {
         "host": "1.1.1.1",
+        "model": "SHSW-1",
+        "sleep_period": 0,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -101,6 +104,8 @@ async def test_title_without_name(hass):
     assert result2["title"] == "shelly1pm-12345"
     assert result2["data"] == {
         "host": "1.1.1.1",
+        "model": "SHSW-1",
+        "sleep_period": 0,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -149,6 +154,8 @@ async def test_form_auth(hass):
     assert result3["title"] == "Test name"
     assert result3["data"] == {
         "host": "1.1.1.1",
+        "model": "SHSW-1",
+        "sleep_period": 0,
         "username": "test username",
         "password": "test password",
     }
@@ -369,6 +376,8 @@ async def test_zeroconf(hass):
     assert result2["title"] == "Test name"
     assert result2["data"] == {
         "host": "1.1.1.1",
+        "model": "SHSW-1",
+        "sleep_period": 0,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -502,6 +511,8 @@ async def test_zeroconf_require_auth(hass):
     assert result3["title"] == "Test name"
     assert result3["data"] == {
         "host": "1.1.1.1",
+        "model": "SHSW-1",
+        "sleep_period": 0,
         "username": "test username",
         "password": "test password",
     }
