@@ -287,6 +287,22 @@ def climate_heatit_z_trm3_fixture(client, climate_heatit_z_trm3_state):
     return node
 
 
+@pytest.fixture(name="climate_danfoss_lc_13")
+def climate_danfoss_lc_13_fixture(client, climate_danfoss_lc_13_state):
+    """Mock a climate radio danfoss LC-13 node."""
+    node = Node(client, climate_danfoss_lc_13_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_heatit_z_trm3")
+def climate_heatit_z_trm3_fixture(client, climate_heatit_z_trm3_state):
+    """Mock a climate radio HEATIT Z-TRM3 node."""
+    node = Node(client, climate_heatit_z_trm3_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="nortek_thermostat")
 def nortek_thermostat_fixture(client, nortek_thermostat_state):
     """Mock a nortek thermostat node."""
