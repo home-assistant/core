@@ -7,6 +7,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -95,6 +96,13 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "platform": "device",
             "domain": DOMAIN,
             "type": "armed_night",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "armed_vacation",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
@@ -207,6 +215,25 @@ async def test_if_fires_on_state_change(hass, calls):
                         },
                     },
                 },
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": "alarm_control_panel.entity",
+                        "type": "armed_vacation",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "armed_vacation - {{ trigger.platform}} - "
+                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                            )
+                        },
+                    },
+                },
             ]
         },
     )
@@ -257,4 +284,14 @@ async def test_if_fires_on_state_change(hass, calls):
     assert (
         calls[4].data["some"]
         == "armed_night - device - alarm_control_panel.entity - pending - armed_night - None"
+    )
+
+    # Fake that the entity is armed vacation.
+    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_PENDING)
+    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_VACATION)
+    await hass.async_block_till_done()
+    assert len(calls) == 6
+    assert (
+        calls[5].data["some"]
+        == "armed_vacation - device - alarm_control_panel.entity - pending - armed_vacation - None"
     )

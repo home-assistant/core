@@ -8,6 +8,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
@@ -66,6 +67,12 @@ async def test_get_actions(hass, device_reg, entity_reg):
         {
             "domain": DOMAIN,
             "type": "arm_night",
+            "device_id": device_entry.id,
+            "entity_id": "alarm_control_panel.test_5678",
+        },
+        {
+            "domain": DOMAIN,
+            "type": "arm_vacation",
             "device_id": device_entry.id,
             "entity_id": "alarm_control_panel.test_5678",
         },
@@ -140,6 +147,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
         "arm_away": {"extra_fields": []},
         "arm_home": {"extra_fields": []},
         "arm_night": {"extra_fields": []},
+        "arm_vacation": {"extra_fields": []},
         "disarm": {
             "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
         },
@@ -182,6 +190,9 @@ async def test_get_action_capabilities_arm_code(hass, device_reg, entity_reg):
             "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
         },
         "arm_night": {
+            "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
+        },
+        "arm_vacation": {
             "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
         },
         "disarm": {
@@ -245,6 +256,18 @@ async def test_action(hass):
                     },
                 },
                 {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_arm_vacation",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "abcdefgh",
+                        "entity_id": "alarm_control_panel.alarm_no_arm_code",
+                        "type": "arm_vacation",
+                    },
+                },
+                {
                     "trigger": {"platform": "event", "event_type": "test_event_disarm"},
                     "action": {
                         "domain": DOMAIN,
@@ -295,6 +318,13 @@ async def test_action(hass):
     assert (
         hass.states.get("alarm_control_panel.alarm_no_arm_code").state
         == STATE_ALARM_ARMED_NIGHT
+    )
+
+    hass.bus.async_fire("test_event_arm_vacation")
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get("alarm_control_panel.alarm_no_arm_code").state
+        == STATE_ALARM_ARMED_VACATION
     )
 
     hass.bus.async_fire("test_event_disarm")
