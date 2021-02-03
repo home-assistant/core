@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+            "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+        },
+        "error": {
+            "account_locked": "Account locked. Please try again later.",
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "email": "[%key:common::config_flow::data::email%]",
+                    "password": "[%key:common::config_flow::data::password%]",
+                    "region": "Region"
+                },
+                "description": "Authentication failed for Mazda Connected Services. Please enter your current credentials.",
+                "title": "Mazda Connected Services - Authentication Failed"
+            },
+            "user": {
+                "data": {
+                    "email": "[%key:common::config_flow::data::email%]",
+                    "password": "[%key:common::config_flow::data::password%]",
+                    "region": "Region"
+                },
+                "description": "Please enter the email address and password you use to log into the MyMazda mobile app.",
+                "title": "Mazda Connected Services - Add Account"
+            }
+        }
+    },
+    "title": "Mazda Connected Services"
+}
