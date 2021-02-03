@@ -745,7 +745,7 @@ pyheos==0.7.2
 pyhomematic==0.1.71
 
 # homeassistant.components.icloud
-pyicloud==0.9.7
+pyicloud==0.10.2
 
 # homeassistant.components.insteon
 pyinsteon==1.0.9
