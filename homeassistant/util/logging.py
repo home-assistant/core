@@ -11,6 +11,8 @@ from typing import Any, Awaitable, Callable, Coroutine, Union, cast, overload
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant, callback
 
+IMMUTABLES = {int, float, complex, bool, str, bytes, bytearray, memoryview, tuple}
+
 
 class HideSensitiveDataFilter(logging.Filter):
     """Filter API password calls."""
@@ -33,7 +35,12 @@ class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
     def emit(self, record: logging.LogRecord) -> None:
         """Emit a log record."""
         try:
-            self.enqueue(self.prepare(record))
+            if type(record.args) is tuple:
+                for arg in record.args:
+                    if type(arg) not in IMMUTABLES:
+                        self.enqueue(self.prepare(record))
+                        return
+            self.enqueue(record)
         except Exception:  # pylint: disable=broad-except
             self.handleError(record)
 
