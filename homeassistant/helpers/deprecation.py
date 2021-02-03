@@ -89,13 +89,22 @@ def deprecated_function(replacement: str) -> Callable[..., Callable]:
             """Wrap for the original function."""
             logger = logging.getLogger(func.__module__)
             try:
-                _, integration, _ = get_integration_frame()
-                logger.warning(
-                    "%s was called from %s, this is a deprecated function. Use %s instead",
-                    func.__name__,
-                    integration,
-                    replacement,
-                )
+                _, integration, path = get_integration_frame()
+                if path == "custom_components/":
+                    logger.warning(
+                        "%s was called from %s, this is a deprecated function. Use %s instead, please report this to the maintainer of %s",
+                        func.__name__,
+                        integration,
+                        replacement,
+                        integration,
+                    )
+                else:
+                    logger.warning(
+                        "%s was called from %s, this is a deprecated function. Use %s instead",
+                        func.__name__,
+                        integration,
+                        replacement,
+                    )
             except MissingIntegrationFrame:
                 logger.warning(
                     "%s is a deprecated function. Use %s instead",
