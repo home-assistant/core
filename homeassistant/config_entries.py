@@ -959,11 +959,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         if include_ignore or self.source != SOURCE_USER:
             return config_entries
 
-        return [
-            entry
-            for entry in config_entries
-            if entry.source != SOURCE_IGNORE
-        ]
+        return [entry for entry in config_entries if entry.source != SOURCE_IGNORE]
 
     @callback
     def _async_current_ids(self, include_ignore: bool = True) -> Set[Optional[str]]:
