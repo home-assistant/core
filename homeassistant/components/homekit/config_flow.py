@@ -365,15 +365,18 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             else:
                 entity_filter[CONF_INCLUDE_DOMAINS] = self.hk_options[CONF_DOMAINS]
                 entity_filter[CONF_EXCLUDE_ENTITIES] = entities
-                camera_entities = _async_get_matching_entities(
-                    self.hass,
-                    domains=[CAMERA_DOMAIN],
-                )
-                self.included_cameras = {
-                    entity_id
-                    for entity_id in camera_entities
-                    if entity_id not in entities
-                }
+                if CAMERA_DOMAIN in entity_filter[CONF_INCLUDE_DOMAINS]:
+                    camera_entities = _async_get_matching_entities(
+                        self.hass,
+                        domains=[CAMERA_DOMAIN],
+                    )
+                    self.included_cameras = {
+                        entity_id
+                        for entity_id in camera_entities
+                        if entity_id not in entities
+                    }
+                else:
+                    self.included_cameras = set()
 
             self.hk_options[CONF_FILTER] = entity_filter
 
