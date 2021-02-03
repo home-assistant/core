@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Controller site is already configured",
+            "configuration_updated": "Configuration updated.",
             "reauth_successful": "Re-authentication was successful"
         },
         "error": {

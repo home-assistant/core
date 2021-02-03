@@ -140,7 +140,7 @@ aiopylgtv==0.3.3
 aiorecollect==1.0.1
 
 # homeassistant.components.shelly
-aioshelly==0.5.3
+aioshelly==0.5.4
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -577,7 +577,7 @@ pilight==0.1.1
 pillow==8.1.0
 
 # homeassistant.components.plex
-plexapi==4.3.0
+plexapi==4.3.1
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -791,6 +791,9 @@ pymailgunner==1.4
 
 # homeassistant.components.firmata
 pymata-express==1.19
+
+# homeassistant.components.mazda
+pymazda==0.0.8
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.2
@@ -1206,4 +1209,4 @@ zigpy-znp==0.3.0
 zigpy==0.32.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.16.0
+zwave-js-server-python==0.17.0

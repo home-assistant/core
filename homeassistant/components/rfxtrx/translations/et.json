@@ -64,7 +64,8 @@
                     "off_delay": "V\u00e4ljal\u00fclitamise viivitus",
                     "off_delay_enabled": "Luba v\u00e4ljal\u00fclitusviivitus",
                     "replace_device": "Vali asendav seade",
-                    "signal_repetitions": "Signaali korduste arv"
+                    "signal_repetitions": "Signaali korduste arv",
+                    "venetian_blind_mode": "Ribikardinate juhtimine"
                 },
                 "title": "Seadista seadme valikud"
             }
