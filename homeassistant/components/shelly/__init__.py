@@ -52,10 +52,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
     querier.start()
 
     @callback
-    def stop_querier_thread(ev):
+    def _stop_querier(ev):
         querier.stop()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_querier_thread)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_querier)
 
     return True
 
