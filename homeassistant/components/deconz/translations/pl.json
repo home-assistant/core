@@ -38,9 +38,9 @@
         "trigger_subtype": {
             "both_buttons": "oba przyciski",
             "bottom_buttons": "dolne przyciski",
-            "button_1": "pierwszy przycisk",
-            "button_2": "drugi przycisk",
-            "button_3": "trzeci przycisk",
+            "button_1": "pierwszy",
+            "button_2": "drugi",
+            "button_3": "trzeci",
             "button_4": "czwarty",
             "close": "zamknij",
             "dim_down": "zmniejszenie jasno\u015bci",

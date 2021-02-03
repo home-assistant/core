@@ -1,9 +1,38 @@
 {
     "config": {
+        "abort": {
+            "cannot_connect": "Echec de connection"
+        },
         "error": {
             "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer"
         },
         "step": {
+            "init": {
+                "data": {
+                    "host": "H\u00f4te"
+                },
+                "description": "S\u00e9lectionnez un Roomba ou un Braava.",
+                "title": "Se connecter automatiquement \u00e0 l'appareil"
+            },
+            "link": {
+                "description": "Appuyez sur le bouton Accueil et maintenez-le enfonc\u00e9 jusqu'\u00e0 ce que l'appareil \u00e9mette un son (environ deux secondes).",
+                "title": "R\u00e9cup\u00e9rer le mot de passe"
+            },
+            "link_manual": {
+                "data": {
+                    "password": "Mot de passe"
+                },
+                "description": "Le mot de passe n'a pas pu \u00eatre r\u00e9cup\u00e9r\u00e9 automatiquement \u00e0 partir de l'appareil. Veuillez suivre les \u00e9tapes d\u00e9crites dans la documentation \u00e0 {auth_help_url}",
+                "title": "Entrer le mot de passe"
+            },
+            "manual": {
+                "data": {
+                    "blid": "BLID",
+                    "host": "H\u00f4te"
+                },
+                "description": "Aucun Roomba ou Braava d\u00e9couvert sur votre r\u00e9seau. Le BLID est la partie du nom d'h\u00f4te du p\u00e9riph\u00e9rique apr\u00e8s `iRobot-`. Veuillez suivre les \u00e9tapes d\u00e9crites dans la documentation \u00e0 {auth_help_url}",
+                "title": "Se connecter manuellement \u00e0 l'appareil"
+            },
             "user": {
                 "data": {
                     "blid": "BLID",

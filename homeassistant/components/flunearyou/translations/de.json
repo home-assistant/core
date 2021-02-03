@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Diese Koordinaten sind bereits registriert."
+            "already_configured": "Standort ist bereits konfiguriert"
         },
         "error": {
             "unknown": "Unerwarteter Fehler"
