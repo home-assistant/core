@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "D\u00fc\u011fme",
+            "button1": "\u0130lk d\u00fc\u011fme",
+            "button2": "\u0130kinci d\u00fc\u011fme",
+            "button3": "\u00dc\u00e7\u00fcnc\u00fc d\u00fc\u011fme"
+        },
+        "trigger_type": {
+            "double": "{subtype} \u00e7ift t\u0131kland\u0131",
+            "long": "{subtype} uzun t\u0131kland\u0131",
+            "long_single": "{subtype} uzun t\u0131kland\u0131 ve ard\u0131ndan tek t\u0131kland\u0131",
+            "single": "{subtype} tek t\u0131kland\u0131",
+            "triple": "{subtype} \u00fc\u00e7 kez t\u0131kland\u0131"
+        }
+    }
+}

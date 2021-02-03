@@ -1,4 +1,6 @@
 """Tests for the IPP config flow."""
+from unittest.mock import patch
+
 from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_UUID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SSL
@@ -17,7 +19,6 @@ from . import (
     mock_connection,
 )
 
-from tests.async_mock import patch
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 

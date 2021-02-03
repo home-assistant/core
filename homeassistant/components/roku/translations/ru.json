@@ -9,6 +9,10 @@
         },
         "flow_title": "Roku: {name}",
         "step": {
+            "discovery_confirm": {
+                "description": "\u0425\u043e\u0442\u0438\u0442\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0438\u0442\u044c {name}?",
+                "title": "Roku"
+            },
             "ssdp_confirm": {
                 "description": "\u0425\u043e\u0442\u0438\u0442\u0435 \u043d\u0430\u0441\u0442\u0440\u043e\u0438\u0442\u044c {name}?",
                 "title": "Roku"

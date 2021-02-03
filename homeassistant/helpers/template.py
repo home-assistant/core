@@ -11,7 +11,7 @@ import math
 from operator import attrgetter
 import random
 import re
-from typing import Any, Dict, Generator, Iterable, Optional, Type, Union
+from typing import Any, Dict, Generator, Iterable, Optional, Type, Union, cast
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -38,8 +38,7 @@ from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.thread import ThreadWithException
 
-# mypy: allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs, no-warn-return-any
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
@@ -140,7 +139,7 @@ def gen_result_wrapper(kls):
                 if kls is set:
                     return str(set(self))
 
-                return kls.__str__(self)
+                return cast(str, kls.__str__(self))
 
             return self.render_result
 
@@ -173,7 +172,8 @@ class TupleWrapper(tuple, ResultWrapper):
 
 
 RESULT_WRAPPERS: Dict[Type, Type] = {
-    kls: gen_result_wrapper(kls) for kls in (list, dict, set)
+    kls: gen_result_wrapper(kls)  # type: ignore[no-untyped-call]
+    for kls in (list, dict, set)
 }
 RESULT_WRAPPERS[tuple] = TupleWrapper
 
@@ -195,15 +195,15 @@ class RenderInfo:
         # Will be set sensibly once frozen.
         self.filter_lifecycle = _true
         self.filter = _true
-        self._result = None
+        self._result: Optional[str] = None
         self.is_static = False
-        self.exception = None
+        self.exception: Optional[TemplateError] = None
         self.all_states = False
         self.all_states_lifecycle = False
         self.domains = set()
         self.domains_lifecycle = set()
         self.entities = set()
-        self.rate_limit = None
+        self.rate_limit: Optional[timedelta] = None
         self.has_time = False
 
     def __repr__(self) -> str:
@@ -228,7 +228,7 @@ class RenderInfo:
         """Results of the template computation."""
         if self.exception is not None:
             raise self.exception
-        return self._result
+        return cast(str, self._result)
 
     def _freeze_static(self) -> None:
         self.is_static = True
@@ -288,26 +288,26 @@ class Template:
 
         self.template: str = template.strip()
         self._compiled_code = None
-        self._compiled = None
+        self._compiled: Optional[Template] = None
         self.hass = hass
         self.is_static = not is_template_string(template)
 
     @property
-    def _env(self):
+    def _env(self) -> "TemplateEnvironment":
         if self.hass is None:
             return _NO_HASS_ENV
-        ret = self.hass.data.get(_ENVIRONMENT)
+        ret: Optional[TemplateEnvironment] = self.hass.data.get(_ENVIRONMENT)
         if ret is None:
-            ret = self.hass.data[_ENVIRONMENT] = TemplateEnvironment(self.hass)
+            ret = self.hass.data[_ENVIRONMENT] = TemplateEnvironment(self.hass)  # type: ignore[no-untyped-call]
         return ret
 
-    def ensure_valid(self):
+    def ensure_valid(self) -> None:
         """Return if template is valid."""
         if self._compiled_code is not None:
             return
 
         try:
-            self._compiled_code = self._env.compile(self.template)
+            self._compiled_code = self._env.compile(self.template)  # type: ignore[no-untyped-call]
         except jinja2.TemplateError as err:
             raise TemplateError(err) from err
 
@@ -422,7 +422,7 @@ class Template:
 
         finish_event = asyncio.Event()
 
-        def _render_template():
+        def _render_template() -> None:
             try:
                 compiled.render(kwargs)
             except TimeoutError:
@@ -449,7 +449,7 @@ class Template:
         """Render the template and collect an entity filter."""
         assert self.hass and _RENDER_INFO not in self.hass.data
 
-        render_info = RenderInfo(self)
+        render_info = RenderInfo(self)  # type: ignore[no-untyped-call]
 
         # pylint: disable=protected-access
         if self.is_static:
@@ -519,7 +519,7 @@ class Template:
                 )
             return value if error_value is _SENTINEL else error_value
 
-    def _ensure_compiled(self):
+    def _ensure_compiled(self) -> "Template":
         """Bind a template to a specific hass instance."""
         self.ensure_valid()
 
@@ -527,8 +527,9 @@ class Template:
 
         env = self._env
 
-        self._compiled = jinja2.Template.from_code(
-            env, self._compiled_code, env.globals, None
+        self._compiled = cast(
+            Template,
+            jinja2.Template.from_code(env, self._compiled_code, env.globals, None),
         )
 
         return self._compiled
@@ -553,7 +554,7 @@ class Template:
 class AllStates:
     """Class to expose all HA states as attributes."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize all states."""
         self._hass = hass
 
@@ -607,7 +608,7 @@ class AllStates:
 class DomainStates:
     """Class to expose a specific HA domain as attributes."""
 
-    def __init__(self, hass, domain):
+    def __init__(self, hass: HomeAssistantType, domain: str) -> None:
         """Initialize the domain states."""
         self._hass = hass
         self._domain = domain
@@ -652,13 +653,15 @@ class TemplateState(State):
 
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
-    def __init__(self, hass, state, collect=True):
+    def __init__(
+        self, hass: HomeAssistantType, state: State, collect: bool = True
+    ) -> None:
         """Initialize template state."""
         self._hass = hass
         self._state = state
         self._collect = collect
 
-    def _collect_state(self):
+    def _collect_state(self) -> None:
         if self._collect and _RENDER_INFO in self._hass.data:
             self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
 
@@ -1411,4 +1414,4 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         return cached
 
 
-_NO_HASS_ENV = TemplateEnvironment(None)
+_NO_HASS_ENV = TemplateEnvironment(None)  # type: ignore[no-untyped-call]

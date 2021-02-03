@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 from ipaddress import ip_address
 import json
+from unittest.mock import patch
 
 from aiohttp.hdrs import CONTENT_TYPE
 import pytest
@@ -50,7 +51,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, get_test_instance_port
 
 HTTP_SERVER_PORT = get_test_instance_port()

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le p\u00e9riph\u00e9rique est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Erreur de connection",
+            "invalid_ws_url": "URL websocket invalide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "title": "Z-Wave JS"
+}

@@ -1,4 +1,6 @@
 """Test Hue bridge."""
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
 
 from homeassistant import config_entries
@@ -9,8 +11,6 @@ from homeassistant.components.hue.const import (
     CONF_ALLOW_UNREACHABLE,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
-
-from tests.async_mock import AsyncMock, Mock, patch
 
 
 async def test_bridge_setup(hass):

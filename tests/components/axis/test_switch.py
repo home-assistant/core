@@ -1,6 +1,7 @@
 """Axis switch platform tests."""
 
 from copy import deepcopy
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -19,8 +20,6 @@ from .test_device import (
     NAME,
     setup_axis_integration,
 )
-
-from tests.async_mock import AsyncMock, patch
 
 EVENTS = [
     {
@@ -69,8 +68,7 @@ async def test_switches_with_port_cgi(hass):
     device.api.vapix.ports["0"].close = AsyncMock()
     device.api.vapix.ports["1"].name = ""
 
-    for event in EVENTS:
-        device.api.event.process_event(event)
+    device.api.event.update(EVENTS)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
@@ -117,8 +115,7 @@ async def test_switches_with_port_management(hass):
     device.api.vapix.ports["0"].close = AsyncMock()
     device.api.vapix.ports["1"].name = ""
 
-    for event in EVENTS:
-        device.api.event.process_event(event)
+    device.api.event.update(EVENTS)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2

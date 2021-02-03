@@ -1,6 +1,6 @@
 """The sensor tests for the august platform."""
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, STATE_UNKNOWN
 
 from tests.components.august.mocks import (
     _create_august_with_devices,
@@ -120,7 +120,7 @@ async def test_create_lock_with_low_battery_linked_keypad(hass):
     )
     assert (
         hass.states.get("sensor.a6697750d607098bae8d6baa11ef8063_name_operator").state
-        == STATE_UNAVAILABLE
+        == STATE_UNKNOWN
     )
 
 

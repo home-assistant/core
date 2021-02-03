@@ -1,6 +1,7 @@
 """The tests for the utility_meter sensor platform."""
 from contextlib import contextmanager
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.utility_meter.const import (
@@ -26,7 +27,6 @@ from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, mock_restore_cache
 
 

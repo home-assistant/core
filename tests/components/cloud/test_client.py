@@ -1,5 +1,6 @@
 """Test the cloud.iot module."""
 from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import aiohttp
 from aiohttp import web
@@ -15,7 +16,6 @@ from homeassistant.util import dt as dt_util
 
 from . import mock_cloud, mock_cloud_prefs
 
-from tests.async_mock import AsyncMock, MagicMock, Mock, patch
 from tests.common import async_fire_time_changed
 from tests.components.alexa import test_smart_home as test_alexa
 

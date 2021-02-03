@@ -32,9 +32,7 @@ async def update_devices(hass, config_entry, api):
 
     for api_item in api.values():
         # Update Device name
-        device = dev_registry.async_get_device(
-            identifiers={(DOMAIN, api_item.id)}, connections=set()
-        )
+        device = dev_registry.async_get_device(identifiers={(DOMAIN, api_item.id)})
         if device is not None:
             dev_registry.async_update_device(
                 device.id,

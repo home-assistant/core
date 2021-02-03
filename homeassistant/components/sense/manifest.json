@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/sense",
   "requirements": ["sense_energy==0.8.1"],
   "codeowners": ["@kbickar"],
-  "config_flow": true
+  "config_flow": true,
+  "dhcp": [{"hostname":"sense-*","macaddress":"009D6B*"}, {"hostname":"sense-*","macaddress":"DCEFCA*"}]
 }

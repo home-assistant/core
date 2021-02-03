@@ -12,6 +12,7 @@ from .const import (
     DEFAULT_ALEXA_REPORT_STATE,
     DEFAULT_EXPOSED_DOMAINS,
     DEFAULT_GOOGLE_REPORT_STATE,
+    DEFAULT_TTS_DEFAULT_VOICE,
     DOMAIN,
     PREF_ALEXA_DEFAULT_EXPOSE,
     PREF_ALEXA_ENTITY_CONFIGS,
@@ -30,6 +31,7 @@ from .const import (
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_OVERRIDE_NAME,
     PREF_SHOULD_EXPOSE,
+    PREF_TTS_DEFAULT_VOICE,
     PREF_USERNAME,
     InvalidTrustedNetworks,
     InvalidTrustedProxies,
@@ -86,6 +88,7 @@ class CloudPreferences:
         google_report_state=UNDEFINED,
         alexa_default_expose=UNDEFINED,
         google_default_expose=UNDEFINED,
+        tts_default_voice=UNDEFINED,
     ):
         """Update user preferences."""
         prefs = {**self._prefs}
@@ -103,6 +106,7 @@ class CloudPreferences:
             (PREF_GOOGLE_REPORT_STATE, google_report_state),
             (PREF_ALEXA_DEFAULT_EXPOSE, alexa_default_expose),
             (PREF_GOOGLE_DEFAULT_EXPOSE, google_default_expose),
+            (PREF_TTS_DEFAULT_VOICE, tts_default_voice),
         ):
             if value is not UNDEFINED:
                 prefs[key] = value
@@ -203,6 +207,7 @@ class CloudPreferences:
             PREF_GOOGLE_ENTITY_CONFIGS: self.google_entity_configs,
             PREF_GOOGLE_REPORT_STATE: self.google_report_state,
             PREF_GOOGLE_SECURE_DEVICES_PIN: self.google_secure_devices_pin,
+            PREF_TTS_DEFAULT_VOICE: self.tts_default_voice,
         }
 
     @property
@@ -278,6 +283,11 @@ class CloudPreferences:
     def cloudhooks(self):
         """Return the published cloud webhooks."""
         return self._prefs.get(PREF_CLOUDHOOKS, {})
+
+    @property
+    def tts_default_voice(self):
+        """Return the default TTS voice."""
+        return self._prefs.get(PREF_TTS_DEFAULT_VOICE, DEFAULT_TTS_DEFAULT_VOICE)
 
     async def get_cloud_user(self) -> str:
         """Return ID from Home Assistant Cloud system user."""

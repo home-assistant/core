@@ -1,4 +1,6 @@
 """Test the Risco config flow."""
+from unittest.mock import PropertyMock, patch
+
 import pytest
 import voluptuous as vol
 
@@ -9,7 +11,6 @@ from homeassistant.components.risco.config_flow import (
 )
 from homeassistant.components.risco.const import DOMAIN
 
-from tests.async_mock import PropertyMock, patch
 from tests.common import MockConfigEntry
 
 TEST_SITE_NAME = "test-site-name"

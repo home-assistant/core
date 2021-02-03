@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse",
+            "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen"
+        },
+        "create_entry": {
+            "default": "Vellykket godkjenning"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Velg godkjenningsmetode"
+            }
+        }
+    },
+    "title": ""
+}

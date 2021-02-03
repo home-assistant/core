@@ -81,12 +81,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(properties["id"])
         return await self.async_step_user()
 
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        await self.async_set_unique_id(user_input[CONF_USERNAME])
-        self._abort_if_unique_id_configured()
-        return await self.async_step_user(user_input)
-
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""

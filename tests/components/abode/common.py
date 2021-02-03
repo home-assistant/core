@@ -1,9 +1,10 @@
 """Common methods used across tests for Abode."""
+from unittest.mock import patch
+
 from homeassistant.components.abode import DOMAIN as ABODE_DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
