@@ -43,7 +43,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
+
         if user_input is not None:
+            for entry in self._async_current_entries():
+                if entry.data[CONF_USERNAME] == user_input[CONF_USERNAME]:
+                    return self.async_abort(reason="already_configured")
+
             try:
                 info = await validate_input(self.hass, user_input)
 
