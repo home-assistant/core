@@ -537,7 +537,6 @@ async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integrati
     # Instead of using resolve_from_root we use the cache of custom
     # components to find the integration.
     integration = (await async_get_custom_components(hass)).get(domain)
-    _LOGGER.critical(integration)
     if integration is not None:
         _LOGGER.warning(CUSTOM_WARNING, domain)
         if integration.manifest.get("version") is None:
