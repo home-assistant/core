@@ -169,6 +169,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         # Z-Wave uses one list for both modes and presets.
         # Iterate over all Z-Wave ThermostatModes and extract the hvac modes and presets.
         if self._current_mode is None:
+            self._hvac_modes = {
+                ZW_HVAC_MODE_MAP[ThermostatMode.HEAT]: ThermostatMode.HEAT
+            }
             return
         for mode_id, mode_name in self._current_mode.metadata.states.items():
             mode_id = int(mode_id)
