@@ -9,7 +9,6 @@ from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -54,14 +53,6 @@ class ZWaveBaseEntity(Entity):
             self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed)
         )
 
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self.config_entry.entry_id}_connection_state",
-                self.async_write_ha_state,
-            )
-        )
-
     @property
     def device_info(self) -> dict:
         """Return device information for the device registry."""
@@ -92,7 +83,13 @@ class ZWaveBaseEntity(Entity):
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        return self.client.connected and bool(self.info.node.ready)
+        return (
+            self.client.connected
+            and bool(self.info.node.ready)
+            # a None value indicates something wrong with the device,
+            # or the value is simply not yet there (it will arrive later).
+            and self.info.primary_value.value is not None
+        )
 
     @callback
     def _value_changed(self, event_data: dict) -> None:
