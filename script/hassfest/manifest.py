@@ -2,9 +2,10 @@
 from typing import Dict
 from urllib.parse import urlparse
 
-from homeassistant.loader import validate_custom_integration_version
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
+
+from homeassistant.loader import validate_custom_integration_version
 
 from .model import Integration
 
