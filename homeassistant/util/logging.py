@@ -33,6 +33,9 @@ class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
     def emit(self, record: logging.LogRecord) -> None:
         """Emit a log record."""
         try:
+            if type(record.args) is tuple:
+                # Stringify the record args so they cannot change before they are logged.
+                record.args = tuple([str(arg) for arg in record.args])
             self.enqueue(record)
         except Exception:  # pylint: disable=broad-except
             self.handleError(record)
