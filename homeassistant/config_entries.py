@@ -960,8 +960,9 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             return config_entries
 
         return [
-            entry for entry in config_entries
-            if entry.source not in (SOURCE_USER, SOURCE_IGNORE)
+            entry
+            for entry in config_entries
+            if self.source != SOURCE_USER or entry.source != SOURCE_IGNORE
         ]
 
     @callback
