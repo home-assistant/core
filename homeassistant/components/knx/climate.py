@@ -2,7 +2,7 @@
 from typing import List, Optional
 
 from xknx.devices import Climate as XknxClimate
-from xknx.dpt import HVACControllerMode, HVACOperationMode
+from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (

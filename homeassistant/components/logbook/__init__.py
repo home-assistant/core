@@ -93,6 +93,7 @@ EVENT_COLUMNS = [
     Events.time_fired,
     Events.context_id,
     Events.context_user_id,
+    Events.context_parent_id,
 ]
 
 SCRIPT_AUTOMATION_EVENTS = [EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED]
@@ -320,16 +321,14 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
                 if event.context_user_id:
                     data["context_user_id"] = event.context_user_id
 
-                context_event = context_lookup.get(event.context_id)
-                if context_event and context_event != event:
-                    _augment_data_with_context(
-                        data,
-                        entity_id,
-                        event,
-                        context_event,
-                        entity_attr_cache,
-                        external_events,
-                    )
+                _augment_data_with_context(
+                    data,
+                    entity_id,
+                    event,
+                    context_lookup,
+                    entity_attr_cache,
+                    external_events,
+                )
 
                 yield data
 
@@ -340,16 +339,15 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
                 data["domain"] = domain
                 if event.context_user_id:
                     data["context_user_id"] = event.context_user_id
-                context_event = context_lookup.get(event.context_id)
-                if context_event:
-                    _augment_data_with_context(
-                        data,
-                        data.get(ATTR_ENTITY_ID),
-                        event,
-                        context_event,
-                        entity_attr_cache,
-                        external_events,
-                    )
+
+                _augment_data_with_context(
+                    data,
+                    data.get(ATTR_ENTITY_ID),
+                    event,
+                    context_lookup,
+                    entity_attr_cache,
+                    external_events,
+                )
                 yield data
 
             elif event.event_type == EVENT_HOMEASSISTANT_START:
@@ -397,16 +395,14 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
                 if event.context_user_id:
                     data["context_user_id"] = event.context_user_id
 
-                context_event = context_lookup.get(event.context_id)
-                if context_event and context_event != event:
-                    _augment_data_with_context(
-                        data,
-                        entity_id,
-                        event,
-                        context_event,
-                        entity_attr_cache,
-                        external_events,
-                    )
+                _augment_data_with_context(
+                    data,
+                    entity_id,
+                    event,
+                    context_lookup,
+                    entity_attr_cache,
+                    external_events,
+                )
 
                 yield data
 
@@ -597,16 +593,27 @@ def _keep_event(hass, event, entities_filter):
 
 
 def _augment_data_with_context(
-    data, entity_id, event, context_event, entity_attr_cache, external_events
+    data, entity_id, event, context_lookup, entity_attr_cache, external_events
 ):
-    event_type = context_event.event_type
+    context_event = context_lookup.get(event.context_id)
 
-    # State change
-    context_entity_id = context_event.entity_id
-
-    if entity_id and context_entity_id == entity_id:
+    if not context_event:
         return
 
+    if event == context_event:
+        # This is the first event with the given ID. Was it directly caused by
+        # a parent event?
+        if event.context_parent_id:
+            context_event = context_lookup.get(event.context_parent_id)
+        # Ensure the (parent) context_event exists and is not the root cause of
+        # this log entry.
+        if not context_event or event == context_event:
+            return
+
+    event_type = context_event.event_type
+    context_entity_id = context_event.entity_id
+
+    # State change
     if context_entity_id:
         data["context_entity_id"] = context_entity_id
         data["context_entity_id_name"] = _entity_name_from_event(
@@ -672,6 +679,7 @@ class LazyEventPartialState:
         "domain",
         "context_id",
         "context_user_id",
+        "context_parent_id",
         "time_fired_minute",
     ]
 
@@ -687,6 +695,7 @@ class LazyEventPartialState:
         self.domain = self._row.domain
         self.context_id = self._row.context_id
         self.context_user_id = self._row.context_user_id
+        self.context_parent_id = self._row.context_parent_id
         self.time_fired_minute = self._row.time_fired.minute
 
     @property

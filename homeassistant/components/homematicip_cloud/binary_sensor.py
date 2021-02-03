@@ -12,6 +12,7 @@ from homematicip.aio.device import (
     AsyncMotionDetectorPushButton,
     AsyncPluggableMainsFailureSurveillance,
     AsyncPresenceDetectorIndoor,
+    AsyncRainSensor,
     AsyncRotaryHandleSensor,
     AsyncShutterContact,
     AsyncShutterContactMagnetic,
@@ -127,7 +128,9 @@ async def async_setup_entry(
             entities.append(HomematicipSmokeDetector(hap, device))
         if isinstance(device, AsyncWaterSensor):
             entities.append(HomematicipWaterDetector(hap, device))
-        if isinstance(device, (AsyncWeatherSensorPlus, AsyncWeatherSensorPro)):
+        if isinstance(
+            device, (AsyncRainSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
+        ):
             entities.append(HomematicipRainSensor(hap, device))
         if isinstance(
             device, (AsyncWeatherSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)

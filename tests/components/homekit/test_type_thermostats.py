@@ -1,4 +1,6 @@
 """Test different accessory types: Thermostats."""
+from unittest.mock import patch
+
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 import pytest
 
@@ -61,7 +63,6 @@ from homeassistant.const import (
 from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry
 
-from tests.async_mock import patch
 from tests.common import async_mock_service
 
 

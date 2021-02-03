@@ -1,11 +1,12 @@
 """Tests for the Spider config flow."""
+from unittest.mock import Mock, patch
+
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.spider.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 USERNAME = "spider-username"

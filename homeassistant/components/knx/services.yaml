@@ -10,3 +10,11 @@ send:
     type:
       description: "Optional. If set, the payload will not be sent as raw bytes, but encoded as given DPT. Knx sensor types are valid values (see https://www.home-assistant.io/integrations/sensor.knx)."
       example: "temperature"
+event_register:
+  description: "Add or remove single group address to knx_event filter for triggering `knx_event`s. Only addresses added with this service can be removed."
+  fields:
+    address:
+      description: "Group address that shall be added or removed."
+      example: "1/1/0"
+    remove:
+      description: "Optional. If `True` the group address will be removed. Defaults to `False`."

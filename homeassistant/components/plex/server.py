@@ -146,7 +146,7 @@ class PlexServer:
             available_servers = [
                 (x.name, x.clientIdentifier)
                 for x in self.account.resources()
-                if "server" in x.provides
+                if "server" in x.provides and x.presence
             ]
 
             if not available_servers:
@@ -592,6 +592,10 @@ class PlexServer:
     def create_playqueue(self, media, **kwargs):
         """Create playqueue on Plex server."""
         return plexapi.playqueue.PlayQueue.create(self._plex_server, media, **kwargs)
+
+    def get_playqueue(self, playqueue_id):
+        """Retrieve existing playqueue from Plex server."""
+        return plexapi.playqueue.PlayQueue.get(self._plex_server, playqueue_id)
 
     def fetch_item(self, item):
         """Fetch item from Plex server."""

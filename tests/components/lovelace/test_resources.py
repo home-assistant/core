@@ -1,11 +1,10 @@
 """Test Lovelace resources."""
 import copy
+from unittest.mock import patch
 import uuid
 
 from homeassistant.components.lovelace import dashboard, resources
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 RESOURCE_EXAMPLES = [
     {"type": "js", "url": "/local/bla.js"},

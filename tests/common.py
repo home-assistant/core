@@ -12,6 +12,7 @@ import os
 import pathlib
 import threading
 import time
+from unittest.mock import AsyncMock, Mock, patch
 import uuid
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa
@@ -59,8 +60,6 @@ from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as date_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.yaml.loader as yaml_loader
-
-from tests.async_mock import AsyncMock, Mock, patch
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []

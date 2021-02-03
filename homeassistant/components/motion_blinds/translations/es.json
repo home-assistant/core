@@ -5,14 +5,31 @@
             "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
             "connection_error": "No se pudo conectar"
         },
+        "error": {
+            "discovery_error": "No se pudo descubrir un detector de movimiento"
+        },
         "flow_title": "Motion Blinds",
         "step": {
+            "connect": {
+                "data": {
+                    "api_key": "Clave API"
+                },
+                "description": "Necesitar\u00e1 la clave de API de 16 caracteres, consulte https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key para obtener instrucciones",
+                "title": "Estores motorizados"
+            },
+            "select": {
+                "data": {
+                    "select_ip": "Direcci\u00f3n IP"
+                },
+                "description": "Ejecute la configuraci\u00f3n de nuevo si desea conectar detectores de movimiento adicionales",
+                "title": "Selecciona el detector de Movimiento que deseas conectar"
+            },
             "user": {
                 "data": {
                     "api_key": "Clave API",
                     "host": "Direcci\u00f3n IP"
                 },
-                "description": "Necesitar\u00e1s la Clave API de 16 caracteres, consulta https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key para instrucciones",
+                "description": "Con\u00e9ctate a tu Motion Gateway, si la direcci\u00f3n IP no est\u00e1 establecida, se utilitzar\u00e1 la detecci\u00f3n autom\u00e1tica",
                 "title": "Motion Blinds"
             }
         }

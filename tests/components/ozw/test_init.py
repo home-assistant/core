@@ -1,11 +1,12 @@
 """Test integration initialization."""
+from unittest.mock import patch
+
 from homeassistant import config_entries
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.ozw import DOMAIN, PLATFORMS, const
 
 from .common import setup_ozw
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -34,6 +35,26 @@ async def test_setup_entry_without_mqtt(hass):
     entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
+
+
+async def test_publish_without_mqtt(hass, caplog):
+    """Test publish without mqtt integration setup."""
+    with patch("homeassistant.components.ozw.OZWOptions") as ozw_options:
+        await setup_ozw(hass)
+
+        send_message = ozw_options.call_args[1]["send_message"]
+
+        mqtt_entries = hass.config_entries.async_entries("mqtt")
+        mqtt_entry = mqtt_entries[0]
+        await hass.config_entries.async_remove(mqtt_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert not hass.config_entries.async_entries("mqtt")
+
+        # Sending a message should not error with the MQTT integration not set up.
+        send_message("test_topic", "test_payload")
+
+    assert "MQTT integration is not set up" in caplog.text
 
 
 async def test_unload_entry(hass, generic_data, switch_msg, caplog):

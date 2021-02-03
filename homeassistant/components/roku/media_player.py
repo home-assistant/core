@@ -34,6 +34,7 @@ from homeassistant.const import (
     STATE_STANDBY,
 )
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.network import is_internal_request
 
 from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
 from .browse_media import build_item_response, library_payload
@@ -250,9 +251,19 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
+        is_internal = is_internal_request(self.hass)
 
-        def _get_thumbnail_url(*args, **kwargs):
-            return self.get_browse_image_url(*args, **kwargs)
+        def _get_thumbnail_url(
+            media_content_type, media_content_id, media_image_id=None
+        ):
+            if is_internal:
+                if media_content_type == MEDIA_TYPE_APP and media_content_id:
+                    return self.coordinator.roku.app_icon_url(media_content_id)
+                return None
+
+            return self.get_browse_image_url(
+                media_content_type, media_content_id, media_image_id
+            )
 
         if media_content_type in [None, "library"]:
             return library_payload(self.coordinator, _get_thumbnail_url)

@@ -1,5 +1,5 @@
 """The tests for the discovery component."""
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -9,7 +9,6 @@ from homeassistant.components import discovery
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, mock_coro
 
 # One might consider to "mock" services, but it's easy enough to just use

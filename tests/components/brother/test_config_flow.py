@@ -1,5 +1,6 @@
 """Define tests for the Brother Printer config flow."""
 import json
+from unittest.mock import patch
 
 from brother import SnmpError, UnsupportedModel
 
@@ -8,7 +9,6 @@ from homeassistant.components.brother.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_TYPE
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 CONFIG = {CONF_HOST: "localhost", CONF_TYPE: "laser"}

@@ -1,4 +1,6 @@
 """Test the Sonarr config flow."""
+from unittest.mock import patch
+
 from homeassistant.components.sonarr.const import (
     CONF_UPCOMING_DAYS,
     CONF_WANTED_MAX_ITEMS,
@@ -15,7 +17,6 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import patch
 from tests.components.sonarr import (
     HOST,
     MOCK_REAUTH_INPUT,

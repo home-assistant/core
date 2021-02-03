@@ -1,5 +1,6 @@
 """Test the Motion Blinds config flow."""
 import socket
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -7,8 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components.motion_blinds.config_flow import DEFAULT_GATEWAY_NAME
 from homeassistant.components.motion_blinds.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST
-
-from tests.async_mock import Mock, patch
 
 TEST_HOST = "1.2.3.4"
 TEST_HOST2 = "5.6.7.8"
