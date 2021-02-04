@@ -70,7 +70,7 @@ class SuplaMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             """Handle flow external step."""
             ais_dom = ais_cloud.AisCloudWS(self.hass)
-            json_ws_resp = ais_dom.key("supla_mqtt_client_id")
+            json_ws_resp = ais_dom.key("supla_mqtt_prod_client_id")
             self.client_id = json_ws_resp["key"]
             gate_id = ais_global.get_sercure_android_id_dom()
             auth_url = (
@@ -86,7 +86,7 @@ class SuplaMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ais_dom = ais_cloud.AisCloudWS(self.hass)
         json_ws_resp = await ais_dom.async_key("supla_mqtt_bridge_code")
         code = json_ws_resp["key"]
-        json_ws_resp = await ais_dom.async_key("supla_mqtt_secret")
+        json_ws_resp = await ais_dom.async_key("supla_mqtt_prod_secret")
         client_secret = json_ws_resp["key"]
         data = {
             "grant_type": "authorization_code",
