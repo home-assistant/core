@@ -166,6 +166,50 @@ async def test_cover(hass, aioclient_mock):
     )
     assert aioclient_mock.mock_calls[4][2] == {"stop": True}
 
+    # Verify service calls for legacy cover
+
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/1/state")
+
+    # Service open cover
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: "cover.level_controllable_cover"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[5][2] == {"on": False}
+
+    # Service close cover
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: "cover.level_controllable_cover"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[6][2] == {"on": True}
+
+    # Service set cover position
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: "cover.level_controllable_cover", ATTR_POSITION: 40},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[7][2] == {"bri": 152}
+
+    # Service stop cover movement
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: "cover.level_controllable_cover"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[8][2] == {"bri_inc": 0}
+
     # Test that a reported cover position of 255 (deconz-rest-api < 2.05.73) is interpreted correctly.
     assert hass.states.get("cover.deconz_old_brightness_cover").state == STATE_OPEN
 

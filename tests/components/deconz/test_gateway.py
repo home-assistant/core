@@ -93,6 +93,7 @@ def mock_deconz_put_request(aioclient_mock, config, path):
 async def setup_deconz_integration(
     hass,
     aioclient_mock=None,
+    *,
     config=ENTRY_CONFIG,
     options=ENTRY_OPTIONS,
     get_state_response=DECONZ_WEB_REQUEST,
@@ -114,11 +115,6 @@ async def setup_deconz_integration(
 
     if aioclient_mock:
         mock_deconz_request(aioclient_mock, config, get_state_response)
-        # aioclient_mock.get(
-        #     f"http://{config[CONF_HOST]}:{config[CONF_PORT]}/api/{config[CONF_API_KEY]}",
-        #     json=deepcopy(get_state_response),
-        #     headers={"content-type": CONTENT_TYPE_JSON},
-        # )
 
     with patch("pydeconz.DeconzSession.start", return_value=True):
         await hass.config_entries.async_setup(config_entry.entry_id)
