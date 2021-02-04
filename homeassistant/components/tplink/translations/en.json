@@ -5,9 +5,20 @@
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "step": {
-            "confirm": {
-                "description": "Do you want to setup TP-Link smart devices?"
+            "user": {
+                "data": {
+                    "dimmer": "Comma separated list of dimmers.",
+                    "discovery": "Discovery",
+                    "light": "Comma separated list of lights.",
+                    "retry_delay": "Retry Delay",
+                    "retry_max_attempts": "Retry Max Attempts",
+                    "strip": "Comma separated list of strips.",
+                    "switch": "Comma separated list of switches."
+                },
+                "description": "Do you want to start set up?",
+                "title": "Setup TP-Link Kasa Smart"
             }
         }
-    }
+    },
+    "title": "TP-Link Kasa Smart"
 }

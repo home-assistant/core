@@ -14,17 +14,16 @@ from pyHS100 import (
 
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN as TPLINK_DOMAIN
+from .const import (
+    CONF_DIMMER,
+    CONF_LIGHT,
+    CONF_RETRY_MAX_ATTEMPTS,
+    CONF_STRIP,
+    CONF_SWITCH,
+    DOMAIN as TPLINK_DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-ATTR_CONFIG = "config"
-CONF_DIMMER = "dimmer"
-CONF_DISCOVERY = "discovery"
-CONF_LIGHT = "light"
-CONF_STRIP = "strip"
-CONF_SWITCH = "switch"
 
 
 class SmartDevices:
@@ -112,7 +111,13 @@ def get_static_devices(config_data) -> SmartDevices:
     switches = []
 
     for type_ in [CONF_LIGHT, CONF_SWITCH, CONF_STRIP, CONF_DIMMER]:
-        for entry in config_data[type_]:
+        entry_list = []
+        if config_data[type_]:
+            if type(config_data[type_]) is list:
+                entry_list = config_data[type_].split(",").strip()
+            else:
+                entry_list = config_data[type_]
+        for entry in entry_list:
             host = entry["host"]
             try:
                 if type_ == CONF_LIGHT:

@@ -1,57 +1,21 @@
 """Component to embed TP-Link smart home devices."""
 import logging
 
-import voluptuous as vol
-
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .common import (
+from .common import SmartDevices, async_discover_devices, get_static_devices
+from .const import (
     ATTR_CONFIG,
-    CONF_DIMMER,
     CONF_DISCOVERY,
     CONF_LIGHT,
-    CONF_STRIP,
+    CONF_RETRY_DELAY,
+    CONF_RETRY_MAX_ATTEMPTS,
     CONF_SWITCH,
-    SmartDevices,
-    async_discover_devices,
-    get_static_devices,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "tplink"
-
-PLATFORMS = [CONF_LIGHT, CONF_SWITCH]
-
-TPLINK_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
-
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_LIGHT, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_SWITCH, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_STRIP, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_DIMMER, default=[]): vol.All(
-                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
-                ),
-                vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 async def async_setup(hass, config):
@@ -73,7 +37,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigType):
     """Set up TPLink from a config entry."""
-    config_data = hass.data[DOMAIN].get(ATTR_CONFIG)
+    config_data = config_entry.data
 
     # These will contain the initialized devices
     lights = hass.data[DOMAIN][CONF_LIGHT] = []
@@ -86,6 +50,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigType):
 
         lights.extend(static_devices.lights)
         switches.extend(static_devices.switches)
+
+        hass.data[DOMAIN][CONF_RETRY_DELAY] = config_data[CONF_RETRY_DELAY]
+        hass.data[DOMAIN][CONF_RETRY_MAX_ATTEMPTS] = config_data[
+            CONF_RETRY_MAX_ATTEMPTS
+        ]
+    hass.data[DOMAIN]["add_attempt"] = 0
 
     # Add discovered devices
     if config_data is None or config_data[CONF_DISCOVERY]:

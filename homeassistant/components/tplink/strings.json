@@ -1,8 +1,21 @@
 {
   "config": {
     "step": {
+      "user": {
+        "title": "Setup TP-Link Kasa Smart",
+        "description": "[%key:common::config_flow::description::confirm_setup%]",
+        "data": {
+          "light": "Comma separated list of lights.",
+          "dimmer": "Comma separated list of dimmers.",
+          "strip": "Comma separated list of strips.",
+          "switch": "Comma separated list of switches.",
+          "discovery": "Discovery",
+          "retry_delay": "Retry Delay",
+          "retry_max_attempts": "Retry Max Attempts"
+        }
+      },
       "confirm": {
-        "description": "Do you want to setup TP-Link smart devices?"
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
     "abort": {
