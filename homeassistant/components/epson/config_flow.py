@@ -2,10 +2,10 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 
 from . import validate_projector
-from .const import DOMAIN
+from .const import DOMAIN, TYPE_HTTP
 from .exceptions import CannotConnect
 
 DATA_SCHEMA = vol.Schema(
@@ -13,6 +13,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_NAME, default=DOMAIN): str,
         vol.Required(CONF_PORT, default=80): int,
+        vol.Optional(CONF_TYPE, default=TYPE_HTTP): str,
     }
 )
 
@@ -33,7 +34,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_projector(
-                    self.hass, user_input[CONF_HOST], user_input[CONF_PORT]
+                    self.hass,
+                    user_input[CONF_HOST],
+                    user_input[CONF_PORT],
+                    user_input[CONF_TYPE],
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"

@@ -4,5 +4,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/epson",
   "requirements": ["epson-projector==0.2.3"],
-  "codeowners": ["@pszafer"]
+  "codeowners": ["@pszafer", "@vzahradnik"]
 }

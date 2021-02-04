@@ -7,7 +7,7 @@ from epson_projector.const import POWER, STATE_UNAVAILABLE as EPSON_STATE_UNAVAI
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_PLATFORM
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -19,12 +19,13 @@ PLATFORMS = [MEDIA_PLAYER_PLATFORM]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_projector(hass: HomeAssistant, host, port):
+async def validate_projector(hass: HomeAssistant, host, port, type):
     """Validate the given host and port allows us to connect."""
     epson_proj = Projector(
         host=host,
         websession=async_get_clientsession(hass, verify_ssl=False),
         port=port,
+        type=type,
     )
     _power = await epson_proj.get_property(POWER)
     if not _power or _power == EPSON_STATE_UNAVAILABLE:
@@ -42,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up epson from a config entry."""
     try:
         projector = await validate_projector(
-            hass, entry.data[CONF_HOST], entry.data[CONF_PORT]
+            hass, entry.data[CONF_HOST], entry.data[CONF_PORT], entry.data[CONF_TYPE]
         )
     except CannotConnect:
         _LOGGER.warning("Cannot connect to projector %s", entry.data[CONF_HOST])

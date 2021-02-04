@@ -37,11 +37,18 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_TYPE,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 
-from .const import ATTR_CMODE, DEFAULT_NAME, DOMAIN, SERVICE_SELECT_CMODE
+from .const import ATTR_CMODE, DEFAULT_NAME, DOMAIN, SERVICE_SELECT_CMODE, TYPE_HTTP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +67,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=80): cv.port,
+        vol.Optional(CONF_TYPE, default=TYPE_HTTP): cv.string,
     }
 )
 
