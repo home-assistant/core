@@ -76,7 +76,7 @@ class Fan(HomeAccessory):
         self.char_speed = None
         self.char_swing = None
         self.char_target_state = None
-        self.preset_mode_chars = []
+        self.preset_mode_chars = {}
 
         if CHAR_ROTATION_DIRECTION in chars:
             self.char_direction = serv_fan.configure_char(
