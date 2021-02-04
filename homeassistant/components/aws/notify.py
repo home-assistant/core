@@ -20,12 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.json import JSONEncoder
 
-from .const import (
-    CONF_CONTEXT,
-    CONF_CREDENTIAL_NAME,
-    CONF_REGION,
-    DATA_SESSIONS,
-)
+from .const import CONF_CONTEXT, CONF_CREDENTIAL_NAME, CONF_REGION, DATA_SESSIONS
 
 _LOGGER = logging.getLogger(__name__)
 
