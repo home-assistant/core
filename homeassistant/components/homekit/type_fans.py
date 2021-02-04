@@ -92,6 +92,7 @@ class Fan(HomeAccessory):
             preset_modes = state.attributes.get(ATTR_PRESET_MODES, [])
             for preset_mode in preset_modes:
                 preset_serv = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
+                serv_fan.add_linked_service(preset_serv)
                 preset_serv.configure_char(
                     CHAR_NAME, value=f"{self.display_name} {preset_mode}"
                 )
@@ -103,6 +104,9 @@ class Fan(HomeAccessory):
                     ),
                 )
             if preset_modes:
+                _LOGGER.warning("Fan service: %s", serv_fan)
+                _LOGGER.warning("Fan service: %s", serv_fan.char)
+
                 self.char_target_state = serv_fan.configure_char(CHAR_TARGET_FAN_STATE)
 
         if CHAR_SWING_MODE in chars:
