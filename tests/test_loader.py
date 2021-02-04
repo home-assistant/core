@@ -130,7 +130,7 @@ async def test_custom_component_name(hass):
 
 async def test_log_warning_custom_component(hass, caplog):
     """Test that we log a warning when loading a custom component."""
-    hass.components.test_standalone
+    await loader.async_get_integration(hass, "test_standalone")
     assert "You are using a custom integration test_standalone" in caplog.text
 
     await loader.async_get_integration(hass, "test")
@@ -170,9 +170,9 @@ async def test_custom_integration_missing_version(hass, caplog):
 
 async def test_no_version_warning_for_none_custom_integrations(hass, caplog):
     """Test that we do not log a warning when core integrations are missing a version."""
-    await loader.async_get_integration(hass, "test")
+    await loader.async_get_integration(hass, "hue")
     assert (
-        "No 'version' key in the manifest file for custom integration 'test'."
+        "No 'version' key in the manifest file for custom integration 'hue'."
         not in caplog.text
     )
 

@@ -62,14 +62,14 @@ CUSTOM_WARNING_VERSION_MISSING = (
     "custom integration '%s'. This will cause a "
     "future version of Home Assistant to block "
     "this custom integration. "
-    "Please report this to the maintainer of %s"
+    "Please report this to the maintainer of '%s'"
 )
 CUSTOM_WARNING_VERSION_TYPE = (
     "'%s' is not a valid version for "
     "custom integration '%s'. This will cause a "
     "future version of Home Assistant to block "
     "this custom integration. "
-    "Please report this to the maintainer of %s"
+    "Please report this to the maintainer of '%s'"
 )
 _UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular dependency
 
@@ -538,17 +538,7 @@ async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integrati
     # components to find the integration.
     integration = (await async_get_custom_components(hass)).get(domain)
     if integration is not None:
-        _LOGGER.warning(CUSTOM_WARNING, domain)
-        if integration.manifest.get("version") is None:
-            _LOGGER.warning(CUSTOM_WARNING_VERSION_MISSING, domain, domain)
-        else:
-            if not validate_custom_integration_version(integration.manifest["version"]):
-                _LOGGER.warning(
-                    CUSTOM_WARNING_VERSION_TYPE,
-                    domain,
-                    integration.manifest["version"],
-                    domain,
-                )
+        custom_integration_warning(integration)
         cache[domain] = integration
         event.set()
         return integration
@@ -566,6 +556,7 @@ async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integrati
 
     integration = Integration.resolve_legacy(hass, domain)
     if integration is not None:
+        custom_integration_warning(integration)
         cache[domain] = integration
     else:
         # Remove event from cache.
@@ -639,9 +630,6 @@ def _load_file(
                 continue
 
             cache[comp_or_platform] = module
-
-            if module.__name__.startswith(PACKAGE_CUSTOM_COMPONENTS):
-                _LOGGER.warning(CUSTOM_WARNING, comp_or_platform)
 
             return module
 
@@ -802,3 +790,24 @@ def validate_custom_integration_version(version: str) -> bool:
         AwesomeVersionStrategy.BUILDVER,
         AwesomeVersionStrategy.PEP440,
     )
+
+
+def custom_integration_warning(integration: Integration) -> None:
+    """Create logs for custom integrations."""
+    if not integration.pkg_path.startswith(PACKAGE_CUSTOM_COMPONENTS):
+        return None
+
+    _LOGGER.warning(CUSTOM_WARNING, integration.domain)
+
+    if integration.manifest.get("version") is None:
+        _LOGGER.warning(
+            CUSTOM_WARNING_VERSION_MISSING, integration.domain, integration.domain
+        )
+    else:
+        if not validate_custom_integration_version(integration.manifest["version"]):
+            _LOGGER.warning(
+                CUSTOM_WARNING_VERSION_TYPE,
+                integration.domain,
+                integration.manifest["version"],
+                integration.domain,
+            )
