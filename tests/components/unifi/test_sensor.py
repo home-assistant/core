@@ -14,7 +14,6 @@ from homeassistant.components.unifi.const import (
     DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.setup import async_setup_component
 
 from .test_controller import setup_unifi_integration
 
@@ -48,17 +47,6 @@ CLIENTS = [
         "uptime": 1600094505,
     },
 ]
-
-
-async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a controller."""
-    assert (
-        await async_setup_component(
-            hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: {"platform": UNIFI_DOMAIN}}
-        )
-        is True
-    )
-    assert UNIFI_DOMAIN not in hass.data
 
 
 async def test_no_clients(hass, aioclient_mock):

@@ -17,7 +17,6 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.components.unifi.switch import POE_SWITCH
 from homeassistant.helpers import entity_registry
-from homeassistant.setup import async_setup_component
 
 from .test_controller import (
     CONTROLLER_HOST,
@@ -280,17 +279,6 @@ DPI_APPS = [
         "site_id": "name",
     }
 ]
-
-
-async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a controller."""
-    assert (
-        await async_setup_component(
-            hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": UNIFI_DOMAIN}}
-        )
-        is True
-    )
-    assert UNIFI_DOMAIN not in hass.data
 
 
 async def test_no_clients(hass, aioclient_mock):

@@ -25,7 +25,6 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .test_controller import ENTRY_CONFIG, setup_unifi_integration
@@ -149,17 +148,6 @@ EVENT_DEVICE_2_UPGRADED = {
     "version_from": {DEVICE_2["version"]},
     "version_to": "4.3.13.11253",
 }
-
-
-async def test_platform_manually_configured(hass):
-    """Test that nothing happens when configuring unifi through device tracker platform."""
-    assert (
-        await async_setup_component(
-            hass, TRACKER_DOMAIN, {TRACKER_DOMAIN: {"platform": UNIFI_DOMAIN}}
-        )
-        is False
-    )
-    assert UNIFI_DOMAIN not in hass.data
 
 
 async def test_no_clients(hass, aioclient_mock):
