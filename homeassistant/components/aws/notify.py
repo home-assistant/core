@@ -12,24 +12,21 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PLATFORM,
+    CONF_PROFILE_NAME,
+    CONF_SERVICE,
+)
 from homeassistant.helpers.json import JSONEncoder
 
-from .const import (
-    CONF_CONTEXT,
-    CONF_CREDENTIAL_NAME,
-    CONF_PROFILE_NAME,
-    CONF_REGION,
-    CONF_SERVICE,
-    DATA_SESSIONS,
-)
+from .const import CONF_CONTEXT, CONF_CREDENTIAL_NAME, CONF_REGION, DATA_SESSIONS
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def get_available_regions(hass, service):
     """Get available regions for a service."""
-
     session = aiobotocore.get_session()
     # get_available_regions is not a coroutine since it does not perform
     # network I/O. But it still perform file I/O heavily, so put it into
