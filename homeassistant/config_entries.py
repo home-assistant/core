@@ -905,7 +905,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         if self.unique_id is None:
             return
 
-        for entry in self._async_current_entries():
+        for entry in self._async_current_entries(include_ignore=True):
             if entry.unique_id == self.unique_id:
                 if updates is not None:
                     changed = self.hass.config_entries.async_update_entry(
@@ -949,17 +949,25 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 if progress["context"].get("unique_id") == DEFAULT_DISCOVERY_UNIQUE_ID:
                     self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
-        for entry in self._async_current_entries():
+        for entry in self._async_current_entries(include_ignore=True):
             if entry.unique_id == unique_id:
                 return entry
 
         return None
 
     @callback
-    def _async_current_entries(self) -> List[ConfigEntry]:
-        """Return current entries."""
+    def _async_current_entries(self, include_ignore: bool = False) -> List[ConfigEntry]:
+        """Return current entries.
+
+        If the flow is user initiated, filter out ignored entries unless include_ignore is True.
+        """
         assert self.hass is not None
-        return self.hass.config_entries.async_entries(self.handler)
+        config_entries = self.hass.config_entries.async_entries(self.handler)
+
+        if include_ignore or self.source != SOURCE_USER:
+            return config_entries
+
+        return [entry for entry in config_entries if entry.source != SOURCE_IGNORE]
 
     @callback
     def _async_current_ids(self, include_ignore: bool = True) -> Set[Optional[str]]:
