@@ -53,6 +53,11 @@ class HarmonyActivitySwitch(ConnectionStateMixin, SwitchEntity):
         return self._data.device_info(DOMAIN)
 
     @property
+    def device_info(self):
+        """Return device info."""
+        return self._data.device_info(DOMAIN)
+
+    @property
     def is_on(self):
         """Return if the current activity is the one for this switch."""
         _, activity_name = self._data.current_activity
