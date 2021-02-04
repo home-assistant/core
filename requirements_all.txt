@@ -2052,7 +2052,7 @@ slackclient==2.5.0
 sleepyq==0.8.1
 
 # homeassistant.components.xmpp
-slixmpp==1.6.0
+slixmpp==1.7.0
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.4.0
