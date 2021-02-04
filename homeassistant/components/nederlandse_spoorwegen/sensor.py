@@ -239,7 +239,7 @@ class NSDepartureSensor(Entity):
                 trip_time = offset_time.strftime("%d-%m-%Y %H:%M")
             else:
                 trip_time = datetime.now().strftime("%d-%m-%Y %H:%M")
-                
+
         try:
             self._trips = self._nsapi.get_trips(
                 trip_time, self._departure, self._via, self._heading, True, 0, 2
