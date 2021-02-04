@@ -2,7 +2,6 @@
 
 This includes tests for all mock object types.
 """
-from datetime import timedelta
 from unittest.mock import Mock, patch
 
 import pytest
@@ -11,7 +10,6 @@ from homeassistant.components.homekit.accessories import (
     HomeAccessory,
     HomeBridge,
     HomeDriver,
-    debounce,
 )
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
@@ -45,41 +43,8 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
-import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed, async_mock_service
-
-
-async def test_debounce(hass):
-    """Test add_timeout decorator function."""
-
-    def demo_func(*args):
-        nonlocal arguments, counter
-        counter += 1
-        arguments = args
-
-    arguments = None
-    counter = 0
-    mock = Mock(hass=hass, debounce={})
-
-    debounce_demo = debounce(demo_func)
-    assert debounce_demo.__name__ == "demo_func"
-    now = dt_util.utcnow()
-
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await hass.async_add_executor_job(debounce_demo, mock, "value")
-    async_fire_time_changed(hass, now + timedelta(seconds=3))
-    await hass.async_block_till_done()
-    assert counter == 1
-    assert len(arguments) == 2
-
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await hass.async_add_executor_job(debounce_demo, mock, "value")
-        await hass.async_add_executor_job(debounce_demo, mock, "value")
-
-    async_fire_time_changed(hass, now + timedelta(seconds=3))
-    await hass.async_block_till_done()
-    assert counter == 2
+from tests.common import async_mock_service
 
 
 async def test_accessory_cancels_track_state_change_on_stop(hass, hk_driver):

@@ -6,7 +6,7 @@ import logging
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from .const import BSH_OPERATION_STATE, DOMAIN
 from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ class HomeConnectSensor(HomeConnectEntity):
         return self._state is not None
 
     async def async_update(self):
-        """Update the sensos status."""
+        """Update the sensor's status."""
         status = self.device.appliance.status
         if self._key not in status:
             self._state = None
@@ -74,6 +74,11 @@ class HomeConnectSensor(HomeConnectEntity):
                     ).isoformat()
             else:
                 self._state = status[self._key].get("value")
+                if self._key == BSH_OPERATION_STATE:
+                    # Value comes back as an enum, we only really care about the
+                    # last part, so split it off
+                    # https://developer.home-connect.com/docs/status/operation_state
+                    self._state = self._state.split(".")[-1]
         _LOGGER.debug("Updated, new state: %s", self._state)
 
     @property

@@ -23,7 +23,7 @@
       },
       "link_manual": {
         "title": "Enter Password",
-        "description": "The password could not be retrivied from the device automatically. Please follow the steps outlined in the documentation at: {auth_help_url}",
+        "description": "The password could not be retrieved from the device automatically. Please follow the steps outlined in the documentation at: {auth_help_url}",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         }

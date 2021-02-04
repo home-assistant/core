@@ -4,7 +4,7 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
@@ -13,7 +13,7 @@
                 "data": {
                     "api_key": "API-Schl\u00fcssel"
                 },
-                "description": "Sie ben\u00f6tigen den API-Schl\u00fcssel von https://app.rach.io/. W\u00e4hlen Sie \"Kontoeinstellungen\" und klicken Sie dann auf \"API-SCHL\u00dcSSEL ERHALTEN\".",
+                "description": "Du ben\u00f6tigst den API-Schl\u00fcssel von https://app.rach.io/. Gehe in die Einstellungen und klicke auf \"API-SCHL\u00dcSSEL ANFORDERN\".",
                 "title": "Stellen Sie eine Verbindung zu Ihrem Rachio-Ger\u00e4t her"
             }
         }
@@ -22,7 +22,7 @@
         "step": {
             "init": {
                 "data": {
-                    "manual_run_mins": "Wie lange, in Minuten, um eine Station einzuschalten, wenn der Schalter aktiviert ist."
+                    "manual_run_mins": "Wie viele Minuten es laufen soll, wenn ein Zonen-Schalter aktiviert wird"
                 }
             }
         }

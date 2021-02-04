@@ -67,7 +67,6 @@ from homeassistant.util import json as json_util
 from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
 
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
-from tests.components.homekit.common import patch_debounce
 
 IP_ADDRESS = "127.0.0.1"
 
@@ -87,14 +86,6 @@ def device_reg_fixture(hass):
 def entity_reg_fixture(hass):
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
-
-
-@pytest.fixture(name="debounce_patcher", scope="module")
-def debounce_patcher_fixture():
-    """Patch debounce method."""
-    patcher = patch_debounce()
-    yield patcher.start()
-    patcher.stop()
 
 
 async def test_setup_min(hass, mock_zeroconf):
@@ -210,7 +201,7 @@ async def test_homekit_setup(hass, hk_driver, mock_zeroconf):
     hass.states.async_set("light.demo2", "on")
     zeroconf_mock = MagicMock()
     with patch(
-        f"{PATH_HOMEKIT}.accessories.HomeDriver", return_value=hk_driver
+        f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver
     ) as mock_driver, patch("homeassistant.util.get_local_ip") as mock_ip:
         mock_ip.return_value = IP_ADDRESS
         await hass.async_add_executor_job(homekit.setup, zeroconf_mock)
@@ -254,9 +245,7 @@ async def test_homekit_setup_ip_address(hass, hk_driver, mock_zeroconf):
 
     mock_zeroconf = MagicMock()
     path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
-    with patch(
-        f"{PATH_HOMEKIT}.accessories.HomeDriver", return_value=hk_driver
-    ) as mock_driver:
+    with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
         await hass.async_add_executor_job(homekit.setup, mock_zeroconf)
     mock_driver.assert_called_with(
         hass,
@@ -292,9 +281,7 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver, mock_zeroconf):
 
     zeroconf_instance = MagicMock()
     path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
-    with patch(
-        f"{PATH_HOMEKIT}.accessories.HomeDriver", return_value=hk_driver
-    ) as mock_driver:
+    with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
         await hass.async_add_executor_job(homekit.setup, zeroconf_instance)
     mock_driver.assert_called_with(
         hass,
@@ -485,7 +472,7 @@ async def test_homekit_entity_glob_filter(hass, mock_zeroconf):
         mock_get_acc.reset_mock()
 
 
-async def test_homekit_start(hass, hk_driver, device_reg, debounce_patcher):
+async def test_homekit_start(hass, hk_driver, device_reg):
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
 
@@ -573,9 +560,7 @@ async def test_homekit_start(hass, hk_driver, device_reg, debounce_patcher):
     assert len(device_reg.devices) == 1
 
 
-async def test_homekit_start_with_a_broken_accessory(
-    hass, hk_driver, debounce_patcher, mock_zeroconf
-):
+async def test_homekit_start_with_a_broken_accessory(hass, hk_driver, mock_zeroconf):
     """Test HomeKit start method."""
     pin = b"123-45-678"
     entry = MockConfigEntry(
@@ -746,7 +731,7 @@ async def test_homekit_too_many_accessories(hass, hk_driver, caplog, mock_zeroco
     with patch("pyhap.accessory_driver.AccessoryDriver.start_service"), patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory"
     ), patch(f"{PATH_HOMEKIT}.show_setup_message"), patch(
-        f"{PATH_HOMEKIT}.accessories.HomeBridge", _mock_bridge
+        f"{PATH_HOMEKIT}.HomeBridge", _mock_bridge
     ):
         await homekit.async_start()
         await hass.async_block_till_done()
@@ -754,7 +739,7 @@ async def test_homekit_too_many_accessories(hass, hk_driver, caplog, mock_zeroco
 
 
 async def test_homekit_finds_linked_batteries(
-    hass, hk_driver, debounce_patcher, device_reg, entity_reg, mock_zeroconf
+    hass, hk_driver, device_reg, entity_reg, mock_zeroconf
 ):
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
@@ -840,7 +825,7 @@ async def test_homekit_finds_linked_batteries(
 
 
 async def test_homekit_async_get_integration_fails(
-    hass, hk_driver, debounce_patcher, device_reg, entity_reg, mock_zeroconf
+    hass, hk_driver, device_reg, entity_reg, mock_zeroconf
 ):
     """Test that we continue if async_get_integration fails."""
     entry = await async_init_integration(hass)
@@ -1035,10 +1020,7 @@ async def test_raise_config_entry_not_ready(hass, mock_zeroconf):
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.homekit.port_is_available",
-        return_value=False,
-    ):
+    with patch(f"{PATH_HOMEKIT}.HomeKit.setup", side_effect=OSError):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -1072,7 +1054,7 @@ def _write_data(path: str, data: Dict) -> None:
 
 
 async def test_homekit_ignored_missing_devices(
-    hass, hk_driver, debounce_patcher, device_reg, entity_reg, mock_zeroconf
+    hass, hk_driver, device_reg, entity_reg, mock_zeroconf
 ):
     """Test HomeKit handles a device in the entity registry but missing from the device registry."""
     entry = await async_init_integration(hass)
@@ -1153,7 +1135,7 @@ async def test_homekit_ignored_missing_devices(
 
 
 async def test_homekit_finds_linked_motion_sensors(
-    hass, hk_driver, debounce_patcher, device_reg, entity_reg, mock_zeroconf
+    hass, hk_driver, device_reg, entity_reg, mock_zeroconf
 ):
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
@@ -1228,7 +1210,7 @@ async def test_homekit_finds_linked_motion_sensors(
 
 
 async def test_homekit_finds_linked_humidity_sensors(
-    hass, hk_driver, debounce_patcher, device_reg, entity_reg, mock_zeroconf
+    hass, hk_driver, device_reg, entity_reg, mock_zeroconf
 ):
     """Test HomeKit start method."""
     entry = await async_init_integration(hass)
@@ -1376,9 +1358,7 @@ def _get_fixtures_base_path():
     return os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
 
-async def test_homekit_start_in_accessory_mode(
-    hass, hk_driver, device_reg, debounce_patcher
-):
+async def test_homekit_start_in_accessory_mode(hass, hk_driver, device_reg):
     """Test HomeKit start method in accessory mode."""
     entry = await async_init_integration(hass)
 

@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_VIBRATION,
+    STATE_ON,
     BinarySensorEntity,
 )
 
@@ -17,6 +18,7 @@ from .entity import (
     RestAttributeDescription,
     ShellyBlockAttributeEntity,
     ShellyRestAttributeEntity,
+    ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
 )
@@ -98,13 +100,25 @@ REST_SENSORS = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for device."""
-    await async_setup_entry_attribute_entities(
-        hass, config_entry, async_add_entities, SENSORS, ShellyBinarySensor
-    )
-
-    await async_setup_entry_rest(
-        hass, config_entry, async_add_entities, REST_SENSORS, ShellyRestBinarySensor
-    )
+    if config_entry.data["sleep_period"]:
+        await async_setup_entry_attribute_entities(
+            hass,
+            config_entry,
+            async_add_entities,
+            SENSORS,
+            ShellySleepingBinarySensor,
+        )
+    else:
+        await async_setup_entry_attribute_entities(
+            hass, config_entry, async_add_entities, SENSORS, ShellyBinarySensor
+        )
+        await async_setup_entry_rest(
+            hass,
+            config_entry,
+            async_add_entities,
+            REST_SENSORS,
+            ShellyRestBinarySensor,
+        )
 
 
 class ShellyBinarySensor(ShellyBlockAttributeEntity, BinarySensorEntity):
@@ -123,3 +137,17 @@ class ShellyRestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
     def is_on(self):
         """Return true if REST sensor state is on."""
         return bool(self.attribute_value)
+
+
+class ShellySleepingBinarySensor(
+    ShellySleepingBlockAttributeEntity, BinarySensorEntity
+):
+    """Represent a shelly sleeping binary sensor."""
+
+    @property
+    def is_on(self):
+        """Return true if sensor state is on."""
+        if self.block is not None:
+            return bool(self.attribute_value)
+
+        return self.last_state == STATE_ON
