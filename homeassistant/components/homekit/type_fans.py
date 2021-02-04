@@ -38,7 +38,6 @@ from .const import (
     CHAR_ROTATION_DIRECTION,
     CHAR_ROTATION_SPEED,
     CHAR_SWING_MODE,
-    CHAR_TARGET_FAN_STATE,
     SERV_FANV2,
     SERV_SWITCH,
 )
@@ -68,8 +67,6 @@ class Fan(HomeAccessory):
             chars.append(CHAR_SWING_MODE)
         if features & SUPPORT_SET_SPEED:
             chars.append(CHAR_ROTATION_SPEED)
-        if preset_modes:
-            chars.append(CHAR_TARGET_FAN_STATE)
 
         serv_fan = self.add_preload_service(SERV_FANV2, chars)
         self.set_primary_service(serv_fan)
@@ -78,7 +75,6 @@ class Fan(HomeAccessory):
         self.char_direction = None
         self.char_speed = None
         self.char_swing = None
-        self.char_target_state = None
         self.preset_mode_chars = {}
 
         if CHAR_ROTATION_DIRECTION in chars:
@@ -93,7 +89,6 @@ class Fan(HomeAccessory):
             self.char_speed = serv_fan.configure_char(CHAR_ROTATION_SPEED, value=100)
 
         if preset_modes:
-            self.char_target_state = serv_fan.configure_char(CHAR_TARGET_FAN_STATE)
             for preset_mode in preset_modes:
                 preset_serv = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
                 serv_fan.add_linked_service(preset_serv)
@@ -103,7 +98,7 @@ class Fan(HomeAccessory):
                 self.preset_mode_chars[preset_mode] = preset_serv.configure_char(
                     CHAR_ON,
                     value=False,
-                    setter_callback=lambda value: self.set_preset_mode(
+                    setter_callback=lambda self, value: self.set_preset_mode(
                         preset_mode, value
                     ),
                 )
@@ -228,17 +223,8 @@ class Fan(HomeAccessory):
                 if self.char_swing.value != hk_oscillating:
                     self.char_swing.set_value(hk_oscillating)
 
-        char_target_state_hk_value = 0
         current_preset_mode = new_state.attributes.get(ATTR_PRESET_MODE)
         for preset_mode, char in self.preset_mode_chars.items():
-            if preset_mode == current_preset_mode:
-                hk_value = 1
-                char_target_state_hk_value = 1
-            else:
-                hk_value = 0
+            hk_value = 1 if preset_mode == current_preset_mode else 0
             if char.value != hk_value:
                 char.set_value(hk_value)
-
-        if self.char_target_state:
-            if self.char_target_state.value != char_target_state_hk_value:
-                self.char_target_state.set_value(char_target_state_hk_value)
