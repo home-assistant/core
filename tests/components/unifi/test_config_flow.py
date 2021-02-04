@@ -191,7 +191,7 @@ async def test_flow_works_multiple_sites(hass, aioclient_mock):
 
 async def test_flow_raise_already_configured(hass, aioclient_mock):
     """Test config flow aborts since a connected config entry already exists."""
-    await setup_unifi_integration(hass, aioclient_mock=aioclient_mock)
+    await setup_unifi_integration(hass, aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": "user"}
@@ -342,7 +342,7 @@ async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
 
 async def test_reauth_flow_update_configuration(hass, aioclient_mock):
     """Verify reauth flow can update controller configuration."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock=aioclient_mock)
+    config_entry = await setup_unifi_integration(hass, aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
@@ -394,7 +394,7 @@ async def test_advanced_option_flow(hass, aioclient_mock):
     """Test advanced config flow options."""
     config_entry = await setup_unifi_integration(
         hass,
-        aioclient_mock=aioclient_mock,
+        aioclient_mock,
         clients_response=CLIENTS,
         devices_response=DEVICES,
         wlans_response=WLANS,
@@ -466,7 +466,7 @@ async def test_simple_option_flow(hass, aioclient_mock):
     """Test simple config flow options."""
     config_entry = await setup_unifi_integration(
         hass,
-        aioclient_mock=aioclient_mock,
+        aioclient_mock,
         clients_response=CLIENTS,
         wlans_response=WLANS,
         dpigroup_response=DPI_GROUPS,

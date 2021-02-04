@@ -143,9 +143,10 @@ def mock_default_unifi_requests(
 
 async def setup_unifi_integration(
     hass,
+    aioclient_mock=None,
+    *,
     config=ENTRY_CONFIG,
     options=ENTRY_OPTIONS,
-    aioclient_mock=None,
     sites=SITE,
     site_description=DESCRIPTION,
     clients_response=None,
@@ -204,9 +205,7 @@ async def test_controller_setup(hass, aioclient_mock):
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
         return_value=True,
     ) as forward_entry_setup:
-        config_entry = await setup_unifi_integration(
-            hass, aioclient_mock=aioclient_mock
-        )
+        config_entry = await setup_unifi_integration(hass, aioclient_mock)
         controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     entry = controller.config_entry
@@ -241,7 +240,7 @@ async def test_controller_setup(hass, aioclient_mock):
 async def test_controller_mac(hass, aioclient_mock):
     """Test that it is possible to identify controller mac."""
     config_entry = await setup_unifi_integration(
-        hass, aioclient_mock=aioclient_mock, clients_response=[CONTROLLER_HOST]
+        hass, aioclient_mock, clients_response=[CONTROLLER_HOST]
     )
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert controller.mac == CONTROLLER_HOST["mac"]
@@ -280,7 +279,7 @@ async def test_controller_unknown_error(hass):
 
 async def test_reset_after_successful_setup(hass, aioclient_mock):
     """Calling reset when the entry has been setup."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock=aioclient_mock)
+    config_entry = await setup_unifi_integration(hass, aioclient_mock)
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(controller.listeners) == 6
@@ -296,7 +295,7 @@ async def test_wireless_client_event_calls_update_wireless_devices(
     hass, aioclient_mock
 ):
     """Call update_wireless_devices method when receiving wireless client event."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock=aioclient_mock)
+    config_entry = await setup_unifi_integration(hass, aioclient_mock)
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     with patch(

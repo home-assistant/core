@@ -65,7 +65,7 @@ async def test_no_clients(hass, aioclient_mock):
     """Test the update_clients function when no clients are found."""
     await setup_unifi_integration(
         hass,
-        aioclient_mock=aioclient_mock,
+        aioclient_mock,
         options={
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
             CONF_ALLOW_UPTIME_SENSORS: True,
@@ -79,7 +79,7 @@ async def test_sensors(hass, aioclient_mock):
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
         hass,
-        aioclient_mock=aioclient_mock,
+        aioclient_mock,
         options={
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
             CONF_ALLOW_UPTIME_SENSORS: True,
@@ -194,7 +194,7 @@ async def test_remove_sensors(hass, aioclient_mock):
     """Test the remove_items function with some clients."""
     config_entry = await setup_unifi_integration(
         hass,
-        aioclient_mock=aioclient_mock,
+        aioclient_mock,
         options={
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
             CONF_ALLOW_UPTIME_SENSORS: True,
