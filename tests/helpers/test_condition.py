@@ -552,6 +552,108 @@ async def test_state_using_input_entities(hass):
     assert test(hass)
 
 
+async def test_numeric_state_raises(hass):
+    """Test that numeric_state raises ConditionError on errors."""
+    # Unknown entity_id
+    with pytest.raises(ConditionError, match="Unknown entity"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature_unknown",
+                "above": 0,
+            },
+        )
+
+        assert test(hass)
+
+    # Unknown attribute
+    with pytest.raises(ConditionError, match=r"Attribute .* does not exist"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "attribute": "temperature",
+                "above": 0,
+            },
+        )
+
+        hass.states.async_set("sensor.temperature", 50)
+        test(hass)
+
+    # Template error
+    with pytest.raises(ConditionError, match="ZeroDivisionError"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "value_template": "{{ 1 / 0 }}",
+                "above": 0,
+            },
+        )
+
+        hass.states.async_set("sensor.temperature", 50)
+        test(hass)
+
+    # Unavailable state
+    with pytest.raises(ConditionError, match="State is not available"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "above": 0,
+            },
+        )
+
+        hass.states.async_set("sensor.temperature", "unavailable")
+        test(hass)
+
+    # Bad number
+    with pytest.raises(ConditionError, match="cannot be processed as a number"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "above": 0,
+            },
+        )
+
+        hass.states.async_set("sensor.temperature", "fifty")
+        test(hass)
+
+    # Below entity missing
+    with pytest.raises(ConditionError, match="below entity"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "below": "input_number.missing",
+            },
+        )
+
+        hass.states.async_set("sensor.temperature", 50)
+        test(hass)
+
+    # Above entity missing
+    with pytest.raises(ConditionError, match="above entity"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "above": "input_number.missing",
+            },
+        )
+
+        hass.states.async_set("sensor.temperature", 50)
+        test(hass)
+
+
 async def test_numeric_state_multiple_entities(hass):
     """Test with multiple entities in condition."""
     test = await condition.async_from_config(
