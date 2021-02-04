@@ -153,7 +153,7 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_options_flow(hass, mock_hc):
+async def test_options_flow(hass, mock_hc, mock_write_config):
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
