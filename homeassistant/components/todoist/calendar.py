@@ -231,10 +231,7 @@ def _parse_due_date(data: dict) -> datetime:
     # Add time information to date only strings.
     if len(data["date"]) == 10:
         data["date"] += "T00:00:00"
-    # If there is no timezone provided, use UTC.
-    if data["timezone"] is None:
-        data["date"] += "Z"
-    return dt.parse_datetime(data["date"])
+    return dt.as_utc(dt.parse_datetime(data["date"]))
 
 
 class TodoistProjectDevice(CalendarEventDevice):
@@ -531,7 +528,7 @@ class TodoistProjectData:
                 continue
             due_date = _parse_due_date(task["due"])
             if start_date < due_date < end_date:
-                if due_date.hour == 0 and due_date.minute == 0:
+                if dt.as_local(due_date).hour == 0 and dt.as_local(due_date).minute == 0:
                     # If the due date has no time data, return just the date so that it
                     # will render correctly as an all day event on a calendar.
                     due_date_value = due_date.strftime("%Y-%m-%d")
