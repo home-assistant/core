@@ -49,6 +49,7 @@ class FakeHarmonyClient:
         self.change_channel = AsyncMock()
         self.sync = AsyncMock()
         self._callbacks = callbacks
+        self.fw_version = "123.456"
 
     async def connect(self):
         """Connect and call the appropriate callbacks."""
