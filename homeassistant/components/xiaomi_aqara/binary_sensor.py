@@ -423,7 +423,9 @@ class XiaomiVibration(XiaomiBinarySensor):
         """Initialize the XiaomiVibration."""
         self._last_action = None
         self._unsub_set_no_vibration = None
-        super().__init__(device, name, xiaomi_hub, data_key, DEVICE_CLASS_VIBRATION, config_entry)
+        super().__init__(
+            device, name, xiaomi_hub, data_key, DEVICE_CLASS_VIBRATION, config_entry
+        )
 
     @property
     def device_state_attributes(self):
