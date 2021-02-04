@@ -295,10 +295,10 @@ def _verify_l2socket_creation_permission():
     conf.L2socket()
 
 
-async def _async_verify_working_pcap(hass, filter):
+async def _async_verify_working_pcap(hass, cap_filter):
     """Verify we can create a packet filter.
 
     If we cannot create a filter we will be listening for
     all traffic which is too intensive.
     """
-    await hass.async_add_executor_job(compile_filter, filter)
+    await hass.async_add_executor_job(compile_filter, cap_filter)

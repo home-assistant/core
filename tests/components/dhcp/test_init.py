@@ -280,7 +280,11 @@ async def test_setup_and_stop(hass):
     )
     await hass.async_block_till_done()
 
-    with patch("homeassistant.components.dhcp.AsyncSniffer.start") as start_call:
+    with patch("homeassistant.components.dhcp.AsyncSniffer.start") as start_call, patch(
+        "homeassistant.components.dhcp._verify_l2socket_creation_permission",
+    ), patch(
+        "homeassistant.components.dhcp.compile_filter",
+    ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
