@@ -205,6 +205,7 @@ async def _async_register_bridge_device(hass, config_entry_id, bridge_device):
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         name=bridge_device["name"],
+        suggested_area=bridge_device["name"].split("_")[0],
         manufacturer=MANUFACTURER,
         config_entry_id=config_entry_id,
         identifiers={(DOMAIN, bridge_device["serial"])},
@@ -225,6 +226,7 @@ async def _async_register_button_devices(
 
         dr_device = device_registry.async_get_or_create(
             name=device["leap_name"],
+            suggested_area=device["leap_name"].split("_")[0],
             manufacturer=MANUFACTURER,
             config_entry_id=config_entry_id,
             identifiers={(DOMAIN, device["serial"])},
@@ -340,6 +342,7 @@ class LutronCasetaDevice(Entity):
         return {
             "identifiers": {(DOMAIN, self.serial)},
             "name": self.name,
+            "suggested_area": self._device["name"].split("_")[0],
             "manufacturer": MANUFACTURER,
             "model": f"{self._device['model']} ({self._device['type']})",
             "via_device": (DOMAIN, self._bridge_device["serial"]),
