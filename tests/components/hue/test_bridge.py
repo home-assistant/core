@@ -3,7 +3,6 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components import hue
 from homeassistant.components.hue import bridge, errors
 from homeassistant.components.hue.bridge import (
@@ -13,12 +12,12 @@ from homeassistant.components.hue.bridge import (
     ATTR_TRANSITION,
 )
 from homeassistant.components.hue.const import (
-    DOMAIN,
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from tests.common import MockConfigEntry
 
 async def test_bridge_setup(hass):
     """Test a successful setup."""
@@ -184,7 +183,7 @@ async def test_hue_activate_scene(hass, mock_api):
         await hass.async_block_till_done()
 
     await hass.services.async_call(
-        DOMAIN,
+        hue.DOMAIN,
         SERVICE_HUE_SCENE,
         {ATTR_GROUP_NAME: "Group 1", ATTR_SCENE_NAME: "Cozy dinner"},
         blocking=True,
@@ -214,7 +213,7 @@ async def test_hue_activate_scene_transition(hass, mock_api):
         await hass.async_block_till_done()
 
     await hass.services.async_call(
-        DOMAIN,
+        hue.DOMAIN,
         SERVICE_HUE_SCENE,
         {
             ATTR_GROUP_NAME: "Group 1",
@@ -250,7 +249,7 @@ async def test_hue_activate_scene_group_not_found(hass, mock_api):
 
     assert (
         await hass.services.async_call(
-            DOMAIN,
+            hue.DOMAIN,
             SERVICE_HUE_SCENE,
             {ATTR_GROUP_NAME: "Group 1", ATTR_SCENE_NAME: "Cozy dinner"},
             blocking=True,
@@ -279,7 +278,7 @@ async def test_hue_activate_scene_scene_not_found(hass, mock_api):
 
     assert (
         await hass.services.async_call(
-            DOMAIN,
+            hue.DOMAIN,
             SERVICE_HUE_SCENE,
             {ATTR_GROUP_NAME: "Group 1", ATTR_SCENE_NAME: "Cozy dinner"},
             blocking=True,
