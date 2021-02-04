@@ -2,10 +2,10 @@
 from typing import Dict
 from urllib.parse import urlparse
 
-from awesomeversion import AwesomeVersion
-from awesomeversion.strategy import AwesomeVersionStrategy
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
+
+from homeassistant.loader import validate_custom_integration_version
 
 from .model import Integration
 
@@ -53,16 +53,9 @@ def verify_uppercase(value: str):
 
 def verify_version(value: str):
     """Verify the version."""
-    version = AwesomeVersion(value)
-    if version.strategy not in [
-        AwesomeVersionStrategy.CALVER,
-        AwesomeVersionStrategy.SEMVER,
-        AwesomeVersionStrategy.SIMPLEVER,
-        AwesomeVersionStrategy.BUILDVER,
-        AwesomeVersionStrategy.PEP440,
-    ]:
+    if not validate_custom_integration_version(value):
         raise vol.Invalid(
-            f"'{version}' is not a valid version. This will cause a future version of Home Assistant to block this integration.",
+            f"'{value}' is not a valid version. This will cause a future version of Home Assistant to block this integration.",
         )
     return value
 

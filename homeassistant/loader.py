@@ -26,6 +26,9 @@ from typing import (
     cast,
 )
 
+from awesomeversion import AwesomeVersion
+from awesomeversion.strategy import AwesomeVersionStrategy
+
 from homeassistant.generated.dhcp import DHCP
 from homeassistant.generated.mqtt import MQTT
 from homeassistant.generated.ssdp import SSDP
@@ -52,7 +55,19 @@ CUSTOM_WARNING = (
     "You are using a custom integration %s which has not "
     "been tested by Home Assistant. This component might "
     "cause stability problems, be sure to disable it if you "
-    "experience issues with Home Assistant."
+    "experience issues with Home Assistant"
+)
+CUSTOM_WARNING_VERSION_MISSING = (
+    "No 'version' key in the manifest file for "
+    "custom integration '%s'. This will not be "
+    "allowed in a future version of Home "
+    "Assistant. Please report this to the "
+    "maintainer of '%s'"
+)
+CUSTOM_WARNING_VERSION_TYPE = (
+    "'%s' is not a valid version for "
+    "custom integration '%s'. "
+    "Please report this to the maintainer of '%s'"
 )
 _UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular dependency
 
@@ -83,6 +98,7 @@ class Manifest(TypedDict, total=False):
     dhcp: List[Dict[str, str]]
     homekit: Dict[str, List[str]]
     is_built_in: bool
+    version: str
     codeowners: List[str]
 
 
@@ -418,6 +434,13 @@ class Integration:
         return self.pkg_path.startswith(PACKAGE_BUILTIN)
 
     @property
+    def version(self) -> Optional[AwesomeVersion]:
+        """Return the version of the integration."""
+        if "version" not in self.manifest:
+            return None
+        return AwesomeVersion(self.manifest["version"])
+
+    @property
     def all_dependencies(self) -> Set[str]:
         """Return all dependencies including sub-dependencies."""
         if self._all_dependencies is None:
@@ -513,7 +536,7 @@ async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integrati
     # components to find the integration.
     integration = (await async_get_custom_components(hass)).get(domain)
     if integration is not None:
-        _LOGGER.warning(CUSTOM_WARNING, domain)
+        custom_integration_warning(integration)
         cache[domain] = integration
         event.set()
         return integration
@@ -531,6 +554,7 @@ async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integrati
 
     integration = Integration.resolve_legacy(hass, domain)
     if integration is not None:
+        custom_integration_warning(integration)
         cache[domain] = integration
     else:
         # Remove event from cache.
@@ -604,9 +628,6 @@ def _load_file(
                 continue
 
             cache[comp_or_platform] = module
-
-            if module.__name__.startswith(PACKAGE_CUSTOM_COMPONENTS):
-                _LOGGER.warning(CUSTOM_WARNING, comp_or_platform)
 
             return module
 
@@ -756,3 +777,35 @@ def _lookup_path(hass: "HomeAssistant") -> List[str]:
     if hass.config.safe_mode:
         return [PACKAGE_BUILTIN]
     return [PACKAGE_CUSTOM_COMPONENTS, PACKAGE_BUILTIN]
+
+
+def validate_custom_integration_version(version: str) -> bool:
+    """Validate the version of custom integrations."""
+    return AwesomeVersion(version).strategy in (
+        AwesomeVersionStrategy.CALVER,
+        AwesomeVersionStrategy.SEMVER,
+        AwesomeVersionStrategy.SIMPLEVER,
+        AwesomeVersionStrategy.BUILDVER,
+        AwesomeVersionStrategy.PEP440,
+    )
+
+
+def custom_integration_warning(integration: Integration) -> None:
+    """Create logs for custom integrations."""
+    if not integration.pkg_path.startswith(PACKAGE_CUSTOM_COMPONENTS):
+        return None
+
+    _LOGGER.warning(CUSTOM_WARNING, integration.domain)
+
+    if integration.manifest.get("version") is None:
+        _LOGGER.warning(
+            CUSTOM_WARNING_VERSION_MISSING, integration.domain, integration.domain
+        )
+    else:
+        if not validate_custom_integration_version(integration.manifest["version"]):
+            _LOGGER.warning(
+                CUSTOM_WARNING_VERSION_TYPE,
+                integration.domain,
+                integration.manifest["version"],
+                integration.domain,
+            )
