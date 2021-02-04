@@ -421,6 +421,7 @@ class XiaomiVibration(XiaomiBinarySensor):
     def __init__(self, device, name, data_key, xiaomi_hub, config_entry):
         """Initialize the XiaomiVibration."""
         self._last_action = None
+        self._unsub_set_no_vibration = None
         super().__init__(device, name, xiaomi_hub, data_key, None, config_entry)
 
     @property
@@ -429,6 +430,13 @@ class XiaomiVibration(XiaomiBinarySensor):
         attrs = {ATTR_LAST_ACTION: self._last_action}
         attrs.update(super().device_state_attributes)
         return attrs
+
+    @callback
+    def _async_set_no_vibration(self, now):
+        """Set state to False."""
+        self._unsub_set_no_vibration = None
+        self._state = False
+        self.async_write_ha_state()
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -445,6 +453,14 @@ class XiaomiVibration(XiaomiBinarySensor):
             {"entity_id": self.entity_id, "movement_type": value},
         )
         self._last_action = value
+
+        if value == "vibrate":
+            if self._unsub_set_no_vibration:
+                self._unsub_set_no_vibration()
+            self._unsub_set_no_vibration = async_call_later(
+                self.hass, 120, self._async_set_no_vibration
+            )
+            self._state = True
 
         return True
 
