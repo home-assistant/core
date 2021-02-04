@@ -8,12 +8,12 @@ from typing import Any, Dict, Optional, cast
 
 import voluptuous as vol
 
+from homeassistant.const import CONF_COMMAND
 from homeassistant.exceptions import HomeAssistantError
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
 
-CONF_COMMAND = "command"
 CONF_ARGS = "args"
 CONF_META = "meta"
 
