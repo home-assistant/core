@@ -209,7 +209,7 @@ class HueBridge:
         """Service to call directly into bridge to set scenes."""
         group_name = call.data[ATTR_GROUP_NAME]
         scene_name = call.data[ATTR_SCENE_NAME]
-        transition = call.data.get(ATTR_TRANSITION, DEFAULT_SCENE_TRANSITION)
+        transition = call.data[ATTR_TRANSITION]
 
         group = next(
             (group for group in self.api.groups.values() if group.name == group_name),
