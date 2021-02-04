@@ -226,11 +226,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-def _parse_due_date(data: dict) -> datetime:
+def _parse_due_date(data: dict, gmt_string) -> datetime:
     """Parse the due date dict into a datetime object."""
     # Add time information to date only strings.
     if len(data["date"]) == 10:
         data["date"] += "T00:00:00"
+    if not data["date"].endswith("Z"):
+        data["date"] += gmt_string
     return dt.as_utc(dt.parse_datetime(data["date"]))
 
 
@@ -404,7 +406,7 @@ class TodoistProjectData:
         # Generally speaking, that means right now.
         task[START] = dt.utcnow()
         if data[DUE] is not None:
-            task[END] = _parse_due_date(data[DUE])
+            task[END] = _parse_due_date(data[DUE], self._api.state['user']['tz_info']['gmt_string'])
 
             if self._due_date_days is not None and (
                 task[END] > dt.utcnow() + self._due_date_days
@@ -526,7 +528,7 @@ class TodoistProjectData:
         for task in project_task_data:
             if task["due"] is None:
                 continue
-            due_date = _parse_due_date(task["due"])
+            due_date = _parse_due_date(task["due"], self._api.state['user']['tz_info']['gmt_string'])
             if start_date < due_date < end_date:
                 if dt.as_local(due_date).hour == 0 and dt.as_local(due_date).minute == 0:
                     # If the due date has no time data, return just the date so that it
