@@ -364,7 +364,7 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
     assert len(calls) == 6
-    assert calls[4].data["some"] == "is_armed_vacation - event - test_event6"
+    assert calls[5].data["some"] == "is_armed_vacation - event - test_event6"
 
     hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_CUSTOM_BYPASS)
     hass.bus.async_fire("test_event1")
@@ -376,4 +376,4 @@ async def test_if_state(hass, calls):
     hass.bus.async_fire("test_event7")
     await hass.async_block_till_done()
     assert len(calls) == 7
-    assert calls[5].data["some"] == "is_armed_custom_bypass - event - test_event7"
+    assert calls[6].data["some"] == "is_armed_custom_bypass - event - test_event7"
