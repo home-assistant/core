@@ -11,7 +11,7 @@ configure:
         entity (when entity is specified).
       example: '"/lights/1/state" or "/state"'
     data:
-      description: Data is a json object with what data you want to alter.
+      description: Data is a JSON object with what data you want to alter.
       example: '{"on": true}'
     bridgeid:
       description: (Optional) Bridgeid is a string unique for each deCONZ hardware. It can be found as part of the integration name.
