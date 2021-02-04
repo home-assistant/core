@@ -20,6 +20,7 @@ python3 -m pip install tox colorlog pre-commit $(grep mypy requirements_test.txt
 
 if [ -n "$DEVCONTAINER" ];then
     pre-commit install
+    pre-commit install-hooks
     python3 -m pip install -e . --constraint homeassistant/package_constraints.txt
 
     mkdir -p config
