@@ -66,6 +66,7 @@ ATTR_PRESET_MODES = "preset_modes"
 # into core integrations at some point so we are temporarily
 # accommodating them in the transition to percentages.
 _NOT_SPEED_OFF = "off"
+_NOT_SPEED_ON = "on"
 _NOT_SPEED_AUTO = "auto"
 _NOT_SPEED_SMART = "smart"
 _NOT_SPEED_INTERVAL = "interval"
@@ -75,6 +76,7 @@ _NOT_SPEED_SLEEP = "sleep"
 
 _NOT_SPEEDS_FILTER = {
     _NOT_SPEED_OFF,
+    _NOT_SPEED_ON,
     _NOT_SPEED_AUTO,
     _NOT_SPEED_SMART,
     _NOT_SPEED_INTERVAL,
@@ -392,7 +394,10 @@ class FanEntity(ToggleEntity):
             if preset_mode:
                 return preset_mode
         if self._implemented_percentage:
-            return self.percentage_to_speed(self.percentage)
+            percentage = self.percentage
+            if percentage is None:
+                return None
+            return self.percentage_to_speed(percentage)
         return None
 
     @property
