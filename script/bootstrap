@@ -16,4 +16,4 @@ fi
 
 echo "Installing development dependencies..."
 python3 -m pip install wheel --constraint homeassistant/package_constraints.txt
-python3 -m pip install tox colorlog pre-commit $(grep mypy requirements_test.txt) $(grep stdlib-list requirements_test.txt) $(grep tqdm requirements_test.txt) $(grep pipdeptree requirements_test.txt) $(grep awesomeversion requirements_test.txt) --constraint homeassistant/package_constraints.txt
+python3 -m pip install tox colorlog pre-commit $(grep mypy requirements_test.txt) $(grep stdlib-list requirements_test.txt) $(grep tqdm requirements_test.txt) $(grep pipdeptree requirements_test.txt) $(grep awesomeversion requirements.txt) --constraint homeassistant/package_constraints.txt
