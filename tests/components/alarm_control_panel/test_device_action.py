@@ -154,7 +154,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
         "trigger": {"extra_fields": []},
     }
     actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 5
+    assert len(actions) == 6
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
@@ -201,7 +201,7 @@ async def test_get_action_capabilities_arm_code(hass, device_reg, entity_reg):
         "trigger": {"extra_fields": []},
     }
     actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 5
+    assert len(actions) == 6
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
