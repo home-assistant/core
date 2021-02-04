@@ -282,4 +282,6 @@ def _verify_l2socket_creation_permission():
     thread so we will not be able to capture
     any permission or bind errors.
     """
+    # disable scapy promiscuous mode as we do not need it
+    conf.sniff_promisc = 0
     conf.L2socket()
