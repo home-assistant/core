@@ -23,6 +23,7 @@ CONF_FROM = "from"
 CONF_TO = "to"
 CONF_VIA = "via"
 CONF_TIME = "time"
+CONF_OFFSET = "offset"
 
 ICON = "mdi:train"
 
@@ -35,6 +36,7 @@ ROUTE_SCHEMA = vol.Schema(
         vol.Required(CONF_TO): cv.string,
         vol.Optional(CONF_VIA): cv.string,
         vol.Optional(CONF_TIME): cv.time,
+        vol.Optional(CONF_OFFSET): cv.positive_int,
     }
 )
 
@@ -77,6 +79,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 departure.get(CONF_TO),
                 departure.get(CONF_VIA),
                 departure.get(CONF_TIME),
+                departure.get(CONF_OFFSET),
             )
         )
     if sensors:
@@ -97,7 +100,7 @@ def valid_stations(stations, given_stations):
 class NSDepartureSensor(Entity):
     """Implementation of a NS Departure Sensor."""
 
-    def __init__(self, nsapi, name, departure, heading, via, time):
+    def __init__(self, nsapi, name, departure, heading, via, time, offset):
         """Initialize the sensor."""
         self._nsapi = nsapi
         self._name = name
@@ -105,6 +108,7 @@ class NSDepartureSensor(Entity):
         self._via = via
         self._heading = heading
         self._time = time
+        self._offset = offset
         self._state = None
         self._trips = None
 
@@ -230,8 +234,12 @@ class NSDepartureSensor(Entity):
                 .strftime("%d-%m-%Y %H:%M")
             )
         else:
-            trip_time = datetime.now().strftime("%d-%m-%Y %H:%M")
-
+            if self._offset:
+                offset_time = datetime.now() + timedelta(minutes=self._offset)
+                trip_time = offset_time.strftime("%d-%m-%Y %H:%M")
+            else:
+                trip_time = datetime.now().strftime("%d-%m-%Y %H:%M")
+                
         try:
             self._trips = self._nsapi.get_trips(
                 trip_time, self._departure, self._via, self._heading, True, 0, 2
