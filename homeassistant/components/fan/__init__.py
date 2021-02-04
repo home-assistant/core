@@ -461,7 +461,7 @@ class FanEntity(ToggleEntity):
         This property provides forward and backwards
         compatibility for conversion to percentage speeds.
         """
-        if self._implemented_percentage:
+        if not self._implemented_speed:
             return LEGACY_SPEED_LIST
         return speed_list_without_preset_modes(self.speed_list)
 
