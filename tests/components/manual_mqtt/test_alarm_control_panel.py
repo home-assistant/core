@@ -1765,7 +1765,7 @@ async def test_arm_vacation_via_command_topic(hass, mqtt_mock):
                 "pending_time": 1,
                 "state_topic": "alarm/state",
                 "command_topic": "alarm/command",
-                "payload_arm_night": "ARM_VACATION",
+                "payload_arm_vacation": "ARM_VACATION",
             }
         },
     )
