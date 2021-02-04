@@ -85,8 +85,8 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
     @property
     def preset_mode(self):
         """Get the current preset mode."""
-        if self.smartfan.mode == FAN_MODE_AUTO:
-            return FAN_MODE_AUTO
+        if self.smartfan.mode in (FAN_MODE_AUTO, FAN_MODE_SLEEP):
+            return self.smartfan.mode
         return None
 
     @property
