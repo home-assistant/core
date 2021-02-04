@@ -512,6 +512,41 @@ async def test_import(hass: HomeAssistantType, user_input: Dict):
         ),
         (
             {
+                CONF_DEVICE: "127.0.0.1",
+                CONF_TCP_PORT: 343,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE: False,
+                CONF_RETAIN: False,
+            },
+            {
+                CONF_DEVICE: "192.168.1.2",
+                CONF_PERSISTENCE_FILE: "same.json",
+                CONF_TCP_PORT: 343,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE: False,
+                CONF_RETAIN: False,
+            },
+            None,
+        ),
+        (
+            {
+                CONF_DEVICE: "127.0.0.1",
+                CONF_TCP_PORT: 343,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE: False,
+                CONF_RETAIN: False,
+            },
+            {
+                CONF_DEVICE: "192.168.1.2",
+                CONF_TCP_PORT: 343,
+                CONF_VERSION: "2.3",
+                CONF_PERSISTENCE: False,
+                CONF_RETAIN: False,
+            },
+            None,
+        ),
+        (
+            {
                 CONF_DEVICE: "192.168.1.2",
                 CONF_PERSISTENCE_FILE: "different1.json",
                 CONF_TCP_PORT: 343,

@@ -70,13 +70,11 @@ def _is_same_device(
     if entry.data[CONF_DEVICE] != user_input[CONF_DEVICE]:
         return False
     if gw_type == CONF_GATEWAY_TYPE_TCP:
-        return entry.data.get(CONF_TCP_PORT, 5003) == user_input.get(
-            CONF_TCP_PORT, 5003
-        )
+        return entry.data[CONF_TCP_PORT] == user_input[CONF_TCP_PORT]
     if gw_type == CONF_GATEWAY_TYPE_MQTT:
         entry_topics = {
-            entry.data.get(CONF_TOPIC_IN_PREFIX),
-            entry.data.get(CONF_TOPIC_OUT_PREFIX),
+            entry.data[CONF_TOPIC_IN_PREFIX],
+            entry.data[CONF_TOPIC_OUT_PREFIX],
         }
         return (
             user_input.get(CONF_TOPIC_IN_PREFIX) in entry_topics
@@ -266,8 +264,10 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         user_input[CONF_PERSISTENCE_FILE]
                     )
                     for other_entry in self.hass.config_entries.async_entries(DOMAIN):
+                        if CONF_PERSISTENCE_FILE not in other_entry.data:
+                            continue
                         if real_persistence_path == self._normalize_persistence_file(
-                            other_entry.data.get(CONF_PERSISTENCE_FILE)
+                            other_entry.data[CONF_PERSISTENCE_FILE]
                         ):
                             errors[CONF_PERSISTENCE_FILE] = "duplicate_persistence_file"
                             break

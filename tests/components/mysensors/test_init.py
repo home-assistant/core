@@ -88,6 +88,27 @@ from homeassistant.setup import async_setup_component
                 DOMAIN: {
                     CONF_GATEWAYS: [
                         {
+                            CONF_DEVICE: "127.0.0.1",
+                        }
+                    ],
+                    CONF_PERSISTENCE: False,
+                    CONF_RETAIN: False,
+                }
+            },
+            1,
+            True,
+            {
+                CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_TCP,
+                CONF_DEVICE: "127.0.0.1",
+                CONF_TCP_PORT: 5003,
+                CONF_VERSION: DEFAULT_VERSION,
+            },
+        ),
+        (
+            {
+                DOMAIN: {
+                    CONF_GATEWAYS: [
+                        {
                             CONF_DEVICE: "mqtt",
                             CONF_BAUD_RATE: 115200,
                             CONF_TCP_PORT: 5003,
