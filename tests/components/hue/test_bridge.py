@@ -6,10 +6,10 @@ import pytest
 from homeassistant.components import hue
 from homeassistant.components.hue import bridge, errors
 from homeassistant.components.hue.bridge import (
-    SERVICE_HUE_SCENE,
     ATTR_GROUP_NAME,
     ATTR_SCENE_NAME,
     ATTR_TRANSITION,
+    SERVICE_HUE_SCENE,
 )
 from homeassistant.components.hue.const import (
     CONF_ALLOW_HUE_GROUPS,
