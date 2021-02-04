@@ -256,7 +256,7 @@ async def test_if_state(hass, calls):
                     },
                 },
                 {
-                    "trigger": {"platform": "event", "event_type": "test_event5"},
+                    "trigger": {"platform": "event", "event_type": "test_event6"},
                     "condition": [
                         {
                             "condition": "device",
@@ -274,7 +274,7 @@ async def test_if_state(hass, calls):
                     },
                 },
                 {
-                    "trigger": {"platform": "event", "event_type": "test_event6"},
+                    "trigger": {"platform": "event", "event_type": "test_event7"},
                     "condition": [
                         {
                             "condition": "device",
