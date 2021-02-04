@@ -18,6 +18,7 @@ from .entity import (
     RestAttributeDescription,
     ShellyBlockAttributeEntity,
     ShellyRestAttributeEntity,
+    ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
 )
@@ -185,12 +186,17 @@ REST_SENSORS = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for device."""
-    await async_setup_entry_attribute_entities(
-        hass, config_entry, async_add_entities, SENSORS, ShellySensor
-    )
-    await async_setup_entry_rest(
-        hass, config_entry, async_add_entities, REST_SENSORS, ShellyRestSensor
-    )
+    if config_entry.data["sleep_period"]:
+        await async_setup_entry_attribute_entities(
+            hass, config_entry, async_add_entities, SENSORS, ShellySleepingSensor
+        )
+    else:
+        await async_setup_entry_attribute_entities(
+            hass, config_entry, async_add_entities, SENSORS, ShellySensor
+        )
+        await async_setup_entry_rest(
+            hass, config_entry, async_add_entities, REST_SENSORS, ShellyRestSensor
+        )
 
 
 class ShellySensor(ShellyBlockAttributeEntity):
@@ -209,3 +215,15 @@ class ShellyRestSensor(ShellyRestAttributeEntity):
     def state(self):
         """Return value of sensor."""
         return self.attribute_value
+
+
+class ShellySleepingSensor(ShellySleepingBlockAttributeEntity):
+    """Represent a shelly sleeping sensor."""
+
+    @property
+    def state(self):
+        """Return value of sensor."""
+        if self.block is not None:
+            return self.attribute_value
+
+        return self.last_state

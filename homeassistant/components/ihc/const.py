@@ -18,6 +18,7 @@ CONF_XPATH = "xpath"
 
 ATTR_IHC_ID = "ihc_id"
 ATTR_VALUE = "value"
+ATTR_CONTROLLER_ID = "controller_id"
 
 SERVICE_SET_RUNTIME_VALUE_BOOL = "set_runtime_value_bool"
 SERVICE_SET_RUNTIME_VALUE_FLOAT = "set_runtime_value_float"

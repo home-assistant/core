@@ -56,6 +56,8 @@ class ZWaveDiscoverySchema:
     type: Optional[Set[str]] = None
 
 
+# For device class mapping see:
+# https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/deviceClasses.json
 DISCOVERY_SCHEMAS = [
     # locks
     ZWaveDiscoverySchema(
@@ -105,6 +107,18 @@ DISCOVERY_SCHEMAS = [
         property={"mode"},
         type={"number"},
     ),
+    # climate
+    # setpoint thermostats
+    ZWaveDiscoverySchema(
+        platform="climate",
+        device_class_generic={"Thermostat"},
+        device_class_specific={
+            "Setpoint Thermostat",
+        },
+        command_class={CommandClass.THERMOSTAT_SETPOINT},
+        property={"setpoint"},
+        type={"number"},
+    ),
     # lights
     # primary value is the currentValue (brightness)
     ZWaveDiscoverySchema(
@@ -115,6 +129,7 @@ DISCOVERY_SCHEMAS = [
             "Binary Tunable Color Light",
             "Multilevel Remote Switch",
             "Multilevel Power Switch",
+            "Multilevel Scene Switch",
         },
         command_class={CommandClass.SWITCH_MULTILEVEL},
         property={"currentValue"},
@@ -143,10 +158,8 @@ DISCOVERY_SCHEMAS = [
         platform="sensor",
         hint="string_sensor",
         command_class={
-            CommandClass.ALARM,
             CommandClass.SENSOR_ALARM,
             CommandClass.INDICATOR,
-            CommandClass.NOTIFICATION,
         },
         type={"string"},
     ),
@@ -156,15 +169,40 @@ DISCOVERY_SCHEMAS = [
         hint="numeric_sensor",
         command_class={
             CommandClass.SENSOR_MULTILEVEL,
-            CommandClass.METER,
-            CommandClass.ALARM,
             CommandClass.SENSOR_ALARM,
             CommandClass.INDICATOR,
             CommandClass.BATTERY,
+        },
+        type={"number"},
+    ),
+    # numeric sensors for Meter CC
+    ZWaveDiscoverySchema(
+        platform="sensor",
+        hint="numeric_sensor",
+        command_class={
+            CommandClass.METER,
+        },
+        type={"number"},
+        property={"value"},
+    ),
+    # special list sensors (Notification CC)
+    ZWaveDiscoverySchema(
+        platform="sensor",
+        hint="list_sensor",
+        command_class={
             CommandClass.NOTIFICATION,
+        },
+        type={"number"},
+    ),
+    # sensor for basic CC
+    ZWaveDiscoverySchema(
+        platform="sensor",
+        hint="numeric_sensor",
+        command_class={
             CommandClass.BASIC,
         },
         type={"number"},
+        property={"currentValue"},
     ),
     # binary switches
     ZWaveDiscoverySchema(
@@ -204,54 +242,44 @@ DISCOVERY_SCHEMAS = [
 def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None, None]:
     """Run discovery on ZWave node and return matching (primary) values."""
     for value in node.values.values():
-        disc_val = async_discover_value(value)
-        if disc_val:
-            yield disc_val
-
-
-@callback
-def async_discover_value(value: ZwaveValue) -> Optional[ZwaveDiscoveryInfo]:
-    """Run discovery on Z-Wave value and return ZwaveDiscoveryInfo if match found."""
-    for schema in DISCOVERY_SCHEMAS:
-        # check device_class_basic
-        if (
-            schema.device_class_basic is not None
-            and value.node.device_class.basic not in schema.device_class_basic
-        ):
-            continue
-        # check device_class_generic
-        if (
-            schema.device_class_generic is not None
-            and value.node.device_class.generic not in schema.device_class_generic
-        ):
-            continue
-        # check device_class_specific
-        if (
-            schema.device_class_specific is not None
-            and value.node.device_class.specific not in schema.device_class_specific
-        ):
-            continue
-        # check command_class
-        if (
-            schema.command_class is not None
-            and value.command_class not in schema.command_class
-        ):
-            continue
-        # check endpoint
-        if schema.endpoint is not None and value.endpoint not in schema.endpoint:
-            continue
-        # check property
-        if schema.property is not None and value.property_ not in schema.property:
-            continue
-        # check metadata_type
-        if schema.type is not None and value.metadata.type not in schema.type:
-            continue
-        # all checks passed, this value belongs to an entity
-        return ZwaveDiscoveryInfo(
-            node=value.node,
-            primary_value=value,
-            platform=schema.platform,
-            platform_hint=schema.hint,
-        )
-
-    return None
+        for schema in DISCOVERY_SCHEMAS:
+            # check device_class_basic
+            if (
+                schema.device_class_basic is not None
+                and value.node.device_class.basic not in schema.device_class_basic
+            ):
+                continue
+            # check device_class_generic
+            if (
+                schema.device_class_generic is not None
+                and value.node.device_class.generic not in schema.device_class_generic
+            ):
+                continue
+            # check device_class_specific
+            if (
+                schema.device_class_specific is not None
+                and value.node.device_class.specific not in schema.device_class_specific
+            ):
+                continue
+            # check command_class
+            if (
+                schema.command_class is not None
+                and value.command_class not in schema.command_class
+            ):
+                continue
+            # check endpoint
+            if schema.endpoint is not None and value.endpoint not in schema.endpoint:
+                continue
+            # check property
+            if schema.property is not None and value.property_ not in schema.property:
+                continue
+            # check metadata_type
+            if schema.type is not None and value.metadata.type not in schema.type:
+                continue
+            # all checks passed, this value belongs to an entity
+            yield ZwaveDiscoveryInfo(
+                node=value.node,
+                primary_value=value,
+                platform=schema.platform,
+                platform_hint=schema.hint,
+            )

@@ -2,7 +2,8 @@
   "name": "Home Assistant Dev",
   "context": "..",
   "dockerFile": "../Dockerfile.dev",
-  "postCreateCommand": "mkdir -p config && pip3 install -e .",
+  "postCreateCommand": "script/bootstrap",
+  "containerEnv": { "DEVCONTAINER": "1" },
   "appPort": 8123,
   "runArgs": ["-e", "GIT_EDITOR=code --wait"],
   "extensions": [

@@ -9,6 +9,10 @@
         },
         "flow_title": "Roku: {name}",
         "step": {
+            "discovery_confirm": {
+                "description": "M\u00f6chtest du {name} einrichten?",
+                "title": "Roku"
+            },
             "ssdp_confirm": {
                 "data": {
                     "one": "eins",

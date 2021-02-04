@@ -338,32 +338,6 @@ async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
     assert result["errors"] == {"base": "service_unavailable"}
 
 
-async def test_flow_fails_unknown_problem(hass, aioclient_mock):
-    """Test config flow."""
-    result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": "user"}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    aioclient_mock.get("https://1.2.3.4:1234", status=302)
-
-    with patch("aiounifi.Controller.login", side_effect=Exception):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_HOST: "1.2.3.4",
-                CONF_USERNAME: "username",
-                CONF_PASSWORD: "password",
-                CONF_PORT: 1234,
-                CONF_VERIFY_SSL: True,
-            },
-        )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-
-
 async def test_reauth_flow_update_configuration(hass, aioclient_mock):
     """Verify reauth flow can update controller configuration."""
     controller = await setup_unifi_integration(hass)
@@ -595,7 +569,7 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(
         domain=UNIFI_DOMAIN,
-        data={},
+        data={"not_controller_key": None},
         source=config_entries.SOURCE_IGNORE,
     )
     entry.add_to_hass(hass)

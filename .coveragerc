@@ -518,6 +518,10 @@ omit =
     homeassistant/components/lutron_caseta/switch.py
     homeassistant/components/lw12wifi/light.py
     homeassistant/components/lyft/sensor.py
+    homeassistant/components/lyric/__init__.py
+    homeassistant/components/lyric/api.py
+    homeassistant/components/lyric/climate.py
+    homeassistant/components/lyric/sensor.py
     homeassistant/components/magicseaweed/sensor.py
     homeassistant/components/mailgun/notify.py
     homeassistant/components/map/*
@@ -620,7 +624,6 @@ omit =
     homeassistant/components/norway_air/air_quality.py
     homeassistant/components/notify_events/notify.py
     homeassistant/components/nsw_fuel_station/sensor.py
-    homeassistant/components/nuimo_controller/*
     homeassistant/components/nuki/__init__.py
     homeassistant/components/nuki/const.py
     homeassistant/components/nuki/lock.py
@@ -700,7 +703,11 @@ omit =
     homeassistant/components/ping/device_tracker.py
     homeassistant/components/pioneer/media_player.py
     homeassistant/components/pjlink/media_player.py
-    homeassistant/components/plaato/*
+    homeassistant/components/plaato/__init__.py
+    homeassistant/components/plaato/binary_sensor.py
+    homeassistant/components/plaato/const.py
+    homeassistant/components/plaato/entity.py
+    homeassistant/components/plaato/sensor.py
     homeassistant/components/plex/media_player.py
     homeassistant/components/plum_lightpad/light.py
     homeassistant/components/pocketcasts/sensor.py

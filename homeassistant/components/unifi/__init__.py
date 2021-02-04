@@ -1,9 +1,8 @@
-"""Support for devices connected to UniFi POE."""
+"""Integration to UniFi controllers and its various features."""
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from .config_flow import get_controller_id_from_config_entry
 from .const import (
     ATTR_MANUFACTURER,
     DOMAIN as UNIFI_DOMAIN,
@@ -82,21 +81,12 @@ class UnifiWirelessClients:
     @callback
     def get_data(self, config_entry):
         """Get data related to a specific controller."""
-        controller_id = get_controller_id_from_config_entry(config_entry)
-        key = config_entry.entry_id
-        if controller_id in self.data:
-            key = controller_id
-
-        data = self.data.get(key, {"wireless_devices": []})
+        data = self.data.get(config_entry.entry_id, {"wireless_devices": []})
         return set(data["wireless_devices"])
 
     @callback
     def update_data(self, data, config_entry):
         """Update data and schedule to save to file."""
-        controller_id = get_controller_id_from_config_entry(config_entry)
-        if controller_id in self.data:
-            self.data.pop(controller_id)
-
         self.data[config_entry.entry_id] = {"wireless_devices": list(data)}
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 

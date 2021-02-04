@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Z-Wave JS lisandmooduli tuvastusteabe hankimine nurjus.",
+            "addon_info_failed": "Z-Wave JS lisandmooduli teabe hankimine nurjus.",
+            "addon_install_failed": "Z-Wave JS lisandmooduli paigaldamine nurjus.",
+            "addon_missing_discovery_info": "Z-Wave JS lisandmooduli tuvastusteave puudub.",
+            "addon_set_config_failed": "Z-Wave JS konfiguratsiooni m\u00e4\u00e4ramine nurjus.",
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "error": {
+            "addon_start_failed": "Z-Wave JS lisandmooduli k\u00e4ivitamine nurjus. Kontrolli seadistusi.",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_ws_url": "Vale sihtkoha aadress",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "progress": {
+            "install_addon": "Palun oota kuni Z-Wave JS lisandmoodul on paigaldatud. See v\u00f5ib v\u00f5tta mitu minutit."
+        },
+        "step": {
+            "hassio_confirm": {
+                "title": "Seadista Z-Wave JS-i sidumine Z-Wave JS-i lisandmooduliga"
+            },
+            "install_addon": {
+                "title": "Z-Wave JS lisandmooduli paigaldamine on alanud"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Kasuta lisandmoodulit Z-Wave JS Supervisor"
+                },
+                "description": "Kas soovid kasutada Z-Wave JSi halduri lisandmoodulit?",
+                "title": "Vali \u00fchendusviis"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "V\u00f5rgu v\u00f5ti",
+                    "usb_path": "USB-seadme asukoha rada"
+                },
+                "title": "Sisesta Z-Wave JS lisandmooduli seaded"
+            },
+            "user": {
+                "data": {
+                    "url": ""
+                }
+            }
+        }
+    },
+    "title": "Z-Wave JS"
+}

@@ -4,9 +4,9 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from aiofreepybox import Freepybox
-from aiofreepybox.api.wifi import Wifi
-from aiofreepybox.exceptions import HttpRequestError
+from freebox_api import Freepybox
+from freebox_api.api.wifi import Wifi
+from freebox_api.exceptions import HttpRequestError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -138,7 +138,7 @@ class FreeboxRouter:
             "serial": syst_datas["serial"],
         }
 
-        self.call_list = await self._api.call.get_call_list()
+        self.call_list = await self._api.call.get_calls_log()
 
         async_dispatcher_send(self.hass, self.signal_sensor_update)
 
