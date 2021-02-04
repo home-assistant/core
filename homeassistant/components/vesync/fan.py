@@ -130,7 +130,11 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         if not self.smartfan.is_on:
             self.smartfan.turn_on()
 
-        self.smartfan.auto_mode()
+        if preset_mode == FAN_MODE_AUTO:
+            self.smartfan.auto_mode()
+        elif preset_mode == FAN_MODE_SLEEP:
+            self.smartfan.sleep_mode()
+
         self.schedule_update_ha_state()
 
     def turn_on(
