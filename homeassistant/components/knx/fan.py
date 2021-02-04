@@ -1,5 +1,11 @@
 """Support for KNX/IP fans."""
-from xknx.devices import Fan as XknxFan
+import math
+
+from xknx.devices import Fan as XknxFan, FanSpeedMode
+from homeassistant.util.percentage import (
+    ranged_value_to_percentage,
+    percentage_to_ranged_value,
+)
 
 from typing import TYPE_CHECKING, Any, Iterator, Optional
 
@@ -29,14 +35,16 @@ class KNXFan(KnxEntity, FanEntity):
         """Initialize of KNX fan."""
         super().__init__(device)
 
-    @property
-    def speed(self) -> Optional[str]:
-        """Return the current speed."""
-        return self._device.current_speed
+        if self._device.mode == FanSpeedMode.Step:
+            self._step_range = (1, device.max_step or 255)
 
-    async def async_set_speed(self, speed: str):
-        # await self._device.set_speed(self._ha_to_knx_value[speed])
-        await self._device.set_speed(speed)
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the speed of the fan, as a percentage."""
+        if self._device.mode == FanSpeedMode.Step:
+            step = math.ceil(percentage_to_ranged_value(self._step_range, percentage))
+            self._device.set_speed(step)
+        else:
+            self._device.set_speed(percentage)
 
     @property
     def supported_features(self) -> int:
@@ -44,12 +52,24 @@ class KNXFan(KnxEntity, FanEntity):
         return SUPPORT_SET_SPEED
 
     @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return self._device.speed_list
+    def percentage(self) -> Optional[int]:
+        """Return the current speed as a percentage."""
+        if self._device.mode == FanSpeedMode.Step:
+            percentage = ranged_value_to_percentage(
+                self._step_range, self._device.speed
+            )
+        else:
+            percentage = self._device.speed
+        return percentage
 
-    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
-        await self.async_set_speed(speed)
+    async def async_turn_on(
+        self,
+        speed: Optional[str] = None,
+        percentage: Optional[int] = None,
+        preset_mode: Optional[str] = None,
+        **kwargs,
+    ) -> None:
+        await self.async_set_percentage(percentage)
 
-    async def async_turn_off(self, **kwargs) -> None:
-        await self.async_set_speed(SPEED_OFF)
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self.async_set_percentage(0)

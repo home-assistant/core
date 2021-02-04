@@ -374,12 +374,6 @@ def _create_fan(knx_module: XKNX, config: ConfigType) -> XknxFan:
         name=config[CONF_NAME],
         group_address_speed=config.get(CONF_ADDRESS),
         group_address_speed_state=config.get(FanSchema.CONF_STATE_ADDRESS),
+        max_step=config.get(FanSchema.CONF_MAX_STEP),
     )
-    fan.speed_mapping = {
-        SPEED_OFF: config[FanSchema.CONF_FAN_VALUE_OFF],
-        SPEED_LOW: config[FanSchema.CONF_FAN_VALUE_LOW],
-        SPEED_MEDIUM: config[FanSchema.CONF_FAN_VALUE_MEDIUM],
-        SPEED_HIGH: config[FanSchema.CONF_FAN_VALUE_HIGH],
-    }
-    fan.speed_list = config[FanSchema.CONF_SPEED_LIST]
     return fan
