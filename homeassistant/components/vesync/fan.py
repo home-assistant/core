@@ -148,4 +148,6 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         if preset_mode:
             self.set_preset_mode(preset_mode)
             return
+        if percentage is None:
+            percentage = 50
         self.set_percentage(percentage)
