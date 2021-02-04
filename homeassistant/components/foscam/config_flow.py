@@ -1,6 +1,10 @@
 """Config flow for foscam integration."""
 from libpyfoscam import FoscamCamera
-from libpyfoscam.foscam import ERROR_FOSCAM_AUTH, ERROR_FOSCAM_UNAVAILABLE
+from libpyfoscam.foscam import (
+    ERROR_FOSCAM_AUTH,
+    ERROR_FOSCAM_UNAVAILABLE,
+    FOSCAM_SUCCESS,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -32,10 +36,18 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
+def camera_unique_id(data):
+    """Generate an unique id for the camera."""
+    # MAC Address is only available with admin accounts so we craft our own unique id
+    return (
+        f"{data[CONF_USERNAME]}_{data[CONF_HOST]}:{data[CONF_PORT]}_{data[CONF_STREAM]}"
+    )
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for foscam."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def _validate_and_create(self, data):
@@ -52,7 +64,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         # Validate data by sending a request to the camera
-        ret, response = await self.hass.async_add_executor_job(camera.get_dev_info)
+        ret, _ = await self.hass.async_add_executor_job(camera.get_product_all_info)
 
         if ret == ERROR_FOSCAM_UNAVAILABLE:
             raise CannotConnect
@@ -60,10 +72,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if ret == ERROR_FOSCAM_AUTH:
             raise InvalidAuth
 
-        await self.async_set_unique_id(response["mac"])
+        if ret != FOSCAM_SUCCESS:
+            LOGGER.error(
+                "Unexpected error code from camera %s:%s: %s",
+                data[CONF_HOST],
+                data[CONF_PORT],
+                ret,
+            )
+            raise InvalidResponse
+
+        # Try to get camera name (only possible with admin account)
+        ret, response = await self.hass.async_add_executor_job(camera.get_dev_info)
+
+        dev_name = response.get(
+            "devName", f"Foscam {data[CONF_HOST]}:{data[CONF_PORT]}"
+        )
+
+        await self.async_set_unique_id(camera_unique_id(data))
         self._abort_if_unique_id_configured()
 
-        name = data.pop(CONF_NAME, response["devName"])
+        name = data.pop(CONF_NAME, dev_name)
 
         return self.async_create_entry(title=name, data=data)
 
@@ -80,6 +108,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+
+            except InvalidResponse:
+                errors["base"] = "unknown"
 
             except AbortFlow:
                 raise
@@ -105,6 +136,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             LOGGER.error("Error importing foscam platform config: invalid auth.")
             return self.async_abort(reason="invalid_auth")
 
+        except InvalidResponse:
+            LOGGER.exception(
+                "Error importing foscam platform config: invalid response from camera."
+            )
+            return self.async_abort(reason="unknown")
+
         except AbortFlow:
             raise
 
@@ -121,3 +158,7 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class InvalidResponse(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid response."""

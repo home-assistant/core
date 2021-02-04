@@ -2,9 +2,11 @@
 import asyncio
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_registry import async_migrate_entries
 
-from .const import DOMAIN, SERVICE_PTZ, SERVICE_PTZ_PRESET
+from .config_flow import camera_unique_id
+from .const import DOMAIN, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
 
 PLATFORMS = ["camera"]
 
@@ -46,3 +48,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.services.async_remove(domain=DOMAIN, service=SERVICE_PTZ_PRESET)
 
     return unload_ok
+
+
+async def async_migrate_entry(hass, config_entry: ConfigEntry):
+    """Migrate old entry."""
+    LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        new_unique_id = camera_unique_id(config_entry.data)
+
+        @callback
+        def update_unique_id(entry):
+            return {"new_unique_id": new_unique_id}
+
+        await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+
+        config_entry.unique_id = new_unique_id
+        config_entry.version = 2
+
+    LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True

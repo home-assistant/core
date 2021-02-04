@@ -145,7 +145,13 @@ class HassFoscamCamera(Camera):
             self._foscam_session.get_motion_detect_config
         )
 
-        if ret != 0:
+        if ret == -3:
+            LOGGER.info(
+                "Can't get motion detection status, camera %s configured with non-admin user.",
+                self._name,
+            )
+
+        elif ret != 0:
             LOGGER.error(
                 "Error getting motion detection status of %s: %s", self._name, ret
             )
@@ -205,6 +211,11 @@ class HassFoscamCamera(Camera):
             ret = self._foscam_session.enable_motion_detection()
 
             if ret != 0:
+                if ret == -3:
+                    LOGGER.info(
+                        "Can't set motion detection status, camera %s configured with non-admin user.",
+                        self._name,
+                    )
                 return
 
             self._motion_status = True
@@ -220,6 +231,11 @@ class HassFoscamCamera(Camera):
             ret = self._foscam_session.disable_motion_detection()
 
             if ret != 0:
+                if ret == -3:
+                    LOGGER.info(
+                        "Can't set motion detection status, camera %s configured with non-admin user.",
+                        self._name,
+                    )
                 return
 
             self._motion_status = False
