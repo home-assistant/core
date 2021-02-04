@@ -1,4 +1,4 @@
 # Describes the format for available lovelace services
 
 reload_resources:
-  description: Reload Lovelace resources from yaml configuration.
+  description: Reload Lovelace resources from YAML configuration.
