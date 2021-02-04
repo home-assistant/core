@@ -19,6 +19,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 
+
 async def test_bridge_setup(hass):
     """Test a successful setup."""
     entry = Mock()
