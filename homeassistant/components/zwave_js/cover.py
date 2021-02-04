@@ -79,17 +79,17 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        target_value = self.get_zwave_value("Open")
+        target_value = self.get_zwave_value("Open") or self.get_zwave_value("Up")
         await self.info.node.async_set_value(target_value, PRESS_BUTTON)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        target_value = self.get_zwave_value("Close")
+        target_value = self.get_zwave_value("Close") or self.get_zwave_value("Down")
         await self.info.node.async_set_value(target_value, PRESS_BUTTON)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop cover."""
-        target_value = self.get_zwave_value("Open")
+        target_value = self.get_zwave_value("Open") or self.get_zwave_value("Up")
         await self.info.node.async_set_value(target_value, RELEASE_BUTTON)
-        target_value = self.get_zwave_value("Close")
+        target_value = self.get_zwave_value("Close") or self.get_zwave_value("Down")
         await self.info.node.async_set_value(target_value, RELEASE_BUTTON)
