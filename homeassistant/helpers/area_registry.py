@@ -1,23 +1,19 @@
 """Provide a way to connect devices to one physical location."""
-import logging
-import uuid
-from asyncio import Event
+from asyncio import Event, gather
 from collections import OrderedDict
-from typing import MutableMapping  # noqa: F401
-from typing import Iterable, Optional, cast
+from typing import Container, Dict, Iterable, List, MutableMapping, Optional, cast
 
 import attr
 
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
+from homeassistant.util import slugify
 
 from .typing import HomeAssistantType
 
-_LOGGER = logging.getLogger(__name__)
-
-DATA_REGISTRY = 'area_registry'
-EVENT_AREA_REGISTRY_UPDATED = 'area_registry_updated'
-STORAGE_KEY = 'core.area_registry'
+DATA_REGISTRY = "area_registry"
+EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
+STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
 
@@ -26,8 +22,17 @@ SAVE_DELAY = 10
 class AreaEntry:
     """Area Registry Entry."""
 
-    name = attr.ib(type=str, default=None)
-    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    name: str = attr.ib()
+    id: Optional[str] = attr.ib(default=None)
+
+    def generate_id(self, existing_ids: Container) -> None:
+        """Initialize ID."""
+        suggestion = suggestion_base = slugify(self.name)
+        tries = 1
+        while suggestion in existing_ids:
+            tries += 1
+            suggestion = f"{suggestion_base}_{tries}"
+        object.__setattr__(self, "id", suggestion)
 
 
 class AreaRegistry:
@@ -36,7 +41,7 @@ class AreaRegistry:
     def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize the area registry."""
         self.hass = hass
-        self.areas = {}  # type: MutableMapping[str, AreaEntry]
+        self.areas: MutableMapping[str, AreaEntry] = {}
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
@@ -53,32 +58,32 @@ class AreaRegistry:
     def async_create(self, name: str) -> AreaEntry:
         """Create a new area."""
         if self._async_is_registered(name):
-            raise ValueError('Name is already in use')
+            raise ValueError("Name is already in use")
 
-        area = AreaEntry()
+        area = AreaEntry(name=name)
+        area.generate_id(self.areas)
+        assert area.id is not None
         self.areas[area.id] = area
-
-        created = self._async_update(area.id, name=name)
-
-        self.hass.bus.async_fire(EVENT_AREA_REGISTRY_UPDATED, {
-            'action': 'create',
-            'area_id': created.id,
-        })
-
-        return created
+        self.async_schedule_save()
+        self.hass.bus.async_fire(
+            EVENT_AREA_REGISTRY_UPDATED, {"action": "create", "area_id": area.id}
+        )
+        return area
 
     async def async_delete(self, area_id: str) -> None:
         """Delete area."""
-        device_registry = await \
-            self.hass.helpers.device_registry.async_get_registry()
+        device_registry, entity_registry = await gather(
+            self.hass.helpers.device_registry.async_get_registry(),
+            self.hass.helpers.entity_registry.async_get_registry(),
+        )
         device_registry.async_clear_area_id(area_id)
+        entity_registry.async_clear_area_id(area_id)
 
         del self.areas[area_id]
 
-        self.hass.bus.async_fire(EVENT_AREA_REGISTRY_UPDATED, {
-            'action': 'remove',
-            'area_id': area_id,
-        })
+        self.hass.bus.async_fire(
+            EVENT_AREA_REGISTRY_UPDATED, {"action": "remove", "area_id": area_id}
+        )
 
         self.async_schedule_save()
 
@@ -86,10 +91,9 @@ class AreaRegistry:
     def async_update(self, area_id: str, name: str) -> AreaEntry:
         """Update name of area."""
         updated = self._async_update(area_id, name)
-        self.hass.bus.async_fire(EVENT_AREA_REGISTRY_UPDATED, {
-            'action': 'update',
-            'area_id': area_id,
-        })
+        self.hass.bus.async_fire(
+            EVENT_AREA_REGISTRY_UPDATED, {"action": "update", "area_id": area_id}
+        )
         return updated
 
     @callback
@@ -103,9 +107,9 @@ class AreaRegistry:
             return old
 
         if self._async_is_registered(name):
-            raise ValueError('Name is already in use')
+            raise ValueError("Name is already in use")
 
-        changes['name'] = name
+        changes["name"] = name
 
         new = self.areas[area_id] = attr.evolve(old, **changes)
         self.async_schedule_save()
@@ -123,14 +127,11 @@ class AreaRegistry:
         """Load the area registry."""
         data = await self._store.async_load()
 
-        areas = OrderedDict()  # type: OrderedDict[str, AreaEntry]
+        areas: MutableMapping[str, AreaEntry] = OrderedDict()
 
         if data is not None:
-            for area in data['areas']:
-                areas[area['id']] = AreaEntry(
-                    name=area['name'],
-                    id=area['id']
-                )
+            for area in data["areas"]:
+                areas[area["id"]] = AreaEntry(name=area["name"], id=area["id"])
 
         self.areas = areas
 
@@ -140,15 +141,12 @@ class AreaRegistry:
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
-    def _data_to_save(self) -> dict:
+    def _data_to_save(self) -> Dict[str, List[Dict[str, Optional[str]]]]:
         """Return data of area registry to store in a file."""
         data = {}
 
-        data['areas'] = [
-            {
-                'name': entry.name,
-                'id': entry.id,
-            } for entry in self.areas.values()
+        data["areas"] = [
+            {"name": entry.name, "id": entry.id} for entry in self.areas.values()
         ]
 
         return data

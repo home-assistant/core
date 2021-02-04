@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Altitudine",
+                    "latitude": "Latitudine",
+                    "longitude": "Logitudine",
+                    "name": "Nome"
+                },
+                "description": "Meteorologisk institutt",
+                "title": "Posizione"
+            }
+        }
+    }
+}

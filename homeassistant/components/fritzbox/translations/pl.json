@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci",
+            "not_supported": "Po\u0142\u0105czony z AVM FRITZ!Box, ale nie jest w stanie kontrolowa\u0107 urz\u0105dze\u0144 Smart Home",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "flow_title": "AVM FRITZ!Box: {name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Czy chcesz skonfigurowa\u0107 {name}?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Zaktualizuj dane logowania dla {name}"
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Wprowad\u017a informacje o urz\u0105dzeniu AVM FRITZ! Box."
+            }
+        }
+    }
+}

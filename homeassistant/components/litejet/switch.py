@@ -2,16 +2,16 @@
 import logging
 
 from homeassistant.components import litejet
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import SwitchEntity
 
-ATTR_NUMBER = 'number'
+ATTR_NUMBER = "number"
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LiteJet switch platform."""
-    litejet_ = hass.data['litejet_system']
+    litejet_ = hass.data["litejet_system"]
 
     devices = []
     for i in litejet_.button_switches():
@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class LiteJetSwitch(SwitchDevice):
+class LiteJetSwitch(SwitchEntity):
     """Representation of a single LiteJet switch."""
 
     def __init__(self, hass, lj, i, name):
@@ -63,9 +63,7 @@ class LiteJetSwitch(SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return the device-specific state attributes."""
-        return {
-            ATTR_NUMBER: self._index
-        }
+        return {ATTR_NUMBER: self._index}
 
     def turn_on(self, **kwargs):
         """Press the switch."""

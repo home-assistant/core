@@ -1,6 +1,4 @@
 """Support for switches using the PiFace Digital I/O module on a RPi."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components import rpi_pfio
@@ -9,24 +7,22 @@ from homeassistant.const import ATTR_NAME, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 
-_LOGGER = logging.getLogger(__name__)
+ATTR_INVERT_LOGIC = "invert_logic"
 
-ATTR_INVERT_LOGIC = 'invert_logic'
-
-CONF_PORTS = 'ports'
+CONF_PORTS = "ports"
 
 DEFAULT_INVERT_LOGIC = False
 
-PORT_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_NAME): cv.string,
-    vol.Optional(ATTR_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
-})
+PORT_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_NAME): cv.string,
+        vol.Optional(ATTR_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_PORTS, default={}): vol.Schema({
-        cv.positive_int: PORT_SCHEMA,
-    })
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_PORTS, default={}): vol.Schema({cv.positive_int: PORT_SCHEMA})}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

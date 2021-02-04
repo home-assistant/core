@@ -1,0 +1,21 @@
+{
+  "config": {
+    "flow_title": "Tesla Powerwall ({ip_address})",
+    "step": {
+      "user": {
+        "title": "Connect to the powerwall",
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "wrong_version": "Your powerwall uses a software version that is not supported. Please consider upgrading or reporting this issue so it can be resolved.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

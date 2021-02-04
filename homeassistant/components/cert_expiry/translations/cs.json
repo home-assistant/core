@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nastavena",
+            "import_failed": "Import z konfigurace se nezda\u0159il"
+        },
+        "error": {
+            "connection_refused": "P\u0159ipojen\u00ed bylo odm\u00edtnuto p\u0159i p\u0159ipojov\u00e1n\u00ed k hostiteli",
+            "connection_timeout": "\u010casov\u00fd limit p\u0159i p\u0159ipojen\u00ed k tomuto hostiteli vypr\u0161el"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostitel",
+                    "name": "N\u00e1zev certifik\u00e1tu",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "title": "Platnost certifik\u00e1tu"
+}

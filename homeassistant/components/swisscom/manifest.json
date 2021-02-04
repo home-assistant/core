@@ -1,8 +1,6 @@
 {
   "domain": "swisscom",
-  "name": "Swisscom",
-  "documentation": "https://www.home-assistant.io/components/swisscom",
-  "requirements": [],
-  "dependencies": [],
+  "name": "Swisscom Internet-Box",
+  "documentation": "https://www.home-assistant.io/integrations/swisscom",
   "codeowners": []
 }

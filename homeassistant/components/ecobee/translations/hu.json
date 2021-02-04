@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "pin_request_failed": "Hiba t\u00f6rt\u00e9nt a PIN-k\u00f3d ecobee-t\u0151l t\u00f6rt\u00e9n\u0151 k\u00e9r\u00e9sekor; ellen\u0151rizze, hogy az API-kulcs helyes-e.",
+            "token_request_failed": "Hiba t\u00f6rt\u00e9nt a tokenek ecobee-t\u0151l t\u00f6rt\u00e9n\u0151 ig\u00e9nyl\u00e9se k\u00f6zben; pr\u00f3b\u00e1lkozzon \u00fajra."
+        },
+        "step": {
+            "authorize": {
+                "description": "K\u00e9rj\u00fck, enged\u00e9lyezze ezt az alkalmaz\u00e1st a https://www.ecobee.com/consumerportal/index.html c\u00edmen a k\u00f6vetkez\u0151 PIN-k\u00f3ddal: \n\n {pin} \n \n Ezut\u00e1n nyomja meg a K\u00fcld\u00e9s gombot.",
+                "title": "Alkalmaz\u00e1s enged\u00e9lyez\u00e9se ecobee.com-on"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API kulcs"
+                },
+                "description": "Adja meg az ecobee.com webhelyr\u0151l beszerzett API-kulcsot.",
+                "title": "ecobee API kulcs"
+            }
+        }
+    }
+}

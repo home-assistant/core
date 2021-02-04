@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "No se pudo conectar con el controlador con url {base_url}"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "Identificadores de dispositivos Vera a excluir de Home Assistant",
+                    "lights": "Identificadores de interruptores Vera que deben ser tratados como luces en Home Assistant",
+                    "vera_controller_url": "URL del controlador"
+                },
+                "description": "Introduce una URL para el controlador Vera a continuaci\u00f3n. Ser\u00eda algo como: http://192.168.1.161:3480.",
+                "title": "Configurar el controlador Vera"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "exclude": "Identificadores de dispositivos Vera a excluir de Home Assistant",
+                    "lights": "Identificadores de interruptores Vera que deben ser tratados como luces en Home Assistant"
+                },
+                "description": "Consulte la documentaci\u00f3n de Vera para obtener detalles sobre los par\u00e1metros opcionales: https://www.home-assistant.io/integrations/vera/. Nota: Cualquier cambio aqu\u00ed necesitar\u00e1 un reinicio del servidor de Home Assistant. Para borrar valores, introduce un espacio.",
+                "title": "Opciones del controlador Vera"
+            }
+        }
+    }
+}

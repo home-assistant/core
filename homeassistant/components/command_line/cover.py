@@ -1,33 +1,48 @@
 """Support for command line covers."""
 import logging
-import subprocess
 
 import voluptuous as vol
 
-from homeassistant.components.cover import (CoverDevice, PLATFORM_SCHEMA)
+from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
 from homeassistant.const import (
-    CONF_COMMAND_CLOSE, CONF_COMMAND_OPEN, CONF_COMMAND_STATE,
-    CONF_COMMAND_STOP, CONF_COVERS, CONF_VALUE_TEMPLATE, CONF_FRIENDLY_NAME)
+    CONF_COMMAND_CLOSE,
+    CONF_COMMAND_OPEN,
+    CONF_COMMAND_STATE,
+    CONF_COMMAND_STOP,
+    CONF_COVERS,
+    CONF_FRIENDLY_NAME,
+    CONF_VALUE_TEMPLATE,
+)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import setup_reload_service
+
+from . import call_shell_with_timeout, check_output_or_log
+from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
-COVER_SCHEMA = vol.Schema({
-    vol.Optional(CONF_COMMAND_CLOSE, default='true'): cv.string,
-    vol.Optional(CONF_COMMAND_OPEN, default='true'): cv.string,
-    vol.Optional(CONF_COMMAND_STATE): cv.string,
-    vol.Optional(CONF_COMMAND_STOP, default='true'): cv.string,
-    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-})
+COVER_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_COMMAND_CLOSE, default="true"): cv.string,
+        vol.Optional(CONF_COMMAND_OPEN, default="true"): cv.string,
+        vol.Optional(CONF_COMMAND_STATE): cv.string,
+        vol.Optional(CONF_COMMAND_STOP, default="true"): cv.string,
+        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA)}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up cover controlled by shell commands."""
+
+    setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     devices = config.get(CONF_COVERS, {})
     covers = []
 
@@ -40,11 +55,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             CommandCover(
                 hass,
                 device_config.get(CONF_FRIENDLY_NAME, device_name),
-                device_config.get(CONF_COMMAND_OPEN),
-                device_config.get(CONF_COMMAND_CLOSE),
-                device_config.get(CONF_COMMAND_STOP),
+                device_config[CONF_COMMAND_OPEN],
+                device_config[CONF_COMMAND_CLOSE],
+                device_config[CONF_COMMAND_STOP],
                 device_config.get(CONF_COMMAND_STATE),
                 value_template,
+                device_config[CONF_COMMAND_TIMEOUT],
             )
         )
 
@@ -55,11 +71,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(covers)
 
 
-class CommandCover(CoverDevice):
+class CommandCover(CoverEntity):
     """Representation a command line cover."""
 
-    def __init__(self, hass, name, command_open, command_close, command_stop,
-                 command_state, value_template):
+    def __init__(
+        self,
+        hass,
+        name,
+        command_open,
+        command_close,
+        command_stop,
+        command_state,
+        value_template,
+        timeout,
+    ):
         """Initialize the cover."""
         self._hass = hass
         self._name = name
@@ -69,29 +94,23 @@ class CommandCover(CoverDevice):
         self._command_stop = command_stop
         self._command_state = command_state
         self._value_template = value_template
+        self._timeout = timeout
 
-    @staticmethod
-    def _move_cover(command):
+    def _move_cover(self, command):
         """Execute the actual commands."""
         _LOGGER.info("Running command: %s", command)
 
-        success = (subprocess.call(command, shell=True) == 0)
+        success = call_shell_with_timeout(command, self._timeout) == 0
 
         if not success:
             _LOGGER.error("Command failed: %s", command)
 
         return success
 
-    @staticmethod
-    def _query_state_value(command):
+    def _query_state_value(self, command):
         """Execute state command for return value."""
-        _LOGGER.info("Running state command: %s", command)
-
-        try:
-            return_value = subprocess.check_output(command, shell=True)
-            return return_value.strip().decode('utf-8')
-        except subprocess.CalledProcessError:
-            _LOGGER.error("Command failed: %s", command)
+        _LOGGER.info("Running state value command: %s", command)
+        return check_output_or_log(command, self._timeout)
 
     @property
     def should_poll(self):
@@ -129,8 +148,7 @@ class CommandCover(CoverDevice):
         if self._command_state:
             payload = str(self._query_state())
             if self._value_template:
-                payload = self._value_template.render_with_possible_json_value(
-                    payload)
+                payload = self._value_template.render_with_possible_json_value(payload)
             self._state = int(payload)
 
     def open_cover(self, **kwargs):

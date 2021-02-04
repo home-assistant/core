@@ -1,0 +1,14 @@
+# Describes the format for available nzbget services
+
+pause:
+  description: Pause download queue.
+
+resume:
+  description: Resume download queue.
+
+set_speed:
+  description: Set download speed limit
+  fields:
+    speed:
+      description: Speed limit in kB/s. 0 is unlimited.
+      example: 1000

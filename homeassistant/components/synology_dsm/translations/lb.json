@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "missing_data": "Donn\u00e9\u00ebe feelen, prob\u00e9ier sp\u00e9ider oder mat enger aner Konfiguratioun",
+            "otp_failed": "Feeler mam 2-Faktor-Authentifikatiouns, prob\u00e9ier mat engem neie Code",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "flow_title": "Synology DSM {name} ({host})",
+        "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Code"
+                },
+                "title": "Synology DSM: 2-Faktor-Authentifikatioun"
+            },
+            "link": {
+                "data": {
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "ssl": "Benotzt ee SSL Zertifikat",
+                    "username": "Benotzernumm",
+                    "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
+                },
+                "description": "Soll {name} ({host}) konfigur\u00e9iert ginn?",
+                "title": "Synology DSM"
+            },
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "ssl": "Benotzt ee SSL Zertifikat",
+                    "username": "Benotzernumm",
+                    "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
+                },
+                "title": "Synology DSM"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Minutte t\u00ebscht Scannen",
+                    "timeout": "Z\u00e4itiwwerscheidung (sekonnen)"
+                }
+            }
+        }
+    }
+}

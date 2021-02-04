@@ -1,0 +1,51 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "cannot_connect": "No se pudo conectar",
+            "not_lutron_device": "El dispositivo descubierto no es un dispositivo de Lutron"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar"
+        },
+        "flow_title": "Lutron Cas\u00e9ta {name} ({host})",
+        "step": {
+            "import_failed": {
+                "description": "No se puede configurar bridge (host: {host}) importado desde configuration.yaml.",
+                "title": "Error al importar la configuraci\u00f3n del bridge Cas\u00e9ta."
+            },
+            "link": {
+                "description": "Para emparejar con {name} ({host}), despu\u00e9s de enviar este formulario, presione el bot\u00f3n negro en la parte posterior del puente.",
+                "title": "Emparejar con el puente"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Introduzca la direcci\u00f3n ip del dispositivo.",
+                "title": "Conectar autom\u00e1ticamente con el dispositivo"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "open_1": "Abrir 1",
+            "open_2": "Abrir 2",
+            "open_3": "Abrir 3",
+            "open_4": "Abrir 4",
+            "open_all": "Abrir todo",
+            "raise": "Levantar",
+            "raise_1": "Levantar 1",
+            "raise_2": "Levantar 2",
+            "raise_3": "Levantar 3",
+            "raise_4": "Levantar 4",
+            "raise_all": "Levantar todo",
+            "stop": "Detener (favorito)",
+            "stop_1": "Detener 1",
+            "stop_2": "Detener 2",
+            "stop_3": "Detener 3",
+            "stop_4": "Detener 4",
+            "stop_all": "Detener todo"
+        }
+    }
+}

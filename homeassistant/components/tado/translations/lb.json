@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "no_homes": "Keng Immobilien mat d\u00ebsem Tado Kont verbonnen.",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                },
+                "title": "Verbann dech mat dengem Tado Kont."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "fallback": "Fallback Modus aktiv\u00e9ieren"
+                },
+                "description": "Fallback Modus wiesselt op Smarte Z\u00e4itplang beim n\u00e4chsten ausf\u00e9ieren nodeems eng Zon ausgewielt gouf.",
+                "title": "Tado Optiounen \u00e4nneren"
+            }
+        }
+    }
+}

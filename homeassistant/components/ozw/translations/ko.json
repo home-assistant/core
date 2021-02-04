@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "mqtt_required": "MQTT \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\uac00 \uc124\uc815\ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4"
+        }
+    }
+}

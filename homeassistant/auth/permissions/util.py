@@ -1,34 +1,34 @@
 """Helpers to deal with permissions."""
 from functools import wraps
-
-from typing import Callable, Dict, List, Optional, Union, cast  # noqa: F401
+from typing import Callable, Dict, List, Optional, cast
 
 from .const import SUBCAT_ALL
 from .models import PermissionLookup
 from .types import CategoryType, SubCategoryDict, ValueType
 
-LookupFunc = Callable[[PermissionLookup, SubCategoryDict, str],
-                      Optional[ValueType]]
+LookupFunc = Callable[[PermissionLookup, SubCategoryDict, str], Optional[ValueType]]
 SubCatLookupType = Dict[str, LookupFunc]
 
 
-def lookup_all(perm_lookup: PermissionLookup, lookup_dict: SubCategoryDict,
-               object_id: str) -> ValueType:
+def lookup_all(
+    perm_lookup: PermissionLookup, lookup_dict: SubCategoryDict, object_id: str
+) -> ValueType:
     """Look up permission for all."""
     # In case of ALL category, lookup_dict IS the schema.
     return cast(ValueType, lookup_dict)
 
 
 def compile_policy(
-        policy: CategoryType, subcategories: SubCatLookupType,
-        perm_lookup: PermissionLookup
-    ) -> Callable[[str, str], bool]:  # noqa
+    policy: CategoryType, subcategories: SubCatLookupType, perm_lookup: PermissionLookup
+) -> Callable[[str, str], bool]:
     """Compile policy into a function that tests policy.
+
     Subcategories are mapping key -> lookup function, ordered by highest
     priority first.
     """
     # None, False, empty dict
     if not policy:
+
         def apply_policy_deny_all(entity_id: str, key: str) -> bool:
             """Decline all."""
             return False
@@ -36,6 +36,7 @@ def compile_policy(
         return apply_policy_deny_all
 
     if policy is True:
+
         def apply_policy_allow_all(entity_id: str, key: str) -> bool:
             """Approve all."""
             return True
@@ -44,7 +45,7 @@ def compile_policy(
 
     assert isinstance(policy, dict)
 
-    funcs = []  # type: List[Callable[[str, str], Union[None, bool]]]
+    funcs: List[Callable[[str, str], Optional[bool]]] = []
 
     for key, lookup_func in subcategories.items():
         lookup_value = policy.get(key)
@@ -54,8 +55,7 @@ def compile_policy(
             return lambda object_id, key: True
 
         if lookup_value is not None:
-            funcs.append(_gen_dict_test_func(
-                perm_lookup, lookup_func, lookup_value))
+            funcs.append(_gen_dict_test_func(perm_lookup, lookup_func, lookup_value))
 
     if len(funcs) == 1:
         func = funcs[0]
@@ -79,15 +79,13 @@ def compile_policy(
 
 
 def _gen_dict_test_func(
-        perm_lookup: PermissionLookup,
-        lookup_func: LookupFunc,
-        lookup_dict: SubCategoryDict
-    ) -> Callable[[str, str], Optional[bool]]:  # noqa
+    perm_lookup: PermissionLookup, lookup_func: LookupFunc, lookup_dict: SubCategoryDict
+) -> Callable[[str, str], Optional[bool]]:
     """Generate a lookup function."""
+
     def test_value(object_id: str, key: str) -> Optional[bool]:
         """Test if permission is allowed based on the keys."""
-        schema = lookup_func(
-            perm_lookup, lookup_dict, object_id)  # type: ValueType
+        schema: ValueType = lookup_func(perm_lookup, lookup_dict, object_id)
 
         if schema is None or isinstance(schema, bool):
             return schema

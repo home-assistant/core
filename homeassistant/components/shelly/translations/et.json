@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "unsupported_firmware": "Seade kasutab toetuseta p\u00fcsivara versiooni."
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "flow_title": "",
+        "step": {
+            "confirm_discovery": {
+                "description": "Kas soovid seadistada {model} saidil {host} ?\n\n Enne seadistamist tuleb akutoitega seade \u00e4ratada vajutades seadmel nuppu."
+            },
+            "credentials": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": ""
+                },
+                "description": "Enne seadistamist tuleb akutoitega seade \u00e4ratada vajutades seadme nuppu."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Nupp",
+            "button1": "Esimene nupp",
+            "button2": "Teine nupp",
+            "button3": "Kolmas nupp"
+        },
+        "trigger_type": {
+            "double": "Nuppu  {subtype}  topeltkl\u00f5psati",
+            "long": "Nuppu \"{subtype}\" hoiti all",
+            "long_single": "Nuppu {subtype} hoiti all ja seej\u00e4rel kl\u00f5psati",
+            "single": "Nuppu {subtype} kl\u00f5psati",
+            "single_long": "Nuppu {subtype} kl\u00f5psati \u00fcks kord ja seej\u00e4rel hoiti all",
+            "triple": "Nuppu {subtype} kl\u00f5psati kolm korda"
+        }
+    }
+}

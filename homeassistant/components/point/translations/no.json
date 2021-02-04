@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
+            "authorize_url_fail": "Ukjent feil ved generering av godkjenningsadresse",
+            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse",
+            "external_setup": "Punktet er konfigurert fra en annen flyt.",
+            "no_flows": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",
+            "unknown_authorize_url_generation": "Ukjent feil ved generering av godkjenningsadresse"
+        },
+        "create_entry": {
+            "default": "Vellykket godkjenning"
+        },
+        "error": {
+            "follow_link": "Vennligst f\u00f8lg lenken og godkjenn f\u00f8r du trykker send",
+            "no_token": "Ugyldig tilgangstoken"
+        },
+        "step": {
+            "auth": {
+                "description": "Vennligst f\u00f8lg lenken nedenfor og **Godta** tilgang til Minut-kontoen din, kom tilbake og trykk **Send inn** nedenfor\n\n [Link]({authorization_url})",
+                "title": "Godkjenn Point"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Tilbyder"
+                },
+                "description": "Vil du starte oppsettet?",
+                "title": "Velg godkjenningsmetode"
+            }
+        }
+    }
+}

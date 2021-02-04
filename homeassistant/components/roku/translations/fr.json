@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "unknown": "Erreur inattendue"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "flow_title": "Roku: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "data": {
+                    "one": "Vide",
+                    "other": "Vide"
+                },
+                "description": "Voulez-vous configurer {name} ?",
+                "title": "Roku"
+            },
+            "user": {
+                "data": {
+                    "host": "Nom d'h\u00f4te ou adresse IP"
+                },
+                "description": "Entrez vos informations Roku."
+            }
+        }
+    }
+}

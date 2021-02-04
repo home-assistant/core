@@ -1,10 +1,13 @@
 {
   "domain": "plex",
-  "name": "Plex",
-  "documentation": "https://www.home-assistant.io/components/plex",
+  "name": "Plex Media Server",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/plex",
   "requirements": [
-    "plexapi==3.0.6"
+      "plexapi==4.3.1",
+      "plexauth==0.0.6",
+      "plexwebsocket==0.0.12"
   ],
-  "dependencies": ["configurator"],
-  "codeowners": []
+  "dependencies": ["http"],
+  "codeowners": ["@jjlawren"]
 }

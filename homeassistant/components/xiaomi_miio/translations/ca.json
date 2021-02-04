@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key::common::config_flow::abort::already_configured_device%]",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "no_device_selected": "No hi ha cap dispositiu seleccionat, selecciona'n un."
+        },
+        "flow_title": "Xiaomi Miio: {name}",
+        "step": {
+            "gateway": {
+                "data": {
+                    "host": "Adre\u00e7a IP",
+                    "name": "Nom de la passarel\u00b7la",
+                    "token": "Token d'API"
+                },
+                "description": "Necessitar\u00e0s el Token d'API de 32 car\u00e0cters, consulta les instruccions a https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token. Tingues en compte que aquest Token d'API \u00e9s diferent a la clau utilitzada per la integraci\u00f3 Xiaomi Aqara.",
+                "title": "Connexi\u00f3 amb la passarel\u00b7la de Xiaomi"
+            },
+            "user": {
+                "data": {
+                    "gateway": "Connexi\u00f3 amb la passarel\u00b7la de Xiaomi"
+                },
+                "description": "Selecciona a quin dispositiu vols connectar-te.",
+                "title": "Xiaomi Miio"
+            }
+        }
+    }
+}

@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servicio ya est\u00e1 configurado",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
+            "unknown": "Error inesperado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
+        },
+        "flow_title": "Sonarr: {name}",
+        "step": {
+            "reauth_confirm": {
+                "description": "La integraci\u00f3n de Sonarr necesita volver a autenticarse manualmente con la API de Sonarr alojada en: {host}",
+                "title": "Volver a autenticarse con Sonarr"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Clave API",
+                    "base_path": "Ruta a la API",
+                    "host": "Host",
+                    "port": "Puerto",
+                    "ssl": "Utiliza un certificado SSL",
+                    "verify_ssl": "Verificar certificado SSL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "upcoming_days": "N\u00famero de d\u00edas pr\u00f3ximos a mostrar",
+                    "wanted_max_items": "N\u00famero m\u00e1ximo de elementos a mostrar"
+                }
+            }
+        }
+    }
+}

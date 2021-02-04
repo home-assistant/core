@@ -1,245 +1,116 @@
 """Sensors on Zigbee Home Automation networks."""
-import logging
+import functools
 import numbers
+from typing import Any, Callable, Dict, List, Optional, Union
 
-from homeassistant.core import callback
 from homeassistant.components.sensor import (
-    DOMAIN, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_PRESSURE, DEVICE_CLASS_POWER,
-    DEVICE_CLASS_BATTERY
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    TEMP_CELSIUS, POWER_WATT, ATTR_UNIT_OF_MEASUREMENT
+    LIGHT_LUX,
+    PERCENTAGE,
+    POWER_WATT,
+    PRESSURE_HPA,
+    TEMP_CELSIUS,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import HomeAssistantType, StateType
+
+from .core import discovery
 from .core.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, ZHA_DISCOVERY_NEW, HUMIDITY, TEMPERATURE,
-    ILLUMINANCE, PRESSURE, METERING, ELECTRICAL_MEASUREMENT,
-    GENERIC, SENSOR_TYPE, ATTRIBUTE_CHANNEL, ELECTRICAL_MEASUREMENT_CHANNEL,
-    SIGNAL_ATTR_UPDATED, SIGNAL_STATE_ATTR, UNKNOWN, BATTERY,
-    POWER_CONFIGURATION_CHANNEL)
+    CHANNEL_ANALOG_INPUT,
+    CHANNEL_ELECTRICAL_MEASUREMENT,
+    CHANNEL_HUMIDITY,
+    CHANNEL_ILLUMINANCE,
+    CHANNEL_POWER_CONFIGURATION,
+    CHANNEL_PRESSURE,
+    CHANNEL_SMARTENERGY_METERING,
+    CHANNEL_TEMPERATURE,
+    DATA_ZHA,
+    DATA_ZHA_DISPATCHERS,
+    SIGNAL_ADD_ENTITIES,
+    SIGNAL_ATTR_UPDATED,
+)
+from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
+from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
 
 PARALLEL_UPDATES = 5
-_LOGGER = logging.getLogger(__name__)
 
 BATTERY_SIZES = {
-    0: 'No battery',
-    1: 'Built in',
-    2: 'Other',
-    3: 'AA',
-    4: 'AAA',
-    5: 'C',
-    6: 'D',
-    7: 'CR2',
-    8: 'CR123A',
-    9: 'CR2450',
-    10: 'CR2032',
-    11: 'CR1632',
-    255: 'Unknown'
+    0: "No battery",
+    1: "Built in",
+    2: "Other",
+    3: "AA",
+    4: "AAA",
+    5: "C",
+    6: "D",
+    7: "CR2",
+    8: "CR123A",
+    9: "CR2450",
+    10: "CR2032",
+    11: "CR1632",
+    255: "Unknown",
 }
 
-
-# Formatter functions
-def pass_through_formatter(value):
-    """No op update function."""
-    return value
+CHANNEL_ST_HUMIDITY_CLUSTER = f"channel_0x{SMARTTHINGS_HUMIDITY_CLUSTER:04x}"
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
-def illuminance_formatter(value):
-    """Convert Illimination data."""
-    if value is None:
-        return None
-    return round(pow(10, ((value - 1) / 10000)), 1)
-
-
-def temperature_formatter(value):
-    """Convert temperature data."""
-    if value is None:
-        return None
-    return round(value / 100, 1)
-
-
-def humidity_formatter(value):
-    """Return the state of the entity."""
-    if value is None:
-        return None
-    return round(float(value) / 100, 1)
-
-
-def active_power_formatter(value):
-    """Return the state of the entity."""
-    if value is None:
-        return None
-    return round(float(value) / 10, 1)
-
-
-def pressure_formatter(value):
-    """Return the state of the entity."""
-    if value is None:
-        return None
-
-    return round(float(value))
-
-
-def battery_percentage_remaining_formatter(value):
-    """Return the state of the entity."""
-    # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
-    if not isinstance(value, numbers.Number) or value == -1:
-        return value
-    value = value / 2
-    value = int(round(value))
-    return value
-
-
-async def async_battery_device_state_attr_provider(channel):
-    """Return device statr attrs for battery sensors."""
-    state_attrs = {}
-    battery_size = await channel.get_attribute_value('battery_size')
-    if battery_size is not None:
-        state_attrs['battery_size'] = BATTERY_SIZES.get(
-            battery_size, 'Unknown')
-    battery_quantity = await channel.get_attribute_value('battery_quantity')
-    if battery_quantity is not None:
-        state_attrs['battery_quantity'] = battery_quantity
-    return state_attrs
-
-
-FORMATTER_FUNC_REGISTRY = {
-    HUMIDITY: humidity_formatter,
-    TEMPERATURE: temperature_formatter,
-    PRESSURE: pressure_formatter,
-    ELECTRICAL_MEASUREMENT: active_power_formatter,
-    ILLUMINANCE: illuminance_formatter,
-    GENERIC: pass_through_formatter,
-    BATTERY: battery_percentage_remaining_formatter
-}
-
-UNIT_REGISTRY = {
-    HUMIDITY: '%',
-    TEMPERATURE: TEMP_CELSIUS,
-    PRESSURE: 'hPa',
-    ILLUMINANCE: 'lx',
-    METERING: POWER_WATT,
-    ELECTRICAL_MEASUREMENT: POWER_WATT,
-    GENERIC: None,
-    BATTERY: '%'
-}
-
-CHANNEL_REGISTRY = {
-    ELECTRICAL_MEASUREMENT: ELECTRICAL_MEASUREMENT_CHANNEL,
-    BATTERY: POWER_CONFIGURATION_CHANNEL
-}
-
-POLLING_REGISTRY = {
-    ELECTRICAL_MEASUREMENT: True
-}
-
-FORCE_UPDATE_REGISTRY = {
-    ELECTRICAL_MEASUREMENT: False
-}
-
-DEVICE_CLASS_REGISTRY = {
-    UNKNOWN: None,
-    HUMIDITY: DEVICE_CLASS_HUMIDITY,
-    TEMPERATURE: DEVICE_CLASS_TEMPERATURE,
-    PRESSURE: DEVICE_CLASS_PRESSURE,
-    ILLUMINANCE: DEVICE_CLASS_ILLUMINANCE,
-    METERING: DEVICE_CLASS_POWER,
-    ELECTRICAL_MEASUREMENT: DEVICE_CLASS_POWER,
-    BATTERY: DEVICE_CLASS_BATTERY
-}
-
-
-DEVICE_STATE_ATTR_PROVIDER_REGISTRY = {
-    BATTERY: async_battery_device_state_attr_provider
-}
-
-
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
-    """Old way of setting up Zigbee Home Automation sensors."""
-    pass
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+) -> None:
     """Set up the Zigbee Home Automation sensor from config entry."""
-    async def async_discover(discovery_info):
-        await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    [discovery_info])
+    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
 
     unsub = async_dispatcher_connect(
-        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
+        hass,
+        SIGNAL_ADD_ENTITIES,
+        functools.partial(
+            discovery.async_add_entities,
+            async_add_entities,
+            entities_to_create,
+            update_before_add=False,
+        ),
+    )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
-
-    sensors = hass.data.get(DATA_ZHA, {}).get(DOMAIN)
-    if sensors is not None:
-        await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    sensors.values())
-        del hass.data[DATA_ZHA][DOMAIN]
-
-
-async def _async_setup_entities(hass, config_entry, async_add_entities,
-                                discovery_infos):
-    """Set up the ZHA sensors."""
-    entities = []
-    for discovery_info in discovery_infos:
-        entities.append(await make_sensor(discovery_info))
-
-    async_add_entities(entities, update_before_add=True)
-
-
-async def make_sensor(discovery_info):
-    """Create ZHA sensors factory."""
-    return Sensor(**discovery_info)
 
 
 class Sensor(ZhaEntity):
     """Base ZHA sensor."""
 
-    _domain = DOMAIN
+    SENSOR_ATTR: Optional[Union[int, str]] = None
+    _decimals: int = 1
+    _device_class: Optional[str] = None
+    _divisor: int = 1
+    _multiplier: int = 1
+    _unit: Optional[str] = None
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: List[ChannelType],
+        **kwargs,
+    ):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._sensor_type = kwargs.get(SENSOR_TYPE, GENERIC)
-        self._unit = UNIT_REGISTRY.get(self._sensor_type)
-        self._formatter_function = FORMATTER_FUNC_REGISTRY.get(
-            self._sensor_type,
-            pass_through_formatter
-        )
-        self._force_update = FORCE_UPDATE_REGISTRY.get(
-            self._sensor_type,
-            False
-        )
-        self._should_poll = POLLING_REGISTRY.get(
-            self._sensor_type,
-            False
-        )
-        self._channel = self.cluster_channels.get(
-            CHANNEL_REGISTRY.get(self._sensor_type, ATTRIBUTE_CHANNEL)
-        )
-        self._device_class = DEVICE_CLASS_REGISTRY.get(
-            self._sensor_type,
-            None
-        )
-        self.state_attr_provider = DEVICE_STATE_ATTR_PROVIDER_REGISTRY.get(
-            self._sensor_type,
-            None
-        )
+        self._channel: ChannelType = channels[0]
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-        if self.state_attr_provider is not None:
-            self._device_state_attributes = await self.state_attr_provider(
-                self._channel
-            )
-        await self.async_accept_signal(
-            self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state)
-        await self.async_accept_signal(
-            self._channel, SIGNAL_STATE_ATTR,
-            self.async_update_state_attribute)
+        self.async_accept_signal(
+            self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
+        )
 
     @property
     def device_class(self) -> str:
@@ -247,30 +118,162 @@ class Sensor(ZhaEntity):
         return self._device_class
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> Optional[str]:
         """Return the unit of measurement of this entity."""
         return self._unit
 
     @property
-    def state(self) -> str:
+    def state(self) -> StateType:
         """Return the state of the entity."""
-        if self._state is None:
+        assert self.SENSOR_ATTR is not None
+        raw_state = self._channel.cluster.get(self.SENSOR_ATTR)
+        if raw_state is None:
             return None
-        if isinstance(self._state, float):
-            return str(round(self._state, 2))
-        return self._state
-
-    def async_set_state(self, state):
-        """Handle state update from channel."""
-        # this is necessary because HA saves the unit based on what shows in
-        # the UI and not based on what the sensor has configured so we need
-        # to flip it back after state restoration
-        self._unit = UNIT_REGISTRY.get(self._sensor_type)
-        self._state = self._formatter_function(state)
-        self.async_schedule_update_ha_state()
+        return self.formatter(raw_state)
 
     @callback
-    def async_restore_last_state(self, last_state):
-        """Restore previous state."""
-        self._state = last_state.state
-        self._unit = last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+    def async_set_state(self, attr_id: int, attr_name: str, value: Any) -> None:
+        """Handle state update from channel."""
+        self.async_write_ha_state()
+
+    def formatter(self, value: int) -> Union[int, float]:
+        """Numeric pass-through formatter."""
+        if self._decimals > 0:
+            return round(
+                float(value * self._multiplier) / self._divisor, self._decimals
+            )
+        return round(float(value * self._multiplier) / self._divisor)
+
+
+@STRICT_MATCH(
+    channel_names=CHANNEL_ANALOG_INPUT,
+    manufacturers="LUMI",
+    models={"lumi.plug", "lumi.plug.maus01", "lumi.plug.mmeu01"},
+)
+@STRICT_MATCH(channel_names=CHANNEL_ANALOG_INPUT, manufacturers="Digi")
+class AnalogInput(Sensor):
+    """Sensor that displays analog input values."""
+
+    SENSOR_ATTR = "present_value"
+
+
+@STRICT_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
+class Battery(Sensor):
+    """Battery sensor of power configuration cluster."""
+
+    SENSOR_ATTR = "battery_percentage_remaining"
+    _device_class = DEVICE_CLASS_BATTERY
+    _unit = PERCENTAGE
+
+    @staticmethod
+    def formatter(value: int) -> int:
+        """Return the state of the entity."""
+        # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
+        if not isinstance(value, numbers.Number) or value == -1:
+            return value
+        value = round(value / 2)
+        return value
+
+    @property
+    def device_state_attributes(self) -> Dict[str, Any]:
+        """Return device state attrs for battery sensors."""
+        state_attrs = {}
+        battery_size = self._channel.cluster.get("battery_size")
+        if battery_size is not None:
+            state_attrs["battery_size"] = BATTERY_SIZES.get(battery_size, "Unknown")
+        battery_quantity = self._channel.cluster.get("battery_quantity")
+        if battery_quantity is not None:
+            state_attrs["battery_quantity"] = battery_quantity
+        battery_voltage = self._channel.cluster.get("battery_voltage")
+        if battery_voltage is not None:
+            state_attrs["battery_voltage"] = round(battery_voltage / 10, 1)
+        return state_attrs
+
+
+@STRICT_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurement(Sensor):
+    """Active power measurement."""
+
+    SENSOR_ATTR = "active_power"
+    _device_class = DEVICE_CLASS_POWER
+    _unit = POWER_WATT
+
+    @property
+    def should_poll(self) -> bool:
+        """Return True if HA needs to poll for state changes."""
+        return True
+
+    def formatter(self, value: int) -> Union[int, float]:
+        """Return 'normalized' value."""
+        value = value * self._channel.multiplier / self._channel.divisor
+        if value < 100 and self._channel.divisor > 1:
+            return round(value, self._decimals)
+        return round(value)
+
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        if not self.available:
+            return
+        await super().async_update()
+
+
+@STRICT_MATCH(generic_ids=CHANNEL_ST_HUMIDITY_CLUSTER)
+@STRICT_MATCH(channel_names=CHANNEL_HUMIDITY)
+class Humidity(Sensor):
+    """Humidity sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _device_class = DEVICE_CLASS_HUMIDITY
+    _divisor = 100
+    _unit = PERCENTAGE
+
+
+@STRICT_MATCH(channel_names=CHANNEL_ILLUMINANCE)
+class Illuminance(Sensor):
+    """Illuminance Sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _device_class = DEVICE_CLASS_ILLUMINANCE
+    _unit = LIGHT_LUX
+
+    @staticmethod
+    def formatter(value: int) -> float:
+        """Convert illumination data."""
+        return round(pow(10, ((value - 1) / 10000)), 1)
+
+
+@STRICT_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
+class SmartEnergyMetering(Sensor):
+    """Metering sensor."""
+
+    SENSOR_ATTR = "instantaneous_demand"
+    _device_class = DEVICE_CLASS_POWER
+
+    def formatter(self, value: int) -> Union[int, float]:
+        """Pass through channel formatter."""
+        return self._channel.formatter_function(value)
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return Unit of measurement."""
+        return self._channel.unit_of_measurement
+
+
+@STRICT_MATCH(channel_names=CHANNEL_PRESSURE)
+class Pressure(Sensor):
+    """Pressure sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _device_class = DEVICE_CLASS_PRESSURE
+    _decimals = 0
+    _unit = PRESSURE_HPA
+
+
+@STRICT_MATCH(channel_names=CHANNEL_TEMPERATURE)
+class Temperature(Sensor):
+    """Temperature Sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _device_class = DEVICE_CLASS_TEMPERATURE
+    _divisor = 100
+    _unit = TEMP_CELSIUS

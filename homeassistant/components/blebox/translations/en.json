@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "A BleBox device is already configured at {address}.",
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error",
+            "unsupported_version": "BleBox device has outdated firmware. Please upgrade it first."
+        },
+        "flow_title": "BleBox device: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP Address",
+                    "port": "Port"
+                },
+                "description": "Set up your BleBox to integrate with Home Assistant.",
+                "title": "Set up your BleBox device"
+            }
+        }
+    }
+}

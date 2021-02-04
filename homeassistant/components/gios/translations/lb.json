@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Standuert ass scho konfigur\u00e9iert."
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_sensors_data": "Ong\u00eblteg Sensor Donn\u00e9e\u00eb fir d\u00ebs Miess Statioun",
+            "wrong_station_id": "ID vun der Miess Statioun ass net korrekt."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Numm",
+                    "station_id": "ID vun der Miess Statioun"
+                },
+                "description": "GIO\u015a (Polnesch Chefinspektorat vum \u00cbmweltschutz) Loft Qualit\u00e9it Integratioun ariichten. Fir w\u00e9ider H\u00ebllef mat der Konfiuratioun kuckt hei: https://www.home-assistant.io/integrations/gios",
+                "title": "GIO\u015a (Polnesch Chefinspektorat vum \u00cbmweltschutz)"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "GIO\u015a Server ereechbar"
+        }
+    }
+}

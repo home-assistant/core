@@ -3,34 +3,32 @@ from typing import Optional, Sequence
 
 from pysmartthings import Attribute, Capability
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockEntity
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
-ST_STATE_LOCKED = 'locked'
+ST_STATE_LOCKED = "locked"
 ST_LOCK_ATTR_MAP = {
-    'codeId': 'code_id',
-    'codeName': 'code_name',
-    'lockName': 'lock_name',
-    'method': 'method',
-    'timeout': 'timeout',
-    'usedCode': 'used_code'
+    "codeId": "code_id",
+    "codeName": "code_name",
+    "lockName": "lock_name",
+    "method": "method",
+    "timeout": "timeout",
+    "usedCode": "used_code",
 }
-
-
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add locks for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
-        [SmartThingsLock(device) for device in broker.devices.values()
-         if broker.any_assigned(device.device_id, 'lock')])
+        [
+            SmartThingsLock(device)
+            for device in broker.devices.values()
+            if broker.any_assigned(device.device_id, "lock")
+        ]
+    )
 
 
 def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
@@ -40,18 +38,18 @@ def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
     return None
 
 
-class SmartThingsLock(SmartThingsEntity, LockDevice):
+class SmartThingsLock(SmartThingsEntity, LockEntity):
     """Define a SmartThings lock."""
 
     async def async_lock(self, **kwargs):
         """Lock the device."""
         await self._device.lock(set_status=True)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_unlock(self, **kwargs):
         """Unlock the device."""
         await self._device.unlock(set_status=True)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def is_locked(self):
@@ -64,7 +62,7 @@ class SmartThingsLock(SmartThingsEntity, LockDevice):
         state_attrs = {}
         status = self._device.status.attributes[Attribute.lock]
         if status.value:
-            state_attrs['lock_state'] = status.value
+            state_attrs["lock_state"] = status.value
         if isinstance(status.data, dict):
             for st_attr, ha_attr in ST_LOCK_ATTR_MAP.items():
                 data_val = status.data.get(st_attr)

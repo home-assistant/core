@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "addon_info_failed": "Impossible d\u2019obtenir des informations de l'add-on OpenZWave.",
+            "addon_install_failed": "\u00c9chec de l\u2019installation de l'add-on OpenZWave.",
+            "addon_set_config_failed": "\u00c9chec de la configuration OpenZWave.",
+            "already_configured": "Cet appareil est d\u00e9j\u00e0 configur\u00e9",
+            "mqtt_required": "L'int\u00e9gration MQTT n'est pas configur\u00e9e",
+            "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
+        },
+        "error": {
+            "addon_start_failed": "\u00c9chec du d\u00e9marrage de l'add-on OpenZWave. V\u00e9rifiez la configuration."
+        },
+        "progress": {
+            "install_addon": "Veuillez patienter pendant que l'installation du module OpenZWave se termine. Cela peut prendre plusieurs minutes."
+        },
+        "step": {
+            "hassio_confirm": {
+                "title": "Configurer l\u2019int\u00e9gration OpenZWave avec l\u2019add-on OpenZWave"
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Utiliser l'add-on OpenZWave Supervisor"
+                },
+                "description": "Souhaitez-vous utiliser l'add-on OpenZWave Supervisor ?",
+                "title": "S\u00e9lectionner la m\u00e9thode de connexion"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "Cl\u00e9 r\u00e9seau",
+                    "usb_path": "Chemin du p\u00e9riph\u00e9rique USB"
+                },
+                "title": "Entrez dans la configuration de l'add-on OpenZWave"
+            }
+        }
+    }
+}

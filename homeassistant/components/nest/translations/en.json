@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_fail": "Unknown error generating an authorize url.",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "reauth_successful": "Re-authentication was successful",
+            "single_instance_allowed": "Already configured. Only a single configuration possible.",
+            "unknown_authorize_url_generation": "Unknown error generating an authorize url."
+        },
+        "create_entry": {
+            "default": "Successfully authenticated"
+        },
+        "error": {
+            "internal_error": "Internal error validating code",
+            "invalid_pin": "Invalid PIN Code",
+            "timeout": "Timeout validating code",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Provider"
+                },
+                "description": "Pick Authentication Method",
+                "title": "Authentication Provider"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN Code"
+                },
+                "description": "To link your Nest account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided pin code below.",
+                "title": "Link Nest Account"
+            },
+            "pick_implementation": {
+                "title": "Pick Authentication Method"
+            },
+            "reauth_confirm": {
+                "description": "The Nest integration needs to re-authenticate your account",
+                "title": "Reauthenticate Integration"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Motion detected",
+            "camera_person": "Person detected",
+            "camera_sound": "Sound detected",
+            "doorbell_chime": "Doorbell pressed"
+        }
+    }
+}

@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "credential_error": "Fout bij ophalen van inloggegevens.",
+            "no_devices_found": "Geen PlayStation 4 apparaten gevonden op het netwerk.",
+            "port_987_bind_error": "Kon niet binden aan poort 987. Raadpleeg de [documentatie] (https://www.home-assistant.io/components/ps4/) voor meer informatie.",
+            "port_997_bind_error": "Kon niet binden aan poort 997. Raadpleeg de [documentatie] (https://www.home-assistant.io/components/ps4/) voor aanvullende informatie."
+        },
+        "error": {
+            "credential_timeout": "Time-out van inlog service. Druk op Submit om opnieuw te starten.",
+            "login_failed": "Kan niet koppelen met PlayStation 4. Controleer of de pincode juist is.",
+            "no_ipaddress": "Voer het IP-adres in van de PlayStation 4 die je wilt configureren."
+        },
+        "step": {
+            "creds": {
+                "description": "Aanmeldingsgegevens zijn nodig. Druk op 'Verzenden' en vervolgens in de PS4-app voor het 2e scherm, vernieuw apparaten en selecteer Home Assistant om door te gaan.",
+                "title": "PlayStation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN",
+                    "ip_address": "IP-adres",
+                    "name": "Naam",
+                    "region": "Regio"
+                },
+                "description": "Voer je PlayStation 4-informatie in. Ga voor 'PIN' naar 'Instellingen' op je PlayStation 4-console. Navigeer vervolgens naar 'Verbindingsinstellingen mobiele app' en selecteer 'Apparaat toevoegen'. Voer de pincode in die wordt weergegeven. Raadpleeg de [documentatie] (https://www.home-assistant.io/components/ps4/) voor meer informatie.",
+                "title": "PlayStation 4"
+            },
+            "mode": {
+                "data": {
+                    "ip_address": "IP-adres (leeg laten als u Auto Discovery gebruikt).",
+                    "mode": "Configuratiemodus"
+                },
+                "description": "Selecteer modus voor configuratie. Het veld IP-adres kan leeg blijven als Auto Discovery wordt geselecteerd, omdat apparaten automatisch worden gedetecteerd.",
+                "title": "PlayStation 4"
+            }
+        }
+    }
+}

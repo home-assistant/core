@@ -1,0 +1,77 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Asukoht on juba m\u00e4\u00e4ratud v\u00f5i Node/Pro ID on juba registreeritud.",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "general_error": "Tundmatu viga",
+            "invalid_api_key": "Vale API v\u00f5ti",
+            "location_not_found": "Asukohta ei leitud"
+        },
+        "step": {
+            "geography": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad"
+                },
+                "description": "Kasutage AirVisual pilve API-t geograafilise asukoha j\u00e4lgimiseks.",
+                "title": "Seadista Geography"
+            },
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad"
+                },
+                "description": "Kasuta AirVisual pilve API-t pikkus/laiuskraadi j\u00e4lgimiseks.",
+                "title": "Seadista Geography sidumine"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "city": "Linn",
+                    "country": "Riik",
+                    "state": "olek"
+                },
+                "description": "Kasuta AirVisual pilve API-t linna/osariigi/riigi j\u00e4lgimiseks.",
+                "title": "Seadista Geography sidumine"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "\u00dcksuse IP-aadress / hostinimi",
+                    "password": "Salas\u00f5na"
+                },
+                "description": "J\u00e4lgige isiklikku AirVisual-seadet. Parooli saab hankida seadme kasutajaliidese kaudu.",
+                "title": "Seadistage AirVisual Node / Pro"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API v\u00f5ti"
+                },
+                "title": "Taastuvasta AirVisual"
+            },
+            "user": {
+                "data": {
+                    "cloud_api": "Geograafiline asukoht",
+                    "node_pro": "",
+                    "type": "Sidumise t\u00fc\u00fcp"
+                },
+                "description": "Vali millist t\u00fc\u00fcpi AirVisuali andmeid soovid j\u00e4lgida.",
+                "title": "Seadista AirVisual"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "N\u00e4ita j\u00e4lgitavat asukohta kaardil"
+                },
+                "title": "Seadista AirVisual"
+            }
+        }
+    }
+}

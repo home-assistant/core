@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "id": "Host ID"
+                },
+                "title": "Kies een hub om toe te voegen"
+            }
+        }
+    }
+}

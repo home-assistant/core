@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Redan konfigurerad"
+        },
+        "create_entry": {
+            "default": "Se [Neato-dokumentation]({docs_url})."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn",
+                    "vendor": "Leverant\u00f6r"
+                },
+                "description": "Se [Neato-dokumentation] ({docs_url}).",
+                "title": "Neato-kontoinfo"
+            }
+        }
+    }
+}

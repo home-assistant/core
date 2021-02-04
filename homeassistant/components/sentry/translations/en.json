@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "bad_dsn": "Invalid DSN",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "dsn": "DSN"
+                },
+                "description": "Enter your Sentry DSN",
+                "title": "Sentry"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "environment": "Optional name of the environment.",
+                    "event_custom_components": "Send events from custom components",
+                    "event_handled": "Send handled events",
+                    "event_third_party_packages": "Send events from third-party packages",
+                    "logging_event_level": "The log level Sentry will register an event for",
+                    "logging_level": "The log level Sentry will record logs as breadcrums for",
+                    "tracing": "Enable performance tracing",
+                    "tracing_sample_rate": "Tracing sample rate; between 0.0 and 1.0 (1.0 = 100%)"
+                }
+            }
+        }
+    }
+}

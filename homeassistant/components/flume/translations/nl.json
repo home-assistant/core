@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dit account is al geconfigureerd."
+        },
+        "error": {
+            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "Client-id",
+                    "client_secret": "Client Secret",
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Om toegang te krijgen tot de Flume Personal API, moet je een 'Client ID' en 'Client Secret' aanvragen op https://portal.flumetech.com/settings#token",
+                "title": "Verbind met uw Flume account"
+            }
+        }
+    }
+}

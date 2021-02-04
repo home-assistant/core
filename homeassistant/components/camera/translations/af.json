@@ -1,0 +1,10 @@
+{
+    "state": {
+        "_": {
+            "idle": "Onaktief",
+            "recording": "Opname",
+            "streaming": "Stroming"
+        }
+    },
+    "title": "Kamera"
+}

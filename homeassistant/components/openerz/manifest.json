@@ -1,0 +1,7 @@
+{
+  "domain": "openerz",
+  "name": "Open ERZ",
+  "documentation": "https://www.home-assistant.io/integrations/openerz",
+  "codeowners": ["@misialq"],
+  "requirements": ["openerz-api==0.1.0"]
+}

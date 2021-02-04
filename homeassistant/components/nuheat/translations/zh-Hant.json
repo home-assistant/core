@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "invalid_thermostat": "\u6eab\u63a7\u5668\u5e8f\u865f\u7121\u6548\u3002",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "serial_number": "\u6eab\u63a7\u5668\u5e8f\u865f\u3002",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u9700\u8981\u67e5\u770b\u60a8\u7684\u6eab\u63a7\u5668\u5e8f\u865f\u6216\u767b\u5165 https://MyNuHeat.com \u4e4b ID \u4e26\u9078\u64c7\u60a8\u7684\u6eab\u63a7\u5668\u3002",
+                "title": "\u9023\u7dda\u81f3 NuHeat"
+            }
+        }
+    }
+}

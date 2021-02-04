@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Plasseringen er allerede konfigurert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": ""
+                },
+                "title": "Fyll inn dine filterdetaljer."
+            }
+        }
+    }
+}

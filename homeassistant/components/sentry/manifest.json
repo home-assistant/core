@@ -1,0 +1,8 @@
+{
+  "domain": "sentry",
+  "name": "Sentry",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/sentry",
+  "requirements": ["sentry-sdk==0.19.5"],
+  "codeowners": ["@dcramer", "@frenck"]
+}

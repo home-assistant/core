@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+        },
+        "error": {
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+        },
+        "flow_title": "Tuya Konfiguration",
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Gib deine Tuya-Anmeldeinformationen ein.",
+                "title": "Tuya"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "error": {
+            "dev_not_config": "Ger\u00e4tetyp nicht konfigurierbar",
+            "dev_not_found": "Ger\u00e4t nicht gefunden"
+        }
+    }
+}

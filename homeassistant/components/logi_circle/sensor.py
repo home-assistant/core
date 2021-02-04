@@ -2,24 +2,30 @@
 import logging
 
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_BATTERY_CHARGING, CONF_MONITORED_CONDITIONS,
-    CONF_SENSORS, STATE_OFF, STATE_ON)
+    ATTR_ATTRIBUTION,
+    ATTR_BATTERY_CHARGING,
+    CONF_MONITORED_CONDITIONS,
+    CONF_SENSORS,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.dt import as_local
 
 from .const import (
-    ATTRIBUTION, DEVICE_BRAND, DOMAIN as LOGI_CIRCLE_DOMAIN,
-    LOGI_SENSORS as SENSOR_TYPES)
+    ATTRIBUTION,
+    DEVICE_BRAND,
+    DOMAIN as LOGI_CIRCLE_DOMAIN,
+    LOGI_SENSORS as SENSOR_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a sensor for a Logi Circle device. Obsolete."""
-    _LOGGER.warning(
-        'Logi Circle no longer works with sensor platform configuration')
+    _LOGGER.warning("Logi Circle no longer works with sensor platform configuration")
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -28,8 +34,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     time_zone = str(hass.config.time_zone)
 
     sensors = []
-    for sensor_type in (entry.data.get(CONF_SENSORS)
-                        .get(CONF_MONITORED_CONDITIONS)):
+    for sensor_type in entry.data.get(CONF_SENSORS).get(CONF_MONITORED_CONDITIONS):
         for device in devices:
             if device.supports_feature(sensor_type):
                 sensors.append(LogiSensor(device, time_zone, sensor_type))
@@ -44,10 +49,9 @@ class LogiSensor(Entity):
         """Initialize a sensor for Logi Circle camera."""
         self._sensor_type = sensor_type
         self._camera = camera
-        self._id = '{}-{}'.format(self._camera.mac_address, self._sensor_type)
-        self._icon = 'mdi:{}'.format(SENSOR_TYPES.get(self._sensor_type)[2])
-        self._name = "{0} {1}".format(
-            self._camera.name, SENSOR_TYPES.get(self._sensor_type)[0])
+        self._id = f"{self._camera.mac_address}-{self._sensor_type}"
+        self._icon = f"mdi:{SENSOR_TYPES.get(self._sensor_type)[2]}"
+        self._name = f"{self._camera.name} {SENSOR_TYPES.get(self._sensor_type)[0]}"
         self._activity = {}
         self._state = None
         self._tz = time_zone
@@ -71,13 +75,11 @@ class LogiSensor(Entity):
     def device_info(self):
         """Return information about the device."""
         return {
-            'name': self._camera.name,
-            'identifiers': {
-                (LOGI_CIRCLE_DOMAIN, self._camera.id)
-            },
-            'model': self._camera.model_name,
-            'sw_version': self._camera.firmware,
-            'manufacturer': DEVICE_BRAND
+            "name": self._camera.name,
+            "identifiers": {(LOGI_CIRCLE_DOMAIN, self._camera.id)},
+            "model": self._camera.model_name,
+            "sw_version": self._camera.firmware,
+            "manufacturer": DEVICE_BRAND,
         }
 
     @property
@@ -85,12 +87,13 @@ class LogiSensor(Entity):
         """Return the state attributes."""
         state = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            'battery_saving_mode': (
-                STATE_ON if self._camera.battery_saving else STATE_OFF),
-            'microphone_gain': self._camera.microphone_gain
+            "battery_saving_mode": (
+                STATE_ON if self._camera.battery_saving else STATE_OFF
+            ),
+            "microphone_gain": self._camera.microphone_gain,
         }
 
-        if self._sensor_type == 'battery_level':
+        if self._sensor_type == "battery_level":
             state[ATTR_BATTERY_CHARGING] = self._camera.charging
 
         return state
@@ -98,17 +101,14 @@ class LogiSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        if (self._sensor_type == 'battery_level' and
-                self._state is not None):
-            return icon_for_battery_level(battery_level=int(self._state),
-                                          charging=False)
-        if (self._sensor_type == 'recording_mode' and
-                self._state is not None):
-            return 'mdi:eye' if self._state == STATE_ON else 'mdi:eye-off'
-        if (self._sensor_type == 'streaming_mode' and
-                self._state is not None):
-            return (
-                'mdi:camera' if self._state == STATE_ON else 'mdi:camera-off')
+        if self._sensor_type == "battery_level" and self._state is not None:
+            return icon_for_battery_level(
+                battery_level=int(self._state), charging=False
+            )
+        if self._sensor_type == "recording_mode" and self._state is not None:
+            return "mdi:eye" if self._state == STATE_ON else "mdi:eye-off"
+        if self._sensor_type == "streaming_mode" and self._state is not None:
+            return "mdi:camera" if self._state == STATE_ON else "mdi:camera-off"
         return self._icon
 
     @property
@@ -121,13 +121,13 @@ class LogiSensor(Entity):
         _LOGGER.debug("Pulling data from %s sensor", self._name)
         await self._camera.update()
 
-        if self._sensor_type == 'last_activity_time':
-            last_activity = (await self._camera.
-                             get_last_activity(force_refresh=True))
+        if self._sensor_type == "last_activity_time":
+            last_activity = await self._camera.get_last_activity(force_refresh=True)
             if last_activity is not None:
                 last_activity_time = as_local(last_activity.end_time_utc)
-                self._state = '{0:0>2}:{1:0>2}'.format(
-                    last_activity_time.hour, last_activity_time.minute)
+                self._state = (
+                    f"{last_activity_time.hour:0>2}:{last_activity_time.minute:0>2}"
+                )
         else:
             state = getattr(self._camera, self._sensor_type, None)
             if isinstance(state, bool):

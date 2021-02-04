@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<tv-channel>
+    <channel>
+        <number>14.3</number>
+        <name>getTV</name>
+        <type>air-digital</type>
+        <user-hidden>false</user-hidden>
+        <active-input>true</active-input>
+        <signal-state>valid</signal-state>
+        <signal-mode>480i</signal-mode>
+        <signal-quality>20</signal-quality>
+        <signal-strength>-75</signal-strength>
+        <program-title>Airwolf</program-title>
+        <program-description>The team will travel all around the world in order to shut down a global crime ring.</program-description>
+        <program-ratings>TV-14-D-V</program-ratings>
+        <program-analog-audio>none</program-analog-audio>
+        <program-digital-audio>stereo</program-digital-audio>
+        <program-audio-languages>eng</program-audio-languages>
+        <program-audio-formats>AC3</program-audio-formats>
+        <program-audio-language>eng</program-audio-language>
+        <program-audio-format>AC3</program-audio-format>
+        <program-has-cc>true</program-has-cc>
+   </channel>
+</tv-channel>

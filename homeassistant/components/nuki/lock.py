@@ -1,138 +1,198 @@
 """Nuki.io lock platform."""
+from abc import ABC, abstractmethod
 from datetime import timedelta
 import logging
 
+from pynuki import NukiBridge
+from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant.components.lock import DOMAIN, PLATFORM_SCHEMA, LockDevice
-from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_TOKEN)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockEntity
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.helpers import config_validation as cv, entity_platform
+
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_PORT = 8080
-
-ATTR_BATTERY_CRITICAL = 'battery_critical'
-ATTR_NUKI_ID = 'nuki_id'
-ATTR_UNLATCH = 'unlatch'
+ATTR_BATTERY_CRITICAL = "battery_critical"
+ATTR_NUKI_ID = "nuki_id"
+ATTR_UNLATCH = "unlatch"
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=5)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
-NUKI_DATA = 'nuki'
+NUKI_DATA = "nuki"
 
-SERVICE_LOCK_N_GO = 'nuki_lock_n_go'
-SERVICE_UNLATCH = 'nuki_unlatch'
+ERROR_STATES = (0, 254, 255)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Required(CONF_TOKEN): cv.string
-})
-
-LOCK_N_GO_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_UNLATCH, default=False): cv.boolean
-})
-
-UNLATCH_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Required(CONF_TOKEN): cv.string,
+    }
+)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Nuki lock platform."""
-    from pynuki import NukiBridge
-    bridge = NukiBridge(config.get(CONF_HOST), config.get(CONF_TOKEN))
-    add_entities([NukiLock(lock) for lock in bridge.locks])
-
-    def service_handler(service):
-        """Service handler for nuki services."""
-        entity_ids = extract_entity_ids(hass, service)
-        all_locks = hass.data[NUKI_DATA][DOMAIN]
-        target_locks = []
-        if not entity_ids:
-            target_locks = all_locks
-        else:
-            for lock in all_locks:
-                if lock.entity_id in entity_ids:
-                    target_locks.append(lock)
-        for lock in target_locks:
-            if service.service == SERVICE_LOCK_N_GO:
-                unlatch = service.data[ATTR_UNLATCH]
-                lock.lock_n_go(unlatch=unlatch)
-            elif service.service == SERVICE_UNLATCH:
-                lock.unlatch()
-
-    hass.services.register(
-        DOMAIN, SERVICE_LOCK_N_GO, service_handler,
-        schema=LOCK_N_GO_SERVICE_SCHEMA)
-    hass.services.register(
-        DOMAIN, SERVICE_UNLATCH, service_handler,
-        schema=UNLATCH_SERVICE_SCHEMA)
+    _LOGGER.warning(
+        "Loading Nuki by lock platform configuration is deprecated and will be removed in the future"
+    )
 
 
-class NukiLock(LockDevice):
-    """Representation of a Nuki lock."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Nuki lock platform."""
+    config = config_entry.data
 
-    def __init__(self, nuki_lock):
+    def get_entities():
+        bridge = NukiBridge(
+            config[CONF_HOST],
+            config[CONF_TOKEN],
+            config[CONF_PORT],
+            True,
+            DEFAULT_TIMEOUT,
+        )
+
+        entities = [NukiLockEntity(lock) for lock in bridge.locks]
+        entities.extend([NukiOpenerEntity(opener) for opener in bridge.openers])
+        return entities
+
+    entities = await hass.async_add_executor_job(get_entities)
+
+    async_add_entities(entities)
+
+    platform = entity_platform.current_platform.get()
+    assert platform is not None
+
+    platform.async_register_entity_service(
+        "lock_n_go",
+        {
+            vol.Optional(ATTR_UNLATCH, default=False): cv.boolean,
+        },
+        "lock_n_go",
+    )
+
+
+class NukiDeviceEntity(LockEntity, ABC):
+    """Representation of a Nuki device."""
+
+    def __init__(self, nuki_device):
         """Initialize the lock."""
-        self._nuki_lock = nuki_lock
-        self._locked = nuki_lock.is_locked
-        self._name = nuki_lock.name
-        self._battery_critical = nuki_lock.battery_critical
-
-    async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
-        if NUKI_DATA not in self.hass.data:
-            self.hass.data[NUKI_DATA] = {}
-        if DOMAIN not in self.hass.data[NUKI_DATA]:
-            self.hass.data[NUKI_DATA][DOMAIN] = []
-        self.hass.data[NUKI_DATA][DOMAIN].append(self)
+        self._nuki_device = nuki_device
+        self._available = nuki_device.state not in ERROR_STATES
 
     @property
     def name(self):
         """Return the name of the lock."""
-        return self._name
+        return self._nuki_device.name
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._nuki_device.nuki_id
+
+    @property
+    @abstractmethod
     def is_locked(self):
         """Return true if lock is locked."""
-        return self._locked
 
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         data = {
-            ATTR_BATTERY_CRITICAL: self._battery_critical,
-            ATTR_NUKI_ID: self._nuki_lock.nuki_id}
+            ATTR_BATTERY_CRITICAL: self._nuki_device.battery_critical,
+            ATTR_NUKI_ID: self._nuki_device.nuki_id,
+        }
         return data
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_OPEN
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._available
 
     def update(self):
         """Update the nuki lock properties."""
-        self._nuki_lock.update(aggressive=False)
-        self._name = self._nuki_lock.name
-        self._locked = self._nuki_lock.is_locked
-        self._battery_critical = self._nuki_lock.battery_critical
+        for level in (False, True):
+            try:
+                self._nuki_device.update(aggressive=level)
+            except RequestException:
+                _LOGGER.warning("Network issues detect with %s", self.name)
+                self._available = False
+                continue
+
+            # If in error state, we force an update and repoll data
+            self._available = self._nuki_device.state not in ERROR_STATES
+            if self._available:
+                break
+
+    @abstractmethod
+    def lock(self, **kwargs):
+        """Lock the device."""
+
+    @abstractmethod
+    def unlock(self, **kwargs):
+        """Unlock the device."""
+
+    @abstractmethod
+    def open(self, **kwargs):
+        """Open the door latch."""
+
+
+class NukiLockEntity(NukiDeviceEntity):
+    """Representation of a Nuki lock."""
+
+    @property
+    def is_locked(self):
+        """Return true if lock is locked."""
+        return self._nuki_device.is_locked
 
     def lock(self, **kwargs):
         """Lock the device."""
-        self._nuki_lock.lock()
+        self._nuki_device.lock()
 
     def unlock(self, **kwargs):
         """Unlock the device."""
-        self._nuki_lock.unlock()
+        self._nuki_device.unlock()
 
-    def lock_n_go(self, unlatch=False, **kwargs):
+    def open(self, **kwargs):
+        """Open the door latch."""
+        self._nuki_device.unlatch()
+
+    def lock_n_go(self, unlatch):
         """Lock and go.
 
         This will first unlock the door, then wait for 20 seconds (or another
         amount of time depending on the lock settings) and relock.
         """
-        self._nuki_lock.lock_n_go(unlatch, kwargs)
+        self._nuki_device.lock_n_go(unlatch)
 
-    def unlatch(self, **kwargs):
-        """Unlatch door."""
-        self._nuki_lock.unlatch()
+
+class NukiOpenerEntity(NukiDeviceEntity):
+    """Representation of a Nuki opener."""
+
+    @property
+    def is_locked(self):
+        """Return true if ring-to-open is enabled."""
+        return not self._nuki_device.is_rto_activated
+
+    def lock(self, **kwargs):
+        """Disable ring-to-open."""
+        self._nuki_device.deactivate_rto()
+
+    def unlock(self, **kwargs):
+        """Enable ring-to-open."""
+        self._nuki_device.activate_rto()
+
+    def open(self, **kwargs):
+        """Buzz open the door."""
+        self._nuki_device.electric_strike_actuation()
+
+    def lock_n_go(self, unlatch):
+        """Stub service."""

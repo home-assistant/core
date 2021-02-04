@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "host": "Host",
+                    "location": "Org",
+                    "name": "Name",
+                    "port": "Port",
+                    "ssl": "Nutzt ein SSL-Zertifikat",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
+                }
+            }
+        }
+    }
+}

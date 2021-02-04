@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "not_xiaomi_aqara": "Non \u00e8 un Gateway Xiaomi Aqara, il dispositivo scoperto non corrisponde ai gateway noti"
+        },
+        "error": {
+            "discovery_error": "Impossibile individuare un gateway Xiaomi Aqara, provare a utilizzare l'IP del dispositivo che esegue HomeAssistant come interfaccia",
+            "invalid_host": "Nome host o indirizzo IP non valido, vedere https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+            "invalid_interface": "Interfaccia di rete non valida",
+            "invalid_key": "Chiave gateway non valida",
+            "invalid_mac": "Indirizzo Mac non valido"
+        },
+        "flow_title": "Xiaomi Aqara Gateway: {name}",
+        "step": {
+            "select": {
+                "data": {
+                    "select_ip": "Indirizzo IP"
+                },
+                "description": "Eseguire nuovamente l'installazione se si desidera connettere gateway adizionali",
+                "title": "Selezionare il Gateway Xiaomi Aqara che si desidera collegare"
+            },
+            "settings": {
+                "data": {
+                    "key": "La chiave del tuo gateway",
+                    "name": "Nome del Gateway"
+                },
+                "description": "La chiave (password) pu\u00f2 essere recuperata utilizzando questo tutorial: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. Se la chiave non viene fornita, saranno accessibili solo i sensori",
+                "title": "Xiaomi Aqara Gateway, impostazioni opzionali"
+            },
+            "user": {
+                "data": {
+                    "host": "Indirizzo IP (opzionale)",
+                    "interface": "L'interfaccia di rete da utilizzare",
+                    "mac": "Indirizzo Mac (opzionale)"
+                },
+                "description": "Connettiti al tuo Xiaomi Aqara Gateway, se gli indirizzi IP e mac sono lasciati vuoti, verr\u00e0 utilizzato il rilevamento automatico",
+                "title": "Xiaomi Aqara Gateway"
+            }
+        }
+    }
+}

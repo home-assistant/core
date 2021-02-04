@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "not_songpal_device": "Ikke en Songpal-enhet"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "flow_title": "",
+        "step": {
+            "init": {
+                "description": "Vil du sette opp {name} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "endpoint": "Endepunkt"
+                }
+            }
+        }
+    }
+}

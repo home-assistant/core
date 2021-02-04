@@ -1,0 +1,75 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "Un accessorio o un bridge con lo stesso nome o porta \u00e8 gi\u00e0 configurato."
+        },
+        "step": {
+            "accessory_mode": {
+                "data": {
+                    "entity_id": "Entit\u00e0"
+                },
+                "description": "Scegli l'entit\u00e0 da includere. In modalit\u00e0 accessorio, \u00e8 inclusa solo una singola entit\u00e0.",
+                "title": "Seleziona l'entit\u00e0 da includere"
+            },
+            "bridge_mode": {
+                "data": {
+                    "include_domains": "Domini da includere"
+                },
+                "description": "Scegli i domini da includere. Verranno incluse tutte le entit\u00e0 supportate nel dominio.",
+                "title": "Seleziona i domini da includere"
+            },
+            "pairing": {
+                "description": "Non appena il {name} \u00e8 pronto, l'associazione sar\u00e0 disponibile in \"Notifiche\" come \"Configurazione HomeKit Bridge\".",
+                "title": "Associa HomeKit"
+            },
+            "user": {
+                "data": {
+                    "auto_start": "Avvio automatico (disabilitare se si utilizza Z-Wave o un altro sistema di avvio ritardato)",
+                    "include_domains": "Domini da includere",
+                    "mode": "Modalit\u00e0"
+                },
+                "description": "L'integrazione di HomeKit ti consentir\u00e0 di accedere alle entit\u00e0 di Home Assistant in HomeKit. In modalit\u00e0 bridge, i bridge HomeKit sono limitati a 150 accessori per istanza, incluso il bridge stesso. Se desideri eseguire il bridge di un numero di accessori superiore a quello massimo, si consiglia di utilizzare pi\u00f9 bridge HomeKit per domini diversi. La configurazione dettagliata dell'entit\u00e0 \u00e8 disponibile solo tramite YAML per il bridge principale.",
+                "title": "Attiva HomeKit"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "data": {
+                    "auto_start": "Avvio automatico (disabilitare se stai chiamando manualmente il servizio homekit.start)",
+                    "safe_mode": "Modalit\u00e0 provvisoria (attivare solo in caso di errore di associazione)"
+                },
+                "description": "Queste impostazioni devono essere regolate solo se HomeKit non funziona.",
+                "title": "Configurazione Avanzata"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Telecamere che supportano flussi H.264 nativi"
+                },
+                "description": "Controllare tutte le telecamere che supportano i flussi H.264 nativi. Se la videocamera non emette uno stream H.264, il sistema provveder\u00e0 a transcodificare il video in H.264 per HomeKit. La transcodifica richiede una CPU performante ed \u00e8 improbabile che funzioni su computer a scheda singola.",
+                "title": "Seleziona il codec video della videocamera."
+            },
+            "include_exclude": {
+                "data": {
+                    "entities": "Entit\u00e0",
+                    "mode": "Modalit\u00e0"
+                },
+                "description": "Scegliere le entit\u00e0 da includere. In modalit\u00e0 accessorio, \u00e8 inclusa una sola entit\u00e0. In modalit\u00e0 di inclusione bridge, tutte le entit\u00e0 nel dominio saranno incluse, a meno che non siano selezionate entit\u00e0 specifiche. In modalit\u00e0 di esclusione bridge, tutte le entit\u00e0 nel dominio saranno incluse, ad eccezione delle entit\u00e0 escluse. Per prestazioni ottimali e per evitare una indisponibilit\u00e0 imprevista, creare e associare un'istanza HomeKit separata in modalit\u00e0 accessorio per ogni lettore multimediale, TV e videocamera.",
+                "title": "Seleziona le entit\u00e0 da includere"
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Domini da includere",
+                    "mode": "Modalit\u00e0"
+                },
+                "description": "HomeKit pu\u00f2 essere configurato esponendo un bridge o un singolo accessorio. In modalit\u00e0 accessorio, pu\u00f2 essere utilizzata solo una singola entit\u00e0. La modalit\u00e0 accessorio \u00e8 necessaria per il corretto funzionamento dei lettori multimediali con la classe di apparecchi TV. Le entit\u00e0 nei \"Domini da includere\" saranno esposte ad HomeKit. Sar\u00e0 possibile selezionare quali entit\u00e0 includere o escludere da questo elenco nella schermata successiva.",
+                "title": "Seleziona i domini da includere."
+            },
+            "yaml": {
+                "description": "Questa voce \u00e8 controllata tramite YAML",
+                "title": "Modifica le opzioni di HomeKit"
+            }
+        }
+    }
+}

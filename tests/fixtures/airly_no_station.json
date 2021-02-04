@@ -1,0 +1,642 @@
+{
+	"current": {
+		"fromDateTime": "2019-10-02T05:53:00.608Z",
+		"tillDateTime": "2019-10-02T06:53:00.608Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	},
+	"history": [{
+		"fromDateTime": "2019-10-01T06:00:00.000Z",
+		"tillDateTime": "2019-10-01T07:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-01T07:00:00.000Z",
+		"tillDateTime": "2019-10-01T08:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-01T08:00:00.000Z",
+		"tillDateTime": "2019-10-01T09:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-01T09:00:00.000Z",
+		"tillDateTime": "2019-10-01T10:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-01T10:00:00.000Z",
+		"tillDateTime": "2019-10-01T11:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-01T11:00:00.000Z",
+		"tillDateTime": "2019-10-01T12:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-01T12:00:00.000Z",
+		"tillDateTime": "2019-10-01T13:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-01T13:00:00.000Z",
+		"tillDateTime": "2019-10-01T14:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-01T14:00:00.000Z",
+		"tillDateTime": "2019-10-01T15:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-01T15:00:00.000Z",
+		"tillDateTime": "2019-10-01T16:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-01T16:00:00.000Z",
+		"tillDateTime": "2019-10-01T17:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-01T17:00:00.000Z",
+		"tillDateTime": "2019-10-01T18:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-01T18:00:00.000Z",
+		"tillDateTime": "2019-10-01T19:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-01T19:00:00.000Z",
+		"tillDateTime": "2019-10-01T20:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-01T20:00:00.000Z",
+		"tillDateTime": "2019-10-01T21:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-01T21:00:00.000Z",
+		"tillDateTime": "2019-10-01T22:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-01T22:00:00.000Z",
+		"tillDateTime": "2019-10-01T23:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-01T23:00:00.000Z",
+		"tillDateTime": "2019-10-02T00:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T00:00:00.000Z",
+		"tillDateTime": "2019-10-02T01:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T01:00:00.000Z",
+		"tillDateTime": "2019-10-02T02:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T02:00:00.000Z",
+		"tillDateTime": "2019-10-02T03:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T03:00:00.000Z",
+		"tillDateTime": "2019-10-02T04:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T04:00:00.000Z",
+		"tillDateTime": "2019-10-02T05:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T05:00:00.000Z",
+		"tillDateTime": "2019-10-02T06:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}],
+	"forecast": [{
+		"fromDateTime": "2019-10-02T06:00:00.000Z",
+		"tillDateTime": "2019-10-02T07:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T07:00:00.000Z",
+		"tillDateTime": "2019-10-02T08:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T08:00:00.000Z",
+		"tillDateTime": "2019-10-02T09:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T09:00:00.000Z",
+		"tillDateTime": "2019-10-02T10:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T10:00:00.000Z",
+		"tillDateTime": "2019-10-02T11:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T11:00:00.000Z",
+		"tillDateTime": "2019-10-02T12:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T12:00:00.000Z",
+		"tillDateTime": "2019-10-02T13:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T13:00:00.000Z",
+		"tillDateTime": "2019-10-02T14:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T14:00:00.000Z",
+		"tillDateTime": "2019-10-02T15:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T15:00:00.000Z",
+		"tillDateTime": "2019-10-02T16:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T16:00:00.000Z",
+		"tillDateTime": "2019-10-02T17:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T17:00:00.000Z",
+		"tillDateTime": "2019-10-02T18:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T18:00:00.000Z",
+		"tillDateTime": "2019-10-02T19:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T19:00:00.000Z",
+		"tillDateTime": "2019-10-02T20:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T20:00:00.000Z",
+		"tillDateTime": "2019-10-02T21:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T21:00:00.000Z",
+		"tillDateTime": "2019-10-02T22:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T22:00:00.000Z",
+		"tillDateTime": "2019-10-02T23:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-02T23:00:00.000Z",
+		"tillDateTime": "2019-10-03T00:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-03T00:00:00.000Z",
+		"tillDateTime": "2019-10-03T01:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-03T01:00:00.000Z",
+		"tillDateTime": "2019-10-03T02:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-03T02:00:00.000Z",
+		"tillDateTime": "2019-10-03T03:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-03T03:00:00.000Z",
+		"tillDateTime": "2019-10-03T04:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-03T04:00:00.000Z",
+		"tillDateTime": "2019-10-03T05:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}, {
+		"fromDateTime": "2019-10-03T05:00:00.000Z",
+		"tillDateTime": "2019-10-03T06:00:00.000Z",
+		"values": [],
+		"indexes": [{
+			"name": "AIRLY_CAQI",
+			"value": null,
+			"level": "UNKNOWN",
+			"description": "There are no Airly sensors in this area yet.",
+			"advice": null,
+			"color": "#999999"
+		}],
+		"standards": []
+	}]
+}

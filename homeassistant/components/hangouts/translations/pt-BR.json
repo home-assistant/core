@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hangouts do Google j\u00e1 est\u00e1 configurado.",
+            "unknown": "Ocorreu um erro desconhecido."
+        },
+        "error": {
+            "invalid_2fa": "Autentica\u00e7\u00e3o de 2 fatores inv\u00e1lida, por favor, tente novamente.",
+            "invalid_2fa_method": "M\u00e9todo 2FA inv\u00e1lido (verificar no telefone).",
+            "invalid_login": "Login inv\u00e1lido, por favor, tente novamente."
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Pin 2FA"
+                },
+                "description": "Vazio",
+                "title": "Autentica\u00e7\u00e3o de 2 Fatores"
+            },
+            "user": {
+                "data": {
+                    "authorization_code": "C\u00f3digo de Autoriza\u00e7\u00e3o (requerido para autentica\u00e7\u00e3o manual)",
+                    "email": "Endere\u00e7o de e-mail",
+                    "password": "Senha"
+                },
+                "description": "Vazio",
+                "title": "Login do Hangouts do Google"
+            }
+        }
+    }
+}

@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "wrong_version": "Version nicht unterst\u00fctzt (nur 2 oder 3)"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "ssl": "Verwende SSL / TLS, um eine Verbindung zum Glances-System herzustellen",
+                    "username": "Benutzername",
+                    "verify_ssl": "\u00dcberpr\u00fcfe die Zertifizierung des Systems",
+                    "version": "Glances API-Version (2 oder 3)"
+                },
+                "title": "Glances einrichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Aktualisierungsfrequenz"
+                },
+                "description": "Konfiguriere die Optionen f\u00fcr Glances"
+            }
+        }
+    }
+}

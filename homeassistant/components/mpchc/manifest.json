@@ -1,8 +1,6 @@
 {
   "domain": "mpchc",
-  "name": "Mpchc",
-  "documentation": "https://www.home-assistant.io/components/mpchc",
-  "requirements": [],
-  "dependencies": [],
+  "name": "Media Player Classic Home Cinema (MPC-HC)",
+  "documentation": "https://www.home-assistant.io/integrations/mpchc",
   "codeowners": []
 }

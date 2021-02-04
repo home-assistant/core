@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Standort ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "loadzone": "Ladezone (Abwicklungspunkt)"
+                },
+                "description": "Ihre Ladezone befindet sich in Ihrem Griddy-Konto unter \"Konto > Messger\u00e4t > Ladezone\".",
+                "title": "Richten Sie Ihre Griddy Ladezone ein"
+            }
+        }
+    }
+}

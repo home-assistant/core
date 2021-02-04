@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "no_devices": "Nisu prona\u0111eni ure\u0111aji na ra\u010dunu"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Lozinka",
+                    "username": "Korisni\u010dko ime/adresa e-po\u0161te"
+                },
+                "title": "Ispunite svoje podatke"
+            }
+        }
+    }
+}

@@ -1,25 +1,27 @@
 """Support for Wink fans."""
-import logging
+import pywink
 
 from homeassistant.components.fan import (
-    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SUPPORT_DIRECTION, SUPPORT_SET_SPEED,
-    FanEntity)
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    SUPPORT_DIRECTION,
+    SUPPORT_SET_SPEED,
+    FanEntity,
+)
 
 from . import DOMAIN, WinkDevice
 
-_LOGGER = logging.getLogger(__name__)
-
-SPEED_AUTO = 'auto'
-SPEED_LOWEST = 'lowest'
+SPEED_AUTO = "auto"
+SPEED_LOWEST = "lowest"
 SUPPORTED_FEATURES = SUPPORT_DIRECTION + SUPPORT_SET_SPEED
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink platform."""
-    import pywink
 
     for fan in pywink.get_fans():
-        if fan.object_id() + fan.name() not in hass.data[DOMAIN]['unique_ids']:
+        if fan.object_id() + fan.name() not in hass.data[DOMAIN]["unique_ids"]:
             add_entities([WinkFanDevice(fan, hass)])
 
 
@@ -28,7 +30,7 @@ class WinkFanDevice(WinkDevice, FanEntity):
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
-        self.hass.data[DOMAIN]['entities']['fan'].append(self)
+        self.hass.data[DOMAIN]["entities"]["fan"].append(self)
 
     def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
@@ -38,7 +40,20 @@ class WinkFanDevice(WinkDevice, FanEntity):
         """Set the speed of the fan."""
         self.wink.set_state(True, speed)
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    def turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
         """Turn on the fan."""
         self.wink.set_state(True, speed)
 

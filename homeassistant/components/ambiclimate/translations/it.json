@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "access_token": "Errore sconosciuto durante la generazione di un token di accesso.",
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione."
+        },
+        "create_entry": {
+            "default": "Autenticazione riuscita"
+        },
+        "error": {
+            "follow_link": "Si prega di seguire il link e di autenticarsi prima di premere Invia",
+            "no_token": "Non autenticato con Ambiclimate"
+        },
+        "step": {
+            "auth": {
+                "description": "Segui questo [link]({authorization_url}) e **Consenti** l'accesso al tuo account Ambiclimate, quindi torna indietro e premi **Invia** qui sotto. \n(Assicurati che l'URL di richiamata specificato sia {cb_url})",
+                "title": "Autenticare Ambiclimate"
+            }
+        }
+    }
+}

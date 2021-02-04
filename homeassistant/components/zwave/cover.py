@@ -1,55 +1,62 @@
 """Support for Z-Wave covers."""
 import logging
-from homeassistant.core import callback
+
 from homeassistant.components.cover import (
-    DOMAIN, SUPPORT_OPEN, SUPPORT_CLOSE, ATTR_POSITION)
-from homeassistant.components.cover import CoverDevice
+    ATTR_POSITION,
+    DOMAIN,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    CoverEntity,
+)
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from . import (
-    ZWaveDeviceEntity, CONF_INVERT_OPENCLOSE_BUTTONS, CONF_INVERT_PERCENT,
-    workaround)
+    CONF_INVERT_OPENCLOSE_BUTTONS,
+    CONF_INVERT_PERCENT,
+    ZWaveDeviceEntity,
+    workaround,
+)
 from .const import (
-    COMMAND_CLASS_SWITCH_MULTILEVEL, COMMAND_CLASS_SWITCH_BINARY,
-    COMMAND_CLASS_BARRIER_OPERATOR, DATA_NETWORK)
+    COMMAND_CLASS_BARRIER_OPERATOR,
+    COMMAND_CLASS_SWITCH_BINARY,
+    COMMAND_CLASS_SWITCH_MULTILEVEL,
+    DATA_NETWORK,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
-    """Old method of setting up Z-Wave covers."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Z-Wave Cover from Config Entry."""
+
     @callback
     def async_add_cover(cover):
         """Add Z-Wave Cover."""
         async_add_entities([cover])
 
-    async_dispatcher_connect(hass, 'zwave_new_cover', async_add_cover)
+    async_dispatcher_connect(hass, "zwave_new_cover", async_add_cover)
 
 
 def get_device(hass, values, node_config, **kwargs):
     """Create Z-Wave entity device."""
     invert_buttons = node_config.get(CONF_INVERT_OPENCLOSE_BUTTONS)
     invert_percent = node_config.get(CONF_INVERT_PERCENT)
-    if (values.primary.command_class ==
-            COMMAND_CLASS_SWITCH_MULTILEVEL
-            and values.primary.index == 0):
+    if (
+        values.primary.command_class == COMMAND_CLASS_SWITCH_MULTILEVEL
+        and values.primary.index == 0
+    ):
         return ZwaveRollershutter(hass, values, invert_buttons, invert_percent)
     if values.primary.command_class == COMMAND_CLASS_SWITCH_BINARY:
         return ZwaveGarageDoorSwitch(values)
-    if values.primary.command_class == \
-       COMMAND_CLASS_BARRIER_OPERATOR:
+    if values.primary.command_class == COMMAND_CLASS_BARRIER_OPERATOR:
         return ZwaveGarageDoorBarrier(values)
     return None
 
 
-class ZwaveRollershutter(ZWaveDeviceEntity, CoverDevice):
+class ZwaveRollershutter(ZWaveDeviceEntity, CoverEntity):
     """Representation of an Z-Wave cover."""
 
     def __init__(self, hass, values, invert_buttons, invert_percent):
@@ -72,8 +79,12 @@ class ZwaveRollershutter(ZWaveDeviceEntity, CoverDevice):
         # Position value
         self._current_position = self.values.primary.data
 
-        if self.values.open and self.values.close and \
-                self._open_id is None and self._close_id is None:
+        if (
+            self.values.open
+            and self.values.close
+            and self._open_id is None
+            and self._close_id is None
+        ):
             if self._invert_buttons:
                 self._open_id = self.values.close.value_id
                 self._close_id = self.values.open.value_id
@@ -101,8 +112,11 @@ class ZwaveRollershutter(ZWaveDeviceEntity, CoverDevice):
                 return 100 if self._invert_percent else 0
             if self._current_position >= 95:
                 return 0 if self._invert_percent else 100
-            return 100 - self._current_position if self._invert_percent \
+            return (
+                100 - self._current_position
+                if self._invert_percent
                 else self._current_position
+            )
 
     def open_cover(self, **kwargs):
         """Move the roller shutter up."""
@@ -114,17 +128,19 @@ class ZwaveRollershutter(ZWaveDeviceEntity, CoverDevice):
 
     def set_cover_position(self, **kwargs):
         """Move the roller shutter to a specific position."""
-        self.node.set_dimmer(self.values.primary.value_id,
-                             (100 - kwargs.get(ATTR_POSITION))
-                             if self._invert_percent
-                             else kwargs.get(ATTR_POSITION))
+        self.node.set_dimmer(
+            self.values.primary.value_id,
+            (100 - kwargs.get(ATTR_POSITION))
+            if self._invert_percent
+            else kwargs.get(ATTR_POSITION),
+        )
 
     def stop_cover(self, **kwargs):
         """Stop the roller shutter."""
         self._network.manager.releaseButton(self._open_id)
 
 
-class ZwaveGarageDoorBase(ZWaveDeviceEntity, CoverDevice):
+class ZwaveGarageDoorBase(ZWaveDeviceEntity, CoverEntity):
     """Base class for a Zwave garage door device."""
 
     def __init__(self, values):
@@ -141,7 +157,7 @@ class ZwaveGarageDoorBase(ZWaveDeviceEntity, CoverDevice):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return 'garage'
+        return "garage"
 
     @property
     def supported_features(self):

@@ -1,0 +1,18 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "advertise_ip": "Advertise IP",
+                    "advertise_port": "Advertise port",
+                    "host_ip": "IP gostitelja",
+                    "listen_port": "Vrata naprave",
+                    "name": "Ime",
+                    "upnp_bind_multicast": "Vezava multicasta (True / False)"
+                },
+                "title": "Dolo\u010dite konfiguracijo stre\u017enika"
+            }
+        }
+    },
+    "title": "EmulatedRoku"
+}

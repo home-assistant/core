@@ -1,8 +1,12 @@
 """Config helpers for Alexa."""
+from abc import ABC, abstractmethod
+
+from homeassistant.core import callback
+
 from .state_report import async_enable_proactive_mode
 
 
-class AbstractConfig:
+class AbstractConfig(ABC):
     """Hold the configuration for Alexa."""
 
     _unsub_proactive_report = None
@@ -27,6 +31,11 @@ class AbstractConfig:
         return None
 
     @property
+    @abstractmethod
+    def locale(self):
+        """Return config locale."""
+
+    @property
     def entity_config(self):
         """Return entity config."""
         return {}
@@ -36,6 +45,11 @@ class AbstractConfig:
         """Return if proactive mode is enabled."""
         return self._unsub_proactive_report is not None
 
+    @callback
+    @abstractmethod
+    def user_identifier(self):
+        """Return an identifier for the user that represents this config."""
+
     async def async_enable_proactive_mode(self):
         """Enable proactive mode."""
         if self._unsub_proactive_report is None:
@@ -44,7 +58,7 @@ class AbstractConfig:
             )
         try:
             await self._unsub_proactive_report
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             self._unsub_proactive_report = None
             raise
 
@@ -55,10 +69,16 @@ class AbstractConfig:
             unsub_func()
         self._unsub_proactive_report = None
 
+    @callback
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
         # pylint: disable=no-self-use
         return False
+
+    @callback
+    def async_invalidate_access_token(self):
+        """Invalidate access token."""
+        raise NotImplementedError
 
     async def async_get_access_token(self):
         """Get an access token."""

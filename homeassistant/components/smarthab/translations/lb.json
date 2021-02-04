@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "service": "Feeler beim verbanne mat SmartHab. De Service ass viellaicht net ereechbar. Iwwerpr\u00e9if deng Verbindung.",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-Mail",
+                    "password": "Passwuert"
+                },
+                "description": "W\u00e9inst technesche Gr\u00ebnn soll een zweeten Kont benotz gin fir d\u00e4in Home Assistant. Du kanns een zous\u00e4tzleche Kont an der SmartHab Applikatioun erstellen.",
+                "title": "SmartHab ariichten"
+            }
+        }
+    }
+}

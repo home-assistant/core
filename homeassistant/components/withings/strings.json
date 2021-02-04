@@ -1,0 +1,29 @@
+{
+  "config": {
+    "flow_title": "Withings: {profile}",
+    "step": {
+      "profile": {
+        "title": "User Profile.",
+        "description": "Provide a unique profile name for this data. Typically this is the name of the profile you selected in the previous step.",
+        "data": { "profile": "Profile Name" }
+      },
+      "pick_implementation": { "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]" },
+      "reauth": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The \"{profile}\" profile needs to be re-authenticated in order to continue receiving Withings data."
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "abort": {
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "already_configured": "Configuration updated for profile.",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]"
+    },
+    "create_entry": {
+      "default": "Successfully authenticated with Withings."
+    }
+  }
+}

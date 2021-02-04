@@ -1,0 +1,8 @@
+{
+  "domain": "atag",
+  "name": "Atag",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/atag/",
+  "requirements": ["pyatag==0.3.4.4"],
+  "codeowners": ["@MatsNL"]
+}

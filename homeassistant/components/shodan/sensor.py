@@ -1,37 +1,38 @@
 """Sensor for displaying the number of result on Shodan.io."""
-import logging
 from datetime import timedelta
+import logging
 
+import shodan
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by Shodan"
 
-CONF_QUERY = 'query'
+CONF_QUERY = "query"
 
-DEFAULT_NAME = 'Shodan Sensor'
+DEFAULT_NAME = "Shodan Sensor"
 
-ICON = 'mdi:tooltip-text'
+ICON = "mdi:tooltip-text"
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_QUERY): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_QUERY): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Shodan sensor."""
-    import shodan
-
     api_key = config.get(CONF_API_KEY)
     name = config.get(CONF_NAME)
     query = config.get(CONF_QUERY)
@@ -54,7 +55,7 @@ class ShodanSensor(Entity):
         self.data = data
         self._name = name
         self._state = None
-        self._unit_of_measurement = 'Hits'
+        self._unit_of_measurement = "Hits"
 
     @property
     def name(self):
@@ -79,14 +80,12 @@ class ShodanSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def update(self):
         """Get the latest data and updates the states."""
         self.data.update()
-        self._state = self.data.details['total']
+        self._state = self.data.details["total"]
 
 
 class ShodanData:

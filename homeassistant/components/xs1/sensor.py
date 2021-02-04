@@ -1,13 +1,9 @@
 """Support for XS1 sensors."""
-import logging
-
 from xs1_api_client.api_constants import ActuatorType
 
 from homeassistant.helpers.entity import Entity
 
 from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -19,8 +15,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for sensor in sensors:
         belongs_to_climate_actuator = False
         for actuator in actuators:
-            if actuator.type() == ActuatorType.TEMPERATURE and \
-                    actuator.name() in sensor.name():
+            if (
+                actuator.type() == ActuatorType.TEMPERATURE
+                and actuator.name() in sensor.name()
+            ):
                 belongs_to_climate_actuator = True
                 break
 

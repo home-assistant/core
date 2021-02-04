@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Inga LIFX enheter hittas i n\u00e4tverket.",
+            "single_instance_allowed": "Endast en enda konfiguration av LIFX \u00e4r m\u00f6jlig."
+        },
+        "step": {
+            "confirm": {
+                "description": "Vill du st\u00e4lla in LIFX?"
+            }
+        }
+    }
+}

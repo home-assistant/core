@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "unknown": "Uventet feil",
+            "wrong_version": "Powerwall bruker en programvareversjon som ikke st\u00f8ttes. Vennligst vurder \u00e5 oppgradere eller rapportere dette problemet, s\u00e5 det kan l\u00f8ses."
+        },
+        "flow_title": "",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP adresse"
+                },
+                "title": "Koble til powerwall"
+            }
+        }
+    }
+}

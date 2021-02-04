@@ -1,36 +1,33 @@
-"""
-Platform for Flexit AC units with CI66 Modbus adapter.
-
-Example configuration:
-
-climate:
-  - platform: flexit
-    name: Main AC
-    slave: 21
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/climate.flexit/
-"""
+"""Platform for Flexit AC units with CI66 Modbus adapter."""
 import logging
 from typing import List
+
+from pyflexit.pyflexit import pyflexit
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME, CONF_SLAVE, TEMP_CELSIUS,
-    ATTR_TEMPERATURE, DEVICE_DEFAULT_NAME)
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
+    HVAC_MODE_COOL,
+    SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_FAN_MODE, HVAC_MODE_COOL)
-from homeassistant.components.modbus import (
-    CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN)
+)
+from homeassistant.components.modbus.const import CONF_HUB, DEFAULT_HUB, MODBUS_DOMAIN
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_NAME,
+    CONF_SLAVE,
+    DEVICE_DEFAULT_NAME,
+    TEMP_CELSIUS,
+)
 import homeassistant.helpers.config_validation as cv
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-    vol.Required(CONF_SLAVE): vol.All(int, vol.Range(min=0, max=32)),
-    vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
+        vol.Required(CONF_SLAVE): vol.All(int, vol.Range(min=0, max=32)),
+        vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
+    }
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,18 +36,17 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Flexit Platform."""
-    modbus_slave = config.get(CONF_SLAVE, None)
-    name = config.get(CONF_NAME, None)
+    modbus_slave = config.get(CONF_SLAVE)
+    name = config.get(CONF_NAME)
     hub = hass.data[MODBUS_DOMAIN][config.get(CONF_HUB)]
     add_entities([Flexit(hub, modbus_slave, name)], True)
 
 
-class Flexit(ClimateDevice):
+class Flexit(ClimateEntity):
     """Representation of a Flexit AC unit."""
 
     def __init__(self, hub, modbus_slave, name):
         """Initialize the unit."""
-        from pyflexit import pyflexit
         self._hub = hub
         self._name = name
         self._slave = modbus_slave
@@ -58,7 +54,7 @@ class Flexit(ClimateDevice):
         self._current_temperature = None
         self._current_fan_mode = None
         self._current_operation = None
-        self._fan_modes = ['Off', 'Low', 'Medium', 'High']
+        self._fan_modes = ["Off", "Low", "Medium", "High"]
         self._current_operation = None
         self._filter_hours = None
         self._filter_alarm = None
@@ -67,7 +63,7 @@ class Flexit(ClimateDevice):
         self._heating = None
         self._cooling = None
         self._alarm = False
-        self.unit = pyflexit.pyflexit(hub, modbus_slave)
+        self.unit = pyflexit(hub, modbus_slave)
 
     @property
     def supported_features(self):
@@ -81,8 +77,7 @@ class Flexit(ClimateDevice):
 
         self._target_temperature = self.unit.get_target_temp
         self._current_temperature = self.unit.get_temp
-        self._current_fan_mode =\
-            self._fan_modes[self.unit.get_fan_speed]
+        self._current_fan_mode = self._fan_modes[self.unit.get_fan_speed]
         self._filter_hours = self.unit.get_filter_hours
         # Mechanical heat recovery, 0-100%
         self._heat_recovery = self.unit.get_heat_recovery
@@ -101,12 +96,12 @@ class Flexit(ClimateDevice):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         return {
-            'filter_hours':     self._filter_hours,
-            'filter_alarm':     self._filter_alarm,
-            'heat_recovery':    self._heat_recovery,
-            'heating':          self._heating,
-            'heater_enabled':   self._heater_enabled,
-            'cooling':          self._cooling
+            "filter_hours": self._filter_hours,
+            "filter_alarm": self._filter_alarm,
+            "heat_recovery": self._heat_recovery,
+            "heating": self._heating,
+            "heater_enabled": self._heater_enabled,
+            "cooling": self._cooling,
         }
 
     @property

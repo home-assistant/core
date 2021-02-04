@@ -1,0 +1,76 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "not_lutron_device": "Avastatud seade ei ole Lutroni seade"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "flow_title": "Lutron Cas\u00e9ta {name} ( {host} )",
+        "step": {
+            "import_failed": {
+                "description": "Silla (host: {host} ) seadistamine configuration.yaml kirje teabest nurjus.",
+                "title": "Cas\u00e9ta Bridge seadete importimine nurjus."
+            },
+            "link": {
+                "description": "{name} ({host}) sidumiseks vajuta p\u00e4rast selle vormi esitamist silla tagak\u00fcljel olevat musta nuppu.",
+                "title": "Sillaga sidumine"
+            },
+            "user": {
+                "data": {
+                    "host": ""
+                },
+                "description": "Sisesta seadme IP-aadress.",
+                "title": "\u00dchendu sillaga automaatselt"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Esimene nupp",
+            "button_2": "Teine nupp",
+            "button_3": "Kolmas nupp",
+            "button_4": "Neljas nupp",
+            "close_1": "Sule #1",
+            "close_2": "Sule #2",
+            "close_3": "Sule #3",
+            "close_4": "Sule #4",
+            "close_all": "Sulge k\u00f5ik",
+            "group_1_button_1": "Esimese r\u00fchma esimene nupp",
+            "group_1_button_2": "Esimene r\u00fchma teine nupp",
+            "group_2_button_1": "Teise r\u00fchma esimene nupp",
+            "group_2_button_2": "Teise r\u00fchma teine nupp",
+            "lower": "Langeta",
+            "lower_1": "Langeta #1",
+            "lower_2": "Langeta #2",
+            "lower_3": "Langeta #3",
+            "lower_4": "Langeta #4",
+            "lower_all": "Langeta k\u00f5ik",
+            "off": "V\u00e4ljas",
+            "on": "Sees",
+            "open_1": "Ava #1",
+            "open_2": "Ava #2",
+            "open_3": "Ava #3",
+            "open_4": "Ava #4",
+            "open_all": "Ava k\u00f5ik",
+            "raise": "T\u00f5sta",
+            "raise_1": "T\u00f5sta #1",
+            "raise_2": "T\u00f5sta #2",
+            "raise_3": "T\u00f5sta #3",
+            "raise_4": "T\u00f5sta #4",
+            "raise_all": "T\u00f5sta k\u00f5ik",
+            "stop": "Peata lemmikasendis",
+            "stop_1": "Peata #1",
+            "stop_2": "Peata #2",
+            "stop_3": "Peata #3",
+            "stop_4": "Peata #4",
+            "stop_all": "Peata k\u00f5ik"
+        },
+        "trigger_type": {
+            "press": "vajutati \" {subtype} \"",
+            "release": "\" {subtype} \" vabastati"
+        }
+    }
+}

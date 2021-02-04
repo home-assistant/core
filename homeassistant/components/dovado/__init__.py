@@ -1,37 +1,51 @@
 """Support for Dovado router."""
-import logging
 from datetime import timedelta
+import logging
 
+import dovado
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_PORT,
-    DEVICE_DEFAULT_NAME)
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    DEVICE_DEFAULT_NAME,
+)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'dovado'
+DOMAIN = "dovado"
 
-CONFIG_SCHEMA = vol.Schema({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT): cv.port,
-})
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_HOST): cv.string,
+                vol.Optional(CONF_PORT): cv.port,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 
 def setup(hass, config):
     """Set up the Dovado component."""
-    import dovado
 
     hass.data[DOMAIN] = DovadoData(
         dovado.Dovado(
-            config[CONF_USERNAME], config[CONF_PASSWORD],
-            config.get(CONF_HOST), config.get(CONF_PORT))
+            config[DOMAIN][CONF_USERNAME],
+            config[DOMAIN][CONF_PASSWORD],
+            config[DOMAIN].get(CONF_HOST),
+            config[DOMAIN].get(CONF_PORT),
+        )
     )
     return True
 
@@ -56,8 +70,7 @@ class DovadoData:
             self.state = self._client.state or {}
             if not self.state:
                 return False
-            self.state.update(
-                connected=self.state.get("modem status") == "CONNECTED")
+            self.state.update(connected=self.state.get("modem status") == "CONNECTED")
             _LOGGER.debug("Received: %s", self.state)
             return True
         except OSError as error:

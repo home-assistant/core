@@ -1,0 +1,69 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Controller-Site ist bereits konfiguriert"
+        },
+        "error": {
+            "faulty_credentials": "Ung\u00fcltige Authentifizierung",
+            "service_unavailable": "Verbindung fehlgeschlagen",
+            "unknown_client_mac": "Unter dieser MAC-Adresse ist kein Client verf\u00fcgbar."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "site": "Site-ID",
+                    "username": "Benutzername",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
+                },
+                "title": "UniFi-Controller einrichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "client_control": {
+                "data": {
+                    "block_client": "Clients mit Netzwerkzugriffskontrolle",
+                    "poe_clients": "POE-Kontrolle von Clients zulassen"
+                },
+                "description": "Konfigurieren Sie Client-Steuerelemente \n\nErstellen Sie Switches f\u00fcr Seriennummern, f\u00fcr die Sie den Netzwerkzugriff steuern m\u00f6chten.",
+                "title": "UniFi-Optionen 2/3"
+            },
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Zeit in Sekunden vom letzten Gesehenen bis zur Entfernung",
+                    "ssid_filter": "W\u00e4hlen Sie SSIDs zur Verfolgung von drahtlosen Clients aus",
+                    "track_clients": "Nachverfolgen von Netzwerkclients",
+                    "track_devices": "Verfolgen von Netzwerkger\u00e4ten (Ubiquiti-Ger\u00e4te)",
+                    "track_wired_clients": "Einbinden von kabelgebundenen Netzwerk-Clients"
+                },
+                "description": "Konfigurieren Sie die Ger\u00e4teverfolgung",
+                "title": "UniFi-Optionen 1/3"
+            },
+            "init": {
+                "data": {
+                    "one": "eins",
+                    "other": "andere"
+                }
+            },
+            "simple_options": {
+                "data": {
+                    "block_client": "Clients mit Netzwerkzugriffskontrolle",
+                    "track_clients": "Netzwerger\u00e4te \u00fcberwachen",
+                    "track_devices": "Verfolgen von Netzwerkger\u00e4ten (Ubiquiti-Ger\u00e4te)"
+                },
+                "description": "Konfigurieren Sie die UniFi-Integration"
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Bandbreitennutzungssensoren f\u00fcr Netzwerkclients"
+                },
+                "description": "Konfigurieren Sie Statistiksensoren",
+                "title": "UniFi-Optionen 3/3"
+            }
+        }
+    }
+}

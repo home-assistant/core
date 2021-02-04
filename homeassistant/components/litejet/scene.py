@@ -1,17 +1,15 @@
 """Support for LiteJet scenes."""
-import logging
+from typing import Any
 
 from homeassistant.components import litejet
 from homeassistant.components.scene import Scene
 
-ATTR_NUMBER = 'number'
-
-_LOGGER = logging.getLogger(__name__)
+ATTR_NUMBER = "number"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up scenes for the LiteJet platform."""
-    litejet_ = hass.data['litejet_system']
+    litejet_ = hass.data["litejet_system"]
 
     devices = []
     for i in litejet_.scenes():
@@ -38,10 +36,8 @@ class LiteJetScene(Scene):
     @property
     def device_state_attributes(self):
         """Return the device-specific state attributes."""
-        return {
-            ATTR_NUMBER: self._index
-        }
+        return {ATTR_NUMBER: self._index}
 
-    def activate(self):
+    def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self._lj.activate_scene(self._index)

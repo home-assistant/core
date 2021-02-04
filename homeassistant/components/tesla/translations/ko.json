@@ -1,0 +1,24 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "username": "\uc774\uba54\uc77c"
+                },
+                "description": "\uc0ac\uc6a9\uc790 \uc815\ubcf4\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694",
+                "title": "Tesla - \uad6c\uc131"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "enable_wake_on_start": "\uc2dc\ub3d9 \uc2dc \ucc28\ub7c9 \uae68\uc6b0\uae30",
+                    "scan_interval": "\uc2a4\uce94 \uac04\uaca9(\ucd08)"
+                }
+            }
+        }
+    }
+}

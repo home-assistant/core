@@ -1,0 +1,10 @@
+{
+    "state": {
+        "_": {
+            "idle": "Segur",
+            "recording": "Recordio",
+            "streaming": "Ffrydio"
+        }
+    },
+    "title": "Camera"
+}

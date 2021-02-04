@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "login_failed": "Nem siker\u00fclt p\u00e1ros\u00edtani a PlayStation 4-gyel. Ellen\u0151rizze, hogy a  helyes-e."
+        },
+        "step": {
+            "creds": {
+                "title": "PlayStation 4"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN",
+                    "ip_address": "IP-c\u00edm",
+                    "name": "N\u00e9v",
+                    "region": "R\u00e9gi\u00f3"
+                }
+            },
+            "mode": {
+                "data": {
+                    "mode": "Konfigur\u00e1ci\u00f3s m\u00f3d"
+                },
+                "title": "PlayStation 4"
+            }
+        }
+    }
+}

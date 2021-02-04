@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Por favor, digite o nome do host ou o endere\u00e7o IP de um dispositivo Heos (de prefer\u00eancia para conex\u00f5es conectadas por cabo \u00e0 sua rede).",
+                "title": "Conecte-se a Heos"
+            }
+        }
+    }
+}

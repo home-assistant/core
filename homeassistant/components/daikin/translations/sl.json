@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Naprava je \u017ee konfigurirana"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Gostitelj"
+                },
+                "description": "Vnesite naslov IP va\u0161e Daikin klime.",
+                "title": "Nastavite Daikin klimo"
+            }
+        }
+    }
+}

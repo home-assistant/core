@@ -1,10 +1,7 @@
 {
   "domain": "lock",
   "name": "Lock",
-  "documentation": "https://www.home-assistant.io/components/lock",
-  "requirements": [],
-  "dependencies": [
-    "group"
-  ],
-  "codeowners": []
+  "documentation": "https://www.home-assistant.io/integrations/lock",
+  "codeowners": [],
+  "quality_scale": "internal"
 }

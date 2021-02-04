@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "invalid_webhook_url": "Home Assistant nie jest poprawnie skonfigurowany do otrzymywania danych od SmartThings. Adres URL webhook jest nieprawid\u0142owy: \n > {webhook_url} \n\n Zaktualizuj konfiguracj\u0119 zgodnie z [instrukcj\u0105]({component_url}), uruchom ponownie Home Assistanta i spr\u00f3buj ponownie.",
+            "no_available_locations": "Nie ma dost\u0119pnych lokalizacji SmartThings do skonfigurowania w Home Assistant"
+        },
+        "error": {
+            "app_setup_error": "Nie mo\u017cna skonfigurowa\u0107 SmartApp. Spr\u00f3buj ponownie.",
+            "token_forbidden": "Token nie ma wymaganych zakres\u00f3w OAuth",
+            "token_invalid_format": "Token musi by\u0107 w formacie UID/GUID",
+            "token_unauthorized": "Token jest niewa\u017cny lub nie ma ju\u017c autoryzacji",
+            "webhook_error": "SmartThings nie m\u00f3g\u0142 sprawdzi\u0107 poprawno\u015bci webhook URL. Upewnij si\u0119, \u017ce adres URL webhook jest dost\u0119pny z internetu i spr\u00f3buj ponownie."
+        },
+        "step": {
+            "authorize": {
+                "title": "Autoryzuj Home Assistanta"
+            },
+            "pat": {
+                "data": {
+                    "access_token": "Token dost\u0119pu"
+                },
+                "description": "Wprowad\u017a [token dost\u0119pu osobistego]({token_url}) SmartThings, kt\u00f3ry zosta\u0142 utworzony zgodnie z [instrukcj\u0105]({component_url}). Umo\u017cliwi to stworzenie integracji Home Assistant w ramach Twojego konta SmartThings.",
+                "title": "Wprowad\u017a osobisty token dost\u0119pu"
+            },
+            "select_location": {
+                "data": {
+                    "location_id": "Lokalizacja"
+                },
+                "description": "Wybierz lokalizacj\u0119 SmartThings, kt\u00f3r\u0105 chcesz doda\u0107 do Home Assistanta. Nast\u0119pnie otwarte zostanie nowe okno i zostaniesz poproszony o zalogowanie si\u0119 i autoryzacj\u0119 instalacji integracji Home Assistant w wybranej lokalizacji.",
+                "title": "Wybierz lokalizacj\u0119"
+            },
+            "user": {
+                "description": "SmartThings zostanie skonfigurowany, by wysy\u0142a\u0107 aktualizacje push do Home Assistanta na:\n> {webhook_url}\n\nJe\u015bli adres jest nieprawid\u0142owy, popraw swoj\u0105 konfiguracj\u0119, uruchom ponownie Home Assistant i spr\u00f3buj ponownie.",
+                "title": "Potwierd\u017a Callback URL"
+            }
+        }
+    }
+}

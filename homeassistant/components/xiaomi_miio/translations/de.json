@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "no_device_selected": "Kein Ger\u00e4t ausgew\u00e4hlt, bitte w\u00e4hle ein Ger\u00e4t aus."
+        },
+        "flow_title": "Xiaomi Miio: {name}",
+        "step": {
+            "gateway": {
+                "data": {
+                    "host": "IP-Adresse",
+                    "name": "Name des Gateways",
+                    "token": "API-Token"
+                },
+                "description": "Du ben\u00f6tigst den 32 Zeichen langen API-Token. Anweisungen findest du unter https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token.",
+                "title": "Stelle eine Verbindung zu einem Xiaomi Gateway her"
+            },
+            "user": {
+                "data": {
+                    "gateway": "Stelle eine Verbindung zu einem Xiaomi Gateway her"
+                },
+                "description": "W\u00e4hle aus, mit welchem Ger\u00e4t du eine Verbindung herstellen m\u00f6chtest.",
+                "title": "Xiaomi Miio"
+            }
+        }
+    }
+}

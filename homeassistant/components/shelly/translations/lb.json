@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "unsupported_firmware": "Den Apparat benotzt eng net \u00ebnnerst\u00ebtzte Firmware Versioun."
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Soll de {model} um {host} konfigur\u00e9iert ginn?\n\nVirum ariichten muss dat Batterie bedriwwen Ger\u00e4t aktiv\u00e9iert ginn andeems de Kn\u00e4ppchen um Apparat gedr\u00e9ckt g\u00ebtt."
+            },
+            "credentials": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Virum ariichten muss dat Batterie bedriwwen Ger\u00e4t aktiv\u00e9iert ginn andeems de Kn\u00e4ppchen um Apparat gedr\u00e9ckt g\u00ebtt."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Kn\u00e4ppchen",
+            "button1": "\u00c9ischte Kn\u00e4ppchen",
+            "button2": "Zweete Kn\u00e4ppchen",
+            "button3": "Dr\u00ebtte Kn\u00e4ppchen"
+        }
+    }
+}

@@ -1,0 +1,19 @@
+# Describes the format for available ness alarm services
+
+aux:
+  description: Trigger an aux output.
+  fields:
+    output_id:
+      description: The aux output you wish to change. A number from 1-4.
+      example: 1
+    state:
+      description: The On/Off State, represented as true/false. Default is true. If P14xE 8E is enabled then a value of true will pulse output x for the time specified in P14(x+4)E.
+      example: true
+      default: true
+
+panic:
+  description: Trigger a panic
+  fields:
+    code:
+      description: The user code to use to trigger the panic.
+      example: 1234

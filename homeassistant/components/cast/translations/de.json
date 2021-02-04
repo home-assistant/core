@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden.",
+            "single_instance_allowed": "Bereits konfiguriert. Es ist nur eine Konfiguration m\u00f6glich."
+        },
+        "step": {
+            "confirm": {
+                "description": "M\u00f6chtest du Google Cast einrichten?"
+            }
+        }
+    }
+}

@@ -1,0 +1,91 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Typ radia"
+                },
+                "description": "Wyb\u00f3r typu radia Zigbee",
+                "title": "Typ radia"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "pr\u0119dko\u015b\u0107 portu",
+                    "flow_control": "kontrola przep\u0142ywu danych",
+                    "path": "\u015acie\u017cka urz\u0105dzenia szeregowego"
+                },
+                "description": "Wprowadzanie ustawie\u0144 dla portu",
+                "title": "Ustawienia"
+            },
+            "user": {
+                "data": {
+                    "path": "\u015acie\u017cka urz\u0105dzenia szeregowego"
+                },
+                "description": "Wyb\u00f3r portu szeregowego dla radia Zigbee",
+                "title": "ZHA"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "squawk": "squawk",
+            "warn": "ostrze\u017cenie"
+        },
+        "trigger_subtype": {
+            "both_buttons": "oba przyciski",
+            "button_1": "pierwszy",
+            "button_2": "drugi",
+            "button_3": "trzeci",
+            "button_4": "czwarty",
+            "button_5": "pi\u0105ty",
+            "button_6": "sz\u00f3sty",
+            "close": "zamknij",
+            "dim_down": "zmniejszenie jasno\u015bci",
+            "dim_up": "zwi\u0119kszenie jasno\u015bci",
+            "face_1": "z aktywowan\u0105 twarz\u0105 1",
+            "face_2": "z aktywowan\u0105 twarz\u0105 2",
+            "face_3": "z aktywowan\u0105 twarz\u0105 3",
+            "face_4": "z aktywowan\u0105 twarz\u0105 4",
+            "face_5": "z aktywowan\u0105 twarz\u0105 5",
+            "face_6": "z aktywowan\u0105 twarz\u0105 6",
+            "face_any": "z dowoln\u0105 twarz\u0105 aktywowan\u0105",
+            "left": "w lewo",
+            "open": "otw\u00f3rz",
+            "right": "w prawo",
+            "turn_off": "wy\u0142\u0105cznik",
+            "turn_on": "w\u0142\u0105cznik"
+        },
+        "trigger_type": {
+            "device_dropped": "nast\u0105pi upadek urz\u0105dzenia",
+            "device_flipped": "nast\u0105pi odwr\u00f3cenie urz\u0105dzenia \"{subtype}\"",
+            "device_knocked": "nast\u0105pi pukni\u0119cie w urz\u0105dzenie \"{subtype}\"",
+            "device_offline": "urz\u0105dzenie przejdzie w tryb offline",
+            "device_rotated": "nast\u0105pi obr\u00f3cenie urz\u0105dzenia \"{subtype}\"",
+            "device_shaken": "nast\u0105pi potrz\u0105\u015bni\u0119cie urz\u0105dzeniem",
+            "device_slid": "nast\u0105pi przesuni\u0119cie urz\u0105dzenia \"{subtype}\"",
+            "device_tilted": "nast\u0105pi przechylenie urz\u0105dzenia",
+            "remote_button_alt_double_press": "przycisk \"{subtype}\" zostanie dwukrotnie naci\u015bni\u0119ty (tryb alternatywny)",
+            "remote_button_alt_long_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty w spos\u00f3b ci\u0105g\u0142y (tryb alternatywny)",
+            "remote_button_alt_long_release": "przycisk \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu (tryb alternatywny)",
+            "remote_button_alt_quadruple_press": "przycisk \"{subtype}\" zostanie czterokrotnie naci\u015bni\u0119ty (tryb alternatywny)",
+            "remote_button_alt_quintuple_press": "przycisk \"{subtype}\" zostanie pi\u0119ciokrotnie naci\u015bni\u0119ty (tryb alternatywny)",
+            "remote_button_alt_short_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty (tryb alternatywny)",
+            "remote_button_alt_short_release": "przycisk \"{subtype}\" zostanie zwolniony (tryb alternatywny)",
+            "remote_button_alt_triple_press": "przycisk \"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty (tryb alternatywny)",
+            "remote_button_double_press": "przycisk \"{subtype}\" zostanie podw\u00f3jnie naci\u015bni\u0119ty",
+            "remote_button_long_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty w spos\u00f3b ci\u0105g\u0142y",
+            "remote_button_long_release": "przycisk \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
+            "remote_button_quadruple_press": "przycisk \"{subtype}\" czterokrotnie naci\u015bni\u0119ty",
+            "remote_button_quintuple_press": "przycisk \"{subtype}\" zostanie pi\u0119ciokrotnie naci\u015bni\u0119ty",
+            "remote_button_short_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty",
+            "remote_button_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
+            "remote_button_triple_press": "przycisk \"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
+        }
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "import_failed": "Nem siker\u00fclt import\u00e1lni a konfigur\u00e1ci\u00f3t"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "name": "A tan\u00fas\u00edtv\u00e1ny neve",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

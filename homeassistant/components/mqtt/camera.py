@@ -1,113 +1,112 @@
 """Camera that loads a picture from an MQTT topic."""
-
-import asyncio
+import functools
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components import camera, mqtt
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.const import CONF_NAME
+from homeassistant.components import camera
+from homeassistant.components.camera import Camera
+from homeassistant.const import CONF_DEVICE, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import (
-    ATTR_DISCOVERY_HASH, CONF_UNIQUE_ID, MqttDiscoveryUpdate, subscription)
-from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
+from . import CONF_QOS, DOMAIN, PLATFORMS, subscription
+from .. import mqtt
+from .debug_info import log_messages
+from .mixins import (
+    MQTT_AVAILABILITY_SCHEMA,
+    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    MQTT_JSON_ATTRS_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TOPIC = 'topic'
-DEFAULT_NAME = 'MQTT Camera'
+CONF_TOPIC = "topic"
+DEFAULT_NAME = "MQTT Camera"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_UNIQUE_ID): cv.string,
-})
+PLATFORM_SCHEMA = (
+    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    )
+    .extend(MQTT_AVAILABILITY_SCHEMA.schema)
+    .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
+)
 
 
-async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+):
     """Set up MQTT camera through configuration.yaml."""
-    await _async_setup_entity(config, async_add_entities)
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await _async_setup_entity(async_add_entities, config)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT camera dynamically through MQTT discovery."""
-    async def async_discover(discovery_payload):
-        """Discover and add a MQTT camera."""
-        try:
-            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
-            config = PLATFORM_SCHEMA(discovery_payload)
-            await _async_setup_entity(config, async_add_entities,
-                                      discovery_hash)
-        except Exception:
-            if discovery_hash:
-                clear_discovery_hash(hass, discovery_hash)
-            raise
 
-    async_dispatcher_connect(
-        hass, MQTT_DISCOVERY_NEW.format(camera.DOMAIN, 'mqtt'),
-        async_discover)
+    setup = functools.partial(
+        _async_setup_entity, async_add_entities, config_entry=config_entry
+    )
+    await async_setup_entry_helper(hass, camera.DOMAIN, setup, PLATFORM_SCHEMA)
 
 
-async def _async_setup_entity(config, async_add_entities, discovery_hash=None):
+async def _async_setup_entity(
+    async_add_entities, config, config_entry=None, discovery_data=None
+):
     """Set up the MQTT Camera."""
-    async_add_entities([MqttCamera(config, discovery_hash)])
+    async_add_entities([MqttCamera(config, config_entry, discovery_data)])
 
 
-class MqttCamera(MqttDiscoveryUpdate, Camera):
+class MqttCamera(MqttEntity, Camera):
     """representation of a MQTT camera."""
 
-    def __init__(self, config, discovery_hash):
+    def __init__(self, config, config_entry, discovery_data):
         """Initialize the MQTT Camera."""
-        self._config = config
-        self._unique_id = config.get(CONF_UNIQUE_ID)
-        self._sub_state = None
-
-        self._qos = 0
         self._last_image = None
 
         Camera.__init__(self)
-        MqttDiscoveryUpdate.__init__(self, discovery_hash,
-                                     self.discovery_update)
+        MqttEntity.__init__(self, None, config, config_entry, discovery_data)
 
-    async def async_added_to_hass(self):
-        """Subscribe MQTT events."""
-        await super().async_added_to_hass()
-        await self._subscribe_topics()
+    @staticmethod
+    def config_schema():
+        """Return the config schema."""
+        return PLATFORM_SCHEMA
 
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA(discovery_payload)
+    def _setup_from_config(self, config):
         self._config = config
-        await self._subscribe_topics()
-        self.async_write_ha_state()
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
+
         @callback
+        @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT messages."""
             self._last_image = msg.payload
 
         self._sub_state = await subscription.async_subscribe_topics(
-            self.hass, self._sub_state,
-            {'state_topic': {'topic': self._config[CONF_TOPIC],
-                             'msg_callback': message_received,
-                             'qos': self._qos,
-                             'encoding': None}})
+            self.hass,
+            self._sub_state,
+            {
+                "state_topic": {
+                    "topic": self._config[CONF_TOPIC],
+                    "msg_callback": message_received,
+                    "qos": self._config[CONF_QOS],
+                    "encoding": None,
+                }
+            },
+        )
 
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
-            self.hass, self._sub_state)
-
-    @asyncio.coroutine
-    def async_camera_image(self):
+    async def async_camera_image(self):
         """Return image response."""
         return self._last_image
 
@@ -115,8 +114,3 @@ class MqttCamera(MqttDiscoveryUpdate, Camera):
     def name(self):
         """Return the name of this camera."""
         return self._config[CONF_NAME]
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Bereits konfiguriert. Es ist nur eine Konfiguration m\u00f6glich.",
+            "wrong_server_id": "Server-ID ist ung\u00fcltig"
+        },
+        "step": {
+            "user": {
+                "description": "M\u00f6chtest du mit der Einrichtung beginnen?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "manual": "Automatische Updates deaktivieren",
+                    "scan_interval": "Aktualisierungsfrequenz (Minuten)",
+                    "server_name": "Testserver ausw\u00e4hlen"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "existing_instance_updated": "S'ha actualitzat la configuraci\u00f3 existent.",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Vols configurar Home Assistant perqu\u00e8 es connecti amb l'AdGuard Home proporcionat pel complement de Hass.io: {addon}?",
+                "title": "AdGuard Home (complement de Hass.io)"
+            },
+            "user": {
+                "data": {
+                    "host": "[%key::common::config_flow::data::host%]",
+                    "password": "[%key::common::config_flow::data::password%]",
+                    "port": "[%key::common::config_flow::data::port%]",
+                    "ssl": "Utilitza un certificat SSL",
+                    "username": "[%key::common::config_flow::data::username%]",
+                    "verify_ssl": "Verifica el certificat SSL"
+                },
+                "description": "Configuraci\u00f3 de la inst\u00e0ncia d'AdGuard Home, permet el control i la monitoritzaci\u00f3."
+            }
+        }
+    }
+}

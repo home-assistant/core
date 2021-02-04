@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "\u50b3\u611f\u5668\u540d\u7a31"
+                },
+                "description": "\u662f\u5426\u8981\u958b\u59cb\u8a2d\u5b9a\uff1f",
+                "title": "\u672c\u5730 IP \u4f4d\u5740"
+            }
+        }
+    },
+    "title": "\u672c\u5730 IP \u4f4d\u5740"
+}

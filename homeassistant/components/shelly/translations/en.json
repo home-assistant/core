@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "unsupported_firmware": "The device is using an unsupported firmware version."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Do you want to set up the {model} at {host}?\n\nBefore set up, battery-powered devices must be woken up by pressing the button on the device."
+            },
+            "credentials": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Before set up, battery-powered devices must be woken up by pressing the button on the device."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Button",
+            "button1": "First button",
+            "button2": "Second button",
+            "button3": "Third button"
+        },
+        "trigger_type": {
+            "double": "{subtype} double clicked",
+            "long": " {subtype} long clicked",
+            "long_single": "{subtype} long clicked and then single clicked",
+            "single": "{subtype} single clicked",
+            "single_long": "{subtype} single clicked and then long clicked",
+            "triple": "{subtype} triple clicked"
+        }
+    }
+}

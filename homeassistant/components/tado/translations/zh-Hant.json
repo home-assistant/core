@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "no_homes": "\u6b64 Tado \u5e33\u865f\u672a\u7d81\u5b9a\u4efb\u4f55\u5bb6\u5ead\u3002",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "title": "\u9023\u7dda\u81f3 Tado \u5e33\u865f"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "fallback": "\u958b\u555f\u5f8c\u964d\u6a21\u5f0f"
+                },
+                "description": "\u5f8c\u964d\u6a21\u5f0f\u5c07\u6703\u65bc\u624b\u52d5\u8abf\u6574\u5340\u57df\u5f8c\uff0c\u4e0b\u4e00\u6b21\u898f\u5283\u5207\u63db\u6642\u3001\u5207\u63db\u5230\u667a\u80fd\u884c\u7a0b\u3002",
+                "title": "\u8abf\u6574 Tado \u9078\u9805\u3002"
+            }
+        }
+    }
+}

@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji",
+            "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
+            "no_url_available": "Brak dost\u0119pnego adresu URL. Aby uzyska\u0107 informacje na temat tego b\u0142\u0119du, [sprawd\u017a sekcj\u0119 pomocy] ({docs_url})",
+            "reauth_account_mismatch": "Uwierzytelnione konto Spotify nie pasuje do konta, kt\u00f3re wymaga ponownego uwierzytelnienia"
+        },
+        "create_entry": {
+            "default": "Pomy\u015blnie uwierzytelniono"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Wybierz metod\u0119 uwierzytelniania"
+            },
+            "reauth_confirm": {
+                "description": "Integracja Spotify wymaga ponownego uwierzytelnienia w Spotify dla konta: {account}",
+                "title": "Ponownie uwierzytelnij integracj\u0119"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Dost\u0119pno\u015b\u0107 punktu ko\u0144cowego API Spotify"
+        }
+    }
+}

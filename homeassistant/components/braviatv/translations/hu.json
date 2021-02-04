@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "authorize": {
+                "data": {
+                    "pin": "PIN k\u00f3d"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Hoszt"
+                }
+            }
+        }
+    }
+}

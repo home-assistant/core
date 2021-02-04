@@ -1,0 +1,7 @@
+{
+  "domain": "stt",
+  "name": "Speech-to-Text (STT)",
+  "documentation": "https://www.home-assistant.io/integrations/stt",
+  "dependencies": ["http"],
+  "codeowners": ["@pvizeli"]
+}

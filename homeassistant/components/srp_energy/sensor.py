@@ -1,142 +1,153 @@
-"""Platform for retrieving energy data from SRP."""
+"""Support for SRP Energy Sensor."""
 from datetime import datetime, timedelta
 import logging
 
-from requests.exceptions import (
-    ConnectionError as ConnectError, HTTPError, Timeout)
-import voluptuous as vol
+import async_timeout
+from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 
-from homeassistant.const import (
-    CONF_NAME, CONF_PASSWORD, ENERGY_KILO_WATT_HOUR,
-    CONF_USERNAME, CONF_ID)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import ATTR_ATTRIBUTION, ENERGY_KILO_WATT_HOUR
+from homeassistant.helpers import entity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import (
+    ATTRIBUTION,
+    DEFAULT_NAME,
+    ICON,
+    MIN_TIME_BETWEEN_UPDATES,
+    SENSOR_NAME,
+    SENSOR_TYPE,
+    SRP_ENERGY_DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Powered by SRP Energy"
 
-DEFAULT_NAME = 'SRP Energy'
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1440)
-ENERGY_KWH = ENERGY_KILO_WATT_HOUR
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up the SRP Energy Usage sensor."""
+    # API object stored here by __init__.py
+    is_time_of_use = False
+    api = hass.data[SRP_ENERGY_DOMAIN]
+    if entry and entry.data:
+        is_time_of_use = entry.data["is_tou"]
 
-ATTR_READING_COST = "reading_cost"
-ATTR_READING_TIME = 'datetime'
-ATTR_READING_USAGE = 'reading_usage'
-ATTR_DAILY_USAGE = 'daily_usage'
-ATTR_USAGE_HISTORY = 'usage_history'
+    async def async_update_data():
+        """Fetch data from API endpoint.
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_ID): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
-})
+        This is the place to pre-process the data to lookup tables
+        so entities can quickly look up their data.
+        """
+        try:
+            # Fetch srp_energy data
+            start_date = datetime.now() + timedelta(days=-1)
+            end_date = datetime.now()
+            with async_timeout.timeout(10):
+                hourly_usage = await hass.async_add_executor_job(
+                    api.usage,
+                    start_date,
+                    end_date,
+                    is_time_of_use,
+                )
+
+                previous_daily_usage = 0.0
+                for _, _, _, kwh, _ in hourly_usage:
+                    previous_daily_usage += float(kwh)
+                return previous_daily_usage
+        except (TimeoutError) as timeout_err:
+            raise UpdateFailed("Timeout communicating with API") from timeout_err
+        except (ConnectError, HTTPError, Timeout, ValueError, TypeError) as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="sensor",
+        update_method=async_update_data,
+        update_interval=MIN_TIME_BETWEEN_UPDATES,
+    )
+
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_refresh()
+
+    async_add_entities([SrpEntity(coordinator)])
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the SRP energy."""
-    name = config[CONF_NAME]
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-    account_id = config[CONF_ID]
+class SrpEntity(entity.Entity):
+    """Implementation of a Srp Energy Usage sensor."""
 
-    from srpenergy.client import SrpEnergyClient
-
-    srp_client = SrpEnergyClient(account_id, username, password)
-
-    if not srp_client.validate():
-        _LOGGER.error("Couldn't connect to %s. Check credentials", name)
-        return
-
-    add_entities([SrpEnergy(name, srp_client)], True)
-
-
-class SrpEnergy(Entity):
-    """Representation of an srp usage."""
-
-    def __init__(self, name, client):
-        """Initialize SRP Usage."""
+    def __init__(self, coordinator):
+        """Initialize the SrpEntity class."""
+        self._name = SENSOR_NAME
+        self.type = SENSOR_TYPE
+        self.coordinator = coordinator
+        self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
         self._state = None
-        self._name = name
-        self._client = client
-        self._history = None
-        self._usage = None
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION
-
-    @property
-    def state(self):
-        """Return the current state."""
-        if self._state is None:
-            return None
-
-        return "{0:.2f}".format(self._state)
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return f"{DEFAULT_NAME} {self._name}"
+
+    @property
+    def unique_id(self):
+        """Return sensor unique_id."""
+        return self.type
+
+    @property
+    def state(self):
+        """Return the state of the device."""
+        if self._state:
+            return f"{self._state:.2f}"
+        return None
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return ENERGY_KWH
+        return self._unit_of_measurement
 
     @property
-    def history(self):
-        """Return the energy usage history of this entity, if any."""
-        if self._usage is None:
-            return None
+    def icon(self):
+        """Return icon."""
+        return ICON
 
-        history = [{
-            ATTR_READING_TIME: isodate,
-            ATTR_READING_USAGE: kwh,
-            ATTR_READING_COST: cost
-            } for _, _, isodate, kwh, cost in self._usage]
+    @property
+    def usage(self):
+        """Return entity state."""
+        if self.coordinator.data:
+            return f"{self.coordinator.data:.2f}"
+        return None
 
-        return history
+    @property
+    def should_poll(self):
+        """No need to poll. Coordinator notifies entity of updates."""
+        return False
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
+        if not self.coordinator.data:
+            return None
         attributes = {
-            ATTR_USAGE_HISTORY: self.history
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
         return attributes
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest usage from SRP Energy."""
-        start_date = datetime.now() + timedelta(days=-1)
-        end_date = datetime.now()
+    @property
+    def available(self):
+        """Return if entity is available."""
+        return self.coordinator.last_update_success
 
-        try:
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
+        if self.coordinator.data:
+            self._state = self.coordinator.data
 
-            usage = self._client.usage(start_date, end_date)
+    async def async_update(self):
+        """Update the entity.
 
-            daily_usage = 0.0
-            for _, _, _, kwh, _ in usage:
-                daily_usage += float(kwh)
-
-            if usage:
-
-                self._state = daily_usage
-                self._usage = usage
-
-            else:
-                _LOGGER.error("Unable to fetch data from SRP. No data")
-
-        except (ConnectError, HTTPError, Timeout) as error:
-            _LOGGER.error("Unable to connect to SRP. %s", error)
-        except ValueError as error:
-            _LOGGER.error("Value error connecting to SRP. %s", error)
-        except TypeError as error:
-            _LOGGER.error("Type error connecting to SRP. "
-                          "Check username and password. %s", error)
+        Only used by the generic entity update service.
+        """
+        await self.coordinator.async_request_refresh()

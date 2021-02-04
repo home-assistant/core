@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "\u4e3b\u673a\u540d\u6216IP\u5730\u5740",
+                    "password": "\u5bc6\u7801",
+                    "port": "\u7aef\u53e3"
+                },
+                "title": "\u586b\u5199\u60a8\u7684\u4fe1\u606f"
+            }
+        }
+    }
+}

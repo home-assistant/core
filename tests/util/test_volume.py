@@ -1,11 +1,16 @@
-"""Test homeassistant volume utility functions."""
+"""Test Home Assistant volume utility functions."""
 
 import pytest
 
+from homeassistant.const import (
+    VOLUME_FLUID_OUNCE,
+    VOLUME_GALLONS,
+    VOLUME_LITERS,
+    VOLUME_MILLILITERS,
+)
 import homeassistant.util.volume as volume_util
-from homeassistant.const import (VOLUME_LITERS, VOLUME_MILLILITERS,
-                                 VOLUME_GALLONS, VOLUME_FLUID_OUNCE)
-INVALID_SYMBOL = 'bob'
+
+INVALID_SYMBOL = "bob"
 VALID_SYMBOL = VOLUME_LITERS
 
 
@@ -29,7 +34,7 @@ def test_convert_invalid_unit():
 def test_convert_nonnumeric_value():
     """Test exception is thrown for nonnumeric type."""
     with pytest.raises(TypeError):
-        volume_util.convert('a', VOLUME_GALLONS, VOLUME_LITERS)
+        volume_util.convert("a", VOLUME_GALLONS, VOLUME_LITERS)
 
 
 def test_convert_from_liters():
@@ -41,5 +46,4 @@ def test_convert_from_liters():
 def test_convert_from_gallons():
     """Test conversion from gallons to other units."""
     gallons = 5
-    assert volume_util.convert(gallons, VOLUME_GALLONS,
-                               VOLUME_LITERS) == 18.925
+    assert volume_util.convert(gallons, VOLUME_GALLONS, VOLUME_LITERS) == 18.925

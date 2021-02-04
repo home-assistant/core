@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az ESP-t m\u00e1r konfigur\u00e1ltad."
+        },
+        "error": {
+            "connection_error": "Nem lehet csatlakozni az ESP-hez. K\u00e9rlek gy\u0151z\u0151dj meg r\u00f3la, hogy a YAML f\u00e1jl tartalmaz egy \"api:\" sort.",
+            "resolve_error": "Az ESP c\u00edme nem oldhat\u00f3 fel. Ha a hiba tov\u00e1bbra is fenn\u00e1ll, k\u00e9rlek, \u00e1ll\u00edts be egy statikus IP-c\u00edmet: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+        },
+        "flow_title": "ESPHome: {name}",
+        "step": {
+            "authenticate": {
+                "data": {
+                    "password": "Jelsz\u00f3"
+                },
+                "description": "K\u00e9rlek, add meg a konfigur\u00e1ci\u00f3ban {name} n\u00e9vhez be\u00e1ll\u00edtott jelsz\u00f3t."
+            },
+            "discovery_confirm": {
+                "description": "Szeretn\u00e9d hozz\u00e1adni a(z) `{name}` ESPHome csom\u00f3pontot a Home Assistant-hoz?",
+                "title": "Felfedezett ESPHome csom\u00f3pont"
+            },
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "port": "Port"
+                },
+                "description": "K\u00e9rlek, add meg az [ESPHome](https://esphomelib.com/) csom\u00f3pontod kapcsol\u00f3d\u00e1si be\u00e1ll\u00edt\u00e1sait."
+            }
+        }
+    }
+}

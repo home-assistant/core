@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "no_device": "\u017badne z Twoich urz\u0105dze\u0144 nie ma aktywowanej funkcji \"Znajd\u017a m\u00f3j iPhone\"",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "send_verification_code": "Nie uda\u0142o si\u0119 wys\u0142a\u0107 kodu weryfikacyjnego",
+            "validate_verification_code": "Nie uda\u0142o si\u0119 zweryfikowa\u0107 kodu weryfikacyjnego, wybierz urz\u0105dzenie zaufane i ponownie rozpocznij weryfikacj\u0119"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Has\u0142o"
+                },
+                "description": "Twoje poprzednio wprowadzone has\u0142o dla {username} ju\u017c nie dzia\u0142a. Zaktualizuj swoje has\u0142o, aby nadal korzysta\u0107 z tej integracji.",
+                "title": "Ponownie uwierzytelnij integracj\u0119"
+            },
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "Zaufane urz\u0105dzenie"
+                },
+                "description": "Wybierz zaufane urz\u0105dzenie",
+                "title": "Zaufane urz\u0105dzenie iCloud"
+            },
+            "user": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Adres e-mail",
+                    "with_family": "Z rodzin\u0105"
+                },
+                "description": "Wprowad\u017a dane uwierzytelniaj\u0105ce",
+                "title": "Dane uwierzytelniaj\u0105ce iCloud"
+            },
+            "verification_code": {
+                "data": {
+                    "verification_code": "Kod weryfikacyjny"
+                },
+                "description": "Wprowad\u017a kod weryfikacyjny, kt\u00f3ry w\u0142a\u015bnie otrzyma\u0142e\u015b z iCloud",
+                "title": "Kod weryfikacyjny iCloud"
+            }
+        }
+    }
+}

@@ -1,14 +1,12 @@
 """Support for Verisure cameras."""
 import errno
-import logging
 import os
 
 from homeassistant.components.camera import Camera
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-from . import CONF_SMARTCAM, HUB as hub
-
-_LOGGER = logging.getLogger(__name__)
+from . import HUB as hub
+from .const import CONF_SMARTCAM, LOGGER
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -17,14 +15,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
     directory_path = hass.config.config_dir
     if not os.access(directory_path, os.R_OK):
-        _LOGGER.error("file path %s is not readable", directory_path)
+        LOGGER.error("file path %s is not readable", directory_path)
         return False
     hub.update_overview()
-    smartcams = []
-    smartcams.extend([
+    smartcams = [
         VerisureSmartcam(hass, device_label, directory_path)
-        for device_label in hub.get(
-            "$.customerImageCameras[*].deviceLabel")])
+        for device_label in hub.get("$.customerImageCameras[*].deviceLabel")
+    ]
+
     add_entities(smartcams)
 
 
@@ -39,37 +37,36 @@ class VerisureSmartcam(Camera):
         self._directory_path = directory_path
         self._image = None
         self._image_id = None
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                             self.delete_image)
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.delete_image)
 
     def camera_image(self):
         """Return image response."""
         self.check_imagelist()
         if not self._image:
-            _LOGGER.debug("No image to display")
+            LOGGER.debug("No image to display")
             return
-        _LOGGER.debug("Trying to open %s", self._image)
-        with open(self._image, 'rb') as file:
+        LOGGER.debug("Trying to open %s", self._image)
+        with open(self._image, "rb") as file:
             return file.read()
 
     def check_imagelist(self):
         """Check the contents of the image list."""
         hub.update_smartcam_imageseries()
         image_ids = hub.get_image_info(
-            "$.imageSeries[?(@.deviceLabel=='%s')].image[0].imageId",
-            self._device_label)
+            "$.imageSeries[?(@.deviceLabel=='%s')].image[0].imageId", self._device_label
+        )
         if not image_ids:
             return
         new_image_id = image_ids[0]
-        if new_image_id in ('-1', self._image_id):
-            _LOGGER.debug("The image is the same, or loading image_id")
+        if new_image_id in ("-1", self._image_id):
+            LOGGER.debug("The image is the same, or loading image_id")
             return
-        _LOGGER.debug("Download new image %s", new_image_id)
+        LOGGER.debug("Download new image %s", new_image_id)
         new_image_path = os.path.join(
-            self._directory_path, '{}{}'.format(new_image_id, '.jpg'))
-        hub.session.download_image(
-            self._device_label, new_image_id, new_image_path)
-        _LOGGER.debug("Old image_id=%s", self._image_id)
+            self._directory_path, "{}{}".format(new_image_id, ".jpg")
+        )
+        hub.session.download_image(self._device_label, new_image_id, new_image_path)
+        LOGGER.debug("Old image_id=%s", self._image_id)
         self.delete_image(self)
 
         self._image_id = new_image_id
@@ -78,10 +75,11 @@ class VerisureSmartcam(Camera):
     def delete_image(self, event):
         """Delete an old image."""
         remove_image = os.path.join(
-            self._directory_path, '{}{}'.format(self._image_id, '.jpg'))
+            self._directory_path, "{}{}".format(self._image_id, ".jpg")
+        )
         try:
             os.remove(remove_image)
-            _LOGGER.debug("Deleting old image %s", remove_image)
+            LOGGER.debug("Deleting old image %s", remove_image)
         except OSError as error:
             if error.errno != errno.ENOENT:
                 raise
@@ -90,5 +88,5 @@ class VerisureSmartcam(Camera):
     def name(self):
         """Return the name of this camera."""
         return hub.get_first(
-            "$.customerImageCameras[?(@.deviceLabel=='%s')].area",
-            self._device_label)
+            "$.customerImageCameras[?(@.deviceLabel=='%s')].area", self._device_label
+        )

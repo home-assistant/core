@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kiszolg\u00e1l\u00f3 m\u00e1r konfigur\u00e1lva van."
+        },
+        "error": {
+            "cannot_connect": "Nem siker\u00fclt csatlakozni a szerverhez. K\u00e9rj\u00fck, ellen\u0151rizze a gazdag\u00e9pet \u00e9s a portot, majd pr\u00f3b\u00e1lkozzon \u00fajra. Gondoskodjon arr\u00f3l, hogy a szerveren legal\u00e1bb a Minecraft 1.7-es verzi\u00f3j\u00e1t futtassa."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "name": "N\u00e9v"
+                },
+                "title": "Kapcsold \u00f6ssze a Minecraft szervered"
+            }
+        }
+    }
+}

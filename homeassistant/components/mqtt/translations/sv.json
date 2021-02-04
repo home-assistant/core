@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Endast en enda konfiguration av MQTT \u00e4r till\u00e5ten."
+        },
+        "error": {
+            "cannot_connect": "Det gick inte att ansluta till broker."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "discovery": "Aktivera uppt\u00e4ckt",
+                    "password": "L\u00f6senord",
+                    "port": "Port",
+                    "username": "Anv\u00e4ndarnamn"
+                },
+                "description": "V\u00e4nligen ange anslutningsinformationen f\u00f6r din MQTT broker."
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Aktivera uppt\u00e4ckt"
+                },
+                "description": "Vill du konfigurera Home Assistant att ansluta till den MQTT-broker som tillhandah\u00e5lls av Hass.io-till\u00e4gget \"{addon}\"?",
+                "title": "MQTT Broker via Hass.io till\u00e4gg"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "F\u00f6rsta knappen",
+            "button_2": "Andra knappen",
+            "button_3": "Tredje knappen",
+            "button_4": "Fj\u00e4rde knappen",
+            "button_5": "Femte knappen",
+            "button_6": "Sj\u00e4tte knappen",
+            "turn_off": "St\u00e4ng av",
+            "turn_on": "Starta"
+        }
+    },
+    "options": {
+        "step": {
+            "broker": {
+                "data": {
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}

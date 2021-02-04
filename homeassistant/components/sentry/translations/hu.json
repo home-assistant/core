@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "bad_dsn": "\u00c9rv\u00e9nytelen DSN",
+            "unknown": "V\u00e1ratlan hiba"
+        },
+        "step": {
+            "user": {
+                "description": "Add meg a Sentry DSN-t",
+                "title": "Sentry"
+            }
+        }
+    }
+}

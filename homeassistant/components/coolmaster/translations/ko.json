@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "no_units": "CoolMasterNet \ud638\uc2a4\ud2b8\uc5d0\uc11c HVAC \uae30\uae30\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "cool": "\ub0c9\ubc29 \ubaa8\ub4dc \uc9c0\uc6d0",
+                    "dry": "\uc81c\uc2b5 \ubaa8\ub4dc \uc9c0\uc6d0",
+                    "fan_only": "\uc1a1\ud48d \ubaa8\ub4dc \uc9c0\uc6d0",
+                    "heat": "\ub09c\ubc29 \ubaa8\ub4dc \uc9c0\uc6d0",
+                    "heat_cool": "\uc790\ub3d9 \ub0c9/\ub09c\ubc29 \ubaa8\ub4dc \uc9c0\uc6d0",
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "off": "\uc804\uc6d0 \ub044\uae30 \ud5c8\uc6a9"
+                },
+                "title": "CoolMasterNet \uc5f0\uacb0 \uc0c1\uc138\uc815\ubcf4\ub97c \uc124\uc815\ud574\uc8fc\uc138\uc694."
+            }
+        }
+    }
+}

@@ -1,0 +1,90 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Slechts \u00e9\u00e9n configuratie van ZHA is toegestaan."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken met ZHA apparaat."
+        },
+        "step": {
+            "pick_radio": {
+                "data": {
+                    "radio_type": "Radio type"
+                },
+                "description": "Kies een type Zigbee-radio",
+                "title": "Radio type"
+            },
+            "port_config": {
+                "data": {
+                    "baudrate": "poort snelheid",
+                    "flow_control": "gegevensstroombeheer",
+                    "path": "Serieel apparaatpad"
+                },
+                "description": "Voer poortspecifieke instellingen in",
+                "title": "Instellingen"
+            },
+            "user": {
+                "data": {
+                    "path": "Serieel apparaatpad"
+                },
+                "description": "Selecteer seri\u00eble poort voor Zigbee-radio",
+                "title": "ZHA"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "squawk": "Schreeuw",
+            "warn": "Waarschuwen"
+        },
+        "trigger_subtype": {
+            "both_buttons": "Beide knoppen",
+            "button_1": "Eerste knop",
+            "button_2": "Tweede knop",
+            "button_3": "Derde knop",
+            "button_4": "Vierde knop",
+            "button_5": "Vijfde knop",
+            "button_6": "Zesde knop",
+            "close": "Sluiten",
+            "dim_down": "Dim omlaag",
+            "dim_up": "Dim omhoog",
+            "face_1": "met gezicht 1 geactiveerd",
+            "face_2": "met gezicht 2 geactiveerd",
+            "face_3": "met gezicht 3 geactiveerd",
+            "face_4": "met gezicht 4 geactiveerd",
+            "face_5": "met gezicht 5 geactiveerd",
+            "face_6": "met gezicht 6 geactiveerd",
+            "face_any": "Met elk/opgegeven gezicht (en) geactiveerd",
+            "left": "Links",
+            "open": "Open",
+            "right": "Rechts",
+            "turn_off": "Uitschakelen",
+            "turn_on": "Inschakelen"
+        },
+        "trigger_type": {
+            "device_dropped": "Apparaat gevallen",
+            "device_flipped": "Apparaat omgedraaid \"{subtype}\"",
+            "device_knocked": "Apparaat klopte \"{subtype}\"",
+            "device_rotated": "Apparaat gedraaid \" {subtype} \"",
+            "device_shaken": "Apparaat geschud",
+            "device_slid": "Apparaat geschoven \"{subtype}\"\".",
+            "device_tilted": "Apparaat gekanteld",
+            "remote_button_alt_double_press": "\" {subtype} \" knop tweemaal aangeklikt (alternate mode)",
+            "remote_button_alt_long_press": "\" {subtype} \" knop continu ingedrukt (alternate mode)",
+            "remote_button_alt_long_release": "\"{subtype}\" knop losgelaten (alternate mode)",
+            "remote_button_alt_quadruple_press": "\" {subtype} \" knop viervoudig aangeklikt (alternate mode)",
+            "remote_button_alt_quintuple_press": "\" {subtype} \" knop vijfmaal geklikt (alternate mode)",
+            "remote_button_alt_short_press": "\"{subtype}\" knop ingedrukt (alternate mode)",
+            "remote_button_alt_short_release": "\"{subtype}\" knop losgelaten (alternate mode)",
+            "remote_button_alt_triple_press": "\" {subtype} \" knop driemaal geklikt (alternate mode)",
+            "remote_button_double_press": "\"{subtype}\" knop dubbel geklikt",
+            "remote_button_long_press": "\" {subtype} \" knop continu ingedrukt",
+            "remote_button_long_release": "\"{subtype}\" knop losgelaten na lang indrukken van de knop",
+            "remote_button_quadruple_press": "\" {subtype} \" knop viervoudig aangeklikt",
+            "remote_button_quintuple_press": "\" {subtype} \" knop vijf keer aangeklikt",
+            "remote_button_short_press": "\"{subtype}\" knop ingedrukt",
+            "remote_button_short_release": "\"{subtype}\" knop losgelaten",
+            "remote_button_triple_press": "\" {subtype} \" knop driemaal geklikt"
+        }
+    }
+}

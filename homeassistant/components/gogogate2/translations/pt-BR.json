@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Endere\u00e7o IP",
+                    "password": "Senha",
+                    "username": "Nome de usu\u00e1rio"
+                },
+                "description": "Forne\u00e7a as informa\u00e7\u00f5es necess\u00e1rias abaixo.",
+                "title": "Configurar GogoGate2"
+            }
+        }
+    }
+}

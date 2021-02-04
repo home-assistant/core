@@ -1,0 +1,15 @@
+# synology-dsm service entries description.
+
+reboot:
+  description: Reboot the NAS.
+  fields:
+    serial:
+      description: serial of the NAS to reboot; required when multiple NAS are configured.
+      example: 1NDVC86409
+
+shutdown:
+  description: Shutdown the NAS.
+  fields:
+    serial:
+      description: serial of the NAS to shutdown; required when multiple NAS are configured.
+      example: 1NDVC86409

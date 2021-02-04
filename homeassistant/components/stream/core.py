@@ -2,17 +2,17 @@
 import asyncio
 from collections import deque
 import io
-from typing import List, Any
+from typing import Any, Callable, List
 
-import attr
 from aiohttp import web
+import attr
 
-from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
 
-from .const import DOMAIN, ATTR_STREAMS
+from .const import ATTR_STREAMS, DOMAIN, MAX_SEGMENTS
 
 PROVIDERS = Registry()
 
@@ -21,25 +21,23 @@ PROVIDERS = Registry()
 class StreamBuffer:
     """Represent a segment."""
 
-    segment = attr.ib(type=io.BytesIO)
-    output = attr.ib()               # type=av.OutputContainer
-    vstream = attr.ib()              # type=av.VideoStream
-    astream = attr.ib(default=None)  # type=av.AudioStream
+    segment: io.BytesIO = attr.ib()
+    output = attr.ib()  # type=av.OutputContainer
+    vstream = attr.ib()  # type=av.VideoStream
+    astream = attr.ib(default=None)  # type=Optional[av.AudioStream]
 
 
 @attr.s
 class Segment:
     """Represent a segment."""
 
-    sequence = attr.ib(type=int)
-    segment = attr.ib(type=io.BytesIO)
-    duration = attr.ib(type=float)
+    sequence: int = attr.ib()
+    segment: io.BytesIO = attr.ib()
+    duration: float = attr.ib()
 
 
 class StreamOutput:
     """Represents a stream output."""
-
-    num_segments = 3
 
     def __init__(self, stream, timeout: int = 300) -> None:
         """Initialize a stream output."""
@@ -48,7 +46,7 @@ class StreamOutput:
         self._stream = stream
         self._cursor = None
         self._event = asyncio.Event()
-        self._segments = deque(maxlen=self.num_segments)
+        self._segments = deque(maxlen=MAX_SEGMENTS)
         self._unsub = None
 
     @property
@@ -62,13 +60,18 @@ class StreamOutput:
         return None
 
     @property
-    def audio_codec(self) -> str:
-        """Return desired audio codec."""
+    def audio_codecs(self) -> str:
+        """Return desired audio codecs."""
         return None
 
     @property
-    def video_codec(self) -> str:
-        """Return desired video codec."""
+    def video_codecs(self) -> tuple:
+        """Return desired video codecs."""
+        return None
+
+    @property
+    def container_options(self) -> Callable[[int], dict]:
+        """Return Callable which takes a sequence number and returns container options."""
         return None
 
     @property
@@ -78,9 +81,12 @@ class StreamOutput:
 
     @property
     def target_duration(self) -> int:
-        """Return the average duration of the segments in seconds."""
+        """Return the max duration of any given segment in seconds."""
+        segment_length = len(self._segments)
+        if not segment_length:
+            return 1
         durations = [s.duration for s in self._segments]
-        return round(sum(durations) // len(self._segments)) or 1
+        return round(max(durations)) or 1
 
     def get_segment(self, sequence: int = None) -> Any:
         """Retrieve a specific segment, or the whole list."""
@@ -88,8 +94,7 @@ class StreamOutput:
         # Reset idle timeout
         if self._unsub is not None:
             self._unsub()
-        self._unsub = async_call_later(
-            self._stream.hass, self.timeout, self._timeout)
+        self._unsub = async_call_later(self._stream.hass, self.timeout, self._timeout)
 
         if not sequence:
             return self._segments
@@ -112,13 +117,18 @@ class StreamOutput:
         self._cursor = segment.sequence
         return segment
 
-    @callback
     def put(self, segment: Segment) -> None:
         """Store output."""
-        # Start idle timeout when we start recieving data
+        self._stream.hass.loop.call_soon_threadsafe(self._async_put, segment)
+
+    @callback
+    def _async_put(self, segment: Segment) -> None:
+        """Store output from event loop."""
+        # Start idle timeout when we start receiving data
         if self._unsub is None:
             self._unsub = async_call_later(
-                self._stream.hass, self.timeout, self._timeout)
+                self._stream.hass, self.timeout, self._timeout
+            )
 
         if segment is None:
             self._event.set()
@@ -144,7 +154,7 @@ class StreamOutput:
 
     def cleanup(self):
         """Handle cleanup."""
-        self._segments = deque(maxlen=self.num_segments)
+        self._segments = deque(maxlen=MAX_SEGMENTS)
         self._stream.remove_provider(self)
 
 
@@ -161,11 +171,16 @@ class StreamView(HomeAssistantView):
 
     async def get(self, request, token, sequence=None):
         """Start a GET request."""
-        hass = request.app['hass']
+        hass = request.app["hass"]
 
-        stream = next((
-            s for s in hass.data[DOMAIN][ATTR_STREAMS].values()
-            if s.access_token == token), None)
+        stream = next(
+            (
+                s
+                for s in hass.data[DOMAIN][ATTR_STREAMS].values()
+                if s.access_token == token
+            ),
+            None,
+        )
 
         if not stream:
             raise web.HTTPNotFound()

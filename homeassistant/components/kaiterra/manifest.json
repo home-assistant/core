@@ -1,0 +1,7 @@
+{
+  "domain": "kaiterra",
+  "name": "Kaiterra",
+  "documentation": "https://www.home-assistant.io/integrations/kaiterra",
+  "requirements": ["kaiterra-async-client==0.0.2"],
+  "codeowners": ["@Michsior14"]
+}

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Der Name f\u00fcr diese Velbus-Verbindung",
+                    "port": "Verbindungs details"
+                },
+                "title": "Definieren des Velbus-Verbindungstyps"
+            }
+        }
+    }
+}

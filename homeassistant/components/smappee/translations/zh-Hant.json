@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured_local_device": "\u672c\u5730\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\uff0c\u8acb\u5148\u9032\u884c\u79fb\u9664\u5f8c\u518d\u8a2d\u5b9a\u96f2\u7aef\u88dd\u7f6e\u3002",
+            "authorize_url_timeout": "\u7522\u751f\u8a8d\u8b49 URL \u6642\u903e\u6642\u3002",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_mdns": "Smappee \u6574\u5408\u4e0d\u652f\u63f4\u7684\u88dd\u7f6e\u3002",
+            "missing_configuration": "\u5143\u4ef6\u5c1a\u672a\u8a2d\u7f6e\uff0c\u8acb\u53c3\u95b1\u6587\u4ef6\u8aaa\u660e\u3002",
+            "no_url_available": "\u6c92\u6709\u53ef\u7528\u7684\u7db2\u5740\u3002\u95dc\u65bc\u6b64\u932f\u8aa4\u66f4\u8a73\u7d30\u8a0a\u606f\uff0c[\u9ede\u9078\u5354\u52a9\u7ae0\u7bc0]({docs_url})"
+        },
+        "flow_title": "Smappee\uff1a{name}",
+        "step": {
+            "environment": {
+                "data": {
+                    "environment": "\u74b0\u5883"
+                },
+                "description": "\u8a2d\u5b9a Smappee \u4ee5\u6574\u5408\u81f3 Home Assistant\u3002"
+            },
+            "local": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef"
+                },
+                "description": "\u8f38\u5165 Smappee \u672c\u5730\u6574\u5408\u4e3b\u6a5f\u7aef\u4ee5\u958b\u59cb"
+            },
+            "pick_implementation": {
+                "title": "\u9078\u64c7\u9a57\u8b49\u6a21\u5f0f"
+            },
+            "zeroconf_confirm": {
+                "description": "\u662f\u5426\u8981\u5c07\u5e8f\u865f\u70ba `{serial_number}` \u4e4b Smappee \u88dd\u7f6e\u65b0\u589e\u81f3 Home Assistant\uff1f",
+                "title": "\u81ea\u52d5\u63a2\u7d22\u5230 Smappee \u88dd\u7f6e"
+            }
+        }
+    }
+}

@@ -1,0 +1,105 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L\u00fc\u00fcs on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "no_bridges": "DeCONZ l\u00fc\u00fcse ei leitud",
+            "no_hardware_available": "DeCONZi raadio riistvara puudub",
+            "not_deconz_bridge": "See pole deCONZ-i sild",
+            "updated_instance": "DeCONZ-i eksemplarile omistati uus hostiaadress"
+        },
+        "error": {
+            "no_key": "API v\u00f5tit ei leitud"
+        },
+        "flow_title": "deCONZ Zigbee l\u00fc\u00fcs ( {host} )",
+        "step": {
+            "hassio_confirm": {
+                "description": "Kas soovid seadistada Home Assistant-i \u00fchenduse deCONZ-l\u00fc\u00fcsiga, mida pakub Hass.io lisandmoodul {addon} ?",
+                "title": "deCONZ Zigbee v\u00e4rav Hass.io pistikprogrammi kaudu"
+            },
+            "link": {
+                "description": "Home Assistanti registreerumiseks ava deCONZ-i l\u00fc\u00fcs.\n\n 1. Minge deCONZ Settings - > Gateway - > Advanced\n 2. Vajutage nuppu \"Authenticate app\"",
+                "title": "\u00dchenda deCONZ-iga"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "",
+                    "port": ""
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Vali avastatud deCONZ l\u00fc\u00fcs"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "both_buttons": "M\u00f5lemad nupud",
+            "bottom_buttons": "Alumised nupud",
+            "button_1": "Esimene nupp",
+            "button_2": "Teine nupp",
+            "button_3": "Kolmas nupp",
+            "button_4": "Neljas nupp",
+            "close": "Sulge",
+            "dim_down": "H\u00e4marda",
+            "dim_up": "Tee heledamaks",
+            "left": "Vasakpoolne",
+            "open": "Ava",
+            "right": "Parempoolne",
+            "side_1": "1. k\u00fclg",
+            "side_2": "2. k\u00fclg",
+            "side_3": "3. k\u00fclg",
+            "side_4": "4. k\u00fclg",
+            "side_5": "5. k\u00fclg",
+            "side_6": "6. k\u00fclg",
+            "top_buttons": "\u00dclemised nupud",
+            "turn_off": "L\u00fclita v\u00e4lja",
+            "turn_on": "L\u00fclita sisse"
+        },
+        "trigger_type": {
+            "remote_awakened": "Seade \u00e4rkas",
+            "remote_button_double_press": "\" {subtype} \" on topeltkl\u00f5psatud",
+            "remote_button_long_press": "\" {subtype} \" on pikalt alla vajutatud",
+            "remote_button_long_release": "\"{subtype}\" nupp vabastatati p\u00e4rast pikka vajutust",
+            "remote_button_quadruple_press": "\"{subtype}\" nuppu on neljakordselt kl\u00f5psatud",
+            "remote_button_quintuple_press": "\"{subtype}\" nuppu on viiekordselt kl\u00f5psatud",
+            "remote_button_rotated": "Nuppu \"{subtype}\" keerati",
+            "remote_button_rotated_fast": "Nuppu \"{ subtype}\"p\u00f6\u00f6rati kiiresti",
+            "remote_button_rotation_stopped": "Nupu \" {subtype} \"  p\u00f6\u00f6ramine peatus",
+            "remote_button_short_press": "\"{subtype}\" nupp  on vajutatud",
+            "remote_button_short_release": "\"{subtype}\" nupp  vabastati",
+            "remote_button_triple_press": "Nuppu \"{subtype}\" kl\u00f5psati kolm korda",
+            "remote_double_tap": "Seadet \"{subtype}\" on topeltkl\u00f5psatud",
+            "remote_double_tap_any_side": "Seadet on topeltpuudutatud mis tahes k\u00fcljelt",
+            "remote_falling": "Seade on vabalangemises",
+            "remote_flip_180_degrees": "Seadet p\u00f6\u00f6rati 180 kraadi",
+            "remote_flip_90_degrees": "Seadet p\u00f6\u00f6rati 90 kraadi",
+            "remote_gyro_activated": "seadet raputati",
+            "remote_moved": "Seadet liigutati k\u00fcljega \"{subtype}\" \u00fclal",
+            "remote_moved_any_side": "Seadet liigutati suvaline k\u00fclg \u00fcleval pool",
+            "remote_rotate_from_side_1": "Seade p\u00f6\u00f6rati k\u00fcljelt \"1\u201d asendisse \"{subtype}\u201d",
+            "remote_rotate_from_side_2": "Seade p\u00f6\u00f6rati k\u00fcljelt \"2\u201d asendisse \"{subtype}\u201d",
+            "remote_rotate_from_side_3": "Seade p\u00f6\u00f6rati k\u00fcljelt \"3\u201d asendisse \"{subtype}\u201d",
+            "remote_rotate_from_side_4": "Seade p\u00f6\u00f6rati k\u00fcljelt \"4\u201d asendisse \"{subtype}\u201d",
+            "remote_rotate_from_side_5": "Seade p\u00f6\u00f6rati k\u00fcljelt \"5\u201d asendisse \"{subtype}\u201d",
+            "remote_rotate_from_side_6": "Seade p\u00f6\u00f6rati k\u00fcljelt \"6\u201d asendisse \"{subtype}\"",
+            "remote_turned_clockwise": "Seadet p\u00f6\u00f6rati p\u00e4rip\u00e4eva",
+            "remote_turned_counter_clockwise": "Seadet p\u00f6\u00f6rati vastup\u00e4eva"
+        }
+    },
+    "options": {
+        "step": {
+            "deconz_devices": {
+                "data": {
+                    "allow_clip_sensor": "Luba deCONZ CLIP andurid",
+                    "allow_deconz_groups": "Luba deCONZi valgustgrupid",
+                    "allow_new_devices": "Luba uute seadmete automaatne lisamine"
+                },
+                "description": "Seadista deCONZ-i seadmet\u00fc\u00fcpide n\u00e4htavus",
+                "title": "deCONZi valikud"
+            }
+        }
+    }
+}

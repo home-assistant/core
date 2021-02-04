@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El powerwall ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar, por favor int\u00e9ntelo de nuevo",
+            "unknown": "Error inesperado",
+            "wrong_version": "Tu powerwall utiliza una versi\u00f3n de software que no es compatible. Considera actualizar o informar de este problema para que pueda resolverse."
+        },
+        "flow_title": "Powerwall de Tesla ({ip_address})",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Direcci\u00f3n IP"
+                },
+                "title": "Conectarse al powerwall"
+            }
+        }
+    }
+}

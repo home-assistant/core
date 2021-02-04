@@ -11,7 +11,7 @@ from homeassistant.components.http import (
     CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE,
 )
-from homeassistant.const import SERVER_PORT
+from homeassistant.const import HTTP_BAD_REQUEST, HTTP_OK, SERVER_PORT
 
 from .const import X_HASSIO
 
@@ -24,25 +24,27 @@ class HassioAPIError(RuntimeError):
 
 def _api_bool(funct):
     """Return a boolean."""
+
     async def _wrapper(*argv, **kwargs):
         """Wrap function."""
         try:
             data = await funct(*argv, **kwargs)
-            return data['result'] == "ok"
+            return data["result"] == "ok"
         except HassioAPIError:
             return False
 
     return _wrapper
 
 
-def _api_data(funct):
+def api_data(funct):
     """Return data of an api."""
+
     async def _wrapper(*argv, **kwargs):
         """Wrap function."""
         data = await funct(*argv, **kwargs)
-        if data['result'] == "ok":
-            return data['data']
-        raise HassioAPIError(data['message'])
+        if data["result"] == "ok":
+            return data["data"]
+        raise HassioAPIError(data["message"])
 
     return _wrapper
 
@@ -64,24 +66,55 @@ class HassIO:
         """
         return self.send_command("/supervisor/ping", method="get", timeout=15)
 
-    @_api_data
-    def get_homeassistant_info(self):
-        """Return data for Home Assistant.
+    @api_data
+    def get_info(self):
+        """Return generic Supervisor information.
 
         This method return a coroutine.
         """
-        return self.send_command("/homeassistant/info", method="get")
+        return self.send_command("/info", method="get")
 
-    @_api_data
+    @api_data
+    def get_host_info(self):
+        """Return data for Host.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/host/info", method="get")
+
+    @api_data
+    def get_os_info(self):
+        """Return data for the OS.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/os/info", method="get")
+
+    @api_data
+    def get_core_info(self):
+        """Return data for Home Asssistant Core.
+
+        This method returns a coroutine.
+        """
+        return self.send_command("/core/info", method="get")
+
+    @api_data
+    def get_supervisor_info(self):
+        """Return data for the Supervisor.
+
+        This method returns a coroutine.
+        """
+        return self.send_command("/supervisor/info", method="get")
+
+    @api_data
     def get_addon_info(self, addon):
         """Return data for a Add-on.
 
         This method return a coroutine.
         """
-        return self.send_command(
-            "/addons/{}/info".format(addon), method="get")
+        return self.send_command(f"/addons/{addon}/info", method="get")
 
-    @_api_data
+    @api_data
     def get_ingress_panels(self):
         """Return data for Add-on ingress panels.
 
@@ -105,7 +138,7 @@ class HassIO:
         """
         return self.send_command("/homeassistant/stop")
 
-    @_api_data
+    @api_data
     def retrieve_discovery_messages(self):
         """Return all discovery data from Hass.io API.
 
@@ -113,31 +146,32 @@ class HassIO:
         """
         return self.send_command("/discovery", method="get")
 
-    @_api_data
+    @api_data
     def get_discovery_message(self, uuid):
         """Return a single discovery data message.
 
         This method return a coroutine.
         """
-        return self.send_command("/discovery/{}".format(uuid), method="get")
+        return self.send_command(f"/discovery/{uuid}", method="get")
 
     @_api_bool
     async def update_hass_api(self, http_config, refresh_token):
         """Update Home Assistant API data on Hass.io."""
         port = http_config.get(CONF_SERVER_PORT) or SERVER_PORT
         options = {
-            'ssl': CONF_SSL_CERTIFICATE in http_config,
-            'port': port,
-            'watchdog': True,
-            'refresh_token': refresh_token,
+            "ssl": CONF_SSL_CERTIFICATE in http_config,
+            "port": port,
+            "watchdog": True,
+            "refresh_token": refresh_token.token,
         }
 
-        if CONF_SERVER_HOST in http_config:
-            options['watchdog'] = False
-            _LOGGER.warning("Don't use 'server_host' options with Hass.io")
+        if http_config.get(CONF_SERVER_HOST) is not None:
+            options["watchdog"] = False
+            _LOGGER.warning(
+                "Found incompatible HTTP option 'server_host'. Watchdog feature disabled"
+            )
 
-        return await self.send_command("/homeassistant/options",
-                                       payload=options)
+        return await self.send_command("/homeassistant/options", payload=options)
 
     @_api_bool
     def update_hass_timezone(self, timezone):
@@ -145,12 +179,9 @@ class HassIO:
 
         This method return a coroutine.
         """
-        return self.send_command("/supervisor/options", payload={
-            'timezone': timezone
-        })
+        return self.send_command("/supervisor/options", payload={"timezone": timezone})
 
-    async def send_command(self, command, method="post", payload=None,
-                           timeout=10):
+    async def send_command(self, command, method="post", payload=None, timeout=10):
         """Send API command to Hass.io.
 
         This method is a coroutine.
@@ -158,14 +189,14 @@ class HassIO:
         try:
             with async_timeout.timeout(timeout):
                 request = await self.websession.request(
-                    method, "http://{}{}".format(self._ip, command),
-                    json=payload, headers={
-                        X_HASSIO: os.environ.get('HASSIO_TOKEN', "")
-                    })
+                    method,
+                    f"http://{self._ip}{command}",
+                    json=payload,
+                    headers={X_HASSIO: os.environ.get("HASSIO_TOKEN", "")},
+                )
 
-                if request.status not in (200, 400):
-                    _LOGGER.error(
-                        "%s return code %d.", command, request.status)
+                if request.status not in (HTTP_OK, HTTP_BAD_REQUEST):
+                    _LOGGER.error("%s return code %d", command, request.status)
                     raise HassioAPIError()
 
                 answer = await request.json()

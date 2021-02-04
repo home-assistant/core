@@ -1,75 +1,45 @@
 """Support for Genius Hub binary_sensor devices."""
-from datetime import datetime
-import logging
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from . import DOMAIN, GeniusDevice
 
-from . import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-GH_IS_SWITCH = ['Dual Channel Receiver', 'Electric Switch', 'Smart Plug']
+GH_STATE_ATTR = "outputOnOff"
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+) -> None:
     """Set up the Genius Hub sensor entities."""
-    client = hass.data[DOMAIN]['client']
+    if discovery_info is None:
+        return
 
-    devices = [d for d in client.hub.device_objs if d.type is not None]
-    switches = [GeniusBinarySensor(client, d)
-                for d in devices if d.type[:21] in GH_IS_SWITCH]
+    broker = hass.data[DOMAIN]["broker"]
 
-    async_add_entities(switches)
+    switches = [
+        GeniusBinarySensor(broker, d, GH_STATE_ATTR)
+        for d in broker.client.device_objs
+        if GH_STATE_ATTR in d.data["state"]
+    ]
+
+    async_add_entities(switches, update_before_add=True)
 
 
-class GeniusBinarySensor(BinarySensorDevice):
+class GeniusBinarySensor(GeniusDevice, BinarySensorEntity):
     """Representation of a Genius Hub binary_sensor."""
 
-    def __init__(self, client, device):
+    def __init__(self, broker, device, state_attr) -> None:
         """Initialize the binary sensor."""
-        self._client = client
-        self._device = device
+        super().__init__(broker, device)
 
-        if device.type[:21] == 'Dual Channel Receiver':
-            self._name = 'Dual Channel Receiver {}'.format(device.id)
+        self._state_attr = state_attr
+
+        if device.type[:21] == "Dual Channel Receiver":
+            self._name = f"{device.type[:21]} {device.id}"
         else:
-            self._name = '{} {}'.format(device.type, device.id)
-
-    async def async_added_to_hass(self):
-        """Set up a listener when this entity is added to HA."""
-        async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
-
-    @callback
-    def _refresh(self):
-        self.async_schedule_update_ha_state(force_refresh=True)
+            self._name = f"{device.type} {device.id}"
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False as the geniushub devices should not be polled."""
-        return False
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the status of the sensor."""
-        return self._device.state['outputOnOff']
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        attrs = {}
-        attrs['assigned_zone'] = self._device.assignedZones[0]['name']
-
-        last_comms = self._device._info_raw['childValues']['lastComms']['val']  # noqa; pylint: disable=protected-access
-        if last_comms != 0:
-            attrs['last_comms'] = datetime.utcfromtimestamp(
-                last_comms).isoformat()
-
-        return {**attrs}
+        return self._device.data["state"][self._state_attr]

@@ -1,26 +1,28 @@
 """Support for Sony projectors via SDCP network control."""
 import logging
 
+import pysdcp
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    STATE_ON, STATE_OFF, CONF_NAME, CONF_HOST)
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Sony Projector'
+DEFAULT_NAME = "Sony Projector"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Connect to Sony projector using network."""
-    import pysdcp
+
     host = config[CONF_HOST]
     name = config[CONF_NAME]
     sdcp_connection = pysdcp.Projector(host)
@@ -36,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class SonyProjector(SwitchDevice):
+class SonyProjector(SwitchEntity):
     """Represents a Sony Projector as a switch."""
 
     def __init__(self, sdcp_connection, name):
@@ -78,18 +80,18 @@ class SonyProjector(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the projector on."""
-        _LOGGER.debug("Powering on projector '%s'...", self.name)
+        _LOGGER.debug("Powering on projector '%s'", self.name)
         if self._sdcp.set_power(True):
-            _LOGGER.debug("Powered on successfully.")
+            _LOGGER.debug("Powered on successfully")
             self._state = STATE_ON
         else:
             _LOGGER.error("Power on command was not successful")
 
     def turn_off(self, **kwargs):
         """Turn the projector off."""
-        _LOGGER.debug("Powering off projector '%s'...", self.name)
+        _LOGGER.debug("Powering off projector '%s'", self.name)
         if self._sdcp.set_power(False):
-            _LOGGER.debug("Powered off successfully.")
+            _LOGGER.debug("Powered off successfully")
             self._state = STATE_OFF
         else:
             _LOGGER.error("Power off command was not successful")

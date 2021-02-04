@@ -1,0 +1,7 @@
+{
+  "domain": "vicare",
+  "name": "Viessmann ViCare",
+  "documentation": "https://www.home-assistant.io/integrations/vicare",
+  "codeowners": ["@oischinger"],
+  "requirements": ["PyViCare==0.2.5"]
+}

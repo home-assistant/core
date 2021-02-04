@@ -1,12 +1,126 @@
-speak_word:
-  description: Speak a word. See list of words in ElkM1 ASCII Protocol documentation.
+alarm_bypass:
+  description: Bypass all zones for the area.
   fields:
-    number:
-      description: Word number to speak.
-      example: 142
+    entity_id:
+      description: Name of alarm control panel to bypass.
+      example: "alarm_control_panel.main"
+    code:
+      description: An code to authorize the bypass of the alarm control panel.
+      example: 4242
+
+alarm_clear_bypass:
+  description: Remove bypass on all zones for the area.
+  fields:
+    entity_id:
+      description: Name of alarm control panel to clear bypass.
+      example: "alarm_control_panel.main"
+    code:
+      description: An code to authorize the bypass clear of the alarm control panel.
+      example: 4242
+
+alarm_arm_home_instant:
+  description: Arm the ElkM1 in home instant mode.
+  fields:
+    entity_id:
+      description: Name of alarm control panel to arm.
+      example: "alarm_control_panel.main"
+    code:
+      description: An code to arm the alarm control panel.
+      example: 1234
+
+alarm_arm_night_instant:
+  description: Arm the ElkM1 in night instant mode.
+  fields:
+    entity_id:
+      description: Name of alarm control panel to arm.
+      example: "alarm_control_panel.main"
+    code:
+      description: An code to arm the alarm control panel.
+      example: 1234
+
+alarm_arm_vacation:
+  description: Arm the ElkM1 in vacation mode.
+  fields:
+    entity_id:
+      description: Name of alarm control panel to arm.
+      example: "alarm_control_panel.main"
+    code:
+      description: An code to arm the alarm control panel.
+      example: 1234
+
+alarm_display_message:
+  description: Display a message on all of the ElkM1 keypads for an area.
+  fields:
+    entity_id:
+      description: Name of alarm control panel to display messages on.
+      example: "alarm_control_panel.main"
+    clear:
+      description: 0=clear message, 1=clear message with * key, 2=Display until timeout; default 2
+      example: 1
+    beep:
+      description: 0=no beep, 1=beep; default 0
+      example: 1
+    timeout:
+      description: Time to display message, 0=forever, max 65535, default 0
+      example: 4242
+    line1:
+      description: Up to 16 characters of text (truncated if too long). Default blank.
+      example: The answer to life,
+    line2:
+      description: Up to 16 characters of text (truncated if too long). Default blank.
+      example: the universe, and everything.
+
+set_time:
+  description: Set the time for the panel.
+  fields:
+    prefix:
+      description: Prefix for the panel.
+      example: gatehouse
+
 speak_phrase:
   description: Speak a phrase. See list of phrases in ElkM1 ASCII Protocol documentation.
   fields:
     number:
       description: Phrase number to speak.
       example: 42
+
+speak_word:
+  description: Speak a word. See list of words in ElkM1 ASCII Protocol documentation.
+  fields:
+    number:
+      description: Word number to speak.
+      example: 142
+
+sensor_counter_refresh:
+  description: Refresh the value of a counter from the panel.
+  fields:
+    entity_id:
+      description: Name of counter to refresh.
+      example: "sensor.counting_sheep"
+
+sensor_counter_set:
+  description: Set the value of a counter on the panel.
+  fields:
+    entity_id:
+      description: Name of counter to set.
+      example: "sensor.test42"
+    value:
+      description: Value to set the counter to.
+      example: 4242
+
+sensor_zone_bypass:
+  description: Bypass zone.
+  fields:
+    entity_id:
+      description: Name of zone to bypass.
+      example: "sensor.window42"
+    code:
+      description: An code to authorize the bypass of the zone.
+      example: 4242
+
+sensor_zone_trigger:
+  description: Trigger zone.
+  fields:
+    entity_id:
+      description: Name of zone to trigger.
+      example: "sensor.motion42"

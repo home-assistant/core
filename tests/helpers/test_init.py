@@ -8,28 +8,31 @@ from homeassistant import helpers
 def test_extract_domain_configs():
     """Test the extraction of domain configuration."""
     config = {
-        'zone': None,
-        'zoner': None,
-        'zone ': None,
-        'zone Hallo': None,
-        'zone 100': None,
+        "zone": None,
+        "zoner": None,
+        "zone ": None,
+        "zone Hallo": None,
+        "zone 100": None,
     }
 
-    assert set(['zone', 'zone Hallo', 'zone 100']) == \
-        set(helpers.extract_domain_configs(config, 'zone'))
+    assert {"zone", "zone Hallo", "zone 100"} == set(
+        helpers.extract_domain_configs(config, "zone")
+    )
 
 
 def test_config_per_platform():
     """Test config per platform method."""
-    config = OrderedDict([
-        ('zone', {'platform': 'hello'}),
-        ('zoner', None),
-        ('zone Hallo', [1, {'platform': 'hello 2'}]),
-        ('zone 100', None),
-    ])
+    config = OrderedDict(
+        [
+            ("zone", {"platform": "hello"}),
+            ("zoner", None),
+            ("zone Hallo", [1, {"platform": "hello 2"}]),
+            ("zone 100", None),
+        ]
+    )
 
     assert [
-        ('hello', config['zone']),
+        ("hello", config["zone"]),
         (None, 1),
-        ('hello 2', config['zone Hallo'][1]),
-    ] == list(helpers.config_per_platform(config, 'zone'))
+        ("hello 2", config["zone Hallo"][1]),
+    ] == list(helpers.config_per_platform(config, "zone"))

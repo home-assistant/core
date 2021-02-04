@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Fi\u00f3k m\u00e1r regisztr\u00e1lva van"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "E-mail"
+                },
+                "title": "T\u00f6ltsd ki az adataid"
+            }
+        }
+    }
+}

@@ -1,8 +1,8 @@
 """Models for manifest validator."""
-import json
-from typing import List, Dict, Any
-import pathlib
 import importlib
+import json
+import pathlib
+from typing import Any, Dict, List, Optional
 
 import attr
 
@@ -11,23 +11,25 @@ import attr
 class Error:
     """Error validating an integration."""
 
-    plugin = attr.ib(type=str)
-    error = attr.ib(type=str)
-    fixable = attr.ib(type=bool, default=False)
+    plugin: str = attr.ib()
+    error: str = attr.ib()
+    fixable: bool = attr.ib(default=False)
 
     def __str__(self) -> str:
         """Represent error as string."""
-        return "[{}] {}".format(self.plugin.upper(), self.error)
+        return f"[{self.plugin.upper()}] {self.error}"
 
 
 @attr.s
 class Config:
     """Config for the run."""
 
-    root = attr.ib(type=pathlib.Path)
-    action = attr.ib(type=str)
-    errors = attr.ib(type=List[Error], factory=list)
-    cache = attr.ib(type=Dict[str, Any], factory=dict)
+    specific_integrations: Optional[pathlib.Path] = attr.ib()
+    root: pathlib.Path = attr.ib()
+    action: str = attr.ib()
+    requirements: bool = attr.ib()
+    errors: List[Error] = attr.ib(factory=list)
+    cache: Dict[str, Any] = attr.ib(factory=dict)
 
     def add_error(self, *args, **kwargs):
         """Add an error."""
@@ -44,14 +46,16 @@ class Integration:
         assert path.is_dir()
         integrations = {}
         for fil in path.iterdir():
-            if fil.is_file() or fil.name == '__pycache__':
+            if fil.is_file() or fil.name == "__pycache__":
                 continue
 
-            init = fil / '__init__.py'
+            init = fil / "__init__.py"
             if not init.exists():
-                print("Warning: {} missing, skipping directory. "
-                      "If this is your development environment, "
-                      "you can safely delete this folder.".format(init))
+                print(
+                    f"Warning: {init} missing, skipping directory. "
+                    "If this is your development environment, "
+                    "you can safely delete this folder."
+                )
                 continue
 
             integration = cls(fil)
@@ -60,43 +64,62 @@ class Integration:
 
         return integrations
 
-    path = attr.ib(type=pathlib.Path)
-    manifest = attr.ib(type=dict, default=None)
-    errors = attr.ib(type=List[Error], factory=list)
+    path: pathlib.Path = attr.ib()
+    manifest: Optional[dict] = attr.ib(default=None)
+    errors: List[Error] = attr.ib(factory=list)
+    warnings: List[Error] = attr.ib(factory=list)
 
     @property
     def domain(self) -> str:
         """Integration domain."""
         return self.path.name
 
+    @property
+    def core(self) -> bool:
+        """Core integration."""
+        return self.path.as_posix().startswith("homeassistant/components")
+
+    @property
+    def disabled(self) -> Optional[str]:
+        """List of disabled."""
+        return self.manifest.get("disabled")
+
+    @property
+    def requirements(self) -> List[str]:
+        """List of requirements."""
+        return self.manifest.get("requirements", [])
+
+    @property
+    def dependencies(self) -> List[str]:
+        """List of dependencies."""
+        return self.manifest.get("dependencies", [])
+
     def add_error(self, *args, **kwargs):
         """Add an error."""
         self.errors.append(Error(*args, **kwargs))
 
+    def add_warning(self, *args, **kwargs):
+        """Add an warning."""
+        self.warnings.append(Error(*args, **kwargs))
+
     def load_manifest(self) -> None:
         """Load manifest."""
-        manifest_path = self.path / 'manifest.json'
+        manifest_path = self.path / "manifest.json"
         if not manifest_path.is_file():
-            self.add_error(
-                'model',
-                "Manifest file {} not found".format(manifest_path)
-            )
+            self.add_error("model", f"Manifest file {manifest_path} not found")
             return
 
         try:
             manifest = json.loads(manifest_path.read_text())
         except ValueError as err:
-            self.add_error(
-                'model',
-                "Manifest contains invalid JSON: {}".format(err)
-            )
+            self.add_error("model", f"Manifest contains invalid JSON: {err}")
             return
 
         self.manifest = manifest
 
     def import_pkg(self, platform=None):
         """Import the Python file."""
-        pkg = "homeassistant.components.{}".format(self.domain)
+        pkg = f"homeassistant.components.{self.domain}"
         if platform is not None:
-            pkg += ".{}".format(platform)
+            pkg += f".{platform}"
         return importlib.import_module(pkg)

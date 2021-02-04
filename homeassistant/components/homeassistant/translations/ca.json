@@ -1,0 +1,21 @@
+{
+    "system_health": {
+        "info": {
+            "arch": "Arquitectura de la CPU",
+            "chassis": "Xass\u00eds",
+            "dev": "Desenvolupador",
+            "docker": "Docker",
+            "docker_version": "Docker",
+            "hassio": "Supervisor",
+            "host_os": "Home Assistant OS",
+            "installation_type": "Tipus d'instal\u00b7laci\u00f3",
+            "os_name": "Fam\u00edlia del sistema operatiu",
+            "os_version": "Versi\u00f3 del sistema operatiu",
+            "python_version": "Versi\u00f3 de Python",
+            "supervisor": "Supervisor",
+            "timezone": "Zona hor\u00e0ria",
+            "version": "Versi\u00f3",
+            "virtualenv": "Entorn virtual"
+        }
+    }
+}

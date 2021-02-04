@@ -1,0 +1,75 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "Akcesorium lub mostek o tej samej nazwie lub adresie IP jest ju\u017c skonfigurowany"
+        },
+        "step": {
+            "accessory_mode": {
+                "data": {
+                    "entity_id": "Encja"
+                },
+                "description": "Wybierz uwzgl\u0119dniane encje. W trybie akcesori\u00f3w uwzgl\u0119dniana jest tylko jedna encja.",
+                "title": "Wybierz uwzgl\u0119dniane encje"
+            },
+            "bridge_mode": {
+                "data": {
+                    "include_domains": "Domeny do uwzgl\u0119dnienia"
+                },
+                "description": "Wybierz uwzgl\u0119dniane domeny. Wszystkie obs\u0142ugiwane encje w domenie zostan\u0105 uwzgl\u0119dnione.",
+                "title": "Wybierz uwzgl\u0119dniane domeny"
+            },
+            "pairing": {
+                "description": "Gdy tylko {name} b\u0119dzie gotowy, opcja parowania b\u0119dzie dost\u0119pna w \u201ePowiadomieniach\u201d jako \u201eKonfiguracja mostka HomeKit\u201d.",
+                "title": "Parowanie z HomeKit"
+            },
+            "user": {
+                "data": {
+                    "auto_start": "Automatyczne uruchomienie (wy\u0142\u0105cz, je\u015bli u\u017cywasz Z-Wave lub innej integracji op\u00f3\u017aniaj\u0105cej start systemu)",
+                    "include_domains": "Domeny do uwzgl\u0119dnienia",
+                    "mode": "Tryb"
+                },
+                "description": "Integracja HomeKit pozwala na dost\u0119p do Twoich encji Home Assistant w HomeKit. W trybie \"Mostka\", mostki HomeKit s\u0105 ograniczone do 150 urz\u0105dze\u0144, w\u0142\u0105czaj\u0105c w to sam mostek. Je\u015bli chcesz wi\u0119cej ni\u017c dozwolona maksymalna liczba urz\u0105dze\u0144, zaleca si\u0119 u\u017cywanie wielu most\u00f3w HomeKit dla r\u00f3\u017cnych domen. Szczeg\u00f3\u0142owa konfiguracja encji jest dost\u0119pna tylko w trybie YAML dla g\u0142\u00f3wnego mostka. Dla najlepszej wydajno\u015bci oraz by zapobiec nieprzewidzianej niedost\u0119pno\u015bci urz\u0105dzenia, utw\u00f3rz i sparuj oddzieln\u0105 instancj\u0119 HomeKit w trybie akcesorium dla ka\u017cdego media playera oraz kamery.",
+                "title": "Aktywacja HomeKit"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "data": {
+                    "auto_start": "Automatyczne uruchomienie (wy\u0142\u0105cz, je\u015bli r\u0119cznie uruchamiasz us\u0142ug\u0119 homekit.start)",
+                    "safe_mode": "Tryb awaryjny (w\u0142\u0105cz tylko wtedy, gdy parowanie nie powiedzie si\u0119)"
+                },
+                "description": "Te ustawienia nale\u017cy dostosowa\u0107 tylko wtedy, gdy HomeKit nie dzia\u0142a.",
+                "title": "Konfiguracja zaawansowana"
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Kamery obs\u0142uguj\u0105ce kodek H.264"
+                },
+                "description": "Sprawd\u017a, czy wszystkie kamery obs\u0142uguj\u0105 kodek H.264. Je\u015bli kamera nie wysy\u0142a strumienia skompresowanego kodekiem H.264, system b\u0119dzie transkodowa\u0142 wideo do H.264 dla HomeKit. Transkodowanie wymaga wydajnego procesora i jest ma\u0142o prawdopodobne, aby dzia\u0142a\u0142o na komputerach jednop\u0142ytkowych.",
+                "title": "Wyb\u00f3r kodeka wideo kamery"
+            },
+            "include_exclude": {
+                "data": {
+                    "entities": "Encje",
+                    "mode": "Tryb"
+                },
+                "description": "Wybierz encje, kt\u00f3re maj\u0105 by\u0107 uwzgl\u0119dnione. W trybie \"Akcesorium\" tylko jedna encja jest uwzgl\u0119dniona. W trybie \"Uwzgl\u0119dnij mostek\", wszystkie encje w danej domenie b\u0119d\u0105 uwzgl\u0119dnione, chyba \u017ce wybrane s\u0105 tylko konkretne encje. W trybie \"Wyklucz mostek\", wszystkie encje b\u0119d\u0105 uwzgl\u0119dnione, z wyj\u0105tkiem tych wybranych. Dla najlepszej wydajno\u015bci oraz by zapobiec nieprzewidzianej niedost\u0119pno\u015bci urz\u0105dzenia, utw\u00f3rz i sparuj oddzieln\u0105 instancj\u0119 HomeKit w trybie akcesorium dla ka\u017cdego media playera oraz kamery.",
+                "title": "Wybierz encje, kt\u00f3re maj\u0105 by\u0107 uwzgl\u0119dnione"
+            },
+            "init": {
+                "data": {
+                    "include_domains": "Domeny do uwzgl\u0119dnienia",
+                    "mode": "Tryb"
+                },
+                "description": "HomeKit mo\u017ce by\u0107 skonfigurowany, by pokaza\u0142 mostek lub pojedyncze akcesorium. W trybie \"Akcesorium\", tylko pojedyncza encja mo\u017ce by\u0107 u\u017cyta. Tryb ten jest wymagany w przypadku odtwarzaczy multimedialnych z klas\u0105 urz\u0105dzenia TV, by dzia\u0142a\u0142 prawid\u0142owo. Encje w \"uwzgl\u0119dnionych domenach\" b\u0119d\u0105 widoczne w HomeKit. B\u0119dziesz m\u00f3g\u0142 wybra\u0107, kt\u00f3re encje maj\u0105 zosta\u0107 uwzgl\u0119dnione lub wykluczone z tej listy na nast\u0119pnym ekranie.",
+                "title": "Domeny do uwzgl\u0119dnienia."
+            },
+            "yaml": {
+                "description": "Ten wpis jest kontrolowany przez YAML",
+                "title": "Dostosowywanie opcji HomeKit"
+            }
+        }
+    }
+}

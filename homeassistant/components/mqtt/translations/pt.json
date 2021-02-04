@@ -1,0 +1,64 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Apenas uma configura\u00e7\u00e3o do MQTT \u00e9 permitida."
+        },
+        "error": {
+            "cannot_connect": "N\u00e3o \u00e9 poss\u00edvel ligar ao broker."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "discovery": "Ativar descoberta",
+                    "password": "Palavra-passe",
+                    "port": "Porto",
+                    "username": "Nome de Utilizador"
+                },
+                "description": "Por favor, insira os detalhes de liga\u00e7\u00e3o ao seu broker MQTT."
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Ativar descoberta"
+                },
+                "description": "Deseja configurar o Home Assistant para se ligar ao broker MQTT fornecido pelo add-on hass.io {addon}?",
+                "title": "MQTT Broker atrav\u00e9s do add-on Hass.io"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Primeiro bot\u00e3o",
+            "button_2": "Segundo bot\u00e3o",
+            "button_3": "Terceiro bot\u00e3o",
+            "button_4": "Quarto bot\u00e3o",
+            "button_5": "Quinto bot\u00e3o",
+            "button_6": "Sexto bot\u00e3o",
+            "turn_off": "Desligar",
+            "turn_on": "Ligar"
+        }
+    },
+    "options": {
+        "error": {
+            "bad_will": "T\u00f3pico testamental inv\u00e1lido.",
+            "cannot_connect": "N\u00e3o \u00e9 poss\u00edvel ligar ao broker."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "password": "Palavra-passe",
+                    "port": "Porta",
+                    "username": "Nome de Utilizador"
+                }
+            },
+            "options": {
+                "data": {
+                    "will_retain": "Reter mensagem testamental",
+                    "will_topic": "T\u00f3pico da mensagem testamental"
+                },
+                "description": "Por favor, selecione as op\u00e7\u00f5es do MQTT."
+            }
+        }
+    }
+}

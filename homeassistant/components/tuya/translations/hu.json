@@ -1,0 +1,63 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen autentik\u00e1ci\u00f3",
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "error": {
+            "invalid_auth": "\u00c9rv\u00e9nytelen autentik\u00e1ci\u00f3"
+        },
+        "flow_title": "Tuya konfigur\u00e1ci\u00f3",
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "A fi\u00f3k orsz\u00e1gk\u00f3dja (pl. 1 USA, 36 Magyarorsz\u00e1g, vagy 86 K\u00edna)",
+                    "password": "Jelsz\u00f3",
+                    "platform": "Az alkalmaz\u00e1s, ahol a fi\u00f3k regisztr\u00e1lt",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "Adja meg Tuya hiteles\u00edt\u0151 adatait.",
+                "title": "Tuya"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "A kapcsol\u00f3d\u00e1s nem siker\u00fclt"
+        },
+        "error": {
+            "dev_multi_type": "A konfigur\u00e1land\u00f3 eszk\u00f6z\u00f6knek azonos t\u00edpus\u00faaknak kell lennie",
+            "dev_not_config": "Ez az eszk\u00f6zt\u00edpus nem konfigur\u00e1lhat\u00f3",
+            "dev_not_found": "Eszk\u00f6z nem tal\u00e1lhat\u00f3"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "brightness_range_mode": "Az eszk\u00f6z \u00e1ltal haszn\u00e1lt f\u00e9nyer\u0151 tartom\u00e1ny",
+                    "curr_temp_divider": "Aktu\u00e1lis h\u0151m\u00e9rs\u00e9klet-\u00e9rt\u00e9k oszt\u00f3 (0 = alap\u00e9rtelmezetten)",
+                    "max_kelvin": "Maxim\u00e1lis t\u00e1mogatott sz\u00ednh\u0151m\u00e9rs\u00e9klet kelvinben",
+                    "max_temp": "Maxim\u00e1lis c\u00e9l-sz\u00ednh\u0151m\u00e9rs\u00e9klet (haszn\u00e1lja a min-t \u00e9s a max-ot = 0-t az alap\u00e9rtelmezett be\u00e1ll\u00edt\u00e1shoz)",
+                    "min_kelvin": "Minimum t\u00e1mogatott sz\u00ednh\u0151m\u00e9rs\u00e9klet kelvinben",
+                    "min_temp": "Min. C\u00e9l-sz\u00ednh\u0151m\u00e9rs\u00e9klet (alap\u00e9rtelmez\u00e9s szerint haszn\u00e1ljon min-t \u00e9s max-ot = 0-t az alap\u00e9rtelmezett be\u00e1ll\u00edt\u00e1shoz)",
+                    "support_color": "Sz\u00ednt\u00e1mogat\u00e1s k\u00e9nyszer\u00edt\u00e9se",
+                    "temp_divider": "Sz\u00ednh\u0151m\u00e9rs\u00e9klet-\u00e9rt\u00e9kek oszt\u00f3ja (0 = alap\u00e9rtelmezett)",
+                    "tuya_max_coltemp": "Az eszk\u00f6z \u00e1ltal megadott maxim\u00e1lis sz\u00ednh\u0151m\u00e9rs\u00e9klet",
+                    "unit_of_measurement": "Az eszk\u00f6z \u00e1ltal haszn\u00e1lt h\u0151m\u00e9rs\u00e9kleti egys\u00e9g"
+                },
+                "description": "Konfigur\u00e1lja a(z) {device_type} eszk\u00f6zt \" {device_name} {device_type} \" megjelen\u00edtett inform\u00e1ci\u00f3inak be\u00e1ll\u00edt\u00e1s\u00e1hoz",
+                "title": "Konfigur\u00e1lja a Tuya eszk\u00f6zt"
+            },
+            "init": {
+                "data": {
+                    "discovery_interval": "Felfedez\u0151 eszk\u00f6z lek\u00e9rdez\u00e9si intervalluma m\u00e1sodpercben",
+                    "list_devices": "V\u00e1lassza ki a konfigur\u00e1lni k\u00edv\u00e1nt eszk\u00f6z\u00f6ket, vagy hagyja \u00fcresen a konfigur\u00e1ci\u00f3 ment\u00e9s\u00e9hez",
+                    "query_device": "V\u00e1lassza ki azt az eszk\u00f6zt, amely a lek\u00e9rdez\u00e9si m\u00f3dszert haszn\u00e1lja a gyorsabb \u00e1llapotfriss\u00edt\u00e9shez",
+                    "query_interval": "Eszk\u00f6z lek\u00e9rdez\u00e9si id\u0151k\u00f6ze m\u00e1sodpercben"
+                },
+                "description": "Ne \u00e1ll\u00edtsa t\u00fal alacsonyra a lek\u00e9rdez\u00e9si intervallum \u00e9rt\u00e9keit, k\u00fcl\u00f6nben a h\u00edv\u00e1sok nem fognak hiba\u00fczenetet gener\u00e1lni a napl\u00f3ban",
+                "title": "Konfigur\u00e1lja a Tuya be\u00e1ll\u00edt\u00e1sokat"
+            }
+        }
+    }
+}

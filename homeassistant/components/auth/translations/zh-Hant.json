@@ -1,0 +1,35 @@
+{
+    "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "\u6c92\u6709\u53ef\u7528\u7684\u901a\u77e5\u670d\u52d9\u3002"
+            },
+            "error": {
+                "invalid_code": "\u9a57\u8b49\u78bc\u7121\u6548\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002"
+            },
+            "step": {
+                "init": {
+                    "description": "\u8acb\u9078\u64c7\u4e00\u9805\u901a\u77e5\u670d\u52d9\uff1a",
+                    "title": "\u8a2d\u5b9a\u4e00\u6b21\u6027\u5bc6\u78bc\u50b3\u9001\u7d44\u4ef6"
+                },
+                "setup": {
+                    "description": "\u4e00\u6b21\u6027\u5bc6\u78bc\u5df2\u900f\u904e **notify.{notify_service}** \u50b3\u9001\u3002\u8acb\u65bc\u4e0b\u65b9\u8f38\u5165\uff1a",
+                    "title": "\u9a57\u8b49\u8a2d\u5b9a"
+                }
+            },
+            "title": "\u901a\u77e5\u4e00\u6b21\u6027\u5bc6\u78bc"
+        },
+        "totp": {
+            "error": {
+                "invalid_code": "\u9a57\u8b49\u78bc\u7121\u6548\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002\u5047\u5982\u932f\u8aa4\u6301\u7e8c\u767c\u751f\uff0c\u8acb\u5148\u78ba\u5b9a\u60a8\u7684 Home Assistant \u7cfb\u7d71\u4e0a\u7684\u6642\u9593\u8a2d\u5b9a\u6b63\u78ba\u5f8c\uff0c\u518d\u8a66\u4e00\u6b21\u3002"
+            },
+            "step": {
+                "init": {
+                    "description": "\u6b32\u555f\u7528\u4e00\u6b21\u6027\u4e14\u5177\u6642\u6548\u6027\u7684\u5bc6\u78bc\u4e4b\u96d9\u91cd\u9a57\u8b49\u529f\u80fd\uff0c\u8acb\u4f7f\u7528\u60a8\u7684\u9a57\u8b49 App \u6383\u7784\u4e0b\u65b9\u7684 QR code \u3002\u5018\u82e5\u60a8\u5c1a\u672a\u5b89\u88dd\u4efb\u4f55 App\uff0c\u63a8\u85a6\u60a8\u4f7f\u7528 [Google Authenticator](https://support.google.com/accounts/answer/1066447) \u6216 [Authy](https://authy.com/)\u3002\n\n{qr_code}\n\n\u65bc\u641c\u5c0b\u4e4b\u5f8c\uff0c\u8f38\u5165 App \u4e2d\u7684\u516d\u4f4d\u6578\u5b57\u9032\u884c\u8a2d\u5b9a\u9a57\u8b49\u3002\u5047\u5982\u641c\u5c0b\u51fa\u73fe\u554f\u984c\uff0c\u8acb\u624b\u52d5\u8f38\u5165\u4ee5\u4e0b\u9a57\u8b49\u78bc **`{code}`**\u3002",
+                    "title": "\u4f7f\u7528 TOTP \u8a2d\u5b9a\u96d9\u91cd\u9a57\u8b49"
+                }
+            },
+            "title": "TOTP"
+        }
+    }
+}

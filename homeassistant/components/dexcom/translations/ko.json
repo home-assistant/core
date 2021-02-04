@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "server": "\uc11c\ubc84",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "description": "Dexcom Share \uc790\uaca9 \uc99d\uba85\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694",
+                "title": "Dexcom \ud1b5\ud569 \uad6c\uc131\uc694\uc18c \uc124\uc815\ud558\uae30"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "\uce21\uc815 \ub2e8\uc704"
+                }
+            }
+        }
+    }
+}

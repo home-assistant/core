@@ -1,0 +1,18 @@
+{
+    "system_health": {
+        "info": {
+            "board": "Tableau de bord",
+            "disk_total": "Taille total du disque",
+            "disk_used": "Taille du disque utilis\u00e9",
+            "docker_version": "Version de Docker",
+            "healthy": "Sain",
+            "installed_addons": "Add-ons install\u00e9s",
+            "supervisor_api": "API du superviseur",
+            "supervisor_version": "Version du supervisor",
+            "supported": "Prise en charge",
+            "update_channel": "Mise \u00e0 jour",
+            "version_api": "Version API"
+        }
+    },
+    "title": "Hass.io"
+}

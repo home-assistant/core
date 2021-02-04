@@ -1,32 +1,34 @@
 """NextBus sensor."""
-import logging
 from itertools import chain
+import logging
 
+from py_nextbus import NextBusClient
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import CONF_NAME, DEVICE_CLASS_TIMESTAMP
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utc_from_timestamp
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'nextbus'
+DOMAIN = "nextbus"
 
-CONF_AGENCY = 'agency'
-CONF_ROUTE = 'route'
-CONF_STOP = 'stop'
+CONF_AGENCY = "agency"
+CONF_ROUTE = "route"
+CONF_STOP = "stop"
 
-ICON = 'mdi:bus'
+ICON = "mdi:bus"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_AGENCY): cv.string,
-    vol.Required(CONF_ROUTE): cv.string,
-    vol.Required(CONF_STOP): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_AGENCY): cv.string,
+        vol.Required(CONF_ROUTE): cv.string,
+        vol.Required(CONF_STOP): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+    }
+)
 
 
 def listify(maybe_list):
@@ -54,19 +56,13 @@ def maybe_first(maybe_list):
 
 def validate_value(value_name, value, value_list):
     """Validate tag value is in the list of items and logs error if not."""
-    valid_values = {
-        v['tag']: v['title']
-        for v in value_list
-    }
+    valid_values = {v["tag"]: v["title"] for v in value_list}
     if value not in valid_values:
         _LOGGER.error(
-            'Invalid %s tag `%s`. Please use one of the following: %s',
+            "Invalid %s tag `%s`. Please use one of the following: %s",
             value_name,
             value,
-            ', '.join(
-                '{}: {}'.format(title, tag)
-                for tag, title in valid_values.items()
-            )
+            ", ".join(f"{title}: {tag}" for tag, title in valid_values.items()),
         )
         return False
 
@@ -76,28 +72,16 @@ def validate_value(value_name, value, value_list):
 def validate_tags(client, agency, route, stop):
     """Validate provided tags."""
     # Validate agencies
-    if not validate_value(
-            'agency',
-            agency,
-            client.get_agency_list()['agency'],
-    ):
+    if not validate_value("agency", agency, client.get_agency_list()["agency"]):
         return False
 
     # Validate the route
-    if not validate_value(
-            'route',
-            route,
-            client.get_route_list(agency)['route'],
-    ):
+    if not validate_value("route", route, client.get_route_list(agency)["route"]):
         return False
 
     # Validate the stop
-    route_config = client.get_route_config(route, agency)['route']
-    if not validate_value(
-            'stop',
-            stop,
-            route_config['stop'],
-    ):
+    route_config = client.get_route_config(route, agency)["route"]
+    if not validate_value("stop", stop, route_config["stop"]):
         return False
 
     return True
@@ -110,23 +94,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     stop = config[CONF_STOP]
     name = config.get(CONF_NAME)
 
-    from py_nextbus import NextBusClient
-    client = NextBusClient(output_format='json')
+    client = NextBusClient(output_format="json")
 
     # Ensures that the tags provided are valid, also logs out valid values
     if not validate_tags(client, agency, route, stop):
-        _LOGGER.error('Invalid config value(s)')
+        _LOGGER.error("Invalid config value(s)")
         return
 
-    add_entities([
-        NextBusDepartureSensor(
-            client,
-            agency,
-            route,
-            stop,
-            name,
-        ),
-    ], True)
+    add_entities([NextBusDepartureSensor(client, agency, route, stop, name)], True)
 
 
 class NextBusDepartureSensor(Entity):
@@ -147,7 +122,7 @@ class NextBusDepartureSensor(Entity):
         self.stop = stop
         self._custom_name = name
         # Maybe pull a more user friendly name from the API here
-        self._name = '{} {}'.format(agency, route)
+        self._name = f"{agency} {route}"
         self._client = client
 
         # set up default state attributes
@@ -156,12 +131,7 @@ class NextBusDepartureSensor(Entity):
 
     def _log_debug(self, message, *args):
         """Log debug message with prefix."""
-        _LOGGER.debug(':'.join((
-            self.agency,
-            self.route,
-            self.stop,
-            message,
-        )), *args)
+        _LOGGER.debug(":".join((self.agency, self.route, self.stop, message)), *args)
 
     @property
     def name(self):
@@ -201,68 +171,65 @@ class NextBusDepartureSensor(Entity):
         """Update sensor with new departures times."""
         # Note: using Multi because there is a bug with the single stop impl
         results = self._client.get_predictions_for_multi_stops(
-            [{
-                'stop_tag': int(self.stop),
-                'route_tag': self.route,
-            }],
-            self.agency,
+            [{"stop_tag": self.stop, "route_tag": self.route}], self.agency
         )
 
-        self._log_debug('Predictions results: %s', results)
+        self._log_debug("Predictions results: %s", results)
 
-        if 'Error' in results:
-            self._log_debug('Could not get predictions: %s', results)
+        if "Error" in results:
+            self._log_debug("Could not get predictions: %s", results)
 
-        if not results.get('predictions'):
-            self._log_debug('No predictions available')
+        if not results.get("predictions"):
+            self._log_debug("No predictions available")
             self._state = None
             # Remove attributes that may now be outdated
-            self._attributes.pop('upcoming', None)
+            self._attributes.pop("upcoming", None)
             return
 
-        results = results['predictions']
+        results = results["predictions"]
 
         # Set detailed attributes
-        self._attributes.update({
-            'agency': results.get('agencyTitle'),
-            'route': results.get('routeTitle'),
-            'stop': results.get('stopTitle'),
-        })
+        self._attributes.update(
+            {
+                "agency": results.get("agencyTitle"),
+                "route": results.get("routeTitle"),
+                "stop": results.get("stopTitle"),
+            }
+        )
 
         # List all messages in the attributes
-        messages = listify(results.get('message', []))
-        self._log_debug('Messages: %s', messages)
-        self._attributes['message'] = ' -- '.join((
-            message.get('text', '')
-            for message in messages
-        ))
+        messages = listify(results.get("message", []))
+        self._log_debug("Messages: %s", messages)
+        self._attributes["message"] = " -- ".join(
+            message.get("text", "") for message in messages
+        )
 
         # List out all directions in the attributes
-        directions = listify(results.get('direction', []))
-        self._attributes['direction'] = ', '.join((
-            direction.get('title', '')
-            for direction in directions
-        ))
+        directions = listify(results.get("direction", []))
+        self._attributes["direction"] = ", ".join(
+            direction.get("title", "") for direction in directions
+        )
 
         # Chain all predictions together
-        predictions = list(chain(*[
-            listify(direction.get('prediction', []))
-            for direction in directions
-        ]))
+        predictions = list(
+            chain(
+                *(listify(direction.get("prediction", [])) for direction in directions)
+            )
+        )
 
         # Short circuit if we don't have any actual bus predictions
         if not predictions:
-            self._log_debug('No upcoming predictions available')
+            self._log_debug("No upcoming predictions available")
             self._state = None
-            self._attributes['upcoming'] = 'No upcoming predictions'
+            self._attributes["upcoming"] = "No upcoming predictions"
             return
 
         # Generate list of upcoming times
-        self._attributes['upcoming'] = ', '.join(
-            p['minutes'] for p in predictions
+        self._attributes["upcoming"] = ", ".join(
+            sorted(p["minutes"] for p in predictions)
         )
 
         latest_prediction = maybe_first(predictions)
         self._state = utc_from_timestamp(
-            int(latest_prediction['epochTime']) / 1000
+            int(latest_prediction["epochTime"]) / 1000
         ).isoformat()

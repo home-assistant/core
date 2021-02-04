@@ -1,13 +1,12 @@
 {
   "domain": "somfy",
-  "name": "Somfy Open API",
+  "name": "Somfy",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/somfy",
-  "dependencies": [],
-  "codeowners": [
-    "@tetienne"
-  ],
-  "requirements": [
-    "pymfy==0.5.2"
+  "documentation": "https://www.home-assistant.io/integrations/somfy",
+  "dependencies": ["http"],
+  "codeowners": ["@tetienne"],
+  "requirements": ["pymfy==0.9.3"],
+  "zeroconf": [
+    {"type": "_kizbox._tcp.local.", "name": "gateway*"}
   ]
 }

@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uacc4\uc815\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "reauth_successful": "\uc561\uc138\uc2a4 \ud1a0\ud070\uc774 \uc131\uacf5\uc801\uc73c\ub85c \uc5c5\ub370\uc774\ud2b8\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "unknown": "\uc54c \uc218 \uc5c6\ub294 Awair API \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4."
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "access_token": "\uc561\uc138\uc2a4 \ud1a0\ud070",
+                    "email": "\uc774\uba54\uc77c"
+                },
+                "description": "Awair \uac1c\ubc1c\uc790 \uc561\uc138\uc2a4 \ud1a0\ud070\uc744 \ub2e4\uc2dc \uc785\ub825\ud574\uc8fc\uc138\uc694."
+            },
+            "user": {
+                "data": {
+                    "access_token": "\uc561\uc138\uc2a4 \ud1a0\ud070",
+                    "email": "\uc774\uba54\uc77c"
+                },
+                "description": "https://developer.getawair.com/onboard/login \uc5d0 Awair \uac1c\ubc1c\uc790 \uc561\uc138\uc2a4 \ud1a0\ud070\uc744 \ub4f1\ub85d\ud574\uc57c\ud569\ub2c8\ub2e4"
+            }
+        }
+    }
+}

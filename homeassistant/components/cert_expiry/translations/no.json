@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert",
+            "import_failed": "Import fra config mislyktes"
+        },
+        "error": {
+            "connection_refused": "Tilkoblingen ble nektet da den koblet til verten",
+            "connection_timeout": "Tidsavbrudd n\u00e5r du kobler til denne verten",
+            "resolve_failed": "Denne verten kan ikke l\u00f8ses"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "name": "Sertifikatets navn",
+                    "port": "Port"
+                },
+                "title": "Definer sertifikatet som skal testes"
+            }
+        }
+    },
+    "title": "Sertifikat utl\u00f8p"
+}

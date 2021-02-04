@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "app_setup_error": "A SmartApp be\u00e1ll\u00edt\u00e1sa nem siker\u00fclt. K\u00e9rlek pr\u00f3b\u00e1ld \u00fajra.",
+            "token_forbidden": "A token nem rendelkezik a sz\u00fcks\u00e9ges OAuth-tartom\u00e1nyokkal.",
+            "token_invalid_format": "A tokennek UID / GUID form\u00e1tumban kell lennie",
+            "token_unauthorized": "A token \u00e9rv\u00e9nytelen vagy m\u00e1r nem enged\u00e9lyezett.",
+            "webhook_error": "A SmartThings nem tudta \u00e9rv\u00e9nyes\u00edteni a `base_url`-ben konfigur\u00e1lt v\u00e9gpontot. K\u00e9rlek, tekintsd \u00e1t az \u00f6sszetev\u0151 k\u00f6vetelm\u00e9nyeit."
+        },
+        "step": {
+            "pat": {
+                "data": {
+                    "access_token": "Hozz\u00e1f\u00e9r\u00e9si token"
+                },
+                "description": "K\u00e9rj\u00fck, adjon meg egy SmartThings [Szem\u00e9lyes hozz\u00e1f\u00e9r\u00e9si tokent] ( {token_url} ), amelyet az [utas\u00edt\u00e1sok] ( {component_url} ) alapj\u00e1n hoztak l\u00e9tre. Ezt haszn\u00e1ljuk a Home Assistant integr\u00e1ci\u00f3j\u00e1nak l\u00e9trehoz\u00e1s\u00e1hoz a SmartThings-fi\u00f3kban."
+            },
+            "user": {
+                "description": "K\u00e9rlek add meg a SmartThings [Personal Access Tokent]({token_url}), amit az [instrukci\u00f3k] ({component_url}) alapj\u00e1n hozt\u00e1l l\u00e9tre.",
+                "title": "Adja meg a szem\u00e9lyes hozz\u00e1f\u00e9r\u00e9si Tokent"
+            }
+        }
+    }
+}

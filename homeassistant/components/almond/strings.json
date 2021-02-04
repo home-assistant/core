@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "hassio_confirm": {
+        "title": "Almond via Hass.io add-on",
+        "description": "Do you want to configure Home Assistant to connect to Almond provided by the Hass.io add-on: {addon}?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]"
+    }
+  }
+}

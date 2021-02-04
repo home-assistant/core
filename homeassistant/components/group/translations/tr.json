@@ -1,0 +1,17 @@
+{
+    "state": {
+        "_": {
+            "closed": "Kapand\u0131",
+            "home": "[%key:common::state::evde%]",
+            "locked": "Kilitli",
+            "not_home": "[%key:common::state::evde_degil%]",
+            "off": "Kapal\u0131",
+            "ok": "Tamam",
+            "on": "A\u00e7\u0131k",
+            "open": "A\u00e7\u0131k",
+            "problem": "Problem",
+            "unlocked": "Kilitli de\u011fil"
+        }
+    },
+    "title": "Grup"
+}

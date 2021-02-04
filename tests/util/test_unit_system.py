@@ -1,61 +1,88 @@
 """Test the unit system helper."""
 import pytest
 
-from homeassistant.util.unit_system import (
-    UnitSystem,
-    METRIC_SYSTEM,
-    IMPERIAL_SYSTEM,
-)
 from homeassistant.const import (
-    LENGTH_METERS,
-    LENGTH_KILOMETERS,
-    MASS_GRAMS,
-    PRESSURE_PA,
-    VOLUME_LITERS,
-    TEMP_CELSIUS,
     LENGTH,
+    LENGTH_KILOMETERS,
+    LENGTH_METERS,
     MASS,
+    MASS_GRAMS,
     PRESSURE,
+    PRESSURE_PA,
+    TEMP_CELSIUS,
     TEMPERATURE,
-    VOLUME
+    VOLUME,
+    VOLUME_LITERS,
 )
-SYSTEM_NAME = 'TEST'
-INVALID_UNIT = 'INVALID'
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
+
+SYSTEM_NAME = "TEST"
+INVALID_UNIT = "INVALID"
 
 
 def test_invalid_units():
     """Test errors are raised when invalid units are passed in."""
     with pytest.raises(ValueError):
-        UnitSystem(SYSTEM_NAME, INVALID_UNIT, LENGTH_METERS, VOLUME_LITERS,
-                   MASS_GRAMS, PRESSURE_PA)
+        UnitSystem(
+            SYSTEM_NAME,
+            INVALID_UNIT,
+            LENGTH_METERS,
+            VOLUME_LITERS,
+            MASS_GRAMS,
+            PRESSURE_PA,
+        )
 
     with pytest.raises(ValueError):
-        UnitSystem(SYSTEM_NAME, TEMP_CELSIUS, INVALID_UNIT, VOLUME_LITERS,
-                   MASS_GRAMS, PRESSURE_PA)
+        UnitSystem(
+            SYSTEM_NAME,
+            TEMP_CELSIUS,
+            INVALID_UNIT,
+            VOLUME_LITERS,
+            MASS_GRAMS,
+            PRESSURE_PA,
+        )
 
     with pytest.raises(ValueError):
-        UnitSystem(SYSTEM_NAME, TEMP_CELSIUS, LENGTH_METERS, INVALID_UNIT,
-                   MASS_GRAMS, PRESSURE_PA)
+        UnitSystem(
+            SYSTEM_NAME,
+            TEMP_CELSIUS,
+            LENGTH_METERS,
+            INVALID_UNIT,
+            MASS_GRAMS,
+            PRESSURE_PA,
+        )
 
     with pytest.raises(ValueError):
-        UnitSystem(SYSTEM_NAME, TEMP_CELSIUS, LENGTH_METERS, VOLUME_LITERS,
-                   INVALID_UNIT, PRESSURE_PA)
+        UnitSystem(
+            SYSTEM_NAME,
+            TEMP_CELSIUS,
+            LENGTH_METERS,
+            VOLUME_LITERS,
+            INVALID_UNIT,
+            PRESSURE_PA,
+        )
 
     with pytest.raises(ValueError):
-        UnitSystem(SYSTEM_NAME, TEMP_CELSIUS, LENGTH_METERS, VOLUME_LITERS,
-                   MASS_GRAMS, INVALID_UNIT)
+        UnitSystem(
+            SYSTEM_NAME,
+            TEMP_CELSIUS,
+            LENGTH_METERS,
+            VOLUME_LITERS,
+            MASS_GRAMS,
+            INVALID_UNIT,
+        )
 
 
 def test_invalid_value():
     """Test no conversion happens if value is non-numeric."""
     with pytest.raises(TypeError):
-        METRIC_SYSTEM.length('25a', LENGTH_KILOMETERS)
+        METRIC_SYSTEM.length("25a", LENGTH_KILOMETERS)
     with pytest.raises(TypeError):
-        METRIC_SYSTEM.temperature('50K', TEMP_CELSIUS)
+        METRIC_SYSTEM.temperature("50K", TEMP_CELSIUS)
     with pytest.raises(TypeError):
-        METRIC_SYSTEM.volume('50L', VOLUME_LITERS)
+        METRIC_SYSTEM.volume("50L", VOLUME_LITERS)
     with pytest.raises(TypeError):
-        METRIC_SYSTEM.pressure('50Pa', PRESSURE_PA)
+        METRIC_SYSTEM.pressure("50Pa", PRESSURE_PA)
 
 
 def test_as_dict():
@@ -65,7 +92,7 @@ def test_as_dict():
         TEMPERATURE: TEMP_CELSIUS,
         VOLUME: VOLUME_LITERS,
         MASS: MASS_GRAMS,
-        PRESSURE: PRESSURE_PA
+        PRESSURE: PRESSURE_PA,
     }
 
     assert expected == METRIC_SYSTEM.as_dict()
@@ -79,28 +106,28 @@ def test_temperature_same_unit():
 def test_temperature_unknown_unit():
     """Test no conversion happens if unknown unit."""
     with pytest.raises(ValueError):
-        METRIC_SYSTEM.temperature(5, 'K')
+        METRIC_SYSTEM.temperature(5, "K")
 
 
 def test_temperature_to_metric():
     """Test temperature conversion to metric system."""
     assert METRIC_SYSTEM.temperature(25, METRIC_SYSTEM.temperature_unit) == 25
-    assert round(METRIC_SYSTEM.temperature(
-        80, IMPERIAL_SYSTEM.temperature_unit), 1) == 26.7
+    assert (
+        round(METRIC_SYSTEM.temperature(80, IMPERIAL_SYSTEM.temperature_unit), 1)
+        == 26.7
+    )
 
 
 def test_temperature_to_imperial():
     """Test temperature conversion to imperial system."""
-    assert IMPERIAL_SYSTEM.temperature(
-        77, IMPERIAL_SYSTEM.temperature_unit) == 77
-    assert IMPERIAL_SYSTEM.temperature(
-        25, METRIC_SYSTEM.temperature_unit) == 77
+    assert IMPERIAL_SYSTEM.temperature(77, IMPERIAL_SYSTEM.temperature_unit) == 77
+    assert IMPERIAL_SYSTEM.temperature(25, METRIC_SYSTEM.temperature_unit) == 77
 
 
 def test_length_unknown_unit():
     """Test length conversion with unknown from unit."""
     with pytest.raises(ValueError):
-        METRIC_SYSTEM.length(5, 'fr')
+        METRIC_SYSTEM.length(5, "fr")
 
 
 def test_length_to_metric():
@@ -123,22 +150,23 @@ def test_pressure_same_unit():
 def test_pressure_unknown_unit():
     """Test no conversion happens if unknown unit."""
     with pytest.raises(ValueError):
-        METRIC_SYSTEM.pressure(5, 'K')
+        METRIC_SYSTEM.pressure(5, "K")
 
 
 def test_pressure_to_metric():
     """Test pressure conversion to metric system."""
     assert METRIC_SYSTEM.pressure(25, METRIC_SYSTEM.pressure_unit) == 25
-    assert METRIC_SYSTEM.pressure(14.7, IMPERIAL_SYSTEM.pressure_unit) == \
-        pytest.approx(101352.932, abs=1e-1)
+    assert METRIC_SYSTEM.pressure(14.7, IMPERIAL_SYSTEM.pressure_unit) == pytest.approx(
+        101352.932, abs=1e-1
+    )
 
 
 def test_pressure_to_imperial():
     """Test pressure conversion to imperial system."""
     assert IMPERIAL_SYSTEM.pressure(77, IMPERIAL_SYSTEM.pressure_unit) == 77
     assert IMPERIAL_SYSTEM.pressure(
-        101352.932, METRIC_SYSTEM.pressure_unit) == \
-        pytest.approx(14.7, abs=1e-4)
+        101352.932, METRIC_SYSTEM.pressure_unit
+    ) == pytest.approx(14.7, abs=1e-4)
 
 
 def test_properties():

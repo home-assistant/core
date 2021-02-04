@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "H\u00f4te d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer",
+            "register_failed": "\u00c9chec de l'inscription, veuillez r\u00e9essayer",
+            "unknown": "Erreur inconnue: veuillez r\u00e9essayer plus tard"
+        },
+        "step": {
+            "link": {
+                "description": "Cliquez sur \u00abSoumettre\u00bb, puis appuyez sur la fl\u00e8che droite du routeur pour enregistrer Freebox avec Home Assistant. \n\n ! [Emplacement du bouton sur le routeur](/static/images/config_freebox.png)",
+                "title": "Lien routeur Freebox"
+            },
+            "user": {
+                "data": {
+                    "host": "Nom d'h\u00f4te ou adresse IP",
+                    "port": "Port"
+                },
+                "title": "Freebox"
+            }
+        }
+    }
+}

@@ -1,0 +1,77 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
+            "configuration_updated": "Konfiguracja zaktualizowana",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "faulty_credentials": "Niepoprawne uwierzytelnienie",
+            "service_unavailable": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "unknown_client_mac": "Brak klienta z tym adresem MAC"
+        },
+        "flow_title": "Sie\u0107 UniFi {site} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "site": "Identyfikator witryny",
+                    "username": "Nazwa u\u017cytkownika",
+                    "verify_ssl": "Weryfikacja certyfikatu SSL"
+                },
+                "title": "Konfiguracja kontrolera UniFi"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "client_control": {
+                "data": {
+                    "block_client": "Klienci z kontrol\u0105 dost\u0119pu do sieci",
+                    "dpi_restrictions": "Zezwalaj na kontrolowanie grupowych ogranicze\u0144 g\u0142\u0119bokiej inspekcji pakiet\u00f3w (DPI)",
+                    "poe_clients": "Zezwalaj na kontrol\u0119 POE klient\u00f3w"
+                },
+                "description": "Konfigurowanie kontroli klienta.\n\nUtw\u00f3rz prze\u0142\u0105czniki dla numer\u00f3w seryjnych, dla kt\u00f3rych chcesz kontrolowa\u0107 dost\u0119p do sieci.",
+                "title": "UniFi opcje 2/3"
+            },
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Czas w sekundach od momentu, kiedy ostatnio widziano, a\u017c do momentu, kiedy uznano go za nieobecny.",
+                    "ignore_wired_bug": "Wy\u0142\u0105czanie logiki b\u0142\u0119d\u00f3w dla po\u0142\u0105cze\u0144 przewodowych UniFi",
+                    "ssid_filter": "Wybierz SSIDy do \u015bledzenia klient\u00f3w bezprzewodowych",
+                    "track_clients": "\u015aled\u017a klient\u00f3w sieciowych",
+                    "track_devices": "\u015aled\u017a urz\u0105dzenia sieciowe (urz\u0105dzenia Ubiquiti)",
+                    "track_wired_clients": "Uwzgl\u0119dnij klient\u00f3w sieci przewodowej"
+                },
+                "description": "Konfiguracja \u015bledzenia urz\u0105dze\u0144",
+                "title": "Opcje UniFi"
+            },
+            "init": {
+                "data": {
+                    "few": "Kilka",
+                    "many": "Wiele",
+                    "one": "Jeden",
+                    "other": "Inne"
+                }
+            },
+            "simple_options": {
+                "data": {
+                    "block_client": "Klienci z kontrol\u0105 dost\u0119pu do sieci",
+                    "track_clients": "\u015aled\u017a klient\u00f3w sieciowych",
+                    "track_devices": "\u015aled\u017a urz\u0105dzenia sieciowe (urz\u0105dzenia Ubiquiti)"
+                },
+                "description": "Konfigurowanie integracji z UniFi"
+            },
+            "statistics_sensors": {
+                "data": {
+                    "allow_bandwidth_sensors": "Sensory wykorzystania przepustowo\u015bci przez klient\u00f3w sieciowych",
+                    "allow_uptime_sensors": "Sensory czasu pracy dla klient\u00f3w sieciowych"
+                },
+                "description": "Konfiguracja sensora statystyk",
+                "title": "Opcje UniFi"
+            }
+        }
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "no_units": "Could not find any HVAC units in CoolMasterNet host."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "cool": "Support cool mode",
+                    "dry": "Support dry mode",
+                    "fan_only": "Support fan only mode",
+                    "heat": "Support heat mode",
+                    "heat_cool": "Support automatic heat/cool mode",
+                    "host": "Host",
+                    "off": "Can be turned off"
+                },
+                "title": "Setup your CoolMasterNet connection details."
+            }
+        }
+    }
+}

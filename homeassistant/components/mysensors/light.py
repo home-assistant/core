@@ -1,29 +1,40 @@
 """Support for MySensors lights."""
 from homeassistant.components import mysensors
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_WHITE_VALUE, DOMAIN,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light)
+    ATTR_BRIGHTNESS,
+    ATTR_HS_COLOR,
+    ATTR_WHITE_VALUE,
+    DOMAIN,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_WHITE_VALUE,
+    LightEntity,
+)
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.util.color import rgb_hex_to_rgb_list
+from homeassistant.core import callback
 import homeassistant.util.color as color_util
+from homeassistant.util.color import rgb_hex_to_rgb_list
 
 SUPPORT_MYSENSORS_RGBW = SUPPORT_COLOR | SUPPORT_WHITE_VALUE
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the mysensors platform for lights."""
     device_class_map = {
-        'S_DIMMER': MySensorsLightDimmer,
-        'S_RGB_LIGHT': MySensorsLightRGB,
-        'S_RGBW_LIGHT': MySensorsLightRGBW,
+        "S_DIMMER": MySensorsLightDimmer,
+        "S_RGB_LIGHT": MySensorsLightRGB,
+        "S_RGBW_LIGHT": MySensorsLightRGBW,
     }
     mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, device_class_map,
-        async_add_entities=async_add_entities)
+        hass,
+        DOMAIN,
+        discovery_info,
+        device_class_map,
+        async_add_entities=async_add_entities,
+    )
 
 
-class MySensorsLight(mysensors.device.MySensorsEntity, Light):
+class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
     """Representation of a MySensors Light child node."""
 
     def __init__(self, *args):
@@ -66,7 +77,8 @@ class MySensorsLight(mysensors.device.MySensorsEntity, Light):
         if self._state:
             return
         self.gateway.set_child_value(
-            self.node_id, self.child_id, set_req.V_LIGHT, 1)
+            self.node_id, self.child_id, set_req.V_LIGHT, 1, ack=1
+        )
 
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
@@ -78,14 +90,17 @@ class MySensorsLight(mysensors.device.MySensorsEntity, Light):
         set_req = self.gateway.const.SetReq
         brightness = self._brightness
 
-        if ATTR_BRIGHTNESS not in kwargs or \
-                kwargs[ATTR_BRIGHTNESS] == self._brightness or \
-                set_req.V_DIMMER not in self._values:
+        if (
+            ATTR_BRIGHTNESS not in kwargs
+            or kwargs[ATTR_BRIGHTNESS] == self._brightness
+            or set_req.V_DIMMER not in self._values
+        ):
             return
         brightness = kwargs[ATTR_BRIGHTNESS]
         percent = round(100 * brightness / 255)
         self.gateway.set_child_value(
-            self.node_id, self.child_id, set_req.V_DIMMER, percent)
+            self.node_id, self.child_id, set_req.V_DIMMER, percent, ack=1
+        )
 
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
@@ -108,7 +123,7 @@ class MySensorsLight(mysensors.device.MySensorsEntity, Light):
             return
         if new_rgb is not None:
             rgb = list(new_rgb)
-        if hex_template == '%02x%02x%02x%02x':
+        if hex_template == "%02x%02x%02x%02x":
             if new_white is not None:
                 rgb.append(new_white)
             else:
@@ -117,7 +132,8 @@ class MySensorsLight(mysensors.device.MySensorsEntity, Light):
         if len(rgb) > 3:
             white = rgb.pop()
         self.gateway.set_child_value(
-            self.node_id, self.child_id, self.value_type, hex_color)
+            self.node_id, self.child_id, self.value_type, hex_color, ack=1
+        )
 
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
@@ -128,19 +144,20 @@ class MySensorsLight(mysensors.device.MySensorsEntity, Light):
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         value_type = self.gateway.const.SetReq.V_LIGHT
-        self.gateway.set_child_value(
-            self.node_id, self.child_id, value_type, 0)
+        self.gateway.set_child_value(self.node_id, self.child_id, value_type, 0, ack=1)
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
             self._state = False
             self._values[value_type] = STATE_OFF
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
+    @callback
     def _async_update_light(self):
         """Update the controller with values from light child."""
         value_type = self.gateway.const.SetReq.V_LIGHT
         self._state = self._values[value_type] == STATE_ON
 
+    @callback
     def _async_update_dimmer(self):
         """Update the controller with values from dimmer child."""
         value_type = self.gateway.const.SetReq.V_DIMMER
@@ -149,6 +166,7 @@ class MySensorsLight(mysensors.device.MySensorsEntity, Light):
             if self._brightness == 0:
                 self._state = False
 
+    @callback
     def _async_update_rgb_or_w(self):
         """Update the controller with values from RGB or RGBW child."""
         value = self._values[self.value_type]
@@ -171,7 +189,7 @@ class MySensorsLightDimmer(MySensorsLight):
         self._turn_on_light()
         self._turn_on_dimmer(**kwargs)
         if self.gateway.optimistic:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_update(self):
         """Update the controller with the latest value from a sensor."""
@@ -195,9 +213,9 @@ class MySensorsLightRGB(MySensorsLight):
         """Turn the device on."""
         self._turn_on_light()
         self._turn_on_dimmer(**kwargs)
-        self._turn_on_rgb_and_w('%02x%02x%02x', **kwargs)
+        self._turn_on_rgb_and_w("%02x%02x%02x", **kwargs)
         if self.gateway.optimistic:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_update(self):
         """Update the controller with the latest value from a sensor."""
@@ -209,8 +227,6 @@ class MySensorsLightRGB(MySensorsLight):
 
 class MySensorsLightRGBW(MySensorsLightRGB):
     """RGBW child class to MySensorsLightRGB."""
-
-    # pylint: disable=too-many-ancestors
 
     @property
     def supported_features(self):
@@ -224,6 +240,6 @@ class MySensorsLightRGBW(MySensorsLightRGB):
         """Turn the device on."""
         self._turn_on_light()
         self._turn_on_dimmer(**kwargs)
-        self._turn_on_rgb_and_w('%02x%02x%02x%02x', **kwargs)
+        self._turn_on_rgb_and_w("%02x%02x%02x%02x", **kwargs)
         if self.gateway.optimistic:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()

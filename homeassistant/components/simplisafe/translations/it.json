@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Questo account SimpliSafe \u00e8 gi\u00e0 in uso.",
+            "reauth_successful": "La riautenticazione ha avuto successo"
+        },
+        "error": {
+            "identifier_exists": "Account gi\u00e0 registrato",
+            "invalid_auth": "Autenticazione non valida",
+            "still_awaiting_mfa": "Ancora in attesa del clic sull'email MFA",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "mfa": {
+                "description": "Controlla la tua e-mail per trovare un link da SimpliSafe. Dopo aver verificato il link, torna qui per completare l'installazione dell'integrazione.",
+                "title": "Autenticazione a pi\u00f9 fattori (MFA) SimpliSafe "
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Il token di accesso \u00e8 scaduto o \u00e8 stato revocato. Inserisci la tua password per ricollegare il tuo account.",
+                "title": "Reautenticare l'integrazione"
+            },
+            "user": {
+                "data": {
+                    "code": "Codice (utilizzato nell'Interfaccia Utente di Home Assistant)",
+                    "password": "Password",
+                    "username": "E-mail"
+                },
+                "title": "Inserisci le tue informazioni."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Codice (utilizzato nell'Interfaccia Utente di Home Assistant)"
+                },
+                "title": "Configurare SimpliSafe"
+            }
+        }
+    }
+}

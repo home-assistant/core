@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Solo se puede agregar un dispositivo Atag a Home Assistant"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Correo electr\u00f3nico (opcional)",
+                    "host": "Host",
+                    "port": "Puerto (10000)"
+                },
+                "title": "Conectarse al dispositivo"
+            }
+        }
+    }
+}
