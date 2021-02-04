@@ -36,7 +36,7 @@ REQUIRES = [
     "astral==1.10.1",
     "async_timeout==3.0.1",
     "attrs==19.3.0",
-    "awesomeversion==21.2.0",
+    "awesomeversion==21.2.2",
     "bcrypt==3.1.7",
     "certifi>=2020.12.5",
     "ciso8601==2.1.3",

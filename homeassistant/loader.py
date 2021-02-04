@@ -26,8 +26,7 @@ from typing import (
     cast,
 )
 
-from awesomeversion import AwesomeVersion
-from awesomeversion.strategy import AwesomeVersionStrategy
+from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.generated.dhcp import DHCP
 from homeassistant.generated.mqtt import MQTT
