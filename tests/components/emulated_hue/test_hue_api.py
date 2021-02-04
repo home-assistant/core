@@ -759,7 +759,7 @@ async def test_put_light_state(hass, hass_hue, hue_client):
 
     await hass.async_block_till_done()
     assert call_turn_on[0]
-    # assert call_turn_on[0].data[ATTR_ENTITY_ID] == "light.ceiling_lights"
+    assert call_turn_on[0].data[ATTR_ENTITY_ID] == ["light.ceiling_lights"]
     assert call_turn_on[0].data[light.ATTR_BRIGHTNESS] == 99
     assert call_turn_on[0].data[light.ATTR_XY_COLOR] == ((0.488, 0.48))
     assert call_turn_on[0].data[light.ATTR_TRANSITION] == 6
