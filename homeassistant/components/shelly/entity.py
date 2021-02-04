@@ -421,7 +421,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
     @callback
     def _update_callback(self):
         """Handle device update."""
-        if self.block is not None:
+        if self.block is not None or not self.wrapper.device.initialized:
             super()._update_callback()
             return
 

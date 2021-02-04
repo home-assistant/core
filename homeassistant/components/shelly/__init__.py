@@ -220,6 +220,10 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch data."""
+        if self.entry.data.get("sleep_period"):
+            # Sleeping device, no point polling it, just mark it unavailable
+            raise update_coordinator.UpdateFailed("Sleeping device did not update")
+
         _LOGGER.debug("Polling Shelly Device - %s", self.name)
         try:
             async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
