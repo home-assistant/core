@@ -1,4 +1,13 @@
 """Constants for Airly integration."""
+from homeassistant.components.air_quality import ATTR_AQI, ATTR_PM_2_5, ATTR_PM_10
+
+DEFAULT_NAME = "Airly"
+DOMAIN = "airly"
+MANUFACTURER = "Airly sp. z o.o."
+MAX_REQUESTS_PER_DAY = 100
+NO_AIRLY_SENSORS = "There are no Airly sensors in this area yet."
+ATTRIBUTION = "Data provided by Airly"
+
 ATTR_API_ADVICE = "ADVICE"
 ATTR_API_CAQI = "CAQI"
 ATTR_API_CAQI_DESCRIPTION = "DESCRIPTION"
@@ -14,8 +23,14 @@ ATTR_API_PM25_PERCENT = "PM25_PERCENT"
 ATTR_API_PRESSURE = "PRESSURE"
 ATTR_API_TEMPERATURE = "TEMPERATURE"
 CONF_USE_NEAREST = "use_nearest"
-DEFAULT_NAME = "Airly"
-DOMAIN = "airly"
-MANUFACTURER = "Airly sp. z o.o."
-MAX_REQUESTS_PER_DAY = 100
-NO_AIRLY_SENSORS = "There are no Airly sensors in this area yet."
+
+LABEL_ADVICE = "advice"
+LABEL_AQI_DESCRIPTION = f"{ATTR_AQI}_description"
+LABEL_AQI_LEVEL = f"{ATTR_AQI}_level"
+LABEL_PM_2_5_LIMIT = f"{ATTR_PM_2_5}_limit"
+LABEL_PM_2_5_PERCENT = f"{ATTR_PM_2_5}_percent_of_limit"
+LABEL_PM_10_LIMIT = f"{ATTR_PM_10}_limit"
+LABEL_PM_10_PERCENT = f"{ATTR_PM_10}_percent_of_limit"
+
+ATTR_LABEL = "label"
+ATTR_UNIT = "unit"
