@@ -162,7 +162,6 @@ async def async_attach_trigger(
     elif config[CONF_TYPE] == "armed_night":
         to_state = STATE_ALARM_ARMED_NIGHT
     elif config[CONF_TYPE] == "armed_vacation":
-        from_state = STATE_ALARM_PENDING or STATE_ALARM_ARMING
         to_state = STATE_ALARM_ARMED_VACATION
 
     state_config = {
