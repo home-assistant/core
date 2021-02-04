@@ -227,6 +227,7 @@ class VeraDevice(Generic[DeviceType], Entity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         self.controller.register(self.vera_device, self._update_callback)
+        self.schedule_update_ha_state(True)
 
     def _update_callback(self, _device: DeviceType) -> None:
         """Update the state."""
