@@ -3,14 +3,21 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components import hue
 from homeassistant.components.hue import bridge, errors
+from homeassistant.components.hue.bridge import (
+    ATTR_GROUP_NAME,
+    ATTR_SCENE_NAME,
+    ATTR_TRANSITION,
+    SERVICE_HUE_SCENE,
+)
 from homeassistant.components.hue.const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
+
+from tests.common import MockConfigEntry
 
 
 async def test_bridge_setup(hass):
@@ -160,17 +167,12 @@ SCENE_RESPONSE = {
 
 async def test_hue_activate_scene(hass, mock_api):
     """Test successful hue_activate_scene."""
-    config_entry = config_entries.ConfigEntry(
-        1,
-        hue.DOMAIN,
-        "Mock Title",
-        {"host": "mock-host", "username": "mock-username"},
-        "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
-        system_options={},
+    entry = MockConfigEntry(
+        domain=hue.DOMAIN,
+        data={"host": "mock-host", "username": "mock-username"},
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
     )
-    hue_bridge = bridge.HueBridge(hass, config_entry)
+    entry.add_to_hass(hass)
 
     mock_api.mock_group_responses.append(GROUP_RESPONSE)
     mock_api.mock_scene_responses.append(SCENE_RESPONSE)
@@ -178,14 +180,15 @@ async def test_hue_activate_scene(hass, mock_api):
     with patch("aiohue.Bridge", return_value=mock_api), patch.object(
         hass.config_entries, "async_forward_entry_setup"
     ):
-        assert await hue_bridge.async_setup() is True
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert hue_bridge.api is mock_api
-
-    call = Mock()
-    call.data = {"group_name": "Group 1", "scene_name": "Cozy dinner"}
-    with patch("aiohue.Bridge", return_value=mock_api):
-        assert await hue_bridge.hue_activate_scene(call) is None
+    await hass.services.async_call(
+        hue.DOMAIN,
+        SERVICE_HUE_SCENE,
+        {ATTR_GROUP_NAME: "Group 1", ATTR_SCENE_NAME: "Cozy dinner"},
+        blocking=True,
+    )
 
     assert len(mock_api.mock_requests) == 3
     assert mock_api.mock_requests[2]["json"]["scene"] == "scene_1"
@@ -194,17 +197,12 @@ async def test_hue_activate_scene(hass, mock_api):
 
 async def test_hue_activate_scene_transition(hass, mock_api):
     """Test successful hue_activate_scene with transition."""
-    config_entry = config_entries.ConfigEntry(
-        1,
-        hue.DOMAIN,
-        "Mock Title",
-        {"host": "mock-host", "username": "mock-username"},
-        "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
-        system_options={},
+    entry = MockConfigEntry(
+        domain=hue.DOMAIN,
+        data={"host": "mock-host", "username": "mock-username"},
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
     )
-    hue_bridge = bridge.HueBridge(hass, config_entry)
+    entry.add_to_hass(hass)
 
     mock_api.mock_group_responses.append(GROUP_RESPONSE)
     mock_api.mock_scene_responses.append(SCENE_RESPONSE)
@@ -212,14 +210,19 @@ async def test_hue_activate_scene_transition(hass, mock_api):
     with patch("aiohue.Bridge", return_value=mock_api), patch.object(
         hass.config_entries, "async_forward_entry_setup"
     ):
-        assert await hue_bridge.async_setup() is True
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert hue_bridge.api is mock_api
-
-    call = Mock()
-    call.data = {"group_name": "Group 1", "scene_name": "Cozy dinner", "transition": 30}
-    with patch("aiohue.Bridge", return_value=mock_api):
-        assert await hue_bridge.hue_activate_scene(call) is None
+    await hass.services.async_call(
+        hue.DOMAIN,
+        SERVICE_HUE_SCENE,
+        {
+            ATTR_GROUP_NAME: "Group 1",
+            ATTR_SCENE_NAME: "Cozy dinner",
+            ATTR_TRANSITION: 30,
+        },
+        blocking=True,
+    )
 
     assert len(mock_api.mock_requests) == 3
     assert mock_api.mock_requests[2]["json"]["scene"] == "scene_1"
@@ -229,17 +232,12 @@ async def test_hue_activate_scene_transition(hass, mock_api):
 
 async def test_hue_activate_scene_group_not_found(hass, mock_api):
     """Test failed hue_activate_scene due to missing group."""
-    config_entry = config_entries.ConfigEntry(
-        1,
-        hue.DOMAIN,
-        "Mock Title",
-        {"host": "mock-host", "username": "mock-username"},
-        "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
-        system_options={},
+    entry = MockConfigEntry(
+        domain=hue.DOMAIN,
+        data={"host": "mock-host", "username": "mock-username"},
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
     )
-    hue_bridge = bridge.HueBridge(hass, config_entry)
+    entry.add_to_hass(hass)
 
     mock_api.mock_group_responses.append({})
     mock_api.mock_scene_responses.append(SCENE_RESPONSE)
@@ -247,29 +245,28 @@ async def test_hue_activate_scene_group_not_found(hass, mock_api):
     with patch("aiohue.Bridge", return_value=mock_api), patch.object(
         hass.config_entries, "async_forward_entry_setup"
     ):
-        assert await hue_bridge.async_setup() is True
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert hue_bridge.api is mock_api
-
-    call = Mock()
-    call.data = {"group_name": "Group 1", "scene_name": "Cozy dinner"}
-    with patch("aiohue.Bridge", return_value=mock_api):
-        assert await hue_bridge.hue_activate_scene(call) is False
+    assert (
+        await hass.services.async_call(
+            hue.DOMAIN,
+            SERVICE_HUE_SCENE,
+            {ATTR_GROUP_NAME: "Group 1", ATTR_SCENE_NAME: "Cozy dinner"},
+            blocking=True,
+        )
+        is False
+    )
 
 
 async def test_hue_activate_scene_scene_not_found(hass, mock_api):
     """Test failed hue_activate_scene due to missing scene."""
-    config_entry = config_entries.ConfigEntry(
-        1,
-        hue.DOMAIN,
-        "Mock Title",
-        {"host": "mock-host", "username": "mock-username"},
-        "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
-        system_options={},
+    entry = MockConfigEntry(
+        domain=hue.DOMAIN,
+        data={"host": "mock-host", "username": "mock-username"},
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
     )
-    hue_bridge = bridge.HueBridge(hass, config_entry)
+    entry.add_to_hass(hass)
 
     mock_api.mock_group_responses.append(GROUP_RESPONSE)
     mock_api.mock_scene_responses.append({})
@@ -277,11 +274,15 @@ async def test_hue_activate_scene_scene_not_found(hass, mock_api):
     with patch("aiohue.Bridge", return_value=mock_api), patch.object(
         hass.config_entries, "async_forward_entry_setup"
     ):
-        assert await hue_bridge.async_setup() is True
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert hue_bridge.api is mock_api
-
-    call = Mock()
-    call.data = {"group_name": "Group 1", "scene_name": "Cozy dinner"}
-    with patch("aiohue.Bridge", return_value=mock_api):
-        assert await hue_bridge.hue_activate_scene(call) is False
+    assert (
+        await hass.services.async_call(
+            hue.DOMAIN,
+            SERVICE_HUE_SCENE,
+            {ATTR_GROUP_NAME: "Group 1", ATTR_SCENE_NAME: "Cozy dinner"},
+            blocking=True,
+        )
+        is False
+    )
