@@ -37,7 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for tracked_asset_pair in config_entry.options[CONF_TRACKED_ASSET_PAIRS]:
             # Only create new devices
-            if create_device_name(tracked_asset_pair) in existing_devices.keys():
+            if create_device_name(tracked_asset_pair) in existing_devices:
                 existing_devices.pop(create_device_name(tracked_asset_pair))
             else:
                 sensors = []

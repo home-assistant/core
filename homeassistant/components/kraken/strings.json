@@ -17,8 +17,7 @@
                 "data": {
                     "scan_interval": "Update interval",
                     "tracked_asset_pairs": "Tracked Asset Pairs"
-                },
-                "description": "Configure options for Kraken"
+                }
             }
         }
     }
