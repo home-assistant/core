@@ -14,6 +14,7 @@
                     "host": "Host",
                     "password": "Password",
                     "port": "Port",
+                    "rtsp_port": "RTSP port",
                     "stream": "Stream",
                     "username": "Username"
                 }

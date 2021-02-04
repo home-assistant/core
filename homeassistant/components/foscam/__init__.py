@@ -1,12 +1,15 @@
 """The foscam component."""
 import asyncio
 
+from libpyfoscam import FoscamCamera
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_registry import async_migrate_entries
 
-from .config_flow import camera_unique_id
-from .const import DOMAIN, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
+from .config_flow import DEFAULT_RTSP_PORT, camera_unique_id
+from .const import CONF_RTSP_PORT, DOMAIN, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
 
 PLATFORMS = ["camera"]
 
@@ -65,6 +68,25 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
 
         config_entry.unique_id = new_unique_id
         config_entry.version = 2
+
+    if config_entry.version == 2:
+        camera = FoscamCamera(
+            config_entry.data[CONF_HOST],
+            config_entry.data[CONF_PORT],
+            config_entry.data[CONF_USERNAME],
+            config_entry.data[CONF_PASSWORD],
+            verbose=False,
+        )
+
+        ret, response = await hass.async_add_executor_job(camera.get_port_info)
+
+        rtsp_port = DEFAULT_RTSP_PORT
+
+        if ret != 0:
+            rtsp_port = response.get("rtspPort") or response.get("mediaPort")
+
+        config_entry.data = {**config_entry.data, CONF_RTSP_PORT: rtsp_port}
+        config_entry.version = 3
 
     LOGGER.info("Migration to version %s successful", config_entry.version)
 

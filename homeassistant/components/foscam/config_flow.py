@@ -17,12 +17,13 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import AbortFlow
 
-from .const import CONF_STREAM, LOGGER
+from .const import CONF_RTSP_PORT, CONF_STREAM, LOGGER
 from .const import DOMAIN  # pylint:disable=unused-import
 
 STREAMS = ["Main", "Sub"]
 
 DEFAULT_PORT = 88
+DEFAULT_RTSP_PORT = 554
 
 
 DATA_SCHEMA = vol.Schema(
@@ -32,6 +33,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Required(CONF_STREAM, default=STREAMS[0]): vol.In(STREAMS),
+        vol.Required(CONF_RTSP_PORT, default=DEFAULT_RTSP_PORT): int,
     }
 )
 
@@ -47,7 +49,7 @@ def camera_unique_id(data):
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for foscam."""
 
-    VERSION = 2
+    VERSION = 3
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def _validate_and_create(self, data):
