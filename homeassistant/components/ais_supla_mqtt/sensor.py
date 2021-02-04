@@ -136,7 +136,7 @@ class SuplaMqttSoftBridge(Entity):
         """Return the status of the sensor."""
         # connection result codes
         if self._supla_mqtt_connection_code == -1:
-            return "not started"
+            return "starting"
         elif self._supla_mqtt_connection_code == 0:
             return "success"
         elif self._supla_mqtt_connection_code == 1:

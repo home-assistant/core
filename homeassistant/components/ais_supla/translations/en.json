@@ -13,7 +13,7 @@
             },
            "confirm": {
                 "description": "###### ![Supla logo](/static/icons/supla_zamel_logo.png)\n\nDo you want to connect to the Supla server to discover your devices?",
-                "title": "Connection to Supla Cloud"
+                "title": "This integration is no longer maintained. For new installations, use AIS-SUPLA-MQTT."
            }
         },
         "error": {
