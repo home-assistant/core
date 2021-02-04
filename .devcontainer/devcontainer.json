@@ -3,7 +3,7 @@
   "context": "..",
   "dockerFile": "../Dockerfile.dev",
   "postCreateCommand": "script/bootstrap",
-  "containerEnv": {"DEVCONTAINER": "1"},
+  "containerEnv": { "DEVCONTAINER": "1" },
   "appPort": 8123,
   "runArgs": ["-e", "GIT_EDITOR=code --wait"],
   "extensions": [
