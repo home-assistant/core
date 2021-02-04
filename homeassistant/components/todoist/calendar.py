@@ -529,8 +529,10 @@ class TodoistProjectData:
             if task["due"] is None:
                 continue
             due_date = _parse_due_date(task["due"], self._api.state['user']['tz_info']['gmt_string'])
+            midnight = dt.as_utc(dt.parse_datetime(due_date.strftime("%Y-%m-%d") + "T00:00:00" + self._api.state['user']['tz_info']['gmt_string']))
+
             if start_date < due_date < end_date:
-                if dt.as_local(due_date).hour == 0 and dt.as_local(due_date).minute == 0:
+                if due_date == midnight:
                     # If the due date has no time data, return just the date so that it
                     # will render correctly as an all day event on a calendar.
                     due_date_value = due_date.strftime("%Y-%m-%d")
