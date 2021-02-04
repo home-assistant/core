@@ -66,9 +66,7 @@ CUSTOM_WARNING_VERSION_MISSING = (
 )
 CUSTOM_WARNING_VERSION_TYPE = (
     "'%s' is not a valid version for "
-    "custom integration '%s'. This will cause a "
-    "future version of Home Assistant to block "
-    "this custom integration. "
+    "custom integration '%s'. "
     "Please report this to the maintainer of '%s'"
 )
 _UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular dependency
