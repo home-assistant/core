@@ -1,0 +1,11 @@
+{
+  "domain": "spokestack_tts",
+  "name": "Spokestack Text-to-Speech",
+  "documentation": "https://www.home-assistant.io/integrations/spokestack_tts",
+  "requirements": ["numpy==1.19.2", "cython==0.29.21", "spokestack==0.0.16"],
+  "codeowners": [
+    "@spokestack",
+    "@will-rice",
+    "@space-pope"
+  ]
+}
