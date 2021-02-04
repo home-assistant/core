@@ -1,5 +1,7 @@
 FROM mcr.microsoft.com/vscode/devcontainers/python:0-3.8
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 RUN \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && apt-get update \
