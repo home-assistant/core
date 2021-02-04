@@ -45,6 +45,7 @@ class BondEntity(Entity):
         """Get a an HA device representing this Bond controlled device."""
         return {
             ATTR_NAME: self.name,
+            "suggested_area": self._device.location,
             "identifiers": {(DOMAIN, self._device.device_id)},
             "via_device": (DOMAIN, self._hub.bond_id),
         }
