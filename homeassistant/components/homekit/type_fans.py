@@ -60,6 +60,7 @@ class Fan(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
 
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        preset_modes = state.attributes.get(ATTR_PRESET_MODES)
 
         if features & SUPPORT_DIRECTION:
             chars.append(CHAR_ROTATION_DIRECTION)
@@ -67,6 +68,8 @@ class Fan(HomeAccessory):
             chars.append(CHAR_SWING_MODE)
         if features & SUPPORT_SET_SPEED:
             chars.append(CHAR_ROTATION_SPEED)
+        if preset_modes:
+            chars.append(CHAR_TARGET_FAN_STATE)
 
         serv_fan = self.add_preload_service(SERV_FANV2, chars)
         self.set_primary_service(serv_fan)
@@ -89,7 +92,8 @@ class Fan(HomeAccessory):
             # to set to the correct initial value.
             self.char_speed = serv_fan.configure_char(CHAR_ROTATION_SPEED, value=100)
 
-            preset_modes = state.attributes.get(ATTR_PRESET_MODES, [])
+        if preset_modes:
+            self.char_target_state = serv_fan.configure_char(CHAR_TARGET_FAN_STATE)
             for preset_mode in preset_modes:
                 preset_serv = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
                 serv_fan.add_linked_service(preset_serv)
@@ -103,11 +107,6 @@ class Fan(HomeAccessory):
                         preset_mode, value
                     ),
                 )
-            if preset_modes:
-                _LOGGER.warning("Fan service: %s", serv_fan)
-                _LOGGER.warning("Fan service: %s", serv_fan.characteristics)
-
-                self.char_target_state = serv_fan.configure_char(CHAR_TARGET_FAN_STATE)
 
         if CHAR_SWING_MODE in chars:
             self.char_swing = serv_fan.configure_char(CHAR_SWING_MODE, value=0)
