@@ -35,6 +35,11 @@ class BondDevice:
         return self._attrs["type"]
 
     @property
+    def location(self) -> str:
+        """Get the location of this device."""
+        return self._attrs["location"]
+
+    @property
     def trust_state(self) -> bool:
         """Check if Trust State is turned on."""
         return self.props.get("trust_state", False)
