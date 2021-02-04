@@ -42,6 +42,7 @@ async def test_get_or_create_returns_same_entry(hass, registry, update_events):
         name="name",
         manufacturer="manufacturer",
         model="model",
+        suggested_area="Man Cave",
     )
     entry2 = registry.async_get_or_create(
         config_entry_id="1234",
@@ -49,6 +50,7 @@ async def test_get_or_create_returns_same_entry(hass, registry, update_events):
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
+        suggested_area="Man Cave",
     )
     entry3 = registry.async_get_or_create(
         config_entry_id="1234",
@@ -64,6 +66,7 @@ async def test_get_or_create_returns_same_entry(hass, registry, update_events):
     assert entry3.model == "model"
     assert entry3.name == "name"
     assert entry3.sw_version == "sw-version"
+    assert entry3.suggested_area == "Man Cave"
 
     await hass.async_block_till_done()
 
@@ -154,6 +157,7 @@ async def test_loading_from_storage(hass, hass_storage):
                     "area_id": "12345A",
                     "name_by_user": "Test Friendly Name",
                     "disabled_by": "user",
+                    "suggested_area": "Kitchen",
                 }
             ],
             "deleted_devices": [
@@ -454,6 +458,7 @@ async def test_loading_saving_data(hass, registry):
         name="Original Name",
         sw_version="Orig SW 1",
         entry_type="device",
+        suggested_area="Kitchen",
     )
 
     orig_light = registry.async_get_or_create(
@@ -464,6 +469,7 @@ async def test_loading_saving_data(hass, registry):
         model="light",
         via_device=("hue", "0123"),
         disabled_by="user",
+        suggested_area="Kitchen",
     )
 
     orig_light2 = registry.async_get_or_create(
@@ -473,6 +479,7 @@ async def test_loading_saving_data(hass, registry):
         manufacturer="manufacturer",
         model="light",
         via_device=("hue", "0123"),
+        suggested_area="Kitchen",
     )
 
     registry.async_remove_device(orig_light2.id)
@@ -483,6 +490,7 @@ async def test_loading_saving_data(hass, registry):
         identifiers={("hue", "abc")},
         manufacturer="manufacturer",
         model="light",
+        suggested_area="Kitchen",
     )
 
     registry.async_get_or_create(
@@ -491,6 +499,7 @@ async def test_loading_saving_data(hass, registry):
         identifiers={("abc", "123")},
         manufacturer="manufacturer",
         model="light",
+        suggested_area="Kitchen",
     )
 
     registry.async_remove_device(orig_light3.id)
@@ -501,6 +510,7 @@ async def test_loading_saving_data(hass, registry):
         identifiers={("hue", "abc")},
         manufacturer="manufacturer",
         model="light",
+        suggested_area="Kitchen",
     )
 
     assert orig_light4.id == orig_light3.id
@@ -717,6 +727,26 @@ async def test_update_sw_version(registry):
     assert mock_save.call_count == 1
     assert updated_entry != entry
     assert updated_entry.sw_version == sw_version
+
+
+async def test_update_suggested_area(registry):
+    """Verify that we can update the suggested area version of a device."""
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bla", "123")},
+    )
+    assert not entry.suggested_area
+    suggested_area = "Pool"
+
+    with patch.object(registry, "async_schedule_save") as mock_save:
+        updated_entry = registry.async_update_device(
+            entry.id, suggested_area=suggested_area
+        )
+
+    assert mock_save.call_count == 1
+    assert updated_entry != entry
+    assert updated_entry.suggested_area == suggested_area
 
 
 async def test_cleanup_device_registry(hass, registry):
