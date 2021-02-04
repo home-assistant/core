@@ -105,7 +105,7 @@ class Fan(HomeAccessory):
                 )
             if preset_modes:
                 _LOGGER.warning("Fan service: %s", serv_fan)
-                _LOGGER.warning("Fan service: %s", serv_fan.char)
+                _LOGGER.warning("Fan service: %s", serv_fan.characteristics)
 
                 self.char_target_state = serv_fan.configure_char(CHAR_TARGET_FAN_STATE)
 
