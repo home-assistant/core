@@ -7,6 +7,7 @@ import logging
 import os
 import threading
 
+from scapy.arch.common import compile_filter
 from scapy.config import conf
 from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
@@ -217,6 +218,15 @@ class DHCPWatcher(WatcherBase):
                 )
             return
 
+        try:
+            await _async_verify_working_pcap(self.hass, FILTER)
+        except (Scapy_Exception, ImportError) as ex:
+            _LOGGER.error(
+                "Cannot watch for dhcp packets without a functional packet filter: %s",
+                ex,
+            )
+            return
+
         self._sniffer = AsyncSniffer(
             filter=FILTER,
             started_callback=self._started.set,
@@ -285,3 +295,12 @@ def _verify_l2socket_creation_permission():
     # disable scapy promiscuous mode as we do not need it
     conf.sniff_promisc = 0
     conf.L2socket()
+
+
+async def _async_verify_working_pcap(hass, cap_filter):
+    """Verify we can create a packet filter.
+
+    If we cannot create a filter we will be listening for
+    all traffic which is too intensive.
+    """
+    await hass.async_add_executor_job(compile_filter, cap_filter)
