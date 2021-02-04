@@ -95,11 +95,12 @@ class Fan(HomeAccessory):
                 preset_serv.configure_char(
                     CHAR_NAME, value=f"{self.display_name} {preset_mode}"
                 )
+
                 self.preset_mode_chars[preset_mode] = preset_serv.configure_char(
                     CHAR_ON,
                     value=False,
-                    setter_callback=lambda value: self.set_preset_mode(
-                        preset_mode, value
+                    setter_callback=lambda value, preset_mode=preset_mode: self.set_preset_mode(
+                        value, preset_mode
                     ),
                 )
 
@@ -137,7 +138,7 @@ class Fan(HomeAccessory):
         if CHAR_ROTATION_SPEED in char_values:
             self.set_percentage(char_values[CHAR_ROTATION_SPEED])
 
-    def set_preset_mode(self, preset_mode, value):
+    def set_preset_mode(self, value, preset_mode):
         """Set preset_mode if call came from HomeKit."""
         _LOGGER.debug(
             "%s: Set preset_mode %s to %d", self.entity_id, preset_mode, value
