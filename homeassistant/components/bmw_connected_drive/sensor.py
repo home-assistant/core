@@ -1,14 +1,12 @@
 """Support for reading vehicle status from BMW connected drive portal."""
 import logging
 
+from bimmer_connected.const import SERVICE_LAST_TRIP, SERVICE_STATUS
 from bimmer_connected.state import ChargingState
-from bimmer_connected.const import (
-    SERVICE_STATUS,
-    SERVICE_LAST_TRIP,
-)
 
 from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
+    ENERGY_KILO_WATT_HOUR,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     PERCENTAGE,
@@ -16,7 +14,6 @@ from homeassistant.const import (
     TIME_MINUTES,
     VOLUME_GALLONS,
     VOLUME_LITERS,
-    ENERGY_KILO_WATT_HOUR,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -34,9 +31,21 @@ ATTR_TO_HA_METRIC = {
     "max_range_electric": ["mdi:map-marker-distance", LENGTH_KILOMETERS, True],
     "remaining_fuel": ["mdi:gas-station", VOLUME_LITERS, True],
     # LastTrip attributes
-    "average_combined_consumption": ["mdi:flash", f"{ENERGY_KILO_WATT_HOUR}/100{LENGTH_KILOMETERS}", True],
-    "average_electric_consumption": ["mdi:power-plug-outline", f"{ENERGY_KILO_WATT_HOUR}/100{LENGTH_KILOMETERS}", True],
-    "average_recuperation": ["mdi:recycle-variant", f"{ENERGY_KILO_WATT_HOUR}/100{LENGTH_KILOMETERS}", True],
+    "average_combined_consumption": [
+        "mdi:flash",
+        f"{ENERGY_KILO_WATT_HOUR}/100{LENGTH_KILOMETERS}",
+        True,
+    ],
+    "average_electric_consumption": [
+        "mdi:power-plug-outline",
+        f"{ENERGY_KILO_WATT_HOUR}/100{LENGTH_KILOMETERS}",
+        True,
+    ],
+    "average_recuperation": [
+        "mdi:recycle-variant",
+        f"{ENERGY_KILO_WATT_HOUR}/100{LENGTH_KILOMETERS}",
+        True,
+    ],
     "electric_distance": ["mdi:map-marker-distance", LENGTH_KILOMETERS, True],
     "saved_fuel": ["mdi:fuel", VOLUME_LITERS, False],
     "total_distance": ["mdi:map-marker-distance", LENGTH_KILOMETERS, True],
@@ -50,9 +59,21 @@ ATTR_TO_HA_IMPERIAL = {
     "max_range_electric": ["mdi:map-marker-distance", LENGTH_MILES, True],
     "remaining_fuel": ["mdi:gas-station", VOLUME_GALLONS, True],
     # LastTrip attributes
-    "average_combined_consumption": ["mdi:flash", f"{ENERGY_KILO_WATT_HOUR}/100{LENGTH_MILES}", True],
-    "average_electric_consumption": ["mdi:power-plug-outline", f"{ENERGY_KILO_WATT_HOUR}/100{LENGTH_MILES}", True],
-    "average_recuperation": ["mdi:recycle-variant", f"{ENERGY_KILO_WATT_HOUR}/100{LENGTH_MILES}", True],
+    "average_combined_consumption": [
+        "mdi:flash",
+        f"{ENERGY_KILO_WATT_HOUR}/100{LENGTH_MILES}",
+        True,
+    ],
+    "average_electric_consumption": [
+        "mdi:power-plug-outline",
+        f"{ENERGY_KILO_WATT_HOUR}/100{LENGTH_MILES}",
+        True,
+    ],
+    "average_recuperation": [
+        "mdi:recycle-variant",
+        f"{ENERGY_KILO_WATT_HOUR}/100{LENGTH_MILES}",
+        True,
+    ],
     "electric_distance": ["mdi:map-marker-distance", LENGTH_MILES, True],
     "saved_fuel": ["mdi:fuel", VOLUME_GALLONS, False],
     "total_distance": ["mdi:map-marker-distance", LENGTH_MILES, True],
@@ -71,6 +92,7 @@ ATTR_TO_HA_GENERIC = {
 
 ATTR_TO_HA_METRIC.update(ATTR_TO_HA_GENERIC)
 ATTR_TO_HA_IMPERIAL.update(ATTR_TO_HA_GENERIC)
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the BMW ConnectedDrive sensors from config entry."""
@@ -112,8 +134,12 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, Entity):
         self._service = service
         self._state = None
         if self._service:
-            self._name = f"{self._vehicle.name} {self._service.lower()}_{self._attribute}"
-            self._unique_id = f"{self._vehicle.vin}-{self._service.lower()}-{self._attribute}"
+            self._name = (
+                f"{self._vehicle.name} {self._service.lower()}_{self._attribute}"
+            )
+            self._unique_id = (
+                f"{self._vehicle.vin}-{self._service.lower()}-{self._attribute}"
+            )
         else:
             self._name = f"{self._vehicle.name} {self._attribute}"
             self._unique_id = f"{self._vehicle.vin}-{self._attribute}"
@@ -145,7 +171,9 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, Entity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        enabled_default = self._attribute_info.get(self._attribute, [None, None, True])[2]
+        enabled_default = self._attribute_info.get(self._attribute, [None, None, True])[
+            2
+        ]
         return enabled_default
 
     @property
