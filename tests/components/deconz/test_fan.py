@@ -4,7 +4,6 @@ from copy import deepcopy
 
 import pytest
 
-from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.components.fan import (
     ATTR_SPEED,
@@ -18,7 +17,6 @@ from homeassistant.components.fan import (
     SPEED_OFF,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.setup import async_setup_component
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -45,17 +43,6 @@ FANS = {
         "uniqueid": "00:22:a3:00:00:27:8b:81-01",
     }
 }
-
-
-async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a gateway."""
-    assert (
-        await async_setup_component(
-            hass, FAN_DOMAIN, {"fan": {"platform": DECONZ_DOMAIN}}
-        )
-        is True
-    )
-    assert DECONZ_DOMAIN not in hass.data
 
 
 async def test_no_fans(hass, aioclient_mock):

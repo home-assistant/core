@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 
-from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
@@ -15,7 +14,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNLOCKED,
 )
-from homeassistant.setup import async_setup_component
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -38,17 +36,6 @@ LOCKS = {
         "uniqueid": "00:00:00:00:00:00:00:00-00",
     }
 }
-
-
-async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a gateway."""
-    assert (
-        await async_setup_component(
-            hass, LOCK_DOMAIN, {"lock": {"platform": DECONZ_DOMAIN}}
-        )
-        is True
-    )
-    assert DECONZ_DOMAIN not in hass.data
 
 
 async def test_no_locks(hass, aioclient_mock):

@@ -2,19 +2,14 @@
 
 from copy import deepcopy
 
-from homeassistant.components.deconz.const import (
-    CONF_ALLOW_CLIP_SENSOR,
-    DOMAIN as DECONZ_DOMAIN,
-)
+from homeassistant.components.deconz.const import CONF_ALLOW_CLIP_SENSOR
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     STATE_UNAVAILABLE,
 )
-from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
@@ -84,17 +79,6 @@ SENSORS = {
         "uniqueid": "00:00:00:00:00:00:00:07-00",
     },
 }
-
-
-async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a gateway."""
-    assert (
-        await async_setup_component(
-            hass, SENSOR_DOMAIN, {"sensor": {"platform": DECONZ_DOMAIN}}
-        )
-        is True
-    )
-    assert DECONZ_DOMAIN not in hass.data
 
 
 async def test_no_sensors(hass, aioclient_mock):

@@ -16,7 +16,6 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
 )
-from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -24,7 +23,6 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_UNAVAILABLE,
 )
-from homeassistant.setup import async_setup_component
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -73,17 +71,6 @@ COVERS = {
         "uniqueid": "00:00:00:00:00:00:00:04-00",
     },
 }
-
-
-async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a gateway."""
-    assert (
-        await async_setup_component(
-            hass, COVER_DOMAIN, {"cover": {"platform": DECONZ_DOMAIN}}
-        )
-        is True
-    )
-    assert DECONZ_DOMAIN not in hass.data
 
 
 async def test_no_covers(hass, aioclient_mock):

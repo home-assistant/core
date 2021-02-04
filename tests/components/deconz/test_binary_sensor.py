@@ -5,7 +5,6 @@ from copy import deepcopy
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_VIBRATION,
-    DOMAIN as BINARY_SENSOR_DOMAIN,
 )
 from homeassistant.components.deconz.const import (
     CONF_ALLOW_CLIP_SENSOR,
@@ -17,7 +16,6 @@ from homeassistant.components.deconz.gateway import get_gateway_from_config_entr
 from homeassistant.components.deconz.services import SERVICE_DEVICE_REFRESH
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
-from homeassistant.setup import async_setup_component
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -64,17 +62,6 @@ SENSORS = {
         "uniqueid": "00:00:00:00:00:00:00:03-00",
     },
 }
-
-
-async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a gateway."""
-    assert (
-        await async_setup_component(
-            hass, BINARY_SENSOR_DOMAIN, {"binary_sensor": {"platform": DECONZ_DOMAIN}}
-        )
-        is True
-    )
-    assert DECONZ_DOMAIN not in hass.data
 
 
 async def test_no_binary_sensors(hass, aioclient_mock):

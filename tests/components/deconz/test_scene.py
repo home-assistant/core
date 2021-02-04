@@ -2,10 +2,8 @@
 
 from copy import deepcopy
 
-from homeassistant.components.deconz import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.setup import async_setup_component
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -24,17 +22,6 @@ GROUPS = {
         "lights": [],
     }
 }
-
-
-async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a gateway."""
-    assert (
-        await async_setup_component(
-            hass, SCENE_DOMAIN, {"scene": {"platform": DECONZ_DOMAIN}}
-        )
-        is True
-    )
-    assert DECONZ_DOMAIN not in hass.data
 
 
 async def test_no_scenes(hass, aioclient_mock):

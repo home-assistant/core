@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 
-from homeassistant.components.deconz import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -10,7 +9,6 @@ from homeassistant.components.switch import (
     SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.setup import async_setup_component
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -65,17 +63,6 @@ SIRENS = {
         "uniqueid": "00:00:00:00:00:00:00:01-00",
     },
 }
-
-
-async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a gateway."""
-    assert (
-        await async_setup_component(
-            hass, SWITCH_DOMAIN, {"switch": {"platform": DECONZ_DOMAIN}}
-        )
-        is True
-    )
-    assert DECONZ_DOMAIN not in hass.data
 
 
 async def test_no_switches(hass, aioclient_mock):
