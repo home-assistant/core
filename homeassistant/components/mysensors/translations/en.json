@@ -1,0 +1,79 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "invalid_subscribe_topic":  "Invalid subscribe topic",
+            "invalid_publish_topic": "Invalid publish topic",
+            "duplicate_topic": "Topic already in use",
+            "same_topic": "Subscribe and publish topics are the same",
+            "invalid_port": "Invalid port number",
+            "invalid_persistence_file": "Invalid persistence file",
+            "duplicate_persistence_file": "Persistence file already in use",
+            "invalid_ip": "Invalid IP address",
+            "invalid_serial": "Invalid serial port",
+            "invalid_device": "Invalid device",
+            "invalid_version": "Invalid MySensors version",
+            "not_a_number": "Please enter a number",
+            "port_out_of_range": "Port number must be at least 1 and at most 65535",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "invalid_subscribe_topic":  "Invalid subscribe topic",
+            "invalid_publish_topic": "Invalid publish topic",
+            "duplicate_topic": "Topic already in use",
+            "same_topic": "Subscribe and publish topics are the same",
+            "invalid_port": "Invalid port number",
+            "invalid_persistence_file": "Invalid persistence file",
+            "duplicate_persistence_file": "Persistence file already in use",
+            "invalid_ip": "Invalid IP address",
+            "invalid_serial": "Invalid serial port",
+            "invalid_device": "Invalid device",
+            "invalid_version": "Invalid MySensors version",
+            "not_a_number": "Please enter a number",
+            "port_out_of_range": "Port number must be at least 1 and at most 65535",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                "optimistic": "optimistic",
+                "persistence": "persistence",
+                "gateway_type": "Gateway type"
+                },
+                "description": "Choose connection method to the gateway"
+            },
+            "gw_tcp": {
+                "description": "Ethernet gateway setup",
+                "data": {
+                    "device": "IP address of the gateway",
+                    "tcp_port": "port",
+                    "version": "MySensors version",
+                    "persistence_file": "persistence file (leave empty to auto-generate)"
+                }
+            },
+            "gw_serial": {
+                "description": "Serial gateway setup",
+                "data": {
+                    "device": "Serial port",
+                    "baud_rate": "baud rate",
+                    "version": "MySensors version",
+                    "persistence_file": "persistence file (leave empty to auto-generate)"
+                }
+            },
+            "gw_mqtt": {
+                "description": "MQTT gateway setup",
+                "data": {
+                    "retain": "mqtt retain",
+                    "topic_in_prefix": "prefix for input topics (topic_in_prefix)",
+                    "topic_out_prefix": "prefix for output topics (topic_out_prefix)",
+                    "version": "MySensors version",
+                    "persistence_file": "persistence file (leave empty to auto-generate)"
+                }
+            }
+        }
+    },
+    "title": "MySensors"
+}
