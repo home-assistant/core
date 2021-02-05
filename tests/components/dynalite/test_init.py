@@ -7,10 +7,12 @@ import pytest
 from voluptuous import MultipleInvalid
 
 import homeassistant.components.dynalite.const as dynalite
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_ROOM
+from homeassistant.const import CONF_DEFAULT, CONF_HOST, CONF_NAME, CONF_PORT, CONF_ROOM
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+
+dynalite.CONF_DEFAULT = CONF_DEFAULT
 
 
 async def test_empty_config(hass):

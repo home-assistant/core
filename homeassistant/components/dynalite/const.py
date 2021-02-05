@@ -1,7 +1,7 @@
 """Constants for the Dynalite component."""
 import logging
 
-from homeassistant.const import CONF_DEFAULT, CONF_ROOM  # NOQA
+from homeassistant.const import CONF_ROOM
 
 LOGGER = logging.getLogger(__package__)
 DOMAIN = "dynalite"
