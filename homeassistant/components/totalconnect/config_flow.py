@@ -9,6 +9,8 @@ from .const import CONF_USERCODES, DOMAIN  # pylint: disable=unused-import
 
 CONF_LOCATION = "location"
 
+PASSWORD_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+
 
 class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Total Connect config flow."""
@@ -109,8 +111,11 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"base": "description"},
         )
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, config):
         """Perform reauth upon an authentication error or no usercode."""
+        self.username = config[CONF_USERNAME]
+        self.usercodes = config[CONF_USERCODES]
+
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input=None):
@@ -118,6 +123,22 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
+                data_schema=PASSWORD_DATA_SCHEMA,
             )
-        return await self.async_step_user()
+
+        client = await self.hass.async_add_executor_job(
+            TotalConnectClient.TotalConnectClient,
+            self.username,
+            user_input[CONF_PASSWORD],
+            self.usercodes,
+        )
+
+        if not client.is_valid_credentials():
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=PASSWORD_DATA_SCHEMA,
+            )
+
+        existing_entry = await self.async_set_unique_id(self.username)
+        self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
+        return self.async_abort(reason="reauth_successful")

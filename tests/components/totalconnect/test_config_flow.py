@@ -4,6 +4,7 @@ from unittest.mock import patch
 from homeassistant import data_entry_flow
 from homeassistant.components.totalconnect.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_PASSWORD
 
 from .common import CONFIG_DATA, CONFIG_DATA_NO_USERCODES, USERNAME
 
@@ -91,26 +92,24 @@ async def test_reauth(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "reauth"}, data=entry.data
     )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "reauth_confirm"
 
     with patch(
-        "homeassistant.components.totalconnect.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.totalconnect.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry, patch(
+    ), patch(
         "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
     ) as client_mock:
-        client_mock.return_value.is_valid_credentials.return_value = False
+        client_mock.return_value.is_valid_credentials.return_value = True
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            CONFIG_DATA,
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PASSWORD: "password"}
         )
-        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "reauth_successful"
 
-    assert result2["type"] == "abort"
-    assert result2["reason"] == "reauth_successful"
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(hass.config_entries.async_entries()) == 1
