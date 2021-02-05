@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from freebox_api.exceptions import InsufficientPermissionsError
+from freebox_api.exceptions import HttpRequestError, InsufficientPermissionsError
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -20,10 +20,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the switch."""
     router = hass.data[DOMAIN][entry.unique_id]
-    entities = [
-        FreeboxWifiSwitch(router),
-        FreeboxLteSwitch(router),
-    ]
+    entities = [FreeboxWifiSwitch(router)]
+
+    try:
+        await router.connection.get_lte_config()
+        entities.append(FreeboxLteSwitch(router))
+    except HttpRequestError:
+        _LOGGER.warning("No 4G module detected")
+
     async_add_entities(entities, True)
 
 
