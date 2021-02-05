@@ -183,5 +183,8 @@ class ZWaveListSensor(ZwaveSensorBase):
         name = f"{node_name}: {prop_name}"
         prop_key_name = self.info.primary_value.property_key_name
         if prop_key_name:
-            return f"{name} - {prop_key_name}"
+            name += f" - {prop_key_name}"
+        # append endpoint if > 1
+        if self.info.primary_value.endpoint > 1:
+            name += f" ({self.info.primary_value.endpoint})"
         return name

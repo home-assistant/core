@@ -307,7 +307,11 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         node_name = self.info.node.name or self.info.node.device_config.description
         value_name = self.info.primary_value.property_name
         state_label = self.info.primary_value.metadata.states[self.state_key]
-        return f"{node_name}: {value_name} - {state_label}"
+        name = f"{node_name}: {value_name} - {state_label}"
+        # append endpoint if > 1
+        if self.info.primary_value.endpoint > 1:
+            name += f" ({self.info.primary_value.endpoint})"
+        return name
 
     @property
     def device_class(self) -> Optional[str]:
