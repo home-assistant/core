@@ -41,7 +41,11 @@ from homeassistant.exceptions import (
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.common import async_capture_events, async_mock_service
+from tests.common import (
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+)
 
 PST = pytz.timezone("America/Los_Angeles")
 
@@ -231,6 +235,41 @@ async def test_async_add_job_pending_tasks_coro(hass):
     assert len(hass._pending_tasks) == 2
     await hass.async_block_till_done()
     assert len(call_count) == 2
+
+
+async def test_async_add_job_pending_tasks_coro_2(hass):
+    """Add a coro to pending tasks."""
+    call_count = []
+
+    async def test_coro():
+        """Test Coro."""
+        call_count.append("call")
+
+    async def wait_a_bit():
+        await asyncio.sleep(0.1)
+
+    async def wait_forever():
+        await asyncio.sleep(1000)
+
+    for _ in range(2):
+        hass.add_job(test_coro())
+        hass.add_job(wait_a_bit())
+        hass.add_job(wait_forever())
+
+    async def wait_finish_callback():
+        """Wait until all stuff is scheduled."""
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+
+    await wait_finish_callback()
+
+    assert len(hass._pending_tasks) == 6
+    await hass.async_block_till_done(max_remaining_tasks=2)
+    assert len(hass._pending_tasks) == 2
+    assert len(call_count) == 2
+
+    # Cancel the timers
+    async_fire_time_changed(hass, dt_util.utcnow(), fire_all=True)
 
 
 async def test_async_add_job_pending_tasks_executor(hass):

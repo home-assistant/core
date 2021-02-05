@@ -459,17 +459,22 @@ class HomeAssistant:
             self.async_block_till_done(), self.loop
         ).result()
 
-    async def async_block_till_done(self) -> None:
+    async def async_block_till_done(self, max_remaining_tasks: int = 0) -> None:
         """Block until all pending work is done."""
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
         start_time: Optional[float] = None
 
-        while self._pending_tasks:
-            pending = [task for task in self._pending_tasks if not task.done()]
+        while len(self._pending_tasks) > max_remaining_tasks:
+            pending = [
+                task for task in self._pending_tasks if not task.done()
+            ]  # type: Collection[Awaitable[Any]]
             self._pending_tasks.clear()
-            if pending:
-                await self._await_and_log_pending(pending)
+            if len(pending) > max_remaining_tasks:
+                pending = await self._await_and_log_pending(
+                    pending, max_remaining_tasks=max_remaining_tasks
+                )
+                self._pending_tasks.extend(pending)
 
                 if start_time is None:
                     # Avoid calling monotonic() until we know
@@ -486,18 +491,30 @@ class HomeAssistant:
                     for task in pending:
                         _LOGGER.debug("Waiting for task: %s", task)
             else:
+                self._pending_tasks.extend(pending)
                 await asyncio.sleep(0)
 
-    async def _await_and_log_pending(self, pending: Iterable[Awaitable[Any]]) -> None:
+    async def _await_and_log_pending(
+        self, pending: Collection[Awaitable[Any]], max_remaining_tasks: int = 0
+    ) -> Collection[Awaitable[Any]]:
         """Await and log tasks that take a long time."""
         wait_time = 0
-        while pending:
-            _, pending = await asyncio.wait(pending, timeout=BLOCK_LOG_TIMEOUT)
-            if not pending:
-                return
+
+        return_when = asyncio.ALL_COMPLETED
+        if max_remaining_tasks:
+            return_when = asyncio.FIRST_COMPLETED
+
+        while len(pending) > max_remaining_tasks:
+            _, pending = await asyncio.wait(
+                pending, timeout=BLOCK_LOG_TIMEOUT, return_when=return_when
+            )
+            if not pending or max_remaining_tasks:
+                return pending
             wait_time += BLOCK_LOG_TIMEOUT
             for task in pending:
                 _LOGGER.debug("Waited %s seconds for task: %s", wait_time, task)
+
+        return []
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
