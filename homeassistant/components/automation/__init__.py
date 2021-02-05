@@ -10,6 +10,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     CONF_ALIAS,
+    CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_ENTITY_ID,
     CONF_ID,
@@ -57,7 +58,6 @@ from .config import PLATFORM_SCHEMA  # noqa
 from .config import async_validate_config_item
 from .const import (
     CONF_ACTION,
-    CONF_CONDITION,
     CONF_INITIAL_STATE,
     CONF_TRIGGER,
     DEFAULT_INITIAL_STATE,
