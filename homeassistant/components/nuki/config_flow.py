@@ -73,11 +73,13 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._abort_if_unique_id_configured()
 
-        self.discovery_schema = {
-            vol.Required(CONF_HOST, default=discovery_info[IP_ADDRESS]): str,
-            vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-            vol.Required(CONF_TOKEN): str,
-        }
+        self.discovery_schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=discovery_info[IP_ADDRESS]): str,
+                vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                vol.Required(CONF_TOKEN): str,
+            }
+        )
 
         return await self.async_step_validate()
 
@@ -103,11 +105,7 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=info["ids"]["hardwareId"], data=user_input
                 )
 
-        data_schema = (
-            USER_SCHEMA
-            if self.discovery_schema == {}
-            else vol.Schema(self.discovery_schema)
-        )
+        data_schema = self.discovery_schema or USER_SCHEMA
 
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
