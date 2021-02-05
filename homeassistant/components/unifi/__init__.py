@@ -33,6 +33,7 @@ async def async_setup_entry(hass, config_entry):
     if not await controller.async_setup():
         return False
 
+    # Unique ID was introduced with 2021.3
     if config_entry.unique_id is None:
         hass.config_entries.async_update_entry(
             config_entry, unique_id=controller.site_id
