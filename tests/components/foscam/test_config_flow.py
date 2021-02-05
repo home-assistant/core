@@ -11,6 +11,8 @@ from libpyfoscam.foscam import (
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.foscam import config_flow
 
+from tests.common import MockConfigEntry
+
 VALID_CONFIG = {
     config_flow.CONF_HOST: "10.0.0.2",
     config_flow.CONF_PORT: 88,
@@ -196,6 +198,39 @@ async def test_user_invalid_response(hass):
         assert result["errors"] == {"base": "invalid_response"}
 
 
+async def test_user_already_configured(hass):
+    """Test we handle already configured from user input."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain=config_flow.DOMAIN,
+        data=VALID_CONFIG,
+        unique_id=config_flow.camera_unique_id(VALID_CONFIG),
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.foscam.config_flow.FoscamCamera",
+    ) as mock_foscam_camera:
+        setup_mock_foscam_camera(mock_foscam_camera)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
+
+
 async def test_user_unknown_exception(hass):
     """Test we handle unknown exceptions from user input."""
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -358,6 +393,34 @@ async def test_import_invalid_response(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "invalid_response"
+
+
+async def test_import_already_configured(hass):
+    """Test we handle already configured from import."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain=config_flow.DOMAIN,
+        data=VALID_CONFIG,
+        unique_id=config_flow.camera_unique_id(VALID_CONFIG),
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.foscam.config_flow.FoscamCamera",
+    ) as mock_foscam_camera:
+        setup_mock_foscam_camera(mock_foscam_camera)
+
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=VALID_CONFIG,
+        )
+
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
 
 
 async def test_import_unknown_exception(hass):

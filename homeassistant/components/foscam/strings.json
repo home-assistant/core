@@ -18,6 +18,9 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_response": "Invalid response from the device",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }

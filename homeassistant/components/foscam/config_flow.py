@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.data_entry_flow import AbortFlow
 
 from .const import CONF_RTSP_PORT, CONF_STREAM, LOGGER
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -48,6 +49,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         Data has the keys from DATA_SCHEMA with values provided by the user.
         """
+
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if (
+                entry.data[CONF_HOST] == data[CONF_HOST]
+                and entry.data[CONF_PORT] == data[CONF_PORT]
+            ):
+                raise AbortFlow("already_configured")
+
         camera = FoscamCamera(
             data[CONF_HOST],
             data[CONF_PORT],
@@ -102,6 +111,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidResponse:
                 errors["base"] = "invalid_response"
 
+            except AbortFlow:
+                raise
+
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -128,6 +140,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "Error importing foscam platform config: invalid response from camera."
             )
             return self.async_abort(reason="invalid_response")
+
+        except AbortFlow:
+            raise
 
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception(
