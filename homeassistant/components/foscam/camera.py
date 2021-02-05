@@ -142,7 +142,7 @@ class HassFoscamCamera(Camera):
         self._username = config_entry.data[CONF_USERNAME]
         self._password = config_entry.data[CONF_PASSWORD]
         self._stream = config_entry.data[CONF_STREAM]
-        self._unique_id = config_entry.unique_id
+        self._unique_id = config_entry.entry_id
         self._rtsp_port = config_entry.data[CONF_RTSP_PORT]
         self._motion_status = False
 

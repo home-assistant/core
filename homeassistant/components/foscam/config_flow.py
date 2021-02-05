@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.data_entry_flow import AbortFlow
 
 from .const import CONF_RTSP_PORT, CONF_STREAM, LOGGER
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -36,14 +35,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_RTSP_PORT, default=DEFAULT_RTSP_PORT): int,
     }
 )
-
-
-def camera_unique_id(data):
-    """Generate an unique id for the camera."""
-    # MAC Address is only available with admin accounts so we craft our own unique id
-    return (
-        f"{data[CONF_USERNAME]}_{data[CONF_HOST]}:{data[CONF_PORT]}_{data[CONF_STREAM]}"
-    )
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -90,9 +81,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "devName", f"Foscam {data[CONF_HOST]}:{data[CONF_PORT]}"
         )
 
-        await self.async_set_unique_id(camera_unique_id(data))
-        self._abort_if_unique_id_configured()
-
         name = data.pop(CONF_NAME, dev_name)
 
         return self.async_create_entry(title=name, data=data)
@@ -113,9 +101,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             except InvalidResponse:
                 errors["base"] = "invalid_response"
-
-            except AbortFlow:
-                raise
 
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
@@ -143,9 +128,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "Error importing foscam platform config: invalid response from camera."
             )
             return self.async_abort(reason="invalid_response")
-
-        except AbortFlow:
-            raise
 
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception(

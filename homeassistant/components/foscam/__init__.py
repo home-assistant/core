@@ -8,7 +8,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_registry import async_migrate_entries
 
-from .config_flow import DEFAULT_RTSP_PORT, camera_unique_id
+from .config_flow import DEFAULT_RTSP_PORT
 from .const import CONF_RTSP_PORT, DOMAIN, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
 
 PLATFORMS = ["camera"]
@@ -59,15 +59,13 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
 
     if config_entry.version == 1:
         # Change unique id
-        new_unique_id = camera_unique_id(config_entry.data)
-
         @callback
         def update_unique_id(entry):
-            return {"new_unique_id": new_unique_id}
+            return {"new_unique_id": config_entry.entry_id}
 
         await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
-        config_entry.unique_id = new_unique_id
+        config_entry.unique_id = None
 
         # Get RTSP port from the camera or use the fallback one and store it in data
         camera = FoscamCamera(
