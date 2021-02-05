@@ -634,6 +634,7 @@ class _ScriptRun:
             self._log(msg, level=level, **kwargs)
 
         to_context = None
+        done = asyncio.Event()
         remove_triggers = await async_initialize_triggers(
             self._hass,
             self._action[CONF_WAIT_FOR_TRIGGER],
@@ -647,7 +648,6 @@ class _ScriptRun:
             return
 
         self._changed()
-        done = asyncio.Event()
         tasks = [
             self._hass.async_create_task(flag.wait()) for flag in (self._stop, done)
         ]
