@@ -71,6 +71,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
     ) -> None:
         """Initialize the light."""
         super().__init__(config_entry, client, info)
+        self._name = self.generate_name(include_value_name=False)
         self._supports_color = False
         self._supports_white_value = False
         self._supports_color_temp = False
