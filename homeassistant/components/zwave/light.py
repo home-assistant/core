@@ -175,7 +175,7 @@ class ZwaveDimmer(ZWaveDeviceEntity, LightEntity):
                     self._refreshing = True
                     self.values.primary.refresh()
 
-                if self._timer is not None and self._timer.isAlive():
+                if self._timer is not None and self._timer.is_alive():
                     self._timer.cancel()
 
                 self._timer = Timer(self._delay, _refresh_value)
