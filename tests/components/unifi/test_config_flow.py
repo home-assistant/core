@@ -112,7 +112,9 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
     aioclient_mock.get(
         "https://1.2.3.4:1234/api/self/sites",
         json={
-            "data": [{"desc": "Site name", "name": "site_id", "role": "admin"}],
+            "data": [
+                {"desc": "Site name", "name": "site_id", "role": "admin", "_id": "1"}
+            ],
             "meta": {"rc": "ok"},
         },
         headers={"content-type": CONTENT_TYPE_JSON},
@@ -143,7 +145,7 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
     }
 
 
-async def test_flow_works_multiple_sites(hass, aioclient_mock):
+async def test_flow_multiple_sites(hass, aioclient_mock):
     """Test config flow works when finding multiple sites."""
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": "user"}
@@ -164,8 +166,8 @@ async def test_flow_works_multiple_sites(hass, aioclient_mock):
         "https://1.2.3.4:1234/api/self/sites",
         json={
             "data": [
-                {"name": "default", "role": "admin", "desc": "site name"},
-                {"name": "site2", "role": "admin", "desc": "site2 name"},
+                {"name": "default", "role": "admin", "desc": "site name", "_id": "1"},
+                {"name": "site2", "role": "admin", "desc": "site2 name", "_id": "2"},
             ],
             "meta": {"rc": "ok"},
         },
@@ -185,8 +187,8 @@ async def test_flow_works_multiple_sites(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "site"
-    assert result["data_schema"]({"site": "default"})
-    assert result["data_schema"]({"site": "site2"})
+    assert result["data_schema"]({"site": "1"})
+    assert result["data_schema"]({"site": "2"})
 
 
 async def test_flow_raise_already_configured(hass, aioclient_mock):
@@ -213,7 +215,9 @@ async def test_flow_raise_already_configured(hass, aioclient_mock):
     aioclient_mock.get(
         "https://1.2.3.4:1234/api/self/sites",
         json={
-            "data": [{"desc": "Site name", "name": "site_id", "role": "admin"}],
+            "data": [
+                {"desc": "Site name", "name": "site_id", "role": "admin", "_id": "1"}
+            ],
             "meta": {"rc": "ok"},
         },
         headers={"content-type": CONTENT_TYPE_JSON},
@@ -237,12 +241,16 @@ async def test_flow_raise_already_configured(hass, aioclient_mock):
 async def test_flow_aborts_configuration_updated(hass, aioclient_mock):
     """Test config flow aborts since a connected config entry already exists."""
     entry = MockConfigEntry(
-        domain=UNIFI_DOMAIN, data={"controller": {"host": "1.2.3.4", "site": "office"}}
+        domain=UNIFI_DOMAIN,
+        data={"controller": {"host": "1.2.3.4", "site": "office"}},
+        unique_id="2",
     )
     entry.add_to_hass(hass)
 
     entry = MockConfigEntry(
-        domain=UNIFI_DOMAIN, data={"controller": {"host": "1.2.3.4", "site": "site_id"}}
+        domain=UNIFI_DOMAIN,
+        data={"controller": {"host": "1.2.3.4", "site": "site_id"}},
+        unique_id="1",
     )
     entry.add_to_hass(hass)
 
@@ -264,7 +272,9 @@ async def test_flow_aborts_configuration_updated(hass, aioclient_mock):
     aioclient_mock.get(
         "https://1.2.3.4:1234/api/self/sites",
         json={
-            "data": [{"desc": "Site name", "name": "site_id", "role": "admin"}],
+            "data": [
+                {"desc": "Site name", "name": "site_id", "role": "admin", "_id": "1"}
+            ],
             "meta": {"rc": "ok"},
         },
         headers={"content-type": CONTENT_TYPE_JSON},
@@ -343,6 +353,8 @@ async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
 async def test_reauth_flow_update_configuration(hass, aioclient_mock):
     """Verify reauth flow can update controller configuration."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    controller.available = False
 
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
@@ -366,7 +378,9 @@ async def test_reauth_flow_update_configuration(hass, aioclient_mock):
     aioclient_mock.get(
         "https://1.2.3.4:1234/api/self/sites",
         json={
-            "data": [{"desc": "Site name", "name": "site_id", "role": "admin"}],
+            "data": [
+                {"desc": "Site name", "name": "site_id", "role": "admin", "_id": "1"}
+            ],
             "meta": {"rc": "ok"},
         },
         headers={"content-type": CONTENT_TYPE_JSON},

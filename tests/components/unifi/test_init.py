@@ -45,6 +45,7 @@ async def test_controller_no_mac(hass):
                 "verify_ssl": True,
             },
         },
+        unique_id="1",
     )
     entry.add_to_hass(hass)
     mock_registry = Mock()

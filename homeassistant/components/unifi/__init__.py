@@ -32,6 +32,11 @@ async def async_setup_entry(hass, config_entry):
     if not await controller.async_setup():
         return False
 
+    if config_entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=controller.site_id
+        )
+
     hass.data[UNIFI_DOMAIN][config_entry.entry_id] = controller
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)

@@ -95,6 +95,7 @@ class UniFiController:
         self.wireless_clients = None
 
         self.listeners = []
+        self.site_id: str = ""
         self._site_name = None
         self._site_role = None
 
@@ -321,6 +322,7 @@ class UniFiController:
 
         for site in sites.values():
             if self.site == site["name"]:
+                self.site_id = site["_id"]
                 self._site_name = site["desc"]
                 break
 
