@@ -146,9 +146,7 @@ class ZWaveNumericSensor(ZwaveSensorBase):
     def name(self) -> str:
         """Return default name from device name and value name combination."""
         if self.info.primary_value.command_class == CommandClass.BASIC:
-            node_name = self.info.node.name or self.info.node.device_config.description
-            label = self.info.primary_value.command_class_name
-            return f"{node_name}: {label}"
+            return self.generate_name(self.info.primary_value.command_class_name)
         return super().name
 
 
@@ -178,13 +176,7 @@ class ZWaveListSensor(ZwaveSensorBase):
     @property
     def name(self) -> str:
         """Return default name from device name and value name combination."""
-        node_name = self.info.node.name or self.info.node.device_config.description
-        prop_name = self.info.primary_value.property_name
-        name = f"{node_name}: {prop_name}"
-        prop_key_name = self.info.primary_value.property_key_name
-        if prop_key_name:
-            name += f" - {prop_key_name}"
-        # append endpoint if > 1
-        if self.info.primary_value.endpoint > 1:
-            name += f" ({self.info.primary_value.endpoint})"
-        return name
+        return self.generate_name(
+            self.info.primary_value.property_name,
+            [self.info.primary_value.property_key_name],
+        )

@@ -1,7 +1,7 @@
 """Generic Z-Wave Entity Class."""
 
 import logging
-from typing import Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -61,19 +61,31 @@ class ZWaveBaseEntity(Entity):
             "identifiers": {get_device_id(self.client, self.info.node)},
         }
 
+    def generate_name(
+        self, value_name: str, additional_info: Optional[List[str]] = None
+    ) -> str:
+        """Generate entity name."""
+        if additional_info is None:
+            additional_info = []
+        node_name = self.info.node.name or self.info.node.device_config.description
+        name = f"{node_name}: {value_name}"
+        for item in additional_info:
+            if item:
+                name += f" - {item}"
+        # append endpoint if > 1
+        if self.info.primary_value.endpoint > 1:
+            name += f" ({self.info.primary_value.endpoint})"
+
+        return name
+
     @property
     def name(self) -> str:
         """Return default name from device name and value name combination."""
-        node_name = self.info.node.name or self.info.node.device_config.description
-        value_name = (
+        return self.generate_name(
             self.info.primary_value.metadata.label
             or self.info.primary_value.property_key_name
             or self.info.primary_value.property_name
         )
-        # append endpoint if > 1
-        if self.info.primary_value.endpoint > 1:
-            value_name += f" ({self.info.primary_value.endpoint})"
-        return f"{node_name}: {value_name}"
 
     @property
     def unique_id(self) -> str:
