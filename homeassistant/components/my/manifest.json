@@ -3,5 +3,5 @@
   "name": "My Home Assistant",
   "documentation": "https://www.home-assistant.io/integrations/my",
   "dependencies": ["frontend"],
-  "codeowners": []
+  "codeowners": ["@home-assistant/core"]
 }
