@@ -25,8 +25,8 @@ async def validate_config_and_get_data(hass: core.HomeAssistant, data):
 
     # Current Weather
     try:
-        weather_data = await hass.async_add_executor_job(
-            fmi_client.weather_by_coordinates, latitude, longitude
+        weather_data = await fmi_client.async_weather_by_coordinates(
+            latitude, longitude
         )
 
         return {"place": weather_data.place, "err": ""}
@@ -78,7 +78,6 @@ class FMIConfigFlowHandler(config_entries.ConfigFlow, domain="fmi"):
                 vol.Required(
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
-                vol.Optional(CONF_OFFSET, default=1): vol.In(FORECAST_OFFSET),
             }
         )
 
@@ -116,7 +115,7 @@ class FMIOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_OFFSET, default=self.config_entry.data[CONF_OFFSET]
+                        CONF_OFFSET, default=self.config_entry.data.get(CONF_OFFSET, 1)
                     ): vol.In(FORECAST_OFFSET)
                 }
             ),
