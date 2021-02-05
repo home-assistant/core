@@ -46,7 +46,7 @@
                 "title": "Opcje dla Plaato"
             },
             "webhook": {
-                "description": "Informacje o webhook: \n\n - URL: `{webhook_url}`\n - Metoda: POST \n\n",
+                "description": "Informacje o webhooku: \n\n - URL: `{webhook_url}`\n - Metoda: POST \n\n",
                 "title": "Opcje dla areomierza Plaato Airlock"
             }
         }

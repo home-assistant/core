@@ -28,7 +28,8 @@ async def async_setup_entry(
         [
             VeraSwitch(device, controller_data)
             for device in controller_data.devices.get(PLATFORM_DOMAIN)
-        ]
+        ],
+        True,
     )
 
 
