@@ -3,7 +3,7 @@ import logging
 from typing import Any, Dict
 
 from pytleap.eap import Eap
-from pytleap.error import AuthenticationError, CommunicationError, PytleapError
+from pytleap.error import AuthenticationError, CommunicationError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -38,11 +38,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     except CommunicationError as ex:
         raise CannotConnect from ex
     finally:
-        try:
-            await eap.disconnect()
-        except PytleapError:
-            # Don't care, just don't need to propagate them up
-            pass
+        await eap.disconnect()
 
     # Return info that you want to store in the config entry.
     return {"title": f"TP-Link EAP {eap.name}", "data": data}

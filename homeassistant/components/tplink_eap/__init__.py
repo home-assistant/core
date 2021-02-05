@@ -16,10 +16,7 @@ PLATFORMS = [DEVICE_TRACKER_DOMAIN]
 
 
 async def async_setup(hass: HomeAssistant, config):
-    """Set up the TP-Link EAP component.
-
-    Configuration through YAML is not supported at this time.
-    """
+    """Set up the TP-Link EAP component."""
     return True
 
 

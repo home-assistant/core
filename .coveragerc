@@ -956,6 +956,7 @@ omit =
     homeassistant/components/touchline/climate.py
     homeassistant/components/tplink/common.py
     homeassistant/components/tplink/switch.py
+    homeassistant/components/tplink_eap/device_tracker.py
     homeassistant/components/tplink_lte/*
     homeassistant/components/traccar/device_tracker.py
     homeassistant/components/traccar/const.py

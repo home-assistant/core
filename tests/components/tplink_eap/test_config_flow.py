@@ -1,11 +1,12 @@
 """Test the TP-Link EAP config flow."""
+from unittest.mock import PropertyMock, patch
+
 from pytleap.error import AuthenticationError, CommunicationError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.tplink_eap.const import DOMAIN
 from homeassistant.const import CONF_URL
 
-from tests.async_mock import PropertyMock, patch
 from tests.common import MockConfigEntry
 
 
@@ -76,6 +77,32 @@ async def test_form_invalid_auth(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_unknown_error_disconnect(hass):
+    """Test we handle error on disconnect."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.tplink_eap.config_flow.Eap.connect",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.tplink_eap.config_flow.Eap.disconnect",
+        side_effect=Exception("error while disconnecting"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "url": "http://localhost",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_form_cannot_connect(hass):
