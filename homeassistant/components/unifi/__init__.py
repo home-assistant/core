@@ -72,8 +72,9 @@ async def async_migrate_entry(hass, config_entry):
 
     #  Flatten configuration but keep old data if user rollbacks HASS prior to 2021.03
     if config_entry.version == 1:
-        config_entry.data = {**config_entry.data, **config_entry.data[CONF_CONTROLLER]}
-        config_entry.version = 2
+        data: dict = {**config_entry.data, **config_entry.data[CONF_CONTROLLER]}
+        if config_entry.data != data:
+            hass.config_entries.async_update_entry(config_entry, data=data)
 
     LOGGER.info("Migration to version %s successful", config_entry.version)
 

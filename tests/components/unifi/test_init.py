@@ -82,7 +82,7 @@ async def test_migrate_entry(hass):
 
     await entry.async_migrate(hass)
 
-    assert entry.version == 2
+    assert entry.version == 1  # Keep version to support rollbacking
     assert entry.data == {
         "controller": {
             "host": "0.0.0.0",
