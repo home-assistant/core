@@ -66,9 +66,15 @@ def setup_platform(hass, config, add_entities, discover_info=None):
 
     try:
         cmus_remote = CmusRemote(server=host, port=port, password=password)
+        cmus_remote.connect()
+
+        if cmus_remote.cmus is None:
+            return
+
     except exceptions.InvalidPassword:
         _LOGGER.error("The provided password was rejected by cmus")
-        return False
+        return
+
     add_entities([CmusDevice(device=cmus_remote, name=name, server=host)], True)
 
 
@@ -81,24 +87,17 @@ class CmusRemote:
         self._server = server
         self._port = port
         self._password = password
-        self.cmus = self.connect()
+        self.cmus = None
 
     def connect(self):
         """Connect to the cmus server."""
 
         try:
-            cmus = remote.PyCmus(
+            self.cmus = remote.PyCmus(
                 server=self._server, port=self._port, password=self._password
             )
         except exceptions.InvalidPassword:
             _LOGGER.error("The provided password was rejected by cmus")
-
-        return cmus
-
-    def reconnect(self):
-        """Re-connect to the cmus server."""
-
-        self.cmus = self.connect()
 
 
 class CmusDevice(MediaPlayerEntity):
@@ -121,9 +120,9 @@ class CmusDevice(MediaPlayerEntity):
         try:
             status = self._remote.cmus.get_status_dict()
         except BrokenPipeError:
-            self._remote.reconnect()
+            self._remote.connect()
         except exceptions.ConfigurationError:
-            self._remote.reconnect()
+            self._remote.connect()
             _LOGGER.warning("A configuration error occurred")
         if "status" not in locals():
             _LOGGER.warning("Received no status from cmus")
