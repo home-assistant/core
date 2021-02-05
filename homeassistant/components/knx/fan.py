@@ -9,10 +9,7 @@ from homeassistant.util.percentage import (
 
 from typing import TYPE_CHECKING, Any, Iterator, Optional
 
-from homeassistant.components.fan import (
-    FanEntity,
-    SUPPORT_SET_SPEED,
-)
+from homeassistant.components.fan import FanEntity, SUPPORT_SET_SPEED, SUPPORT_OSCILLATE
 
 from .const import DOMAIN
 from .schema import FanSchema
@@ -49,7 +46,12 @@ class KNXFan(KnxEntity, FanEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return SUPPORT_SET_SPEED
+        flags = 0
+        if self._device.supports_oscillation:
+            flags |= SUPPORT_OSCILLATE
+
+        flags |= SUPPORT_SET_SPEED
+        return flags
 
     @property
     def percentage(self) -> Optional[int]:
@@ -69,7 +71,18 @@ class KNXFan(KnxEntity, FanEntity):
         preset_mode: Optional[str] = None,
         **kwargs,
     ) -> None:
+        """Turn on the fan."""
         await self.async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the fan off."""
         await self.async_set_percentage(0)
+
+    async def async_oscillate(self, oscillating: bool) -> None:
+        """Oscillate the fan."""
+        await self._device.set_oscillation(oscillating)
+
+    @property
+    def oscillating(self):
+        """Return whether or not the fan is currently oscillating."""
+        return self._device.current_oscillation
