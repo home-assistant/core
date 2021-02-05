@@ -16,6 +16,8 @@ from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_AIR_PARTICULATE_DENSITY,
     CHAR_AIR_QUALITY,
+    CHAR_PM25_DENSITY,
+    CHAR_PM10_DENSITY,
     CHAR_CARBON_DIOXIDE_DETECTED,
     CHAR_CARBON_DIOXIDE_LEVEL,
     CHAR_CARBON_DIOXIDE_PEAK_LEVEL,
@@ -30,6 +32,8 @@ from .const import (
     CHAR_MOTION_DETECTED,
     CHAR_OCCUPANCY_DETECTED,
     CHAR_SMOKE_DETECTED,
+    DEVICE_CLASS_PM25,
+    DEVICE_CLASS_PM10,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_GARAGE_DOOR,
@@ -139,12 +143,25 @@ class AirQualitySensor(HomeAccessory):
         """Initialize a AirQualitySensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
         state = self.hass.states.get(self.entity_id)
+
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        
+        AQS_type = CHAR_AIR_PARTICULATE_DENSITY
+
+        if device_class == DEVICE_CLASS_PM10 or DEVICE_CLASS_PM10 in state.entity_id:
+            self.AQS_type = CHAR_PM10_DENSITY
+        elif device_class == DEVICE_CLASS_PM25 or DEVICE_CLASS_PM25 in state.entity_id:
+            self.AQS_type = CHAR_PM25_DENSITY
+        else:
+            self.AQS_type = CHAR_AIR_PARTICULATE_DENSITY
+
+
         serv_air_quality = self.add_preload_service(
-            SERV_AIR_QUALITY_SENSOR, [CHAR_AIR_PARTICULATE_DENSITY]
+            SERV_AIR_QUALITY_SENSOR, [self.AQS_type]
         )
         self.char_quality = serv_air_quality.configure_char(CHAR_AIR_QUALITY, value=0)
         self.char_density = serv_air_quality.configure_char(
-            CHAR_AIR_PARTICULATE_DENSITY, value=0
+            self.AQS_type, value=0
         )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup

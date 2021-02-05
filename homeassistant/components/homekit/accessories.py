@@ -57,6 +57,7 @@ from .const import (
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_PM25,
+    DEVICE_CLASS_PM10,
     EVENT_HOMEKIT_CHANGED,
     HK_CHARGING,
     HK_NOT_CHARGABLE,
@@ -163,6 +164,8 @@ def get_accessory(hass, driver, state, aid, config):
         elif device_class == DEVICE_CLASS_HUMIDITY and unit == PERCENTAGE:
             a_type = "HumiditySensor"
         elif device_class == DEVICE_CLASS_PM25 or DEVICE_CLASS_PM25 in state.entity_id:
+            a_type = "AirQualitySensor"
+        elif device_class == DEVICE_CLASS_PM10 or DEVICE_CLASS_PM10 in state.entity_id:
             a_type = "AirQualitySensor"
         elif device_class == DEVICE_CLASS_CO:
             a_type = "CarbonMonoxideSensor"
