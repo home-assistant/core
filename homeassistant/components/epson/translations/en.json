@@ -8,7 +8,9 @@
                 "data": {
                     "host": "Host",
                     "name": "Name",
-                    "port": "Port"
+                    "port": "Port",
+                    "protocol": "Protocol",
+                    "scan_interval": "Scan Interval [seconds]"
                 }
             }
         }
