@@ -63,6 +63,7 @@ async def test_lg_tv(hass):
     assert device.sw_version == "04.71.04"
     assert device.via_device_id is None
 
-    # A TV doesn't have any triggers
+    # A TV has media player device triggers
     triggers = await async_get_device_automations(hass, "trigger", device.id)
-    assert triggers == []
+    for trigger in triggers:
+        assert trigger["domain"] == "media_player"
