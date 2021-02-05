@@ -35,6 +35,7 @@ class ZWaveBaseEntity(Entity):
         self.config_entry = config_entry
         self.client = client
         self.info = info
+        self._name = self.generate_name()
         # entities requiring additional values, can add extra ids to this list
         self.watched_value_ids = {self.info.primary_value.value_id}
 
@@ -89,7 +90,7 @@ class ZWaveBaseEntity(Entity):
     @property
     def name(self) -> str:
         """Return default name from device name and value name combination."""
-        return self.generate_name()
+        return self._name
 
     @property
     def unique_id(self) -> str:
