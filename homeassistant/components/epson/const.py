@@ -1,13 +1,8 @@
 """Constants for the Epson integration."""
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    DEVICE_CLASSES_SCHEMA as MEDIA_PLAYER_DEVICE_CLASSES_SCHEMA,
-    DOMAIN as MEDIA_PLAYER_PLATFORM,
-)
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_PLATFORM
 from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_ENTITY_NAMESPACE,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
@@ -46,24 +41,25 @@ BASE_SCHEMA = vol.Schema(
 PROJECTORS_SCHEMA = BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_PROTOCOL, default=PROTO_HTTP): vol.In(
             [PROTO_HTTP, PROTO_TCP, PROTO_SERIAL]
         ),
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
             cv.time_period, lambda value: value.total_seconds()
         ),
-        vol.Optional(CONF_ENTITY_NAMESPACE): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): MEDIA_PLAYER_DEVICE_CLASSES_SCHEMA,
     }
 )
 
 PROJECTOR_CONFIG_FLOW_SCHEMA = BASE_SCHEMA.extend(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
         vol.Required(CONF_PROTOCOL, default=PROTO_HTTP): vol.In(
             [PROTO_HTTP, PROTO_TCP, PROTO_SERIAL]
+        ),
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
+            vol.Coerce(int), vol.Range(min=1)
         ),
     }
 )

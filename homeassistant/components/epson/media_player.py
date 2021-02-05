@@ -1,4 +1,5 @@
 """Support for Epson projector."""
+from datetime import timedelta
 import logging
 from typing import Any, Dict, Optional
 
@@ -27,7 +28,7 @@ from epson_projector.const import (
     VOLUME,
 )
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK,
@@ -42,10 +43,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_PROTOCOL,
+    CONF_SCAN_INTERVAL,
     STATE_OFF,
     STATE_ON,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
@@ -55,16 +58,6 @@ from homeassistant.helpers.typing import (
 from .const import ATTR_CMODE
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_EPSON = (
-    SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -90,6 +83,7 @@ async def async_setup_platform(
 
     projectors = []
     for projector in discovery_info:
+        # noinspection PyTypeChecker
         projectors.append(
             EpsonProjector(
                 projector[CONF_NAME],
@@ -104,7 +98,7 @@ async def async_setup_platform(
 class EpsonProjector(MediaPlayerEntity):
     """Representation of Epson Projector Device."""
 
-    def __init__(self, name, config: Dict[str, Any], unique_id=None, websession=None):
+    def __init__(self, name, config: Dict[str, Any], websession=None):
         """Initialize entity to control Epson projector."""
         self._name = name
         self._available = False
@@ -113,7 +107,7 @@ class EpsonProjector(MediaPlayerEntity):
         self._source = None
         self._volume = None
         self._state = None
-        self._unique_id = unique_id
+        self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
 
         self._projector = Projector(
             host=config[CONF_HOST],
@@ -122,7 +116,11 @@ class EpsonProjector(MediaPlayerEntity):
             type=config[CONF_PROTOCOL],
         )
 
-    async def async_update(self):
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        async_track_time_interval(self.hass, self._async_update, self._scan_interval)
+
+    async def _async_update(self, _):
         """Update state of device."""
         power_state = await self._projector.get_property(POWER)
         _LOGGER.debug("Projector status: %s", power_state)
@@ -151,11 +149,6 @@ class EpsonProjector(MediaPlayerEntity):
         return self._name
 
     @property
-    def unique_id(self):
-        """Return unique ID."""
-        return self._unique_id
-
-    @property
     def state(self):
         """Return the state of the device."""
         return self._state
@@ -168,7 +161,30 @@ class EpsonProjector(MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_EPSON
+        return (
+            SUPPORT_TURN_ON
+            | SUPPORT_TURN_OFF
+            | SUPPORT_SELECT_SOURCE
+            | SUPPORT_VOLUME_MUTE
+            | SUPPORT_VOLUME_STEP
+            | SUPPORT_NEXT_TRACK
+            | SUPPORT_PREVIOUS_TRACK
+        )
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_TV
+
+    @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state.
+
+        False if entity pushes its state to HA.
+        """
+
+        # Handle polling directly in this entity
+        return False
 
     async def async_turn_on(self):
         """Turn on epson."""
