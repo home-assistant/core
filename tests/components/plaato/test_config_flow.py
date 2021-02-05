@@ -240,13 +240,13 @@ async def test_options(hass):
         data={},
         options={CONF_SCAN_INTERVAL: 5},
     )
+    config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.plaato.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.plaato.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        config_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -278,13 +278,14 @@ async def test_options_webhook(hass, webhook_id):
         data={CONF_USE_WEBHOOK: True, CONF_WEBHOOK_ID: None},
         options={CONF_SCAN_INTERVAL: 5},
     )
+    config_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.plaato.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.plaato.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        config_entry.add_to_hass(hass)
+
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
