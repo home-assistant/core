@@ -254,6 +254,28 @@ async def test_fail_to_connect(hass: HomeAssistantType):
             "gw_tcp",
             {
                 CONF_TCP_PORT: 5003,
+                CONF_DEVICE: "127.0.0.1",
+                CONF_VERSION: "4",
+            },
+            CONF_VERSION,
+            "invalid_version",
+        ),
+        (
+            CONF_GATEWAY_TYPE_TCP,
+            "gw_tcp",
+            {
+                CONF_TCP_PORT: 5003,
+                CONF_DEVICE: "127.0.0.1",
+                CONF_VERSION: "v3",
+            },
+            CONF_VERSION,
+            "invalid_version",
+        ),
+        (
+            CONF_GATEWAY_TYPE_TCP,
+            "gw_tcp",
+            {
+                CONF_TCP_PORT: 5003,
                 CONF_DEVICE: "127.0.0.",
             },
             CONF_DEVICE,

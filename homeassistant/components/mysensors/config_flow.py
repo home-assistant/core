@@ -3,7 +3,11 @@ import logging
 import os
 from typing import Dict, Optional
 
-from packaging.version import Version, parse as parse_version
+from awesomeversion import (
+    AwesomeVersion,
+    AwesomeVersionStrategy,
+    AwesomeVersionStrategyException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -54,10 +58,19 @@ def _get_schema_common() -> dict:
 
 def _validate_version(version: str) -> Dict[str, str]:
     """Validate a version string from the user."""
-    errors = {CONF_VERSION: "invalid_version"}
-    if not isinstance(parse_version(version), Version):
-        return errors
-    return {}
+    ok = False
+    try:
+        ok = bool(
+            AwesomeVersion.ensure_strategy(
+                version,
+                [AwesomeVersionStrategy.SIMPLEVER, AwesomeVersionStrategy.SEMVER],
+            )
+        )
+    except AwesomeVersionStrategyException:
+        pass
+    if ok:
+        return {}
+    return {CONF_VERSION: "invalid_version"}
 
 
 def _is_same_device(
