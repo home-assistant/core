@@ -21,7 +21,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             DemoNumber(
                 "pwm1",
                 "PWM 1",
-                42.0,
+                0.42,
                 "mdi:square-wave",
                 False,
                 0.0,
