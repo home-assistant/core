@@ -731,7 +731,5 @@ async def test_duplicate(
         if expected_result is None:
             assert result["type"] == "create_entry"
         else:
-            assert result["type"] == "form"
-            assert "errors" in result
-            assert expected_result[0] in result["errors"]
-            assert result["errors"][expected_result[0]] == expected_result[1]
+            assert result["type"] == "abort"
+            assert result["reason"] == expected_result[1]

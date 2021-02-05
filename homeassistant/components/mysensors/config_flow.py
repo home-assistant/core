@@ -1,7 +1,7 @@
 """Config flow for MySensors."""
 import logging
 import os
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from awesomeversion import (
     AwesomeVersion,
@@ -58,9 +58,9 @@ def _get_schema_common() -> dict:
 
 def _validate_version(version: str) -> Dict[str, str]:
     """Validate a version string from the user."""
-    ok = False
+    version_okay = False
     try:
-        ok = bool(
+        version_okay = bool(
             AwesomeVersion.ensure_strategy(
                 version,
                 [AwesomeVersionStrategy.SIMPLEVER, AwesomeVersionStrategy.SEMVER],
@@ -68,7 +68,7 @@ def _validate_version(version: str) -> Dict[str, str]:
         )
     except AwesomeVersionStrategyException:
         pass
-    if ok:
+    if version_okay:
         return {}
     return {CONF_VERSION: "invalid_version"}
 
@@ -119,7 +119,10 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 user_input[CONF_GATEWAY_TYPE] = CONF_GATEWAY_TYPE_SERIAL
 
-        return await self.async_step_user(user_input=user_input)
+        result: Dict[str, Any] = await self.async_step_user(user_input=user_input)
+        if result["type"] == "form":
+            return self.async_abort(reason=next(iter(result["errors"].values())))
+        return result
 
     async def async_step_user(self, user_input: Optional[Dict[str, str]] = None):
         """Create a config entry from frontend user input."""
