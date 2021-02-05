@@ -1,7 +1,7 @@
 """Constants for the Dynalite component."""
 import logging
 
-from homeassistant.const import CONF_ROOM
+from homeassistant.const import CONF_DEFAULT, CONF_ROOM  # NOQA
 
 LOGGER = logging.getLogger(__package__)
 DOMAIN = "dynalite"
@@ -19,7 +19,6 @@ CONF_BRIDGES = "bridges"
 CONF_CHANNEL = "channel"
 CONF_CHANNEL_COVER = "channel_cover"
 CONF_CLOSE_PRESET = "close"
-CONF_DEFAULT = "default"
 CONF_DEVICE_CLASS = "class"
 CONF_DURATION = "duration"
 CONF_FADE = "fade"
