@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         try:
             return await myq.update_device_info()
         except MyQError as err:
-            raise UpdateFailed(err)
+            raise UpdateFailed(str(err)) from err
 
     coordinator = DataUpdateCoordinator(
         hass,

@@ -108,22 +108,22 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
             wait_task = await self._device.close(wait_for_state=False)
         except MyQError as err:
             _LOGGER.error(
-                f"Closing of cover {self._device.name} failed with error: {str(err)}"
+                "Closing of cover %s failed with error: %s", self._device.name, str(err)
             )
+
             return
 
         # Write closing state to HASS
         self.async_write_ha_state()
 
         if not await wait_task:
-            _LOGGER.error(f"Closing of cover {self._device.name} failed")
+            _LOGGER.error("Closing of cover %s failed", self._device.name)
 
         # Write final state to HASS
         self.async_write_ha_state()
 
     async def async_open_cover(self, **kwargs):
         """Issue open command to cover."""
-        """Issue close command to cover."""
         if self.is_opening or self.is_open:
             return
 
@@ -131,7 +131,7 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
             wait_task = await self._device.open(wait_for_state=False)
         except MyQError as err:
             _LOGGER.error(
-                f"Opening of cover {self._device.name} failed with error: {str(err)}"
+                "Opening of cover %s failed with error: %s", self._device.name, str(err)
             )
             return
 
@@ -139,7 +139,7 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
         self.async_write_ha_state()
 
         if not await wait_task:
-            _LOGGER.error(f"Opening of cover {self._device.name} failed")
+            _LOGGER.error("Opening of cover %s failed", self._device.name)
 
         # Write final state to HASS
         self.async_write_ha_state()
