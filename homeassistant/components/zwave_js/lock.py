@@ -87,6 +87,16 @@ async def async_setup_entry(
 class ZWaveLock(ZWaveBaseEntity, LockEntity):
     """Representation of a Z-Wave lock."""
 
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveLock entity."""
+        super().__init__(config_entry, client, info)
+        self._name = self.generate_name(include_value_name=False)
+
     @property
     def is_locked(self) -> Optional[bool]:
         """Return true if the lock is locked."""

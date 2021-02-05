@@ -294,8 +294,8 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         super().__init__(config_entry, client, info)
         self.state_key = state_key
         self._name = self.generate_name(
-            self.info.primary_value.property_name,
-            [self.info.primary_value.metadata.states[self.state_key]],
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[self.info.primary_value.metadata.states[self.state_key]],
         )
         # check if we have a custom mapping for this value
         self._mapping_info = self._get_sensor_mapping()

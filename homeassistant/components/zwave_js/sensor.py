@@ -132,7 +132,9 @@ class ZWaveNumericSensor(ZwaveSensorBase):
         """Initialize a ZWaveNumericSensor entity."""
         super().__init__(config_entry, client, info)
         if self.info.primary_value.command_class == CommandClass.BASIC:
-            self._name = self.generate_name(self.info.primary_value.command_class_name)
+            self._name = self.generate_name(
+                alternate_value_name=self.info.primary_value.command_class_name
+            )
 
     @property
     def state(self) -> float:
@@ -166,8 +168,8 @@ class ZWaveListSensor(ZwaveSensorBase):
         """Initialize a ZWaveListSensor entity."""
         super().__init__(config_entry, client, info)
         self._name = self.generate_name(
-            self.info.primary_value.property_name,
-            [self.info.primary_value.property_key_name],
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[self.info.primary_value.property_key_name],
         )
 
     @property
