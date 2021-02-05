@@ -41,7 +41,7 @@ async def async_setup_entry(hass, config_entry) -> bool:
     """Set up FMI as config entry."""
     latitude = config_entry.data[CONF_LATITUDE]
     longitude = config_entry.data[CONF_LONGITUDE]
-    time_step = config_entry.options.get(CONF_OFFSET, False)
+    time_step = config_entry.options.get(CONF_OFFSET, 1)
 
     _LOGGER.debug("Using lat: %s and long: %s", latitude, longitude)
 
