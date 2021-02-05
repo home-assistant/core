@@ -92,11 +92,11 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         return bool(self.info.primary_value.value > 0)
 
     @property
-    def percentage(self) -> int:
+    def percentage(self) -> Optional[int]:
         """Return the current speed percentage."""
         if self.info.primary_value.value is None:
             # guard missing value
-            return 0
+            return None
         return ranged_value_to_percentage(SPEED_RANGE, self.info.primary_value.value)
 
     @property
