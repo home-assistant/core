@@ -1,5 +1,4 @@
 """Constants for the Epson integration."""
-from epson_projector.const import CMODE_LIST_SET
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -19,8 +18,7 @@ import homeassistant.helpers.config_validation as cv
 
 # Configuration names
 CONF_PROJECTORS = "projectors"
-CONF_SERVICE_SELECT_CMODE = "select_cmode"
-CONF_CMODE = "cmode"
+ATTR_CMODE = "cmode"
 
 # Integration name
 EPSON_DOMAIN = "epson"
@@ -68,10 +66,6 @@ PROJECTOR_CONFIG_FLOW_SCHEMA = BASE_SCHEMA.extend(
             [PROTO_HTTP, PROTO_TCP, PROTO_SERIAL]
         ),
     }
-)
-
-SERVICE_SELECT_CMODE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))}
 )
 
 CONFIG_SCHEMA = vol.Schema(

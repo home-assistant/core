@@ -52,7 +52,7 @@ from homeassistant.helpers.typing import (
     HomeAssistantType,
 )
 
-from .const import CONF_CMODE
+from .const import ATTR_CMODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -237,4 +237,4 @@ class EpsonProjector(MediaPlayerEntity):
         """Return device specific state attributes."""
         if self._cmode is None:
             return {}
-        return {CONF_CMODE: self._cmode}
+        return {ATTR_CMODE: self._cmode}
