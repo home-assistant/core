@@ -102,7 +102,13 @@ async def async_setup_entry(
     """Set up the configuration entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        [PhilipsTVMediaPlayer(coordinator, config_entry.data[CONF_SYSTEM])]
+        [
+            PhilipsTVMediaPlayer(
+                coordinator,
+                config_entry.data[CONF_SYSTEM],
+                config_entry.unique_id or config_entry.entry_id,
+            )
+        ]
     )
 
 
@@ -110,7 +116,10 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
 
     def __init__(
-        self, coordinator: PhilipsTVDataUpdateCoordinator, system: Dict[str, Any]
+        self,
+        coordinator: PhilipsTVDataUpdateCoordinator,
+        system: Dict[str, Any],
+        unique_id: str,
     ):
         """Initialize the Philips TV."""
         self._tv = coordinator.api
@@ -119,6 +128,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         self._channels = {}
         self._supports = SUPPORT_PHILIPS_JS
         self._system = system
+        self._unique_id = unique_id
         super().__init__(coordinator)
         self._update_from_coordinator()
 
@@ -266,7 +276,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def unique_id(self):
         """Return unique identifier if known."""
-        return self._system["serialnumber"]
+        return self._unique_id
 
     @property
     def device_info(self):
@@ -274,11 +284,11 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         return {
             "name": self._system["name"],
             "identifiers": {
-                (DOMAIN, self._system["serialnumber"]),
+                (DOMAIN, self._unique_id),
             },
-            "model": self._system["model"],
+            "model": self._system.get("model"),
             "manufacturer": "Philips",
-            "sw_version": self._system["softwareversion"],
+            "sw_version": self._system.get("softwareversion"),
         }
 
     def play_media(self, media_type, media_id, **kwargs):
