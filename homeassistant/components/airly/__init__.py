@@ -1,4 +1,4 @@
-"""The Airly component."""
+"""The Airly integration."""
 import asyncio
 from datetime import timedelta
 import logging
