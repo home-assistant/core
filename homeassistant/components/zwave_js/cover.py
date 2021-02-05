@@ -21,8 +21,6 @@ from .entity import ZWaveBaseEntity
 
 LOGGER = logging.getLogger(__name__)
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
-PRESS_BUTTON = True
-RELEASE_BUTTON = False
 
 
 async def async_setup_entry(
@@ -91,7 +89,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         """Stop cover."""
         target_value = self.get_zwave_value("Open") or self.get_zwave_value("Up")
         if target_value:
-            await self.info.node.async_set_value(target_value, RELEASE_BUTTON)
+            await self.info.node.async_set_value(target_value, False)
         target_value = self.get_zwave_value("Close") or self.get_zwave_value("Down")
         if target_value:
-            await self.info.node.async_set_value(target_value, RELEASE_BUTTON)
+            await self.info.node.async_set_value(target_value, False)
