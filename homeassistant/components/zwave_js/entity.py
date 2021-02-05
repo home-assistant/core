@@ -62,12 +62,20 @@ class ZWaveBaseEntity(Entity):
         }
 
     def generate_name(
-        self, value_name: str, additional_info: Optional[List[str]] = None
+        self,
+        alternate_value_name: Optional[str] = None,
+        additional_info: Optional[List[str]] = None,
     ) -> str:
         """Generate entity name."""
         if additional_info is None:
             additional_info = []
         node_name = self.info.node.name or self.info.node.device_config.description
+        value_name = (
+            alternate_value_name
+            or self.info.primary_value.metadata.label
+            or self.info.primary_value.property_key_name
+            or self.info.primary_value.property_name
+        )
         name = f"{node_name}: {value_name}"
         for item in additional_info:
             if item:
@@ -81,11 +89,7 @@ class ZWaveBaseEntity(Entity):
     @property
     def name(self) -> str:
         """Return default name from device name and value name combination."""
-        return self.generate_name(
-            self.info.primary_value.metadata.label
-            or self.info.primary_value.property_key_name
-            or self.info.primary_value.property_name
-        )
+        return self.generate_name()
 
     @property
     def unique_id(self) -> str:
