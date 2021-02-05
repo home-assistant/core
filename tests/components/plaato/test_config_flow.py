@@ -234,18 +234,18 @@ async def test_show_config_form_api_method_no_auth_token(hass, webhook_id):
 
 async def test_options(hass):
     """Test updating options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="NAME",
+        data={},
+        options={CONF_SCAN_INTERVAL: 5},
+    )
+
     with patch(
         "homeassistant.components.plaato.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.plaato.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            title="NAME",
-            data={},
-            options={CONF_SCAN_INTERVAL: 5},
-        )
-
         config_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -272,18 +272,18 @@ async def test_options(hass):
 
 async def test_options_webhook(hass, webhook_id):
     """Test updating options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="NAME",
+        data={CONF_USE_WEBHOOK: True, CONF_WEBHOOK_ID: None},
+        options={CONF_SCAN_INTERVAL: 5},
+    )
+
     with patch(
         "homeassistant.components.plaato.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.plaato.async_setup_entry", return_value=True
     ) as mock_setup_entry:
-        config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            title="NAME",
-            data={CONF_USE_WEBHOOK: True, CONF_WEBHOOK_ID: None},
-            options={CONF_SCAN_INTERVAL: 5},
-        )
-
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

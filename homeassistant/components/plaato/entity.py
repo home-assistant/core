@@ -74,7 +74,8 @@ class PlaatoEntity(entity.Entity):
             return {
                 attr_key: self._attributes[plaato_key]
                 for attr_key, plaato_key in DEVICE_STATE_ATTRIBUTES.items()
-                if plaato_key in self._attributes and self._attributes[plaato_key]
+                if plaato_key in self._attributes
+                and self._attributes[plaato_key] is not None
             }
 
     @property
