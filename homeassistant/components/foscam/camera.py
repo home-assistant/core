@@ -15,7 +15,14 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv, entity_platform
 
-from .const import CONF_STREAM, DOMAIN, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
+from .const import (
+    CONF_RTSP_PORT,
+    CONF_STREAM,
+    DOMAIN,
+    LOGGER,
+    SERVICE_PTZ,
+    SERVICE_PTZ_PRESET,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -24,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_NAME, default="Foscam Camera"): cv.string,
         vol.Optional(CONF_PORT, default=88): cv.port,
-        vol.Optional("rtsp_port"): cv.port,
+        vol.Optional(CONF_RTSP_PORT): cv.port,
     }
 )
 
@@ -71,6 +78,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         CONF_USERNAME: config[CONF_USERNAME],
         CONF_PASSWORD: config[CONF_PASSWORD],
         CONF_STREAM: "Main",
+        CONF_RTSP_PORT: config.get(CONF_RTSP_PORT, 554),
     }
 
     hass.async_create_task(
@@ -134,8 +142,8 @@ class HassFoscamCamera(Camera):
         self._username = config_entry.data[CONF_USERNAME]
         self._password = config_entry.data[CONF_PASSWORD]
         self._stream = config_entry.data[CONF_STREAM]
-        self._unique_id = config_entry.unique_id
-        self._rtsp_port = None
+        self._unique_id = config_entry.entry_id
+        self._rtsp_port = config_entry.data[CONF_RTSP_PORT]
         self._motion_status = False
 
     async def async_added_to_hass(self):
@@ -145,24 +153,19 @@ class HassFoscamCamera(Camera):
             self._foscam_session.get_motion_detect_config
         )
 
-        if ret != 0:
+        if ret == -3:
+            LOGGER.info(
+                "Can't get motion detection status, camera %s configured with non-admin user",
+                self._name,
+            )
+
+        elif ret != 0:
             LOGGER.error(
                 "Error getting motion detection status of %s: %s", self._name, ret
             )
 
         else:
             self._motion_status = response == 1
-
-        # Get RTSP port
-        ret, response = await self.hass.async_add_executor_job(
-            self._foscam_session.get_port_info
-        )
-
-        if ret != 0:
-            LOGGER.error("Error getting RTSP port of %s: %s", self._name, ret)
-
-        else:
-            self._rtsp_port = response.get("rtspPort") or response.get("mediaPort")
 
     @property
     def unique_id(self):
@@ -205,6 +208,11 @@ class HassFoscamCamera(Camera):
             ret = self._foscam_session.enable_motion_detection()
 
             if ret != 0:
+                if ret == -3:
+                    LOGGER.info(
+                        "Can't set motion detection status, camera %s configured with non-admin user",
+                        self._name,
+                    )
                 return
 
             self._motion_status = True
@@ -220,6 +228,11 @@ class HassFoscamCamera(Camera):
             ret = self._foscam_session.disable_motion_detection()
 
             if ret != 0:
+                if ret == -3:
+                    LOGGER.info(
+                        "Can't set motion detection status, camera %s configured with non-admin user",
+                        self._name,
+                    )
                 return
 
             self._motion_status = False

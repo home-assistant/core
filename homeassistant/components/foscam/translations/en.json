@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
+            "invalid_response": "Invalid response from the device",
             "unknown": "Unexpected error"
         },
         "step": {
@@ -14,6 +15,7 @@
                     "host": "Host",
                     "password": "Password",
                     "port": "Port",
+                    "rtsp_port": "RTSP port",
                     "stream": "Stream",
                     "username": "Username"
                 }
