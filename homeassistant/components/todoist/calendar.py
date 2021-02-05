@@ -406,7 +406,9 @@ class TodoistProjectData:
         # Generally speaking, that means right now.
         task[START] = dt.utcnow()
         if data[DUE] is not None:
-            task[END] = _parse_due_date(data[DUE], self._api.state['user']['tz_info']['gmt_string'])
+            task[END] = _parse_due_date(
+                data[DUE], self._api.state["user"]["tz_info"]["gmt_string"]
+            )
 
             if self._due_date_days is not None and (
                 task[END] > dt.utcnow() + self._due_date_days
@@ -528,8 +530,16 @@ class TodoistProjectData:
         for task in project_task_data:
             if task["due"] is None:
                 continue
-            due_date = _parse_due_date(task["due"], self._api.state['user']['tz_info']['gmt_string'])
-            midnight = dt.as_utc(dt.parse_datetime(due_date.strftime("%Y-%m-%d") + "T00:00:00" + self._api.state['user']['tz_info']['gmt_string']))
+            due_date = _parse_due_date(
+                task["due"], self._api.state["user"]["tz_info"]["gmt_string"]
+            )
+            midnight = dt.as_utc(
+                dt.parse_datetime(
+                    due_date.strftime("%Y-%m-%d")
+                    + "T00:00:00"
+                    + self._api.state["user"]["tz_info"]["gmt_string"]
+                )
+            )
 
             if start_date < due_date < end_date:
                 if due_date == midnight:
