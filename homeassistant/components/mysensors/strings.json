@@ -38,6 +38,7 @@
       }
     },
     "error": {
+      "already_configured": "Device is already configured",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_subscribe_topic":  "Invalid subscribe topic",
@@ -56,6 +57,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
+      "already_configured": "Device is already configured"
     }
   }
 }

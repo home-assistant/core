@@ -4,6 +4,7 @@
             "already_configured": "Device is already configured"
         },
         "error": {
+            "already_configured": "Device is already configured",
             "cannot_connect": "Failed to connect",
             "invalid_subscribe_topic":  "Invalid subscribe topic",
             "invalid_publish_topic": "Invalid publish topic",
