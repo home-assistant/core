@@ -10,7 +10,6 @@ MANUFACTURER = "Finnish Meteorological Institute"
 
 COORDINATOR = "coordinator"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
-MIN_TIME_BETWEEN_LIGHTNING_UPDATES = timedelta(minutes=60)
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 FORECAST_OFFSET = [0, 1, 2, 3, 4, 6, 8, 12, 24]  # Based on API test runs

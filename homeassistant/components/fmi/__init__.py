@@ -1,5 +1,6 @@
 """The FMI (Finnish Meteorological Institute) component."""
 
+import asyncio
 from datetime import date, datetime
 
 from async_timeout import timeout
@@ -15,7 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -29,11 +29,6 @@ from .const import (
 )
 
 PLATFORMS = ["weather"]
-
-
-def base_unique_id(latitude, longitude):
-    """Return unique id for entries in configuration."""
-    return f"{latitude}_{longitude}"
 
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
@@ -50,11 +45,7 @@ async def async_setup_entry(hass, config_entry) -> bool:
 
     _LOGGER.debug("Using lat: %s and long: %s", latitude, longitude)
 
-    websession = async_get_clientsession(hass)
-
-    coordinator = FMIDataUpdateCoordinator(
-        hass, websession, latitude, longitude, time_step
-    )
+    coordinator = FMIDataUpdateCoordinator(hass, latitude, longitude, time_step)
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
@@ -77,13 +68,19 @@ async def async_setup_entry(hass, config_entry) -> bool:
 
 async def async_unload_entry(hass, config_entry):
     """Unload an FMI config entry."""
-    for component in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, component)
-
-    hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(config_entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
     hass.data[DOMAIN].pop(config_entry.entry_id)
 
-    return True
+    return unload_ok
 
 
 async def update_listener(hass, config_entry):
@@ -94,11 +91,11 @@ async def update_listener(hass, config_entry):
 class FMIDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching FMI data API."""
 
-    def __init__(self, hass, session, latitude, longitude, time_step):
+    def __init__(self, hass, latitude, longitude, time_step):
         """Initialize."""
         self.latitude = latitude
         self.longitude = longitude
-        self.unique_id = str(self.latitude) + ":" + str(self.longitude)
+        self.unique_id = f"{self.latitude}_{self.longitude}"
         self.time_step = time_step
         self.current = None
         self.forecast = None
@@ -114,14 +111,11 @@ class FMIDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via Open API."""
         try:
             async with timeout(10):
-                self.current = await self._hass.async_add_executor_job(
-                    fmi.weather_by_coordinates, self.latitude, self.longitude
+                self.current = await fmi.async_weather_by_coordinates(
+                    self.latitude, self.longitude
                 )
-                self.forecast = await self._hass.async_add_executor_job(
-                    fmi.forecast_by_coordinates,
-                    self.latitude,
-                    self.longitude,
-                    self.time_step,
+                self.forecast = await fmi.async_forecast_by_coordinates(
+                    self.latitude, self.longitude, self.time_step
                 )
         except (ClientError, ServerError) as error:
             raise UpdateFailed(error) from error

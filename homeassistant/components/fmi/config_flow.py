@@ -9,20 +9,19 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_O
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from . import base_unique_id
 from .const import _LOGGER, FORECAST_OFFSET
 
 
-async def validate_user_config(hass: core.HomeAssistant, data):
-    """Validate input configuration for FMI.
+async def validate_config_and_get_data(hass: core.HomeAssistant, data):
+    """Validate input configuration for FMI and extract weather data.
 
     Data contains Latitude / Longitude provided by user or from
-    HASS default configuration.
+    HASS default configuration. If the the details are right, also
+    use the returned weather data to avoid a REST call at later
+    stages
     """
     latitude = data[CONF_LATITUDE]
     longitude = data[CONF_LONGITUDE]
-
-    errors = ""
 
     # Current Weather
     try:
@@ -32,25 +31,19 @@ async def validate_user_config(hass: core.HomeAssistant, data):
 
         return {"place": weather_data.place, "err": ""}
     except ClientError as err:
-        err_string = (
-            "Client error with status "
-            + str(err.status_code)
-            + " and message "
-            + err.message
+        _LOGGER.error(
+            "Client error with status %s and message %s",
+            str(err.status_code),
+            err.message,
         )
-        errors = "client_connect_error"
-        _LOGGER.error(err_string)
+        raise err
     except ServerError as err:
-        err_string = (
-            "Server error with status "
-            + str(err.status_code)
-            + " and message "
-            + err.body
+        _LOGGER.error(
+            "Server error with status %s and message %s", str(err.status_code), err.body
         )
-        errors = "server_connect_error"
-        _LOGGER.error(err_string)
+        raise err
 
-    return {"place": "None", "err": errors}
+    return {"place": "None"}
 
 
 class FMIConfigFlowHandler(config_entries.ConfigFlow, domain="fmi"):
@@ -66,16 +59,15 @@ class FMIConfigFlowHandler(config_entries.ConfigFlow, domain="fmi"):
         if user_input is not None:
 
             await self.async_set_unique_id(
-                base_unique_id(user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE])
+                f"{user_input[CONF_LATITUDE]}_{user_input[CONF_LONGITUDE]}"
             )
             self._abort_if_unique_id_configured()
 
-            valid = await validate_user_config(self.hass, user_input)
-
-            if valid.get("err", "") == "":
+            try:
+                valid = await validate_config_and_get_data(self.hass, user_input)
                 return self.async_create_entry(title=valid["place"], data=user_input)
-
-            errors["fmi"] = valid["err"]
+            except (ClientError, ServerError):
+                _LOGGER.error("Configuration error.")
 
         data_schema = vol.Schema(
             {

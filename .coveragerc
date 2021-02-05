@@ -325,7 +325,6 @@ omit =
     homeassistant/components/fmi/__init__.py
     homeassistant/components/fmi/const.py
     homeassistant/components/fmi/weather.py
-    homeassistant/components/fmi/config_flow.py
     homeassistant/components/folder/sensor.py
     homeassistant/components/folder_watcher/*
     homeassistant/components/foobot/sensor.py
