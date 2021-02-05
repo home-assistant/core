@@ -1,10 +1,11 @@
 """Tests for FMI."""
 
+from unittest.mock import patch
+
 from homeassistant.components.fmi.const import DOMAIN
 
 from .const import MOCK_CURRENT, MOCK_FORECAST
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

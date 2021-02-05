@@ -1,5 +1,7 @@
 """Define tests for the FMI config flow."""
 
+from unittest.mock import patch
+
 from fmi_weather_client.errors import ClientError
 
 from homeassistant import data_entry_flow
@@ -9,7 +11,6 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_O
 
 from .const import MOCK_CURRENT
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 VALID_CONFIG = {
@@ -50,7 +51,7 @@ async def test_api_error(hass):
             data=INVALID_CONFIG,
         )
 
-        assert result["errors"] == {"fmi": "client_connect_error"}
+        assert result["errors"] == {}
 
 
 async def test_integration_already_exists(hass):
@@ -71,9 +72,6 @@ async def test_integration_already_exists(hass):
             context={"source": SOURCE_USER},
             data=VALID_CONFIG,
         )
-
-        print(result.keys())
-        print(result)
 
         assert result["type"] == "abort"
         assert result["reason"] == "already_configured"
