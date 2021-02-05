@@ -58,6 +58,7 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
     LOGGER.debug("Migrating from version %s", config_entry.version)
 
     if config_entry.version == 1:
+        # Change unique id
         new_unique_id = camera_unique_id(config_entry.data)
 
         @callback
@@ -67,9 +68,8 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
         await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
         config_entry.unique_id = new_unique_id
-        config_entry.version = 2
 
-    if config_entry.version == 2:
+        # Get RTSP port from the camera or use the fallback one and store it in data
         camera = FoscamCamera(
             config_entry.data[CONF_HOST],
             config_entry.data[CONF_PORT],
@@ -86,7 +86,9 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
             rtsp_port = response.get("rtspPort") or response.get("mediaPort")
 
         config_entry.data = {**config_entry.data, CONF_RTSP_PORT: rtsp_port}
-        config_entry.version = 3
+
+        # Change entry version
+        config_entry.version = 2
 
     LOGGER.info("Migration to version %s successful", config_entry.version)
 

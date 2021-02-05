@@ -49,7 +49,7 @@ def camera_unique_id(data):
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for foscam."""
 
-    VERSION = 3
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def _validate_and_create(self, data):
