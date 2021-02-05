@@ -95,15 +95,12 @@ async def test_show_config_form_validate_webhook(hass, webhook_id):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "api_method"
 
-    async def return_async_value(val):
-        return val
-
     hass.config.components.add("cloud")
     with patch(
         "homeassistant.components.cloud.async_active_subscription", return_value=True
     ), patch(
         "homeassistant.components.cloud.async_create_cloudhook",
-        return_value=return_async_value("https://hooks.nabu.casa/ABCD"),
+        return_value="https://hooks.nabu.casa/ABCD",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -243,21 +240,34 @@ async def test_options(hass):
         data={},
         options={CONF_SCAN_INTERVAL: 5},
     )
-
     config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.plaato.async_setup_entry", return_value=True):
+
+    with patch(
+        "homeassistant.components.plaato.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.plaato.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "user"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_SCAN_INTERVAL: 10},
-    )
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_SCAN_INTERVAL: 10},
+        )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_SCAN_INTERVAL] == 10
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"][CONF_SCAN_INTERVAL] == 10
+
+        assert len(mock_setup.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_options_webhook(hass, webhook_id):
@@ -268,19 +278,32 @@ async def test_options_webhook(hass, webhook_id):
         data={CONF_USE_WEBHOOK: True, CONF_WEBHOOK_ID: None},
         options={CONF_SCAN_INTERVAL: 5},
     )
-
     config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.plaato.async_setup_entry", return_value=True):
+
+    with patch(
+        "homeassistant.components.plaato.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.plaato.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "webhook"
-    assert result["description_placeholders"] == {"webhook_url": ""}
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "webhook"
+        assert result["description_placeholders"] == {"webhook_url": ""}
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_WEBHOOK_ID: WEBHOOK_ID},
-    )
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_WEBHOOK_ID: WEBHOOK_ID},
+        )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_WEBHOOK_ID] == CONF_WEBHOOK_ID
+        await hass.async_block_till_done()
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"][CONF_WEBHOOK_ID] == CONF_WEBHOOK_ID
+
+        assert len(mock_setup.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1
