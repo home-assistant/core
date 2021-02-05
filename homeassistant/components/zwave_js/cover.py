@@ -84,3 +84,12 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         """Close cover."""
         target_value = self.get_zwave_value("targetValue")
         await self.info.node.async_set_value(target_value, 0)
+
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Stop cover."""
+        target_value = self.get_zwave_value("Open") or self.get_zwave_value("Up")
+        if target_value:
+            await self.info.node.async_set_value(target_value, False)
+        target_value = self.get_zwave_value("Close") or self.get_zwave_value("Down")
+        if target_value:
+            await self.info.node.async_set_value(target_value, False)

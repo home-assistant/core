@@ -27,7 +27,8 @@ from .const import (
     CONF_INTEGRATION_TYPE,
     DATA_COORDINATOR,
     DOMAIN,
-    INTEGRATION_TYPE_GEOGRAPHY,
+    INTEGRATION_TYPE_GEOGRAPHY_COORDS,
+    INTEGRATION_TYPE_GEOGRAPHY_NAME,
 )
 
 _LOGGER = getLogger(__name__)
@@ -115,7 +116,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AirVisual sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
 
-    if config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
+    if config_entry.data[CONF_INTEGRATION_TYPE] in [
+        INTEGRATION_TYPE_GEOGRAPHY_COORDS,
+        INTEGRATION_TYPE_GEOGRAPHY_NAME,
+    ]:
         sensors = [
             AirVisualGeographySensor(
                 coordinator,
@@ -208,17 +212,32 @@ class AirVisualGeographySensor(AirVisualEntity):
                 }
             )
 
-        if CONF_LATITUDE in self._config_entry.data:
-            if self._config_entry.options[CONF_SHOW_ON_MAP]:
-                self._attrs[ATTR_LATITUDE] = self._config_entry.data[CONF_LATITUDE]
-                self._attrs[ATTR_LONGITUDE] = self._config_entry.data[CONF_LONGITUDE]
-                self._attrs.pop("lati", None)
-                self._attrs.pop("long", None)
-            else:
-                self._attrs["lati"] = self._config_entry.data[CONF_LATITUDE]
-                self._attrs["long"] = self._config_entry.data[CONF_LONGITUDE]
-                self._attrs.pop(ATTR_LATITUDE, None)
-                self._attrs.pop(ATTR_LONGITUDE, None)
+        # Displaying the geography on the map relies upon putting the latitude/longitude
+        # in the entity attributes with "latitude" and "longitude" as the keys.
+        # Conversely, we can hide the location on the map by using other keys, like
+        # "lati" and "long".
+        #
+        # We use any coordinates in the config entry and, in the case of a geography by
+        # name, we fall back to the latitude longitude provided in the coordinator data:
+        latitude = self._config_entry.data.get(
+            CONF_LATITUDE,
+            self.coordinator.data["location"]["coordinates"][1],
+        )
+        longitude = self._config_entry.data.get(
+            CONF_LONGITUDE,
+            self.coordinator.data["location"]["coordinates"][0],
+        )
+
+        if self._config_entry.options[CONF_SHOW_ON_MAP]:
+            self._attrs[ATTR_LATITUDE] = latitude
+            self._attrs[ATTR_LONGITUDE] = longitude
+            self._attrs.pop("lati", None)
+            self._attrs.pop("long", None)
+        else:
+            self._attrs["lati"] = latitude
+            self._attrs["long"] = longitude
+            self._attrs.pop(ATTR_LATITUDE, None)
+            self._attrs.pop(ATTR_LONGITUDE, None)
 
 
 class AirVisualNodeProSensor(AirVisualEntity):

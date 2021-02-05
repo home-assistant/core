@@ -1,12 +1,15 @@
 {
     "config": {
         "abort": {
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
             "unknown": "Unerwarteter Fehler"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "invalid_zone": "Ung\u00fcltige Zone"
         },
+        "flow_title": "Cloudflare: {name}",
         "step": {
             "records": {
                 "data": {
@@ -18,6 +21,11 @@
                     "api_token": "API Token"
                 },
                 "title": "Mit Cloudflare verbinden"
+            },
+            "zone": {
+                "data": {
+                    "zone": "Zone"
+                }
             }
         }
     }
