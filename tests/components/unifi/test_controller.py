@@ -71,7 +71,7 @@ ENTRY_OPTIONS = {}
 
 CONFIGURATION = []
 
-SITE = [{"desc": "Site name", "name": "site_id", "role": "admin"}]
+SITE = [{"desc": "Site name", "name": "site_id", "role": "admin", "_id": "1"}]
 DESCRIPTION = [{"name": "username", "site_name": "site_id", "site_role": "admin"}]
 
 
@@ -166,6 +166,7 @@ async def setup_unifi_integration(
         data=deepcopy(config),
         options=deepcopy(options),
         entry_id=1,
+        unique_id="1",
     )
     config_entry.add_to_hass(hass)
 
