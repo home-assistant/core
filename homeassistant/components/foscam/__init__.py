@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
-    hass.data[DOMAIN][entry.unique_id] = entry.data
+    hass.data[DOMAIN][entry.entry_id] = entry.data
 
     return True
 
@@ -44,7 +44,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.unique_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
         if not hass.data[DOMAIN]:
             hass.services.async_remove(domain=DOMAIN, service=SERVICE_PTZ)
