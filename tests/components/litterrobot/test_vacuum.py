@@ -1,7 +1,6 @@
 """Test the Litter-Robot vacuum entity."""
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components import litterrobot
 from homeassistant.components.vacuum import (
     ATTR_PARAMS,
@@ -14,24 +13,22 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import ATTR_COMMAND, ATTR_ENTITY_ID
 
+from .common import CONFIG
+
+from tests.common import MockConfigEntry
+
 ENTITY_ID = "vacuum.test_litter_box"
 
 
 async def setup_hub(hass, mock_hub):
     """Load the Litter-Robot vacuum platform with the provided hub."""
     hass.config.components.add(litterrobot.DOMAIN)
-    config_entry = config_entries.ConfigEntry(
-        1,
-        litterrobot.DOMAIN,
-        "Mock Title",
-        {"host": "mock-host"},
-        "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
-        system_options={},
+    entry = MockConfigEntry(
+        domain=litterrobot.DOMAIN,
+        data=CONFIG[litterrobot.DOMAIN],
     )
-    mock_hub.config_entry = config_entry
-    hass.data[litterrobot.DOMAIN] = {config_entry.entry_id: mock_hub}
-    await hass.config_entries.async_forward_entry_setup(config_entry, PLATFORM_DOMAIN)
+    hass.data[litterrobot.DOMAIN] = {entry.entry_id: mock_hub}
+    await hass.config_entries.async_forward_entry_setup(entry, PLATFORM_DOMAIN)
     await hass.async_block_till_done()
 
 
