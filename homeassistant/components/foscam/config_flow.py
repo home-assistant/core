@@ -112,7 +112,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
 
             except InvalidResponse:
-                errors["base"] = "unknown"
+                errors["base"] = "invalid_response"
 
             except AbortFlow:
                 raise
@@ -142,7 +142,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             LOGGER.exception(
                 "Error importing foscam platform config: invalid response from camera."
             )
-            return self.async_abort(reason="unknown")
+            return self.async_abort(reason="invalid_response")
 
         except AbortFlow:
             raise

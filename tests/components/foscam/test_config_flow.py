@@ -195,7 +195,7 @@ async def test_user_invalid_response(hass):
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "unknown"}
+        assert result["errors"] == {"base": "invalid_response"}
 
 
 async def test_user_already_configured(hass):
@@ -392,7 +392,7 @@ async def test_import_invalid_response(hass):
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "unknown"
+        assert result["reason"] == "invalid_response"
 
 
 async def test_import_already_configured(hass):
