@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from aiohttp import ClientError
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.aurora.const import DOMAIN
 
