@@ -1692,7 +1692,11 @@ class OpenCloseTrait(_Trait):
                 svc_params[cover.ATTR_POSITION] = position
             elif position == 0:
                 service = cover.SERVICE_CLOSE_COVER
-                should_verify = False
+                # Ask for a PIN if the cover isn't open, in case the open/close command is a toggle.
+                if self.state.state != cover.STATE_OPEN:
+                    should_verify = True
+                else:
+                    should_verify = False
             elif position == 100:
                 service = cover.SERVICE_OPEN_COVER
                 should_verify = True
