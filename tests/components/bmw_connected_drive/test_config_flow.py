@@ -5,10 +5,9 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.bmw_connected_drive.config_flow import DOMAIN
 from homeassistant.components.bmw_connected_drive.const import (
     CONF_READ_ONLY,
-    CONF_REGION,
     CONF_USE_LOCATION,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 

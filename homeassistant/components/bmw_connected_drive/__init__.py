@@ -12,6 +12,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_REGION,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -28,7 +29,6 @@ from .const import (
     CONF_ACCOUNT,
     CONF_ALLOWED_REGIONS,
     CONF_READ_ONLY,
-    CONF_REGION,
     CONF_USE_LOCATION,
     DATA_ENTRIES,
     DATA_HASS_CONFIG,
