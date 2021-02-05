@@ -91,7 +91,8 @@ DEFAULT_DOMAINS = [
 
 DOMAINS_PREFER_ACCESSORY_MODE = ["camera", "media_player"]
 
-CAMERA_ENTITY_PREFIX = "camera."
+CAMERA_DOMAIN = "camera"
+CAMERA_ENTITY_PREFIX = f"{CAMERA_DOMAIN}."
 
 _EMPTY_ENTITY_FILTER = {
     CONF_INCLUDE_DOMAINS: [],
@@ -356,15 +357,26 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     if domain not in domains_with_entities_selected
                 ]
 
-                for entity_id in list(self.included_cameras):
-                    if entity_id not in entities:
-                        self.included_cameras.remove(entity_id)
+                self.included_cameras = {
+                    entity_id
+                    for entity_id in entities
+                    if entity_id.startswith(CAMERA_ENTITY_PREFIX)
+                }
             else:
                 entity_filter[CONF_INCLUDE_DOMAINS] = self.hk_options[CONF_DOMAINS]
                 entity_filter[CONF_EXCLUDE_ENTITIES] = entities
-                for entity_id in entities:
-                    if entity_id in self.included_cameras:
-                        self.included_cameras.remove(entity_id)
+                if CAMERA_DOMAIN in entity_filter[CONF_INCLUDE_DOMAINS]:
+                    camera_entities = _async_get_matching_entities(
+                        self.hass,
+                        domains=[CAMERA_DOMAIN],
+                    )
+                    self.included_cameras = {
+                        entity_id
+                        for entity_id in camera_entities
+                        if entity_id not in entities
+                    }
+                else:
+                    self.included_cameras = set()
 
             self.hk_options[CONF_FILTER] = entity_filter
 
@@ -378,11 +390,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self.hass,
             domains=self.hk_options[CONF_DOMAINS],
         )
-        self.included_cameras = {
-            entity_id
-            for entity_id in all_supported_entities
-            if entity_id.startswith(CAMERA_ENTITY_PREFIX)
-        }
 
         data_schema = {}
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
@@ -416,10 +423,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             self.hk_options.update(user_input)
             return await self.async_step_include_exclude()
 
-        hk_options = dict(self.config_entry.options)
-        entity_filter = hk_options.get(CONF_FILTER, {})
-
-        homekit_mode = hk_options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
+        self.hk_options = dict(self.config_entry.options)
+        entity_filter = self.hk_options.get(CONF_FILTER, {})
+        homekit_mode = self.hk_options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
         domains = entity_filter.get(CONF_INCLUDE_DOMAINS, [])
         include_entities = entity_filter.get(CONF_INCLUDE_ENTITIES)
         if include_entities:
