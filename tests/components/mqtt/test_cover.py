@@ -1084,6 +1084,23 @@ async def test_tilt_given_value_optimistic(hass, mqtt_mock):
 
     await hass.services.async_call(
         cover.DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: "cover.test", ATTR_TILT_POSITION: 50},
+        blocking=True,
+    )
+
+    current_cover_tilt_position = hass.states.get("cover.test").attributes[
+        ATTR_CURRENT_TILT_POSITION
+    ]
+    assert current_cover_tilt_position == 50
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "50", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    await hass.services.async_call(
+        cover.DOMAIN,
         SERVICE_CLOSE_COVER_TILT,
         {ATTR_ENTITY_ID: "cover.test"},
         blocking=True,
@@ -1378,6 +1395,41 @@ async def test_tilt_position(hass, mqtt_mock):
 
     mqtt_mock.async_publish.assert_called_once_with(
         "tilt-command-topic", "50", 0, False
+    )
+
+
+async def test_tilt_position_templated(hass, mqtt_mock):
+    """Test tilt position via template."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "payload_open": "OPEN",
+                "payload_close": "CLOSE",
+                "payload_stop": "STOP",
+                "tilt_command_topic": "tilt-command-topic",
+                "tilt_status_topic": "tilt-status-topic",
+                "tilt_command_template": "{{100-32}}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: "cover.test", ATTR_TILT_POSITION: 100},
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tilt-command-topic", "68", 0, False
     )
 
 
@@ -1978,3 +2030,57 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
     await help_test_entity_debug_info_message(
         hass, mqtt_mock, cover.DOMAIN, DEFAULT_CONFIG
     )
+
+
+async def test_deprecated_value_template_for_position_topic_warnning(
+    hass, caplog, mqtt_mock
+):
+    """Test warnning when value_template is used for position_topic."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "set_position_topic": "set-position-topic",
+                "position_topic": "position-topic",
+                "value_template": "{{100-62}}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        "using 'value_template' for 'position_topic' is deprecated "
+        "and will be removed in the future, "
+        "please replace it with 'position_template'"
+    ) in caplog.text
+
+
+async def test_no_deprecated_warnning_for_position_topic_using_position_template(
+    hass, caplog, mqtt_mock
+):
+    """Test no warnning when position_template is used for position_topic."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "set_position_topic": "set-position-topic",
+                "position_topic": "position-topic",
+                "position_template": "{{100-62}}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        "using 'value_template' for 'position_topic' is deprecated "
+        "and will be removed in the future, "
+        "please replace it with 'position_template'"
+    ) not in caplog.text
