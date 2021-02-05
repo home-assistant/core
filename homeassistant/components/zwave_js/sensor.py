@@ -180,5 +180,8 @@ class ZWaveListSensor(ZwaveSensorBase):
         """Return default name from device name and value name combination."""
         node_name = self.info.node.name or self.info.node.device_config.description
         prop_name = self.info.primary_value.property_name
+        name = f"{node_name}: {prop_name}"
         prop_key_name = self.info.primary_value.property_key_name
-        return f"{node_name}: {prop_name} - {prop_key_name}"
+        if prop_key_name:
+            return f"{name} - {prop_key_name}"
+        return name
