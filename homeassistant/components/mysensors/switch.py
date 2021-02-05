@@ -1,4 +1,6 @@
 """Support for MySensors switches."""
+from typing import Callable
+
 import voluptuous as vol
 
 from homeassistant.components import mysensors
@@ -6,7 +8,11 @@ from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN as MYSENSORS_DOMAIN, SERVICE_SEND_IR_CODE
+from . import on_unload
+from ...config_entries import ConfigEntry
+from ...helpers.dispatcher import async_dispatcher_connect
+from ...helpers.typing import HomeAssistantType
+from .const import DOMAIN as MYSENSORS_DOMAIN, MYSENSORS_DISCOVERY, SERVICE_SEND_IR_CODE
 
 ATTR_IR_CODE = "V_IR_SEND"
 
@@ -15,8 +21,10 @@ SEND_IR_CODE_SERVICE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the mysensors platform for switches."""
+async def async_setup_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+):
+    """Set up this platform for a specific ConfigEntry(==Gateway)."""
     device_class_map = {
         "S_DOOR": MySensorsSwitch,
         "S_MOTION": MySensorsSwitch,
@@ -32,13 +40,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         "S_MOISTURE": MySensorsSwitch,
         "S_WATER_QUALITY": MySensorsSwitch,
     }
-    mysensors.setup_mysensors_platform(
-        hass,
-        DOMAIN,
-        discovery_info,
-        device_class_map,
-        async_add_entities=async_add_entities,
-    )
+
+    async def async_discover(discovery_info):
+        """Discover and add a MySensors switch."""
+        mysensors.setup_mysensors_platform(
+            hass,
+            DOMAIN,
+            discovery_info,
+            device_class_map,
+            async_add_entities=async_add_entities,
+        )
 
     async def async_send_ir_code_service(service):
         """Set IR code as device state attribute."""
@@ -71,14 +82,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         schema=SEND_IR_CODE_SERVICE_SCHEMA,
     )
 
+    await on_unload(
+        hass,
+        config_entry,
+        async_dispatcher_connect(
+            hass,
+            MYSENSORS_DISCOVERY.format(config_entry.entry_id, DOMAIN),
+            async_discover,
+        ),
+    )
+
 
 class MySensorsSwitch(mysensors.device.MySensorsEntity, SwitchEntity):
     """Representation of the value of a MySensors Switch child node."""
-
-    @property
-    def assumed_state(self):
-        """Return True if unable to access real state of entity."""
-        return self.gateway.optimistic
 
     @property
     def current_power_w(self):
@@ -96,7 +112,7 @@ class MySensorsSwitch(mysensors.device.MySensorsEntity, SwitchEntity):
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 1, ack=1
         )
-        if self.gateway.optimistic:
+        if self.assumed_state:
             # Optimistically assume that switch has changed state
             self._values[self.value_type] = STATE_ON
             self.async_write_ha_state()
@@ -106,7 +122,7 @@ class MySensorsSwitch(mysensors.device.MySensorsEntity, SwitchEntity):
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 0, ack=1
         )
-        if self.gateway.optimistic:
+        if self.assumed_state:
             # Optimistically assume that switch has changed state
             self._values[self.value_type] = STATE_OFF
             self.async_write_ha_state()
@@ -137,7 +153,7 @@ class MySensorsIRSwitch(MySensorsSwitch):
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_LIGHT, 1, ack=1
         )
-        if self.gateway.optimistic:
+        if self.assumed_state:
             # Optimistically assume that switch has changed state
             self._values[self.value_type] = self._ir_code
             self._values[set_req.V_LIGHT] = STATE_ON
@@ -151,7 +167,7 @@ class MySensorsIRSwitch(MySensorsSwitch):
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_LIGHT, 0, ack=1
         )
-        if self.gateway.optimistic:
+        if self.assumed_state:
             # Optimistically assume that switch has changed state
             self._values[set_req.V_LIGHT] = STATE_OFF
             self.async_write_ha_state()

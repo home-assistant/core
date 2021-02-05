@@ -1551,7 +1551,7 @@ pymusiccast==0.1.6
 pymyq==2.0.14
 
 # homeassistant.components.mysensors
-pymysensors==0.18.0
+pymysensors==0.20.1
 
 # homeassistant.components.nanoleaf
 pynanoleaf==0.0.5

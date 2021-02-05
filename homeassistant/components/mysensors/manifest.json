@@ -2,7 +2,15 @@
   "domain": "mysensors",
   "name": "MySensors",
   "documentation": "https://www.home-assistant.io/integrations/mysensors",
-  "requirements": ["pymysensors==0.18.0"],
-  "after_dependencies": ["mqtt"],
-  "codeowners": ["@MartinHjelmare"]
+  "requirements": [
+    "pymysensors==0.20.1"
+  ],
+  "after_dependencies": [
+    "mqtt"
+  ],
+  "codeowners": [
+    "@MartinHjelmare",
+    "@functionpointer"
+  ],
+  "config_flow": true
 }
