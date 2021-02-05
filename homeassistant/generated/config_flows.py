@@ -136,6 +136,7 @@ FLOWS = [
     "motion_blinds",
     "mqtt",
     "myq",
+    "mysensors",
     "neato",
     "nest",
     "netatmo",
