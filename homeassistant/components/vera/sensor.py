@@ -68,7 +68,7 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], Entity):
 
     def update(self) -> None:
         """Update the state."""
-
+        super().update()
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
             self.current_value = self.vera_device.temperature
 
