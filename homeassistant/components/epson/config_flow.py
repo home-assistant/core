@@ -1,50 +1,24 @@
-"""Config flow for epson integration."""
-import voluptuous as vol
+"""Config flow for the Epson integration."""
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_NAME
 
-from . import validate_projector
-from .const import DOMAIN, TYPE_HTTP
-from .exceptions import CannotConnect
-
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_NAME, default=DOMAIN): str,
-        vol.Required(CONF_PORT, default=80): int,
-        vol.Optional(CONF_TYPE, default=TYPE_HTTP): str,
-    }
-)
+from .const import EPSON_DOMAIN as DOMAIN, PROJECTOR_CONFIG_FLOW_SCHEMA as DATA_SCHEMA
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for epson."""
+    """Handle a config flow for Epson."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            try:
-                await validate_projector(
-                    self.hass,
-                    user_input[CONF_HOST],
-                    user_input[CONF_PORT],
-                    user_input[CONF_TYPE],
-                )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            else:
-                return self.async_create_entry(
-                    title=user_input.pop(CONF_NAME), data=user_input
-                )
+            return self.async_create_entry(
+                title=user_input.pop(CONF_NAME), data=user_input
+            )
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )

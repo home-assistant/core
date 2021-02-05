@@ -1,55 +1,39 @@
-"""The epson integration."""
+"""Epson integration."""
 import asyncio
 import logging
 
-from epson_projector import Projector
-from epson_projector.const import POWER, STATE_UNAVAILABLE as EPSON_STATE_UNAVAILABLE
-
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_PLATFORM
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.discovery import load_platform
 
-from .const import DOMAIN
-from .exceptions import CannotConnect
-
-PLATFORMS = [MEDIA_PLAYER_PLATFORM]
+from .const import (  # noqa: F401; pylint:disable=unused-import
+    CONF_PROJECTORS,
+    CONFIG_SCHEMA,
+    EPSON_DOMAIN as DOMAIN,
+    PLATFORMS as SUPPORTED_PLATFORMS,
+    PROTO_HTTP,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_projector(hass: HomeAssistant, host, port, type):
-    """Validate the given host and port allows us to connect."""
-    epson_proj = Projector(
-        host=host,
-        websession=async_get_clientsession(hass, verify_ssl=False),
-        port=port,
-        type=type,
-    )
-    _power = await epson_proj.get_property(POWER)
-    if not _power or _power == EPSON_STATE_UNAVAILABLE:
-        raise CannotConnect
-    return epson_proj
-
-
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the epson component."""
+    """Set up the Epson component."""
     hass.data.setdefault(DOMAIN, {})
+
+    # Load platforms
+    for component, conf_key in ((MEDIA_PLAYER_PLATFORM, CONF_PROJECTORS),):
+        if conf_key in config[DOMAIN]:
+            load_platform(hass, component, DOMAIN, config[DOMAIN][conf_key], config)
+
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up epson from a config entry."""
-    try:
-        projector = await validate_projector(
-            hass, entry.data[CONF_HOST], entry.data[CONF_PORT], entry.data[CONF_TYPE]
-        )
-    except CannotConnect:
-        _LOGGER.warning("Cannot connect to projector %s", entry.data[CONF_HOST])
-        return False
-    hass.data[DOMAIN][entry.entry_id] = projector
-    for component in PLATFORMS:
+    """Set up the Epson entity from a config entry."""
+    for component in SUPPORTED_PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
@@ -62,10 +46,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                for component in SUPPORTED_PLATFORMS
             ]
         )
     )
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
+
+
+async def async_migrate_entry(_, config_entry: ConfigEntry):
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        new = {**config_entry.data, CONF_PROTOCOL: PROTO_HTTP}
+        config_entry.data = {**new}
+        config_entry.version = 2
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True
