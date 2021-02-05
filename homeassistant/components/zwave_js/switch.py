@@ -46,6 +46,9 @@ class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return a boolean for the state of the switch."""
+        if self.info.primary_value.value is None:
+            # guard missing value
+            return False
         return bool(self.info.primary_value.value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:

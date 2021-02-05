@@ -192,6 +192,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if self._current_mode is None:
             # Thermostat(valve) with no support for setting a mode is considered heating-only
             return [ThermostatSetpointType.HEATING]
+        if self._current_mode.value is None:
+            # guard missing value
+            return []
         return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])  # type: ignore
 
     @property
@@ -207,6 +210,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if self._current_mode is None:
             # Thermostat(valve) with no support for setting a mode is considered heating-only
             return HVAC_MODE_HEAT
+        if self._current_mode.value is None:
+            # guard missing value
+            return HVAC_MODE_HEAT
         return ZW_HVAC_MODE_MAP.get(int(self._current_mode.value), HVAC_MODE_HEAT_COOL)
 
     @property
@@ -218,6 +224,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     def hvac_action(self) -> Optional[str]:
         """Return the current running hvac operation if supported."""
         if not self._operating_state:
+            return None
+        if self._operating_state.value is None:
+            # guard missing value
             return None
         return HVAC_CURRENT_MAP.get(int(self._operating_state.value))
 
@@ -251,6 +260,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
+        if self._current_mode and self._current_mode.value is None:
+            # guard missing value
+            return None
         if self._current_mode and int(self._current_mode.value) not in THERMOSTAT_MODES:
             return_val: str = self._current_mode.metadata.states.get(
                 self._current_mode.value

@@ -61,11 +61,17 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     @property
     def is_closed(self) -> bool:
         """Return true if cover is closed."""
+        if self.info.primary_value.value is None:
+            # guard missing value
+            return True
         return bool(self.info.primary_value.value == 0)
 
     @property
     def current_cover_position(self) -> int:
         """Return the current position of cover where 0 means closed and 100 is fully open."""
+        if self.info.primary_value.value is None:
+            # guard missing value
+            return 0
         return round((self.info.primary_value.value / 99) * 100)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
