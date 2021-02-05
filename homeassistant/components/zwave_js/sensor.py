@@ -162,7 +162,7 @@ class ZWaveListSensor(ZwaveSensorBase):
             not str(self.info.primary_value.value)
             in self.info.primary_value.metadata.states
         ):
-            return None
+            return str(self.info.primary_value.value)
         return str(
             self.info.primary_value.metadata.states[str(self.info.primary_value.value)]
         )
