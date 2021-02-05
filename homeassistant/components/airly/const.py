@@ -1,13 +1,5 @@
 """Constants for Airly integration."""
 
-DEFAULT_NAME = "Airly"
-DOMAIN = "airly"
-MANUFACTURER = "Airly sp. z o.o."
-MAX_REQUESTS_PER_DAY = 100
-ATTRIBUTION = "Data provided by Airly"
-
-NO_AIRLY_SENSORS = "There are no Airly sensors in this area yet."
-
 ATTR_API_ADVICE = "ADVICE"
 ATTR_API_CAQI = "CAQI"
 ATTR_API_CAQI_DESCRIPTION = "DESCRIPTION"
@@ -22,8 +14,15 @@ ATTR_API_PM25_LIMIT = "PM25_LIMIT"
 ATTR_API_PM25_PERCENT = "PM25_PERCENT"
 ATTR_API_PRESSURE = "PRESSURE"
 ATTR_API_TEMPERATURE = "TEMPERATURE"
-CONF_USE_NEAREST = "use_nearest"
 
-LABEL_ADVICE = "advice"
 ATTR_LABEL = "label"
 ATTR_UNIT = "unit"
+
+ATTRIBUTION = "Data provided by Airly"
+CONF_USE_NEAREST = "use_nearest"
+DEFAULT_NAME = "Airly"
+DOMAIN = "airly"
+LABEL_ADVICE = "advice"
+MANUFACTURER = "Airly sp. z o.o."
+MAX_REQUESTS_PER_DAY = 100
+NO_AIRLY_SENSORS = "There are no Airly sensors in this area yet."
