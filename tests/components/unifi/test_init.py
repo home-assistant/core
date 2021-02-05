@@ -11,14 +11,14 @@ from tests.common import MockConfigEntry, mock_coro
 
 
 async def test_setup_with_no_config(hass):
-    """Test that we do not discover anything or try to set up a bridge."""
+    """Test that we do not discover anything or try to set up a controller."""
     assert await async_setup_component(hass, UNIFI_DOMAIN, {}) is True
     assert UNIFI_DOMAIN not in hass.data
 
 
-async def test_successful_config_entry(hass):
+async def test_successful_config_entry(hass, aioclient_mock):
     """Test that configured options for a host are loaded via config entry."""
-    await setup_unifi_integration(hass)
+    await setup_unifi_integration(hass, aioclient_mock)
     assert hass.data[UNIFI_DOMAIN]
 
 
@@ -44,7 +44,6 @@ async def test_controller_no_mac(hass):
                 "site": "default",
                 "verify_ssl": True,
             },
-            "poe_control": True,
         },
     )
     entry.add_to_hass(hass)
@@ -64,10 +63,10 @@ async def test_controller_no_mac(hass):
     assert len(mock_registry.mock_calls) == 0
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass, aioclient_mock):
     """Test being able to unload an entry."""
-    controller = await setup_unifi_integration(hass)
+    config_entry = await setup_unifi_integration(hass, aioclient_mock)
     assert hass.data[UNIFI_DOMAIN]
 
-    assert await unifi.async_unload_entry(hass, controller.config_entry)
+    assert await unifi.async_unload_entry(hass, config_entry)
     assert not hass.data[UNIFI_DOMAIN]
