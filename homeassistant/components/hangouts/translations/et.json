@@ -5,9 +5,9 @@
             "unknown": "Tundmatu viga"
         },
         "error": {
-            "invalid_2fa": "Vale 2-teguriline autentimine, proovige uuesti.",
-            "invalid_2fa_method": "Kehtetu 2FA meetod (kontrollige telefoni teel).",
-            "invalid_login": "Vale Kasutajanimi, palun proovige uuesti."
+            "invalid_2fa": "Vale 2-teguriline autentimine, proovi uuesti.",
+            "invalid_2fa_method": "Kehtetu 2FA meetod (kontrolli telefoni teel).",
+            "invalid_login": "Vale kasutajanimi, palun proovi uuesti."
         },
         "step": {
             "2fa": {

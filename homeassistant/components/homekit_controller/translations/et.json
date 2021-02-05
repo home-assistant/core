@@ -13,7 +13,7 @@
         "error": {
             "authentication_error": "Vale HomeKiti kood. Kontrolli seda ja proovi uuesti.",
             "max_peers_error": "Seade keeldus sidumist lisamast kuna puudub piisav salvestusruum.",
-            "pairing_failed": "Selle seadmega sidumise katsel ilmnes tundmatu t\u00f5rge. See v\u00f5ib olla ajutine t\u00f5rge v\u00f5i tseadet ei toetata praegu.",
+            "pairing_failed": "Selle seadmega sidumise katsel ilmnes tundmatu t\u00f5rge. See v\u00f5ib olla ajutine t\u00f5rge v\u00f5i seadet ei toetata praegu.",
             "unable_to_pair": "Ei saa siduda, proovi uuesti.",
             "unknown_error": "Seade teatas tundmatust t\u00f5rkest. Sidumine nurjus."
         },

@@ -11,7 +11,7 @@
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "connection_upgrade": "Printeriga \u00fchenduse loomine nurjus. Proovige uuesti kui SSL/TLS-i suvand on m\u00e4rgitud."
+            "connection_upgrade": "Printeriga \u00fchenduse loomine nurjus. Proovi uuesti kui SSL/TLS-i suvand on m\u00e4rgitud."
         },
         "flow_title": "Printer: {name}",
         "step": {
@@ -23,8 +23,8 @@
                     "ssl": "Printer toetab SSL/TLS \u00fchendust",
                     "verify_ssl": "Printer kasutab \u00f5iget SSL-serti"
                 },
-                "description": "Seadistage oma printer Interneti-printimisprotokolli (IPP) kaudu, et see integreeruks Home Assistantiga.",
-                "title": "Linkige oma printer"
+                "description": "Seadista oma printer Interneti-printimisprotokolli (IPP) kaudu, et see integreeruks Home Assistantiga.",
+                "title": "Lingi oma printer"
             },
             "zeroconf_confirm": {
                 "description": "Kas soovite seadistada {name}?",

@@ -34,7 +34,7 @@
                 "data": {
                     "code_arm_required": "Wymagaj kodu PIN do uzbrojenia",
                     "code_disarm_required": "Wymagaj kodu PIN do rozbrojenia",
-                    "scan_interval": "Cz\u0119stotliwo\u015b\u0107 od\u015bwie\u017cania (w sekundach)"
+                    "scan_interval": "Jak cz\u0119sto odpytywa\u0107 Risco (w sekundach)"
                 },
                 "title": "Opcje"
             },
