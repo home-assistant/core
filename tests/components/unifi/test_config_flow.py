@@ -191,7 +191,7 @@ async def test_flow_works_multiple_sites(hass, aioclient_mock):
 
 async def test_flow_raise_already_configured(hass, aioclient_mock):
     """Test config flow aborts since a connected config entry already exists."""
-    await setup_unifi_integration(hass)
+    await setup_unifi_integration(hass, aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN, context={"source": "user"}
@@ -199,6 +199,8 @@ async def test_flow_raise_already_configured(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
+
+    aioclient_mock.clear_requests()
 
     aioclient_mock.get("https://1.2.3.4:1234", status=302)
 
@@ -340,16 +342,18 @@ async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
 
 async def test_reauth_flow_update_configuration(hass, aioclient_mock):
     """Verify reauth flow can update controller configuration."""
-    controller = await setup_unifi_integration(hass)
+    config_entry = await setup_unifi_integration(hass, aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": SOURCE_REAUTH},
-        data=controller.config_entry,
+        data=config_entry,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == SOURCE_USER
+
+    aioclient_mock.clear_requests()
 
     aioclient_mock.get("https://1.2.3.4:1234", status=302)
 
@@ -381,15 +385,16 @@ async def test_reauth_flow_update_configuration(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
-    assert controller.host == "1.2.3.4"
-    assert controller.config_entry.data[CONF_CONTROLLER][CONF_USERNAME] == "new_name"
-    assert controller.config_entry.data[CONF_CONTROLLER][CONF_PASSWORD] == "new_pass"
+    assert config_entry.data[CONF_CONTROLLER][CONF_HOST] == "1.2.3.4"
+    assert config_entry.data[CONF_CONTROLLER][CONF_USERNAME] == "new_name"
+    assert config_entry.data[CONF_CONTROLLER][CONF_PASSWORD] == "new_pass"
 
 
-async def test_advanced_option_flow(hass):
+async def test_advanced_option_flow(hass, aioclient_mock):
     """Test advanced config flow options."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock,
         clients_response=CLIENTS,
         devices_response=DEVICES,
         wlans_response=WLANS,
@@ -398,7 +403,7 @@ async def test_advanced_option_flow(hass):
     )
 
     result = await hass.config_entries.options.async_init(
-        controller.config_entry.entry_id, context={"show_advanced_options": True}
+        config_entry.entry_id, context={"show_advanced_options": True}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -457,10 +462,11 @@ async def test_advanced_option_flow(hass):
     }
 
 
-async def test_simple_option_flow(hass):
+async def test_simple_option_flow(hass, aioclient_mock):
     """Test simple config flow options."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock,
         clients_response=CLIENTS,
         wlans_response=WLANS,
         dpigroup_response=DPI_GROUPS,
@@ -468,7 +474,7 @@ async def test_simple_option_flow(hass):
     )
 
     result = await hass.config_entries.options.async_init(
-        controller.config_entry.entry_id, context={"show_advanced_options": False}
+        config_entry.entry_id, context={"show_advanced_options": False}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
