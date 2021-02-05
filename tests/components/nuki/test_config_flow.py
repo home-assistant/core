@@ -5,9 +5,10 @@ from pynuki.bridge import InvalidCredentialsException
 from requests.exceptions import RequestException
 
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.nuki.const import DOMAIN
 
-from tests.common import MockConfigEntry
+from .mock import HOST, MAC, MOCK_INFO, NAME, setup_nuki_integration
 
 
 async def test_form(hass):
@@ -19,11 +20,9 @@ async def test_form(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
 
-    mock_info = {"ids": {"hardwareId": "0001"}}
-
     with patch(
         "homeassistant.components.nuki.config_flow.NukiBridge.info",
-        return_value=mock_info,
+        return_value=MOCK_INFO,
     ), patch(
         "homeassistant.components.nuki.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -41,7 +40,7 @@ async def test_form(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "0001"
+    assert result2["title"] == 123456789
     assert result2["data"] == {
         "host": "1.1.1.1",
         "port": 8080,
@@ -55,11 +54,9 @@ async def test_import(hass):
     """Test that the import works."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    mock_info = {"ids": {"hardwareId": "0001"}}
-
     with patch(
         "homeassistant.components.nuki.config_flow.NukiBridge.info",
-        return_value=mock_info,
+        return_value=MOCK_INFO,
     ), patch(
         "homeassistant.components.nuki.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -72,7 +69,7 @@ async def test_import(hass):
             data={"host": "1.1.1.1", "port": 8080, "token": "test-token"},
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "0001"
+        assert result["title"] == 123456789
         assert result["data"] == {
             "host": "1.1.1.1",
             "port": 8080,
@@ -155,21 +152,14 @@ async def test_form_unknown_exception(hass):
 
 async def test_form_already_configured(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    entry = MockConfigEntry(
-        domain="nuki",
-        unique_id="0001",
-        data={"host": "1.1.1.1", "port": 8080, "token": "test-token"},
-    )
-    entry.add_to_hass(hass)
-
+    await setup_nuki_integration(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
         "homeassistant.components.nuki.config_flow.NukiBridge.info",
-        return_value={"ids": {"hardwareId": "0001"}},
+        return_value=MOCK_INFO,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -182,3 +172,58 @@ async def test_form_already_configured(hass):
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result2["reason"] == "already_configured"
+
+
+async def test_dhcp_flow(hass):
+    """Test that DHCP discovery for new bridge works."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data={HOSTNAME: NAME, IP_ADDRESS: HOST, MAC_ADDRESS: MAC},
+        context={"source": config_entries.SOURCE_DHCP},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
+
+    with patch(
+        "homeassistant.components.nuki.config_flow.NukiBridge.info",
+        return_value=MOCK_INFO,
+    ), patch(
+        "homeassistant.components.nuki.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.nuki.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "port": 8080,
+                "token": "test-token",
+            },
+        )
+
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result2["title"] == 123456789
+        assert result2["data"] == {
+            "host": "1.1.1.1",
+            "port": 8080,
+            "token": "test-token",
+        }
+
+        await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_dhcp_flow_already_configured(hass):
+    """Test that DHCP doesn't setup already configured devices."""
+    await setup_nuki_integration(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data={HOSTNAME: NAME, IP_ADDRESS: HOST, MAC_ADDRESS: MAC},
+        context={"source": config_entries.SOURCE_DHCP},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
