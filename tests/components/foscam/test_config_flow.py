@@ -205,7 +205,6 @@ async def test_user_already_configured(hass):
     entry = MockConfigEntry(
         domain=config_flow.DOMAIN,
         data=VALID_CONFIG,
-        unique_id=config_flow.camera_unique_id(VALID_CONFIG),
     )
     entry.add_to_hass(hass)
 
@@ -402,7 +401,6 @@ async def test_import_already_configured(hass):
     entry = MockConfigEntry(
         domain=config_flow.DOMAIN,
         data=VALID_CONFIG,
-        unique_id=config_flow.camera_unique_id(VALID_CONFIG),
     )
     entry.add_to_hass(hass)
 
