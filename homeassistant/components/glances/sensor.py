@@ -34,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             elif sensor_details[0] == "sensors":
                 # sensors will provide temp for different devices
                 for sensor in client.api.data[sensor_details[0]]:
-                    if sensor["type"] == sensor_type:
+                    if sensor["type"].startswith(sensor_type):
                         dev.append(
                             GlancesSensor(
                                 client,
@@ -167,9 +167,9 @@ class GlancesSensor(Entity):
                     if sensor["type"] == "fan_speed":
                         if sensor["label"] == self._sensor_name_prefix:
                             self._state = sensor["value"]
-            elif self.type == "temperature_core":
+            elif self.type == "temperature":
                 for sensor in value["sensors"]:
-                    if sensor["type"] == "temperature_core":
+                    if sensor["type"].startswith("temperature"):
                         if sensor["label"] == self._sensor_name_prefix:
                             self._state = sensor["value"]
             elif self.type == "memory_use_percent":
