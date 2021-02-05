@@ -155,7 +155,7 @@ class HassFoscamCamera(Camera):
 
         if ret == -3:
             LOGGER.info(
-                "Can't get motion detection status, camera %s configured with non-admin user.",
+                "Can't get motion detection status, camera %s configured with non-admin user",
                 self._name,
             )
 
@@ -210,7 +210,7 @@ class HassFoscamCamera(Camera):
             if ret != 0:
                 if ret == -3:
                     LOGGER.info(
-                        "Can't set motion detection status, camera %s configured with non-admin user.",
+                        "Can't set motion detection status, camera %s configured with non-admin user",
                         self._name,
                     )
                 return
@@ -230,7 +230,7 @@ class HassFoscamCamera(Camera):
             if ret != 0:
                 if ret == -3:
                     LOGGER.info(
-                        "Can't set motion detection status, camera %s configured with non-admin user.",
+                        "Can't set motion detection status, camera %s configured with non-admin user",
                         self._name,
                     )
                 return
