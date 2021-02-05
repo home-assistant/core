@@ -6,11 +6,11 @@ from bimmer_connected.country_selector import get_region_from_name
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_PASSWORD, CONF_SOURCE, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_SOURCE, CONF_USERNAME
 from homeassistant.core import callback
 
 from . import DOMAIN  # pylint: disable=unused-import
-from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY, CONF_REGION, CONF_USE_LOCATION
+from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY, CONF_USE_LOCATION
 
 _LOGGER = logging.getLogger(__name__)
 
