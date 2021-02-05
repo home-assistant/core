@@ -95,8 +95,8 @@
             "on": "w\u0142."
         },
         "battery": {
-            "off": "na\u0142adowana",
-            "on": "roz\u0142adowana"
+            "off": "Normalna",
+            "on": "Niska"
         },
         "battery_charging": {
             "off": "roz\u0142adowywanie",
@@ -107,8 +107,8 @@
             "on": "zimno"
         },
         "connectivity": {
-            "off": "offline",
-            "on": "online"
+            "off": "Roz\u0142\u0105czony",
+            "on": "Po\u0142\u0105czony"
         },
         "door": {
             "off": "zamkni\u0119te",
@@ -135,7 +135,7 @@
             "on": "otwarty"
         },
         "moisture": {
-            "off": "brak wilgoci",
+            "off": "Sucho",
             "on": "wilgo\u0107"
         },
         "motion": {
