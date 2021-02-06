@@ -313,10 +313,7 @@ async def test_form_auth_errors_test_connection(hass, error):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "aioshelly.get_info",
-        return_value={"mac": "test-mac", "auth": True},
-    ):
+    with patch("aioshelly.get_info", return_value={"mac": "test-mac", "auth": True}):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "1.1.1.1"},
