@@ -622,7 +622,7 @@ freesms==0.1.2
 fritzconnection==1.4.0
 
 # homeassistant.components.google_translate
-gTTS==2.2.1
+gTTS==2.2.2
 
 # homeassistant.components.garmin_connect
 garminconnect==0.1.16
