@@ -144,17 +144,18 @@ class AirQualitySensor(HomeAccessory):
         super().__init__(*args, category=CATEGORY_SENSOR)
         state = self.hass.states.get(self.entity_id)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        sensor_char = CHAR_AIR_PARTICULATE_DENSITY
         if device_class == DEVICE_CLASS_PM10 or DEVICE_CLASS_PM10 in state.entity_id:
-            self.sensor_class = CHAR_PM10_DENSITY
+            sensor_char = CHAR_PM10_DENSITY
         elif device_class == DEVICE_CLASS_PM25 or DEVICE_CLASS_PM25 in state.entity_id:
-            self.sensor_class = CHAR_PM25_DENSITY
+            sensor_char = CHAR_PM25_DENSITY
         else:
-            self.sensor_class = CHAR_AIR_PARTICULATE_DENSITY
+            sensor_char = CHAR_AIR_PARTICULATE_DENSITY
         serv_air_quality = self.add_preload_service(
-            SERV_AIR_QUALITY_SENSOR, [self.sensor_class]
+            SERV_AIR_QUALITY_SENSOR, [sensor_char]
         )
         self.char_quality = serv_air_quality.configure_char(CHAR_AIR_QUALITY, value=0)
-        self.char_density = serv_air_quality.configure_char(self.sensor_class, value=0)
+        self.char_density = serv_air_quality.configure_char(sensor_char, value=0)
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
         self.async_update_state(state)
