@@ -13,7 +13,8 @@
             "reauth": {
                 "data": {
                     "password": "Mot de passe"
-                }
+                },
+                "description": "Les jetons d'authentification sont invalides, connectez-vous pour les recr\u00e9er."
             },
             "user": {
                 "data": {

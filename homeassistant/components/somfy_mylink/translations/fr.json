@@ -1,13 +1,22 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9ja configur\u00e9 "
+        },
         "error": {
+            "cannot_connect": "\u00c9chec de la connexion ",
+            "invalid_auth": "Authentification invalide ",
             "unknown": "Erreur inattendue"
         },
+        "flow_title": "Somfy MyLink {mac} ( {ip} )",
         "step": {
             "user": {
                 "data": {
-                    "host": "H\u00f4te"
-                }
+                    "host": "H\u00f4te",
+                    "port": "Port",
+                    "system_id": "ID syst\u00e8me"
+                },
+                "description": "L'ID syst\u00e8me peut \u00eatre obtenu dans l'application MyLink sous Int\u00e9gration en s\u00e9lectionnant n'importe quel service non cloud."
             }
         }
     },
@@ -20,6 +29,7 @@
                 "data": {
                     "reverse": "La couverture est invers\u00e9e"
                 },
+                "description": "Configurer les options pour \u00ab {entity_id} \u00bb",
                 "title": "Configurez une entit\u00e9 sp\u00e9cifique"
             },
             "init": {

@@ -18,6 +18,9 @@
             "hassio_confirm": {
                 "title": "Configurer l\u2019int\u00e9gration OpenZWave avec l\u2019add-on OpenZWave"
             },
+            "install_addon": {
+                "title": "L'installation du module compl\u00e9mentaire OpenZWave a commenc\u00e9"
+            },
             "on_supervisor": {
                 "data": {
                     "use_addon": "Utiliser l'add-on OpenZWave Supervisor"
