@@ -73,7 +73,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         self.site_ids = {}
         self.site_names = {}
         self.reauth_config_entry = None
-        self.reauth_config = {}
         self.reauth_schema = {}
 
     async def async_step_user(self, user_input=None):
@@ -92,7 +91,16 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
             }
 
             try:
-                controller = await get_controller(self.hass, **self.config)
+                controller = await get_controller(
+                    self.hass,
+                    host=self.config[CONF_HOST],
+                    username=self.config[CONF_USERNAME],
+                    password=self.config[CONF_PASSWORD],
+                    port=self.config[CONF_PORT],
+                    site=self.config[CONF_SITE_ID],
+                    verify_ssl=self.config[CONF_VERIFY_SSL],
+                )
+
                 sites = await controller.sites()
 
             except AuthenticationRequired:
@@ -143,7 +151,8 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
             unique_id = user_input[CONF_SITE_ID]
             self.config[CONF_SITE_ID] = self.site_ids[unique_id]
-            data = {CONF_CONTROLLER: self.config}
+            # Backwards compatible config
+            self.config[CONF_CONTROLLER] = self.config.copy()
 
             config_entry = await self.async_set_unique_id(unique_id)
             abort_reason = "configuration_updated"
@@ -160,12 +169,14 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                 if controller and controller.available:
                     return self.async_abort(reason="already_configured")
 
-                self.hass.config_entries.async_update_entry(config_entry, data=data)
+                self.hass.config_entries.async_update_entry(
+                    config_entry, data=self.config
+                )
                 await self.hass.config_entries.async_reload(config_entry.entry_id)
                 return self.async_abort(reason=abort_reason)
 
             site_nice_name = self.site_names[unique_id]
-            return self.async_create_entry(title=site_nice_name, data=data)
+            return self.async_create_entry(title=site_nice_name, data=self.config)
 
         if len(self.site_names) == 1:
             return await self.async_step_site(
@@ -183,21 +194,20 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     async def async_step_reauth(self, config_entry: dict):
         """Trigger a reauthentication flow."""
         self.reauth_config_entry = config_entry
-        self.reauth_config = config_entry.data[CONF_CONTROLLER]
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
-            CONF_HOST: self.reauth_config[CONF_HOST],
+            CONF_HOST: config_entry.data[CONF_HOST],
             CONF_SITE_ID: config_entry.title,
         }
 
         self.reauth_schema = {
-            vol.Required(CONF_HOST, default=self.reauth_config[CONF_HOST]): str,
-            vol.Required(CONF_USERNAME, default=self.reauth_config[CONF_USERNAME]): str,
+            vol.Required(CONF_HOST, default=config_entry.data[CONF_HOST]): str,
+            vol.Required(CONF_USERNAME, default=config_entry.data[CONF_USERNAME]): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_PORT, default=self.reauth_config[CONF_PORT]): int,
+            vol.Required(CONF_PORT, default=config_entry.data[CONF_PORT]): int,
             vol.Required(
-                CONF_VERIFY_SSL, default=self.reauth_config[CONF_VERIFY_SSL]
+                CONF_VERIFY_SSL, default=config_entry.data[CONF_VERIFY_SSL]
             ): bool,
         }
 
@@ -217,7 +227,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
             return self.async_abort(reason="already_configured")
 
         await self.async_set_unique_id(mac_address)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: self.config[CONF_HOST]})
+        self._abort_if_unique_id_configured(updates=self.config)
 
         # pylint: disable=no-member
         self.context["title_placeholders"] = {
@@ -234,9 +244,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     def _host_already_configured(self, host):
         """See if we already have a UniFi entry matching the host."""
         for entry in self._async_current_entries():
-            if not entry.data or CONF_CONTROLLER not in entry.data:
-                continue
-            if entry.data[CONF_CONTROLLER][CONF_HOST] == host:
+            if entry.data.get(CONF_HOST) == host:
                 return True
         return False
 

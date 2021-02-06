@@ -66,7 +66,7 @@ CONTROLLER_DATA = {
     CONF_VERIFY_SSL: False,
 }
 
-ENTRY_CONFIG = {CONF_CONTROLLER: CONTROLLER_DATA}
+ENTRY_CONFIG = {**CONTROLLER_DATA, CONF_CONTROLLER: CONTROLLER_DATA}
 ENTRY_OPTIONS = {}
 
 CONFIGURATION = []
@@ -167,6 +167,7 @@ async def setup_unifi_integration(
         options=deepcopy(options),
         entry_id=1,
         unique_id="1",
+        version=1,
     )
     config_entry.add_to_hass(hass)
 
@@ -178,8 +179,8 @@ async def setup_unifi_integration(
     if aioclient_mock:
         mock_default_unifi_requests(
             aioclient_mock,
-            host=config_entry.data[CONF_CONTROLLER][CONF_HOST],
-            site_id=config_entry.data[CONF_CONTROLLER][CONF_SITE_ID],
+            host=config_entry.data[CONF_HOST],
+            site_id=config_entry.data[CONF_SITE_ID],
             sites=sites,
             description=site_description,
             clients_response=clients_response,

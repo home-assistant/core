@@ -29,7 +29,13 @@ from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import CONF_HOST
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
@@ -41,7 +47,6 @@ from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
-    CONF_CONTROLLER,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
@@ -161,12 +166,12 @@ class UniFiController:
     @property
     def host(self):
         """Return the host of this controller."""
-        return self.config_entry.data[CONF_CONTROLLER][CONF_HOST]
+        return self.config_entry.data[CONF_HOST]
 
     @property
     def site(self):
         """Return the site of this config entry."""
-        return self.config_entry.data[CONF_CONTROLLER][CONF_SITE_ID]
+        return self.config_entry.data[CONF_SITE_ID]
 
     @property
     def site_name(self):
@@ -299,7 +304,12 @@ class UniFiController:
         try:
             self.api = await get_controller(
                 self.hass,
-                **self.config_entry.data[CONF_CONTROLLER],
+                host=self.config_entry.data[CONF_HOST],
+                username=self.config_entry.data[CONF_USERNAME],
+                password=self.config_entry.data[CONF_PASSWORD],
+                port=self.config_entry.data[CONF_PORT],
+                site=self.config_entry.data[CONF_SITE_ID],
+                verify_ssl=self.config_entry.data[CONF_VERIFY_SSL],
                 async_callback=self.async_unifi_signalling_callback,
             )
             await self.api.initialize()
