@@ -623,6 +623,8 @@ class _ScriptRun:
         variables = {**self._variables}
         self._variables["wait"] = {"remaining": delay, "trigger": None}
 
+        done = asyncio.Event()
+
         async def async_done(variables, context=None):
             self._variables["wait"] = {
                 "remaining": to_context.remaining if to_context else delay,
@@ -647,7 +649,6 @@ class _ScriptRun:
             return
 
         self._changed()
-        done = asyncio.Event()
         tasks = [
             self._hass.async_create_task(flag.wait()) for flag in (self._stop, done)
         ]
