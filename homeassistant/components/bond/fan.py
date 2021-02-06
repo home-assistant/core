@@ -43,7 +43,7 @@ async def async_setup_entry(
         if DeviceType.is_fan(device.type)
     ]
 
-    async_add_entities(fans)
+    async_add_entities(fans, True)
 
 
 class BondFan(BondEntity, FanEntity):
