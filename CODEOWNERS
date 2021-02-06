@@ -158,7 +158,7 @@ homeassistant/components/flunearyou/* @bachya
 homeassistant/components/forked_daapd/* @uvjustin
 homeassistant/components/fortios/* @kimfrellsen
 homeassistant/components/foscam/* @skgsergio
-homeassistant/components/freebox/* @snoof85 @Quentame
+homeassistant/components/freebox/* @hacf-fr @Quentame
 homeassistant/components/fronius/* @nielstron
 homeassistant/components/frontend/* @home-assistant/frontend
 homeassistant/components/garmin_connect/* @cyberjunky
@@ -211,7 +211,7 @@ homeassistant/components/hydrawise/* @ptcryan
 homeassistant/components/hyperion/* @dermotduffy
 homeassistant/components/iammeter/* @lewei50
 homeassistant/components/iaqualink/* @flz
-homeassistant/components/icloud/* @Quentame
+homeassistant/components/icloud/* @Quentame @nzapponi
 homeassistant/components/ign_sismologia/* @exxamalte
 homeassistant/components/image/* @home-assistant/core
 homeassistant/components/incomfort/* @zxdavb
@@ -263,6 +263,7 @@ homeassistant/components/lutron_caseta/* @swails @bdraco
 homeassistant/components/lyric/* @timmo001
 homeassistant/components/mastodon/* @fabaff
 homeassistant/components/matrix/* @tinloaf
+homeassistant/components/mazda/* @bdr99
 homeassistant/components/mcp23017/* @jardiamj
 homeassistant/components/media_source/* @hunterjm
 homeassistant/components/mediaroom/* @dgomes
@@ -287,7 +288,7 @@ homeassistant/components/mpd/* @fabaff
 homeassistant/components/mqtt/* @home-assistant/core @emontnemery
 homeassistant/components/msteams/* @peroyvind
 homeassistant/components/myq/* @bdraco
-homeassistant/components/mysensors/* @MartinHjelmare
+homeassistant/components/mysensors/* @MartinHjelmare @functionpointer
 homeassistant/components/mystrom/* @fabaff
 homeassistant/components/neato/* @dshokouhi @Santobert
 homeassistant/components/nederlandse_spoorwegen/* @YarmoM

@@ -99,7 +99,7 @@
       }
     },
     "error": {
-      "bad_host": "Invalid Override API host url"
+      "bad_host": "Invalid Override API host URL"
     },
     "abort": {
       "not_konn_panel": "Not a recognized Konnected.io device"

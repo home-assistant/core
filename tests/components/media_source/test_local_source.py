@@ -23,7 +23,7 @@ async def test_async_browse_media(hass):
         await media_source.async_browse_media(
             hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/test/not/exist"
         )
-    assert str(excinfo.value) == "Invalid path."
+    assert str(excinfo.value) == "Path does not exist."
 
     # Test browse file
     with pytest.raises(media_source.BrowseError) as excinfo:

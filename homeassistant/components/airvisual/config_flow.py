@@ -84,47 +84,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-    async def _async_set_unique_id(self, unique_id):
-        """Set the unique ID of the config flow and abort if it already exists."""
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Define the config flow to handle options."""
-        return AirVisualOptionsFlowHandler(config_entry)
-
-    async def async_step_geography(self, user_input, integration_type):
-        """Handle the initialization of the integration via the cloud API."""
-        self._geo_id = async_get_geography_id(user_input)
-        await self._async_set_unique_id(self._geo_id)
-        self._abort_if_unique_id_configured()
-        return await self.async_step_geography_finish(user_input, integration_type)
-
-    async def async_step_geography_by_coords(self, user_input=None):
-        """Handle the initialization of the cloud API based on latitude/longitude."""
-        if not user_input:
-            return self.async_show_form(
-                step_id="geography_by_coords", data_schema=self.geography_coords_schema
-            )
-
-        return await self.async_step_geography(
-            user_input, INTEGRATION_TYPE_GEOGRAPHY_COORDS
-        )
-
-    async def async_step_geography_by_name(self, user_input=None):
-        """Handle the initialization of the cloud API based on city/state/country."""
-        if not user_input:
-            return self.async_show_form(
-                step_id="geography_by_name", data_schema=GEOGRAPHY_NAME_SCHEMA
-            )
-
-        return await self.async_step_geography(
-            user_input, INTEGRATION_TYPE_GEOGRAPHY_NAME
-        )
-
-    async def async_step_geography_finish(self, user_input, integration_type):
+    async def _async_finish_geography(self, user_input, integration_type):
         """Validate a Cloud API key."""
         websession = aiohttp_client.async_get_clientsession(self.hass)
         cloud_api = CloudAPI(user_input[CONF_API_KEY], session=websession)
@@ -183,6 +143,46 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={**user_input, CONF_INTEGRATION_TYPE: integration_type},
         )
 
+    async def _async_init_geography(self, user_input, integration_type):
+        """Handle the initialization of the integration via the cloud API."""
+        self._geo_id = async_get_geography_id(user_input)
+        await self._async_set_unique_id(self._geo_id)
+        self._abort_if_unique_id_configured()
+        return await self._async_finish_geography(user_input, integration_type)
+
+    async def _async_set_unique_id(self, unique_id):
+        """Set the unique ID of the config flow and abort if it already exists."""
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Define the config flow to handle options."""
+        return AirVisualOptionsFlowHandler(config_entry)
+
+    async def async_step_geography_by_coords(self, user_input=None):
+        """Handle the initialization of the cloud API based on latitude/longitude."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="geography_by_coords", data_schema=self.geography_coords_schema
+            )
+
+        return await self._async_init_geography(
+            user_input, INTEGRATION_TYPE_GEOGRAPHY_COORDS
+        )
+
+    async def async_step_geography_by_name(self, user_input=None):
+        """Handle the initialization of the cloud API based on city/state/country."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="geography_by_name", data_schema=GEOGRAPHY_NAME_SCHEMA
+            )
+
+        return await self._async_init_geography(
+            user_input, INTEGRATION_TYPE_GEOGRAPHY_NAME
+        )
+
     async def async_step_node_pro(self, user_input=None):
         """Handle the initialization of the integration with a Node/Pro."""
         if not user_input:
@@ -224,7 +224,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         conf = {CONF_API_KEY: user_input[CONF_API_KEY], **self._entry_data_for_reauth}
 
-        return await self.async_step_geography_finish(
+        return await self._async_finish_geography(
             conf, self._entry_data_for_reauth[CONF_INTEGRATION_TYPE]
         )
 
