@@ -5,7 +5,12 @@ import logging
 from pyenvisalink import EnvisalinkAlarmPanel
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_TIMEOUT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_CODE,
+    CONF_HOST,
+    CONF_TIMEOUT,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -18,7 +23,6 @@ DOMAIN = "envisalink"
 
 DATA_EVL = "envisalink"
 
-CONF_CODE = "code"
 CONF_EVL_KEEPALIVE = "keepalive_interval"
 CONF_EVL_PORT = "port"
 CONF_EVL_VERSION = "evl_version"
@@ -99,7 +103,6 @@ SERVICE_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up for Envisalink devices."""
-
     conf = config.get(DOMAIN)
 
     host = conf.get(CONF_HOST)
