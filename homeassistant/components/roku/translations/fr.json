@@ -9,6 +9,14 @@
         },
         "flow_title": "Roku: {name}",
         "step": {
+            "discovery_confirm": {
+                "data": {
+                    "one": "Vide",
+                    "other": "Vide"
+                },
+                "description": "Voulez-vous configurer {name} ?",
+                "title": "Roku"
+            },
             "ssdp_confirm": {
                 "data": {
                     "one": "Vide",

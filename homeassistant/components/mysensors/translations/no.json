@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "gw_mqtt": {
+                "data": {
+                    "version": "MySensors versjon"
+                }
+            },
+            "gw_serial": {
+                "data": {
+                    "version": "MySensors versjon"
+                }
+            },
+            "user": {
+                "data": {
+                    "gateway_type": ""
+                }
+            }
+        }
+    },
+    "title": ""
+}
