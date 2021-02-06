@@ -6,7 +6,15 @@ from pytest import fixture
 from homeassistant import config_entries
 from homeassistant.components.philips_js.const import DOMAIN
 
-from . import MOCK_CONFIG, MOCK_USERINPUT
+from . import (
+    MOCK_CONFIG,
+    MOCK_CONFIG_PAIRED,
+    MOCK_IMPORT,
+    MOCK_PASSWORD,
+    MOCK_SYSTEM_UNPAIRED,
+    MOCK_USERINPUT,
+    MOCK_USERNAME,
+)
 
 
 @fixture(autouse=True)
@@ -32,7 +40,7 @@ async def test_import(hass, mock_setup, mock_setup_entry):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_USERINPUT,
+        data=MOCK_IMPORT,
     )
 
     assert result["type"] == "create_entry"
@@ -47,7 +55,7 @@ async def test_import_exist(hass, mock_config_entry):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_USERINPUT,
+        data=MOCK_IMPORT,
     )
 
     assert result["type"] == "abort"
@@ -103,3 +111,46 @@ async def test_form_unexpected_error(hass, mock_tv):
 
     assert result["type"] == "form"
     assert result["errors"] == {"base": "unknown"}
+
+
+async def test_pairing(hass, mock_tv, mock_setup, mock_setup_entry):
+    """Test we get the form."""
+
+    mock_tv.system = MOCK_SYSTEM_UNPAIRED
+    mock_tv.pairing_type = "digest_auth_pairing"
+    mock_tv.api_version = 6
+    mock_tv.api_version_detected = 6
+    mock_tv.secured_transport = True
+
+    mock_tv.pairRequest.return_value = {}
+    mock_tv.pairGrant.return_value = MOCK_USERNAME, MOCK_PASSWORD
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_USERINPUT,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    mock_tv.setTransport.assert_called_with(True, 6)
+    mock_tv.pairRequest.assert_called()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"pin": "1234"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "55PUS7181/12 (None)"
+    assert result["data"] == MOCK_CONFIG_PAIRED
+
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1

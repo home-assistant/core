@@ -24,6 +24,9 @@ def mock_tv():
     tv.sources = {}
     tv.channels = {}
     tv.system = MOCK_SYSTEM
+    tv.api_version = 1
+    tv.api_version_detected = None
+    tv.pairing_type = None
 
     with patch(
         "homeassistant.components.philips_js.config_flow.PhilipsTV", return_value=tv

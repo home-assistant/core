@@ -131,6 +131,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         self._supports = SUPPORT_PHILIPS_JS
         self._system = system
         self._unique_id = unique_id
+        self._state = STATE_OFF
         super().__init__(coordinator)
         self._update_from_coordinator()
 
@@ -147,7 +148,9 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def supported_features(self):
         """Flag media player features that are supported."""
         supports = self._supports
-        if self._coordinator.turn_on:
+        if self._coordinator.turn_on or (
+            self._tv.on and self._tv.powerstate is not None
+        ):
             supports |= SUPPORT_TURN_ON
         return supports
 
@@ -155,7 +158,8 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def state(self):
         """Get the device state. An exception means OFF state."""
         if self._tv.on:
-            return STATE_ON
+            if self._tv.powerstate == "On" or self._tv.powerstate is None:
+                return STATE_ON
         return STATE_OFF
 
     @property
@@ -197,12 +201,17 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     async def async_turn_on(self):
         """Turn on the device."""
-        await self._coordinator.turn_on.async_run(self.hass, self._context)
+        if self._tv.on and self._tv.powerstate:
+            self.hass.async_add_executor_job(self._tv.setPowerState, "On")
+            self._state = STATE_ON
+        else:
+            await self._coordinator.turn_on.async_run(self.hass, self._context)
+        self._update_soon()
 
     def turn_off(self):
         """Turn off the device."""
         self._tv.sendKey("Standby")
-        self._tv.on = False
+        self._state = STATE_OFF
         self._update_soon()
 
     def volume_up(self):
@@ -252,9 +261,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def media_content_type(self):
         """Return content type of playing media."""
-        if self._tv.source_id == "tv" or self._tv.source_id == "11":
-            return MEDIA_TYPE_CHANNEL
-        if self._tv.source_id is None and self._tv.channels:
+        if self._tv.channel_active:
             return MEDIA_TYPE_CHANNEL
         return None
 
@@ -335,6 +342,15 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         )
 
     def _update_from_coordinator(self):
+
+        if self._tv.on:
+            if self._tv.powerstate in ("Standby", "StandbyKeep"):
+                self._state = STATE_OFF
+            else:
+                self._state = STATE_ON
+        else:
+            self._state = STATE_OFF
+
         self._sources = {
             srcid: source.get("name") or f"Source {srcid}"
             for srcid, source in (self._tv.sources or {}).items()

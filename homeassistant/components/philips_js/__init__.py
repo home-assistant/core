@@ -8,7 +8,12 @@ from haphilipsjs import ConnectionFailure, PhilipsTV
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_VERSION, CONF_HOST
+from homeassistant.const import (
+    CONF_API_VERSION,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import HomeAssistantType
@@ -30,7 +35,12 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Philips TV from a config entry."""
 
-    tvapi = PhilipsTV(entry.data[CONF_HOST], entry.data[CONF_API_VERSION])
+    tvapi = PhilipsTV(
+        entry.data[CONF_HOST],
+        entry.data[CONF_API_VERSION],
+        username=entry.data.get(CONF_USERNAME),
+        password=entry.data.get(CONF_PASSWORD),
+    )
 
     coordinator = PhilipsTVDataUpdateCoordinator(hass, tvapi)
 
