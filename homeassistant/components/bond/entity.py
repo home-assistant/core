@@ -9,6 +9,7 @@ from aiohttp import ClientError
 from bond_api import BPUPSubscriptions
 
 from homeassistant.const import ATTR_NAME
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -38,7 +39,7 @@ class BondEntity(Entity):
         self._bpup_subs = bpup_subs
         self._cancel_updates = None
         self._update_lock = None
-        self._first_update = False
+        self._initialized = False
 
     @property
     def unique_id(self) -> Optional[str]:
@@ -80,12 +81,11 @@ class BondEntity(Entity):
 
     async def async_update(self):
         """Fetch assumed state of the cover from the hub using API."""
-
-        await self._async_update_from_api()
+        await self._async_update_if_bpup_not_alive()
 
     async def _async_update_if_bpup_not_alive(self, now):
         """Fetch via the API if BPUP is not alive."""
-        if self._bpup_subs.alive and self._first_update:
+        if self._bpup_subs.alive and self._initialized:
             return
 
         if self._update_lock.locked():
@@ -99,13 +99,10 @@ class BondEntity(Entity):
         async with self._update_lock:
             await self._async_update_from_api()
 
-        self.async_write_ha_state()
-
     async def _async_update_from_api(self):
         """Fetch via the API."""
         try:
             state: dict = await self._hub.bond.device_state(self._device.device_id)
-            self._first_update = True
         except (ClientError, AsyncIOTimeoutError, OSError) as error:
             if self._available:
                 _LOGGER.warning(
@@ -113,27 +110,28 @@ class BondEntity(Entity):
                 )
             self._available = False
         else:
-            _LOGGER.debug("Device state for %s is:\n%s", self.entity_id, state)
             if not self._available:
                 _LOGGER.info("Entity %s has come back", self.entity_id)
-            self._available = True
-            self._apply_state(state)
+            self._async_state_callback(state)
 
     @abstractmethod
     def _apply_state(self, state: dict):
         raise NotImplementedError
 
-    def _bpup_callback(self, state):
-        """Process a BPUP state change."""
+    @callback
+    def _async_state_callback(self, state):
+        """Process a state change."""
+        self._initialized = True
         self._available = True
         self._apply_state(state)
         self.async_write_ha_state()
+        _LOGGER.debug("Device state for %s is:\n%s", self.entity_id, state)
 
     async def async_added_to_hass(self):
         """Subscribe to BPUP."""
         await super().async_added_to_hass()
         self._update_lock = Lock()
-        self._bpup_subs.subscribe(self._device.device_id, self._bpup_callback)
+        self._bpup_subs.subscribe(self._device.device_id, self._async_state_callback)
         self._cancel_updates = async_track_time_interval(
             self.hass, self._async_update_if_bpup_not_alive, _FALLBACK_SCAN_INTERVAL
         )
