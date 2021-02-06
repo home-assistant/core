@@ -6,12 +6,10 @@ import logging
 import logging.handlers
 import queue
 import traceback
-from typing import Any, Awaitable, Callable, Coroutine, Union, cast, overload
+from typing import Any, Callable, Coroutine
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant, callback
-
-IMMUTABLES = {int, float, complex, bool, str, bytes, bytearray, memoryview, tuple}
 
 
 class HideSensitiveDataFilter(logging.Filter):
@@ -31,18 +29,6 @@ class HideSensitiveDataFilter(logging.Filter):
 
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
     """Process the log in another thread."""
-
-    def emit(self, record: logging.LogRecord) -> None:
-        """Emit a log record."""
-        try:
-            if type(record.args) is tuple:
-                for arg in record.args:
-                    if type(arg) not in IMMUTABLES:
-                        self.enqueue(self.prepare(record))
-                        return
-            self.enqueue(record)
-        except Exception:  # pylint: disable=broad-except
-            self.handleError(record)
 
     def handle(self, record: logging.LogRecord) -> Any:
         """
@@ -113,23 +99,9 @@ def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
     logging.getLogger(module_name).error("%s\n%s", friendly_msg, exc_msg)
 
 
-@overload
-def catch_log_exception(  # type: ignore
-    func: Callable[..., Awaitable[Any]], format_err: Callable[..., Any], *args: Any
-) -> Callable[..., Awaitable[None]]:
-    """Overload for Callables that return an Awaitable."""
-
-
-@overload
 def catch_log_exception(
     func: Callable[..., Any], format_err: Callable[..., Any], *args: Any
-) -> Callable[..., None]:
-    """Overload for Callables that return Any."""
-
-
-def catch_log_exception(
-    func: Callable[..., Any], format_err: Callable[..., Any], *args: Any
-) -> Union[Callable[..., None], Callable[..., Awaitable[None]]]:
+) -> Callable[[], None]:
     """Decorate a callback to catch and log exceptions."""
 
     # Check for partials to properly determine if coroutine function
@@ -137,15 +109,14 @@ def catch_log_exception(
     while isinstance(check_func, partial):
         check_func = check_func.func
 
-    wrapper_func: Union[Callable[..., None], Callable[..., Awaitable[None]]]
+    wrapper_func = None
     if asyncio.iscoroutinefunction(check_func):
-        async_func = cast(Callable[..., Awaitable[None]], func)
 
-        @wraps(async_func)
+        @wraps(func)
         async def async_wrapper(*args: Any) -> None:
             """Catch and log exception."""
             try:
-                await async_func(*args)
+                await func(*args)
             except Exception:  # pylint: disable=broad-except
                 log_exception(format_err, *args)
 
