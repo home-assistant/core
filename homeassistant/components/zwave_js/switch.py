@@ -1,7 +1,7 @@
 """Representation of Z-Wave switches."""
 
 import logging
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Optional
 
 from zwave_js_server.client import Client as ZwaveClient
 
@@ -44,8 +44,11 @@ class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
     """Representation of a Z-Wave switch."""
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> Optional[bool]:  # type: ignore
         """Return a boolean for the state of the switch."""
+        if self.info.primary_value.value is None:
+            # guard missing value
+            return None
         return bool(self.info.primary_value.value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:

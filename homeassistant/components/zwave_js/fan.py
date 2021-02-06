@@ -84,13 +84,19 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         await self.info.node.async_set_value(target_value, 0)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> Optional[bool]:  # type: ignore
         """Return true if device is on (speed above 0)."""
+        if self.info.primary_value.value is None:
+            # guard missing value
+            return None
         return bool(self.info.primary_value.value > 0)
 
     @property
-    def percentage(self) -> int:
+    def percentage(self) -> Optional[int]:
         """Return the current speed percentage."""
+        if self.info.primary_value.value is None:
+            # guard missing value
+            return None
         return ranged_value_to_percentage(SPEED_RANGE, self.info.primary_value.value)
 
     @property
