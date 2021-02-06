@@ -480,7 +480,12 @@ async def test_zeroconf_sleeping_device_error(hass, error):
 
 
 @pytest.mark.parametrize(
-    "error", [(asyncio.TimeoutError, "cannot_connect"), (ValueError, "unknown")]
+    "error",
+    [
+        (asyncio.TimeoutError, "cannot_connect"),
+        (aioshelly.AuthRequired, "invalid_auth"),
+        (ValueError, "unknown"),
+    ],
 )
 async def test_zeroconf_confirm_error(hass, error):
     """Test we get the form."""
