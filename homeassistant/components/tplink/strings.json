@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Setup TP-Link Kasa Smart",
-        "description": "[%key:common::config_flow::description::confirm_setup%]",
+        "description": "Do you want to setup the TP-Link integration?",
         "data": {
           "light": "Comma separated list of lights.",
           "dimmer": "Comma separated list of dimmers.",
