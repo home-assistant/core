@@ -65,7 +65,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     projector = EpsonProjector(
         config_entry.title,
         config_entry.data,
-        config_entry.entry_id,
+        unique_id=config_entry.entry_id,
         websession=async_get_clientsession(hass, verify_ssl=False),
     )
     async_add_entities([projector], True)
@@ -98,7 +98,7 @@ async def async_setup_platform(
 class EpsonProjector(MediaPlayerEntity):
     """Representation of Epson Projector Device."""
 
-    def __init__(self, name, config: Dict[str, Any], websession=None):
+    def __init__(self, name, config: Dict[str, Any], unique_id=None, websession=None):
         """Initialize entity to control Epson projector."""
         self._name = name
         self._available = False
@@ -107,6 +107,7 @@ class EpsonProjector(MediaPlayerEntity):
         self._source = None
         self._volume = None
         self._state = None
+        self._unique_id = unique_id
         self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
 
         self._projector = Projector(
@@ -147,6 +148,11 @@ class EpsonProjector(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return unique ID."""
+        return self._unique_id
 
     @property
     def state(self):
