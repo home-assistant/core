@@ -16,7 +16,6 @@ async def async_reproduce_states(
     reproduce_options: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Reproduce component states."""
-
     states_copy = []
     for state in states:
         members = get_entity_ids(hass, state.entity_id)
