@@ -176,14 +176,14 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return int(color_temperature_kelvin_to_mired(color_temp))
 
     @property
-    def min_mireds(self) -> Optional[float]:
+    def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
-        return color_temperature_kelvin_to_mired(KELVIN_MAX_VALUE)
+        return int(color_temperature_kelvin_to_mired(KELVIN_MAX_VALUE))
 
     @property
-    def max_mireds(self) -> Optional[float]:
+    def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
-        return color_temperature_kelvin_to_mired(min_kelvin(self.wrapper.model))
+        return int(color_temperature_kelvin_to_mired(min_kelvin(self.wrapper.model)))
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on light."""
