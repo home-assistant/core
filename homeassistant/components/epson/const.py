@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 
 # Configuration names
 CONF_PROJECTORS = "projectors"
-ATTR_CMODE = "cmode"
+ATTR_COLOR_MODE = "color_mode"
 
 # Integration name
 EPSON_DOMAIN = "epson"

@@ -55,7 +55,7 @@ from homeassistant.helpers.typing import (
     HomeAssistantType,
 )
 
-from .const import ATTR_CMODE
+from .const import ATTR_COLOR_MODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ class EpsonProjector(MediaPlayerEntity):
         """Initialize entity to control Epson projector."""
         self._name = name
         self._available = False
-        self._cmode = None
+        self._color_mode = None
         self._source_list = list(DEFAULT_SOURCES.values())
         self._source = None
         self._volume = None
@@ -131,8 +131,8 @@ class EpsonProjector(MediaPlayerEntity):
         if power_state == EPSON_CODES[POWER]:
             self._state = STATE_ON
             self._source_list = list(DEFAULT_SOURCES.values())
-            cmode = await self._projector.get_property(CMODE)
-            self._cmode = CMODE_LIST.get(cmode, self._cmode)
+            color_mode = await self._projector.get_property(CMODE)
+            self._color_mode = CMODE_LIST.get(color_mode, self._color_mode)
             source = await self._projector.get_property(SOURCE)
             self._source = SOURCE_LIST.get(source, self._source)
             volume = await self._projector.get_property(VOLUME)
@@ -211,9 +211,9 @@ class EpsonProjector(MediaPlayerEntity):
         """Return the volume level of the media player (0..1)."""
         return self._volume
 
-    async def select_cmode(self, cmode):
+    async def select_color_mode(self, color_mode):
         """Set color mode in Epson."""
-        await self._projector.send_command(CMODE_LIST_SET[cmode])
+        await self._projector.send_command(CMODE_LIST_SET[color_mode])
 
     async def async_select_source(self, source):
         """Select input source."""
@@ -251,6 +251,6 @@ class EpsonProjector(MediaPlayerEntity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        if self._cmode is None:
+        if self._color_mode is None:
             return {}
-        return {ATTR_CMODE: self._cmode}
+        return {ATTR_COLOR_MODE: self._color_mode}
