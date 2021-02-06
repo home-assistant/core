@@ -21,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "hive"
 DATA_HIVE = "data_hive"
+ENTITY_LOOKUP = {}
 SERVICES = ["Heating", "HotWater", "TRV"]
 SERVICE_BOOST_HOT_WATER = "boost_hot_water"
 SERVICE_BOOST_HEATING = "boost_heating"
@@ -166,20 +167,15 @@ def refresh_system(func):
 class HiveEntity(Entity):
     """Initiate Hive Base Class."""
 
-    def __init__(self, session, hive_device):
+    def __init__(self, hive, hive_device):
         """Initialize the instance."""
-        self.node_id = hive_device["Hive_NodeID"]
-        self.node_name = hive_device["Hive_NodeName"]
-        self.device_type = hive_device["HA_DeviceType"]
-        self.node_device_type = hive_device["Hive_DeviceType"]
-        self.session = session
+        self.hive = hive
+        self.device = hive_device
         self.attributes = {}
-        self._unique_id = f"{self.node_id}-{self.device_type}"
+        self._unique_id = f'{self.device["hiveID"]}-{self.device["hiveType"]}'
 
     async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
-        )
-        if self.device_type in SERVICES:
-            self.session.entity_lookup[self.entity_id] = self.node_id
+        async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state())
+        if self.device["hiveType"] in SERVICES:
+            ENTITY_LOOKUP[self.entity_id] = self.device["hiveID"]
