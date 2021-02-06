@@ -109,7 +109,7 @@ async def test_migrate_entry(hass):
         CONF_MODEL: "model",
         CONF_NAME: "name",
     }
-    assert entry.version == 3
+    assert entry.version == 2  # Keep version to support rollbacking
     assert entry.unique_id == "00:40:8c:12:34:56"
 
     vmd4_entity = registry.async_get("binary_sensor.vmd4")
