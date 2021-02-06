@@ -2,7 +2,7 @@
 from functools import wraps
 import logging
 
-from pyhiveapi import Pyhiveapi
+from pyhiveapi import Hive
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -84,10 +84,10 @@ class HiveSession:
     trv = None
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Hive Component."""
 
-    def heating_boost(service):
+    async def heating_boost(service):
         """Handle the service call."""
         node_id = HiveSession.entity_lookup.get(service.data[ATTR_ENTITY_ID])
         if not node_id:
@@ -98,9 +98,9 @@ def setup(hass, config):
         minutes = service.data[ATTR_TIME_PERIOD]
         temperature = service.data[ATTR_TEMPERATURE]
 
-        session.heating.turn_boost_on(node_id, minutes, temperature)
+        hive.heating.turn_boost_on(node_id, minutes, temperature)
 
-    def hot_water_boost(service):
+    async def hot_water_boost(service):
         """Handle the service call."""
         node_id = HiveSession.entity_lookup.get(service.data[ATTR_ENTITY_ID])
         if not node_id:
@@ -111,31 +111,24 @@ def setup(hass, config):
         mode = service.data[ATTR_MODE]
 
         if mode == "on":
-            session.hotwater.turn_boost_on(node_id, minutes)
+            hive.hotwater.turn_boost_on(node_id, minutes)
         elif mode == "off":
-            session.hotwater.turn_boost_off(node_id)
+            hive.hotwater.turn_boost_off(node_id)
 
-    session = HiveSession()
-    session.core = Pyhiveapi()
+    hive = Hive()
 
-    username = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
-    update_interval = config[DOMAIN][CONF_SCAN_INTERVAL]
+    config = {}
+    config["username"] = config[DOMAIN][CONF_USERNAME]
+    config["password"] = config[DOMAIN][CONF_PASSWORD]
+    config["update_interval"] = config[DOMAIN][CONF_SCAN_INTERVAL]
 
-    devices = session.core.initialise_api(username, password, update_interval)
+    devices = await hive.session.startSession()
 
     if devices is None:
         _LOGGER.error("Hive API initialization failed")
         return False
 
-    session.sensor = Pyhiveapi.Sensor()
-    session.heating = Pyhiveapi.Heating()
-    session.hotwater = Pyhiveapi.Hotwater()
-    session.light = Pyhiveapi.Light()
-    session.switch = Pyhiveapi.Switch()
-    session.weather = Pyhiveapi.Weather()
-    session.attributes = Pyhiveapi.Attributes()
-    hass.data[DATA_HIVE] = session
+    hass.data[DATA_HIVE] = hive
 
     for ha_type in DEVICETYPES:
         devicelist = devices.get(DEVICETYPES[ha_type])
