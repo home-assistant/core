@@ -14,7 +14,6 @@ from tests.common import MockConfigEntry
 MOCK_SETTINGS = {
     "name": "Test name",
     "device": {"mac": "test-mac", "hostname": "test-host", "type": "SHSW-1"},
-    "sleep_period": 0,
 }
 DISCOVERY_INFO = {
     "host": "1.1.1.1",
@@ -341,12 +340,7 @@ async def test_zeroconf(hass):
 
     with patch(
         "aioshelly.get_info",
-        return_value={
-            "mac": "test-mac",
-            "type": "SHSW-1",
-            "auth": False,
-            "sleep_mode": 0,
-        },
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -401,7 +395,7 @@ async def test_zeroconf_sleeping_device(hass):
             "mac": "test-mac",
             "type": "SHSW-1",
             "auth": False,
-            "sleep_mode": 600,
+            "sleep_mode": True,
         },
     ), patch(
         "aioshelly.Device.create",
@@ -473,7 +467,7 @@ async def test_zeroconf_sleeping_device_error(hass, error):
             "mac": "test-mac",
             "type": "SHSW-1",
             "auth": False,
-            "sleep_mode": 600,
+            "sleep_mode": True,
         },
     ), patch(
         "aioshelly.Device.create",
@@ -498,12 +492,7 @@ async def test_zeroconf_confirm_error(hass, error):
 
     with patch(
         "aioshelly.get_info",
-        return_value={
-            "mac": "test-mac",
-            "type": "SHSW-1",
-            "auth": False,
-            "sleep_mode": 0,
-        },
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
