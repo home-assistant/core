@@ -12,8 +12,8 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
 
-BULB_6_MULTI_COLOR_LIGHT_ENTITY = "light.bulb_6_multi_color_current_value"
-EATON_RF9640_ENTITY = "light.allloaddimmer_current_value"
+BULB_6_MULTI_COLOR_LIGHT_ENTITY = "light.bulb_6_multi_color"
+EATON_RF9640_ENTITY = "light.allloaddimmer"
 
 
 async def test_light(hass, client, bulb_6_multi_color, integration):
