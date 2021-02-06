@@ -98,6 +98,7 @@ class BondEntity(Entity):
 
         async with self._update_lock:
             await self._async_update_from_api()
+            self.async_write_ha_state()
 
     async def _async_update_from_api(self):
         """Fetch via the API."""
