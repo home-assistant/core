@@ -113,7 +113,7 @@ async def test_unload_entry_multiple_gateways(hass):
     assert hass.data[DECONZ_DOMAIN][gateway2.bridgeid].master
 
 
-async def test_migrate_entry(hass):
+async def test_update_group_unique_id(hass):
     """Test successful migration of entry data."""
     old_unique_id = "123"
     new_unique_id = "1234"
@@ -157,7 +157,7 @@ async def test_migrate_entry(hass):
     assert new_entity.unique_id == f"{new_unique_id}-NEW"
 
 
-async def test_migrate_entry_no_legacy_group_id(hass):
+async def test_update_group_unique_id_no_legacy_group_id(hass):
     """Test migration doesn't trigger without old legacy group id in entry data."""
     old_unique_id = "123"
     new_unique_id = "1234"

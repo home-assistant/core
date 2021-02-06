@@ -84,7 +84,6 @@ async def async_update_master_gateway(hass, config_entry):
 
 async def async_update_group_unique_id(hass, config_entry) -> None:
     """Update unique ID entities based on deCONZ groups."""
-    # if old_unique_id := config_entry.data.get(CONF_GROUP_ID_BASE):
     old_unique_id = config_entry.data.get(CONF_GROUP_ID_BASE)
     if old_unique_id:
         new_unique_id: str = config_entry.unique_id
