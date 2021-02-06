@@ -2,7 +2,7 @@
 AIR_TEMPERATURE_SENSOR = "sensor.multisensor_6_air_temperature"
 ENERGY_SENSOR = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed_2"
 POWER_SENSOR = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed"
-SWITCH_ENTITY = "switch.smart_plug_with_two_usb_ports_current_value"
+SWITCH_ENTITY = "switch.smart_plug_with_two_usb_ports"
 LOW_BATTERY_BINARY_SENSOR = "binary_sensor.multisensor_6_low_battery_level"
 ENABLED_LEGACY_BINARY_SENSOR = "binary_sensor.z_wave_door_window_sensor_any"
 DISABLED_LEGACY_BINARY_SENSOR = "binary_sensor.multisensor_6_any"
