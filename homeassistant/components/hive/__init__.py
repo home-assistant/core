@@ -19,6 +19,8 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_AVAILABLE = "available"
+CONF_MODE = "mode"
 DOMAIN = "hive"
 DATA_HIVE = "data_hive"
 ENTITY_LOOKUP = {}
@@ -119,7 +121,9 @@ async def async_setup(hass, config):
     for ha_type in DEVICETYPES:
         devicelist = devices.get(DEVICETYPES[ha_type])
         if devicelist:
-            async_load_platform(hass, ha_type, DOMAIN, devicelist, config)
+            hass.async_create_task(
+                async_load_platform(hass, ha_type, DOMAIN, devicelist, config)
+            )
             if ha_type == "climate":
                 hass.services.async_register(
                     DOMAIN,
@@ -161,6 +165,8 @@ class HiveEntity(Entity):
 
     async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""
-        async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state())
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state())
+        )
         if self.device["hiveType"] in SERVICES:
             ENTITY_LOOKUP[self.entity_id] = self.device["hiveID"]
