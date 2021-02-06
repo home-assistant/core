@@ -3533,6 +3533,18 @@ def _process_command_from_frame(hass, service):
                 {"key": "setTtsVoice", "val": voice},
             )
 
+    elif service.data["topic"] == "ais/trim_memory":
+        _LOGGER.warnin("trim_memory " + str(service.data["payload"]))
+        try:
+            import os
+
+            tot_m, used_m, free_m = map(
+                int, os.popen("free -t -m").readlines()[-1].split()[1:]
+            )
+            _LOGGER.warnin("used_m " + str(used_m))
+            _LOGGER.warnin("free_m " + str(free_m))
+        except Exception as e:
+            pass
     else:
         # TODO process this without mqtt
         # player_status and speech_status
