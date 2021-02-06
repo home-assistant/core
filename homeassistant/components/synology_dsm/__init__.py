@@ -415,7 +415,7 @@ class SynoApi:
         await self._hass.async_add_executor_job(self._fetch_device_configuration)
         await self.async_update()
 
-    def set_fetching_entities(self, fetching_entities={}):
+    def set_fetching_entities(self, fetching_entities: Dict[str, bool]):
         """Set entries to be fetch from api."""
         self._fetching_entities = fetching_entities
 
@@ -529,7 +529,7 @@ class SynoApi:
         """Stop interacting with the NAS and prepare for removal from hass."""
         try:
             await self._hass.async_add_executor_job(self.dsm.logout)
-        except Exception as err:
+        except (SynologyDSMAPIErrorException, SynologyDSMRequestException) as err:
             _LOGGER.debug("Logout not possible:%s", err)
 
     async def async_update(self, now=None):
