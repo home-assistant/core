@@ -40,6 +40,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except MyQError as err:
         raise ConfigEntryNotReady from err
 
+    # Called by DataUpdateCoordinator, allows to capture any MyQError exceptions and to throw an HASS UpdateFailed
+    # exception instead, preventing traceback in HASS logs.
     async def async_update_data():
         try:
             return await myq.update_device_info()
