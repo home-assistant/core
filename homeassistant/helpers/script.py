@@ -624,6 +624,7 @@ class _ScriptRun:
         self._variables["wait"] = {"remaining": delay, "trigger": None}
 
         done = asyncio.Event()
+
         async def async_done(variables, context=None):
             self._variables["wait"] = {
                 "remaining": to_context.remaining if to_context else delay,
