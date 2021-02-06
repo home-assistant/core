@@ -378,8 +378,13 @@ class Recorder(threading.Thread):
                         self._timechanges_seen = 0
                         self._commit_event_session_or_retry()
                 continue
+
+            skip_event = False
             if event.event_type in self.exclude_t:
-                continue
+                if event.event_type == EVENT_STATE_CHANGED:
+                    skip_event = True
+                else:
+                    continue
 
             entity_id = event.data.get(ATTR_ENTITY_ID)
             if entity_id is not None:
@@ -392,7 +397,8 @@ class Recorder(threading.Thread):
                 else:
                     dbevent = Events.from_event(event)
                 dbevent.created = event.time_fired
-                self.event_session.add(dbevent)
+                if not skip_event:
+                    self.event_session.add(dbevent)
             except (TypeError, ValueError):
                 _LOGGER.warning("Event is not JSON serializable: %s", event)
             except Exception as err:  # pylint: disable=broad-except
