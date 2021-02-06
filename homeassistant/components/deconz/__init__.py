@@ -84,9 +84,11 @@ async def async_update_master_gateway(hass, config_entry):
 
 async def async_update_group_unique_id(hass, config_entry) -> None:
     """Update unique ID entities based on deCONZ groups."""
-    old_unique_id = config_entry.data.get(CONF_GROUP_ID_BASE)
-    if old_unique_id:
-        new_unique_id: str = config_entry.unique_id
+    if CONF_GROUP_ID_BASE not in config_entry.data:
+        return
+
+    old_unique_id = config_entry.data[CONF_GROUP_ID_BASE]
+    new_unique_id: str = config_entry.unique_id
 
     @callback
     def update_unique_id(entity_entry):
@@ -99,11 +101,10 @@ async def async_update_group_unique_id(hass, config_entry) -> None:
             )
         }
 
-    if old_unique_id:
-        await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
-        data = {
-            CONF_API_KEY: config_entry.data[CONF_API_KEY],
-            CONF_HOST: config_entry.data[CONF_HOST],
-            CONF_PORT: config_entry.data[CONF_PORT],
-        }
-        hass.config_entries.async_update_entry(config_entry, data=data)
+    await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+    data = {
+        CONF_API_KEY: config_entry.data[CONF_API_KEY],
+        CONF_HOST: config_entry.data[CONF_HOST],
+        CONF_PORT: config_entry.data[CONF_PORT],
+    }
+    hass.config_entries.async_update_entry(config_entry, data=data)
