@@ -163,7 +163,7 @@ aioftp==0.12.0
 aioguardian==1.0.4
 
 # homeassistant.components.harmony
-aioharmony==0.2.6
+aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
 aiohomekit==0.2.60

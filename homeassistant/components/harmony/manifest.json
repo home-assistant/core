@@ -2,7 +2,7 @@
   "domain": "harmony",
   "name": "Logitech Harmony Hub",
   "documentation": "https://www.home-assistant.io/integrations/harmony",
-  "requirements": ["aioharmony==0.2.6"],
+  "requirements": ["aioharmony==0.2.7"],
   "codeowners": ["@ehendrix23", "@bramkragten", "@bdraco", "@mkeesey"],
   "ssdp": [
     {
