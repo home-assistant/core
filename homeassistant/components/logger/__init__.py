@@ -3,7 +3,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import EVENT_ENABLE_FAST_LOGGING
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -23,11 +22,9 @@ LOGSEVERITY = {
     "NOTSET": 0,
 }
 
-DEFAULT_FAST = False
 DEFAULT_LOGSEVERITY = "DEBUG"
 
 LOGGER_DEFAULT = "default"
-LOGGER_FAST = "fast"
 LOGGER_LOGS = "logs"
 
 ATTR_LEVEL = "level"
@@ -42,7 +39,6 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(LOGGER_DEFAULT): _VALID_LOG_LEVEL,
-                vol.Optional(LOGGER_FAST, default=DEFAULT_FAST): cv.boolean,
                 vol.Optional(LOGGER_LOGS): vol.Schema({cv.string: _VALID_LOG_LEVEL}),
             }
         )
@@ -73,9 +69,6 @@ async def async_setup(hass, config):
 
     if LOGGER_LOGS in config[DOMAIN]:
         set_log_levels(config[DOMAIN][LOGGER_LOGS])
-
-    if config[DOMAIN][LOGGER_FAST]:
-        hass.bus.async_fire(EVENT_ENABLE_FAST_LOGGING)
 
     @callback
     def async_service_handler(service):

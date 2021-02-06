@@ -8,7 +8,7 @@ import queue
 import traceback
 from typing import Any, Callable, Coroutine
 
-from homeassistant.const import EVENT_ENABLE_FAST_LOGGING, EVENT_HOMEASSISTANT_CLOSE
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant, callback
 
 
@@ -29,21 +29,6 @@ class HideSensitiveDataFilter(logging.Filter):
 
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
     """Process the log in another thread."""
-
-    def __init__(self, queue):  # type: ignore
-        """Initialise an instance, using the passed queue."""
-        self.fast_logging = False
-        super().__init__(queue)
-
-    def emit(self, record: logging.LogRecord) -> None:
-        """Emit a log record."""
-        try:
-            if self.fast_logging:
-                self.enqueue(record)
-            else:
-                self.enqueue(self.prepare(record))
-        except Exception:  # pylint: disable=broad-except
-            self.handleError(record)
 
     def handle(self, record: logging.LogRecord) -> Any:
         """
@@ -73,7 +58,7 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
     in the event loop as log messages are written in another thread.
     """
     simple_queue = queue.SimpleQueue()  # type: ignore
-    queue_handler = HomeAssistantQueueHandler(simple_queue)  # type: ignore
+    queue_handler = HomeAssistantQueueHandler(simple_queue)
     logging.root.addHandler(queue_handler)
 
     migrated_handlers = []
@@ -93,13 +78,7 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
         logging.root.removeHandler(queue_handler)
         listener.stop()
 
-    @callback
-    def _async_set_fast_logging(_: Any) -> None:
-        """Enable fast logging."""
-        queue_handler.fast_logging = True
-
-    hass.bus.async_listen(EVENT_HOMEASSISTANT_CLOSE, _async_stop_queue_handler)
-    hass.bus.async_listen_once(EVENT_ENABLE_FAST_LOGGING, _async_set_fast_logging)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_queue_handler)
 
 
 def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
