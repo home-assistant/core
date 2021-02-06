@@ -9,10 +9,17 @@ from homeassistant.components.deconz import (
     async_setup_entry,
     async_unload_entry,
 )
-from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
+from homeassistant.components.deconz.const import (
+    CONF_GROUP_ID_BASE,
+    DOMAIN as DECONZ_DOMAIN,
+)
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.helpers import entity_registry
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+
+from tests.common import MockConfigEntry
 
 ENTRY1_HOST = "1.2.3.4"
 ENTRY1_PORT = 80
@@ -67,7 +74,7 @@ async def test_setup_entry_multiple_gateways(hass):
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["config"]["bridgeid"] = "01234E56789B"
     config_entry2 = await setup_deconz_integration(
-        hass, get_state_response=data, entry_id="2"
+        hass, get_state_response=data, entry_id="2", unique_id="01234E56789B"
     )
     gateway2 = get_gateway_from_config_entry(hass, config_entry2)
 
@@ -92,7 +99,7 @@ async def test_unload_entry_multiple_gateways(hass):
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["config"]["bridgeid"] = "01234E56789B"
     config_entry2 = await setup_deconz_integration(
-        hass, get_state_response=data, entry_id="2"
+        hass, get_state_response=data, entry_id="2", unique_id="01234E56789B"
     )
     gateway2 = get_gateway_from_config_entry(hass, config_entry2)
 
@@ -102,3 +109,66 @@ async def test_unload_entry_multiple_gateways(hass):
 
     assert len(hass.data[DECONZ_DOMAIN]) == 1
     assert hass.data[DECONZ_DOMAIN][gateway2.bridgeid].master
+
+
+async def test_migrate_entry(hass):
+    """Test successful migration of entry data."""
+    old_unique_id = "123"
+    new_unique_id = "1234"
+    entry = MockConfigEntry(
+        domain=DECONZ_DOMAIN,
+        unique_id=new_unique_id,
+        data={CONF_GROUP_ID_BASE: old_unique_id},
+    )
+
+    registry = await entity_registry.async_get_registry(hass)
+    # Create entity entry to migrate to new unique ID
+    registry.async_get_or_create(
+        LIGHT_DOMAIN,
+        DECONZ_DOMAIN,
+        f"{old_unique_id}-OLD",
+        suggested_object_id="old",
+        config_entry=entry,
+    )
+    # Create entity entry with new unique ID
+    registry.async_get_or_create(
+        LIGHT_DOMAIN,
+        DECONZ_DOMAIN,
+        f"{new_unique_id}-NEW",
+        suggested_object_id="new",
+        config_entry=entry,
+    )
+
+    await entry.async_migrate(hass)
+
+    old_entity = registry.async_get(f"{LIGHT_DOMAIN}.old")
+    assert old_entity.unique_id == f"{new_unique_id}-OLD"
+
+    new_entity = registry.async_get(f"{LIGHT_DOMAIN}.new")
+    assert new_entity.unique_id == f"{new_unique_id}-NEW"
+
+
+async def test_migrate_entry_no_legacy_group_id(hass):
+    """Test migration doesn't trigger without old legacy group id in entry data."""
+    old_unique_id = "123"
+    new_unique_id = "1234"
+    entry = MockConfigEntry(
+        domain=DECONZ_DOMAIN,
+        unique_id=new_unique_id,
+        data={},
+    )
+
+    registry = await entity_registry.async_get_registry(hass)
+    # Create entity entry to migrate to new unique ID
+    registry.async_get_or_create(
+        LIGHT_DOMAIN,
+        DECONZ_DOMAIN,
+        f"{old_unique_id}-OLD",
+        suggested_object_id="old",
+        config_entry=entry,
+    )
+
+    await entry.async_migrate(hass)
+
+    old_entity = registry.async_get(f"{LIGHT_DOMAIN}.old")
+    assert old_entity.unique_id == f"{old_unique_id}-OLD"

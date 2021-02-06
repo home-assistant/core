@@ -46,7 +46,7 @@ def get_master_gateway(hass):
 class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a deCONZ config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     _hassio_discovery = None
