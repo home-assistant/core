@@ -2,10 +2,11 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components import unifi
-from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
+from homeassistant.components.unifi import async_flatten_entry_data
+from homeassistant.components.unifi.const import CONF_CONTROLLER, DOMAIN as UNIFI_DOMAIN
 from homeassistant.setup import async_setup_component
 
-from .test_controller import setup_unifi_integration
+from .test_controller import CONTROLLER_DATA, ENTRY_CONFIG, setup_unifi_integration
 
 from tests.common import MockConfigEntry, mock_coro
 
@@ -35,16 +36,9 @@ async def test_controller_no_mac(hass):
     """Test that configured options for a host are loaded via config entry."""
     entry = MockConfigEntry(
         domain=UNIFI_DOMAIN,
-        data={
-            "host": "0.0.0.0",
-            "username": "user",
-            "password": "pass",
-            "port": 80,
-            "site": "default",
-            "verify_ssl": True,
-        },
+        data=ENTRY_CONFIG,
         unique_id="1",
-        version=2,
+        version=1,
     )
     entry.add_to_hass(hass)
     mock_registry = Mock()
@@ -63,42 +57,15 @@ async def test_controller_no_mac(hass):
     assert len(mock_registry.mock_calls) == 0
 
 
-async def test_migrate_entry(hass):
-    """Test that configured options for a host are loaded via config entry."""
+async def test_flatten_entry_data(hass):
+    """Verify entry data can be flattened."""
     entry = MockConfigEntry(
         domain=UNIFI_DOMAIN,
-        data={
-            "controller": {
-                "host": "0.0.0.0",
-                "username": "user",
-                "password": "pass",
-                "port": 80,
-                "site": "default",
-                "verify_ssl": True,
-            }
-        },
-        version=1,
+        data={CONF_CONTROLLER: CONTROLLER_DATA},
     )
+    await async_flatten_entry_data(hass, entry)
 
-    await entry.async_migrate(hass)
-
-    assert entry.version == 1  # Keep version to support rollbacking
-    assert entry.data == {
-        "controller": {
-            "host": "0.0.0.0",
-            "username": "user",
-            "password": "pass",
-            "port": 80,
-            "site": "default",
-            "verify_ssl": True,
-        },
-        "host": "0.0.0.0",
-        "username": "user",
-        "password": "pass",
-        "port": 80,
-        "site": "default",
-        "verify_ssl": True,
-    }
+    assert entry.data == ENTRY_CONFIG
 
 
 async def test_unload_entry(hass, aioclient_mock):

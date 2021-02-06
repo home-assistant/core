@@ -11,6 +11,7 @@ from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.unifi.const import (
+    CONF_CONTROLLER,
     CONF_SITE_ID,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
@@ -65,7 +66,7 @@ CONTROLLER_DATA = {
     CONF_VERIFY_SSL: False,
 }
 
-ENTRY_CONFIG = CONTROLLER_DATA
+ENTRY_CONFIG = {**CONTROLLER_DATA, CONF_CONTROLLER: CONTROLLER_DATA}
 ENTRY_OPTIONS = {}
 
 CONFIGURATION = []
@@ -166,7 +167,7 @@ async def setup_unifi_integration(
         options=deepcopy(options),
         entry_id=1,
         unique_id="1",
-        version=2,
+        version=1,
     )
     config_entry.add_to_hass(hass)
 

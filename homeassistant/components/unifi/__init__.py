@@ -29,6 +29,9 @@ async def async_setup_entry(hass, config_entry):
     """Set up the UniFi component."""
     hass.data.setdefault(UNIFI_DOMAIN, {})
 
+    # Flat configuration was introduced with 2021.3
+    await async_flatten_entry_data(hass, config_entry)
+
     controller = UniFiController(hass, config_entry)
     if not await controller.async_setup():
         return False
@@ -66,19 +69,15 @@ async def async_unload_entry(hass, config_entry):
     return await controller.async_reset()
 
 
-async def async_migrate_entry(hass, config_entry):
-    """Migrate old entry."""
-    LOGGER.debug("Migrating from version %s", config_entry.version)
+async def async_flatten_entry_data(hass, config_entry):
+    """Simpler configuration structure for entry data.
 
-    #  Flatten configuration but keep old data if user rollbacks HASS prior to 2021.03
-    if config_entry.version == 1:
-        data: dict = {**config_entry.data, **config_entry.data[CONF_CONTROLLER]}
-        if config_entry.data != data:
-            hass.config_entries.async_update_entry(config_entry, data=data)
+    Keep controller key layer in case user rollbacks.
+    """
 
-    LOGGER.info("Migration to version %s successful", config_entry.version)
-
-    return True
+    data: dict = {**config_entry.data, **config_entry.data[CONF_CONTROLLER]}
+    if config_entry.data != data:
+        hass.config_entries.async_update_entry(config_entry, data=data)
 
 
 class UnifiWirelessClients:
