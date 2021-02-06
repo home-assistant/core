@@ -4,16 +4,26 @@ import asyncio
 from datetime import timedelta
 import logging
 
+from aiohttp import ClientError
 from auroranoaa import AuroraForecast
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import ATTR_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import (
+    ATTR_ENTRY_TYPE,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTRIBUTION,
     AURORA_API,
     CONF_THRESHOLD,
     COORDINATOR,
@@ -24,7 +34,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor"]
+PLATFORMS = ["binary_sensor", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -126,5 +136,54 @@ class AuroraDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             return await self.api.get_forecast_data(self.longitude, self.latitude)
-        except ConnectionError as error:
+        except ClientError as error:
             raise UpdateFailed(f"Error updating from NOAA: {error}") from error
+
+
+class AuroraEntity(CoordinatorEntity):
+    """Implementation of the base Aurora Entity."""
+
+    def __init__(
+        self,
+        coordinator: AuroraDataUpdateCoordinator,
+        name: str,
+        icon: str,
+    ):
+        """Initialize the Aurora Entity."""
+
+        super().__init__(coordinator=coordinator)
+
+        self._name = name
+        self._unique_id = f"{self.coordinator.latitude}_{self.coordinator.longitude}"
+        self._icon = icon
+
+    @property
+    def unique_id(self):
+        """Define the unique id based on the latitude and longitude."""
+        return self._unique_id
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {"attribution": ATTRIBUTION}
+
+    @property
+    def icon(self):
+        """Return the icon for the sensor."""
+        return self._icon
+
+    @property
+    def device_info(self):
+        """Define the device based on name."""
+        return {
+            ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
+            ATTR_NAME: self.coordinator.name,
+            ATTR_MANUFACTURER: "NOAA",
+            ATTR_MODEL: "Aurora Visibility Sensor",
+            ATTR_ENTRY_TYPE: "service",
+        }
