@@ -64,20 +64,22 @@ class ZWaveBaseEntity(Entity):
 
     def generate_name(
         self,
+        include_value_name: bool = False,
         alternate_value_name: Optional[str] = None,
         additional_info: Optional[List[str]] = None,
     ) -> str:
         """Generate entity name."""
         if additional_info is None:
             additional_info = []
-        node_name = self.info.node.name or self.info.node.device_config.description
-        value_name = (
-            alternate_value_name
-            or self.info.primary_value.metadata.label
-            or self.info.primary_value.property_key_name
-            or self.info.primary_value.property_name
-        )
-        name = f"{node_name}: {value_name}"
+        name: str = self.info.node.name or self.info.node.device_config.description
+        if include_value_name:
+            value_name = (
+                alternate_value_name
+                or self.info.primary_value.metadata.label
+                or self.info.primary_value.property_key_name
+                or self.info.primary_value.property_name
+            )
+            name = f"{name}: {value_name}"
         for item in additional_info:
             if item:
                 name += f" - {item}"

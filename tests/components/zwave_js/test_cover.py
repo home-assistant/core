@@ -3,7 +3,7 @@ from zwave_js_server.event import Event
 
 from homeassistant.components.cover import ATTR_CURRENT_POSITION
 
-WINDOW_COVER_ENTITY = "cover.zws_12_current_value"
+WINDOW_COVER_ENTITY = "cover.zws_12"
 
 
 async def test_cover(hass, client, chain_actuator_zws12, integration):

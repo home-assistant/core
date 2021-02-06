@@ -4,7 +4,7 @@ from zwave_js_server.event import Event
 
 from homeassistant.components.fan import ATTR_SPEED, SPEED_MEDIUM
 
-FAN_ENTITY = "fan.in_wall_smart_fan_control_current_value"
+FAN_ENTITY = "fan.in_wall_smart_fan_control"
 
 
 async def test_fan(hass, client, in_wall_smart_fan_control, integration):
