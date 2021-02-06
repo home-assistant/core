@@ -1,6 +1,6 @@
 """Support for Z-Wave cover devices."""
 import logging
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Optional
 
 from zwave_js_server.client import Client as ZwaveClient
 
@@ -59,13 +59,19 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave Cover device."""
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> Optional[bool]:
         """Return true if cover is closed."""
+        if self.info.primary_value.value is None:
+            # guard missing value
+            return None
         return bool(self.info.primary_value.value == 0)
 
     @property
-    def current_cover_position(self) -> int:
+    def current_cover_position(self) -> Optional[int]:
         """Return the current position of cover where 0 means closed and 100 is fully open."""
+        if self.info.primary_value.value is None:
+            # guard missing value
+            return None
         return round((self.info.primary_value.value / 99) * 100)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
