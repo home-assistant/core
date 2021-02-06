@@ -64,24 +64,30 @@ ATTR_PRESET_MODES = "preset_modes"
 # into core integrations at some point so we are temporarily
 # accommodating them in the transition to percentages.
 _NOT_SPEED_OFF = "off"
+_NOT_SPEED_ON = "on"
 _NOT_SPEED_AUTO = "auto"
 _NOT_SPEED_SMART = "smart"
 _NOT_SPEED_INTERVAL = "interval"
 _NOT_SPEED_IDLE = "idle"
 _NOT_SPEED_FAVORITE = "favorite"
+_NOT_SPEED_SLEEP = "sleep"
 
 _NOT_SPEEDS_FILTER = {
     _NOT_SPEED_OFF,
+    _NOT_SPEED_ON,
     _NOT_SPEED_AUTO,
     _NOT_SPEED_SMART,
     _NOT_SPEED_INTERVAL,
     _NOT_SPEED_IDLE,
+    _NOT_SPEED_SLEEP,
     _NOT_SPEED_FAVORITE,
 }
 
 _FAN_NATIVE = "_fan_native"
 
 OFF_SPEED_VALUES = [SPEED_OFF, None]
+
+LEGACY_SPEED_LIST = [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
 
 class NoValidSpeedsError(ValueError):
@@ -386,7 +392,10 @@ class FanEntity(ToggleEntity):
             if preset_mode:
                 return preset_mode
         if self._implemented_percentage:
-            return self.percentage_to_speed(self.percentage)
+            percentage = self.percentage
+            if percentage is None:
+                return None
+            return self.percentage_to_speed(percentage)
         return None
 
     @property
@@ -404,7 +413,7 @@ class FanEntity(ToggleEntity):
         """Get the list of available speeds."""
         speeds = []
         if self._implemented_percentage:
-            speeds += [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+            speeds += [SPEED_OFF, *LEGACY_SPEED_LIST]
         if self._implemented_preset_mode:
             speeds += self.preset_modes
         return speeds
@@ -434,6 +443,17 @@ class FanEntity(ToggleEntity):
 
         return attrs
 
+    @property
+    def _speed_list_without_preset_modes(self) -> list:
+        """Return the speed list without preset modes.
+
+        This property provides forward and backwards
+        compatibility for conversion to percentage speeds.
+        """
+        if not self._implemented_speed:
+            return LEGACY_SPEED_LIST
+        return speed_list_without_preset_modes(self.speed_list)
+
     def speed_to_percentage(self, speed: str) -> int:
         """
         Map a speed to a percentage.
@@ -453,7 +473,7 @@ class FanEntity(ToggleEntity):
         if speed in OFF_SPEED_VALUES:
             return 0
 
-        speed_list = speed_list_without_preset_modes(self.speed_list)
+        speed_list = self._speed_list_without_preset_modes
 
         if speed_list and speed not in speed_list:
             raise NotValidSpeedError(f"The speed {speed} is not a valid speed.")
@@ -487,7 +507,7 @@ class FanEntity(ToggleEntity):
         if percentage == 0:
             return SPEED_OFF
 
-        speed_list = speed_list_without_preset_modes(self.speed_list)
+        speed_list = self._speed_list_without_preset_modes
 
         try:
             return percentage_to_ordered_list_item(speed_list, percentage)

@@ -15,6 +15,8 @@ from homeassistant.components.fan import (
 
 PRESET_MODE_AUTO = "auto"
 PRESET_MODE_SMART = "smart"
+PRESET_MODE_SLEEP = "sleep"
+PRESET_MODE_ON = "on"
 
 FULL_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
 LIMITED_SUPPORT = SUPPORT_SET_SPEED
@@ -38,6 +40,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     SPEED_HIGH,
                     PRESET_MODE_AUTO,
                     PRESET_MODE_SMART,
+                    PRESET_MODE_SLEEP,
+                    PRESET_MODE_ON,
                 ],
             ),
             DemoFan(
@@ -54,7 +58,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "fan3",
                 "Percentage Full Fan",
                 FULL_SUPPORT,
-                [PRESET_MODE_AUTO, PRESET_MODE_SMART],
+                [
+                    PRESET_MODE_AUTO,
+                    PRESET_MODE_SMART,
+                    PRESET_MODE_SLEEP,
+                    PRESET_MODE_ON,
+                ],
                 None,
             ),
             DemoPercentageFan(
@@ -62,7 +71,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "fan4",
                 "Percentage Limited Fan",
                 LIMITED_SUPPORT,
-                [PRESET_MODE_AUTO, PRESET_MODE_SMART],
+                [
+                    PRESET_MODE_AUTO,
+                    PRESET_MODE_SMART,
+                    PRESET_MODE_SLEEP,
+                    PRESET_MODE_ON,
+                ],
                 None,
             ),
             AsyncDemoPercentageFan(
@@ -70,7 +84,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "fan5",
                 "Preset Only Limited Fan",
                 SUPPORT_PRESET_MODE,
-                [PRESET_MODE_AUTO, PRESET_MODE_SMART],
+                [
+                    PRESET_MODE_AUTO,
+                    PRESET_MODE_SMART,
+                    PRESET_MODE_SLEEP,
+                    PRESET_MODE_ON,
+                ],
                 [],
             ),
         ]
@@ -99,7 +118,7 @@ class BaseDemoFan(FanEntity):
         self._unique_id = unique_id
         self._supported_features = supported_features
         self._speed = SPEED_OFF
-        self._percentage = 0
+        self._percentage = None
         self._speed_list = speed_list
         self._preset_modes = preset_modes
         self._preset_mode = None
