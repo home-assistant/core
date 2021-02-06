@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "api_key": "API nyckel"
-                }
+                },
+                "title": "Anslut till Rachio-enheten"
             }
         }
     }
