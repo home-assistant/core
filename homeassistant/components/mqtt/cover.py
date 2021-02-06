@@ -76,6 +76,7 @@ CONF_STATE_CLOSED = "state_closed"
 CONF_STATE_CLOSING = "state_closing"
 CONF_STATE_OPEN = "state_open"
 CONF_STATE_OPENING = "state_opening"
+CONF_STATE_STOPPED = "state_stopped"
 CONF_TILT_CLOSED_POSITION = "tilt_closed_value"
 CONF_TILT_INVERT_STATE = "tilt_invert_state"
 CONF_TILT_MAX = "tilt_max"
@@ -94,6 +95,7 @@ DEFAULT_PAYLOAD_STOP = "STOP"
 DEFAULT_POSITION_CLOSED = 0
 DEFAULT_POSITION_OPEN = 100
 DEFAULT_RETAIN = False
+DEFAULT_STATE_STOPPED = "stopped"
 DEFAULT_TILT_CLOSED_POSITION = 0
 DEFAULT_TILT_INVERT_STATE = False
 DEFAULT_TILT_MAX = 100
@@ -157,6 +159,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_STATE_CLOSING, default=STATE_CLOSING): cv.string,
             vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
             vol.Optional(CONF_STATE_OPENING, default=STATE_OPENING): cv.string,
+            vol.Optional(CONF_STATE_STOPPED, default=DEFAULT_STATE_STOPPED): cv.string,
             vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(
                 CONF_TILT_CLOSED_POSITION, default=DEFAULT_TILT_CLOSED_POSITION
@@ -285,17 +288,31 @@ class MqttCover(MqttEntity, CoverEntity):
             if template is not None:
                 payload = template.async_render_with_possible_json_value(payload)
 
-            if payload == self._config[CONF_STATE_OPEN]:
-                self._state = STATE_OPEN
+            if payload == self._config[CONF_STATE_STOPPED]:
+                if (
+                    self._optimistic
+                    or self._config.get(CONF_GET_POSITION_TOPIC) is None
+                ):
+                    self._state = (
+                        STATE_CLOSED if self._state == STATE_CLOSING else STATE_OPEN
+                    )
+                else:
+                    self._state = (
+                        STATE_CLOSED
+                        if self._position == DEFAULT_POSITION_CLOSED
+                        else STATE_OPEN
+                    )
             elif payload == self._config[CONF_STATE_OPENING]:
                 self._state = STATE_OPENING
-            elif payload == self._config[CONF_STATE_CLOSED]:
-                self._state = STATE_CLOSED
             elif payload == self._config[CONF_STATE_CLOSING]:
                 self._state = STATE_CLOSING
+            elif payload == self._config[CONF_STATE_OPEN]:
+                self._state = STATE_OPEN
+            elif payload == self._config[CONF_STATE_CLOSED]:
+                self._state = STATE_CLOSED
             else:
                 _LOGGER.warning(
-                    "Payload is not supported (e.g. open, closed, opening, closing): %s",
+                    "Payload is not supported (e.g. open, closed, opening, closing, stopped): %s",
                     payload,
                 )
                 return
@@ -310,7 +327,8 @@ class MqttCover(MqttEntity, CoverEntity):
 
             template = self._config.get(CONF_GET_POSITION_TEMPLATE)
 
-            # To be deprecated: allow using `value_template` as position template if no `state_topic`
+            # To be deprecated:
+            # allow using `value_template` as position template if no `state_topic`
             if template is None and self._config.get(CONF_STATE_TOPIC) is None:
                 template = self._config.get(CONF_VALUE_TEMPLATE)
 
@@ -321,13 +339,13 @@ class MqttCover(MqttEntity, CoverEntity):
                 percentage_payload = self.find_percentage_in_range(
                     float(payload), COVER_PAYLOAD
                 )
-                if self._config.get(CONF_STATE_TOPIC) is None or self._position is None:
+                self._position = percentage_payload
+                if self._config.get(CONF_STATE_TOPIC) is None:
                     self._state = (
                         STATE_CLOSED
                         if percentage_payload == DEFAULT_POSITION_CLOSED
                         else STATE_OPEN
                     )
-                self._position = percentage_payload
             else:
                 _LOGGER.warning("Payload is not integer within range: %s", payload)
                 return

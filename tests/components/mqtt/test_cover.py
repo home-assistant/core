@@ -2084,3 +2084,221 @@ async def test_no_deprecated_warnning_for_position_topic_using_position_template
         "and will be removed in the future, "
         "please replace it with 'position_template'"
     ) not in caplog.text
+
+
+async def test_state_and_position_topics_state_not_set_via_position_topic(
+    hass, mqtt_mock
+):
+    """Test state is not set via position topic when both state and position topics are set."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "position_topic": "get-position-topic",
+                "position_open": 100,
+                "position_closed": 0,
+                "state_open": "OPEN",
+                "state_closed": "CLOSE",
+                "command_topic": "command-topic",
+                "qos": 0,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "state-topic", "OPEN")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "get-position-topic", "0")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "get-position-topic", "100")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "state-topic", "CLOSE")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+
+    async_fire_mqtt_message(hass, "get-position-topic", "0")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+
+    async_fire_mqtt_message(hass, "get-position-topic", "100")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+
+
+async def test_set_state_via_position_using_stopped_state(hass, mqtt_mock):
+    """Test the controlling state via position topic using stopped state."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "position_topic": "get-position-topic",
+                "position_open": 100,
+                "position_closed": 0,
+                "state_open": "OPEN",
+                "state_closed": "CLOSE",
+                "state_stopped": "STOPPED",
+                "command_topic": "command-topic",
+                "qos": 0,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "state-topic", "OPEN")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "get-position-topic", "0")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "state-topic", "STOPPED")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+
+    async_fire_mqtt_message(hass, "get-position-topic", "100")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+
+    async_fire_mqtt_message(hass, "state-topic", "STOPPED")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+
+async def test_set_state_via_stopped_state_optimistic(hass, mqtt_mock):
+    """Test the controlling state via stopped state in optimistic mode."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "position_topic": "get-position-topic",
+                "position_open": 100,
+                "position_closed": 0,
+                "state_open": "OPEN",
+                "state_closed": "CLOSE",
+                "state_stopped": "STOPPED",
+                "state_opening": "OPENING",
+                "state_closing": "CLOSING",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "optimistic": True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "state-topic", "OPEN")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "get-position-topic", "50")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "state-topic", "OPENING")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPENING
+
+    async_fire_mqtt_message(hass, "state-topic", "STOPPED")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "state-topic", "CLOSING")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSING
+
+    async_fire_mqtt_message(hass, "state-topic", "STOPPED")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+
+
+async def test_set_state_via_stopped_state_no_position_topic(hass, mqtt_mock):
+    """Test the controlling state via stopped state when no position topic."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "state_open": "OPEN",
+                "state_closed": "CLOSE",
+                "state_stopped": "STOPPED",
+                "state_opening": "OPENING",
+                "state_closing": "CLOSING",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "optimistic": False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "state-topic", "OPEN")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "state-topic", "OPENING")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPENING
+
+    async_fire_mqtt_message(hass, "state-topic", "STOPPED")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+
+    async_fire_mqtt_message(hass, "state-topic", "CLOSING")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSING
+
+    async_fire_mqtt_message(hass, "state-topic", "STOPPED")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
