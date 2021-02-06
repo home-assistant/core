@@ -8,6 +8,7 @@ from homeassistant.components.deconz import (
     DeconzGateway,
     async_setup_entry,
     async_unload_entry,
+    async_update_group_unique_id,
 )
 from homeassistant.components.deconz.const import (
     CONF_GROUP_ID_BASE,
@@ -145,7 +146,7 @@ async def test_migrate_entry(hass):
         config_entry=entry,
     )
 
-    await entry.async_migrate(hass)
+    await async_update_group_unique_id(hass, entry)
 
     assert entry.data == {CONF_API_KEY: "1", CONF_HOST: "2", CONF_PORT: "3"}
 
@@ -176,7 +177,7 @@ async def test_migrate_entry_no_legacy_group_id(hass):
         config_entry=entry,
     )
 
-    await entry.async_migrate(hass)
+    await async_update_group_unique_id(hass, entry)
 
     old_entity = registry.async_get(f"{LIGHT_DOMAIN}.old")
     assert old_entity.unique_id == f"{old_unique_id}-OLD"
