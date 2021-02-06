@@ -161,7 +161,7 @@ class HarmonyRemote(ConnectionStateMixin, remote.RemoteEntity, RestoreEntity):
     @property
     def device_info(self):
         """Return device info."""
-        self._data.device_info(DOMAIN)
+        return self._data.device_info(DOMAIN)
 
     @property
     def unique_id(self):

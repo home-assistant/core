@@ -2,7 +2,7 @@
 
 MAJOR_VERSION = 2021
 MINOR_VERSION = 2
-PATCH_VERSION = "0b6"
+PATCH_VERSION = "1b0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
 # AIS
