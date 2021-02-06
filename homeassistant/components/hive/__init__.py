@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
@@ -70,27 +70,12 @@ BOOST_HOT_WATER_SCHEMA = vol.Schema(
 )
 
 
-class HiveSession:
-    """Initiate Hive Session Class."""
-
-    entity_lookup = {}
-    core = None
-    heating = None
-    hotwater = None
-    light = None
-    sensor = None
-    switch = None
-    weather = None
-    attributes = None
-    trv = None
-
-
 async def async_setup(hass, config):
     """Set up the Hive Component."""
 
     async def heating_boost(service):
         """Handle the service call."""
-        node_id = HiveSession.entity_lookup.get(service.data[ATTR_ENTITY_ID])
+        node_id = ENTITY_LOOKUP.get(service.data[ATTR_ENTITY_ID])
         if not node_id:
             # log or raise error
             _LOGGER.error("Cannot boost entity id entered")
@@ -103,7 +88,7 @@ async def async_setup(hass, config):
 
     async def hot_water_boost(service):
         """Handle the service call."""
-        node_id = HiveSession.entity_lookup.get(service.data[ATTR_ENTITY_ID])
+        node_id = ENTITY_LOOKUP.get(service.data[ATTR_ENTITY_ID])
         if not node_id:
             # log or raise error
             _LOGGER.error("Cannot boost entity id entered")
@@ -123,7 +108,7 @@ async def async_setup(hass, config):
     config["password"] = config[DOMAIN][CONF_PASSWORD]
     config["update_interval"] = config[DOMAIN][CONF_SCAN_INTERVAL]
 
-    devices = await hive.session.startSession()
+    devices = await hive.session.startSession(config)
 
     if devices is None:
         _LOGGER.error("Hive API initialization failed")
@@ -134,16 +119,16 @@ async def async_setup(hass, config):
     for ha_type in DEVICETYPES:
         devicelist = devices.get(DEVICETYPES[ha_type])
         if devicelist:
-            load_platform(hass, ha_type, DOMAIN, devicelist, config)
+            async_load_platform(hass, ha_type, DOMAIN, devicelist, config)
             if ha_type == "climate":
-                hass.services.register(
+                hass.services.async_register(
                     DOMAIN,
                     SERVICE_BOOST_HEATING,
                     heating_boost,
                     schema=BOOST_HEATING_SCHEMA,
                 )
             if ha_type == "water_heater":
-                hass.services.register(
+                hass.services.async_register(
                     DOMAIN,
                     SERVICE_BOOST_HOT_WATER,
                     hot_water_boost,
