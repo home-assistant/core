@@ -37,7 +37,6 @@ class BondEntity(Entity):
         self._sub_device = sub_device
         self._available = True
         self._bpup_subs = bpup_subs
-        self._cancel_updates = None
         self._update_lock = None
         self._initialized = False
 
@@ -110,8 +109,6 @@ class BondEntity(Entity):
                 )
             self._available = False
         else:
-            if not self._available:
-                _LOGGER.info("Entity %s has come back", self.entity_id)
             self._async_state_callback(state)
 
     @abstractmethod
@@ -122,24 +119,25 @@ class BondEntity(Entity):
     def _async_state_callback(self, state):
         """Process a state change."""
         self._initialized = True
+        if not self._available:
+            _LOGGER.info("Entity %s has come back", self.entity_id)
         self._available = True
         self._apply_state(state)
         self.async_write_ha_state()
         _LOGGER.debug("Device state for %s is:\n%s", self.entity_id, state)
 
     async def async_added_to_hass(self):
-        """Subscribe to BPUP."""
+        """Subscribe to BPUP and start polling."""
         await super().async_added_to_hass()
         self._update_lock = Lock()
         self._bpup_subs.subscribe(self._device.device_id, self._async_state_callback)
-        self._cancel_updates = async_track_time_interval(
-            self.hass, self._async_update_if_bpup_not_alive, _FALLBACK_SCAN_INTERVAL
+        self.async_on_remove(
+            async_track_time_interval(
+                self.hass, self._async_update_if_bpup_not_alive, _FALLBACK_SCAN_INTERVAL
+            )
         )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from BPUP data on remove."""
         await super().async_will_remove_from_hass()
         self._bpup_subs.unsubscribe(self._device.device_id, self._bpup_callback)
-        if self._cancel_updates:
-            self._cancel_updates()
-            self._cancel_updates = None
