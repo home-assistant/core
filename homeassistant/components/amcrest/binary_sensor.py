@@ -20,6 +20,9 @@ from .const import (
     BINARY_SENSOR_SCAN_INTERVAL_SECS,
     DATA_AMCREST,
     DEVICES,
+    EVENT_ACTION_START,
+    EVENT_ACTION_STOP,
+    EVENT_KEY_ACTION,
     SENSOR_DEVICE_CLASS,
     SENSOR_EVENT_CODE,
     SENSOR_NAME,
@@ -98,7 +101,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
         self._signal_name = name
         self._api = device.api
         self._sensor_type = sensor_type
-        self._state = None
+        self._state = False
         self._device_class = BINARY_SENSORS[sensor_type][SENSOR_DEVICE_CLASS]
         self._event_code = BINARY_SENSORS[sensor_type][SENSOR_EVENT_CODE]
         self._unsub_dispatcher = []
@@ -172,11 +175,16 @@ class AmcrestBinarySensor(BinarySensorEntity):
         self.async_schedule_update_ha_state(True)
 
     @callback
-    def async_event_received(self, start):
+    def async_event_received(self, event_info):
         """Update state from received event."""
         _LOGGER.debug(_UPDATE_MSG, self._name)
-        self._state = start
-        self.async_write_ha_state()
+
+        if EVENT_KEY_ACTION in event_info:
+            if event_info[EVENT_KEY_ACTION] == EVENT_ACTION_START:
+                self._state = True
+            elif event_info[EVENT_KEY_ACTION] == EVENT_ACTION_STOP:
+                self._state = False
+            self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Subscribe to signals."""

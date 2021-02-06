@@ -142,6 +142,7 @@ class AmcrestCam(Camera):
         super().__init__()
         self._name = name
         self._api = device.api
+        self._channel = device.channel
         self._ffmpeg = ffmpeg
         self._ffmpeg_arguments = device.ffmpeg_arguments
         self._stream_source = device.stream_source
@@ -177,6 +178,7 @@ class AmcrestCam(Camera):
             return await self.hass.async_add_executor_job(
                 partial(
                     self._api.snapshot,
+                    channel=self._channel,
                     timeout=(COMM_TIMEOUT, SNAPSHOT_TIMEOUT),
                     stream=False,
                 )
@@ -226,7 +228,9 @@ class AmcrestCam(Camera):
         if self._stream_source == "mjpeg":
             # stream an MJPEG image stream directly from the camera
             websession = async_get_clientsession(self.hass)
-            streaming_url = self._api.mjpeg_url(typeno=self._resolution)
+            streaming_url = self._api.mjpeg_url(
+                channelno=self._channel, typeno=self._resolution
+            )
             stream_coro = websession.get(
                 streaming_url, auth=self._token, timeout=CAMERA_WEB_SESSION_TIMEOUT
             )
@@ -377,7 +381,9 @@ class AmcrestCam(Camera):
             self._audio_enabled = self._get_audio()
             self._motion_recording_enabled = self._get_motion_recording()
             self._color_bw = self._get_color_mode()
-            self._rtsp_url = self._api.rtsp_url(typeno=self._resolution)
+            self._rtsp_url = self._api.rtsp_url(
+                channelno=self._channel, typeno=self._resolution
+            )
         except AmcrestError as error:
             log_update_error(_LOGGER, "get", self.name, "camera attributes", error)
             self._update_succeeded = False
