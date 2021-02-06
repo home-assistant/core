@@ -83,7 +83,7 @@ class BondEntity(Entity):
         """Fetch assumed state of the cover from the hub using API."""
         await self._async_update_if_bpup_not_alive()
 
-    async def _async_update_if_bpup_not_alive(self, now):
+    async def _async_update_if_bpup_not_alive(self, *_):
         """Fetch via the API if BPUP is not alive."""
         if self._bpup_subs.alive and self._initialized:
             return
