@@ -64,6 +64,16 @@ async def async_setup_entry(
 class ZwaveSensorBase(ZWaveBaseEntity):
     """Basic Representation of a Z-Wave sensor."""
 
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveSensorBase entity."""
+        super().__init__(config_entry, client, info)
+        self._name = self.generate_name(include_value_name=True)
+
     @property
     def device_class(self) -> Optional[str]:
         """Return the device class of the sensor."""
@@ -132,7 +142,10 @@ class ZWaveNumericSensor(ZwaveSensorBase):
         """Initialize a ZWaveNumericSensor entity."""
         super().__init__(config_entry, client, info)
         if self.info.primary_value.command_class == CommandClass.BASIC:
-            self._name = self.generate_name(self.info.primary_value.command_class_name)
+            self._name = self.generate_name(
+                include_value_name=True,
+                alternate_value_name=self.info.primary_value.command_class_name,
+            )
 
     @property
     def state(self) -> float:
@@ -166,8 +179,9 @@ class ZWaveListSensor(ZwaveSensorBase):
         """Initialize a ZWaveListSensor entity."""
         super().__init__(config_entry, client, info)
         self._name = self.generate_name(
-            self.info.primary_value.property_name,
-            [self.info.primary_value.property_key_name],
+            include_value_name=True,
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[self.info.primary_value.property_key_name],
         )
 
     @property

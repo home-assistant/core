@@ -25,9 +25,9 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 
-CLIMATE_RADIO_THERMOSTAT_ENTITY = "climate.z_wave_thermostat_thermostat_mode"
-CLIMATE_DANFOSS_LC13_ENTITY = "climate.living_connect_z_thermostat_heating"
-CLIMATE_FLOOR_THERMOSTAT_ENTITY = "climate.floor_thermostat_thermostat_mode"
+CLIMATE_RADIO_THERMOSTAT_ENTITY = "climate.z_wave_thermostat"
+CLIMATE_DANFOSS_LC13_ENTITY = "climate.living_connect_z_thermostat"
+CLIMATE_FLOOR_THERMOSTAT_ENTITY = "climate.floor_thermostat"
 
 
 async def test_thermostat_v2(
