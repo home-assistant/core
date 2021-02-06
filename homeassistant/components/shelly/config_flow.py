@@ -162,7 +162,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured({CONF_HOST: zeroconf_info["host"]})
         self.host = zeroconf_info["host"]
 
-        if not info["auth"] and info["sleep_mode"]:
+        if not info["auth"] and info.get("sleep_mode", False):
             try:
                 self.device_info = info = await validate_input(self.hass, self.host, {})
             except HTTP_CONNECT_ERRORS:
