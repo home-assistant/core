@@ -897,7 +897,6 @@ omit =
     homeassistant/components/switcher_kis/switch.py
     homeassistant/components/switchmate/switch.py
     homeassistant/components/syncthru/sensor.py
-    homeassistant/components/synology/camera.py
     homeassistant/components/synology_chat/notify.py
     homeassistant/components/synology_dsm/__init__.py
     homeassistant/components/synology_dsm/binary_sensor.py
@@ -1064,7 +1063,6 @@ omit =
     homeassistant/components/xbox/sensor.py
     homeassistant/components/xbox_live/sensor.py
     homeassistant/components/xeoma/camera.py
-    homeassistant/components/xfinity/device_tracker.py
     homeassistant/components/xiaomi/camera.py
     homeassistant/components/xiaomi_aqara/__init__.py
     homeassistant/components/xiaomi_aqara/binary_sensor.py
