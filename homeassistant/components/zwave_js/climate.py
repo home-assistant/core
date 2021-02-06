@@ -116,7 +116,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     ) -> None:
         """Initialize lock."""
         super().__init__(config_entry, client, info)
-        self._name = self.generate_name(include_value_name=False)
         self._hvac_modes: Dict[str, Optional[int]] = {}
         self._hvac_presets: Dict[str, Optional[int]] = {}
         self._unit_value: ZwaveValue = None

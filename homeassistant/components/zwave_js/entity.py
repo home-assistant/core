@@ -64,7 +64,7 @@ class ZWaveBaseEntity(Entity):
 
     def generate_name(
         self,
-        include_value_name: bool = True,
+        include_value_name: bool = False,
         alternate_value_name: Optional[str] = None,
         additional_info: Optional[List[str]] = None,
     ) -> str:
