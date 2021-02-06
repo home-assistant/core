@@ -83,9 +83,9 @@ CONFIG_SCHEMA = vol.Schema(
             vol.Schema(
                 {
                     vol.Optional(CONF_KNX_CONFIG): cv.string,
-                    vol.Exclusive(CONF_KNX_ROUTING, "connection_type"): vol.Maybe(
-                        ConnectionSchema.ROUTING_SCHEMA
-                    ),
+                    vol.Exclusive(
+                        CONF_KNX_ROUTING, "connection_type"
+                    ): ConnectionSchema.ROUTING_SCHEMA,
                     vol.Exclusive(
                         CONF_KNX_TUNNELING, "connection_type"
                     ): ConnectionSchema.TUNNELING_SCHEMA,
