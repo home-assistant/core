@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "no_device_selected": "Cihaz se\u00e7ilmedi, l\u00fctfen bir cihaz se\u00e7in."
+        },
+        "step": {
+            "gateway": {
+                "data": {
+                    "host": "\u0130p Adresi",
+                    "name": "A\u011f Ge\u00e7idinin Ad\u0131",
+                    "token": "API Belirteci"
+                },
+                "title": "Bir Xiaomi A\u011f Ge\u00e7idine ba\u011flan\u0131n"
+            },
+            "user": {
+                "data": {
+                    "gateway": "Bir Xiaomi A\u011f Ge\u00e7idine ba\u011flan\u0131n"
+                },
+                "description": "Hangi cihaza ba\u011flanmak istedi\u011finizi se\u00e7in.",
+                "title": "Xiaomi Miio"
+            }
+        }
+    }
+}

@@ -207,9 +207,6 @@ async def async_setup(hass, config):
         """
         params = call.data["params"]
 
-        if not params:
-            profiles.apply_default(light.entity_id, params)
-
         # Only process params once we processed brightness step
         if params and (
             ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params
@@ -225,6 +222,9 @@ async def async_setup(hass, config):
             params[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
 
             preprocess_turn_on_alternatives(hass, params)
+
+        if ATTR_PROFILE not in params:
+            profiles.apply_default(light.entity_id, params)
 
         # Zero brightness: Light will be turned off
         if params.get(ATTR_BRIGHTNESS) == 0:

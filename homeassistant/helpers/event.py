@@ -116,7 +116,9 @@ class TrackTemplateResult:
     result: Any
 
 
-def threaded_listener_factory(async_factory: Callable[..., Any]) -> CALLBACK_TYPE:
+def threaded_listener_factory(
+    async_factory: Callable[..., Any]
+) -> Callable[..., CALLBACK_TYPE]:
     """Convert an async event helper to a threaded one."""
 
     @ft.wraps(async_factory)

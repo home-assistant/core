@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "unauthorized": "Sidumine on keelatud, kontrollige seadme tuvastamistaotlust"
+            "unauthorized": "Sidumine on keelatud, kontrolli seadme tuvastamistaotlust"
         },
         "step": {
             "user": {

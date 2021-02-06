@@ -3,7 +3,7 @@
         "abort": {
             "accessory_not_found_error": "Die Kopplung kann nicht durchgef\u00fchrt werden, da das Ger\u00e4t nicht mehr gefunden werden kann.",
             "already_configured": "Das Zubeh\u00f6r ist mit diesem Controller bereits konfiguriert.",
-            "already_in_progress": "Der Konfigurationsablauf f\u00fcr das Ger\u00e4t wird bereits ausgef\u00fchrt.",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "already_paired": "Dieses Zubeh\u00f6r ist bereits mit einem anderen Ger\u00e4t gekoppelt. Setze das Zubeh\u00f6r zur\u00fcck und versuche es erneut.",
             "ignored_model": "Die Unterst\u00fctzung von HomeKit f\u00fcr dieses Modell ist blockiert, da eine vollst\u00e4ndige native Integration verf\u00fcgbar ist.",
             "invalid_config_entry": "Dieses Ger\u00e4t wird als bereit zum Koppeln angezeigt, es gibt jedoch bereits einen widerspr\u00fcchlichen Konfigurationseintrag in Home Assistant, der zuerst entfernt werden muss.",
@@ -30,7 +30,7 @@
                     "device": "Ger\u00e4t"
                 },
                 "description": "W\u00e4hle das Ger\u00e4t aus, mit dem du die Kopplung herstellen m\u00f6chtest",
-                "title": "Mit HomeKit Zubeh\u00f6r koppeln"
+                "title": "Ger\u00e4teauswahl"
             }
         }
     },

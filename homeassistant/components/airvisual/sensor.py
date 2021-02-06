@@ -27,7 +27,8 @@ from .const import (
     CONF_INTEGRATION_TYPE,
     DATA_COORDINATOR,
     DOMAIN,
-    INTEGRATION_TYPE_GEOGRAPHY,
+    INTEGRATION_TYPE_GEOGRAPHY_COORDS,
+    INTEGRATION_TYPE_GEOGRAPHY_NAME,
 )
 
 _LOGGER = getLogger(__name__)
@@ -58,14 +59,23 @@ NODE_PRO_SENSORS = [
     (SENSOR_KIND_TEMPERATURE, "Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS),
 ]
 
-POLLUTANT_MAPPING = {
-    "co": {"label": "Carbon Monoxide", "unit": CONCENTRATION_PARTS_PER_MILLION},
-    "n2": {"label": "Nitrogen Dioxide", "unit": CONCENTRATION_PARTS_PER_BILLION},
-    "o3": {"label": "Ozone", "unit": CONCENTRATION_PARTS_PER_BILLION},
-    "p1": {"label": "PM10", "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    "p2": {"label": "PM2.5", "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    "s2": {"label": "Sulfur Dioxide", "unit": CONCENTRATION_PARTS_PER_BILLION},
-}
+
+@callback
+def async_get_pollutant_label(symbol):
+    """Get a pollutant's label based on its symbol."""
+    if symbol == "co":
+        return "Carbon Monoxide"
+    if symbol == "n2":
+        return "Nitrogen Dioxide"
+    if symbol == "o3":
+        return "Ozone"
+    if symbol == "p1":
+        return "PM10"
+    if symbol == "p2":
+        return "PM2.5"
+    if symbol == "s2":
+        return "Sulfur Dioxide"
+    return symbol
 
 
 @callback
@@ -84,11 +94,32 @@ def async_get_pollutant_level_info(value):
     return ("Hazardous", "mdi:biohazard")
 
 
+@callback
+def async_get_pollutant_unit(symbol):
+    """Get a pollutant's unit based on its symbol."""
+    if symbol == "co":
+        return CONCENTRATION_PARTS_PER_MILLION
+    if symbol == "n2":
+        return CONCENTRATION_PARTS_PER_BILLION
+    if symbol == "o3":
+        return CONCENTRATION_PARTS_PER_BILLION
+    if symbol == "p1":
+        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    if symbol == "p2":
+        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    if symbol == "s2":
+        return CONCENTRATION_PARTS_PER_BILLION
+    return None
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AirVisual sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id]
 
-    if config_entry.data[CONF_INTEGRATION_TYPE] == INTEGRATION_TYPE_GEOGRAPHY:
+    if config_entry.data[CONF_INTEGRATION_TYPE] in [
+        INTEGRATION_TYPE_GEOGRAPHY_COORDS,
+        INTEGRATION_TYPE_GEOGRAPHY_NAME,
+    ]:
         sensors = [
             AirVisualGeographySensor(
                 coordinator,
@@ -173,25 +204,40 @@ class AirVisualGeographySensor(AirVisualEntity):
             self._state = data[f"aqi{self._locale}"]
         elif self._kind == SENSOR_KIND_POLLUTANT:
             symbol = data[f"main{self._locale}"]
-            self._state = POLLUTANT_MAPPING[symbol]["label"]
+            self._state = async_get_pollutant_label(symbol)
             self._attrs.update(
                 {
                     ATTR_POLLUTANT_SYMBOL: symbol,
-                    ATTR_POLLUTANT_UNIT: POLLUTANT_MAPPING[symbol]["unit"],
+                    ATTR_POLLUTANT_UNIT: async_get_pollutant_unit(symbol),
                 }
             )
 
-        if CONF_LATITUDE in self._config_entry.data:
-            if self._config_entry.options[CONF_SHOW_ON_MAP]:
-                self._attrs[ATTR_LATITUDE] = self._config_entry.data[CONF_LATITUDE]
-                self._attrs[ATTR_LONGITUDE] = self._config_entry.data[CONF_LONGITUDE]
-                self._attrs.pop("lati", None)
-                self._attrs.pop("long", None)
-            else:
-                self._attrs["lati"] = self._config_entry.data[CONF_LATITUDE]
-                self._attrs["long"] = self._config_entry.data[CONF_LONGITUDE]
-                self._attrs.pop(ATTR_LATITUDE, None)
-                self._attrs.pop(ATTR_LONGITUDE, None)
+        # Displaying the geography on the map relies upon putting the latitude/longitude
+        # in the entity attributes with "latitude" and "longitude" as the keys.
+        # Conversely, we can hide the location on the map by using other keys, like
+        # "lati" and "long".
+        #
+        # We use any coordinates in the config entry and, in the case of a geography by
+        # name, we fall back to the latitude longitude provided in the coordinator data:
+        latitude = self._config_entry.data.get(
+            CONF_LATITUDE,
+            self.coordinator.data["location"]["coordinates"][1],
+        )
+        longitude = self._config_entry.data.get(
+            CONF_LONGITUDE,
+            self.coordinator.data["location"]["coordinates"][0],
+        )
+
+        if self._config_entry.options[CONF_SHOW_ON_MAP]:
+            self._attrs[ATTR_LATITUDE] = latitude
+            self._attrs[ATTR_LONGITUDE] = longitude
+            self._attrs.pop("lati", None)
+            self._attrs.pop("long", None)
+        else:
+            self._attrs["lati"] = latitude
+            self._attrs["long"] = longitude
+            self._attrs.pop(ATTR_LATITUDE, None)
+            self._attrs.pop(ATTR_LONGITUDE, None)
 
 
 class AirVisualNodeProSensor(AirVisualEntity):

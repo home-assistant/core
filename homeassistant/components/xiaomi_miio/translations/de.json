@@ -2,27 +2,28 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "already_in_progress": "Der Konfigurationsablauf f\u00fcr dieses Xiaomi Miio-Ger\u00e4t wird bereits ausgef\u00fchrt."
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt"
         },
         "error": {
-            "no_device_selected": "Kein Ger\u00e4t ausgew\u00e4hlt, bitte w\u00e4hlen Sie ein Ger\u00e4t aus."
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "no_device_selected": "Kein Ger\u00e4t ausgew\u00e4hlt, bitte w\u00e4hle ein Ger\u00e4t aus."
         },
         "flow_title": "Xiaomi Miio: {name}",
         "step": {
             "gateway": {
                 "data": {
-                    "host": "IP Adresse",
+                    "host": "IP-Adresse",
                     "name": "Name des Gateways",
                     "token": "API-Token"
                 },
-                "description": "Sie ben\u00f6tigen den 32 Zeichen langen  API-Token. Anweisungen finden Sie unter https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token.",
-                "title": "Stellen Sie eine Verbindung zu einem Xiaomi Gateway her"
+                "description": "Du ben\u00f6tigst den 32 Zeichen langen API-Token. Anweisungen findest du unter https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token.",
+                "title": "Stelle eine Verbindung zu einem Xiaomi Gateway her"
             },
             "user": {
                 "data": {
-                    "gateway": "Stellen Sie eine Verbindung zu einem Xiaomi Gateway her"
+                    "gateway": "Stelle eine Verbindung zu einem Xiaomi Gateway her"
                 },
-                "description": "W\u00e4hlen Sie aus, mit welchem Ger\u00e4t Sie eine Verbindung herstellen m\u00f6chten.",
+                "description": "W\u00e4hle aus, mit welchem Ger\u00e4t du eine Verbindung herstellen m\u00f6chtest.",
                 "title": "Xiaomi Miio"
             }
         }

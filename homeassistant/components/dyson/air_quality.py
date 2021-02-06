@@ -74,37 +74,24 @@ class DysonAirSensor(DysonEntity, AirQualityEntity):
     @property
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
-        if self._device.environmental_state:
-            return int(self._device.environmental_state.particulate_matter_25)
-        return None
+        return int(self._device.environmental_state.particulate_matter_25)
 
     @property
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
-        if self._device.environmental_state:
-            return int(self._device.environmental_state.particulate_matter_10)
-        return None
+        return int(self._device.environmental_state.particulate_matter_10)
 
     @property
     def nitrogen_dioxide(self):
         """Return the NO2 (nitrogen dioxide) level."""
-        if self._device.environmental_state:
-            return int(self._device.environmental_state.nitrogen_dioxide)
-        return None
+        return int(self._device.environmental_state.nitrogen_dioxide)
 
     @property
     def volatile_organic_compounds(self):
         """Return the VOC (Volatile Organic Compounds) level."""
-        if self._device.environmental_state:
-            return int(self._device.environmental_state.volatile_organic_compounds)
-        return None
+        return int(self._device.environmental_state.volatile_organic_compounds)
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        data = {}
-
-        voc = self.volatile_organic_compounds
-        if voc is not None:
-            data[ATTR_VOC] = voc
-        return data
+        return {ATTR_VOC: self.volatile_organic_compounds}

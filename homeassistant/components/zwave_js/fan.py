@@ -7,16 +7,16 @@ from zwave_js_server.client import Client as ZwaveClient
 
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
     SUPPORT_SET_SPEED,
     FanEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.percentage import (
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
+)
 
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -26,10 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_FEATURES = SUPPORT_SET_SPEED
 
-# Value will first be divided to an integer
-VALUE_TO_SPEED = {0: SPEED_OFF, 1: SPEED_LOW, 2: SPEED_MEDIUM, 3: SPEED_HIGH}
-SPEED_TO_VALUE = {SPEED_OFF: 0, SPEED_LOW: 1, SPEED_MEDIUM: 50, SPEED_HIGH: 99}
-SPEED_LIST = [*SPEED_TO_VALUE]
+SPEED_RANGE = (1, 99)  # off is not included
 
 
 async def async_setup_entry(
@@ -57,29 +54,29 @@ async def async_setup_entry(
 class ZwaveFan(ZWaveBaseEntity, FanEntity):
     """Representation of a Z-Wave fan."""
 
-    def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
-    ) -> None:
-        """Initialize the fan."""
-        super().__init__(config_entry, client, info)
-        self._previous_speed: Optional[str] = None
-
-    async def async_set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
-        if speed not in SPEED_TO_VALUE:
-            raise ValueError(f"Invalid speed received: {speed}")
-        self._previous_speed = speed
+    async def async_set_percentage(self, percentage: Optional[int]) -> None:
+        """Set the speed percentage of the fan."""
         target_value = self.get_zwave_value("targetValue")
-        await self.info.node.async_set_value(target_value, SPEED_TO_VALUE[speed])
 
-    async def async_turn_on(self, speed: Optional[str] = None, **kwargs: Any) -> None:
-        """Turn the device on."""
-        if speed is None:
+        if percentage is None:
             # Value 255 tells device to return to previous value
-            target_value = self.get_zwave_value("targetValue")
-            await self.info.node.async_set_value(target_value, 255)
+            zwave_speed = 255
+        elif percentage == 0:
+            zwave_speed = 0
         else:
-            await self.async_set_speed(speed)
+            zwave_speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+
+        await self.info.node.async_set_value(target_value, zwave_speed)
+
+    async def async_turn_on(
+        self,
+        speed: Optional[str] = None,
+        percentage: Optional[int] = None,
+        preset_mode: Optional[str] = None,
+        **kwargs: Any,
+    ) -> None:
+        """Turn the device on."""
+        await self.async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
@@ -87,24 +84,20 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         await self.info.node.async_set_value(target_value, 0)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> Optional[bool]:  # type: ignore
         """Return true if device is on (speed above 0)."""
+        if self.info.primary_value.value is None:
+            # guard missing value
+            return None
         return bool(self.info.primary_value.value > 0)
 
     @property
-    def speed(self) -> Optional[str]:
-        """Return the current speed.
-
-        The Z-Wave speed value is a byte 0-255. 255 means previous value.
-        The normal range of the speed is 0-99. 0 means off.
-        """
-        value = math.ceil(self.info.primary_value.value * 3 / 100)
-        return VALUE_TO_SPEED.get(value, self._previous_speed)
-
-    @property
-    def speed_list(self) -> List[str]:
-        """Get the list of available speeds."""
-        return SPEED_LIST
+    def percentage(self) -> Optional[int]:
+        """Return the current speed percentage."""
+        if self.info.primary_value.value is None:
+            # guard missing value
+            return None
+        return ranged_value_to_percentage(SPEED_RANGE, self.info.primary_value.value)
 
     @property
     def supported_features(self) -> int:

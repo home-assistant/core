@@ -170,3 +170,46 @@ async def test_scan_description_parse_fail(hass, aioclient_mock):
         return_value=[Mock(st="mock-st", location="http://1.1.1.1", values={})],
     ):
         await scanner.async_scan(None)
+
+
+async def test_invalid_characters(hass, aioclient_mock):
+    """Test that we replace bad characters with placeholders."""
+    aioclient_mock.get(
+        "http://1.1.1.1",
+        text="""
+<root>
+  <device>
+    <deviceType>ABC</deviceType>
+    <serialNumber>\xff\xff\xff\xff</serialNumber>
+  </device>
+</root>
+    """,
+    )
+    scanner = ssdp.Scanner(
+        hass,
+        {
+            "mock-domain": [
+                {
+                    ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC",
+                }
+            ]
+        },
+    )
+
+    with patch(
+        "netdisco.ssdp.scan",
+        return_value=[Mock(st="mock-st", location="http://1.1.1.1", values={})],
+    ), patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init:
+        await scanner.async_scan(None)
+
+    assert len(mock_init.mock_calls) == 1
+    assert mock_init.mock_calls[0][1][0] == "mock-domain"
+    assert mock_init.mock_calls[0][2]["context"] == {"source": "ssdp"}
+    assert mock_init.mock_calls[0][2]["data"] == {
+        "ssdp_location": "http://1.1.1.1",
+        "ssdp_st": "mock-st",
+        "deviceType": "ABC",
+        "serialNumber": "ÿÿÿÿ",
+    }

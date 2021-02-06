@@ -1,15 +1,7 @@
 """Collection of fixtures and functions for the HomeKit tests."""
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 EMPTY_8_6_JPEG = b"empty_8_6"
-
-
-def patch_debounce():
-    """Return patch for debounce method."""
-    return patch(
-        "homeassistant.components.homekit.accessories.debounce",
-        lambda f: lambda *args, **kwargs: f(*args, **kwargs),
-    )
 
 
 def mock_turbo_jpeg(
