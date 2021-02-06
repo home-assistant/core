@@ -35,16 +35,26 @@ class HarmonyData(HarmonySubscriberMixin):
         )
 
     @property
+    def activities(self):
+        """List of activity_id: activity_name pairs for all the remotes activities."""
+        activity_list = []
+
+        activity_infos = self._client.config.get("activity", [])
+        for info in activity_infos:
+            activity_id = info["id"]
+            name = info["label"]
+
+            # Filter both ways of representing PowerOff
+            if name is not None and name != ACTIVITY_POWER_OFF:
+                activity_list.append({"id": activity_id, "name": name})
+
+        return activity_list
+
+    @property
     def activity_names(self):
         """Names of all the remotes activities."""
-        activity_infos = self._client.config.get("activity", [])
-        activities = [activity["label"] for activity in activity_infos]
-
-        # Remove both ways of representing PowerOff
-        if None in activities:
-            activities.remove(None)
-        if ACTIVITY_POWER_OFF in activities:
-            activities.remove(ACTIVITY_POWER_OFF)
+        activity_infos = self.activities
+        activities = [activity["name"] for activity in activity_infos]
 
         return activities
 
