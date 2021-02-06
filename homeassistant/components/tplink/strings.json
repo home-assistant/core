@@ -22,5 +22,20 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "light": "Comma separated list of lights.",
+          "dimmer": "Comma separated list of dimmers.",
+          "strip": "Comma separated list of strips.",
+          "switch": "Comma separated list of switches.",
+          "discovery": "Discovery",
+          "retry_delay": "Retry Delay",
+          "retry_max_attempts": "Retry Max Attempts"
+        }
+      }
+    }
   }
 }
