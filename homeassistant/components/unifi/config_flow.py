@@ -123,8 +123,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
                 return await self.async_step_site()
 
-        host = self.config.get(CONF_HOST)
-        if not host and await async_discover_unifi(self.hass):
+        if not (host := self.config.get(CONF_HOST, "")) and await async_discover_unifi(
+            self.hass
+        ):
             host = "unifi"
 
         data = self.reauth_schema or {
