@@ -207,6 +207,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if self._current_mode is None:
             # Thermostat(valve) with no support for setting a mode is considered heating-only
             return HVAC_MODE_HEAT
+        if self._current_mode.value is None:
+            # guard missing value
+            return HVAC_MODE_HEAT
         return ZW_HVAC_MODE_MAP.get(int(self._current_mode.value), HVAC_MODE_HEAT_COOL)
 
     @property
@@ -218,6 +221,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     def hvac_action(self) -> Optional[str]:
         """Return the current running hvac operation if supported."""
         if not self._operating_state:
+            return None
+        if self._operating_state.value is None:
+            # guard missing value
             return None
         return HVAC_CURRENT_MAP.get(int(self._operating_state.value))
 
@@ -234,12 +240,18 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
+        if self._current_mode and self._current_mode.value is None:
+            # guard missing value
+            return None
         temp = self._setpoint_value(self._current_mode_setpoint_enums[0])
         return temp.value if temp else None
 
     @property
     def target_temperature_high(self) -> Optional[float]:
         """Return the highbound target temperature we try to reach."""
+        if self._current_mode and self._current_mode.value is None:
+            # guard missing value
+            return None
         temp = self._setpoint_value(self._current_mode_setpoint_enums[1])
         return temp.value if temp else None
 
@@ -251,6 +263,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
+        if self._current_mode and self._current_mode.value is None:
+            # guard missing value
+            return None
         if self._current_mode and int(self._current_mode.value) not in THERMOSTAT_MODES:
             return_val: str = self._current_mode.metadata.states.get(
                 self._current_mode.value
