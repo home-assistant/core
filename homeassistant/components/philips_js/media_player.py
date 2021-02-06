@@ -1,6 +1,7 @@
 """Media Player component to integrate TVs exposing the Joint Space API."""
 from typing import Any, Dict
 
+from haphilipsjs import ConnectionFailure
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -11,8 +12,11 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_APP,
     MEDIA_CLASS_CHANNEL,
     MEDIA_CLASS_DIRECTORY,
+    MEDIA_TYPE_APP,
+    MEDIA_TYPE_APPS,
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_CHANNELS,
     SUPPORT_BROWSE_MEDIA,
@@ -132,6 +136,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         self._system = system
         self._unique_id = unique_id
         self._state = STATE_OFF
+
         super().__init__(coordinator)
         self._update_from_coordinator()
 
@@ -311,24 +316,19 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                 self._update_soon()
             else:
                 _LOGGER.error("Unable to find channel <%s>", media_id)
+        elif media_type == MEDIA_TYPE_APP:
+            app = self._applications.get(media_id)
+            if app:
+                self._tv.setApplication(app["intent"])
+            else:
+                _LOGGER.error("Unable to find application <%s>", media_id)
         else:
             _LOGGER.error("Unsupported media type <%s>", media_type)
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None):
-        """Implement the websocket media browsing helper."""
-        if media_content_id not in (None, ""):
-            raise BrowseError(
-                f"Media not found: {media_content_type} / {media_content_id}"
-            )
-
-        return BrowseMedia(
-            title="Channels",
-            media_class=MEDIA_CLASS_DIRECTORY,
-            media_content_id="",
-            media_content_type=MEDIA_TYPE_CHANNELS,
-            can_play=False,
-            can_expand=True,
-            children=[
+    async def async_browse_media_channels(self, expanded):
+        """Return channel media objects."""
+        if expanded:
+            children = [
                 BrowseMedia(
                     title=channel,
                     media_class=MEDIA_CLASS_CHANNEL,
@@ -336,9 +336,104 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                     media_content_type=MEDIA_TYPE_CHANNEL,
                     can_play=True,
                     can_expand=False,
+                    thumbnail=self.get_browse_image_url(
+                        MEDIA_TYPE_APP, channel, media_image_id=None
+                    ),
                 )
                 for channel in self._channels.values()
+            ]
+        else:
+            children = None
+
+        return BrowseMedia(
+            title="Channels",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="channels",
+            media_content_type=MEDIA_TYPE_CHANNELS,
+            children_media_class=MEDIA_TYPE_CHANNEL,
+            can_play=False,
+            can_expand=True,
+            children=children,
+        )
+
+    async def async_browse_media_applications(self, expanded):
+        """Return application media objects."""
+        if expanded:
+            children = [
+                BrowseMedia(
+                    title=application["label"],
+                    media_class=MEDIA_CLASS_APP,
+                    media_content_id=application_id,
+                    media_content_type=MEDIA_TYPE_APP,
+                    can_play=True,
+                    can_expand=False,
+                    thumbnail=self.get_browse_image_url(
+                        MEDIA_TYPE_APP, application_id, media_image_id=None
+                    ),
+                )
+                for application_id, application in self._applications.items()
+            ]
+        else:
+            children = None
+
+        return BrowseMedia(
+            title="Applications",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="applications",
+            media_content_type=MEDIA_TYPE_APPS,
+            children_media_class=MEDIA_TYPE_APP,
+            can_play=False,
+            can_expand=True,
+            children=children,
+        )
+
+    async def async_browse_media_root(self):
+        """Return root media objects."""
+        return BrowseMedia(
+            title="Library",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="",
+            media_content_type="",
+            can_play=False,
+            can_expand=True,
+            children=[
+                await self.async_browse_media_channels(False),
+                await self.async_browse_media_applications(False),
             ],
+        )
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        if media_content_id == "channels":
+            return await self.async_browse_media_channels(True)
+        if media_content_id == "applications":
+            return await self.async_browse_media_applications(True)
+        if media_content_id in (None, ""):
+            return await self.async_browse_media_root()
+
+        raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
+
+    async def async_get_browse_image(
+        self, media_content_type, media_content_id, media_image_id=None
+    ):
+        """Serve album art. Returns (content, content_type)."""
+        try:
+            if media_content_type == MEDIA_TYPE_APP and media_content_id:
+                return await self.hass.async_add_executor_job(
+                    self._tv.getApplicationIcon, media_content_id
+                )
+            if media_content_type == MEDIA_TYPE_CHANNEL and media_content_id:
+                return await self.hass.async_add_executor_job(
+                    self._tv.getChannelLogo, media_content_id
+                )
+        except ConnectionFailure:
+            _LOGGER.warning("Failed to fetch image")
+        return None, None
+
+    async def async_get_media_image(self):
+        """Serve album art. Returns (content, content_type)."""
+        return self.async_get_browse_image(
+            self.media_content_type, self.media_content_id, None
         )
 
     def _update_from_coordinator(self):
@@ -360,6 +455,20 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             chid: channel.get("name") or f"Channel {chid}"
             for chid, channel in (self._tv.channels or {}).items()
         }
+
+        if self._tv.applications:
+            self._applications = {
+                app["id"]: app for app in self._tv.applications["applications"]
+            }
+        else:
+            self._applications = {}
+
+        if self._tv.application and "component" in self._tv.application:
+            component = self._tv.application["component"]
+            appid = f"{component['className']}-{component['packageName']}"
+            self._application = self._applications.get(appid)
+        else:
+            self._application = None
 
     @callback
     def _handle_coordinator_update(self) -> None:
