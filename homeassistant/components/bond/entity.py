@@ -34,6 +34,7 @@ class BondEntity(Entity):
         """Initialize entity with API and device info."""
         self._hub = hub
         self._device = device
+        self._device_id = device.device_id
         self._sub_device = sub_device
         self._available = True
         self._bpup_subs = bpup_subs
@@ -44,7 +45,7 @@ class BondEntity(Entity):
     def unique_id(self) -> Optional[str]:
         """Get unique ID for the entity."""
         hub_id = self._hub.bond_id
-        device_id = self._device.device_id
+        device_id = self._device_id
         sub_device_id: str = f"_{self._sub_device}" if self._sub_device else ""
         return f"{hub_id}_{device_id}{sub_device_id}"
 
@@ -64,7 +65,7 @@ class BondEntity(Entity):
         return {
             ATTR_NAME: self.name,
             "suggested_area": self._device.location,
-            "identifiers": {(DOMAIN, self._device.device_id)},
+            "identifiers": {(DOMAIN, self._device_id)},
             "via_device": (DOMAIN, self._hub.bond_id),
         }
 
@@ -80,7 +81,7 @@ class BondEntity(Entity):
 
     async def async_update(self):
         """Fetch assumed state of the cover from the hub using API."""
-        await self._async_update_if_bpup_not_alive()
+        await self._async_update_from_api()
 
     async def _async_update_if_bpup_not_alive(self, *_):
         """Fetch via the API if BPUP is not alive."""
@@ -101,7 +102,7 @@ class BondEntity(Entity):
     async def _async_update_from_api(self):
         """Fetch via the API."""
         try:
-            state: dict = await self._hub.bond.device_state(self._device.device_id)
+            state: dict = await self._hub.bond.device_state(self._device_id)
         except (ClientError, AsyncIOTimeoutError, OSError) as error:
             if self._available:
                 _LOGGER.warning(
@@ -122,15 +123,20 @@ class BondEntity(Entity):
         if not self._available:
             _LOGGER.info("Entity %s has come back", self.entity_id)
         self._available = True
-        self._apply_state(state)
-        self.async_write_ha_state()
         _LOGGER.debug("Device state for %s is:\n%s", self.entity_id, state)
+        self._apply_state(state)
+
+    @callback
+    def _async_bpup_callback(self, state):
+        """Process a state change from BPUP."""
+        self._async_state_callback(state)
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Subscribe to BPUP and start polling."""
         await super().async_added_to_hass()
         self._update_lock = Lock()
-        self._bpup_subs.subscribe(self._device.device_id, self._async_state_callback)
+        self._bpup_subs.subscribe(self._device_id, self._async_bpup_callback)
         self.async_on_remove(
             async_track_time_interval(
                 self.hass, self._async_update_if_bpup_not_alive, _FALLBACK_SCAN_INTERVAL
@@ -140,4 +146,4 @@ class BondEntity(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from BPUP data on remove."""
         await super().async_will_remove_from_hass()
-        self._bpup_subs.unsubscribe(self._device.device_id, self._bpup_callback)
+        self._bpup_subs.unsubscribe(self._device_id, self._async_bpup_callback)

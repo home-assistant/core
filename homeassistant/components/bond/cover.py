@@ -29,7 +29,7 @@ async def async_setup_entry(
         if device.type == DeviceType.MOTORIZED_SHADES
     ]
 
-    async_add_entities(covers, True)
+    async_add_entities(covers)
 
 
 class BondCover(BondEntity, CoverEntity):
