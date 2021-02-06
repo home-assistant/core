@@ -192,9 +192,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if self._current_mode is None:
             # Thermostat(valve) with no support for setting a mode is considered heating-only
             return [ThermostatSetpointType.HEATING]
-        if self._current_mode.value is None:
-            # guard missing value
-            return []
         return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])  # type: ignore
 
     @property
@@ -243,12 +240,18 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
+        if self._current_mode and self._current_mode.value is None:
+            # guard missing value
+            return None
         temp = self._setpoint_value(self._current_mode_setpoint_enums[0])
         return temp.value if temp else None
 
     @property
     def target_temperature_high(self) -> Optional[float]:
         """Return the highbound target temperature we try to reach."""
+        if self._current_mode and self._current_mode.value is None:
+            # guard missing value
+            return None
         temp = self._setpoint_value(self._current_mode_setpoint_enums[1])
         return temp.value if temp else None
 
