@@ -230,7 +230,6 @@ def setup(hass, config):
 
 def ihc_setup(hass, config, conf, controller_id):
     """Set up the IHC component."""
-
     url = conf[CONF_URL]
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
@@ -289,7 +288,6 @@ def autosetup_ihc_products(
     hass: HomeAssistantType, config, ihc_controller, controller_id
 ):
     """Auto setup of IHC products from the IHC project file."""
-
     project_xml = ihc_controller.get_project()
     if not project_xml:
         _LOGGER.error("Unable to read project from IHC controller")
