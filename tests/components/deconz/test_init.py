@@ -15,6 +15,7 @@ from homeassistant.components.deconz.const import (
 )
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.helpers import entity_registry
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
@@ -118,7 +119,12 @@ async def test_migrate_entry(hass):
     entry = MockConfigEntry(
         domain=DECONZ_DOMAIN,
         unique_id=new_unique_id,
-        data={CONF_GROUP_ID_BASE: old_unique_id},
+        data={
+            CONF_API_KEY: "1",
+            CONF_HOST: "2",
+            CONF_GROUP_ID_BASE: old_unique_id,
+            CONF_PORT: "3",
+        },
     )
 
     registry = await entity_registry.async_get_registry(hass)
@@ -140,6 +146,8 @@ async def test_migrate_entry(hass):
     )
 
     await entry.async_migrate(hass)
+
+    assert entry.data == {CONF_API_KEY: "1", CONF_HOST: "2", CONF_PORT: "3"}
 
     old_entity = registry.async_get(f"{LIGHT_DOMAIN}.old")
     assert old_entity.unique_id == f"{new_unique_id}-OLD"

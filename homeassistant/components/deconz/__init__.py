@@ -1,7 +1,12 @@
 """Support for deCONZ devices."""
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.entity_registry import async_migrate_entries
 
@@ -99,6 +104,12 @@ async def async_migrate_entry(hass, config_entry) -> bool:
 
         if old_unique_id:
             await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+            data = {
+                CONF_API_KEY: config_entry.data[CONF_API_KEY],
+                CONF_HOST: config_entry.data[CONF_HOST],
+                CONF_PORT: config_entry.data[CONF_PORT],
+            }
+            hass.config_entries.async_update_entry(config_entry, data=data)
 
     LOGGER.info("Migration to version %s successful", config_entry.version)
 
