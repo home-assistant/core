@@ -34,14 +34,16 @@ SUPPORT_WATER_HEATER = [STATE_ECO, STATE_ON, STATE_OFF]
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Hive Hotwater."""
+    if discovery_info is None:
+        return
 
     hive = hass.data.get(DATA_HIVE)
     devices = hive.devices.get("water_heater")
-    devs = []
+    entities = []
     if devices:
         for dev in devices:
-            devs.append(HiveWaterHeater(hive, dev))
-    async_add_entities(devs, True)
+            entities.append(HiveWaterHeater(hive, dev))
+    async_add_entities(entities, True)
 
 
 class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
@@ -55,14 +57,7 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     @property
     def device_info(self):
         """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self.device["device_id"])},
-            "name": self.device["device_name"],
-            "model": self.device["deviceData"]["model"],
-            "manufacturer": self.device["deviceData"]["manufacturer"],
-            "sw_version": self.device["deviceData"]["version"],
-            "via_device": (DOMAIN, self.device["parentDevice"]),
-        }
+        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
 
     @property
     def supported_features(self):

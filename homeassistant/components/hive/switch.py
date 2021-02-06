@@ -3,23 +3,24 @@ from datetime import timedelta
 
 from homeassistant.components.switch import SwitchEntity
 
-from . import DATA_HIVE, DOMAIN, HiveEntity, refresh_system
+from . import CONF_AVAILABLE, CONF_MODE, DATA_HIVE, DOMAIN, HiveEntity, refresh_system
 
-DEPENDENCIES = ["hive"]
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Hive Switch."""
+    if discovery_info is None:
+        return
 
     hive = hass.data.get(DATA_HIVE)
     devices = hive.devices.get("switch")
-    devs = []
+    entities = []
     if devices:
         for dev in devices:
-            devs.append(HiveDevicePlug(hive, dev))
-    async_add_entities(devs, True)
+            entities.append(HiveDevicePlug(hive, dev))
+    async_add_entities(entities, True)
 
 
 class HiveDevicePlug(HiveEntity, SwitchEntity):
@@ -33,15 +34,7 @@ class HiveDevicePlug(HiveEntity, SwitchEntity):
     @property
     def device_info(self):
         """Return device information."""
-        if self.device["hiveType"] == "activeplug":
-            return {
-                "identifiers": {(DOMAIN, self.device["device_id"])},
-                "name": self.device["device_name"],
-                "model": self.device["deviceData"]["model"],
-                "manufacturer": self.device["deviceData"]["manufacturer"],
-                "sw_version": self.device["deviceData"]["version"],
-                "via_device": (DOMAIN, self.device["parentDevice"]),
-            }
+        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
 
     @property
     def name(self):
@@ -56,7 +49,10 @@ class HiveDevicePlug(HiveEntity, SwitchEntity):
     @property
     def device_state_attributes(self):
         """Show Device Attributes."""
-        return self.attributes
+        return {
+            CONF_AVAILABLE: self.attributes[CONF_AVAILABLE],
+            CONF_MODE: self.attributes[CONF_MODE],
+        }
 
     @property
     def current_power_w(self):
