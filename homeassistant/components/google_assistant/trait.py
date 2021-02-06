@@ -1312,9 +1312,7 @@ class FanSpeedTrait(_Trait):
                 context=data.context,
             )
         if domain == fan.DOMAIN:
-            service_params = {
-                ATTR_ENTITY_ID: self.state.entity_id,
-            }
+            service_params = {ATTR_ENTITY_ID: self.state.entity_id}
             if "fanSpeedPercent" in params:
                 service = fan.SERVICE_SET_PERCENTAGE
                 service_params[fan.ATTR_PERCENTAGE] = params["fanSpeedPercent"]
@@ -1323,11 +1321,7 @@ class FanSpeedTrait(_Trait):
                 service_params[fan.ATTR_SPEED] = params["fanSpeed"]
 
             await self.hass.services.async_call(
-                fan.DOMAIN,
-                service,
-                service_params,
-                blocking=True,
-                context=data.context,
+                fan.DOMAIN, service, service_params, blocking=True, context=data.context
             )
 
 
