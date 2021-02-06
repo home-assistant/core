@@ -4,13 +4,13 @@ import logging
 from homeassistant.const import CONF_DEVICE, CONF_NAME, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 
+from . import CONF_SENSOR
+
 DOMAIN = "kira"
 
 _LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:remote"
-
-CONF_SENSOR = "sensor"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
