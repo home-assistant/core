@@ -144,6 +144,8 @@ class EpsonProjector(MediaPlayerEntity):
         else:
             self._state = STATE_OFF
 
+        self.async_schedule_update_ha_state()
+
     @property
     def name(self):
         """Return the name of the device."""
@@ -179,7 +181,7 @@ class EpsonProjector(MediaPlayerEntity):
 
     @property
     def device_class(self) -> Optional[str]:
-        """Return the device class of the sensor."""
+        """Return the device class of the projector."""
         return DEVICE_CLASS_TV
 
     @property

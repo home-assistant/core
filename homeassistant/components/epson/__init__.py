@@ -24,9 +24,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
     hass.data.setdefault(DOMAIN, {})
 
     # Load platforms
-    for component, conf_key in ((MEDIA_PLAYER_PLATFORM, CONF_PROJECTORS),):
-        if conf_key in config[DOMAIN]:
-            load_platform(hass, component, DOMAIN, config[DOMAIN][conf_key], config)
+    if config.get(DOMAIN) is not None:
+        for component, conf_key in ((MEDIA_PLAYER_PLATFORM, CONF_PROJECTORS),):
+            if conf_key in config[DOMAIN]:
+                load_platform(hass, component, DOMAIN, config[DOMAIN][conf_key], config)
 
     return True
 
