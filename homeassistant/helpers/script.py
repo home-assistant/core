@@ -623,6 +623,7 @@ class _ScriptRun:
         variables = {**self._variables}
         self._variables["wait"] = {"remaining": delay, "trigger": None}
 
+        done = asyncio.Event()
         async def async_done(variables, context=None):
             self._variables["wait"] = {
                 "remaining": to_context.remaining if to_context else delay,
@@ -634,7 +635,6 @@ class _ScriptRun:
             self._log(msg, level=level, **kwargs)
 
         to_context = None
-        done = asyncio.Event()
         remove_triggers = await async_initialize_triggers(
             self._hass,
             self._action[CONF_WAIT_FOR_TRIGGER],
