@@ -123,7 +123,9 @@ class BondEntity(Entity):
         if not self._available:
             _LOGGER.info("Entity %s has come back", self.entity_id)
         self._available = True
-        _LOGGER.debug("Device state for %s is:\n%s", self.entity_id, state)
+        _LOGGER.debug(
+            "Device state for %s (%s) is:\n%s", self.name, self.entity_id, state
+        )
         self._apply_state(state)
 
     @callback
