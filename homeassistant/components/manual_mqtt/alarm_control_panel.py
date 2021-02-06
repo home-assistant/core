@@ -12,7 +12,6 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_ARM_VACATION,
     SUPPORT_ALARM_TRIGGER,
 )
 from homeassistant.const import (
@@ -26,7 +25,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -47,7 +45,6 @@ CONF_PAYLOAD_DISARM = "payload_disarm"
 CONF_PAYLOAD_ARM_HOME = "payload_arm_home"
 CONF_PAYLOAD_ARM_AWAY = "payload_arm_away"
 CONF_PAYLOAD_ARM_NIGHT = "payload_arm_night"
-CONF_PAYLOAD_ARM_VACATION = "payload_arm_vacation"
 
 DEFAULT_ALARM_NAME = "HA Alarm"
 DEFAULT_DELAY_TIME = datetime.timedelta(seconds=0)
@@ -57,7 +54,6 @@ DEFAULT_DISARM_AFTER_TRIGGER = False
 DEFAULT_ARM_AWAY = "ARM_AWAY"
 DEFAULT_ARM_HOME = "ARM_HOME"
 DEFAULT_ARM_NIGHT = "ARM_NIGHT"
-DEFAULT_ARM_VACATION = "ARM_VACATION"
 DEFAULT_DISARM = "DISARM"
 
 SUPPORTED_STATES = [
@@ -65,7 +61,6 @@ SUPPORTED_STATES = [
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_TRIGGERED,
 ]
 
@@ -142,9 +137,6 @@ PLATFORM_SCHEMA = vol.Schema(
                 vol.Optional(STATE_ALARM_ARMED_NIGHT, default={}): _state_schema(
                     STATE_ALARM_ARMED_NIGHT
                 ),
-                vol.Optional(STATE_ALARM_ARMED_VACATION, default={}): _state_schema(
-                    STATE_ALARM_ARMED_VACATION
-                ),
                 vol.Optional(STATE_ALARM_DISARMED, default={}): _state_schema(
                     STATE_ALARM_DISARMED
                 ),
@@ -162,9 +154,6 @@ PLATFORM_SCHEMA = vol.Schema(
                 ): cv.string,
                 vol.Optional(
                     CONF_PAYLOAD_ARM_NIGHT, default=DEFAULT_ARM_NIGHT
-                ): cv.string,
-                vol.Optional(
-                    CONF_PAYLOAD_ARM_VACATION, default=DEFAULT_ARM_VACATION
                 ): cv.string,
                 vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
             }
@@ -192,7 +181,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 config.get(CONF_PAYLOAD_ARM_HOME),
                 config.get(CONF_PAYLOAD_ARM_AWAY),
                 config.get(CONF_PAYLOAD_ARM_NIGHT),
-                config.get(CONF_PAYLOAD_ARM_VACATION),
                 config,
             )
         ]
@@ -226,7 +214,6 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         payload_arm_home,
         payload_arm_away,
         payload_arm_night,
-        payload_arm_vacation,
         config,
     ):
         """Init the manual MQTT alarm panel."""
@@ -263,7 +250,6 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         self._payload_arm_home = payload_arm_home
         self._payload_arm_away = payload_arm_away
         self._payload_arm_night = payload_arm_night
-        self._payload_arm_vacation = payload_arm_vacation
 
     @property
     def should_poll(self):
@@ -304,7 +290,6 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
             SUPPORT_ALARM_ARM_HOME
             | SUPPORT_ALARM_ARM_AWAY
             | SUPPORT_ALARM_ARM_NIGHT
-            | SUPPORT_ALARM_ARM_VACATION
             | SUPPORT_ALARM_TRIGGER
         )
 
@@ -376,15 +361,6 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
         self._update_state(STATE_ALARM_ARMED_NIGHT)
 
-    def alarm_arm_vacation(self, code=None):
-        """Send arm vacation command."""
-        if self._code_arm_required and not self._validate_code(
-            code, STATE_ALARM_ARMED_VACATION
-        ):
-            return
-
-        self._update_state(STATE_ALARM_ARMED_VACATION)
-
     def alarm_trigger(self, code=None):
         """
         Send alarm trigger command.
@@ -430,9 +406,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         if isinstance(self._code, str):
             alarm_code = self._code
         else:
-            alarm_code = self._code.render(
-                from_state=self._state, to_state=state, parse_result=False
-            )
+            alarm_code = self._code.render(from_state=self._state, to_state=state)
         check = not alarm_code or code == alarm_code
         if not check:
             _LOGGER.warning("Invalid code given for %s", state)
@@ -441,12 +415,13 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self.state != STATE_ALARM_PENDING:
-            return {}
-        return {
-            ATTR_PRE_PENDING_STATE: self._previous_state,
-            ATTR_POST_PENDING_STATE: self._state,
-        }
+        state_attr = {}
+
+        if self.state == STATE_ALARM_PENDING:
+            state_attr[ATTR_PRE_PENDING_STATE] = self._previous_state
+            state_attr[ATTR_POST_PENDING_STATE] = self._state
+
+        return state_attr
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -464,8 +439,6 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
                 await self.async_alarm_arm_away(self._code)
             elif msg.payload == self._payload_arm_night:
                 await self.async_alarm_arm_night(self._code)
-            elif msg.payload == self._payload_arm_vacation:
-                await self.async_alarm_arm_vacation(self._code)
             else:
                 _LOGGER.warning("Received unexpected payload: %s", msg.payload)
                 return

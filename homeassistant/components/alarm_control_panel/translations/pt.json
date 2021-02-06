@@ -3,7 +3,6 @@
         "action_type": {
             "arm_home": "Armar casa {entity_name}",
             "arm_night": "Armar noite {entity_name}",
-            "arm_vacation": "Armar periodo de ferias {entity_name}",
             "disarm": "Desarmar {entity_name}"
         }
     },
@@ -14,7 +13,6 @@
             "armed_custom_bypass": "Armado com desvio personalizado",
             "armed_home": "Armado Casa",
             "armed_night": "Armado noite",
-            "armed_vacation": "Armado periodo de ferias",
             "arming": "A armar",
             "disarmed": "Desarmado",
             "disarming": "A desarmar",

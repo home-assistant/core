@@ -4,7 +4,6 @@
             "arm_away": "Larma {entity_name} borta",
             "arm_home": "Larma {entity_name} hemma",
             "arm_night": "Larma {entity_name} natt",
-            "arm_vacation": "Larma {entity_name} semester",
             "disarm": "Avlarma {entity_name}",
             "trigger": "Utl\u00f6sare {entity_name}"
         },
@@ -12,7 +11,6 @@
             "armed_away": "{entity_name} larmad borta",
             "armed_home": "{entity_name} larmad hemma",
             "armed_night": "{entity_name} larmad natt",
-            "armed_vacation": "{entity_name} larmad semester",
             "disarmed": "{entity_name} bortkopplad",
             "triggered": "{entity_name} utl\u00f6st"
         }
@@ -24,7 +22,6 @@
             "armed_custom_bypass": "Larm f\u00f6rbikopplat",
             "armed_home": "Hemmalarmat",
             "armed_night": "Nattlarmat",
-            "armed_vacation": "Semesterlarmat",
             "arming": "Tillkopplar",
             "disarmed": "Avlarmat",
             "disarming": "Fr\u00e5nkopplar",

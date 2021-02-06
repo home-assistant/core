@@ -4,7 +4,6 @@
             "arm_away": "Tilkobl {entity_name} ude",
             "arm_home": "Tilkobl {entity_name} hjemme",
             "arm_night": "Tilkobl {entity_name} nat",
-            "arm_vacation": "Tilkobl {entity_name} ferie",
             "disarm": "Frakobl {entity_name}",
             "trigger": "Udl\u00f8s {entity_name}"
         },
@@ -12,7 +11,6 @@
             "armed_away": "{entity_name} tilkoblet ude",
             "armed_home": "{entity_name} tilkoblet hjemme",
             "armed_night": "{entity_name} tilkoblet nat",
-            "armed_vacation": "{entity_name} tilkoblet ferie",
             "disarmed": "{entity_name} frakoblet",
             "triggered": "{entity_name} udl\u00f8st"
         }
@@ -24,7 +22,6 @@
             "armed_custom_bypass": "Tilkoblet brugerdefineret bypass",
             "armed_home": "Tilkoblet hjemme",
             "armed_night": "Tilkoblet nat",
-            "armed_vacation": "Tilkoblet ferie",
             "arming": "Tilkobler",
             "disarmed": "Frakoblet",
             "disarming": "Frakobler",
