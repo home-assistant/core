@@ -316,7 +316,7 @@ async def test_form_auth_errors_test_connection(hass, error):
 
     with patch(
         "aioshelly.get_info",
-        return_value={"mac": "test-mac", "auth": True, "sleep_mode": 0},
+        return_value={"mac": "test-mac", "auth": True},
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
