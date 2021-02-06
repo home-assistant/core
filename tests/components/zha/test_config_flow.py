@@ -74,6 +74,7 @@ async def test_user_flow_not_detected(detect_mock, hass):
     assert detect_mock.await_args[0][0] == port.device
 
 
+@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 async def test_user_flow_show_form(hass):
     """Test user step form."""
     result = await hass.config_entries.flow.async_init(
@@ -83,6 +84,17 @@ async def test_user_flow_show_form(hass):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
+
+
+async def test_user_flow_show_manual(hass):
+    """Test user flow manual entry when no comport detected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "pick_radio"
 
 
 async def test_user_flow_manual(hass):

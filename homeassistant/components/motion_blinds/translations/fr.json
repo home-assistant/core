@@ -1,16 +1,35 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9ja configur\u00e9 ",
+            "connection_error": "\u00c9chec de la connexion "
+        },
+        "error": {
+            "discovery_error": "Impossible de d\u00e9couvrir une Motion Gateway"
+        },
+        "flow_title": "Stores de mouvement",
         "step": {
             "connect": {
                 "data": {
                     "api_key": "Cl\u00e9 API"
                 },
-                "description": "Vous aurez besoin de la cl\u00e9 API de 16 caract\u00e8res, voir https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key pour les instructions"
+                "description": "Vous aurez besoin de la cl\u00e9 API de 16 caract\u00e8res, voir https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key pour les instructions",
+                "title": "Stores de mouvement"
             },
             "select": {
                 "data": {
                     "select_ip": "Adresse IP"
-                }
+                },
+                "description": "Ex\u00e9cutez \u00e0 nouveau la configuration si vous souhaitez connecter des passerelles Motion suppl\u00e9mentaires",
+                "title": "S\u00e9lectionnez la Motion Gateway que vous souhaitez connecter"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Clef d'API",
+                    "host": "Adresse IP"
+                },
+                "description": "Connectez-vous \u00e0 votre Motion Gateway, si l'adresse IP n'est pas d\u00e9finie, la d\u00e9tection automatique est utilis\u00e9e",
+                "title": "Stores de mouvement"
             }
         }
     }
