@@ -126,6 +126,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEnt
     # Update config entry options
     hive_options = hive_options if len(hive_options) > 0 else hive_config["options"]
     hive_config["options"].update(hive_options)
+    hive_config["add_sensors"] = True if 'hive' in hass.data['custom_components'] else False
     hass.config_entries.async_update_entry(entry, options=hive_options)
     hass.data[DOMAIN][entry.entry_id] = hive
 
