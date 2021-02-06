@@ -307,7 +307,7 @@ async def _async_setup_services(hass: HomeAssistantType):
         if call.service == SERVICE_REBOOT:
             await dsm_api.async_reboot()
         elif call.service == SERVICE_SHUTDOWN:
-            await dsm_api.system.shutdown()
+            await dsm_api.async_shutdown()
 
     for service in SERVICES:
         hass.services.async_register(DOMAIN, service, service_handler)
