@@ -70,8 +70,9 @@ def setup(hass, config):
 
                 overwrite = service.data.get(ATTR_OVERWRITE)
 
-                # Check the path
-                raise_if_invalid_path(subdir)
+                if subdir:
+                    # Check the path
+                    raise_if_invalid_path(subdir)
 
                 final_path = None
 
