@@ -1215,9 +1215,6 @@ py-nightscout==1.2.2
 # homeassistant.components.schluter
 py-schluter==0.1.7
 
-# homeassistant.components.synology
-py-synology==0.2.0
-
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
 
@@ -2318,9 +2315,6 @@ xbox-webapi==2.0.8
 
 # homeassistant.components.xbox_live
 xboxapi==2.0.1
-
-# homeassistant.components.xfinity
-xfinity-gateway==0.0.4
 
 # homeassistant.components.knx
 xknx==0.16.2
