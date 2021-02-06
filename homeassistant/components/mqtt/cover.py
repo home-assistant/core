@@ -129,8 +129,15 @@ def validate_options(value):
     ):
         _LOGGER.warning(
             "using 'value_template' for 'position_topic' is deprecated "
-            "and will be removed in the future, "
+            "and will be removed from Home Assistant in version 2021.6"
             "please replace it with 'position_template'"
+        )
+
+    if CONF_TILT_INVERT_STATE in value:
+        _LOGGER.warning(
+            "'tilt_invert_state' is deprecated "
+            "and will be removed from Home Assistant in version 2021.6"
+            "please invert tilt using 'tilt_min' & 'tilt_max'"
         )
 
     return value
@@ -347,7 +354,7 @@ class MqttCover(MqttEntity, CoverEntity):
                         else STATE_OPEN
                     )
             else:
-                _LOGGER.warning("Payload is not integer within range: %s", payload)
+                _LOGGER.warning("Payload '%s' is not numeric", payload)
                 return
             self.async_write_ha_state()
 
@@ -540,10 +547,9 @@ class MqttCover(MqttEntity, CoverEntity):
         set_tilt_template = self._config.get(CONF_TILT_COMMAND_TEMPLATE)
         tilt = kwargs[ATTR_TILT_POSITION]
         percentage_tilt = tilt
+        tilt = self.find_in_range_from_percent(tilt)
         if set_tilt_template is not None:
             tilt = set_tilt_template.async_render(parse_result=False, **kwargs)
-        else:
-            tilt = self.find_in_range_from_percent(tilt)
 
         mqtt.async_publish(
             self.hass,
@@ -561,10 +567,9 @@ class MqttCover(MqttEntity, CoverEntity):
         set_position_template = self._config.get(CONF_SET_POSITION_TEMPLATE)
         position = kwargs[ATTR_POSITION]
         percentage_position = position
+        position = self.find_in_range_from_percent(position, COVER_PAYLOAD)
         if set_position_template is not None:
             position = set_position_template.async_render(parse_result=False, **kwargs)
-        else:
-            position = self.find_in_range_from_percent(position, COVER_PAYLOAD)
 
         mqtt.async_publish(
             self.hass,

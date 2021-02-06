@@ -2054,8 +2054,31 @@ async def test_deprecated_value_template_for_position_topic_warnning(
 
     assert (
         "using 'value_template' for 'position_topic' is deprecated "
-        "and will be removed in the future, "
+        "and will be removed from Home Assistant in version 2021.6"
         "please replace it with 'position_template'"
+    ) in caplog.text
+
+
+async def test_deprecated_tilt_invert_state_warnning(hass, caplog, mqtt_mock):
+    """Test warnning when tilt_invert_state is used."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "tilt_invert_state": True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        "'tilt_invert_state' is deprecated "
+        "and will be removed from Home Assistant in version 2021.6"
+        "please invert tilt using 'tilt_min' & 'tilt_max'"
     ) in caplog.text
 
 
@@ -2081,7 +2104,7 @@ async def test_no_deprecated_warnning_for_position_topic_using_position_template
 
     assert (
         "using 'value_template' for 'position_topic' is deprecated "
-        "and will be removed in the future, "
+        "and will be removed from Home Assistant in version 2021.6"
         "please replace it with 'position_template'"
     ) not in caplog.text
 
