@@ -27,5 +27,20 @@
                 "description": "Avant la configuration, l'appareil aliment\u00e9 par batterie doit \u00eatre r\u00e9veill\u00e9 en appuyant sur le bouton de l'appareil."
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Bouton",
+            "button1": "Premier bouton",
+            "button2": "Deuxi\u00e8me bouton",
+            "button3": "Troisi\u00e8me bouton"
+        },
+        "trigger_type": {
+            "double": "{subtype} double-cliqu\u00e9",
+            "long": " {sous-type} long cliqu\u00e9",
+            "single": "{subtype} simple clic",
+            "single_long": "{subtype} simple clic, puis un clic long",
+            "triple": "{subtype} cliqu\u00e9 trois fois"
+        }
     }
 }

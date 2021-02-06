@@ -18,6 +18,13 @@
                 },
                 "description": "Voulez-vous configurer {name} ?"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Mettez \u00e0 jour vos informations de connexion pour {name} ."
+            },
             "user": {
                 "data": {
                     "host": "Nom d'h\u00f4te ou adresse IP",

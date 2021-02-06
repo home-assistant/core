@@ -1,11 +1,14 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "Echec de connection"
+            "already_configured": "L'appareil est d\u00e9ja configur\u00e9 ",
+            "cannot_connect": "Echec de connection",
+            "not_irobot_device": "L'appareil d\u00e9couvert n'est pas un appareil iRobot"
         },
         "error": {
             "cannot_connect": "Impossible de se connecter, veuillez r\u00e9essayer"
         },
+        "flow_title": "iRobot {name} ( {host} )",
         "step": {
             "init": {
                 "data": {

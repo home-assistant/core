@@ -6,6 +6,7 @@
             "disk_used": "Taille du disque utilis\u00e9",
             "docker_version": "Version de Docker",
             "healthy": "Sain",
+            "host_os": "Syst\u00e8me d'exploitation h\u00f4te",
             "installed_addons": "Add-ons install\u00e9s",
             "supervisor_api": "API du superviseur",
             "supervisor_version": "Version du supervisor",

@@ -34,7 +34,18 @@
             },
             "pick_implementation": {
                 "title": "S\u00e9lectionner une m\u00e9thode d'authentification"
+            },
+            "reauth_confirm": {
+                "description": "L'int\u00e9gration Nest doit r\u00e9-authentifier votre compte"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Mouvement d\u00e9tect\u00e9",
+            "camera_person": "Personne d\u00e9tect\u00e9e",
+            "camera_sound": "Son d\u00e9tect\u00e9",
+            "doorbell_chime": "Sonnette enfonc\u00e9e"
         }
     }
 }
