@@ -80,35 +80,59 @@ async def async_setup_entry(
 
     dsmr_version = config[CONF_DSMR_VERSION]
 
-    # Define list of name,obis mappings to generate entities
+    # Define list of name,obis,force_update mappings to generate entities
     obis_mapping = [
-        ["Power Consumption", obis_ref.CURRENT_ELECTRICITY_USAGE],
-        ["Power Production", obis_ref.CURRENT_ELECTRICITY_DELIVERY],
-        ["Power Tariff", obis_ref.ELECTRICITY_ACTIVE_TARIFF],
-        ["Energy Consumption (tarif 1)", obis_ref.ELECTRICITY_USED_TARIFF_1],
-        ["Energy Consumption (tarif 2)", obis_ref.ELECTRICITY_USED_TARIFF_2],
-        ["Energy Production (tarif 1)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_1],
-        ["Energy Production (tarif 2)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_2],
-        ["Power Consumption Phase L1", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE],
-        ["Power Consumption Phase L2", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE],
-        ["Power Consumption Phase L3", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE],
-        ["Power Production Phase L1", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE],
-        ["Power Production Phase L2", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE],
-        ["Power Production Phase L3", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE],
-        ["Short Power Failure Count", obis_ref.SHORT_POWER_FAILURE_COUNT],
-        ["Long Power Failure Count", obis_ref.LONG_POWER_FAILURE_COUNT],
-        ["Voltage Sags Phase L1", obis_ref.VOLTAGE_SAG_L1_COUNT],
-        ["Voltage Sags Phase L2", obis_ref.VOLTAGE_SAG_L2_COUNT],
-        ["Voltage Sags Phase L3", obis_ref.VOLTAGE_SAG_L3_COUNT],
-        ["Voltage Swells Phase L1", obis_ref.VOLTAGE_SWELL_L1_COUNT],
-        ["Voltage Swells Phase L2", obis_ref.VOLTAGE_SWELL_L2_COUNT],
-        ["Voltage Swells Phase L3", obis_ref.VOLTAGE_SWELL_L3_COUNT],
-        ["Voltage Phase L1", obis_ref.INSTANTANEOUS_VOLTAGE_L1],
-        ["Voltage Phase L2", obis_ref.INSTANTANEOUS_VOLTAGE_L2],
-        ["Voltage Phase L3", obis_ref.INSTANTANEOUS_VOLTAGE_L3],
-        ["Current Phase L1", obis_ref.INSTANTANEOUS_CURRENT_L1],
-        ["Current Phase L2", obis_ref.INSTANTANEOUS_CURRENT_L2],
-        ["Current Phase L3", obis_ref.INSTANTANEOUS_CURRENT_L3],
+        ["Power Consumption", obis_ref.CURRENT_ELECTRICITY_USAGE, True],
+        ["Power Production", obis_ref.CURRENT_ELECTRICITY_DELIVERY, True],
+        ["Power Tariff", obis_ref.ELECTRICITY_ACTIVE_TARIFF, False],
+        ["Energy Consumption (tarif 1)", obis_ref.ELECTRICITY_USED_TARIFF_1, True],
+        ["Energy Consumption (tarif 2)", obis_ref.ELECTRICITY_USED_TARIFF_2, True],
+        ["Energy Production (tarif 1)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_1, True],
+        ["Energy Production (tarif 2)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_2, True],
+        [
+            "Power Consumption Phase L1",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE,
+            False,
+        ],
+        [
+            "Power Consumption Phase L2",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE,
+            False,
+        ],
+        [
+            "Power Consumption Phase L3",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE,
+            False,
+        ],
+        [
+            "Power Production Phase L1",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE,
+            False,
+        ],
+        [
+            "Power Production Phase L2",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE,
+            False,
+        ],
+        [
+            "Power Production Phase L3",
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE,
+            False,
+        ],
+        ["Short Power Failure Count", obis_ref.SHORT_POWER_FAILURE_COUNT, False],
+        ["Long Power Failure Count", obis_ref.LONG_POWER_FAILURE_COUNT, False],
+        ["Voltage Sags Phase L1", obis_ref.VOLTAGE_SAG_L1_COUNT, False],
+        ["Voltage Sags Phase L2", obis_ref.VOLTAGE_SAG_L2_COUNT, False],
+        ["Voltage Sags Phase L3", obis_ref.VOLTAGE_SAG_L3_COUNT, False],
+        ["Voltage Swells Phase L1", obis_ref.VOLTAGE_SWELL_L1_COUNT, False],
+        ["Voltage Swells Phase L2", obis_ref.VOLTAGE_SWELL_L2_COUNT, False],
+        ["Voltage Swells Phase L3", obis_ref.VOLTAGE_SWELL_L3_COUNT, False],
+        ["Voltage Phase L1", obis_ref.INSTANTANEOUS_VOLTAGE_L1, False],
+        ["Voltage Phase L2", obis_ref.INSTANTANEOUS_VOLTAGE_L2, False],
+        ["Voltage Phase L3", obis_ref.INSTANTANEOUS_VOLTAGE_L3, False],
+        ["Current Phase L1", obis_ref.INSTANTANEOUS_CURRENT_L1, False],
+        ["Current Phase L2", obis_ref.INSTANTANEOUS_CURRENT_L2, False],
+        ["Current Phase L3", obis_ref.INSTANTANEOUS_CURRENT_L3, False],
     ]
 
     if dsmr_version == "5L":
@@ -117,22 +141,26 @@ async def async_setup_entry(
                 [
                     "Energy Consumption (total)",
                     obis_ref.LUXEMBOURG_ELECTRICITY_USED_TARIFF_GLOBAL,
+                    True,
                 ],
                 [
                     "Energy Production (total)",
                     obis_ref.LUXEMBOURG_ELECTRICITY_DELIVERED_TARIFF_GLOBAL,
+                    True,
                 ],
             ]
         )
     else:
         obis_mapping.extend(
-            [["Energy Consumption (total)", obis_ref.ELECTRICITY_IMPORTED_TOTAL]]
+            [["Energy Consumption (total)", obis_ref.ELECTRICITY_IMPORTED_TOTAL, True]]
         )
 
     # Generate device entities
     devices = [
-        DSMREntity(name, DEVICE_NAME_ENERGY, config[CONF_SERIAL_ID], obis, config)
-        for name, obis in obis_mapping
+        DSMREntity(
+            name, DEVICE_NAME_ENERGY, config[CONF_SERIAL_ID], obis, config, force_update
+        )
+        for name, obis, force_update in obis_mapping
     ]
 
     # Protocol version specific obis
@@ -152,6 +180,7 @@ async def async_setup_entry(
                 config[CONF_SERIAL_ID_GAS],
                 gas_obis,
                 config,
+                True,
             ),
             DerivativeDSMREntity(
                 "Hourly Gas Consumption",
@@ -159,6 +188,7 @@ async def async_setup_entry(
                 config[CONF_SERIAL_ID_GAS],
                 gas_obis,
                 config,
+                False,
             ),
         ]
 
@@ -257,7 +287,7 @@ async def async_setup_entry(
 class DSMREntity(Entity):
     """Entity reading values from DSMR telegram."""
 
-    def __init__(self, name, device_name, device_serial, obis, config):
+    def __init__(self, name, device_name, device_serial, obis, config, force_update):
         """Initialize entity."""
         self._name = name
         self._obis = obis
@@ -266,6 +296,7 @@ class DSMREntity(Entity):
 
         self._device_name = device_name
         self._device_serial = device_serial
+        self._force_update = force_update
         self._unique_id = f"{device_serial}_{name}".replace(" ", "_")
 
     @callback
@@ -341,7 +372,7 @@ class DSMREntity(Entity):
     @property
     def force_update(self):
         """Force update."""
-        return True
+        return self._force_update
 
     @property
     def should_poll(self):
