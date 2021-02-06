@@ -70,7 +70,8 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     def __init__(self):
         """Initialize the UniFi flow."""
         self.config = {}
-        self.sites = None
+        self.site_ids = {}
+        self.site_names = {}
         self.reauth_config_entry = None
         self.reauth_config = {}
         self.reauth_schema = {}
@@ -101,11 +102,15 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                 errors["base"] = "service_unavailable"
 
             else:
-                self.sites = {site["name"]: site["desc"] for site in sites.values()}
+                self.site_ids = {site["_id"]: site["name"] for site in sites.values()}
+                self.site_names = {site["_id"]: site["desc"] for site in sites.values()}
 
-                if self.reauth_config.get(CONF_SITE_ID) in self.sites:
+                if (
+                    self.reauth_config_entry
+                    and self.reauth_config_entry.unique_id in self.site_names
+                ):
                     return await self.async_step_site(
-                        {CONF_SITE_ID: self.reauth_config[CONF_SITE_ID]}
+                        {CONF_SITE_ID: self.reauth_config_entry.unique_id}
                     )
 
                 return await self.async_step_site()
@@ -136,26 +141,18 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
         if user_input is not None:
 
-            self.config[CONF_SITE_ID] = user_input[CONF_SITE_ID]
+            unique_id = user_input[CONF_SITE_ID]
+            self.config[CONF_SITE_ID] = self.site_ids[unique_id]
             data = {CONF_CONTROLLER: self.config}
 
+            config_entry = await self.async_set_unique_id(unique_id)
+            abort_reason = "configuration_updated"
+
             if self.reauth_config_entry:
-                self.hass.config_entries.async_update_entry(
-                    self.reauth_config_entry, data=data
-                )
-                await self.hass.config_entries.async_reload(
-                    self.reauth_config_entry.entry_id
-                )
-                return self.async_abort(reason="reauth_successful")
+                config_entry = self.reauth_config_entry
+                abort_reason = "reauth_successful"
 
-            for config_entry in self._async_current_entries():
-                controller_data = config_entry.data[CONF_CONTROLLER]
-                if (
-                    controller_data[CONF_HOST] != self.config[CONF_HOST]
-                    or controller_data[CONF_SITE_ID] != self.config[CONF_SITE_ID]
-                ):
-                    continue
-
+            if config_entry:
                 controller = self.hass.data.get(UNIFI_DOMAIN, {}).get(
                     config_entry.entry_id
                 )
@@ -165,17 +162,21 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
                 self.hass.config_entries.async_update_entry(config_entry, data=data)
                 await self.hass.config_entries.async_reload(config_entry.entry_id)
-                return self.async_abort(reason="configuration_updated")
+                return self.async_abort(reason=abort_reason)
 
-            site_nice_name = self.sites[self.config[CONF_SITE_ID]]
+            site_nice_name = self.site_names[unique_id]
             return self.async_create_entry(title=site_nice_name, data=data)
 
-        if len(self.sites) == 1:
-            return await self.async_step_site({CONF_SITE_ID: next(iter(self.sites))})
+        if len(self.site_names) == 1:
+            return await self.async_step_site(
+                {CONF_SITE_ID: next(iter(self.site_names))}
+            )
 
         return self.async_show_form(
             step_id="site",
-            data_schema=vol.Schema({vol.Required(CONF_SITE_ID): vol.In(self.sites)}),
+            data_schema=vol.Schema(
+                {vol.Required(CONF_SITE_ID): vol.In(self.site_names)}
+            ),
             errors=errors,
         )
 

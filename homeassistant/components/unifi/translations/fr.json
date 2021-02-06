@@ -1,13 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Le contr\u00f4leur est d\u00e9j\u00e0 configur\u00e9"
+            "already_configured": "Le contr\u00f4leur est d\u00e9j\u00e0 configur\u00e9",
+            "configuration_updated": "Configuration mise \u00e0 jour."
         },
         "error": {
             "faulty_credentials": "Authentification invalide",
             "service_unavailable": "\u00c9chec de connexion",
             "unknown_client_mac": "Aucun client disponible sur cette adresse MAC"
         },
+        "flow_title": "UniFi Network {site} ( {host} )",
         "step": {
             "user": {
                 "data": {

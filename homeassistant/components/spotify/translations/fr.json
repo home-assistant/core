@@ -18,5 +18,10 @@
                 "title": "R\u00e9-authentifier avec Spotify"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Point de terminaison de l'API Spotify accessible"
+        }
     }
 }
