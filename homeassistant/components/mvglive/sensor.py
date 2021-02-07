@@ -21,6 +21,7 @@ CONF_DIRECTIONS = "directions"
 CONF_LINES = "lines"
 CONF_PRODUCTS = "products"
 CONF_TIMEOFFSET = "timeoffset"
+CONF_ENTRIES = "entries"
 CONF_NUMBER = "number"
 
 DEFAULT_PRODUCT = ["U-Bahn", "Tram", "Bus", "ExpressBus", "S-Bahn", "Nachteule"]
@@ -51,6 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                     CONF_PRODUCTS, default=DEFAULT_PRODUCT
                 ): cv.ensure_list_csv,
                 vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
+                vol.Optional(CONF_ENTRIES, default=10): cv.positive_int,
                 vol.Optional(CONF_NUMBER, default=1): cv.positive_int,
                 vol.Optional(CONF_NAME): cv.string,
             }
@@ -71,6 +73,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 nextdeparture.get(CONF_LINES),
                 nextdeparture.get(CONF_PRODUCTS),
                 nextdeparture.get(CONF_TIMEOFFSET),
+                nextdeparture.get(CONF_ENTRIES),
                 nextdeparture.get(CONF_NUMBER),
                 nextdeparture.get(CONF_NAME),
             )
@@ -89,6 +92,7 @@ class MVGLiveSensor(Entity):
         lines,
         products,
         timeoffset,
+        entries,
         number,
         name,
     ):
@@ -96,7 +100,7 @@ class MVGLiveSensor(Entity):
         self._station = station
         self._name = name
         self.data = MVGLiveData(
-            station, destinations, directions, lines, products, timeoffset, number
+            station, destinations, directions, lines, products, timeoffset, entries, number
         )
         self._state = None
         self._icon = ICONS["-"]
@@ -148,7 +152,7 @@ class MVGLiveData:
     """Pull data from the mvg-live.de web page."""
 
     def __init__(
-        self, station, destinations, directions, lines, products, timeoffset, number
+        self, station, destinations, directions, lines, products, timeoffset, entries, number
     ):
         """Initialize the sensor."""
         self._station = station
@@ -157,6 +161,7 @@ class MVGLiveData:
         self._lines = lines
         self._products = products
         self._timeoffset = timeoffset
+        self._entries = entries
         self._number = number
         self._include_ubahn = "U-Bahn" in self._products
         self._include_tram = "Tram" in self._products
@@ -171,6 +176,7 @@ class MVGLiveData:
             _departures = self.mvg.getlivedata(
                 station=self._station,
                 timeoffset=self._timeoffset,
+                entries=self._entries,
                 ubahn=self._include_ubahn,
                 tram=self._include_tram,
                 bus=self._include_bus,
