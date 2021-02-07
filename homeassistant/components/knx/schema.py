@@ -14,13 +14,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.fan import (
-    SPEED_OFF,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_HIGH,
-)
-
 from .const import (
     CONF_INVERT,
     CONF_RESET_AFTER,

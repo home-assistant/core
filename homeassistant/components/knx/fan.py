@@ -46,6 +46,7 @@ class KNXFan(KnxEntity, FanEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         flags = 0
+
         if self._device.supports_oscillation:
             flags |= SUPPORT_OSCILLATE
 

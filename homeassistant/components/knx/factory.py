@@ -8,35 +8,29 @@ from xknx.devices import (
     ClimateMode as XknxClimateMode,
     Cover as XknxCover,
     Device as XknxDevice,
+    Fan as XknxFan,
     Light as XknxLight,
     Notification as XknxNotification,
     Scene as XknxScene,
     Sensor as XknxSensor,
     Switch as XknxSwitch,
     Weather as XknxWeather,
-    Fan as XknxFan,
 )
 
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, CONF_TYPE
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.components.fan import (
-    SPEED_OFF,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_HIGH,
-)
 
 from .const import ColorTempModes, SupportedPlatforms
 from .schema import (
     BinarySensorSchema,
     ClimateSchema,
     CoverSchema,
+    FanSchema,
     LightSchema,
     SceneSchema,
     SensorSchema,
     SwitchSchema,
     WeatherSchema,
-    FanSchema,
 )
 
 
