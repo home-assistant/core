@@ -151,6 +151,7 @@ class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
         """Set a new mode for this zone."""
         mode = kwargs.get(ATTR_ZONE_MODE)
 
+        # pylint: disable=protected-access
         if mode == "footprint" and not self._zone._has_pir:
             raise TypeError(
                 f"'{self.entity_id}' can not support footprint mode (it has no PIR)"
