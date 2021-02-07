@@ -29,6 +29,12 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "button_1": "Primer bot\u00f3n",
+            "button_3": "Tercer bot\u00f3n",
+            "close_1": "Cerrar 1",
+            "close_2": "Cerrar 2",
+            "off": "Apagado",
+            "on": "Encendido",
             "open_1": "Abrir 1",
             "open_2": "Abrir 2",
             "open_3": "Abrir 3",
