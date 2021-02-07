@@ -1,5 +1,6 @@
 """The Philips TV integration."""
 import asyncio
+import concurrent
 from datetime import timedelta
 import logging
 from typing import Any, Callable, Dict, Optional
@@ -14,7 +15,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.core import Context, HassJob, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -110,10 +111,46 @@ class PluggableAction:
 class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinator to update data."""
 
+    def _notify_task(self):
+        while self.api.on and self.api.notify_change_supported:
+            if self.api.notifyChange(130):
+                self.hass.loop.call_soon_threadsafe(self.async_set_updated_data, None)
+
+    @callback
+    def _async_notify_stop(self):
+        if self._notify_future:
+            self._notify_future.cancel()
+            self._notify_future = None
+
+    @callback
+    def _async_notify_schedule(self):
+        if (
+            (self._notify_future is None or self._notify_future.done())
+            and self.api.on
+            and self.api.notify_change_supported
+        ):
+            self._notify_future = self.hass.loop.run_in_executor(
+                None, self._notify_task
+            )
+
+    @callback
+    def async_remove_listener(self, update_callback: CALLBACK_TYPE) -> None:
+        """Remove data update."""
+        super().async_remove_listener(update_callback)
+        if not self._listeners:
+            self._async_notify_stop()
+
+    @callback
+    def _async_stop_refresh(self, event: asyncio.Event) -> None:
+        super()._async_stop_refresh(event)
+        self._async_notify_stop()
+
     def __init__(self, hass, api: PhilipsTV) -> None:
         """Set up the coordinator."""
         self.api = api
+        self._notify_future: Optional[concurrent.futures.Future] = None
 
+        @callback
         def _update_listeners():
             for update_callback in self._listeners:
                 update_callback()
@@ -134,5 +171,6 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Fetch the latest data from the source."""
         try:
             await self.hass.async_add_executor_job(self.api.update)
+            self._async_notify_schedule()
         except ConnectionFailure:
             pass
