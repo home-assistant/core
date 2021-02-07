@@ -410,7 +410,7 @@ class SynoApi:
             self._with_surveillance_station,
         )
 
-        self._async_setup_api_requests()
+        self._setup_api_requests()
 
         await self._hass.async_add_executor_job(self._fetch_device_configuration)
         await self.async_update()
@@ -420,12 +420,12 @@ class SynoApi:
         self._fetching_entities = fetching_entities
 
     @callback
-    def _async_setup_api_requests(self):
+    def _setup_api_requests(self):
         """Determine if we should fetch each API, if one entity needs it."""
         # Entities not added yet, fetch all
         if not self._fetching_entities:
             _LOGGER.debug(
-                "SynoAPI._async_setup_api_requests() - Entities not added yet, fetch all"
+                "SynoAPI._setup_api_requests() - Entities not added yet, fetch all"
             )
             return
 
@@ -448,33 +448,33 @@ class SynoApi:
 
         # Reset not used API, information is not reset since it's used in device_info
         if not self._with_security:
-            _LOGGER.debug("SynoAPI._async_setup_api_requests() - disable security")
+            _LOGGER.debug("SynoAPI._setup_api_requests() - disable security")
             self.dsm.reset(self.security)
             self.security = None
 
         if not self._with_storage:
-            _LOGGER.debug("SynoAPI._async_setup_api_requests() - disable storage")
+            _LOGGER.debug("SynoAPI._setup_api_requests() - disable storage")
             self.dsm.reset(self.storage)
             self.storage = None
 
         if not self._with_system:
-            _LOGGER.debug("SynoAPI._async_setup_api_requests() - disable system")
+            _LOGGER.debug("SynoAPI._setup_api_requests() - disable system")
             self.dsm.reset(self.system)
             self.system = None
 
         if not self._with_upgrade:
-            _LOGGER.debug("SynoAPI._async_setup_api_requests() - disable upgrade")
+            _LOGGER.debug("SynoAPI._setup_api_requests() - disable upgrade")
             self.dsm.reset(self.upgrade)
             self.upgrade = None
 
         if not self._with_utilisation:
-            _LOGGER.debug("SynoAPI._async_setup_api_requests() - disable utilisation")
+            _LOGGER.debug("SynoAPI._setup_api_requests() - disable utilisation")
             self.dsm.reset(self.utilisation)
             self.utilisation = None
 
         if not self._with_surveillance_station:
             _LOGGER.debug(
-                "SynoAPI._async_setup_api_requests() - disable surveillance_station"
+                "SynoAPI._setup_api_requests() - disable surveillance_station"
             )
             self.dsm.reset(self.surveillance_station)
             self.surveillance_station = None
@@ -537,7 +537,7 @@ class SynoApi:
     async def async_update(self, now=None):
         """Update function for updating API information."""
         _LOGGER.debug("SynoAPI.async_update()")
-        self._async_setup_api_requests()
+        self._setup_api_requests()
         try:
             await self._hass.async_add_executor_job(
                 self.dsm.update, self._with_information
