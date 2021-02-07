@@ -2,9 +2,11 @@
 import logging
 
 from miio import Device, DeviceException
+
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
-from .const import CONF_MAC,CONF_MODEL, DOMAIN
+
+from .const import CONF_MAC, CONF_MODEL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +52,7 @@ class ConnectXiaomiDevice:
         )
         return True
 
+
 class XiaomiMiioDevice(Entity):
     """Representation of a base Xiaomi Miio Device."""
 
@@ -61,10 +64,8 @@ class XiaomiMiioDevice(Entity):
         self._device_id = entry.unique_id
         self._unique_id = unique_id
         self._name = name
-        
-        self._device_info = await self.hass.async_add_executor_job(
-            self._device.info
-        )
+
+        self._device_info = await self.hass.async_add_executor_job(self._device.info)
 
     @property
     def unique_id(self):

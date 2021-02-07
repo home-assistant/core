@@ -31,8 +31,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from .config_flow import CONF_FLOW_TYPE, CONF_GATEWAY
-from .const import DOMAIN
+from .const import CONF_FLOW_TYPE, CONF_GATEWAY, DOMAIN
 from .gateway import XiaomiGatewayDevice
 
 _LOGGER = logging.getLogger(__name__)

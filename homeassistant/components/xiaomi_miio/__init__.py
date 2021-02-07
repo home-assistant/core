@@ -3,8 +3,14 @@ from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers import device_registry as dr
 
-from .config_flow import CONF_DEVICE, CONF_FLOW_TYPE, CONF_GATEWAY
-from .const import CONF_MODEL, DOMAIN, MODELS_SWITCH
+from .const import (
+    CONF_DEVICE,
+    CONF_FLOW_TYPE,
+    CONF_GATEWAY,
+    CONF_MODEL,
+    DOMAIN,
+    MODELS_SWITCH,
+)
 from .gateway import ConnectXiaomiGateway
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor", "light"]
@@ -71,6 +77,7 @@ async def async_setup_gateway_entry(
         )
 
     return True
+
 
 async def async_setup_device_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry

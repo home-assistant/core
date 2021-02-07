@@ -8,15 +8,20 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.helpers.device_registry import format_mac
 
 # pylint: disable=unused-import
-from .const import CONF_MAC, CONF_MODEL, DOMAIN, MODELS_SWITCH
+from .const import (
+    CONF_DEVICE,
+    CONF_FLOW_TYPE,
+    CONF_GATEWAY,
+    CONF_MAC,
+    CONF_MODEL,
+    DOMAIN,
+    MODELS_SWITCH,
+)
 from .device import ConnectXiaomiDevice
 from .gateway import ConnectXiaomiGateway
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_FLOW_TYPE = "config_flow_device"
-CONF_GATEWAY = "gateway"
-CONF_DEVICE = "device"
 DEFAULT_GATEWAY_NAME = "Xiaomi Gateway"
 ZEROCONF_GATEWAY = "lumi-gateway"
 ZEROCONF_ACPARTNER = "lumi-acpartner"
@@ -27,10 +32,12 @@ DEVICE_SETTINGS = {
 }
 DEVICE_CONFIG = vol.Schema({vol.Required(CONF_HOST): str}).extend(DEVICE_SETTINGS)
 
-CONFIG_SCHEMA = vol.Schema({
-    vol.Optional(CONF_GATEWAY, default=False): bool,
-    vol.Optional(CONF_DEVICE, default=False): bool,
-})
+CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_GATEWAY, default=False): bool,
+        vol.Optional(CONF_DEVICE, default=False): bool,
+    }
+)
 
 
 class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -178,6 +185,4 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             schema = DEVICE_CONFIG
 
-        return self.async_show_form(
-            step_id="device", data_schema=schema, errors=errors
-        )
+        return self.async_show_form(step_id="device", data_schema=schema, errors=errors)

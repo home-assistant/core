@@ -3,17 +3,12 @@ import asyncio
 from functools import partial
 import logging
 
-from miio import (  # pylint: disable=import-error
-    AirConditioningCompanionV3,
-    ChuangmiPlug,
-    Device,
-    DeviceException,
-    PowerStrip,
-)
+from miio import AirConditioningCompanionV3  # pylint: disable=import-error
+from miio import ChuangmiPlug, DeviceException, PowerStrip
 from miio.powerstrip import PowerMode  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -21,20 +16,19 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_TOKEN,
 )
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-from .device import XiaomiMiioDevice
 from .const import (
     CONF_DEVICE,
+    CONF_FLOW_TYPE,
     CONF_MODEL,
     DOMAIN,
-    MODELS_SWITCH,
     SERVICE_SET_POWER_MODE,
     SERVICE_SET_POWER_PRICE,
     SERVICE_SET_WIFI_LED_OFF,
     SERVICE_SET_WIFI_LED_ON,
 )
+from .device import XiaomiMiioDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,6 +86,7 @@ SERVICE_TO_METHOD = {
     },
 }
 
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the switch from a config entry."""
     entities = []
@@ -118,7 +113,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     unique_id_ch = f"{unique_id}-USB"
                 else:
                     unique_id_ch = f"{unique_id}-mains"
-                device = ChuangMiPlugSwitch(name, plug, config_entry, unique_id_ch, channel_usb)
+                device = ChuangMiPlugSwitch(
+                    name, plug, config_entry, unique_id_ch, channel_usb
+                )
                 entities.append(device)
                 hass.data[DATA_KEY][host] = device
         elif model in ["qmi.powerstrip.v1", "zimi.powerstrip.v2"]:
@@ -139,7 +136,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             hass.data[DATA_KEY][host] = device
         elif model in ["lumi.acpartner.v3"]:
             plug = AirConditioningCompanionV3(host, token)
-            device = XiaomiAirConditioningCompanionSwitch(name, plug,  , unique_id)
+            device = XiaomiAirConditioningCompanionSwitch(
+                name, plug, config_entry, unique_id
+            )
             entities.append(device)
             hass.data[DATA_KEY][host] = device
         else:
@@ -154,7 +153,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             """Map services to methods on XiaomiPlugGenericSwitch."""
             method = SERVICE_TO_METHOD.get(service.service)
             params = {
-                key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
+                key: value
+                for key, value in service.data.items()
+                if key != ATTR_ENTITY_ID
             }
             entity_ids = service.data.get(ATTR_ENTITY_ID)
             if entity_ids:
@@ -250,7 +251,9 @@ class XiaomiPlugGenericSwitch(XiaomiMiioDevice, SwitchEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the plug off."""
-        result = await self._try_command("Turning the plug off failed.", self._device.off)
+        result = await self._try_command(
+            "Turning the plug off failed.", self._device.off
+        )
 
         if result:
             self._state = False
