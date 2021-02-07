@@ -159,4 +159,7 @@ class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature for and options duration this zone."""
-        await self._zone.set_override(kwargs[ATTR_TEMPERATURE], int(kwargs.get(ATTR_DURATION, 3600).total_seconds()))
+        await self._zone.set_override(
+            kwargs[ATTR_TEMPERATURE],
+            int(kwargs.get(ATTR_DURATION, 3600).total_seconds()),
+        )
