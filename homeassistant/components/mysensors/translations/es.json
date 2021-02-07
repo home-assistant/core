@@ -1,0 +1,32 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "invalid_device": "Dispositivo no v\u00e1lido",
+            "invalid_ip": "Direcci\u00f3n IP no v\u00e1lida",
+            "invalid_port": "N\u00famero de puerto no v\u00e1lido",
+            "invalid_serial": "Puerto serie no v\u00e1lido",
+            "invalid_version": "Versi\u00f3n no v\u00e1lida de MySensors",
+            "not_a_number": "Por favor, introduce un n\u00famero",
+            "port_out_of_range": "El n\u00famero de puerto debe ser como m\u00ednimo 1 y como m\u00e1ximo 65535",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "gw_mqtt": {
+                "data": {
+                    "version": "Versi\u00f3n de MySensors"
+                },
+                "description": "Configuraci\u00f3n del gateway MQTT"
+            },
+            "gw_serial": {
+                "data": {
+                    "baud_rate": "tasa de baudios",
+                    "device": "Puerto serie",
+                    "version": "Versi\u00f3n de MySensors"
+                }
+            }
+        }
+    }
+}
