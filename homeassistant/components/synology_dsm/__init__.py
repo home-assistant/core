@@ -47,6 +47,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
+    CONF_DEVICE_TOKEN,
     CONF_SERIAL,
     CONF_VOLUMES,
     COORDINATOR_CAMERAS,
@@ -385,8 +386,6 @@ class SynoApi:
         self._with_upgrade = True
         self._with_utilisation = True
 
-        self._unsub_dispatcher = None
-
     async def async_setup(self):
         """Start interacting with the NAS."""
         self.dsm = SynologyDSM(
@@ -397,7 +396,7 @@ class SynoApi:
             self._entry.data[CONF_SSL],
             self._entry.data[CONF_VERIFY_SSL],
             timeout=self._entry.options.get(CONF_TIMEOUT),
-            device_token=self._entry.data.get("device_token"),
+            device_token=self._entry.data.get(CONF_DEVICE_TOKEN),
         )
         await self._hass.async_add_executor_job(self.dsm.login)
 
@@ -434,6 +433,7 @@ class SynoApi:
         self._with_surveillance_station = bool(
             self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
         ) or bool(self.dsm.apis.get(SynoSurveillanceStation.HOME_MODE_API_KEY))
+
         self._with_security = bool(
             self._fetching_entities.get(SynoCoreSecurity.API_KEY)
         )

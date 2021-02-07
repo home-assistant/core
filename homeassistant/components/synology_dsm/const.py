@@ -31,6 +31,7 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 # Configuration
 CONF_SERIAL = "serial"
 CONF_VOLUMES = "volumes"
+CONF_DEVICE_TOKEN = "device_token"
 
 DEFAULT_USE_SSL = True
 DEFAULT_VERIFY_SSL = False
