@@ -18,12 +18,12 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.components.tplink.common import (
+from homeassistant.components.tplink.const import (
     CONF_DIMMER,
     CONF_DISCOVERY,
     CONF_LIGHT,
+    DEFAULT_RETRY_DELAY,
 )
-from homeassistant.components.tplink.light import SLEEP_TIME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -687,7 +687,7 @@ async def test_update_failure(
     await hass.helpers.entity_component.async_update_entity("light.light1")
     assert caplog.text == ""
 
-    with patch("homeassistant.components.tplink.light.MAX_ATTEMPTS", 0):
+    with patch("homeassistant.components.tplink.const.DEFAULT_MAX_ATTEMPTS", 0):
         caplog.clear()
         caplog.set_level(logging.WARNING)
         await hass.helpers.entity_component.async_update_entity("light.light1")
@@ -706,13 +706,17 @@ async def test_update_failure(
 
     light_mock_data.get_light_state_mock.side_effect = get_light_state_side_effect
 
-    with patch("homeassistant.components.tplink.light", MAX_ATTEMPTS=2, SLEEP_TIME=0):
+    with patch(
+        "homeassistant.components.tplink.const",
+        DEFAULT_MAX_ATTEMPTS=2,
+        DEFAULT_RETRY_DELAY=0,
+    ):
         caplog.clear()
         caplog.set_level(logging.DEBUG)
 
         await update_entity(hass, "light.light1")
         assert (
-            f"Retrying in {SLEEP_TIME} seconds for 123.123.123.123|light1"
+            f"Retrying in {DEFAULT_RETRY_DELAY} seconds for 123.123.123.123|light1"
             in caplog.text
         )
         assert "Device 123.123.123.123|light1 responded after " in caplog.text

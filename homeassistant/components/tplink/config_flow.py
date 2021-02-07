@@ -1,4 +1,6 @@
 """Config flow for TP-Link."""
+import logging
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -27,6 +29,8 @@ DATA_SCHEMA = {
     vol.Optional(CONF_RETRY_MAX_ATTEMPTS, default=DEFAULT_MAX_ATTEMPTS): int,
 }
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class TplinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """TP-Link configuration flow."""
@@ -51,6 +55,14 @@ class TplinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=vol.Schema(DATA_SCHEMA))
 
+    async def async_step_import(self, import_config):
+        """Import a config entry from configuration.yaml."""
+        if self._async_current_entries():
+            _LOGGER.warning("Already configured. Only a single configuration possible.")
+            return self.async_abort(reason="single_instance_allowed")
+
+        return await self.async_step_user(import_config)
+
 
 class TpLinkOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options."""
@@ -61,11 +73,15 @@ class TpLinkOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
+        return await self.async_step_user()
+
+    async def async_step_user(self, user_input=None):
+        """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
-            step_id="init",
+            step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Optional(

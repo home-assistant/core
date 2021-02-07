@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import tplink
-from homeassistant.components.tplink.common import (
+from homeassistant.components.tplink.const import (
     CONF_DIMMER,
     CONF_DISCOVERY,
     CONF_LIGHT,
