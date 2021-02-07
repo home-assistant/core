@@ -18,7 +18,7 @@ from homeassistant.const import (
 
 from .const import DOMAIN  # pylint: disable=unused-import
 from .errors import CannotLoginException
-from .router import async_get_api
+from .router import get_api
 
 
 def _discovery_schema_with_defaults(discovery_info):
@@ -88,9 +88,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             return await self._show_setup_form(user_input, errors)
 
-        url = None
-        if self.placeholders.get(CONF_URL):
-            url = self.placeholders.get(CONF_URL)
+        url = self.placeholders.get(CONF_URL)
         host = user_input.get(CONF_HOST)
         port = user_input.get(CONF_PORT)
         ssl = user_input.get(CONF_SSL)
@@ -100,7 +98,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Open connection and check authentication
         try:
             api = await self.hass.async_add_executor_job(
-                async_get_api, password, host, username, port, ssl, url
+                get_api, password, host, username, port, ssl, url
             )
         except CannotLoginException:
             errors["base"] = "config"
@@ -133,10 +131,13 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input=None):
         """Import a config entry."""
+        print("import")
+        print(user_input)
         return await self.async_step_user(user_input)
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered device."""
+        print("discovery")
         await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
         self._abort_if_unique_id_configured()
 

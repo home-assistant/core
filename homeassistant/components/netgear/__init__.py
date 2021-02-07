@@ -11,6 +11,11 @@ from .router import NetgearRouter
 _LOGGER = logging.getLogger(__name__)
 
 
+async def async_setup(hass, config):
+    """Set up Netgear integration."""
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Netgear component."""
     router = NetgearRouter(hass, entry)

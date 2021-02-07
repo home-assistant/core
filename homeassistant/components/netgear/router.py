@@ -23,8 +23,7 @@ from .errors import CannotLoginException
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-async def async_get_api(
-    hass: HomeAssistantType,
+def get_api(
     password: str,
     host: str = None,
     username: str = None,
@@ -65,7 +64,7 @@ class NetgearRouter:
     async def async_setup(self) -> None:
         """Set up a Netgear router."""
         self._api = await self.hass.async_add_executor_job(
-            async_get_api,
+            get_api,
             self._password,
             self._host,
             self._username,
