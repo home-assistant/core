@@ -115,7 +115,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         async def _async_update():
             try:
-                self.hass.async_add_executor_job(self.api.update)
+                await self.hass.async_add_executor_job(self.api.update)
             except ConnectionFailure:
                 pass
 
