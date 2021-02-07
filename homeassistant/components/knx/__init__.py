@@ -45,13 +45,13 @@ from .schema import (
     ConnectionSchema,
     CoverSchema,
     ExposeSchema,
+    FanSchema,
     LightSchema,
     NotifySchema,
     SceneSchema,
     SensorSchema,
     SwitchSchema,
     WeatherSchema,
-    FanSchema,
 )
 
 _LOGGER = logging.getLogger(__name__)
