@@ -44,7 +44,7 @@ async def test_unique_id_migration(mock_hc, hass, mock_write_config):
             # new format
             ENTITY_PLAY_MUSIC: entity_registry.RegistryEntry(
                 entity_id=ENTITY_PLAY_MUSIC,
-                unique_id=str(PLAY_MUSIC_ACTIVITY_ID),
+                unique_id=f"activity_{PLAY_MUSIC_ACTIVITY_ID}",
                 platform="harmony",
                 config_entry_id=entry.entry_id,
             ),
@@ -63,10 +63,10 @@ async def test_unique_id_migration(mock_hc, hass, mock_write_config):
     ent_reg = await entity_registry.async_get_registry(hass)
 
     switch_tv = ent_reg.async_get(ENTITY_WATCH_TV)
-    assert switch_tv.unique_id == str(WATCH_TV_ACTIVITY_ID)
+    assert switch_tv.unique_id == f"activity_{WATCH_TV_ACTIVITY_ID}"
 
     switch_nile = ent_reg.async_get(ENTITY_NILE_TV)
-    assert switch_nile.unique_id == str(NILE_TV_ACTIVITY_ID)
+    assert switch_nile.unique_id == f"activity_{NILE_TV_ACTIVITY_ID}"
 
     switch_music = ent_reg.async_get(ENTITY_PLAY_MUSIC)
-    assert switch_music.unique_id == str(PLAY_MUSIC_ACTIVITY_ID)
+    assert switch_music.unique_id == f"activity_{PLAY_MUSIC_ACTIVITY_ID}"

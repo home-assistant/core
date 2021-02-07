@@ -45,7 +45,7 @@ class HarmonyActivitySwitch(ConnectionStateMixin, SwitchEntity):
     @property
     def unique_id(self):
         """Return the unique id."""
-        return f"{self._activity_id}"
+        return f"activity_{self._activity_id}"
 
     @property
     def device_info(self):

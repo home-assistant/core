@@ -76,7 +76,7 @@ async def _migrate_old_unique_ids(
                     entity_entry.unique_id,
                     activity_id,
                 )
-                return {"new_unique_id": f"{activity_id}"}
+                return {"new_unique_id": f"activity_{activity_id}"}
 
         return None
 
