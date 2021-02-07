@@ -57,6 +57,7 @@ def __some_comfort_refresh_async_wrap(device):
             break
         except (
             somecomfort.client.APIRateLimited,
+            somecomfort.client.SessionTimedOut,
             OSError,
             requests.exceptions.ReadTimeout,
             somecomfort.SomeComfortError,
