@@ -51,6 +51,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, extract_domain_configs
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, IntegrationNotFound
 from homeassistant.requirements import (
     RequirementsNotFound,
@@ -734,8 +735,8 @@ async def merge_packages_config(
 
 
 async def async_process_component_config(
-    hass: HomeAssistant, config: Dict, integration: Integration
-) -> Optional[Dict]:
+    hass: HomeAssistant, config: ConfigType, integration: Integration
+) -> Optional[ConfigType]:
     """Check component configuration and return processed configuration.
 
     Returns None on error.
