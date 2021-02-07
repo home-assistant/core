@@ -63,8 +63,7 @@ class KNXFan(KnxEntity, FanEntity):
             return ranged_value_to_percentage(
                 self._step_range, self._device.current_speed
             )
-        else:
-            return self._device.current_speed
+        return self._device.current_speed
 
     async def async_turn_on(
         self,
