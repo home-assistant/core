@@ -513,17 +513,19 @@ class SynoApi:
 
     async def async_reboot(self):
         """Reboot NAS."""
-        if not self.system:
-            _LOGGER.debug("SynoAPI.async_reboot() - System API not ready: %s", self)
-            return
-        await self._hass.async_add_executor_job(self.system.reboot)
+        try:
+            await self._hass.async_add_executor_job(self.system.reboot)
+        except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
+            _LOGGER.error("Reboot not possible, please try again later")
+            _LOGGER.debug("Exception:%s", err)
 
     async def async_shutdown(self):
         """Shutdown NAS."""
-        if not self.system:
-            _LOGGER.debug("SynoAPI.async_shutdown() - System API not ready: %s", self)
-            return
-        await self._hass.async_add_executor_job(self.system.shutdown)
+        try:
+            await self._hass.async_add_executor_job(self.system.shutdown)
+        except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
+            _LOGGER.error("Shutdown not possible, please try again later")
+            _LOGGER.debug("Exception:%s", err)
 
     async def async_unload(self):
         """Stop interacting with the NAS and prepare for removal from hass."""
