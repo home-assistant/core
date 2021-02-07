@@ -20,7 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Plaato from a config entry."""
 
     if config_entry.data[CONF_USE_WEBHOOK]:
-        return False
+        return
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
     async_add_entities(
@@ -29,10 +29,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             sensor_type,
             coordinator,
         )
-        for sensor_type in coordinator.data.binary_sensors.keys()
+        for sensor_type in coordinator.data.binary_sensors
     )
-
-    return True
 
 
 class PlaatoBinarySensor(PlaatoEntity, BinarySensorEntity):

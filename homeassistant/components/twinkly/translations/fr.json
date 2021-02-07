@@ -11,7 +11,8 @@
                 "data": {
                     "host": "Nom r\u00e9seau (ou adresse IP) de votre Twinkly"
                 },
-                "description": "Configurer votre Twinkly"
+                "description": "Configurer votre Twinkly",
+                "title": "Twinkly"
             }
         }
     }

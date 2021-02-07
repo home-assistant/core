@@ -6,7 +6,7 @@ from pydelijn.common import HttpException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -17,7 +17,6 @@ ATTRIBUTION = "Data provided by data.delijn.be"
 
 CONF_NEXT_DEPARTURE = "next_departure"
 CONF_STOP_ID = "stop_id"
-CONF_API_KEY = "api_key"
 CONF_NUMBER_OF_DEPARTURES = "number_of_departures"
 
 DEFAULT_NAME = "De Lijn"

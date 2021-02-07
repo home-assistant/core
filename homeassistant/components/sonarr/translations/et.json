@@ -13,7 +13,7 @@
         "step": {
             "reauth_confirm": {
                 "description": "Sonarr-i sidumine tuleb k\u00e4sitsi taastuvastada Sonarr API abil: {host}",
-                "title": "Autentige uuesti Sonarriga"
+                "title": "Autendi Sonarriga uuesti"
             },
             "user": {
                 "data": {

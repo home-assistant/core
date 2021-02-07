@@ -163,7 +163,7 @@ aioftp==0.12.0
 aioguardian==1.0.4
 
 # homeassistant.components.harmony
-aioharmony==0.2.6
+aioharmony==0.2.7
 
 # homeassistant.components.homekit_controller
 aiohomekit==0.2.60
@@ -762,7 +762,7 @@ hlk-sw16==0.0.9
 hole==0.5.1
 
 # homeassistant.components.workday
-holidays==0.10.4
+holidays==0.10.5.2
 
 # homeassistant.components.frontend
 home-assistant-frontend==20210127.7
@@ -1159,7 +1159,7 @@ pmsensor==0.4
 poolsense==0.0.8
 
 # homeassistant.components.reddit
-praw==7.1.0
+praw==7.1.2
 
 # homeassistant.components.islamic_prayer_times
 prayer_times_calculator==0.0.3
@@ -1551,7 +1551,7 @@ pymusiccast==0.1.6
 pymyq==2.0.14
 
 # homeassistant.components.mysensors
-pymysensors==0.18.0
+pymysensors==0.20.1
 
 # homeassistant.components.nanoleaf
 pynanoleaf==0.0.5
@@ -2049,7 +2049,7 @@ slackclient==2.5.0
 sleepyq==0.8.1
 
 # homeassistant.components.xmpp
-slixmpp==1.6.0
+slixmpp==1.7.0
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.4.0
@@ -2323,7 +2323,7 @@ xboxapi==2.0.1
 xfinity-gateway==0.0.4
 
 # homeassistant.components.knx
-xknx==0.16.2
+xknx==0.16.3
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest
@@ -2387,4 +2387,4 @@ zigpy==0.32.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.17.1
+zwave-js-server-python==0.17.2

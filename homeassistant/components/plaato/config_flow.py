@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__package__)
 class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handles a Plaato config flow."""
 
-    VERSION = 2
+    VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
@@ -128,16 +128,16 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _show_api_method_form(
         self, device_type: PlaatoDeviceType, errors: dict = None
     ):
-        data_scheme = vol.Schema({vol.Optional(CONF_TOKEN, default=""): str})
+        data_schema = vol.Schema({vol.Optional(CONF_TOKEN, default=""): str})
 
         if device_type == PlaatoDeviceType.Airlock:
-            data_scheme = data_scheme.extend(
+            data_schema = data_schema.extend(
                 {vol.Optional(CONF_USE_WEBHOOK, default=False): bool}
             )
 
         return self.async_show_form(
             step_id="api_method",
-            data_schema=data_scheme,
+            data_schema=data_schema,
             errors=errors,
             description_placeholders={PLACEHOLDER_DEVICE_TYPE: device_type.name},
         )

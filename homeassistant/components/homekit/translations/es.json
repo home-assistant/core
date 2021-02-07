@@ -4,6 +4,17 @@
             "port_name_in_use": "Ya est\u00e1 configurada una pasarela con el mismo nombre o puerto."
         },
         "step": {
+            "accessory_mode": {
+                "data": {
+                    "entity_id": "Entidad"
+                }
+            },
+            "bridge_mode": {
+                "data": {
+                    "include_domains": "Dominios a incluir"
+                },
+                "title": "Selecciona los dominios a incluir"
+            },
             "pairing": {
                 "description": "Tan pronto como la pasarela {name} est\u00e9 lista, la vinculaci\u00f3n estar\u00e1 disponible en \"Notificaciones\" como \"configuraci\u00f3n de pasarela Homekit\"",
                 "title": "Vincular pasarela Homekit"
@@ -11,7 +22,8 @@
             "user": {
                 "data": {
                     "auto_start": "Arranque autom\u00e1tico (desactivado si se utiliza Z-Wave u otro sistema de arranque retardado)",
-                    "include_domains": "Dominios para incluir"
+                    "include_domains": "Dominios para incluir",
+                    "mode": "Modo"
                 },
                 "description": "Una pasarela Homekit permitir\u00e1 a Homekit acceder a sus entidades de Home Assistant. La pasarela Homekit est\u00e1 limitada a 150 accesorios por instancia incluyendo la propia pasarela. Si desea enlazar m\u00e1s del m\u00e1ximo n\u00famero de accesorios, se recomienda que use multiples pasarelas Homekit para diferentes dominios. Configuraci\u00f3n detallada de la entidad solo est\u00e1 disponible via YAML para la pasarela primaria.",
                 "title": "Activar pasarela Homekit"

@@ -3,7 +3,7 @@ from zwave_js_server.event import Event
 
 from homeassistant.components.cover import ATTR_CURRENT_POSITION
 
-WINDOW_COVER_ENTITY = "cover.zws_12_current_value"
+WINDOW_COVER_ENTITY = "cover.zws_12"
 
 
 async def test_cover(hass, client, chain_actuator_zws12, integration):
@@ -95,14 +95,16 @@ async def test_cover(hass, client, chain_actuator_zws12, integration):
         "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
-        "property": "Open",
-        "propertyName": "Open",
+        "property": "targetValue",
+        "propertyName": "targetValue",
         "metadata": {
-            "type": "boolean",
+            "label": "Target value",
+            "max": 99,
+            "min": 0,
+            "type": "number",
             "readable": True,
             "writeable": True,
-            "label": "Perform a level change (Open)",
-            "ccSpecific": {"switchType": 3},
+            "label": "Target value",
         },
     }
     assert args["value"]
@@ -194,17 +196,19 @@ async def test_cover(hass, client, chain_actuator_zws12, integration):
         "commandClassName": "Multilevel Switch",
         "commandClass": 38,
         "endpoint": 0,
-        "property": "Close",
-        "propertyName": "Close",
+        "property": "targetValue",
+        "propertyName": "targetValue",
         "metadata": {
-            "type": "boolean",
+            "label": "Target value",
+            "max": 99,
+            "min": 0,
+            "type": "number",
             "readable": True,
             "writeable": True,
-            "label": "Perform a level change (Close)",
-            "ccSpecific": {"switchType": 3},
+            "label": "Target value",
         },
     }
-    assert args["value"]
+    assert args["value"] == 0
 
     client.async_send_command.reset_mock()
 

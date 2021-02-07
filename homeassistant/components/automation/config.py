@@ -8,7 +8,7 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.config import async_log_exception, config_without_domain
-from homeassistant.const import CONF_ALIAS, CONF_ID, CONF_VARIABLES
+from homeassistant.const import CONF_ALIAS, CONF_CONDITION, CONF_ID, CONF_VARIABLES
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, config_validation as cv, script
 from homeassistant.helpers.condition import async_validate_condition_config
@@ -17,7 +17,6 @@ from homeassistant.loader import IntegrationNotFound
 
 from .const import (
     CONF_ACTION,
-    CONF_CONDITION,
     CONF_DESCRIPTION,
     CONF_HIDE_ENTITY,
     CONF_INITIAL_STATE,

@@ -64,6 +64,16 @@ async def async_setup_entry(
 class ZwaveSensorBase(ZWaveBaseEntity):
     """Basic Representation of a Z-Wave sensor."""
 
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveSensorBase entity."""
+        super().__init__(config_entry, client, info)
+        self._name = self.generate_name(include_value_name=True)
+
     @property
     def device_class(self) -> Optional[str]:
         """Return the device class of the sensor."""
@@ -123,6 +133,20 @@ class ZWaveStringSensor(ZwaveSensorBase):
 class ZWaveNumericSensor(ZwaveSensorBase):
     """Representation of a Z-Wave Numeric sensor."""
 
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveNumericSensor entity."""
+        super().__init__(config_entry, client, info)
+        if self.info.primary_value.command_class == CommandClass.BASIC:
+            self._name = self.generate_name(
+                include_value_name=True,
+                alternate_value_name=self.info.primary_value.command_class_name,
+            )
+
     @property
     def state(self) -> float:
         """Return state of the sensor."""
@@ -142,18 +166,23 @@ class ZWaveNumericSensor(ZwaveSensorBase):
 
         return str(self.info.primary_value.metadata.unit)
 
-    @property
-    def name(self) -> str:
-        """Return default name from device name and value name combination."""
-        if self.info.primary_value.command_class == CommandClass.BASIC:
-            node_name = self.info.node.name or self.info.node.device_config.description
-            label = self.info.primary_value.command_class_name
-            return f"{node_name}: {label}"
-        return super().name
-
 
 class ZWaveListSensor(ZwaveSensorBase):
     """Representation of a Z-Wave Numeric sensor with multiple states."""
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveListSensor entity."""
+        super().__init__(config_entry, client, info)
+        self._name = self.generate_name(
+            include_value_name=True,
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[self.info.primary_value.property_key_name],
+        )
 
     @property
     def state(self) -> Optional[str]:
@@ -164,7 +193,7 @@ class ZWaveListSensor(ZwaveSensorBase):
             not str(self.info.primary_value.value)
             in self.info.primary_value.metadata.states
         ):
-            return None
+            return str(self.info.primary_value.value)
         return str(
             self.info.primary_value.metadata.states[str(self.info.primary_value.value)]
         )
@@ -174,11 +203,3 @@ class ZWaveListSensor(ZwaveSensorBase):
         """Return the device specific state attributes."""
         # add the value's int value as property for multi-value (list) items
         return {"value": self.info.primary_value.value}
-
-    @property
-    def name(self) -> str:
-        """Return default name from device name and value name combination."""
-        node_name = self.info.node.name or self.info.node.device_config.description
-        prop_name = self.info.primary_value.property_name
-        prop_key_name = self.info.primary_value.property_key_name
-        return f"{node_name}: {prop_name} - {prop_key_name}"
