@@ -65,8 +65,6 @@ class XiaomiMiioDevice(Entity):
         self._unique_id = unique_id
         self._name = name
 
-        self._device_info = await self.hass.async_add_executor_job(self._device.info)
-
     @property
     def unique_id(self):
         """Return an unique ID."""
@@ -86,5 +84,4 @@ class XiaomiMiioDevice(Entity):
             "manufacturer": "Xiaomi",
             "name": self._name,
             "model": self._model,
-            "sw_version": self._device_info.firmware_version,
         }
