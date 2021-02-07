@@ -171,7 +171,6 @@ HOMEKIT = {
     "3810X": "roku",
     "4660X": "roku",
     "7820X": "roku",
-    "819LMB": "myq",
     "AC02": "tado",
     "Abode": "abode",
     "BSB002": "hue",

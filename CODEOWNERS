@@ -287,7 +287,6 @@ homeassistant/components/motion_blinds/* @starkillerOG
 homeassistant/components/mpd/* @fabaff
 homeassistant/components/mqtt/* @home-assistant/core @emontnemery
 homeassistant/components/msteams/* @peroyvind
-homeassistant/components/myq/* @bdraco
 homeassistant/components/mysensors/* @MartinHjelmare @functionpointer
 homeassistant/components/mystrom/* @fabaff
 homeassistant/components/neato/* @dshokouhi @Santobert
