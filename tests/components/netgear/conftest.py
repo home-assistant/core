@@ -1,11 +1,14 @@
 """Configure Netgear tests."""
-import pytest
+from unittest.mock import patch
 
-from tests.async_mock import patch
+import pytest
 
 
 @pytest.fixture(name="bypass_setup", autouse=True)
 def bypass_setup_fixture():
     """Mock component setup."""
-    with patch("homeassistant.components.netgear.async_setup_entry", return_value=True):
+    with patch(
+        "homeassistant.components.netgear.device_tracker.async_setup_scanner",
+        return_value=True,
+    ):
         yield

@@ -72,20 +72,11 @@ def mock_controller_service_failed():
         yield service_mock
 
 
-async def _discover_step_user(hass):
+async def test_user(hass, service):
+    """Test user step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "discover"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    return result
-
-
-async def test_user(hass, service):
-    """Test user step."""
-    result = await _discover_step_user(hass)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
@@ -128,7 +119,7 @@ async def test_import_required(hass, autodetect_url, service):
 
 
 async def test_import_required_login_failed(hass, autodetect_url, service_failed):
-    """Test import step, with required config only, while wrong password."""
+    """Test import step, with required config only, while wrong password or connection issue."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_PASSWORD: PASSWORD}
     )
@@ -197,7 +188,12 @@ async def test_abort_if_already_setup(hass, autodetect_url, service):
     assert result["reason"] == "already_configured"
 
     # Should fail, same SERIAL (flow)
-    result = await _discover_step_user(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_PASSWORD: PASSWORD},
