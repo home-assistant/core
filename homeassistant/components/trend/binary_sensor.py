@@ -46,6 +46,8 @@ CONF_MAX_SAMPLES = "max_samples"
 CONF_MIN_GRADIENT = "min_gradient"
 CONF_SAMPLE_DURATION = "sample_duration"
 
+STATE_NOT_SET = "not set"
+
 SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
@@ -178,7 +180,7 @@ class SensorTrend(BinarySensorEntity):
                     state = new_state.attributes.get(self._attribute)
                 else:
                     state = new_state.state
-                if state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+                if state not in (STATE_UNKNOWN, STATE_UNAVAILABLE, STATE_NOT_SET):
                     sample = (new_state.last_updated.timestamp(), float(state))
                     self.samples.append(sample)
                     self.async_schedule_update_ha_state(True)
