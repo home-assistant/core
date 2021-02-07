@@ -8,24 +8,29 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.helpers.device_registry import format_mac
 
 # pylint: disable=unused-import
-from .const import DOMAIN
+from .const import CONF_MAC, CONF_MODEL, DOMAIN, MODELS_SWITCH
+from .device import ConnectXiaomiDevice
 from .gateway import ConnectXiaomiGateway
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FLOW_TYPE = "config_flow_device"
 CONF_GATEWAY = "gateway"
+CONF_DEVICE = "device"
 DEFAULT_GATEWAY_NAME = "Xiaomi Gateway"
 ZEROCONF_GATEWAY = "lumi-gateway"
 ZEROCONF_ACPARTNER = "lumi-acpartner"
 
-GATEWAY_SETTINGS = {
+DEVICE_SETTINGS = {
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
     vol.Optional(CONF_NAME, default=DEFAULT_GATEWAY_NAME): str,
 }
-GATEWAY_CONFIG = vol.Schema({vol.Required(CONF_HOST): str}).extend(GATEWAY_SETTINGS)
+DEVICE_CONFIG = vol.Schema({vol.Required(CONF_HOST): str}).extend(DEVICE_SETTINGS)
 
-CONFIG_SCHEMA = vol.Schema({vol.Optional(CONF_GATEWAY, default=False): bool})
+CONFIG_SCHEMA = vol.Schema({
+    vol.Optional(CONF_GATEWAY, default=False): bool,
+    vol.Optional(CONF_DEVICE, default=False): bool,
+})
 
 
 class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -45,6 +50,8 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # Check which device needs to be connected.
             if user_input[CONF_GATEWAY]:
                 return await self.async_step_gateway()
+            if user_input[CONF_DEVICE]:
+                return await self.async_step_device()
 
             errors["base"] = "no_device_selected"
 
@@ -73,6 +80,17 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             return await self.async_step_gateway()
+        if name in MODELS_SWITCH:
+            unique_id = format_mac(mac_address)
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured({CONF_HOST: self.host})
+
+            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+            self.context.update(
+                {"title_placeholders": {"name": f"Miio Device {self.host}"}}
+            )
+
+            return await self.async_step_device()
 
         # Discovered device is not yet supported
         _LOGGER.debug(
@@ -106,18 +124,60 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_FLOW_TYPE: CONF_GATEWAY,
                         CONF_HOST: self.host,
                         CONF_TOKEN: token,
-                        "model": gateway_info.model,
-                        "mac": mac,
+                        CONF_MODEL: gateway_info.model,
+                        CONF_MAC: mac,
                     },
                 )
 
             errors["base"] = "cannot_connect"
 
         if self.host:
-            schema = vol.Schema(GATEWAY_SETTINGS)
+            schema = vol.Schema(DEVICE_SETTINGS)
         else:
-            schema = GATEWAY_CONFIG
+            schema = DEVICE_CONFIG
 
         return self.async_show_form(
             step_id="gateway", data_schema=schema, errors=errors
+        )
+
+    async def async_step_device(self, user_input=None):
+        """Handle a flow initialized by the user to configure a xiaomi miio device."""
+        errors = {}
+        if user_input is not None:
+            token = user_input[CONF_TOKEN]
+            if user_input.get(CONF_HOST):
+                self.host = user_input[CONF_HOST]
+
+            # Try to connect to a Xiaomi Device.
+            connect_device_class = ConnectXiaomiDevice(self.hass)
+            await connect_device_class.async_connect_device(self.host, token)
+            device_info = connect_device_class.device_info
+
+            if device_info is not None:
+                if device_info.model in MODELS_SWITCH:
+                    mac = format_mac(device_info.mac_address)
+                    unique_id = mac
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=user_input[CONF_NAME],
+                        data={
+                            CONF_FLOW_TYPE: CONF_DEVICE,
+                            CONF_HOST: self.host,
+                            CONF_TOKEN: token,
+                            CONF_MODEL: device_info.model,
+                            CONF_MAC: mac,
+                        },
+                    )
+                errors["base"] = "unknown_device"
+            else:
+                errors["base"] = "cannot_connect"
+
+        if self.host:
+            schema = vol.Schema(DEVICE_SETTINGS)
+        else:
+            schema = DEVICE_CONFIG
+
+        return self.async_show_form(
+            step_id="device", data_schema=schema, errors=errors
         )
