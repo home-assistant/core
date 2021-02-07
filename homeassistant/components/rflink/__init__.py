@@ -10,7 +10,9 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_STATE,
     CONF_COMMAND,
+    CONF_DEVICE_ID,
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
@@ -29,15 +31,12 @@ from homeassistant.helpers.restore_state import RestoreEntity
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_EVENT = "event"
-ATTR_STATE = "state"
 
 CONF_ALIASES = "aliases"
 CONF_GROUP_ALIASES = "group_aliases"
 CONF_GROUP = "group"
 CONF_NOGROUP_ALIASES = "nogroup_aliases"
 CONF_DEVICE_DEFAULTS = "device_defaults"
-CONF_DEVICE_ID = "device_id"
-CONF_DEVICES = "devices"
 CONF_AUTOMATIC_ADD = "automatic_add"
 CONF_FIRE_EVENT = "fire_event"
 CONF_IGNORE_DEVICES = "ignore_devices"
