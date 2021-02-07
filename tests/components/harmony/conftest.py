@@ -7,10 +7,9 @@ import pytest
 
 from homeassistant.components.harmony.const import ACTIVITY_POWER_OFF
 
-_LOGGER = logging.getLogger(__name__)
+from .const import PLAY_MUSIC_ACTIVITY_ID, WATCH_TV_ACTIVITY_ID
 
-WATCH_TV_ACTIVITY_ID = 123
-PLAY_MUSIC_ACTIVITY_ID = 456
+_LOGGER = logging.getLogger(__name__)
 
 ACTIVITIES_TO_IDS = {
     ACTIVITY_POWER_OFF: -1,
