@@ -37,11 +37,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_scanner(hass, config, async_add_entities, discovery_info=None):
     """Import Netgear configuration from YAML."""
-    _LOGGER.warning(
-        "Loading Netgear via platform setup is deprecated. Please remove it from your configuration."
-    )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -49,6 +46,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             data=config,
         )
     )
+
+    _LOGGER.warning(
+        "Your Netgear configuration has been imported into the UI, "
+        "please remove it from configuration.yaml. Loading Netgear via platform setup is now deprecated."
+    )
+
+    return True
 
 
 async def async_setup_entry(
