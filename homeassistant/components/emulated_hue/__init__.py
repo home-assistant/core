@@ -5,7 +5,12 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_ENTITIES,
+    CONF_TYPE,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
@@ -31,7 +36,6 @@ NUMBERS_FILE = "emulated_hue_ids.json"
 
 CONF_ADVERTISE_IP = "advertise_ip"
 CONF_ADVERTISE_PORT = "advertise_port"
-CONF_ENTITIES = "entities"
 CONF_ENTITY_HIDDEN = "hidden"
 CONF_ENTITY_NAME = "name"
 CONF_EXPOSE_BY_DEFAULT = "expose_by_default"
@@ -40,7 +44,6 @@ CONF_HOST_IP = "host_ip"
 CONF_LIGHTS_ALL_DIMMABLE = "lights_all_dimmable"
 CONF_LISTEN_PORT = "listen_port"
 CONF_OFF_MAPS_TO_ON_DOMAINS = "off_maps_to_on_domains"
-CONF_TYPE = "type"
 CONF_UPNP_BIND_MULTICAST = "upnp_bind_multicast"
 
 TYPE_ALEXA = "alexa"
