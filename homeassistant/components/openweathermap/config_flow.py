@@ -108,19 +108,18 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
         return vol.Schema(
             {
                 vol.Optional(
-                    CONF_MODE,
-                    default=self.config_entry.options.get(
-                        CONF_MODE, DEFAULT_FORECAST_MODE
-                    ),
+                    CONF_MODE, default=self._get_config_value(CONF_MODE)
                 ): vol.In(FORECAST_MODES),
                 vol.Optional(
-                    CONF_LANGUAGE,
-                    default=self.config_entry.options.get(
-                        CONF_LANGUAGE, DEFAULT_LANGUAGE
-                    ),
+                    CONF_LANGUAGE, default=self._get_config_value(CONF_LANGUAGE)
                 ): vol.In(LANGUAGES),
             }
         )
+
+    def _get_config_value(self, key):
+        if self.config_entry.options:
+            return self.config_entry.options[key]
+        return self.config_entry.data[key]
 
 
 async def _is_owm_api_online(hass, api_key, lat, lon):
