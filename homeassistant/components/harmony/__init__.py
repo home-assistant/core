@@ -66,8 +66,8 @@ async def _migrate_old_unique_ids(
         # Old format for switches was {remote_unique_id}-{activity_name}
         # New format is {activity_id}
         parts = entity_entry.unique_id.split("-")
-        if len(parts) == 2:  # old format
-            activity_name = parts[1]
+        if len(parts) > 1:  # old format
+            activity_name = "-".join(parts[1:])
             activity_id = names_to_ids.get(activity_name)
 
             if activity_id is not None:

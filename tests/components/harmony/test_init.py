@@ -5,9 +5,11 @@ from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
 from .const import (
+    ENTITY_NILE_TV,
     ENTITY_PLAY_MUSIC,
     ENTITY_WATCH_TV,
     HUB_NAME,
+    NILE_TV_ACTIVITY_ID,
     PLAY_MUSIC_ACTIVITY_ID,
     WATCH_TV_ACTIVITY_ID,
 )
@@ -29,6 +31,13 @@ async def test_unique_id_migration(mock_hc, hass, mock_write_config):
             ENTITY_WATCH_TV: entity_registry.RegistryEntry(
                 entity_id=ENTITY_WATCH_TV,
                 unique_id="123443-Watch TV",
+                platform="harmony",
+                config_entry_id=entry.entry_id,
+            ),
+            # old format, activity name with -
+            ENTITY_NILE_TV: entity_registry.RegistryEntry(
+                entity_id=ENTITY_NILE_TV,
+                unique_id="123443-Nile-TV",
                 platform="harmony",
                 config_entry_id=entry.entry_id,
             ),
@@ -54,8 +63,10 @@ async def test_unique_id_migration(mock_hc, hass, mock_write_config):
     ent_reg = await entity_registry.async_get_registry(hass)
 
     switch_tv = ent_reg.async_get(ENTITY_WATCH_TV)
-    # TODO constant
     assert switch_tv.unique_id == str(WATCH_TV_ACTIVITY_ID)
+
+    switch_nile = ent_reg.async_get(ENTITY_NILE_TV)
+    assert switch_nile.unique_id == str(NILE_TV_ACTIVITY_ID)
 
     switch_music = ent_reg.async_get(ENTITY_PLAY_MUSIC)
     assert switch_music.unique_id == str(PLAY_MUSIC_ACTIVITY_ID)
