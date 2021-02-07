@@ -18,7 +18,7 @@
                 "data": {
                     "select_ip": "IP \u4f4d\u5740"
                 },
-                "description": "\u5982\u679c\u9084\u6709\u5176\u4ed6\u7db2\u95dc\u9700\u8981\u9023\u7dda\uff0c\u8acb\u518d\u57f7\u884c\u4e00\u6b21\u8a2d\u5b9a",
+                "description": "\u5982\u679c\u9084\u9700\u8981\u9023\u7dda\u81f3\u5176\u4ed6\u7db2\u95dc\uff0c\u8acb\u518d\u57f7\u884c\u4e00\u6b21\u8a2d\u5b9a",
                 "title": "\u9078\u64c7\u6240\u8981\u9023\u7dda\u7684\u5c0f\u7c73 Aqara \u7db2\u95dc"
             },
             "settings": {

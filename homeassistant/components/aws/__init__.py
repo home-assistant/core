@@ -7,7 +7,12 @@ import aiobotocore
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import ATTR_CREDENTIALS, CONF_NAME, CONF_PROFILE_NAME
+from homeassistant.const import (
+    ATTR_CREDENTIALS,
+    CONF_NAME,
+    CONF_PROFILE_NAME,
+    CONF_SERVICE,
+)
 from homeassistant.helpers import config_validation as cv, discovery
 
 # Loading the config flow file will register the flow
@@ -20,7 +25,6 @@ from .const import (
     CONF_NOTIFY,
     CONF_REGION,
     CONF_SECRET_ACCESS_KEY,
-    CONF_SERVICE,
     CONF_VALIDATE,
     DATA_CONFIG,
     DATA_HASS_CONFIG,
@@ -152,7 +156,6 @@ async def async_setup_entry(hass, entry):
 
 async def _validate_aws_credentials(hass, credential):
     """Validate AWS credential config."""
-
     aws_config = credential.copy()
     del aws_config[CONF_NAME]
     del aws_config[CONF_VALIDATE]

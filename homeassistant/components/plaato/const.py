@@ -25,3 +25,12 @@ DEVICE_ID = "device_id"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 DEFAULT_SCAN_INTERVAL = 5
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
+
+DEVICE_STATE_ATTRIBUTES = {
+    "beer_name": "beer_name",
+    "keg_date": "keg_date",
+    "mode": "mode",
+    "original_gravity": "original_gravity",
+    "final_gravity": "final_gravity",
+    "alcohol_by_volume": "alcohol_by_volume",
+}

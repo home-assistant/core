@@ -1,7 +1,7 @@
 """Generic Z-Wave Entity Class."""
 
 import logging
-from typing import Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -35,6 +35,7 @@ class ZWaveBaseEntity(Entity):
         self.config_entry = config_entry
         self.client = client
         self.info = info
+        self._name = self.generate_name()
         # entities requiring additional values, can add extra ids to this list
         self.watched_value_ids = {self.info.primary_value.value_id}
 
@@ -61,19 +62,37 @@ class ZWaveBaseEntity(Entity):
             "identifiers": {get_device_id(self.client, self.info.node)},
         }
 
+    def generate_name(
+        self,
+        include_value_name: bool = False,
+        alternate_value_name: Optional[str] = None,
+        additional_info: Optional[List[str]] = None,
+    ) -> str:
+        """Generate entity name."""
+        if additional_info is None:
+            additional_info = []
+        name: str = self.info.node.name or self.info.node.device_config.description
+        if include_value_name:
+            value_name = (
+                alternate_value_name
+                or self.info.primary_value.metadata.label
+                or self.info.primary_value.property_key_name
+                or self.info.primary_value.property_name
+            )
+            name = f"{name}: {value_name}"
+        for item in additional_info:
+            if item:
+                name += f" - {item}"
+        # append endpoint if > 1
+        if self.info.primary_value.endpoint > 1:
+            name += f" ({self.info.primary_value.endpoint})"
+
+        return name
+
     @property
     def name(self) -> str:
         """Return default name from device name and value name combination."""
-        node_name = self.info.node.name or self.info.node.device_config.description
-        value_name = (
-            self.info.primary_value.metadata.label
-            or self.info.primary_value.property_key_name
-            or self.info.primary_value.property_name
-        )
-        # append endpoint if > 1
-        if self.info.primary_value.endpoint > 1:
-            value_name += f" ({self.info.primary_value.endpoint})"
-        return f"{node_name}: {value_name}"
+        return self._name
 
     @property
     def unique_id(self) -> str:
@@ -83,13 +102,7 @@ class ZWaveBaseEntity(Entity):
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        return (
-            self.client.connected
-            and bool(self.info.node.ready)
-            # a None value indicates something wrong with the device,
-            # or the value is simply not yet there (it will arrive later).
-            and self.info.primary_value.value is not None
-        )
+        return self.client.connected and bool(self.info.node.ready)
 
     @callback
     def _value_changed(self, event_data: dict) -> None:

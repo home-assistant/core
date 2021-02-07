@@ -59,10 +59,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         coordinator = entry_data[COORDINATOR]
         async_add_entities(
             PlaatoSensor(entry_data, sensor_type, coordinator)
-            for sensor_type in coordinator.data.sensors.keys()
+            for sensor_type in coordinator.data.sensors
         )
-
-    return True
 
 
 class PlaatoSensor(PlaatoEntity):
