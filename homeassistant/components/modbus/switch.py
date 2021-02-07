@@ -200,7 +200,6 @@ class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
 
     def turn_on(self, **kwargs):
         """Set switch on."""
-
         # Only holding register is writable
         if self._register_type == CALL_TYPE_REGISTER_HOLDING:
             self._write_register(self._command_on)
@@ -209,7 +208,6 @@ class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
 
     def turn_off(self, **kwargs):
         """Set switch off."""
-
         # Only holding register is writable
         if self._register_type == CALL_TYPE_REGISTER_HOLDING:
             self._write_register(self._command_off)
