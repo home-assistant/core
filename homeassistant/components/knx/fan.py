@@ -1,18 +1,17 @@
 """Support for KNX/IP fans."""
 import math
+from typing import Any, Optional
 
-from xknx.devices import Fan as XknxFan, FanSpeedMode
+from xknx.devices import Fan as XknxFan
+from xknx.devices.fan import FanSpeedMode
+
+from homeassistant.components.fan import SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.util.percentage import (
-    ranged_value_to_percentage,
     percentage_to_ranged_value,
+    ranged_value_to_percentage,
 )
 
-from typing import TYPE_CHECKING, Any, Iterator, Optional
-
-from homeassistant.components.fan import FanEntity, SUPPORT_SET_SPEED, SUPPORT_OSCILLATE
-
 from .const import DOMAIN
-from .schema import FanSchema
 from .knx_entity import KnxEntity
 
 
@@ -33,15 +32,15 @@ class KNXFan(KnxEntity, FanEntity):
         super().__init__(device)
 
         if self._device.mode == FanSpeedMode.Step:
-            self._step_range = (1, device.max_step or 255)
+            self._step_range = (1, device.max_step)
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         if self._device.mode == FanSpeedMode.Step:
             step = math.ceil(percentage_to_ranged_value(self._step_range, percentage))
-            self._device.set_speed(step)
+            await self._device.set_speed(step)
         else:
-            self._device.set_speed(percentage)
+            await self._device.set_speed(percentage)
 
     @property
     def supported_features(self) -> int:
@@ -56,13 +55,15 @@ class KNXFan(KnxEntity, FanEntity):
     @property
     def percentage(self) -> Optional[int]:
         """Return the current speed as a percentage."""
+        if self._device.current_speed is None:
+            return None
+
         if self._device.mode == FanSpeedMode.Step:
-            percentage = ranged_value_to_percentage(
-                self._step_range, self._device.speed
+            return ranged_value_to_percentage(
+                self._step_range, self._device.current_speed
             )
         else:
-            percentage = self._device.speed
-        return percentage
+            return self._device.current_speed
 
     async def async_turn_on(
         self,
