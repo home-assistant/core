@@ -2272,7 +2272,7 @@ volkszaehler==0.2.1
 volvooncall==0.8.12
 
 # homeassistant.components.verisure
-vsure==1.6.1
+vsure==1.7.2
 
 # homeassistant.components.vasttrafik
 vtjp==0.1.14
