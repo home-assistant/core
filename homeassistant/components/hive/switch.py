@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from homeassistant.components.switch import SwitchEntity
 
-from . import CONF_AVAILABLE, CONF_MODE, DATA_HIVE, DOMAIN, HiveEntity, refresh_system
+from . import ATTR_AVAILABLE, ATTR_MODE, DATA_HIVE, DOMAIN, HiveEntity, refresh_system
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -44,14 +44,14 @@ class HiveDevicePlug(HiveEntity, SwitchEntity):
     @property
     def available(self):
         """Return if the device is available."""
-        return self.device["deviceData"].get("online", True)
+        return self.device["deviceData"].get("online")
 
     @property
     def device_state_attributes(self):
         """Show Device Attributes."""
         return {
-            CONF_AVAILABLE: self.attributes[CONF_AVAILABLE],
-            CONF_MODE: self.attributes[CONF_MODE],
+            ATTR_AVAILABLE: self.attributes.get(ATTR_AVAILABLE),
+            ATTR_MODE: self.attributes.get(ATTR_MODE),
         }
 
     @property
@@ -69,16 +69,12 @@ class HiveDevicePlug(HiveEntity, SwitchEntity):
         """Turn the switch on."""
         if self.device["hiveType"] == "activeplug":
             await self.hive.switch.turn_on(self.device)
-        elif self.device["hiveType"] == "action":
-            await self.hive.action.turn_on(self.device)
 
     @refresh_system
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         if self.device["hiveType"] == "activeplug":
             await self.hive.switch.turn_off(self.device)
-        elif self.device["hiveType"] == "action":
-            await self.hive.action.turn_off(self.device)
 
     async def async_update(self):
         """Update all Node data from Hive."""

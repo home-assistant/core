@@ -12,7 +12,7 @@ from homeassistant.components.light import (
 )
 import homeassistant.util.color as color_util
 
-from . import CONF_AVAILABLE, CONF_MODE, DATA_HIVE, DOMAIN, HiveEntity, refresh_system
+from . import ATTR_AVAILABLE, ATTR_MODE, DATA_HIVE, DOMAIN, HiveEntity, refresh_system
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -59,8 +59,8 @@ class HiveDeviceLight(HiveEntity, LightEntity):
     def device_state_attributes(self):
         """Show Device Attributes."""
         return {
-            CONF_AVAILABLE: self.attributes[CONF_AVAILABLE],
-            CONF_MODE: self.attributes[CONF_MODE],
+            ATTR_AVAILABLE: self.attributes.get(ATTR_AVAILABLE),
+            ATTR_MODE: self.attributes.get(ATTR_MODE),
         }
 
     @property
@@ -71,23 +71,23 @@ class HiveDeviceLight(HiveEntity, LightEntity):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        return self.device.get("min_mireds", None)
+        return self.device.get("min_mireds")
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        return self.device.get("max_mireds", None)
+        return self.device.get("max_mireds")
 
     @property
     def color_temp(self):
         """Return the CT color value in mireds."""
-        return self.device["status"].get("color_temp", None)
+        return self.device["status"].get("color_temp")
 
     @property
     def hs_color(self):
         """Return the hs color value."""
         if self.device["status"]["mode"] == "COLOUR":
-            rgb = self.device["status"].get("hs_color", None)
+            rgb = self.device["status"].get("hs_color")
             return color_util.color_RGB_to_hs(*rgb)
         return None
 
