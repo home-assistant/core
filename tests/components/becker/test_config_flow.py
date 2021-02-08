@@ -96,27 +96,7 @@ async def test_import_with_no_config(hass):
     assert result["type"] == "create_entry"
     print(result)
     assert result["data"][const.CONF_DEVICE] == const.DEFAULT_CONF_USB_STICK_PATH
-
-
-async def test_import_already_configured(hass):
-    """Test if a import flow aborts if device is already configured."""
-    MockConfigEntry(
-        domain="becker",
-        unique_id="aabbccddeeff",
-        data={"device": const.DEFAULT_CONF_USB_STICK_PATH},
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN,
-        context={"source": "import"},
-        data={
-            const.CONF_DEVICE: const.DEFAULT_CONF_USB_STICK_PATH,
-            "properties": {"id": "aa:bb:cc:dd:ee:ff"},
-        },
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-
+    
 
 def test_get_serial_by_id_no_dir():
     """Test serial by id conversion if there's no /dev/serial/by-id."""
