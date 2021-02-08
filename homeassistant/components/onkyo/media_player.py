@@ -120,6 +120,9 @@ SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
 def _parse_onkyo_tuple(tup):
     """Parse a tuple returned from the eiscp library."""
+    if isinstance(tup, bool):
+        return None
+
     if len(tup) < 2:
         return None
 
