@@ -545,6 +545,49 @@ async def test_wait_basic(hass, action_type):
         assert script_obj.last_action is None
 
 
+async def test_wait_for_trigger_variables(hass):
+    """Test variables are passed to wait_for_trigger action."""
+    context = Context()
+    wait_alias = "wait step"
+    actions = [
+        {
+            "alias": "variables",
+            "variables": {"seconds": 5},
+        },
+        {
+            "alias": wait_alias,
+            "wait_for_trigger": {
+                "platform": "state",
+                "entity_id": "switch.test",
+                "to": "off",
+                "for": {"seconds": "{{ seconds }}"},
+            },
+        },
+    ]
+    sequence = cv.SCRIPT_SCHEMA(actions)
+    sequence = await script.async_validate_actions_config(hass, sequence)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, wait_alias)
+
+    try:
+        hass.states.async_set("switch.test", "on")
+        hass.async_create_task(script_obj.async_run(context=context))
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+        assert script_obj.is_running
+        assert script_obj.last_action == wait_alias
+        hass.states.async_set("switch.test", "off")
+        # the script task +  2 tasks created by wait_for_trigger script step
+        await hass.async_wait_for_task_count(3)
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+        await hass.async_block_till_done()
+    except (AssertionError, asyncio.TimeoutError):
+        await script_obj.async_stop()
+        raise
+    else:
+        assert not script_obj.is_running
+        assert script_obj.last_action is None
+
+
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
 async def test_wait_basic_times_out(hass, action_type):
     """Test wait actions times out when the action does not happen."""
