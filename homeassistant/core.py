@@ -471,10 +471,10 @@ class HomeAssistant:
             ]  # type: Collection[Awaitable[Any]]
             self._pending_tasks.clear()
             if len(pending) > max_remaining_tasks:
-                pending = await self._await_and_log_pending(
+                remaining_pending = await self._await_and_log_pending(
                     pending, max_remaining_tasks=max_remaining_tasks
                 )
-                self._pending_tasks.extend(pending)
+                self._pending_tasks.extend(remaining_pending)
 
                 if start_time is None:
                     # Avoid calling monotonic() until we know
