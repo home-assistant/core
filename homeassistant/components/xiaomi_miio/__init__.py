@@ -7,6 +7,8 @@ from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from miio.gateway import GatewayException
+
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
@@ -16,6 +18,7 @@ from .const import (
     MODELS_SWITCH,
 )
 from .gateway import ConnectXiaomiGateway
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,12 +80,12 @@ async def async_setup_gateway_entry(
         sw_version=gateway_info.firmware_version,
     )
 
-    for sub_device in gateway.devices.values():
+    for sub_device in gateway.gateway_device.devices.values():
         async def async_update_data():
             """Fetch data from the subdevice."""
             try:
                 await hass.async_add_executor_job(sub_device.update)
-            except gateway.GatewayException as ex:
+            except GatewayException as ex:
                 raise UpdateFailed(f"Got exception while fetching the state: {err}")
 
         # Create update coordinator per subdevice
