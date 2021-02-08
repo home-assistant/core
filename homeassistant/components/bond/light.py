@@ -32,7 +32,9 @@ async def async_setup_entry(
     fan_lights: List[Entity] = [
         BondLight(hub, device)
         for device in hub.devices
-        if DeviceType.is_fan(device.type) and device.supports_light()
+        if DeviceType.is_fan(device.type)
+        and device.supports_light()
+        and not (device.supports_up_light() and device.supports_down_light())
     ]
 
     fan_up_lights: List[Entity] = [
