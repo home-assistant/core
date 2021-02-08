@@ -372,7 +372,7 @@ async def test_state_raises(hass):
             },
         )
 
-        assert test(hass)
+        test(hass)
 
     # Unknown attribute
     with pytest.raises(ConditionError, match=r"Attribute .* does not exist"):
@@ -498,7 +498,7 @@ async def test_state_attribute_boolean(hass):
 
     hass.states.async_set("sensor.temperature", 100, {"no_happening": 201})
     with pytest.raises(ConditionError):
-        assert test(hass)
+        test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"happening": False})
     assert test(hass)
@@ -599,7 +599,7 @@ async def test_numeric_state_raises(hass):
             },
         )
 
-        assert test(hass)
+        test(hass)
 
     # Unknown attribute
     with pytest.raises(ConditionError, match=r"Attribute .* does not exist"):
