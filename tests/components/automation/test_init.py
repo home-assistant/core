@@ -1237,6 +1237,94 @@ async def test_automation_variables(hass, caplog):
     assert len(calls) == 3
 
 
+async def test_automation_trigger_variables(hass, caplog):
+    """Test automation trigger variables."""
+    calls = async_mock_service(hass, "test", "automation")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "variables": {
+                        "event_type": "{{ trigger.event.event_type }}",
+                    },
+                    "trigger_variables": {
+                        "test_var": "defined_in_config",
+                    },
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {
+                        "service": "test.automation",
+                        "data": {
+                            "value": "{{ test_var }}",
+                            "event_type": "{{ event_type }}",
+                        },
+                    },
+                },
+                {
+                    "variables": {
+                        "event_type": "{{ trigger.event.event_type }}",
+                        "test_var": "overridden_in_config",
+                    },
+                    "trigger_variables": {
+                        "test_var": "defined_in_config",
+                    },
+                    "trigger": {"platform": "event", "event_type": "test_event_2"},
+                    "action": {
+                        "service": "test.automation",
+                        "data": {
+                            "value": "{{ test_var }}",
+                            "event_type": "{{ event_type }}",
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["value"] == "defined_in_config"
+    assert calls[0].data["event_type"] == "test_event"
+
+    hass.bus.async_fire("test_event_2")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].data["value"] == "overridden_in_config"
+    assert calls[1].data["event_type"] == "test_event_2"
+
+    assert "Error rendering variables" not in caplog.text
+
+
+async def test_automation_bad_trigger_variables(hass, caplog):
+    """Test automation trigger variables accessing hass is rejected."""
+    calls = async_mock_service(hass, "test", "automation")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger_variables": {
+                        "test_var": "{{ states('foo.bar') }}",
+                    },
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {
+                        "service": "test.automation",
+                    },
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event")
+    assert "Use of 'states' is not supported in limited templates" in caplog.text
+
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
 async def test_blueprint_automation(hass, calls):
     """Test blueprint automation."""
     assert await async_setup_component(
