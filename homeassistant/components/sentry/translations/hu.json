@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Az Sentry m\u00e1r konfigur\u00e1lva van"
-        },
         "error": {
             "bad_dsn": "\u00c9rv\u00e9nytelen DSN",
             "unknown": "V\u00e1ratlan hiba"

@@ -4,9 +4,7 @@
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
         },
         "error": {
-            "identifier_exists": "Konto on juba seadistatud",
-            "invalid_auth": "Tuvastamise viga",
-            "invalid_credentials": "Sobimatu mandaat"
+            "invalid_auth": "Tuvastamise viga"
         },
         "step": {
             "user": {
@@ -14,7 +12,18 @@
                     "ip_address": "Hostinimi v\u00f5i IP-aadress",
                     "password": "Salas\u00f5na",
                     "port": ""
-                }
+                },
+                "title": "Sisesta oma teave"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Vaiketsooni k\u00e4itamisaeg (sekundites)"
+                },
+                "title": "Seadista RainMachine"
             }
         }
     }

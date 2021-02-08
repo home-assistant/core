@@ -68,11 +68,9 @@ class BondLight(BondEntity, LightEntity):
     @property
     def supported_features(self) -> Optional[int]:
         """Flag supported features."""
-        features = 0
         if self._device.supports_set_brightness():
-            features |= SUPPORT_BRIGHTNESS
-
-        return features
+            return SUPPORT_BRIGHTNESS
+        return 0
 
     @property
     def is_on(self) -> bool:

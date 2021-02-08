@@ -62,6 +62,7 @@ from .const import (
     CONF_PRECISION,
     CONF_RETRY_COUNT,
     CONF_SSL,
+    CONF_SSL_CA_CERT,
     CONF_TAGS,
     CONF_TAGS_ATTRIBUTES,
     CONF_TOKEN,
@@ -335,6 +336,9 @@ def get_influx_connection(conf, test_write=False, test_read=False):
         kwargs[CONF_URL] = conf[CONF_URL]
         kwargs[CONF_TOKEN] = conf[CONF_TOKEN]
         kwargs[INFLUX_CONF_ORG] = conf[CONF_ORG]
+        kwargs[CONF_VERIFY_SSL] = conf[CONF_VERIFY_SSL]
+        if CONF_SSL_CA_CERT in conf:
+            kwargs[CONF_SSL_CA_CERT] = conf[CONF_SSL_CA_CERT]
         bucket = conf.get(CONF_BUCKET)
         influx = InfluxDBClientV2(**kwargs)
         query_api = influx.query_api()
@@ -392,7 +396,10 @@ def get_influx_connection(conf, test_write=False, test_read=False):
         return InfluxClient(buckets, write_v2, query_v2, close_v2)
 
     # Else it's a V1 client
-    kwargs[CONF_VERIFY_SSL] = conf[CONF_VERIFY_SSL]
+    if CONF_SSL_CA_CERT in conf and conf[CONF_VERIFY_SSL]:
+        kwargs[CONF_VERIFY_SSL] = conf[CONF_SSL_CA_CERT]
+    else:
+        kwargs[CONF_VERIFY_SSL] = conf[CONF_VERIFY_SSL]
 
     if CONF_DB_NAME in conf:
         kwargs[CONF_DB_NAME] = conf[CONF_DB_NAME]

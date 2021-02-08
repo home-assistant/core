@@ -1,6 +1,7 @@
 """The tests for the input_boolean component."""
 # pylint: disable=protected-access
 import logging
+from unittest.mock import patch
 
 import pytest
 
@@ -22,7 +23,6 @@ from homeassistant.core import Context, CoreState, State
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import mock_component, mock_restore_cache
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,23 +63,21 @@ async def test_methods(hass):
 
     assert not is_on(hass, entity_id)
 
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id})
-
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
 
     assert is_on(hass, entity_id)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-
-    await hass.async_block_till_done()
 
     assert not is_on(hass, entity_id)
 
-    await hass.services.async_call(DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id})
-
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
 
     assert is_on(hass, entity_id)
 
@@ -246,7 +244,6 @@ async def test_reload(hass, hass_admin_user):
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
-        await hass.async_block_till_done()
 
     assert count_start + 2 == len(hass.states.async_entity_ids())
 
@@ -267,7 +264,7 @@ async def test_reload(hass, hass_admin_user):
     assert "mdi:work_reloaded" == state_2.attributes.get(ATTR_ICON)
 
 
-async def test_load_person_storage(hass, storage_setup):
+async def test_load_from_storage(hass, storage_setup):
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
@@ -349,6 +346,5 @@ async def test_setup_no_config(hass, hass_admin_user):
             blocking=True,
             context=Context(user_id=hass_admin_user.id),
         )
-        await hass.async_block_till_done()
 
     assert count_start == len(hass.states.async_entity_ids())

@@ -6,7 +6,6 @@ from homeassistant.const import (
     SERVICE_LOCK,
     SERVICE_UNLOCK,
     STATE_LOCKED,
-    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
@@ -27,7 +26,7 @@ async def test_lock_device_registry(hass):
     device_registry = await hass.helpers.device_registry.async_get_registry()
 
     reg_device = device_registry.async_get_device(
-        identifiers={("august", "online_with_doorsense")}, connections=set()
+        identifiers={("august", "online_with_doorsense")}
     )
     assert reg_device.model == "AUG-MD01"
     assert reg_device.sw_version == "undefined-4.3.0-1.8.14"
@@ -98,7 +97,7 @@ async def test_one_lock_operation(hass):
     assert lock_operator_sensor
     assert (
         hass.states.get("sensor.online_with_doorsense_name_operator").state
-        == STATE_UNAVAILABLE
+        == STATE_UNKNOWN
     )
 
 

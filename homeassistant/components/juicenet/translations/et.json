@@ -12,7 +12,9 @@
             "user": {
                 "data": {
                     "api_token": "API string"
-                }
+                },
+                "description": "Vaja on https://home.juice.net/Manage API luba.",
+                "title": "Loo \u00fchendus JuiceNet-iga"
             }
         }
     }

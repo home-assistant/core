@@ -4,10 +4,9 @@
             "already_configured": "Bridge \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
             "no_bridges": "\u672a\u641c\u5c0b\u5230 deCONZ Bridfe",
-            "no_hardware_available": "deCONZ \u6c92\u6709\u4efb\u4f55\u7121\u7dda\u96fb\u8a2d\u5099\u9023\u7dda",
-            "not_deconz_bridge": "\u975e deCONZ Bridge \u8a2d\u5099",
-            "one_instance_only": "\u7d44\u4ef6\u50c5\u652f\u63f4\u4e00\u7d44 deCONZ \u7269\u4ef6",
-            "updated_instance": "\u4f7f\u7528\u65b0\u4e3b\u6a5f\u7aef\u4f4d\u5740\u66f4\u65b0 deCONZ \u8a2d\u5099"
+            "no_hardware_available": "deCONZ \u6c92\u6709\u4efb\u4f55\u7121\u7dda\u96fb\u88dd\u7f6e\u9023\u7dda",
+            "not_deconz_bridge": "\u975e deCONZ Bridge \u88dd\u7f6e",
+            "updated_instance": "\u4f7f\u7528\u65b0\u4e3b\u6a5f\u7aef\u4f4d\u5740\u66f4\u65b0 deCONZ \u88dd\u7f6e"
         },
         "error": {
             "no_key": "\u7121\u6cd5\u53d6\u5f97 API key"
@@ -60,7 +59,7 @@
             "turn_on": "\u958b\u555f"
         },
         "trigger_type": {
-            "remote_awakened": "\u8a2d\u5099\u5df2\u559a\u9192",
+            "remote_awakened": "\u88dd\u7f6e\u5df2\u559a\u9192",
             "remote_button_double_press": "\"{subtype}\" \u6309\u9215\u96d9\u64ca",
             "remote_button_long_press": "\"{subtype}\" \u6309\u9215\u6301\u7e8c\u6309\u4e0b",
             "remote_button_long_release": "\u9577\u6309\u5f8c\u91cb\u653e \"{subtype}\" \u6309\u9215",
@@ -72,22 +71,22 @@
             "remote_button_short_press": "\"{subtype}\" \u6309\u9215\u5df2\u6309\u4e0b",
             "remote_button_short_release": "\"{subtype}\" \u6309\u9215\u5df2\u91cb\u653e",
             "remote_button_triple_press": "\"{subtype}\" \u6309\u9215\u4e09\u9023\u9ede\u64ca",
-            "remote_double_tap": "\u8a2d\u5099 \"{subtype}\" \u96d9\u6572",
-            "remote_double_tap_any_side": "\u8a2d\u5099\u4efb\u4e00\u9762\u96d9\u9ede\u9078",
-            "remote_falling": "\u8a2d\u5099\u81ea\u7531\u843d\u4e0b",
-            "remote_flip_180_degrees": "\u8a2d\u5099\u65cb\u8f49 180 \u5ea6",
-            "remote_flip_90_degrees": "\u8a2d\u5099\u65cb\u8f49 90 \u5ea6",
-            "remote_gyro_activated": "\u8a2d\u5099\u6416\u6643",
-            "remote_moved": "\u8a2d\u5099\u79fb\u52d5\u81f3 \"{subtype}\" \u671d\u4e0a",
-            "remote_moved_any_side": "\u8a2d\u5099\u4efb\u4e00\u9762\u671d\u4e0a",
-            "remote_rotate_from_side_1": "\u8a2d\u5099\u7531\u300c\u7b2c 1 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
-            "remote_rotate_from_side_2": "\u8a2d\u5099\u7531\u300c\u7b2c 2 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
-            "remote_rotate_from_side_3": "\u8a2d\u5099\u7531\u300c\u7b2c 3 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
-            "remote_rotate_from_side_4": "\u8a2d\u5099\u7531\u300c\u7b2c 4 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
-            "remote_rotate_from_side_5": "\u8a2d\u5099\u7531\u300c\u7b2c 5 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
-            "remote_rotate_from_side_6": "\u8a2d\u5099\u7531\u300c\u7b2c 6 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
-            "remote_turned_clockwise": "\u8a2d\u5099\u9806\u6642\u91dd\u65cb\u8f49",
-            "remote_turned_counter_clockwise": "\u8a2d\u5099\u9006\u6642\u91dd\u65cb\u8f49"
+            "remote_double_tap": "\u88dd\u7f6e \"{subtype}\" \u96d9\u6572",
+            "remote_double_tap_any_side": "\u88dd\u7f6e\u4efb\u4e00\u9762\u96d9\u9ede\u9078",
+            "remote_falling": "\u88dd\u7f6e\u81ea\u7531\u843d\u4e0b",
+            "remote_flip_180_degrees": "\u88dd\u7f6e\u65cb\u8f49 180 \u5ea6",
+            "remote_flip_90_degrees": "\u88dd\u7f6e\u65cb\u8f49 90 \u5ea6",
+            "remote_gyro_activated": "\u88dd\u7f6e\u6416\u6643",
+            "remote_moved": "\u88dd\u7f6e\u79fb\u52d5\u81f3 \"{subtype}\" \u671d\u4e0a",
+            "remote_moved_any_side": "\u88dd\u7f6e\u4efb\u4e00\u9762\u671d\u4e0a",
+            "remote_rotate_from_side_1": "\u88dd\u7f6e\u7531\u300c\u7b2c 1 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
+            "remote_rotate_from_side_2": "\u88dd\u7f6e\u7531\u300c\u7b2c 2 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
+            "remote_rotate_from_side_3": "\u88dd\u7f6e\u7531\u300c\u7b2c 3 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
+            "remote_rotate_from_side_4": "\u88dd\u7f6e\u7531\u300c\u7b2c 4 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
+            "remote_rotate_from_side_5": "\u88dd\u7f6e\u7531\u300c\u7b2c 5 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
+            "remote_rotate_from_side_6": "\u88dd\u7f6e\u7531\u300c\u7b2c 6 \u9762\u300d\u65cb\u8f49\u81f3\u300c{subtype}\u300d",
+            "remote_turned_clockwise": "\u88dd\u7f6e\u9806\u6642\u91dd\u65cb\u8f49",
+            "remote_turned_counter_clockwise": "\u88dd\u7f6e\u9006\u6642\u91dd\u65cb\u8f49"
         }
     },
     "options": {
@@ -96,9 +95,9 @@
                 "data": {
                     "allow_clip_sensor": "\u5141\u8a31 deCONZ CLIP \u611f\u61c9\u5668",
                     "allow_deconz_groups": "\u5141\u8a31 deCONZ \u71c8\u5149\u7fa4\u7d44",
-                    "allow_new_devices": "\u5141\u8a31\u81ea\u52d5\u5316\u65b0\u589e\u8a2d\u5099"
+                    "allow_new_devices": "\u5141\u8a31\u81ea\u52d5\u5316\u65b0\u589e\u88dd\u7f6e"
                 },
-                "description": "\u8a2d\u5b9a deCONZ \u53ef\u8996\u8a2d\u5099\u985e\u578b",
+                "description": "\u8a2d\u5b9a deCONZ \u53ef\u8996\u88dd\u7f6e\u985e\u578b",
                 "title": "deCONZ \u9078\u9805"
             }
         }

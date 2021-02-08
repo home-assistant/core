@@ -1,12 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Bare en Vesync-forekomst er tillatt",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
-            "invalid_auth": "Ugyldig godkjenning",
-            "invalid_login": "Ugyldig brukernavn eller passord"
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "user": {

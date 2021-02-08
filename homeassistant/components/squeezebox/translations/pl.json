@@ -24,10 +24,8 @@
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP"
-                },
-                "title": "Konfiguracja Serwera medi\u00f3w Logitech (LMS)"
+                }
             }
         }
-    },
-    "title": "Logitech Squeezebox"
+    }
 }

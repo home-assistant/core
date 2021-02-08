@@ -6,7 +6,6 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
         },
-        "flow_title": "[VOID] oppsett",
         "step": {
             "user": {
                 "data": {
@@ -17,6 +16,5 @@
                 "title": "Koble til"
             }
         }
-    },
-    "title": ""
+    }
 }

@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat",
-            "name_exists": "El nom ja existeix"
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "step": {
             "user": {

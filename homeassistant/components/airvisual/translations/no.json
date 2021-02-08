@@ -2,13 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "Plasseringen er allerede konfigurert eller Node / Pro ID er allerede registrert.",
-            "reauth_successful": "Reautentisering var vellykket"
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
             "general_error": "Uventet feil",
             "invalid_api_key": "Ugyldig API-n\u00f8kkel",
-            "unable_to_connect": "Kan ikke koble til Node / Pro-enheten."
+            "location_not_found": "Stedet ble ikke funnet"
         },
         "step": {
             "geography": {
@@ -18,6 +18,25 @@
                     "longitude": "Lengdegrad"
                 },
                 "description": "Bruk AirVisual cloud API til \u00e5 overv\u00e5ke en geografisk plassering.",
+                "title": "Konfigurer en Geography"
+            },
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "latitude": "Breddegrad",
+                    "longitude": "Lengdegrad"
+                },
+                "description": "Bruk AirVisual cloud API til \u00e5 overv\u00e5ke en breddegrad/lengdegrad.",
+                "title": "Konfigurer en Geography"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel",
+                    "city": "By",
+                    "country": "Land",
+                    "state": "stat"
+                },
+                "description": "Bruk AirVisual cloud API til \u00e5 overv\u00e5ke en by/stat/land.",
                 "title": "Konfigurer en Geography"
             },
             "node_pro": {
@@ -32,7 +51,7 @@
                 "data": {
                     "api_key": "API-n\u00f8kkel"
                 },
-                "title": "Autentiser AirVisual p\u00e5 nytt"
+                "title": "Godkjenne integrering p\u00e5 nytt"
             },
             "user": {
                 "data": {

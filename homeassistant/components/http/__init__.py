@@ -30,6 +30,7 @@ from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER  # noqa: F401
 from .cors import setup_cors
 from .forwarded import async_setup_forwarded
 from .request_context import setup_request_context
+from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
 from .view import HomeAssistantView  # noqa: F401
 from .web_runner import HomeAssistantTCPSite
@@ -57,8 +58,9 @@ SSL_INTERMEDIATE = "intermediate"
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_DEVELOPMENT = "0"
-# To be able to load custom cards.
-DEFAULT_CORS = "https://cast.home-assistant.io"
+# Cast to be able to load custom cards.
+# My to be able to check url and version info.
+DEFAULT_CORS = ["https://cast.home-assistant.io", "https://my.home-assistant.io"]
 NO_LOGIN_ATTEMPT_THRESHOLD = -1
 
 MAX_CLIENT_SIZE: int = 1024 ** 2 * 16
@@ -79,7 +81,7 @@ HTTP_SCHEMA = vol.All(
             vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
             vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
             vol.Optional(CONF_SSL_KEY): cv.isfile,
-            vol.Optional(CONF_CORS_ORIGINS, default=[DEFAULT_CORS]): vol.All(
+            vol.Optional(CONF_CORS_ORIGINS, default=DEFAULT_CORS): vol.All(
                 cv.ensure_list, [cv.string]
             ),
             vol.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,
@@ -296,7 +298,10 @@ class HomeAssistantHTTP:
         )
         app[KEY_HASS] = hass
 
-        # Order matters, forwarded middleware needs to go first.
+        # Order matters, security filters middle ware needs to go first,
+        # forwarded middleware needs to go second.
+        setup_security_filter(app)
+
         # Only register middleware if `use_x_forwarded_for` is enabled
         # and trusted proxies are provided
         if use_x_forwarded_for and trusted_proxies:
@@ -432,6 +437,8 @@ class HomeAssistantHTTP:
             _LOGGER.error(
                 "Failed to create HTTP server at port %d: %s", self.server_port, error
             )
+
+        _LOGGER.info("Now listening on port %d", self.server_port)
 
     async def stop(self):
         """Stop the aiohttp server."""

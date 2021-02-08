@@ -3,7 +3,6 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
             "incomplete_discovery": "Ufullstendig oppdagelse",
-            "no_devices_discovered": "Ingen UPnP / IGDs oppdaget",
             "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket"
         },
         "error": {

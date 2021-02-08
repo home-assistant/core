@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
+        "create_entry": {
+            "default": "\u5df2\u6210\u529f\u8a8d\u8b49"
+        },
+        "error": {
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "\u5bc6\u78bc"
+                },
+                "description": "\u8a8d\u8b49\u5bc6\u9470\u5df2\u7d93\u5931\u6548\uff0c\u8acb\u767b\u5165\u91cd\u65b0\u65b0\u589e\u3002"
+            },
+            "user": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "url": "\u7db2\u7ad9",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                }
+            }
+        }
+    }
+}

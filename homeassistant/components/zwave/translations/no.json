@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
-            "one_instance_only": "Komponenten st\u00f8tter kun en Z-Wave-forekomst",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {

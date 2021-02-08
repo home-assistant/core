@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00c9chec de la connexion ",
+            "invalid_auth": "Authentification invalide "
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hote",
+                    "port": "Port",
+                    "token": "jeton d'acc\u00e8s"
+                }
+            }
+        }
+    }
+}

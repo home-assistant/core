@@ -4,7 +4,6 @@
             "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
         },
         "error": {
-            "auth": "La chiave API non \u00e8 corretta.",
             "invalid_api_key": "Chiave API non valida",
             "wrong_location": "Nessuna stazione di misurazione Airly in quest'area."
         },
@@ -19,6 +18,11 @@
                 "description": "Configurazione dell'integrazione della qualit\u00e0 dell'aria Airly. Per generare la chiave API andare su https://developer.airly.eu/register",
                 "title": "Airly"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Raggiungi il server Airly"
         }
     }
 }

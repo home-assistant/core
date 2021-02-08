@@ -1,21 +1,16 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Only a single instance is necessary.",
             "single_instance_allowed": "Already configured. Only a single configuration possible.",
             "wrong_server_id": "Server ID is not valid"
         },
         "step": {
             "user": {
-                "description": "Do you want to start set up?",
-                "title": "Set up SpeedTest"
+                "description": "Do you want to start set up?"
             }
         }
     },
     "options": {
-        "error": {
-            "retrive_error": "Error retriving servers list"
-        },
         "step": {
             "init": {
                 "data": {

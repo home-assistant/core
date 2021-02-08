@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "Tw\u00f3j Home Assistant musi by\u0107 dost\u0119pny z Internetu, aby odbiera\u0107 komunikaty z Geofency",
-            "one_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
-            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
+            "webhook_not_internet_accessible": "Tw\u00f3j Home Assistant musi by\u0107 dost\u0119pny z Internetu, aby odbiera\u0107 komunikaty webhook"
         },
         "create_entry": {
-            "default": "Aby wysy\u0142a\u0107 zdarzenia do Home Assistant, musisz skonfigurowa\u0107 webhook w Geofency. \n\n Wprowad\u017a nast\u0119puj\u0105ce dane:\n\n - URL: `{webhook_url}` \n - Metoda: POST \n\nZapoznaj si\u0119 z [dokumentacj\u0105]({docs_url}), by pozna\u0107 szczeg\u00f3\u0142y."
+            "default": "Aby wysy\u0142a\u0107 zdarzenia do Home Assistanta, musisz skonfigurowa\u0107 webhook w Geofency. \n\n Wprowad\u017a nast\u0119puj\u0105ce dane:\n\n - URL: `{webhook_url}` \n - Metoda: POST \n\nZapoznaj si\u0119 z [dokumentacj\u0105]({docs_url}), by pozna\u0107 szczeg\u00f3\u0142y."
         },
         "step": {
             "user": {

@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Saad seadistada ainult \u00fche Heosi \u00fchenduse kuna see toetab k\u00f5iki v\u00f5rgus olevaid seadmeid.",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
         "error": {
@@ -11,7 +10,9 @@
             "user": {
                 "data": {
                     "host": ""
-                }
+                },
+                "description": "Sisesta Heos-seadme hosti nimi v\u00f5i IP-aadress (eelistatavalt v\u00f5rgukaabliga \u00fchendatud).",
+                "title": "\u00dchendu Heos'ega"
             }
         }
     }

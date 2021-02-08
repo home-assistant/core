@@ -5,9 +5,7 @@
             "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9"
         },
         "error": {
-            "authorization_error": "Chyba autorizace. Zkontrolujte, zda m\u00e1te p\u0159\u00edstup k projektu a zda m\u00e1te spr\u00e1vn\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje.",
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "connection_error": "Nelze se p\u0159ipojit k Azure DevOps.",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
             "project_error": "Nelze z\u00edskat informace o projektu."
         },
@@ -29,6 +27,5 @@
                 "title": "P\u0159idejte projekt Azure DevOps"
             }
         }
-    },
-    "title": "Azure DevOps"
+    }
 }

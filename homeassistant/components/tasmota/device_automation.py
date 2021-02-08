@@ -6,8 +6,13 @@ from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import device_trigger
-from .const import DATA_REMOVE_DISCOVER_COMPONENT
+from .const import DATA_REMOVE_DISCOVER_COMPONENT, DATA_UNSUB
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
+
+
+async def async_remove_automations(hass, device_id):
+    """Remove automations for a Tasmota device."""
+    await device_trigger.async_remove_triggers(hass, device_id)
 
 
 async def async_setup_entry(hass, config_entry):
@@ -17,7 +22,7 @@ async def async_setup_entry(hass, config_entry):
         """Handle the removal of a device."""
         if event.data["action"] != "remove":
             return
-        await device_trigger.async_device_removed(hass, event.data["device_id"])
+        await async_remove_automations(hass, event.data["device_id"])
 
     async def async_discover(tasmota_automation, discovery_hash):
         """Discover and add a Tasmota device automation."""
@@ -30,7 +35,9 @@ async def async_setup_entry(hass, config_entry):
         DATA_REMOVE_DISCOVER_COMPONENT.format("device_automation")
     ] = async_dispatcher_connect(
         hass,
-        TASMOTA_DISCOVERY_ENTITY_NEW.format("device_automation", "tasmota"),
+        TASMOTA_DISCOVERY_ENTITY_NEW.format("device_automation"),
         async_discover,
     )
-    hass.bus.async_listen(EVENT_DEVICE_REGISTRY_UPDATED, async_device_removed)
+    hass.data[DATA_UNSUB].append(
+        hass.bus.async_listen(EVENT_DEVICE_REGISTRY_UPDATED, async_device_removed)
+    )

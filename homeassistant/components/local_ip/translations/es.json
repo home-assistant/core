@@ -8,6 +8,7 @@
                 "data": {
                     "name": "Nombre del sensor"
                 },
+                "description": "\u00bfQuieres iniciar la configuraci\u00f3n?",
                 "title": "Direcci\u00f3n IP local"
             }
         }

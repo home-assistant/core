@@ -3,7 +3,7 @@
   "name": "Rollease Acmeda Automate",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/acmeda",
-  "requirements": ["aiopulse==0.4.0"],
+  "requirements": ["aiopulse==0.4.2"],
   "codeowners": [
     "@atmurray"
   ]

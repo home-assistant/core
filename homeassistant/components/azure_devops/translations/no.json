@@ -2,12 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
-            "reauth_successful": "Reautentisering var vellykket"
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
-            "authorization_error": "Autoriseringsfeil. Sjekk at du har tilgang til prosjektet og har riktig legitimasjon.",
             "cannot_connect": "Tilkobling mislyktes",
-            "connection_error": "Kunne ikke koble til Azure DevOps.",
             "invalid_auth": "Ugyldig godkjenning",
             "project_error": "Kunne ikke f\u00e5 prosjektinformasjon."
         },
@@ -15,10 +13,10 @@
         "step": {
             "reauth": {
                 "data": {
-                    "personal_access_token": "Token for personlig tilgang (PAT)"
+                    "personal_access_token": "Personlig tilgangstoken (PAT)"
                 },
-                "description": "Autentiseringen mislyktes for {project_url} . Vennligst skriv inn gjeldende legitimasjon.",
-                "title": "Reautorisasjon"
+                "description": "Autentiseringen mislyktes for {project_url}. Vennligst skriv inn gjeldende legitimasjon.",
+                "title": "Godkjenne integrering p\u00e5 nytt"
             },
             "user": {
                 "data": {
@@ -30,6 +28,5 @@
                 "title": "Legg til Azure DevOps Project"
             }
         }
-    },
-    "title": ""
+    }
 }

@@ -1,12 +1,14 @@
 """Smart energy channels module for Zigbee Home Automation."""
+from typing import Coroutine, Union
+
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
 from homeassistant.const import (
     POWER_WATT,
     TIME_HOURS,
     TIME_SECONDS,
-    VOLUME_CUBIC_FEET,
-    VOLUME_CUBIC_METERS,
+    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
+    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
 )
 from homeassistant.core import callback
 
@@ -63,8 +65,8 @@ class Metering(ZigbeeChannel):
 
     unit_of_measure_map = {
         0x00: POWER_WATT,
-        0x01: f"{VOLUME_CUBIC_METERS}/{TIME_HOURS}",
-        0x02: f"{VOLUME_CUBIC_FEET}/{TIME_HOURS}",
+        0x01: VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
+        0x02: VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
         0x03: f"ccf/{TIME_HOURS}",
         0x04: f"US gal/{TIME_HOURS}",
         0x05: f"IMP gal/{TIME_HOURS}",
@@ -82,43 +84,45 @@ class Metering(ZigbeeChannel):
     ) -> None:
         """Initialize Metering."""
         super().__init__(cluster, ch_pool)
-        self._divisor = 1
-        self._multiplier = 1
-        self._unit_enum = None
         self._format_spec = None
 
-    async def async_configure(self):
-        """Configure channel."""
-        await self.fetch_config(False)
-        await super().async_configure()
-
-    async def async_initialize(self, from_cache):
-        """Initialize channel."""
-        await self.fetch_config(True)
-        await super().async_initialize(from_cache)
-
-    @callback
-    def attribute_updated(self, attrid, value):
-        """Handle attribute update from Metering cluster."""
-        if None in (self._multiplier, self._divisor, self._format_spec):
-            return
-        super().attribute_updated(attrid, value * self._multiplier / self._divisor)
+    @property
+    def divisor(self) -> int:
+        """Return divisor for the value."""
+        return self.cluster.get("divisor") or 1
 
     @property
-    def unit_of_measurement(self):
-        """Return unit of measurement."""
-        return self.unit_of_measure_map.get(self._unit_enum & 0x7F, "unknown")
+    def multiplier(self) -> int:
+        """Return multiplier for the value."""
+        return self.cluster.get("multiplier") or 1
 
-    async def fetch_config(self, from_cache):
+    def async_configure_channel_specific(self) -> Coroutine:
+        """Configure channel."""
+        return self.fetch_config(False)
+
+    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
+        """Initialize channel."""
+        return self.fetch_config(True)
+
+    @callback
+    def attribute_updated(self, attrid: int, value: int) -> None:
+        """Handle attribute update from Metering cluster."""
+        if None in (self.multiplier, self.divisor, self._format_spec):
+            return
+        super().attribute_updated(attrid, value)
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return unit of measurement."""
+        uom = self.cluster.get("unit_of_measure", 0x7F)
+        return self.unit_of_measure_map.get(uom & 0x7F, "unknown")
+
+    async def fetch_config(self, from_cache: bool) -> None:
         """Fetch config from device and updates format specifier."""
         results = await self.get_attributes(
             ["divisor", "multiplier", "unit_of_measure", "demand_formatting"],
             from_cache=from_cache,
         )
-
-        self._divisor = results.get("divisor", self._divisor)
-        self._multiplier = results.get("multiplier", self._multiplier)
-        self._unit_enum = results.get("unit_of_measure", 0x7F)  # default to unknown
 
         fmting = results.get(
             "demand_formatting", 0xF9
@@ -135,8 +139,9 @@ class Metering(ZigbeeChannel):
         else:
             self._format_spec = "{:0" + str(width) + "." + str(r_digits) + "f}"
 
-    def formatter_function(self, value):
+    def formatter_function(self, value: int) -> Union[int, float]:
         """Return formatted value for display."""
+        value = value * self.multiplier / self.divisor
         if self.unit_of_measurement == POWER_WATT:
             # Zigbee spec power unit is kW, but we show the value in W
             value_watt = value * 1000

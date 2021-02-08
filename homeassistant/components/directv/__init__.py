@@ -4,9 +4,8 @@ from datetime import timedelta
 from typing import Any, Dict
 
 from directv import DIRECTV, DIRECTVError
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -23,14 +22,7 @@ from .const import (
     DOMAIN,
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list, [vol.Schema({vol.Required(CONF_HOST): cv.string})]
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = ["media_player", "remote"]
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -39,17 +31,6 @@ SCAN_INTERVAL = timedelta(seconds=30)
 async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     """Set up the DirecTV component."""
     hass.data.setdefault(DOMAIN, {})
-
-    if DOMAIN in config:
-        for entry_config in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data=entry_config,
-                )
-            )
-
     return True
 
 

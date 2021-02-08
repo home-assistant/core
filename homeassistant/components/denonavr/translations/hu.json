@@ -1,7 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Nem siker\u00fclt csatlakozni, k\u00e9rj\u00fck, pr\u00f3b\u00e1lja \u00fajra. A h\u00e1l\u00f3zati \u00e9s Ethernet k\u00e1belek kih\u00faz\u00e1sa \u00e9s \u00fajracsatlakoztat\u00e1sa seg\u00edthet"
+        },
+        "error": {
+            "discovery_error": "Nem siker\u00fclt megtal\u00e1lni a Denon AVR h\u00e1l\u00f3zati er\u0151s\u00edt\u0151t"
         }
     }
 }

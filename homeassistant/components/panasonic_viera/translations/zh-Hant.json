@@ -1,15 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "not_connected": "\u8207 Panasonic Viera \u96fb\u8996\u9060\u7aef\u9023\u7dda\u65b7\u7dda\uff0c\u8acb\u53c3\u95b1\u65e5\u8a8c\u4ee5\u7372\u5f97\u66f4\u8a73\u7d30\u8cc7\u8a0a\u3002",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "invalid_pin_code": "\u6240\u8f38\u5165\u7684 PIN \u78bc\u7121\u6548",
-            "not_connected": "\u7121\u6cd5\u8207 Panasonic Viera \u96fb\u8996\u5efa\u7acb\u9060\u7aef\u9023\u7dda"
+            "invalid_pin_code": "\u6240\u8f38\u5165\u7684 PIN \u78bc\u7121\u6548"
         },
         "step": {
             "pairing": {
@@ -28,6 +26,5 @@
                 "title": "\u8a2d\u5b9a\u96fb\u8996"
             }
         }
-    },
-    "title": "Panasonic Viera"
+    }
 }

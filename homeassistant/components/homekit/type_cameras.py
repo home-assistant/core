@@ -1,5 +1,4 @@
 """Class to hold all camera accessories."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -370,7 +369,7 @@ class Camera(HomeAccessory, PyhapCamera):
         if self.config[CONF_SUPPORT_AUDIO]:
             output = output + " " + AUDIO_OUTPUT.format(**output_vars)
         _LOGGER.debug("FFmpeg output settings: %s", output)
-        stream = HAFFmpeg(self._ffmpeg.binary, loop=self.driver.loop)
+        stream = HAFFmpeg(self._ffmpeg.binary)
         opened = await stream.open(
             cmd=[], input_source=input_source, output=output, stdout_pipe=False
         )
@@ -444,13 +443,10 @@ class Camera(HomeAccessory, PyhapCamera):
         """Reconfigure the stream so that it uses the given ``stream_config``."""
         return True
 
-    def get_snapshot(self, image_size):
+    async def async_get_snapshot(self, image_size):
         """Return a jpeg of a snapshot from the camera."""
         return scale_jpeg_camera_image(
-            asyncio.run_coroutine_threadsafe(
-                self.hass.components.camera.async_get_image(self.entity_id),
-                self.hass.loop,
-            ).result(),
+            await self.hass.components.camera.async_get_image(self.entity_id),
             image_size["image-width"],
             image_size["image-height"],
         )

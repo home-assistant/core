@@ -25,6 +25,10 @@ class TemplateError(HomeAssistantError):
         super().__init__(f"{exception.__class__.__name__}: {exception}")
 
 
+class ConditionError(HomeAssistantError):
+    """Error during condition evaluation."""
+
+
 class PlatformNotReady(HomeAssistantError):
     """Error to indicate that platform is not ready."""
 
@@ -80,4 +84,4 @@ class ServiceNotFound(HomeAssistantError):
 
     def __str__(self) -> str:
         """Return string representation."""
-        return f"Unable to find service {self.domain}/{self.service}"
+        return f"Unable to find service {self.domain}.{self.service}"

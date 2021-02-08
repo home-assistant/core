@@ -7,7 +7,7 @@
             "default": "Erfollegr\u00e4ich mat Alarmdecoder verbonnen."
         },
         "error": {
-            "service_unavailable": "Feeler beim verbannen"
+            "cannot_connect": "Feeler beim verbannen"
         },
         "step": {
             "protocol": {
@@ -30,6 +30,8 @@
     "options": {
         "error": {
             "int": "D'Feld hei \u00ebnnen muss eng ganz Zuel sinn.",
+            "loop_range": "RF Loop muss eng ganz Zuel t\u00ebscht 1 a 4 sinn.",
+            "loop_rfid": "RF Loop kann net ouni RF Serial benotzt ginn.",
             "relay_inclusive": "Relais Adress a Relais Kanal sin vuneneen ofh\u00e4ngeg a musse mat abegraff sinn."
         },
         "step": {

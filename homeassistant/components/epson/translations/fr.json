@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Echec de la connection"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "name": "Nom",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

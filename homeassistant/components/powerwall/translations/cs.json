@@ -8,6 +8,7 @@
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba",
             "wrong_version": "Powerwall pou\u017e\u00edv\u00e1 verzi softwaru, kter\u00e1 nen\u00ed podporov\u00e1na. Zva\u017ete upgrade nebo nahlaste probl\u00e9m, aby mohl b\u00fdt vy\u0159e\u0161en."
         },
+        "flow_title": "Tesla Powerwall ({ip_address})",
         "step": {
             "user": {
                 "data": {

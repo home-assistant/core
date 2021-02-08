@@ -11,9 +11,13 @@
         "step": {
             "user": {
                 "data": {
+                    "client_id": "Kliendi ID",
+                    "client_secret": "Kliendi salas\u00f5na",
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
-                }
+                },
+                "description": "Flume Personal API-le juurdep\u00e4\u00e4suks pead lehel https://portal.flumetech.com/settings#token taotlema kliendi ID ja salas\u00f5na.",
+                "title": "\u00dchendu oma Flume kontoga"
             }
         }
     }

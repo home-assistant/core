@@ -19,7 +19,6 @@ CONF_FILTER = "filter"
 CONF_ENTITY_CONFIG = "entity_config"
 CONF_ENDPOINT = "endpoint"
 CONF_LOCALE = "locale"
-CONF_PASSWORD = "password"
 
 ATTR_UID = "uid"
 ATTR_UPDATE_DATE = "updateDate"
@@ -53,10 +52,13 @@ CONF_SUPPORTED_LOCALES = (
     "en-US",
     "es-ES",
     "es-MX",
+    "es-US",
     "fr-CA",
     "fr-FR",
+    "hi-IN",
     "it-IT",
     "ja-JP",
+    "pt-BR",
 )
 
 API_TEMP_UNITS = {TEMP_FAHRENHEIT: "FAHRENHEIT", TEMP_CELSIUS: "CELSIUS"}

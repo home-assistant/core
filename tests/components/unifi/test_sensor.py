@@ -14,7 +14,6 @@ from homeassistant.components.unifi.const import (
     DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.setup import async_setup_component
 
 from .test_controller import setup_unifi_integration
 
@@ -50,35 +49,25 @@ CLIENTS = [
 ]
 
 
-async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a controller."""
-    assert (
-        await async_setup_component(
-            hass, SENSOR_DOMAIN, {SENSOR_DOMAIN: {"platform": UNIFI_DOMAIN}}
-        )
-        is True
-    )
-    assert UNIFI_DOMAIN not in hass.data
-
-
-async def test_no_clients(hass):
+async def test_no_clients(hass, aioclient_mock):
     """Test the update_clients function when no clients are found."""
-    controller = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
+        aioclient_mock,
         options={
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
             CONF_ALLOW_UPTIME_SENSORS: True,
         },
     )
 
-    assert len(controller.mock_requests) == 4
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
 
 
-async def test_sensors(hass):
+async def test_sensors(hass, aioclient_mock):
     """Test the update_items function with some clients."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock,
         options={
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
             CONF_ALLOW_UPTIME_SENSORS: True,
@@ -87,8 +76,8 @@ async def test_sensors(hass):
         },
         clients_response=CLIENTS,
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(controller.mock_requests) == 4
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
 
     wired_client_rx = hass.states.get("sensor.wired_client_name_rx")
@@ -129,7 +118,7 @@ async def test_sensors(hass):
     assert wireless_client_uptime.state == "2020-09-15T14:41:00+00:00"
 
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={
             CONF_ALLOW_BANDWIDTH_SENSORS: False,
             CONF_ALLOW_UPTIME_SENSORS: False,
@@ -150,7 +139,7 @@ async def test_sensors(hass):
     assert wireless_client_uptime is None
 
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
             CONF_ALLOW_UPTIME_SENSORS: True,
@@ -189,16 +178,18 @@ async def test_sensors(hass):
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
 
 
-async def test_remove_sensors(hass):
+async def test_remove_sensors(hass, aioclient_mock):
     """Test the remove_items function with some clients."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock,
         options={
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
             CONF_ALLOW_UPTIME_SENSORS: True,
         },
         clients_response=CLIENTS,
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
 

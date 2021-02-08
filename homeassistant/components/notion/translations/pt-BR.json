@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "invalid_credentials": "Usu\u00e1rio ou senha inv\u00e1lidos",
             "no_devices": "Nenhum dispositivo encontrado na conta"
         },
         "step": {

@@ -5,7 +5,7 @@
             "unsupported_model": "Dieses Druckermodell wird nicht unterst\u00fctzt."
         },
         "error": {
-            "connection_error": "Verbindungsfehler",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "snmp_error": "SNMP-Server deaktiviert oder Drucker nicht unterst\u00fctzt.",
             "wrong_host": " Ung\u00fcltiger Hostname oder IP-Adresse"
         },

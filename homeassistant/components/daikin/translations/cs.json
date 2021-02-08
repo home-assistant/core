@@ -6,9 +6,6 @@
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "device_fail": "Neo\u010dek\u00e1van\u00e1 chyba",
-            "device_timeout": "Nepoda\u0159ilo se p\u0159ipojit",
-            "forbidden": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
@@ -17,7 +14,6 @@
                 "data": {
                     "api_key": "Kl\u00ed\u010d API",
                     "host": "Hostitel",
-                    "key": "Kl\u00ed\u010d API",
                     "password": "Heslo"
                 },
                 "description": "Zadejte IP adresu va\u0161eho Daikin AC. \n\nV\u0161imn\u011bte si, \u017ee Kl\u00ed\u010d API a Heslo jsou pou\u017eit\u00e9 za\u0159\u00edzen\u00edm BRP072Cxx, respektive SKYFi.",

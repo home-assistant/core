@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tplink",
   "requirements": [
-    "pyHS100==0.3.5.1"
+    "pyHS100==0.3.5.2"
   ],
   "codeowners": [
     "@rytilahti",

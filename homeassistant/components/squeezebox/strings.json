@@ -1,21 +1,19 @@
 {
-  "title": "Logitech Squeezebox",
   "config": {
     "flow_title": "Logitech Squeezebox: {host}",
     "step": {
       "user": {
-	"title": "Configure Logitech Media Server",
-	"data": {
-	  "host": "[%key:common::config_flow::data::host%]"
-	}
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
       },
       "edit": {
         "title": "Edit connection information",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-	  "port": "[%key:common::config_flow::data::port%]",
-	  "username": "[%key:common::config_flow::data::username%]",
-	  "password": "[%key:common::config_flow::data::password%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },

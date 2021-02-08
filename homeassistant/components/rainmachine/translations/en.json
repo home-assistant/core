@@ -4,9 +4,7 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "identifier_exists": "Account is already configured",
-            "invalid_auth": "Invalid authentication",
-            "invalid_credentials": "Invalid credentials"
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
             "user": {
@@ -16,6 +14,16 @@
                     "port": "Port"
                 },
                 "title": "Fill in your information"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Default zone run time (in seconds)"
+                },
+                "title": "Configure RainMachine"
             }
         }
     }

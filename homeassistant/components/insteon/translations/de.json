@@ -1,12 +1,13 @@
 {
     "config": {
+        "abort": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
         "step": {
-            "hub2": {
-                "data": {
-                    "password": "Passwort",
-                    "username": "Benutzername"
-                }
-            },
             "hubv1": {
                 "data": {
                     "host": "IP-Adresse",
@@ -21,10 +22,10 @@
                     "username": "Benutzername"
                 }
             },
-            "init": {
-                "title": "Insteon"
-            },
             "plm": {
+                "data": {
+                    "device": "USB-Ger\u00e4te-Pfad"
+                },
                 "title": "Insteon PLM"
             },
             "user": {
@@ -34,6 +35,7 @@
     },
     "options": {
         "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "select_single": "W\u00e4hle eine Option aus."
         },
         "step": {

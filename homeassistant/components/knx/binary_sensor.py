@@ -41,3 +41,13 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity):
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return device specific state attributes."""
         return {ATTR_COUNTER: self._device.counter}
+
+    @property
+    def force_update(self) -> bool:
+        """
+        Return True if state updates should be forced.
+
+        If True, a state change will be triggered anytime the state property is
+        updated, not just when the value changes.
+        """
+        return self._device.ignore_internal_state

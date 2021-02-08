@@ -1,10 +1,32 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Denetleyici sitesi zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "configuration_updated": "Yap\u0131land\u0131rma g\u00fcncellendi.",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "faulty_credentials": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "service_unavailable": "Ba\u011flanma hatas\u0131",
+            "unknown_client_mac": "Bu MAC adresinde kullan\u0131labilir istemci yok"
+        },
+        "flow_title": "UniFi A\u011f\u0131 {site} ( {host} )",
         "step": {
             "user": {
                 "data": {
+                    "host": "Ana Bilgisayar",
                     "password": "Parola",
+                    "port": "Port",
                     "username": "Kullan\u0131c\u0131 ad\u0131"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "client_control": {
+                "data": {
+                    "dpi_restrictions": "DPI k\u0131s\u0131tlama gruplar\u0131n\u0131n kontrol\u00fcne izin ver"
                 }
             }
         }

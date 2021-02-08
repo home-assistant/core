@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Konum zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
         "error": {
             "cannot_connect": "Ba\u011flant\u0131 kurulamad\u0131, l\u00fctfen tekrar deneyin",
             "unknown": "Beklenmeyen hata"

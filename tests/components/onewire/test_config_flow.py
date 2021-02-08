@@ -1,4 +1,6 @@
 """Tests for 1-Wire config flow."""
+from unittest.mock import patch
+
 from pyownet import protocol
 
 from homeassistant.components.onewire.const import (
@@ -18,8 +20,6 @@ from homeassistant.data_entry_flow import (
 )
 
 from . import setup_onewire_owserver_integration, setup_onewire_sysbus_integration
-
-from tests.async_mock import patch
 
 
 async def test_user_owserver(hass):
@@ -318,7 +318,7 @@ async def test_import_owserver_with_port(hass):
             data={
                 CONF_TYPE: CONF_TYPE_OWSERVER,
                 CONF_HOST: "1.2.3.4",
-                CONF_PORT: "1234",
+                CONF_PORT: 1234,
             },
         )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
@@ -326,8 +326,37 @@ async def test_import_owserver_with_port(hass):
     assert result["data"] == {
         CONF_TYPE: CONF_TYPE_OWSERVER,
         CONF_HOST: "1.2.3.4",
-        CONF_PORT: "1234",
+        CONF_PORT: 1234,
     }
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_import_owserver_duplicate(hass):
+    """Test OWServer flow."""
+    # Initialise with single entry
+    with patch(
+        "homeassistant.components.onewire.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.onewire.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        await setup_onewire_owserver_integration(hass)
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    # Import duplicate entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_TYPE: CONF_TYPE_OWSERVER,
+            CONF_HOST: "1.2.3.4",
+            CONF_PORT: 1234,
+        },
+    )
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

@@ -9,6 +9,10 @@
         },
         "flow_title": "",
         "step": {
+            "discovery_confirm": {
+                "description": "Vil du konfigurere {name}?",
+                "title": ""
+            },
             "ssdp_confirm": {
                 "description": "Vil du sette opp {name} ?",
                 "title": ""

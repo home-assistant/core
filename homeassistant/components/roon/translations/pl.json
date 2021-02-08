@@ -17,10 +17,8 @@
                 "data": {
                     "host": "Nazwa hosta lub adres IP"
                 },
-                "description": "Wprowad\u017a nazw\u0119 hosta lub adres IP swojego serwera Roon.",
-                "title": "Konfiguracja serwera Roon"
+                "description": "Nie wykryto serwera Roon, wprowad\u017a nazw\u0119 hosta lub adres IP."
             }
         }
-    },
-    "title": "Roon"
+    }
 }

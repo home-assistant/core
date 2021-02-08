@@ -5,9 +5,7 @@
             "reauth_successful": "La riautenticazione ha avuto successo"
         },
         "error": {
-            "authorization_error": "Errore di autorizzazione. Verificare di avere accesso al progetto e disporre delle credenziali corrette.",
             "cannot_connect": "Impossibile connettersi",
-            "connection_error": "Impossibile connettersi ad Azure DevOps.",
             "invalid_auth": "Autenticazione non valida",
             "project_error": "Non \u00e8 stato possibile ottenere informazioni sul progetto."
         },
@@ -30,6 +28,5 @@
                 "title": "Aggiungere un progetto Azure DevOps"
             }
         }
-    },
-    "title": "Azure DevOps"
+    }
 }

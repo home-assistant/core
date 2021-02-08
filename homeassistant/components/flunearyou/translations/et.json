@@ -4,7 +4,6 @@
             "already_configured": "Asukoht on juba h\u00e4\u00e4lestatud"
         },
         "error": {
-            "general_error": "Tekkis tundmatu viga.",
             "unknown": "Tundmatu viga"
         },
         "step": {
@@ -12,7 +11,9 @@
                 "data": {
                     "latitude": "Laiuskraad",
                     "longitude": "Pikkuskraad"
-                }
+                },
+                "description": "Kasutajap\u00f5histe ja CDC-aruannete j\u00e4lgimine antud asukohas.",
+                "title": "Seadista Flu Near You"
             }
         }
     }

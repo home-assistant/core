@@ -4,9 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "identifier_exists": "Kontoen er allerede konfigurert",
-            "invalid_auth": "Ugyldig godkjenning",
-            "invalid_credentials": "Ugyldige innloggingsopplysninger"
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "user": {
@@ -16,6 +14,16 @@
                     "port": "Port"
                 },
                 "title": "Fyll ut informasjonen din"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Standard sonekj\u00f8ringstid (i sekunder)"
+                },
+                "title": "Konfigurer RainMachine"
             }
         }
     }

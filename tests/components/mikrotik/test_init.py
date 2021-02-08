@@ -1,10 +1,11 @@
 """Test Mikrotik setup process."""
+from unittest.mock import AsyncMock, Mock, patch
+
 from homeassistant.components import mikrotik
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_DATA
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 

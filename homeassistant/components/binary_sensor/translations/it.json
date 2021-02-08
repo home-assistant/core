@@ -98,6 +98,10 @@
             "off": "Normale",
             "on": "Basso"
         },
+        "battery_charging": {
+            "off": "Non in carica",
+            "on": "In carica"
+        },
         "cold": {
             "off": "Normale",
             "on": "Freddo"
@@ -115,12 +119,16 @@
             "on": "Aperta"
         },
         "gas": {
-            "off": "Assenza",
-            "on": "Presenza"
+            "off": "Assente",
+            "on": "Rilevato"
         },
         "heat": {
             "off": "Normale",
             "on": "Caldo"
+        },
+        "light": {
+            "off": "Nessuna luce",
+            "on": "Luce rilevata"
         },
         "lock": {
             "off": "Bloccato",
@@ -131,16 +139,24 @@
             "on": "Umido"
         },
         "motion": {
-            "off": "Assenza",
-            "on": "Presenza"
+            "off": "Assente",
+            "on": "Rilevato"
+        },
+        "moving": {
+            "off": "Non in movimento",
+            "on": "In movimento"
         },
         "occupancy": {
-            "off": "Assenza",
-            "on": "Presenza"
+            "off": "Assente",
+            "on": "Rilevato"
         },
         "opening": {
             "off": "Chiuso",
             "on": "Aperto"
+        },
+        "plug": {
+            "off": "Scollegato",
+            "on": "Connesso"
         },
         "presence": {
             "off": "Fuori casa",
@@ -155,15 +171,15 @@
             "on": "Non Sicuro"
         },
         "smoke": {
-            "off": "Assenza",
-            "on": "Presenza"
+            "off": "Assente",
+            "on": "Rilevato"
         },
         "sound": {
-            "off": "Assenza",
-            "on": "Presenza"
+            "off": "Assente",
+            "on": "Rilevato"
         },
         "vibration": {
-            "off": "Assenza",
+            "off": "Assente",
             "on": "Rilevata"
         },
         "window": {

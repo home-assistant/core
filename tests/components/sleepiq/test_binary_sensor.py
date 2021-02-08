@@ -1,8 +1,9 @@
 """The tests for SleepIQ binary sensor platform."""
+from unittest.mock import MagicMock
+
 from homeassistant.components.sleepiq import binary_sensor as sleepiq
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock
 from tests.components.sleepiq.test_init import mock_responses
 
 CONFIG = {"username": "foo", "password": "bar"}

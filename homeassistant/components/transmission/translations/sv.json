@@ -5,8 +5,7 @@
         },
         "error": {
             "cannot_connect": "Det g\u00e5r inte att ansluta till v\u00e4rden",
-            "name_exists": "Namnet finns redan",
-            "wrong_credentials": "Fel anv\u00e4ndarnamn eller l\u00f6senord"
+            "name_exists": "Namnet finns redan"
         },
         "step": {
             "user": {

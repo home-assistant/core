@@ -1,6 +1,8 @@
 {
     "config": {
         "abort": {
+            "already_configured": "De geselecteerde overeenkomst is al geconfigureerd.",
+            "authorize_url_fail": "Onbekende fout bij het genereren van een autorisatie-URL.",
             "no_agreements": "Dit account heeft geen Toon schermen.",
             "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout [check the help section] ( {docs_url} )"
         }

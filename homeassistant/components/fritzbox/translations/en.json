@@ -4,11 +4,10 @@
             "already_configured": "Device is already configured",
             "already_in_progress": "Configuration flow is already in progress",
             "no_devices_found": "No devices found on the network",
-            "not_found": "No supported AVM FRITZ!Box found on the network.",
-            "not_supported": "Connected to AVM FRITZ!Box but it's unable to control Smart Home devices."
+            "not_supported": "Connected to AVM FRITZ!Box but it's unable to control Smart Home devices.",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
-            "auth_failed": "Username and/or password are incorrect.",
             "invalid_auth": "Invalid authentication"
         },
         "flow_title": "AVM FRITZ!Box: {name}",
@@ -19,6 +18,13 @@
                     "username": "Username"
                 },
                 "description": "Do you want to set up {name}?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Update your login information for {name}."
             },
             "user": {
                 "data": {

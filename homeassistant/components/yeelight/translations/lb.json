@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "no_devices_found": "Keng Apparater am Netzwierk fonnt"
+        },
         "error": {
             "cannot_connect": "Feeler beim verbannen"
         },
@@ -10,6 +14,9 @@
                 }
             },
             "user": {
+                "data": {
+                    "host": "Host"
+                },
                 "description": "Falls Host eidel gelass g\u00ebtt, g\u00ebtt eng automatesch Sich gestart"
             }
         }
@@ -21,11 +28,11 @@
                     "model": "Modell (Optionell)",
                     "nightlight_switch": "Nuechtliicht Schalter benotzen",
                     "save_on_change": "Status sp\u00e4icheren bei \u00c4nnerung",
+                    "transition": "Iwwergangsz\u00e4it (ms)",
                     "use_music_mode": "Musek Modus aktiv\u00e9ieren"
                 },
                 "description": "Falls Modell eidel gelass g\u00ebtt, g\u00ebtt et automatesch erkannt."
             }
         }
-    },
-    "title": "Yeelight"
+    }
 }

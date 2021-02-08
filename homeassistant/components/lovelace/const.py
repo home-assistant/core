@@ -16,6 +16,7 @@ DEFAULT_ICON = "hass:view-dashboard"
 CONF_MODE = "mode"
 MODE_YAML = "yaml"
 MODE_STORAGE = "storage"
+MODE_AUTO = "auto-gen"
 
 LOVELACE_CONFIG_FILE = "ui-lovelace.yaml"
 CONF_RESOURCES = "resources"

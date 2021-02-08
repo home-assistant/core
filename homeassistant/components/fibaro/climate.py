@@ -321,7 +321,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         """Return the current temperature."""
         if self._temp_sensor_device:
             device = self._temp_sensor_device.fibaro_device
-            if device.properties.heatingThermostatSetpoint:
+            if "heatingThermostatSetpoint" in device.properties:
                 return float(device.properties.heatingThermostatSetpoint)
             return float(device.properties.value)
         return None
@@ -331,7 +331,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         """Return the temperature we try to reach."""
         if self._target_temp_device:
             device = self._target_temp_device.fibaro_device
-            if device.properties.heatingThermostatSetpointFuture:
+            if "heatingThermostatSetpointFuture" in device.properties:
                 return float(device.properties.heatingThermostatSetpointFuture)
             return float(device.properties.targetLevel)
         return None

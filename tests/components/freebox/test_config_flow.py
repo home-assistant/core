@@ -1,5 +1,7 @@
 """Tests for the Freebox config flow."""
-from aiofreepybox.exceptions import (
+from unittest.mock import AsyncMock, patch
+
+from freebox_api.exceptions import (
     AuthorizationError,
     HttpRequestError,
     InvalidTokenError,
@@ -11,7 +13,6 @@ from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 HOST = "myrouter.freeboxos.fr"

@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "one_instance_only": "See sidumine toetab praegu ainult \u00fchte ecobee \u00fcksust.",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
         "error": {
-            "pin_request_failed": "Viga ecobee'lt PIN-koodi taotlemisel. Palun veendu, et API v\u00f5ti on \u00f5ige."
+            "pin_request_failed": "Viga ecobee'lt PIN-koodi taotlemisel. Palun veendu, et API v\u00f5ti on \u00f5ige.",
+            "token_request_failed": "Viga ecobee-lt m\u00e4rgendite taotlemisel. Palun proovi uuesti."
         },
         "step": {
             "authorize": {

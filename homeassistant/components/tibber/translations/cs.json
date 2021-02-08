@@ -5,7 +5,6 @@
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "connection_error": "Nepoda\u0159ilo se p\u0159ipojit",
             "invalid_access_token": "Neplatn\u00fd p\u0159\u00edstupov\u00fd token",
             "timeout": "\u010casov\u00fd limit p\u0159i p\u0159ipojen\u00ed k Tibber"
         },
@@ -17,6 +16,5 @@
                 "title": "Tibber"
             }
         }
-    },
-    "title": "Tibber"
+    }
 }

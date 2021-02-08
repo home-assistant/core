@@ -4,7 +4,6 @@
             "already_configured": "Ra\u010dun Tibber je \u017ee konfiguriran."
         },
         "error": {
-            "connection_error": "Napaka pri povezovanju s Tibberjem",
             "invalid_access_token": "Neveljaven dostopni \u017eeton",
             "timeout": "\u010casovna omejitev za priklop na Tibber je potekla"
         },
@@ -17,6 +16,5 @@
                 "title": "Tibber"
             }
         }
-    },
-    "title": "Tibber"
+    }
 }

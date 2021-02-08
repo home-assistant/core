@@ -2,9 +2,6 @@
     "config": {
         "create_entry": {
             "default": "Autenticado com sucesso no Withings."
-        },
-        "error": {
-            "already_configured_account": "Conta j\u00e1 configurada"
         }
     }
 }

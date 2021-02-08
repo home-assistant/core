@@ -1,6 +1,7 @@
 """deCONZ service tests."""
 
 from copy import deepcopy
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -25,8 +26,6 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
 from .test_gateway import BRIDGEID, DECONZ_WEB_REQUEST, setup_deconz_integration
-
-from tests.async_mock import Mock, patch
 
 GROUP = {
     "1": {

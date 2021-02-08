@@ -41,8 +41,8 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Define a device for the config flow."""
         supported_types = {
             device_type
-            for _, device_types in DOMAINS_AND_TYPES
-            for device_type in device_types
+            for device_types in DOMAINS_AND_TYPES
+            for device_type in device_types[1]
         }
         if device.type not in supported_types:
             _LOGGER.error(
@@ -94,23 +94,21 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 device.timeout = timeout
 
-                if self.unique_id is None:
+                if self.source != "reauth":
                     await self.async_set_device(device)
                     self._abort_if_unique_id_configured(
                         updates={CONF_HOST: device.host[0], CONF_TIMEOUT: timeout}
                     )
                     return await self.async_step_auth()
 
-                # The user came from a factory reset.
-                # We need to check whether the host is correct.
                 if device.mac == self.device.mac:
                     await self.async_set_device(device, raise_on_progress=False)
                     return await self.async_step_auth()
 
                 errors["base"] = "invalid_host"
                 err_msg = (
-                    "Invalid host for this configuration flow. The MAC address should be "
-                    f"{format_mac(self.device.mac)}, but {format_mac(device.mac)} was given"
+                    "This is not the device you are looking for. The MAC "
+                    f"address must be {format_mac(self.device.mac)}"
                 )
 
             _LOGGER.error("Failed to connect to the device at %s: %s", host, err_msg)
@@ -161,10 +159,10 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(device.mac.hex())
             if self.source == config_entries.SOURCE_IMPORT:
                 _LOGGER.warning(
-                    "The %s at %s is ready to be configured. Please "
-                    "click Configuration in the sidebar and click "
-                    "Integrations. Then find the device there and click "
-                    "Configure to finish the setup",
+                    "%s (%s at %s) is ready to be configured. Click "
+                    "Configuration in the sidebar, click Integrations and "
+                    "click Configure on the device to complete the setup",
+                    device.name,
                     device.model,
                     device.host[0],
                 )
@@ -183,14 +181,23 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Guide the user to unlock the device manually.
 
         We are unable to authenticate because the device is locked.
-        The user needs to factory reset the device to make it work
-        with Home Assistant.
+        The user needs to open the Broadlink app and unlock the device.
         """
+        device = self.device
+
         if user_input is None:
-            return self.async_show_form(step_id="reset", errors=errors)
+            return self.async_show_form(
+                step_id="reset",
+                errors=errors,
+                description_placeholders={
+                    "name": device.name,
+                    "model": device.model,
+                    "host": device.host[0],
+                },
+            )
 
         return await self.async_step_user(
-            {CONF_HOST: self.device.host[0], CONF_TIMEOUT: self.device.timeout}
+            {CONF_HOST: device.host[0], CONF_TIMEOUT: device.timeout}
         )
 
     async def async_step_unlock(self, user_input=None):
@@ -237,7 +244,14 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = {vol.Required("unlock", default=False): bool}
         return self.async_show_form(
-            step_id="unlock", data_schema=vol.Schema(data_schema), errors=errors
+            step_id="unlock",
+            errors=errors,
+            data_schema=vol.Schema(data_schema),
+            description_placeholders={
+                "name": device.name,
+                "model": device.model,
+                "host": device.host[0],
+            },
         )
 
     async def async_step_finish(self, user_input=None):

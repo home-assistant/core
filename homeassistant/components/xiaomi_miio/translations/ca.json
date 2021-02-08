@@ -6,7 +6,6 @@
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "connect_error": "[%key::common::config_flow::error::cannot_connect%]",
             "no_device_selected": "No hi ha cap dispositiu seleccionat, selecciona'n un."
         },
         "flow_title": "Xiaomi Miio: {name}",

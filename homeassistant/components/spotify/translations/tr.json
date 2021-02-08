@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Yaln\u0131zca bir Spotify hesab\u0131 ayarlayabilirsin.",
             "authorize_url_timeout": "Kimlik do\u011frulama URL'sini olu\u015ftururken zaman a\u015f\u0131m\u0131 ger\u00e7ekle\u015fti.",
             "missing_configuration": "Spotify entegrasyonu ayarlanmam\u0131\u015f. L\u00fctfen dok\u00fcmentasyonu takip et."
         },
@@ -12,6 +11,11 @@
             "pick_implementation": {
                 "title": "Kimlik Do\u011frulama Y\u00f6ntemini Se\u00e7"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Spotify API u\u00e7 noktas\u0131na ula\u015f\u0131labilir"
         }
     }
 }

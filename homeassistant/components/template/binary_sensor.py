@@ -46,8 +46,8 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
             vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_DELAY_ON): cv.positive_time_period,
-            vol.Optional(CONF_DELAY_OFF): cv.positive_time_period,
+            vol.Optional(CONF_DELAY_ON): vol.Any(cv.positive_time_period, cv.template),
+            vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
     ),
@@ -71,8 +71,8 @@ async def _async_create_entities(hass, config):
 
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         device_class = device_config.get(CONF_DEVICE_CLASS)
-        delay_on = device_config.get(CONF_DELAY_ON)
-        delay_off = device_config.get(CONF_DELAY_OFF)
+        delay_on_raw = device_config.get(CONF_DELAY_ON)
+        delay_off_raw = device_config.get(CONF_DELAY_OFF)
         unique_id = device_config.get(CONF_UNIQUE_ID)
 
         sensors.append(
@@ -85,8 +85,8 @@ async def _async_create_entities(hass, config):
                 icon_template,
                 entity_picture_template,
                 availability_template,
-                delay_on,
-                delay_off,
+                delay_on_raw,
+                delay_off_raw,
                 attribute_templates,
                 unique_id,
             )
@@ -115,8 +115,8 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
         icon_template,
         entity_picture_template,
         availability_template,
-        delay_on,
-        delay_off,
+        delay_on_raw,
+        delay_off_raw,
         attribute_templates,
         unique_id,
     ):
@@ -133,14 +133,32 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
         self._template = value_template
         self._state = None
         self._delay_cancel = None
-        self._delay_on = delay_on
-        self._delay_off = delay_off
+        self._delay_on = None
+        self._delay_on_raw = delay_on_raw
+        self._delay_off = None
+        self._delay_off_raw = delay_off_raw
         self._unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
 
         self.add_template_attribute("_state", self._template, None, self._update_state)
+
+        if self._delay_on_raw is not None:
+            try:
+                self._delay_on = cv.positive_time_period(self._delay_on_raw)
+            except vol.Invalid:
+                self.add_template_attribute(
+                    "_delay_on", self._delay_on_raw, cv.positive_time_period
+                )
+
+        if self._delay_off_raw is not None:
+            try:
+                self._delay_off = cv.positive_time_period(self._delay_off_raw)
+            except vol.Invalid:
+                self.add_template_attribute(
+                    "_delay_off", self._delay_off_raw, cv.positive_time_period
+                )
 
         await super().async_added_to_hass()
 

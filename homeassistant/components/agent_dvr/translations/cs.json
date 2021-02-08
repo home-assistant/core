@@ -5,8 +5,7 @@
         },
         "error": {
             "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "device_unavailable": "Za\u0159\u00edzen\u00ed nen\u00ed k dispozici"
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
         "step": {
             "user": {
@@ -17,6 +16,5 @@
                 "title": "Nastaven\u00ed Agent DVR"
             }
         }
-    },
-    "title": "Agent DVR"
+    }
 }

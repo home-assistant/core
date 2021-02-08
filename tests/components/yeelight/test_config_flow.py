@@ -1,4 +1,6 @@
 """Test the Yeelight config flow."""
+from unittest.mock import MagicMock, patch
+
 from homeassistant import config_entries
 from homeassistant.components.yeelight import (
     CONF_DEVICE,
@@ -30,7 +32,6 @@ from . import (
     _patch_discovery,
 )
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 DEFAULT_CONFIG = {

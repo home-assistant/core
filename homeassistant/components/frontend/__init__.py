@@ -14,7 +14,7 @@ from yarl import URL
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.config import async_hass_config_yaml
-from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
+from homeassistant.const import CONF_MODE, CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
@@ -26,7 +26,7 @@ from .storage import async_setup_frontend_storage
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 # Fix mimetypes for borked Windows machines
-# https://github.com/home-assistant/home-assistant-polymer/issues/3336
+# https://github.com/home-assistant/frontend/issues/3336
 mimetypes.add_type("text/css", ".css")
 mimetypes.add_type("application/javascript", ".js")
 
@@ -113,7 +113,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_SET_THEME = "set_theme"
 SERVICE_RELOAD_THEMES = "reload_themes"
-CONF_MODE = "mode"
 
 
 class Panel:
@@ -262,10 +261,10 @@ async def async_setup(hass, config):
     for path, should_cache in (
         ("service_worker.js", False),
         ("robots.txt", False),
-        ("onboarding.html", True),
-        ("static", True),
-        ("frontend_latest", True),
-        ("frontend_es5", True),
+        ("onboarding.html", not is_dev),
+        ("static", not is_dev),
+        ("frontend_latest", not is_dev),
+        ("frontend_es5", not is_dev),
     ):
         hass.http.register_static_path(f"/{path}", str(root_path / path), should_cache)
 

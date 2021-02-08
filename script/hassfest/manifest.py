@@ -5,6 +5,8 @@ from urllib.parse import urlparse
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
+from homeassistant.loader import validate_custom_integration_version
+
 from .model import Integration
 
 DOCUMENTATION_URL_SCHEMA = "https"
@@ -33,6 +35,31 @@ def documentation_url(value: str) -> str:
     return value
 
 
+def verify_lowercase(value: str):
+    """Verify a value is lowercase."""
+    if value.lower() != value:
+        raise vol.Invalid("Value needs to be lowercase")
+
+    return value
+
+
+def verify_uppercase(value: str):
+    """Verify a value is uppercase."""
+    if value.upper() != value:
+        raise vol.Invalid("Value needs to be uppercase")
+
+    return value
+
+
+def verify_version(value: str):
+    """Verify the version."""
+    if not validate_custom_integration_version(value):
+        raise vol.Invalid(
+            f"'{value}' is not a valid version. This will cause a future version of Home Assistant to block this integration.",
+        )
+    return value
+
+
 MANIFEST_SCHEMA = vol.Schema(
     {
         vol.Required("domain"): str,
@@ -45,8 +72,8 @@ MANIFEST_SCHEMA = vol.Schema(
                 vol.Schema(
                     {
                         vol.Required("type"): str,
-                        vol.Optional("macaddress"): str,
-                        vol.Optional("name"): str,
+                        vol.Optional("macaddress"): vol.All(str, verify_uppercase),
+                        vol.Optional("name"): vol.All(str, verify_lowercase),
                     }
                 ),
             )
@@ -55,6 +82,14 @@ MANIFEST_SCHEMA = vol.Schema(
             vol.All([vol.All(vol.Schema({}, extra=vol.ALLOW_EXTRA), vol.Length(min=1))])
         ),
         vol.Optional("homekit"): vol.Schema({vol.Optional("models"): [str]}),
+        vol.Optional("dhcp"): [
+            vol.Schema(
+                {
+                    vol.Optional("macaddress"): vol.All(str, verify_uppercase),
+                    vol.Optional("hostname"): vol.All(str, verify_lowercase),
+                }
+            )
+        ],
         vol.Required("documentation"): vol.All(
             vol.Url(), documentation_url  # pylint: disable=no-value-for-parameter
         ),
@@ -70,20 +105,44 @@ MANIFEST_SCHEMA = vol.Schema(
     }
 )
 
+CUSTOM_INTEGRATION_MANIFEST_SCHEMA = MANIFEST_SCHEMA.extend(
+    {
+        vol.Optional("version"): vol.All(str, verify_version),
+    }
+)
+
+
+def validate_version(integration: Integration):
+    """
+    Validate the version of the integration.
+
+    Will be removed when the version key is no longer optional for custom integrations.
+    """
+    if not integration.manifest.get("version"):
+        integration.add_error(
+            "manifest",
+            "No 'version' key in the manifest file. This will cause a future version of Home Assistant to block this integration.",
+        )
+        return
+
 
 def validate_manifest(integration: Integration):
     """Validate manifest."""
     try:
-        MANIFEST_SCHEMA(integration.manifest)
+        if integration.core:
+            MANIFEST_SCHEMA(integration.manifest)
+        else:
+            CUSTOM_INTEGRATION_MANIFEST_SCHEMA(integration.manifest)
     except vol.Invalid as err:
         integration.add_error(
             "manifest", f"Invalid manifest: {humanize_error(integration.manifest, err)}"
         )
-        integration.manifest = None
-        return
 
     if integration.manifest["domain"] != integration.path.name:
         integration.add_error("manifest", "Domain does not match dir name")
+
+    if not integration.core:
+        validate_version(integration)
 
 
 def validate(integrations: Dict[str, Integration], config):

@@ -1,14 +1,13 @@
 """The tests for the Home Assistant HTTP component."""
 from ipaddress import ip_network
 import logging
+from unittest.mock import Mock, patch
 
 import pytest
 
 import homeassistant.components.http as http
 from homeassistant.setup import async_setup_component
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
-
-from tests.async_mock import Mock, patch
 
 
 @pytest.fixture
@@ -243,7 +242,10 @@ async def test_cors_defaults(hass):
         assert await async_setup_component(hass, "http", {})
 
     assert len(mock_setup.mock_calls) == 1
-    assert mock_setup.mock_calls[0][1][1] == ["https://cast.home-assistant.io"]
+    assert mock_setup.mock_calls[0][1][1] == [
+        "https://cast.home-assistant.io",
+        "https://my.home-assistant.io",
+    ]
 
 
 async def test_storing_config(hass, aiohttp_client, aiohttp_unused_port):

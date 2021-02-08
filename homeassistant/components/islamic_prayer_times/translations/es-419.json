@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "one_instance_allowed": "Solo una instancia es necesaria."
-        },
         "step": {
             "user": {
                 "description": "\u00bfDesea establecer tiempos de oraci\u00f3n isl\u00e1mica?",

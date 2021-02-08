@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_PROTOCOL,
+    CONF_SENSORS,
     CONF_USERNAME,
 )
 from homeassistant.helpers import config_validation as cv
@@ -22,7 +23,6 @@ CONF_DNSMASQ = "dnsmasq"
 CONF_INTERFACE = "interface"
 CONF_PUB_KEY = "pub_key"
 CONF_REQUIRE_IP = "require_ip"
-CONF_SENSORS = "sensors"
 CONF_SSH_KEY = "ssh_key"
 
 DOMAIN = "asuswrt"
@@ -65,7 +65,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config, retry_delay=FIRST_RETRY_TIME):
     """Set up the asuswrt component."""
-
     conf = config[DOMAIN]
 
     api = AsusWrt(

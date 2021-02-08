@@ -329,7 +329,7 @@ class AlexaEntity:
                 "manufacturer": "Home Assistant",
                 "model": self.entity.domain,
                 "softwareVersion": __version__,
-                "customIdentifier": self.entity_id,
+                "customIdentifier": f"{self.config.user_identifier()}-{self.entity_id}",
             },
         }
 

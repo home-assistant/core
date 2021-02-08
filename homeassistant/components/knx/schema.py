@@ -15,9 +15,11 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    CONF_INVERT,
+    CONF_RESET_AFTER,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
-    OPERATION_MODES,
+    CONTROLLER_MODES,
     PRESET_MODES,
     ColorTempModes,
 )
@@ -75,6 +77,7 @@ class CoverSchema:
             ): cv.positive_int,
             vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
             vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
+            vol.Optional(CONF_DEVICE_CLASS): cv.string,
         }
     )
 
@@ -84,9 +87,10 @@ class BinarySensorSchema:
 
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_SYNC_STATE = CONF_SYNC_STATE
+    CONF_INVERT = CONF_INVERT
     CONF_IGNORE_INTERNAL_STATE = "ignore_internal_state"
     CONF_CONTEXT_TIMEOUT = "context_timeout"
-    CONF_RESET_AFTER = "reset_after"
+    CONF_RESET_AFTER = CONF_RESET_AFTER
 
     DEFAULT_NAME = "KNX Binary Sensor"
 
@@ -101,13 +105,14 @@ class BinarySensorSchema:
                     cv.boolean,
                     cv.string,
                 ),
-                vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=True): cv.boolean,
-                vol.Optional(CONF_CONTEXT_TIMEOUT, default=1.0): vol.All(
+                vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=False): cv.boolean,
+                vol.Required(CONF_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_CONTEXT_TIMEOUT): vol.All(
                     vol.Coerce(float), vol.Range(min=0, max=10)
                 ),
-                vol.Required(CONF_STATE_ADDRESS): cv.string,
                 vol.Optional(CONF_DEVICE_CLASS): cv.string,
-                vol.Optional(CONF_RESET_AFTER): cv.positive_int,
+                vol.Optional(CONF_INVERT): cv.boolean,
+                vol.Optional(CONF_RESET_AFTER): cv.positive_float,
             }
         ),
     )
@@ -134,29 +139,71 @@ class LightSchema:
     DEFAULT_MIN_KELVIN = 2700  # 370 mireds
     DEFAULT_MAX_KELVIN = 6000  # 166 mireds
 
-    SCHEMA = vol.Schema(
+    CONF_INDIVIDUAL_COLORS = "individual_colors"
+    CONF_RED = "red"
+    CONF_GREEN = "green"
+    CONF_BLUE = "blue"
+    CONF_WHITE = "white"
+
+    COLOR_SCHEMA = vol.Schema(
         {
-            vol.Required(CONF_ADDRESS): cv.string,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_ADDRESS): cv.string,
             vol.Optional(CONF_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_BRIGHTNESS_ADDRESS): cv.string,
+            vol.Required(CONF_BRIGHTNESS_ADDRESS): cv.string,
             vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_COLOR_ADDRESS): cv.string,
-            vol.Optional(CONF_COLOR_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_COLOR_TEMP_ADDRESS): cv.string,
-            vol.Optional(CONF_COLOR_TEMP_STATE_ADDRESS): cv.string,
-            vol.Optional(
-                CONF_COLOR_TEMP_MODE, default=DEFAULT_COLOR_TEMP_MODE
-            ): cv.enum(ColorTempModes),
-            vol.Optional(CONF_RGBW_ADDRESS): cv.string,
-            vol.Optional(CONF_RGBW_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_MIN_KELVIN, default=DEFAULT_MIN_KELVIN): vol.All(
-                vol.Coerce(int), vol.Range(min=1)
-            ),
-            vol.Optional(CONF_MAX_KELVIN, default=DEFAULT_MAX_KELVIN): vol.All(
-                vol.Coerce(int), vol.Range(min=1)
-            ),
         }
+    )
+
+    SCHEMA = vol.All(
+        vol.Schema(
+            {
+                vol.Optional(CONF_ADDRESS): cv.string,
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_BRIGHTNESS_ADDRESS): cv.string,
+                vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): cv.string,
+                vol.Exclusive(CONF_INDIVIDUAL_COLORS, "color"): {
+                    vol.Inclusive(CONF_RED, "colors"): COLOR_SCHEMA,
+                    vol.Inclusive(CONF_GREEN, "colors"): COLOR_SCHEMA,
+                    vol.Inclusive(CONF_BLUE, "colors"): COLOR_SCHEMA,
+                    vol.Optional(CONF_WHITE): COLOR_SCHEMA,
+                },
+                vol.Exclusive(CONF_COLOR_ADDRESS, "color"): cv.string,
+                vol.Optional(CONF_COLOR_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_COLOR_TEMP_ADDRESS): cv.string,
+                vol.Optional(CONF_COLOR_TEMP_STATE_ADDRESS): cv.string,
+                vol.Optional(
+                    CONF_COLOR_TEMP_MODE, default=DEFAULT_COLOR_TEMP_MODE
+                ): cv.enum(ColorTempModes),
+                vol.Exclusive(CONF_RGBW_ADDRESS, "color"): cv.string,
+                vol.Optional(CONF_RGBW_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_MIN_KELVIN, default=DEFAULT_MIN_KELVIN): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+                vol.Optional(CONF_MAX_KELVIN, default=DEFAULT_MAX_KELVIN): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+            }
+        ),
+        vol.Any(
+            # either global "address" or all addresses for individual colors are required
+            vol.Schema(
+                {
+                    vol.Required(CONF_INDIVIDUAL_COLORS): {
+                        vol.Required(CONF_RED): {vol.Required(CONF_ADDRESS): object},
+                        vol.Required(CONF_GREEN): {vol.Required(CONF_ADDRESS): object},
+                        vol.Required(CONF_BLUE): {vol.Required(CONF_ADDRESS): object},
+                    },
+                },
+                extra=vol.ALLOW_EXTRA,
+            ),
+            vol.Schema(
+                {
+                    vol.Required(CONF_ADDRESS): object,
+                },
+                extra=vol.ALLOW_EXTRA,
+            ),
+        ),
     )
 
 
@@ -187,6 +234,7 @@ class ClimateSchema:
     CONF_OPERATION_MODE_COMFORT_ADDRESS = "operation_mode_comfort_address"
     CONF_OPERATION_MODE_STANDBY_ADDRESS = "operation_mode_standby_address"
     CONF_OPERATION_MODES = "operation_modes"
+    CONF_CONTROLLER_MODES = "controller_modes"
     CONF_ON_OFF_ADDRESS = "on_off_address"
     CONF_ON_OFF_STATE_ADDRESS = "on_off_state_address"
     CONF_ON_OFF_INVERT = "on_off_invert"
@@ -240,7 +288,10 @@ class ClimateSchema:
                     CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT
                 ): cv.boolean,
                 vol.Optional(CONF_OPERATION_MODES): vol.All(
-                    cv.ensure_list, [vol.In({**OPERATION_MODES, **PRESET_MODES})]
+                    cv.ensure_list, [vol.In({**PRESET_MODES})]
+                ),
+                vol.Optional(CONF_CONTROLLER_MODES): vol.All(
+                    cv.ensure_list, [vol.In({**CONTROLLER_MODES})]
                 ),
                 vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
                 vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
@@ -252,6 +303,7 @@ class ClimateSchema:
 class SwitchSchema:
     """Voluptuous schema for KNX switches."""
 
+    CONF_INVERT = CONF_INVERT
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
 
     DEFAULT_NAME = "KNX Switch"
@@ -260,6 +312,7 @@ class SwitchSchema:
             vol.Required(CONF_ADDRESS): cv.string,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_INVERT): cv.boolean,
         }
     )
 
@@ -299,6 +352,7 @@ class NotifySchema:
 class SensorSchema:
     """Voluptuous schema for KNX sensors."""
 
+    CONF_ALWAYS_CALLBACK = "always_callback"
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_SYNC_STATE = CONF_SYNC_STATE
     DEFAULT_NAME = "KNX Sensor"
@@ -311,6 +365,7 @@ class SensorSchema:
                 cv.boolean,
                 cv.string,
             ),
+            vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
             vol.Required(CONF_STATE_ADDRESS): cv.string,
             vol.Required(CONF_TYPE): vol.Any(int, float, str),
         }

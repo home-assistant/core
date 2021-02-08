@@ -5,9 +5,16 @@
         },
         "error": {
             "identifier_exists": "Account bestaat al",
-            "invalid_credentials": "Ongeldige gebruikersgegevens"
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord"
+                },
+                "description": "Uw toegangstoken is verlopen of ingetrokken. Voer uw wachtwoord in om uw account opnieuw te koppelen."
+            },
             "user": {
                 "data": {
                     "code": "Code (gebruikt in Home Assistant)",

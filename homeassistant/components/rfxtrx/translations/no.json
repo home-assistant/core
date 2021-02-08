@@ -25,7 +25,7 @@
                 "data": {
                     "device": "USB enhetsbane"
                 },
-                "title": "Sti"
+                "title": "Bane"
             },
             "user": {
                 "data": {
@@ -53,7 +53,7 @@
                     "event_code": "Angi hendelseskode for \u00e5 legge til",
                     "remove_device": "Velg enhet du vil slette"
                 },
-                "title": "[VOID] alternativer"
+                "title": "[%key:component::rfxtrx::title%] alternativer"
             },
             "set_device_options": {
                 "data": {
@@ -64,11 +64,11 @@
                     "off_delay": "Av forsinkelse",
                     "off_delay_enabled": "Aktiver av forsinkelse",
                     "replace_device": "Velg enheten du vil erstatte",
-                    "signal_repetitions": "Antall signalrepetisjoner"
+                    "signal_repetitions": "Antall signalrepetisjoner",
+                    "venetian_blind_mode": "Persiennemodus"
                 },
                 "title": "Konfigurer enhetsalternativer"
             }
         }
-    },
-    "title": ""
+    }
 }

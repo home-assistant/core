@@ -8,6 +8,7 @@
             "unknown": "Error inesperado",
             "wrong_version": "Tu powerwall utiliza una versi\u00f3n de software que no es compatible. Considera actualizar o informar de este problema para que pueda resolverse."
         },
+        "flow_title": "Powerwall de Tesla ({ip_address})",
         "step": {
             "user": {
                 "data": {

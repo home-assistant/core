@@ -1,20 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
-            "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania url autoryzacji",
+            "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania URL autoryzacji",
             "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji",
             "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
-            "no_flows": "Musisz skonfigurowa\u0107 Nest, aby m\u00f3c si\u0119 z nim uwierzytelni\u0107. Zapoznaj si\u0119 z [instrukcj\u0105](https://www.home-assistant.io/components/nest/).",
             "no_url_available": "Brak dost\u0119pnego adresu URL. Aby uzyska\u0107 informacje na temat tego b\u0142\u0119du, [sprawd\u017a sekcj\u0119 pomocy] ({docs_url})",
-            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
+            "unknown_authorize_url_generation": "Nieznany b\u0142\u0105d podczas generowania URL autoryzacji"
         },
         "create_entry": {
             "default": "Pomy\u015blnie uwierzytelniono"
         },
         "error": {
             "internal_error": "Wewn\u0119trzny b\u0142\u0105d sprawdzania poprawno\u015bci kodu",
-            "invalid_code": "Nieprawid\u0142owy kod",
             "invalid_pin": "Nieprawid\u0142owy kod PIN",
             "timeout": "Przekroczono limit czasu sprawdzania poprawno\u015bci kodu",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
@@ -36,7 +35,19 @@
             },
             "pick_implementation": {
                 "title": "Wybierz metod\u0119 uwierzytelniania"
+            },
+            "reauth_confirm": {
+                "description": "Integracja Nest wymaga ponownego uwierzytelnienia Twojego konta",
+                "title": "Ponownie uwierzytelnij integracj\u0119"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "nast\u0105pi wykrycie ruchu",
+            "camera_person": "nast\u0105pi wykrycie osoby",
+            "camera_sound": "nast\u0105pi wykrycie d\u017awi\u0119ku",
+            "doorbell_chime": "dzwonek zostanie wci\u015bni\u0119ty"
         }
     }
 }

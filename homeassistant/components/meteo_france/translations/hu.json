@@ -4,6 +4,9 @@
             "already_configured": "A v\u00e1ros m\u00e1r konfigur\u00e1lva van",
             "unknown": "Ismeretlen hiba: k\u00e9rj\u00fck, pr\u00f3b\u00e1lja \u00fajra k\u00e9s\u0151bb"
         },
+        "error": {
+            "empty": "Nincs eredm\u00e9ny a v\u00e1roskeres\u00e9sben: ellen\u0151rizze a v\u00e1ros mez\u0151t"
+        },
         "step": {
             "user": {
                 "data": {

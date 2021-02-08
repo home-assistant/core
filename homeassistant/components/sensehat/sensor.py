@@ -1,7 +1,7 @@
 """Support for Sense HAT sensors."""
 from datetime import timedelta
 import logging
-import os
+from pathlib import Path
 
 from sense_hat import SenseHat
 import voluptuous as vol
@@ -43,9 +43,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_cpu_temp():
     """Get CPU temperature."""
-    res = os.popen("vcgencmd measure_temp").readline()
-    t_cpu = float(res.replace("temp=", "").replace("'C\n", ""))
-    return t_cpu
+    t_cpu = Path("/sys/class/thermal/thermal_zone0/temp").read_text().strip()
+    return float(t_cpu) * 0.001
 
 
 def get_average(temp_base):

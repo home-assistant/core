@@ -1,5 +1,6 @@
 """The tests for the august platform."""
 import asyncio
+from unittest.mock import patch
 
 from aiohttp import ClientResponseError
 from august.authenticator_common import AuthenticationState
@@ -31,7 +32,6 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 from tests.components.august.mocks import (
     _create_august_with_devices,

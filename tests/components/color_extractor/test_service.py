@@ -1,9 +1,11 @@
 """Tests for color_extractor component service calls."""
 import base64
 import io
+from unittest.mock import Mock, mock_open, patch
 
 import aiohttp
 import pytest
+from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.color_extractor import (
     ATTR_PATH,
@@ -22,7 +24,6 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 import homeassistant.util.color as color_util
 
-from tests.async_mock import Mock, mock_open, patch
 from tests.common import load_fixture
 
 LIGHT_ENTITY = "light.kitchen_lights"
@@ -103,8 +104,11 @@ async def test_missing_url_and_path(hass):
         ATTR_ENTITY_ID: LIGHT_ENTITY,
     }
 
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, service_data, blocking=True)
-    await hass.async_block_till_done()
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_ON, service_data, blocking=True
+        )
+        await hass.async_block_till_done()
 
     # check light is still off, unchanged due to bad parameters on service call
     state = hass.states.get(LIGHT_ENTITY)

@@ -4,9 +4,7 @@
             "already_configured": "Lokalizacja jest ju\u017c skonfigurowana"
         },
         "error": {
-            "auth": "Nieprawid\u0142owy klucz API",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "connection": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z API OWM",
             "invalid_api_key": "Nieprawid\u0142owy klucz API"
         },
         "step": {

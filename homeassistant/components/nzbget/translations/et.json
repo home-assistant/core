@@ -5,9 +5,9 @@
             "unknown": "Tundmatu viga"
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus",
-            "invalid_auth": "Tuvastamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus"
         },
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {

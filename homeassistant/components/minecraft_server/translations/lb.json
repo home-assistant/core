@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+            "already_configured": "Service ass scho konfigur\u00e9iert"
         },
         "error": {
             "cannot_connect": "Feeler beim verbannen mam Server. Iwwerpr\u00e9if den Numm a Port a prob\u00e9ier nach emol. G\u00e9i och s\u00e9cher dass op d'mannst Minecraft Versioun 1.7 um Server leeft.",

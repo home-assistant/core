@@ -12,7 +12,6 @@ from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
 from homeassistant.loader import async_get_integration
-from homeassistant.util import sanitize_path
 
 from . import dashboard, resources, websocket
 from .const import (
@@ -37,6 +36,7 @@ from .const import (
     STORAGE_DASHBOARD_UPDATE_FIELDS,
     url_slug,
 )
+from .system_health import system_health_info  # NOQA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ YAML_DASHBOARD_SCHEMA = vol.Schema(
     {
         **DASHBOARD_BASE_CREATE_FIELDS,
         vol.Required(CONF_MODE): MODE_YAML,
-        vol.Required(CONF_FILENAME): vol.All(cv.string, sanitize_path),
+        vol.Required(CONF_FILENAME): cv.path,
     }
 )
 
@@ -140,8 +140,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         websocket.websocket_lovelace_dashboards
     )
 
-    hass.components.system_health.async_register_info(DOMAIN, system_health_info)
-
     hass.data[DOMAIN] = {
         # We store a dictionary mapping url_path: config. None is the default.
         "dashboards": {None: default_config},
@@ -231,14 +229,6 @@ async def create_yaml_resource_col(hass, yaml_resources):
                 yaml_resources = ll_conf[CONF_RESOURCES]
 
     return resources.ResourceYAMLCollection(yaml_resources or [])
-
-
-async def system_health_info(hass):
-    """Get info for the info page."""
-    health_info = {"dashboards": len(hass.data[DOMAIN]["dashboards"])}
-    health_info.update(await hass.data[DOMAIN]["dashboards"][None].async_get_info())
-    health_info.update(await hass.data[DOMAIN]["resources"].async_get_info())
-    return health_info
 
 
 @callback

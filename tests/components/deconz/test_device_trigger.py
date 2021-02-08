@@ -19,6 +19,7 @@ from homeassistant.const import (
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
 from tests.common import assert_lists_same, async_get_device_automations
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
 SENSORS = {
     "1": {

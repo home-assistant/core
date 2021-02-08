@@ -5,8 +5,7 @@
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus",
-            "connection_error": "\u00dchenduse loomine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus"
         },
         "step": {
             "hassio_confirm": {

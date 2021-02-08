@@ -5,7 +5,6 @@
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "auth_missing": "Home Assistant non \u00e8 autorizzato a connettersi a questo Samsung TV. Controlla le impostazioni del tuo TV per autorizzare Home Assistant.",
             "cannot_connect": "Impossibile connettersi",
-            "not_successful": "Impossibile connettersi a questo dispositivo Samsung TV.",
             "not_supported": "Questo dispositivo Samsung TV non \u00e8 attualmente supportato."
         },
         "flow_title": "Samsung TV: {model}",

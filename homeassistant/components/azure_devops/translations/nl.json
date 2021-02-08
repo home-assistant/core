@@ -2,6 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "Account is al geconfigureerd"
+        },
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie"
         }
     }
 }

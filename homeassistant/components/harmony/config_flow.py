@@ -129,19 +129,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_import(self, validated_input):
-        """Handle import."""
-        await self.async_set_unique_id(
-            validated_input[UNIQUE_ID], raise_on_progress=False
-        )
-        self._abort_if_unique_id_configured()
-
-        # Everything was validated in remote async_setup_platform
-        # all we do now is create.
-        return await self._async_create_entry_from_valid_input(
-            validated_input, validated_input
-        )
-
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
