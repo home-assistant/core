@@ -18,10 +18,12 @@ from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     LIGHT_LUX,
     PERCENTAGE,
     PRESSURE_HPA,
+    POWER_WATT,
     TEMP_CELSIUS,
 )
 from homeassistant.exceptions import PlatformNotReady
@@ -74,6 +76,9 @@ GATEWAY_SENSOR_TYPES = {
     ),
     "pressure": SensorType(
         unit=PRESSURE_HPA, icon=None, device_class=DEVICE_CLASS_PRESSURE
+    ),
+    "load_power": SensorType(
+        unit=POWER_WATT, icon=None, device_class=DEVICE_CLASS_POWER
     ),
 }
 
