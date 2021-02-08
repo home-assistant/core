@@ -164,7 +164,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if not info["auth"] and info.get("sleep_mode", False):
             try:
-                self.device_info = info = await validate_input(self.hass, self.host, {})
+                self.device_info = await validate_input(self.hass, self.host, {})
             except HTTP_CONNECT_ERRORS:
                 return self.async_abort(reason="cannot_connect")
 
