@@ -1016,7 +1016,7 @@ async def test_condition_template_error(hass):
     )
 
     with pytest.raises(ConditionError, match="template"):
-        assert test(hass)
+        test(hass)
 
 
 async def test_condition_template_invalid_results(hass):
