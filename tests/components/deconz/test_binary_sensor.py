@@ -16,7 +16,7 @@ from homeassistant.components.deconz.const import (
 )
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.components.deconz.services import SERVICE_DEVICE_REFRESH
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.setup import async_setup_component
 
@@ -111,6 +111,10 @@ async def test_binary_sensors(hass):
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
+    assert hass.states.get("binary_sensor.presence_sensor").state == STATE_UNAVAILABLE
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 
 

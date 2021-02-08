@@ -95,7 +95,7 @@ class ZWaveBaseEntity(Entity):
         """Remove this entity and add it back."""
 
         async def _async_remove_and_add():
-            await self.async_remove()
+            await self.async_remove(force_remove=True)
             self.entity_id = None
             await self.platform.async_add_entities([self])
 
@@ -104,7 +104,7 @@ class ZWaveBaseEntity(Entity):
 
     async def node_removed(self):
         """Call when a node is removed from the Z-Wave network."""
-        await self.async_remove()
+        await self.async_remove(force_remove=True)
 
         registry = await async_get_registry(self.hass)
         if self.entity_id not in registry.entities:

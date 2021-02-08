@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_ERROR,
     ConfigEntry,
 )
-from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -144,6 +144,14 @@ async def test_unload_entry(hass: HomeAssistant):
         # Unload config entry
         await hass.config_entries.async_unload(config_entry.entry_id)
         assert config_entry.state == ENTRY_STATE_NOT_LOADED
+        entities = hass.states.async_entity_ids("sensor")
+        assert len(entities) == 14
+        for entity in entities:
+            assert hass.states.get(entity).state == STATE_UNAVAILABLE
+
+        # Remove config entry
+        await hass.config_entries.async_remove(config_entry.entry_id)
+        await hass.async_block_till_done()
         entities = hass.states.async_entity_ids("sensor")
         assert len(entities) == 0
 

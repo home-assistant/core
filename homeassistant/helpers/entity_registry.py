@@ -115,6 +115,33 @@ class RegistryEntry:
         """Return if entry is disabled."""
         return self.disabled_by is not None
 
+    @callback
+    def write_unavailable_state(self, hass: HomeAssistantType) -> None:
+        """Write the unavailable state to the state machine."""
+        attrs: Dict[str, Any] = {ATTR_RESTORED: True}
+
+        if self.capabilities is not None:
+            attrs.update(self.capabilities)
+
+        if self.supported_features is not None:
+            attrs[ATTR_SUPPORTED_FEATURES] = self.supported_features
+
+        if self.device_class is not None:
+            attrs[ATTR_DEVICE_CLASS] = self.device_class
+
+        if self.unit_of_measurement is not None:
+            attrs[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
+
+        name = self.name or self.original_name
+        if name is not None:
+            attrs[ATTR_FRIENDLY_NAME] = name
+
+        icon = self.icon or self.original_icon
+        if icon is not None:
+            attrs[ATTR_ICON] = icon
+
+        hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
+
 
 class EntityRegistry:
     """Class to hold a registry of entities."""
@@ -616,36 +643,13 @@ def async_setup_entity_restore(
     @callback
     def _write_unavailable_states(_: Event) -> None:
         """Make sure state machine contains entry for each registered entity."""
-        states = hass.states
-        existing = set(states.async_entity_ids())
+        existing = set(hass.states.async_entity_ids())
 
         for entry in registry.entities.values():
             if entry.entity_id in existing or entry.disabled:
                 continue
 
-            attrs: Dict[str, Any] = {ATTR_RESTORED: True}
-
-            if entry.capabilities is not None:
-                attrs.update(entry.capabilities)
-
-            if entry.supported_features is not None:
-                attrs[ATTR_SUPPORTED_FEATURES] = entry.supported_features
-
-            if entry.device_class is not None:
-                attrs[ATTR_DEVICE_CLASS] = entry.device_class
-
-            if entry.unit_of_measurement is not None:
-                attrs[ATTR_UNIT_OF_MEASUREMENT] = entry.unit_of_measurement
-
-            name = entry.name or entry.original_name
-            if name is not None:
-                attrs[ATTR_FRIENDLY_NAME] = name
-
-            icon = entry.icon or entry.original_icon
-            if icon is not None:
-                attrs[ATTR_ICON] = icon
-
-            states.async_set(entry.entity_id, STATE_UNAVAILABLE, attrs)
+            entry.write_unavailable_state(hass)
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _write_unavailable_states)
 

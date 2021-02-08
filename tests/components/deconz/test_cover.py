@@ -19,7 +19,12 @@ from homeassistant.components.cover import (
 )
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_CLOSED, STATE_OPEN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_CLOSED,
+    STATE_OPEN,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
@@ -251,6 +256,13 @@ async def test_cover(hass):
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
+    states = hass.states.async_all()
+    assert len(hass.states.async_all()) == 5
+    for state in states:
+        assert state.state == STATE_UNAVAILABLE
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 
 

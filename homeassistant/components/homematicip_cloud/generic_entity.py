@@ -172,7 +172,7 @@ class HomematicipGenericEntity(Entity):
         """Handle hmip device removal."""
         # Set marker showing that the HmIP device hase been removed.
         self.hmip_device_removed = True
-        self.hass.async_create_task(self.async_remove())
+        self.hass.async_create_task(self.async_remove(force_remove=True))
 
     @property
     def name(self) -> str:

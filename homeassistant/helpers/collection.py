@@ -301,7 +301,10 @@ class IDLessCollection(ObservableCollection):
 
 
 @callback
-def attach_entity_component_collection(
+def sync_entity_lifecycle(
+    hass: HomeAssistantType,
+    domain: str,
+    platform: str,
     entity_component: EntityComponent,
     collection: ObservableCollection,
     create_entity: Callable[[dict], Entity],
@@ -318,34 +321,17 @@ def attach_entity_component_collection(
             return
 
         if change_type == CHANGE_REMOVED:
-            entity = entities.pop(item_id)
-            await entity.async_remove()
+            ent_reg = await entity_registry.async_get_registry(hass)
+            ent_to_remove = ent_reg.async_get_entity_id(domain, platform, item_id)
+            if ent_to_remove is not None:
+                ent_reg.async_remove(ent_to_remove)
+            else:
+                await entities[item_id].async_remove(force_remove=True)
+            entities.pop(item_id)
             return
 
         # CHANGE_UPDATED
         await entities[item_id].async_update_config(config)  # type: ignore
-
-    collection.async_add_listener(_collection_changed)
-
-
-@callback
-def attach_entity_registry_cleaner(
-    hass: HomeAssistantType,
-    domain: str,
-    platform: str,
-    collection: ObservableCollection,
-) -> None:
-    """Attach a listener to clean up entity registry on collection changes."""
-
-    async def _collection_changed(change_type: str, item_id: str, config: Dict) -> None:
-        """Handle a collection change: clean up entity registry on removals."""
-        if change_type != CHANGE_REMOVED:
-            return
-
-        ent_reg = await entity_registry.async_get_registry(hass)
-        ent_to_remove = ent_reg.async_get_entity_id(domain, platform, item_id)
-        if ent_to_remove is not None:
-            ent_reg.async_remove(ent_to_remove)
 
     collection.async_add_listener(_collection_changed)
 

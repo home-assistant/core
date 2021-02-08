@@ -264,7 +264,7 @@ async def test_reload(hass, hass_admin_user):
     assert "mdi:work_reloaded" == state_2.attributes.get(ATTR_ICON)
 
 
-async def test_load_person_storage(hass, storage_setup):
+async def test_load_from_storage(hass, storage_setup):
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")

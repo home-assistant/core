@@ -517,7 +517,7 @@ class EntityPlatform:
         if not self.entities:
             return
 
-        tasks = [self.async_remove_entity(entity_id) for entity_id in self.entities]
+        tasks = [entity.async_remove() for entity in self.entities.values()]
 
         await asyncio.gather(*tasks)
 

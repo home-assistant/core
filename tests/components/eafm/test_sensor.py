@@ -5,7 +5,7 @@ import aiohttp
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -428,5 +428,8 @@ async def test_unload_entry(hass, mock_get_station):
 
     assert await entry.async_unload(hass)
 
-    # And the entity should be gone
-    assert not hass.states.get("sensor.my_station_water_level_stage")
+    # And the entity should be unavailable
+    assert (
+        hass.states.get("sensor.my_station_water_level_stage").state
+        == STATE_UNAVAILABLE
+    )

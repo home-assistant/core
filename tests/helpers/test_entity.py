@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Context
 from homeassistant.helpers import entity, entity_registry
 
@@ -718,3 +718,29 @@ async def test_setup_source(hass):
     await platform.async_reset()
 
     assert entity.entity_sources(hass) == {}
+
+
+async def test_removing_entity_unavailable(hass):
+    """Test removing an entity that is still registered creates an unavailable state."""
+    entry = entity_registry.RegistryEntry(
+        entity_id="hello.world",
+        unique_id="test-unique-id",
+        platform="test-platform",
+        disabled_by=None,
+    )
+
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.entity_id = "hello.world"
+    ent.registry_entry = entry
+    ent.async_write_ha_state()
+
+    state = hass.states.get("hello.world")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    await ent.async_remove()
+
+    state = hass.states.get("hello.world")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
