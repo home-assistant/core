@@ -25,10 +25,9 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_FLOW_TYPE, CONF_GATEWAY, DOMAIN
+from .const import CONF_FLOW_TYPE, CONF_GATEWAY, DOMAIN, KEY_COORDINATOR
 from .gateway import XiaomiGatewayDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,6 +98,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
         # Gateway sub devices
         sub_devices = gateway.devices
+        coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
         for sub_device in sub_devices.values():
             sensor_variables = []
             for variable in sub_device.status.keys():
