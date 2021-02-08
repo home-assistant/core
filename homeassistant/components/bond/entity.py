@@ -55,9 +55,9 @@ class BondEntity(Entity):
         else:
             model_data = []
             if self._hub.branding_profile:
-                model_data.append(self._hub.branding_profile)
+                model_data.append(self._device.branding_profile)
             if self._hub.template:
-                model_data.append(self._hub.template)
+                model_data.append(self._device.template)
             if model_data:
                 device_info["model"] = " ".join(model_data)
 
