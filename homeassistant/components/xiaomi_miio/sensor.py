@@ -1,18 +1,15 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
-from miio import AirQualityMonitor, DeviceException  # pylint: disable=import-error
-from miio.gateway import (
-    GATEWAY_MODEL_AC_V1,
-    GATEWAY_MODEL_AC_V2,
-    GATEWAY_MODEL_AC_V3,
-    GATEWAY_MODEL_EU,
-    DeviceType,
-    GatewayException,
-)
 import voluptuous as vol
+from miio import (AirQualityMonitor,  # pylint: disable=import-error
+                  DeviceException)
+from miio.gateway import (GATEWAY_MODEL_AC_V1, GATEWAY_MODEL_AC_V2,
+                          GATEWAY_MODEL_AC_V3, GATEWAY_MODEL_EU, DeviceType,
+                          GatewayException)
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
@@ -103,7 +100,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         # Gateway sub devices
         sub_devices = gateway.devices
         for sub_device in sub_devices.values():
-            coordinator = hass.data[DOMAIN][config_entry.entry_id][sub_device.sid]
             sensor_variables = []
             for variable in sub_device.status.keys():
                 if variable in GATEWAY_SENSOR_TYPES.keys():
@@ -111,7 +107,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if sensor_variables:
                 entities.extend(
                     [
-                        XiaomiGatewaySensor(coordinator, sub_device, config_entry, variable)
+                        XiaomiGatewaySensor(
+                            coordinator, sub_device, config_entry, variable
+                        )
                         for variable in sensor_variables
                     ]
                 )
@@ -288,9 +286,7 @@ class XiaomiGatewayIlluminanceSensor(Entity):
     @property
     def device_info(self):
         """Return the device info of the gateway."""
-        return {
-            "identifiers": {(DOMAIN, self._gateway_device_id)},
-        }
+        return {"identifiers": {(DOMAIN, self._gateway_device_id)}}
 
     @property
     def name(self):

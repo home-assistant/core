@@ -15,6 +15,7 @@ from .const import (
     CONF_GATEWAY,
     CONF_MODEL,
     DOMAIN,
+    KEY_COORDINATOR,
     MODELS_SWITCH,
 )
 from .gateway import ConnectXiaomiGateway
@@ -65,8 +66,6 @@ async def async_setup_gateway_entry(
         return False
     gateway_info = gateway.gateway_info
 
-    hass.data[DOMAIN][entry.entry_id] = {CONF_GATEWAY: gateway.gateway_device}
-
     gateway_model = f"{gateway_info.model}-{gateway_info.hardware_version}"
 
     device_registry = await dr.async_get_registry(hass)
@@ -80,26 +79,29 @@ async def async_setup_gateway_entry(
         sw_version=gateway_info.firmware_version,
     )
 
-    for sub_device in gateway.gateway_device.devices.values():
-        async def async_update_data():
-            """Fetch data from the subdevice."""
-            try:
+    async def async_update_data():
+        """Fetch data from the subdevice."""
+        try:
+            for sub_device in gateway.gateway_device.devices.values():
                 await hass.async_add_executor_job(sub_device.update)
-            except GatewayException as ex:
-                raise UpdateFailed(f"Got exception while fetching the state: {err}")
+        except GatewayException as ex:
+            raise UpdateFailed(f"Got exception while fetching the state: {err}")
 
-        # Create update coordinator per subdevice
-        coordinator = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            # Name of the data. For logging purposes.
-            name=name,
-            update_method=async_update_data,
-            # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(seconds=10),
-        )
+    # Create update coordinator
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        # Name of the data. For logging purposes.
+        name=name,
+        update_method=async_update_data,
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=timedelta(seconds=10),
+    )
 
-        hass.data[DOMAIN][entry.entry_id][sub_device.sid] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = {
+        CONF_GATEWAY: gateway.gateway_device,
+        KEY_COORDINATOR: coordinator,
+    }
 
     for component in GATEWAY_PLATFORMS:
         hass.async_create_task(
