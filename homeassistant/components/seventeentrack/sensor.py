@@ -244,7 +244,7 @@ class SeventeenTrackPackageSensor(Entity):
 
     async def _remove(self, *_):
         """Remove entity itself."""
-        await self.async_remove()
+        await self.async_remove(force_remove=True)
 
         reg = await self.hass.helpers.entity_registry.async_get_registry()
         entity_id = reg.async_get_entity_id(
