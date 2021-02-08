@@ -58,7 +58,7 @@ PASSWORD = "password"
 @pytest.fixture(name="service")
 def mock_controller_service():
     """Mock a successful service."""
-    with patch("homeassistant.components.netgear.config_flow.Netgear") as service_mock:
+    with patch("homeassistant.components.netgear.router.Netgear") as service_mock:
         service_mock.return_value.get_info = Mock(return_value=ROUTER_INFOS)
         yield service_mock
 
@@ -66,7 +66,7 @@ def mock_controller_service():
 @pytest.fixture(name="service_failed")
 def mock_controller_service_failed():
     """Mock a failed service."""
-    with patch("homeassistant.components.netgear.config_flow.Netgear") as service_mock:
+    with patch("homeassistant.components.netgear.router.Netgear") as service_mock:
         service_mock.return_value.login = Mock(return_value=None)
         service_mock.return_value.get_info = Mock(return_value=None)
         yield service_mock
