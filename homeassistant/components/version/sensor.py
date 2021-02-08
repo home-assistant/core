@@ -34,6 +34,8 @@ ALL_IMAGES = [
     "odroid-c2",
     "odroid-n2",
     "odroid-xu",
+    "jethub-d1",
+    "jethub-h1",
 ]
 ALL_SOURCES = ["local", "pypi", "hassio", "docker", "haio"]
 

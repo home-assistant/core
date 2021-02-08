@@ -148,6 +148,10 @@ stages:
           buildMachine: 'odroid-c4'
         odroid-n2:
           buildMachine: 'odroid-n2'
+        jethub-d1:
+          buildMachine: 'jethub-d1'
+        jethub-h1:
+          buildMachine: 'jethub-h1'
     steps:
     - template: templates/azp-step-ha-version.yaml@azure
     - script: |
