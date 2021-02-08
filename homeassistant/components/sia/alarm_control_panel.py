@@ -41,7 +41,7 @@ from .const import (
     PING_INTERVAL_MARGIN,
     SIA_EVENT,
 )
-from .helpers import GET_ENTITY_AND_NAME, GET_PING_INTERVAL
+from .helpers import get_entity_and_name, get_ping_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ async def async_setup_entry(
     async_add_devices(
         [
             SIAAlarmControlPanel(
-                *GET_ENTITY_AND_NAME(
+                *get_entity_and_name(
                     entry.data[CONF_PORT], acc[CONF_ACCOUNT], zone, DEVICE_CLASS_ALARM
                 ),
                 entry.data[CONF_PORT],
@@ -115,7 +115,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         self._port = port
         self._account = account
         self._zone = zone
-        self._ping_interval = GET_PING_INTERVAL(ping_interval)
+        self._ping_interval = get_ping_interval(ping_interval)
         self._event_listener_str = f"{SIA_EVENT}_{port}_{account}"
         self._unsub = None
 

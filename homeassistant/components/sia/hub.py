@@ -11,6 +11,7 @@ from .const import (
     CONF_ACCOUNT,
     CONF_ACCOUNTS,
     CONF_ENCRYPTION_KEY,
+    CONF_IGNORE_TIMESTAMPS,
     DOMAIN,
     EVENT_ACCOUNT,
     EVENT_CODE,
@@ -22,7 +23,8 @@ from .const import (
     SIA_EVENT,
 )
 
-ALLOWED_TIMEBAND = (300, 150)
+DEFAULT_TIMEBAND = (80, 40)
+IGNORED_TIMEBAND = (3600, 1800)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +44,13 @@ class SIAHub:
 
         self._remove_shutdown_listener = None
         self.sia_accounts = [
-            SIAAccount(a[CONF_ACCOUNT], a.get(CONF_ENCRYPTION_KEY), ALLOWED_TIMEBAND)
+            SIAAccount(
+                a[CONF_ACCOUNT],
+                a.get(CONF_ENCRYPTION_KEY),
+                IGNORED_TIMEBAND
+                if hub_config[CONF_IGNORE_TIMESTAMPS]
+                else DEFAULT_TIMEBAND,
+            )
             for a in self._accounts
         ]
         self.sia_client = SIAClient(
@@ -72,6 +80,12 @@ class SIAHub:
 
     async def async_create_and_fire_event(self, event: SIAEvent):
         """Create a event on HA's bus, with the data from the SIAEvent."""
+        _LOGGER.debug(
+            "Adding event to bus for code %s for account %s and port %s",
+            event.code,
+            event.account,
+            self._port,
+        )
         self._hass.bus.async_fire(
             event_type=f"{SIA_EVENT}_{self._port}_{event.account}",
             event_data={

@@ -11,6 +11,7 @@ CONF_ADDITIONAL_ACCOUNTS = "additional_account"
 CONF_PING_INTERVAL = "ping_interval"
 CONF_ENCRYPTION_KEY = "encryption_key"
 CONF_ZONES = "zones"
+CONF_IGNORE_TIMESTAMPS = "ignore_timestamps"
 
 DOMAIN = "sia"
 DATA_UPDATED = f"{DOMAIN}_data_updated"

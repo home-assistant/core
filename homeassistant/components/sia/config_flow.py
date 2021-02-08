@@ -19,6 +19,7 @@ from .const import (
     CONF_ACCOUNTS,
     CONF_ADDITIONAL_ACCOUNTS,
     CONF_ENCRYPTION_KEY,
+    CONF_IGNORE_TIMESTAMPS,
     CONF_PING_INTERVAL,
     CONF_ZONES,
     DOMAIN,
@@ -34,6 +35,7 @@ HUB_SCHEMA = vol.Schema(
         vol.Optional(CONF_ENCRYPTION_KEY): str,
         vol.Required(CONF_PING_INTERVAL, default=1): int,
         vol.Required(CONF_ZONES, default=1): int,
+        vol.Required(CONF_IGNORE_TIMESTAMPS, default=False): bool,
         vol.Optional(CONF_ADDITIONAL_ACCOUNTS, default=False): bool,
     }
 )
@@ -44,6 +46,7 @@ ACCOUNT_SCHEMA = vol.Schema(
         vol.Optional(CONF_ENCRYPTION_KEY): str,
         vol.Required(CONF_PING_INTERVAL, default=1): int,
         vol.Required(CONF_ZONES, default=1): int,
+        vol.Required(CONF_IGNORE_TIMESTAMPS, default=False): bool,
         vol.Optional(CONF_ADDITIONAL_ACCOUNTS, default=False): bool,
     }
 )
@@ -56,13 +59,13 @@ def validate_input(data: dict) -> bool:
     try:
         ping = int(data[CONF_PING_INTERVAL])
         assert 1 <= ping <= 1440
-    except AssertionError:
-        raise InvalidPing
+    except AssertionError as invalid_ping:
+        raise InvalidPing from invalid_ping
     try:
         zones = int(data[CONF_ZONES])
         assert zones > 0
-    except AssertionError:
-        raise InvalidZones
+    except AssertionError as invalid_zone:
+        raise InvalidZones from invalid_zone
 
     return True
 
@@ -121,6 +124,9 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                     ),
                                     CONF_PING_INTERVAL: user_input[CONF_PING_INTERVAL],
                                     CONF_ZONES: user_input[CONF_ZONES],
+                                    CONF_IGNORE_TIMESTAMPS: user_input[
+                                        CONF_IGNORE_TIMESTAMPS
+                                    ],
                                 }
                             ],
                         }
