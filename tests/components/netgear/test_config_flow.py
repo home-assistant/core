@@ -100,6 +100,7 @@ async def test_user(hass, service):
     assert result["data"].get(CONF_SSL) == SSL
     assert result["data"].get(CONF_USERNAME) == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["placeholders"][CONF_URL] is None
 
 
 async def test_import_required(hass, autodetect_url, service):
@@ -116,6 +117,7 @@ async def test_import_required(hass, autodetect_url, service):
     assert result["data"].get(CONF_SSL) is None
     assert result["data"].get(CONF_USERNAME) is None
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["placeholders"][CONF_URL] is None
 
 
 async def test_import_required_login_failed(hass, autodetect_url, service_failed):
@@ -124,8 +126,9 @@ async def test_import_required_login_failed(hass, autodetect_url, service_failed
         DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_PASSWORD: PASSWORD}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "link"
+    assert result["step_id"] == "user"
     assert result["errors"] == {"base": "config"}
+    assert result["placeholders"][CONF_URL] is None
 
 
 async def test_import_all(hass, autodetect_url, service):
@@ -150,6 +153,7 @@ async def test_import_all(hass, autodetect_url, service):
     assert result["data"].get(CONF_SSL) == SSL
     assert result["data"].get(CONF_USERNAME) == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["placeholders"][CONF_URL] is None
 
 
 async def test_import_all_connection_failed(hass, autodetect_url, service_failed):
@@ -168,6 +172,7 @@ async def test_import_all_connection_failed(hass, autodetect_url, service_failed
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "config"}
+    assert result["placeholders"][CONF_URL] is None
 
 
 async def test_abort_if_already_setup(hass, autodetect_url, service):
@@ -186,6 +191,7 @@ async def test_abort_if_already_setup(hass, autodetect_url, service):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+    assert result["placeholders"][CONF_URL] is None
 
     # Should fail, same SERIAL (flow)
     result = await hass.config_entries.flow.async_init(
@@ -200,6 +206,7 @@ async def test_abort_if_already_setup(hass, autodetect_url, service):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+    assert result["placeholders"][CONF_URL] is None
 
 
 async def test_form_ssdp_already_configured(hass):
@@ -222,6 +229,7 @@ async def test_form_ssdp_already_configured(hass):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+    assert result["placeholders"][CONF_URL] == f"http://{HOST}"
 
 
 async def test_form_ssdp(hass, autodetect_url, service):
@@ -237,7 +245,7 @@ async def test_form_ssdp(hass, autodetect_url, service):
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "link"
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: PASSWORD}
@@ -251,3 +259,4 @@ async def test_form_ssdp(hass, autodetect_url, service):
     assert result["data"].get(CONF_SSL) is None
     assert result["data"].get(CONF_USERNAME) is None
     assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["placeholders"][CONF_URL] == f"http://{HOST}"
