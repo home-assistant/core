@@ -8,6 +8,8 @@ from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_EXCLUDE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -24,6 +26,8 @@ from .const import DEVICE_ICONS, DOMAIN
 from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_APS = "accesspoints"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
