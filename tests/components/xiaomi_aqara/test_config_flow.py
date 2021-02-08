@@ -7,11 +7,12 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_aqara import config_flow, const
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_PROTOCOL
 
 ZEROCONF_NAME = "name"
 ZEROCONF_PROP = "properties"
 ZEROCONF_MAC = "mac"
+const.CONF_PROTOCOL = CONF_PROTOCOL
 
 TEST_HOST = "1.2.3.4"
 TEST_HOST_2 = "5.6.7.8"
