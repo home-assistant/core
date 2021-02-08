@@ -178,6 +178,7 @@ class APIDiscoveryView(HomeAssistantView):
     requires_auth = False
     url = URL_API_DISCOVERY_INFO
     name = "api:discovery"
+    cors_allowed = True
 
     async def get(self, request):
         """Get discovery information."""
