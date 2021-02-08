@@ -117,12 +117,13 @@ class CmusDevice(MediaPlayerEntity):
         except BrokenPipeError:
             self._remote.connect()
         except exceptions.ConfigurationError:
-            self._remote.connect()
             _LOGGER.warning("A configuration error occurred")
-        if "status" not in locals():
-            _LOGGER.warning("Received no status from cmus")
+            self._remote.connect()
         else:
             self.status = status
+            return
+
+        _LOGGER.warning("Received no status from cmus")
 
     @property
     def name(self):
