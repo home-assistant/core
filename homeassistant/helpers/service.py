@@ -669,10 +669,14 @@ def async_register_admin_service(
 
 @bind_hass
 @ha.callback
-def verify_domain_control(hass: HomeAssistantType, domain: str) -> Callable:
+def verify_domain_control(
+    hass: HomeAssistantType, domain: str
+) -> Callable[[Callable[[ha.ServiceCall], Any]], Callable[[ha.ServiceCall], Any]]:
     """Ensure permission to access any entity under domain in service call."""
 
-    def decorator(service_handler: Callable[[ha.ServiceCall], Any]) -> Callable:
+    def decorator(
+        service_handler: Callable[[ha.ServiceCall], Any]
+    ) -> Callable[[ha.ServiceCall], Any]:
         """Decorate."""
         if not asyncio.iscoroutinefunction(service_handler):
             raise HomeAssistantError("Can only decorate async functions.")
