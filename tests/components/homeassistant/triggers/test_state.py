@@ -1011,51 +1011,6 @@ async def test_if_fires_on_change_with_for_template_4(hass, calls):
     assert len(calls) == 1
 
 
-async def test_if_fires_on_change_with_for_template_5(hass, calls):
-    """Test for firing on change with for template."""
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger_variables": {"seconds": 5},
-                "trigger": {
-                    "platform": "state",
-                    "entity_id": "test.entity",
-                    "to": "world",
-                    "for": {"seconds": "{{ seconds }}"},
-                },
-                "action": [
-                    {
-                        "wait_for_trigger": {
-                            "platform": "state",
-                            "entity_id": "test.entity",
-                            "to": "moon",
-                            "for": {"seconds": "{{ seconds * 2 }}"},
-                        }
-                    },
-                    {"service": "test.automation"},
-                ],
-            }
-        },
-    )
-
-    hass.states.async_set("test.entity", "world")
-    await hass.async_block_till_done()
-    assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
-    await hass.async_block_till_done(1)
-    await hass.async_block_till_done(1)
-    assert len(calls) == 0
-
-    hass.states.async_set("test.entity", "moon")
-    await hass.async_block_till_done(1)
-    assert len(calls) == 0
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-
-
 async def test_if_fires_on_change_from_with_for(hass, calls):
     """Test for firing on change with from/for."""
     assert await async_setup_component(
