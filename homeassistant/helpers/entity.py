@@ -65,7 +65,6 @@ def async_generate_entity_id(
     hass: Optional[HomeAssistant] = None,
 ) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
-
     name = (name or DEVICE_DEFAULT_NAME).lower()
     preferred_string = entity_id_format.format(slugify(name))
 
