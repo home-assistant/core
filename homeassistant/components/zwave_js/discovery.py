@@ -130,6 +130,7 @@ DISCOVERY_SCHEMAS = [
             "Multilevel Remote Switch",
             "Multilevel Power Switch",
             "Multilevel Scene Switch",
+            "Unused",
         },
         command_class={CommandClass.SWITCH_MULTILEVEL},
         property={"currentValue"},
