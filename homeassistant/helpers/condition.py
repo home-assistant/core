@@ -574,23 +574,34 @@ def zone(
 
     Async friendly.
     """
+    if zone_ent is None:
+        raise ConditionError("No zone specified")
+
     if isinstance(zone_ent, str):
+        zone_ent_id = zone_ent
         zone_ent = hass.states.get(zone_ent)
 
-    if zone_ent is None:
-        return False
-
-    if isinstance(entity, str):
-        entity = hass.states.get(entity)
+        if zone_ent is None:
+            raise ConditionError(f"Unknown zone {zone_ent_id}")
 
     if entity is None:
-        return False
+        raise ConditionError("No entity specified")
+
+    if isinstance(entity, str):
+        entity_id = entity
+        entity = hass.states.get(entity)
+
+        if entity is None:
+            raise ConditionError(f"Unknown entity {entity_id}")
 
     latitude = entity.attributes.get(ATTR_LATITUDE)
     longitude = entity.attributes.get(ATTR_LONGITUDE)
 
-    if latitude is None or longitude is None:
-        return False
+    if latitude is None:
+        raise ConditionError(f"Entity {entity_id} has no 'latitude' attribute")
+
+    if longitude is None:
+        raise ConditionError(f"Entity {entity_id} has no 'longitude' attribute")
 
     return zone_cmp.in_zone(
         zone_ent, latitude, longitude, entity.attributes.get(ATTR_GPS_ACCURACY, 0)
