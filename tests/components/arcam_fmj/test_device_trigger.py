@@ -7,7 +7,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
     mock_device_registry,
@@ -55,7 +54,13 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         },
     ]
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
-    assert_lists_same(triggers, expected_triggers)
+
+    # Test triggers are either arcam_fmj specific or media_player entity triggers
+    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    for expected_trigger in expected_triggers:
+        assert expected_trigger in triggers
+    for trigger in triggers:
+        assert trigger in expected_triggers or trigger["domain"] == "media_player"
 
 
 async def test_if_fires_on_turn_on_request(hass, calls, player_setup, state):
