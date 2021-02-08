@@ -7,8 +7,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
-
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
@@ -24,7 +22,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def in_range(self, socket_number):
         """Verify that input is between the range of 1 and 4."""
-        if socket_number >= 1 and socket_number <= 4:
+        if 1 <= socket_number <= 4:
             return True
         raise InvalidRange
 
