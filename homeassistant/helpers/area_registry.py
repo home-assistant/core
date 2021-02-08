@@ -11,6 +11,8 @@ from homeassistant.util import slugify
 
 from .typing import HomeAssistantType
 
+# mypy: disallow-any-generics
+
 DATA_REGISTRY = "area_registry"
 EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
 STORAGE_KEY = "core.area_registry"
@@ -25,7 +27,7 @@ class AreaEntry:
     name: str = attr.ib()
     id: Optional[str] = attr.ib(default=None)
 
-    def generate_id(self, existing_ids: Container) -> None:
+    def generate_id(self, existing_ids: Container[str]) -> None:
         """Initialize ID."""
         suggestion = suggestion_base = slugify(self.name)
         tries = 1
