@@ -171,8 +171,8 @@ class TransmissionClient:
         """Initialize the Transmission RPC API."""
         self.hass = hass
         self.config_entry = config_entry
-        self.tm_api = None  # type: transmissionrpc.Client
-        self._tm_data = None  # type: TransmissionData
+        self.tm_api: transmissionrpc.Client = None
+        self._tm_data: TransmissionData = None
         self.unsub_timer = None
 
     @property
@@ -343,14 +343,14 @@ class TransmissionData:
         """Initialize the Transmission RPC API."""
         self.hass = hass
         self.config = config
-        self.data = None  # type: transmissionrpc.Session
-        self.available = True  # type: bool
-        self._all_torrents = []  # type: List[transmissionrpc.Torrent]
-        self._api = api  # type: transmissionrpc.Client
-        self._completed_torrents = []  # type: List[transmissionrpc.Torrent]
-        self._session = None  # type: transmissionrpc.Session
-        self._started_torrents = []  # type: List[transmissionrpc.Torrent]
-        self._torrents = []  # type: List[transmissionrpc.Torrent]
+        self.data: transmissionrpc.Session = None
+        self.available: bool = True
+        self._all_torrents: List[transmissionrpc.Torrent] = []
+        self._api: transmissionrpc.Client = api
+        self._completed_torrents: List[transmissionrpc.Torrent] = []
+        self._session: transmissionrpc.Session = None
+        self._started_torrents: List[transmissionrpc.Torrent] = []
+        self._torrents: List[transmissionrpc.Torrent] = []
 
     @property
     def host(self):
