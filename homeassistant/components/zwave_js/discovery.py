@@ -345,10 +345,20 @@ DISCOVERY_SCHEMAS = [
             command_class={CommandClass.SWITCH_BINARY}, property={"currentValue"}
         ),
     ),
+    # binary switch
+    # barrier operator signaling states
+    ZWaveDiscoverySchema(
+        platform="switch",
+        hint="barrier_event_signaling_state",
+        command_class={CommandClass.BARRIER_OPERATOR},
+        property={"signalingState"},
+        type={"number"},
+    ),
     # cover
+    # window coverings
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="cover",
+        hint="window_cover",
         device_class_generic={"Multilevel Switch"},
         device_class_specific={
             "Motor Control Class A",
@@ -361,6 +371,19 @@ DISCOVERY_SCHEMAS = [
             property={"currentValue"},
             type={"number"},
         ),
+    ),
+    # cover
+    # motorized barriers
+    ZWaveDiscoverySchema(
+        platform="cover",
+        hint="motorized_barrier",
+        device_class_generic={"Entry Control"},
+        device_class_specific={
+            "Secure Barrier Add-on",
+        },
+        command_class={CommandClass.BARRIER_OPERATOR},
+        property={"currentState"},
+        type={"number"},
     ),
     # fan
     ZWaveDiscoverySchema(
