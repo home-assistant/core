@@ -508,7 +508,9 @@ def time(
     elif isinstance(after, str):
         after_entity = hass.states.get(after)
         if not after_entity:
-            return False
+            raise ConditionError(
+                f"Error in 'time' condition: The 'after' entity {after} is not available"
+            )
         after = dt_util.dt.time(
             after_entity.attributes.get("hour", 23),
             after_entity.attributes.get("minute", 59),
@@ -520,7 +522,9 @@ def time(
     elif isinstance(before, str):
         before_entity = hass.states.get(before)
         if not before_entity:
-            return False
+            raise ConditionError(
+                f"Error in 'time' condition: The 'before' entity {before} is not available"
+            )
         before = dt_util.dt.time(
             before_entity.attributes.get("hour", 23),
             before_entity.attributes.get("minute", 59),
