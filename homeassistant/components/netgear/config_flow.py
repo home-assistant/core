@@ -65,7 +65,7 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self.placeholders.get(CONF_URL):
             user_input.update({CONF_URL: self.placeholders[CONF_URL]})
-            step_id = "link"
+            step_id = "ssdp_confirm"
             data_schema = _discovery_schema_with_defaults(user_input)
         else:
             step_id = "user"
@@ -142,9 +142,9 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.placeholders[
             CONF_URL
         ] = f"http://{urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname}/"
-        return await self.async_step_link()
+        return await self.async_step_ssdp_confirm()
 
-    async def async_step_link(self, user_input=None):
+    async def async_step_ssdp_confirm(self, user_input=None):
         """Link a config entry from discovery."""
         if not user_input:
             return await self._show_setup_form(user_input)
