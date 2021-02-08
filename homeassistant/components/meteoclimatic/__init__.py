@@ -5,7 +5,7 @@ import logging
 from meteoclimatic import MeteoclimaticClient
 from meteoclimatic.exceptions import MeteoclimaticError
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -16,7 +16,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Set up Meteoclimatic weather platform."""
+    """Set up Meteoclimatic from legacy config file."""
+    conf = config.get(DOMAIN)
+    if not conf:
+        return True
+
+    for station_conf in conf:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=station_conf
+            )
+        )
+
     return True
 
 
