@@ -162,18 +162,20 @@ async def test_trigger_service_ignoring_condition(hass, calls):
                 "alias": "test",
                 "trigger": [{"platform": "event", "event_type": "test_event"}],
                 "condition": {
-                    "condition": "state",
+                    "condition": "numeric_state",
                     "entity_id": "non.existing",
-                    "state": "beer",
+                    "above": "1",
                 },
                 "action": {"service": "test.automation"},
             }
         },
     )
 
-    hass.bus.async_fire("test_event")
-    await hass.async_block_till_done()
-    assert len(calls) == 0
+    with patch("homeassistant.components.automation.LOGGER.warning") as logwarn:
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+        assert len(calls) == 0
+        assert len(logwarn.mock_calls) == 1
 
     await hass.services.async_call(
         "automation", "trigger", {"entity_id": "automation.test"}, blocking=True
