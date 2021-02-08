@@ -3,7 +3,12 @@ import logging
 
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, text
 from sqlalchemy.engine import reflection
-from sqlalchemy.exc import InternalError, OperationalError, SQLAlchemyError
+from sqlalchemy.exc import (
+    InternalError,
+    OperationalError,
+    ProgrammingError,
+    SQLAlchemyError,
+)
 from sqlalchemy.schema import AddConstraint, DropConstraint
 
 from .const import DOMAIN
@@ -69,17 +74,10 @@ def _create_index(engine, table_name, index_name):
     )
     try:
         index.create(engine)
-    except OperationalError as err:
+    except (InternalError, ProgrammingError, OperationalError) as err:
         lower_err_str = str(err).lower()
 
         if "already exists" not in lower_err_str and "duplicate" not in lower_err_str:
-            raise
-
-        _LOGGER.warning(
-            "Index %s already exists on %s, continuing", index_name, table_name
-        )
-    except InternalError as err:
-        if "duplicate" not in str(err).lower():
             raise
 
         _LOGGER.warning(

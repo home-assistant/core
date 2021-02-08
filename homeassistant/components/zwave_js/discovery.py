@@ -130,6 +130,7 @@ DISCOVERY_SCHEMAS = [
             "Multilevel Remote Switch",
             "Multilevel Power Switch",
             "Multilevel Scene Switch",
+            "Unused",
         },
         command_class={CommandClass.SWITCH_MULTILEVEL},
         property={"currentValue"},
@@ -142,6 +143,7 @@ DISCOVERY_SCHEMAS = [
         command_class={
             CommandClass.SENSOR_BINARY,
             CommandClass.BATTERY,
+            CommandClass.SENSOR_ALARM,
         },
         type={"boolean"},
     ),
