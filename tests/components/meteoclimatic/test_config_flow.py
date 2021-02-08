@@ -1,4 +1,6 @@
 """Tests for the Meteoclimatic config flow."""
+from unittest.mock import patch
+
 from meteoclimatic.exceptions import MeteoclimaticError, StationNotFound
 import pytest
 
@@ -6,7 +8,6 @@ from homeassistant import data_entry_flow
 from homeassistant.components.meteoclimatic.const import CONF_STATION_CODE, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 TEST_STATION_CODE = "ESCAT4300000043206B"

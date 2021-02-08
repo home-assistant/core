@@ -21,7 +21,6 @@ class MeteoclimaticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
-
         if user_input is None:
             user_input = {}
 

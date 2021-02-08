@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Meteoclimatic",
-        "description": "Enter the Meteoclimatic station code (e.g. ESCAT4300000043206B)",
+        "description": "Enter the Meteoclimatic station code (e.g., ESCAT4300000043206B)",
         "data": {
           "code": "Station code"
         }
