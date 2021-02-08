@@ -464,7 +464,7 @@ def async_template(
     try:
         value: str = value_template.async_render(variables, parse_result=False)
     except TemplateError as ex:
-        raise ConditionError(f"Error in 'template' condition: {ex}")
+        raise ConditionError(f"Error in 'template' condition: {ex}") from ex
 
     return value.lower() == "true"
 
