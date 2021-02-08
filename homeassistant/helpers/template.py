@@ -1292,7 +1292,6 @@ def relative_time(value):
 
     If the input are not a datetime object the input will be returned unmodified.
     """
-
     if not isinstance(value, datetime):
         return value
     if not value.tzinfo:

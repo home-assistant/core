@@ -299,7 +299,6 @@ def _async_remove_indexed_listeners(
     job: HassJob,
 ) -> None:
     """Remove a listener."""
-
     callbacks = hass.data[data_key]
 
     for storage_key in storage_keys:
@@ -686,7 +685,6 @@ def async_track_template(
     Callable to unregister the listener.
 
     """
-
     job = HassJob(action)
 
     @callback
@@ -1105,7 +1103,6 @@ def async_track_point_in_time(
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in time."""
-
     job = action if isinstance(action, HassJob) else HassJob(action)
 
     @callback
@@ -1329,7 +1326,6 @@ def async_track_utc_time_change(
     local: bool = False,
 ) -> CALLBACK_TYPE:
     """Add a listener that will fire if time matches a pattern."""
-
     job = HassJob(action)
     # We do not have to wrap the function with time pattern matching logic
     # if no pattern given

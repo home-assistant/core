@@ -51,7 +51,6 @@ def create_async_httpx_client(
 
     This method must be run in the event loop.
     """
-
     client = httpx.AsyncClient(
         verify=verify_ssl,
         headers={USER_AGENT: SERVER_SOFTWARE},
