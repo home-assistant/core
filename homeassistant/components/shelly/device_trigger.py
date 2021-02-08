@@ -93,17 +93,15 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     config = TRIGGER_SCHEMA(config)
-    event_config = event_trigger.TRIGGER_SCHEMA(
-        {
-            event_trigger.CONF_PLATFORM: CONF_EVENT,
-            event_trigger.CONF_EVENT_TYPE: EVENT_SHELLY_CLICK,
-            event_trigger.CONF_EVENT_DATA: {
-                ATTR_DEVICE_ID: config[CONF_DEVICE_ID],
-                ATTR_CHANNEL: INPUTS_EVENTS_SUBTYPES[config[CONF_SUBTYPE]],
-                ATTR_CLICK_TYPE: config[CONF_TYPE],
-            },
-        }
-    )
+    event_config = {
+        event_trigger.CONF_PLATFORM: CONF_EVENT,
+        event_trigger.CONF_EVENT_TYPE: EVENT_SHELLY_CLICK,
+        event_trigger.CONF_EVENT_DATA: {
+            ATTR_DEVICE_ID: config[CONF_DEVICE_ID],
+            ATTR_CHANNEL: INPUTS_EVENTS_SUBTYPES[config[CONF_SUBTYPE]],
+            ATTR_CLICK_TYPE: config[CONF_TYPE],
+        },
+    }
     event_config = event_trigger.TRIGGER_SCHEMA(event_config)
     return await event_trigger.async_attach_trigger(
         hass, event_config, action, automation_info, platform_type="device"
