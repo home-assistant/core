@@ -54,7 +54,7 @@ async def async_get_scanner(hass, config):
         "please remove it from configuration.yaml. Loading Netgear via platform setup is now deprecated."
     )
 
-    return True
+    return None
 
 
 async def async_setup_entry(
