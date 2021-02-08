@@ -62,7 +62,7 @@ async def async_setup_gateway_entry(
         return False
     gateway_info = gateway.gateway_info
 
-    hass.data[DOMAIN][entry.entry_id][CONF_GATEWAY] = gateway.gateway_device
+    hass.data[DOMAIN][entry.entry_id] = {CONF_GATEWAY: gateway.gateway_device}
 
     gateway_model = f"{gateway_info.model}-{gateway_info.hardware_version}"
 
