@@ -133,12 +133,6 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
 class BondDownLight(BondBaseLight, BondEntity, LightEntity):
     """Representation of a Bond light."""
 
-    def __init__(
-        self, hub: BondHub, device: BondDevice, sub_device: Optional[str] = None
-    ):
-        """Create HA entity representing Bond fan."""
-        super().__init__(hub, device, sub_device)
-
     def _apply_state(self, state: dict):
         self._light = state.get("down_light")
 
@@ -157,12 +151,6 @@ class BondDownLight(BondBaseLight, BondEntity, LightEntity):
 
 class BondUpLight(BondBaseLight, BondEntity, LightEntity):
     """Representation of a Bond light."""
-
-    def __init__(
-        self, hub: BondHub, device: BondDevice, sub_device: Optional[str] = None
-    ):
-        """Create HA entity representing Bond fan."""
-        super().__init__(hub, device, sub_device)
 
     def _apply_state(self, state: dict):
         self._light = state.get("up_light")
