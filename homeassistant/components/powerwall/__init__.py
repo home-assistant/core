@@ -124,21 +124,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         """Fetch data from API endpoint."""
         # Check if we had an error before
         _LOGGER.debug("Checking if update failed")
-        if not hass.data[DOMAIN][entry.entry_id][POWERWALL_API_CHANGED]:
-            _LOGGER.debug("Updating data")
-            try:
-                return await hass.async_add_executor_job(
-                    _fetch_powerwall_data, power_wall
-                )
-            except PowerwallUnreachableError as err:
-                raise UpdateFailed("Unable to fetch data from powerwall") from err
-            except MissingAttributeError as err:
-                await _async_handle_api_changed_error(hass, err)
-                hass.data[DOMAIN][entry.entry_id][POWERWALL_API_CHANGED] = True
-                # Returns the cached data. This data can also be None
-                return hass.data[DOMAIN][entry.entry_id][POWERWALL_COORDINATOR].data
-        else:
+        if hass.data[DOMAIN][entry.entry_id][POWERWALL_API_CHANGED]:
             return hass.data[DOMAIN][entry.entry_id][POWERWALL_COORDINATOR].data
+
+        _LOGGER.debug("Updating data")
+        try:
+            return await _async_update_powerwall_data(hass, entry, power_wall)
+        except AccessDeniedError:
+            if password is None:
+                return
+
+            # If the session expired, relogin, and try again
+            await hass.async_add_executor_job(power_wall.login, "", password)
+            return await _async_update_powerwall_data(hass, entry, power_wall)
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -166,6 +164,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
 
     return True
+
+
+async def _async_update_powerwall_data(
+    hass: HomeAssistant, entry: ConfigEntry, power_wall: Powerwall
+):
+    """Fetch updated powerwall data."""
+    try:
+        return await hass.async_add_executor_job(_fetch_powerwall_data, power_wall)
+    except PowerwallUnreachableError as err:
+        raise UpdateFailed("Unable to fetch data from powerwall") from err
+    except MissingAttributeError as err:
+        await _async_handle_api_changed_error(hass, err)
+        hass.data[DOMAIN][entry.entry_id][POWERWALL_API_CHANGED] = True
+        # Returns the cached data. This data can also be None
+        return hass.data[DOMAIN][entry.entry_id][POWERWALL_COORDINATOR].data
 
 
 def _async_start_reauth(hass: HomeAssistant, entry: ConfigEntry):
