@@ -401,12 +401,9 @@ class TransmissionData:
             torrent.name for torrent in self._completed_torrents
         }
 
-        current_completed_torrents = []
-        current_completed_torrent_names = set()
-        for torrent in self._torrents:
-            if torrent.status == "seeding":
-                current_completed_torrents.append(torrent)
-                current_completed_torrent_names.add(torrent.name)
+        current_completed_torrents = [
+            torrent for torrent in self._torrents if torrent.status == "seeding"
+        ]
 
         for torrent in current_completed_torrents:
             if torrent.name not in old_completed_torrent_names:
@@ -420,12 +417,9 @@ class TransmissionData:
         """Get started torrent functionality."""
         old_started_torrent_names = {torrent.name for torrent in self._started_torrents}
 
-        current_started_torrents = []
-        current_started_torrent_names = set()
-        for torrent in self._torrents:
-            if torrent.status == "downloading":
-                current_started_torrents.append(torrent)
-                current_started_torrent_names.add(torrent.name)
+        current_started_torrents = [
+            torrent for torrent in self._torrents if torrent.status == "downloading"
+        ]
 
         for torrent in current_started_torrents:
             if torrent.name not in old_started_torrent_names:
