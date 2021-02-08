@@ -86,18 +86,6 @@ async def test_user_already_configured(hass):
     assert result["reason"] == "one_instance_only"
 
 
-async def test_import_with_no_config(hass):
-    """Test importing a host without an existing config file."""
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN,
-        context={"source": "import"},
-        data={const.CONF_DEVICE: const.DEFAULT_CONF_USB_STICK_PATH},
-    )
-    assert result["type"] == "create_entry"
-    print(result)
-    assert result["data"][const.CONF_DEVICE] == const.DEFAULT_CONF_USB_STICK_PATH
-    
-
 def test_get_serial_by_id_no_dir():
     """Test serial by id conversion if there's no /dev/serial/by-id."""
     p1 = patch("os.path.isdir", MagicMock(return_value=False))
