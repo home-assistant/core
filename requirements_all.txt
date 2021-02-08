@@ -1460,6 +1460,9 @@ pyhiveapi==0.4.2
 # homeassistant.components.homematic
 pyhomematic==0.1.72
 
+# homeassistant.components.homepilot
+pyhomepilot==0.0.1
+
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
 

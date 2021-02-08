@@ -108,6 +108,7 @@ FLOWS = [
     "homekit",
     "homekit_controller",
     "homematicip_cloud",
+    "homepilot",
     "huawei_lte",
     "hue",
     "huisbaasje",

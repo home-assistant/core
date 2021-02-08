@@ -1,0 +1,16 @@
+{
+  "domain": "homepilot",
+  "name": "Rademacher HomePilot",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/homepilot",
+  "requirements": [
+    "pyhomepilot==0.0.1"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@nico0302"
+  ]
+}
