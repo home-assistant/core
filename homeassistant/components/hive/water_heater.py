@@ -109,4 +109,3 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.hotwater.get_hotwater(self.device)
-        self.attributes.update(self.device.get("attributes", {}))

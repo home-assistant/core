@@ -19,11 +19,10 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_AVAILABLE = "available"
-CONF_MODE = "mode"
+ATTR_AVAILABLE = "available"
+ATTR_MODE = "mode"
 DOMAIN = "hive"
 DATA_HIVE = "data_hive"
-ENTITY_LOOKUP = {}
 SERVICES = ["Heating", "HotWater", "TRV"]
 SERVICE_BOOST_HOT_WATER = "boost_hot_water"
 SERVICE_BOOST_HEATING = "boost_heating"
@@ -77,8 +76,10 @@ async def async_setup(hass, config):
 
     async def heating_boost(service):
         """Handle the service call."""
-        node_id = ENTITY_LOOKUP.get(service.data[ATTR_ENTITY_ID])
-        if not node_id:
+
+        entity_lookup = hass.data[DATA_HIVE]["entity_lookup"]
+        entity = entity_lookup.get(service.data[ATTR_ENTITY_ID])
+        if not entity:
             # log or raise error
             _LOGGER.error("Cannot boost entity id entered")
             return
@@ -86,12 +87,13 @@ async def async_setup(hass, config):
         minutes = service.data[ATTR_TIME_PERIOD]
         temperature = service.data[ATTR_TEMPERATURE]
 
-        hive.heating.turn_boost_on(node_id, minutes, temperature)
+        hive.heating.turn_boost_on(entity, minutes, temperature)
 
     async def hot_water_boost(service):
         """Handle the service call."""
-        node_id = ENTITY_LOOKUP.get(service.data[ATTR_ENTITY_ID])
-        if not node_id:
+        entity_lookup = hass.data[DATA_HIVE]["entity_lookup"]
+        entity = entity_lookup.get(service.data[ATTR_ENTITY_ID])
+        if not entity:
             # log or raise error
             _LOGGER.error("Cannot boost entity id entered")
             return
@@ -99,9 +101,9 @@ async def async_setup(hass, config):
         mode = service.data[ATTR_MODE]
 
         if mode == "on":
-            hive.hotwater.turn_boost_on(node_id, minutes)
+            hive.hotwater.turn_boost_on(entity, minutes)
         elif mode == "off":
-            hive.hotwater.turn_boost_off(node_id)
+            hive.hotwater.turn_boost_off(entity)
 
     hive = Hive()
 
@@ -166,7 +168,9 @@ class HiveEntity(Entity):
     async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state())
+            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
         )
         if self.device["hiveType"] in SERVICES:
-            ENTITY_LOOKUP[self.entity_id] = self.device["hiveID"]
+            self.hass.data[DATA_HIVE]["entity_lookup"] = {}
+            entity_lookup = self.hass.data[DATA_HIVE]["entity_lookup"]
+            entity_lookup[self.entity_id] = self.device["hiveID"]
