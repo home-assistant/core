@@ -1,4 +1,6 @@
 """Test the Canary config flow."""
+from unittest.mock import patch
+
 from requests import ConnectTimeout, HTTPError
 
 from homeassistant.components.canary.const import (
@@ -17,8 +19,6 @@ from homeassistant.data_entry_flow import (
 from homeassistant.setup import async_setup_component
 
 from . import USER_INPUT, _patch_async_setup, _patch_async_setup_entry, init_integration
-
-from tests.async_mock import patch
 
 
 async def test_user_form(hass, canary_config_flow):
@@ -103,7 +103,7 @@ async def test_user_form_single_instance_allowed(hass, canary_config_flow):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass, canary):
     """Test updating options."""
     with patch("homeassistant.components.canary.PLATFORMS", []):
         entry = await init_integration(hass)

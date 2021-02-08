@@ -21,8 +21,10 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
+    LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
+    LENGTH_MILLIMETERS,
     PRESSURE_HPA,
     PRESSURE_INHG,
     TEMP_CELSIUS,
@@ -32,7 +34,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 
-from .const import ATTR_MAP, CONDITIONS_MAP, CONF_TRACK_HOME, DOMAIN, FORECAST_MAP
+from .const import (
+    ATTR_FORECAST_PRECIPITATION,
+    ATTR_MAP,
+    CONDITIONS_MAP,
+    CONF_TRACK_HOME,
+    DOMAIN,
+    FORECAST_MAP,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -217,11 +226,32 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
             if not set(met_item).issuperset(required_keys):
                 continue
             ha_item = {
-                k: met_item[v] for k, v in FORECAST_MAP.items() if met_item.get(v)
+                k: met_item[v]
+                for k, v in FORECAST_MAP.items()
+                if met_item.get(v) is not None
             }
+            if not self._is_metric:
+                if ATTR_FORECAST_PRECIPITATION in ha_item:
+                    precip_inches = convert_distance(
+                        ha_item[ATTR_FORECAST_PRECIPITATION],
+                        LENGTH_MILLIMETERS,
+                        LENGTH_INCHES,
+                    )
+                    ha_item[ATTR_FORECAST_PRECIPITATION] = round(precip_inches, 2)
             if ha_item.get(ATTR_FORECAST_CONDITION):
                 ha_item[ATTR_FORECAST_CONDITION] = format_condition(
                     ha_item[ATTR_FORECAST_CONDITION]
                 )
             ha_forecast.append(ha_item)
         return ha_forecast
+
+    @property
+    def device_info(self):
+        """Device info."""
+        return {
+            "identifiers": {(DOMAIN,)},
+            "manufacturer": "Met.no",
+            "model": "Forecast",
+            "default_name": "Forecast",
+            "entry_type": "service",
+        }

@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 import operator
-from typing import Dict
+from typing import Dict, Optional
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
@@ -13,7 +13,8 @@ from pyicloud.exceptions import (
 from pyicloud.services.findmyiphone import AppleDevice
 
 from homeassistant.components.zone import async_active_zone
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
@@ -81,6 +82,7 @@ class IcloudAccount:
         with_family: bool,
         max_interval: int,
         gps_accuracy_threshold: int,
+        config_entry: ConfigEntry,
     ):
         """Initialize an iCloud account."""
         self.hass = hass
@@ -93,11 +95,12 @@ class IcloudAccount:
 
         self._icloud_dir = icloud_dir
 
-        self.api: PyiCloudService = None
+        self.api: Optional[PyiCloudService] = None
         self._owner_fullname = None
         self._family_members_fullname = {}
         self._devices = {}
         self._retried_fetch = False
+        self._config_entry = config_entry
 
         self.listeners = []
 
@@ -110,9 +113,25 @@ class IcloudAccount:
                 self._icloud_dir.path,
                 with_family=self._with_family,
             )
-        except PyiCloudFailedLoginException as error:
+
+            if not self.api.is_trusted_session or self.api.requires_2fa:
+                # Session is no longer trusted
+                # Trigger a new log in to ensure the user enters the 2FA code again.
+                raise PyiCloudFailedLoginException
+
+        except PyiCloudFailedLoginException:
             self.api = None
-            _LOGGER.error("Error logging into iCloud Service: %s", error)
+            # Login failed which means credentials need to be updated.
+            _LOGGER.error(
+                (
+                    "Your password for '%s' is no longer working. Go to the "
+                    "Integrations menu and click on Configure on the discovered Apple "
+                    "iCloud card to login again."
+                ),
+                self._config_entry.data[CONF_USERNAME],
+            )
+
+            self._require_reauth()
             return
 
         try:
@@ -141,6 +160,10 @@ class IcloudAccount:
     def update_devices(self) -> None:
         """Update iCloud devices."""
         if self.api is None:
+            return
+
+        if not self.api.is_trusted_session or self.api.requires_2fa:
+            self._require_reauth()
             return
 
         api_devices = {}
@@ -204,6 +227,19 @@ class IcloudAccount:
             self.hass,
             self.keep_alive,
             utcnow() + timedelta(minutes=self._fetch_interval),
+        )
+
+    def _require_reauth(self):
+        """Require the user to log in again."""
+        self.hass.add_job(
+            self.hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_REAUTH},
+                data={
+                    **self._config_entry.data,
+                    "unique_id": self._config_entry.unique_id,
+                },
+            )
         )
 
     def _determine_interval(self) -> int:

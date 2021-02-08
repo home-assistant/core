@@ -9,6 +9,16 @@
         },
         "flow_title": "Roku: {name}",
         "step": {
+            "discovery_confirm": {
+                "data": {
+                    "few": "kilka",
+                    "many": "wiele",
+                    "one": "jeden",
+                    "other": "inne"
+                },
+                "description": "Czy chcesz skonfigurowa\u0107 {name}?",
+                "title": "Roku"
+            },
             "ssdp_confirm": {
                 "data": {
                     "few": "kilka",
@@ -16,7 +26,7 @@
                     "one": "jeden",
                     "other": "inne"
                 },
-                "description": "Czy chcesz skonfigurowa\u0107 {name}? R\u0119czne konfiguracje tego urz\u0105dzenia zostan\u0105 zast\u0105pione.",
+                "description": "Czy chcesz skonfigurowa\u0107 {name}?",
                 "title": "Roku"
             },
             "user": {

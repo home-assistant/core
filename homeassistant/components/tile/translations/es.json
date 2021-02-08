@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Esta cuenta de Tile ya est\u00e1 registrada."
+            "already_configured": "La cuenta ya ha sido configurada"
         },
         "error": {
-            "invalid_credentials": "Credenciales de Tile no v\u00e1lidas"
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
         },
         "step": {
             "user": {

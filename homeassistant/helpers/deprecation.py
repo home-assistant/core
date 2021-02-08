@@ -1,7 +1,10 @@
 """Deprecation helpers for Home Assistant."""
+import functools
 import inspect
 import logging
 from typing import Any, Callable, Dict, Optional
+
+from ..helpers.frame import MissingIntegrationFrame, get_integration_frame
 
 
 def deprecated_substitute(substitute_name: str) -> Callable[..., Callable]:
@@ -73,3 +76,43 @@ def get_deprecated(
         )
         return config.get(old_name)
     return config.get(new_name, default)
+
+
+def deprecated_function(replacement: str) -> Callable[..., Callable]:
+    """Mark function as deprecated and provide a replacement function to be used instead."""
+
+    def deprecated_decorator(func: Callable) -> Callable:
+        """Decorate function as deprecated."""
+
+        @functools.wraps(func)
+        def deprecated_func(*args: tuple, **kwargs: Dict[str, Any]) -> Any:
+            """Wrap for the original function."""
+            logger = logging.getLogger(func.__module__)
+            try:
+                _, integration, path = get_integration_frame()
+                if path == "custom_components/":
+                    logger.warning(
+                        "%s was called from %s, this is a deprecated function. Use %s instead, please report this to the maintainer of %s",
+                        func.__name__,
+                        integration,
+                        replacement,
+                        integration,
+                    )
+                else:
+                    logger.warning(
+                        "%s was called from %s, this is a deprecated function. Use %s instead",
+                        func.__name__,
+                        integration,
+                        replacement,
+                    )
+            except MissingIntegrationFrame:
+                logger.warning(
+                    "%s is a deprecated function. Use %s instead",
+                    func.__name__,
+                    replacement,
+                )
+            return func(*args, **kwargs)
+
+        return deprecated_func
+
+    return deprecated_decorator

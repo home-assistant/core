@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "name_exists": "Ime \u017ee obstaja"
-        },
         "step": {
             "user": {
                 "data": {

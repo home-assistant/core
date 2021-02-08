@@ -1,5 +1,6 @@
 """The test for state automation."""
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -10,7 +11,6 @@ from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
@@ -1238,5 +1238,34 @@ async def test_attribute_if_not_fires_on_entities_change_with_for_after_stop(
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_attribute_if_fires_on_entity_change_with_both_filters_boolean(
+    hass, calls
+):
+    """Test for firing if both filters are match attribute."""
+    hass.states.async_set("test.entity", "bla", {"happening": False})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "test.entity",
+                    "from": False,
+                    "to": True,
+                    "attribute": "happening",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("test.entity", "bla", {"happening": True})
     await hass.async_block_till_done()
     assert len(calls) == 1

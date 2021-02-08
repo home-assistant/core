@@ -1,5 +1,4 @@
 """Config flow to configure the WLED integration."""
-import logging
 from typing import Any, Dict, Optional
 
 import voluptuous as vol
@@ -15,8 +14,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN  # pylint: disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):

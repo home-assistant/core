@@ -1,4 +1,6 @@
 """Support for Tuya fans."""
+from datetime import timedelta
+
 from homeassistant.components.fan import (
     DOMAIN as SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
@@ -12,7 +14,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import TuyaDevice
 from .const import DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
 
-PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -73,7 +75,20 @@ class TuyaFanDevice(TuyaDevice, FanEntity):
         else:
             self._tuya.set_speed(speed)
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    def turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
         """Turn on the fan."""
         if speed is not None:
             self.set_speed(speed)
@@ -117,7 +132,6 @@ class TuyaFanDevice(TuyaDevice, FanEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        supports = SUPPORT_SET_SPEED
         if self._tuya.support_oscillate():
-            supports = supports | SUPPORT_OSCILLATE
-        return supports
+            return SUPPORT_SET_SPEED | SUPPORT_OSCILLATE
+        return SUPPORT_SET_SPEED

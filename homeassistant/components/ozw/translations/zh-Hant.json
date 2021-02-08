@@ -1,13 +1,40 @@
 {
     "config": {
         "abort": {
+            "addon_info_failed": "\u53d6\u5f97 OpenZWave add-on \u8cc7\u8a0a\u5931\u6557\u3002",
+            "addon_install_failed": "OpenZWave add-on \u5b89\u88dd\u5931\u6557\u3002",
+            "addon_set_config_failed": "OpenZWave add-on \u8a2d\u5b9a\u5931\u6557\u3002",
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
             "mqtt_required": "MQTT \u6574\u5408\u5c1a\u672a\u8a2d\u5b9a",
-            "one_instance_allowed": "\u6574\u5408\u50c5\u652f\u63f4\u4e00\u7d44 Z-Wave \u5be6\u4f8b",
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
+        },
+        "error": {
+            "addon_start_failed": "OpenZWave add-on \u555f\u52d5\u5931\u6557\uff0c\u8acb\u6aa2\u67e5\u8a2d\u5b9a\u3002"
+        },
+        "progress": {
+            "install_addon": "\u8acb\u7a0d\u7b49 OpenZWave add-on \u5b89\u88dd\u5b8c\u6210\uff0c\u53ef\u80fd\u6703\u9700\u8981\u5e7e\u5206\u9418\u3002"
         },
         "step": {
-            "user": {
-                "title": "\u78ba\u8a8d\u8a2d\u5b9a"
+            "hassio_confirm": {
+                "title": "\u4ee5 OpenZWave add-on \u8a2d\u5b9a OpenZwave \u6574\u5408"
+            },
+            "install_addon": {
+                "title": "OpenZWave add-on \u5b89\u88dd\u5df2\u555f\u52d5"
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "\u4f7f\u7528 OpenZWave Supervisor add-on"
+                },
+                "description": "\u662f\u5426\u8981\u4f7f\u7528 OpenZWave Supervisor add-on\uff1f",
+                "title": "\u9078\u64c7\u9023\u7dda\u985e\u578b"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "\u7db2\u8def\u5bc6\u9470",
+                    "usb_path": "USB \u88dd\u7f6e\u8def\u5f91"
+                },
+                "title": "\u8acb\u8f38\u5165 OpenZWave \u8a2d\u5b9a\u3002"
             }
         }
     }

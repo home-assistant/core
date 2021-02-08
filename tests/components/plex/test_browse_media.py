@@ -8,15 +8,11 @@ from homeassistant.components.plex.media_browser import SPECIAL_METHODS
 from homeassistant.components.websocket_api.const import ERR_UNKNOWN_ERROR, TYPE_RESULT
 
 from .const import DEFAULT_DATA
-from .helpers import trigger_plex_update
 
 
-async def test_browse_media(hass, hass_ws_client, mock_plex_server, mock_websocket):
+async def test_browse_media(hass, hass_ws_client, mock_plex_server, requests_mock):
     """Test getting Plex clients from plex.tv."""
     websocket_client = await hass_ws_client(hass)
-
-    trigger_plex_update(mock_websocket)
-    await hass.async_block_till_done()
 
     media_players = hass.states.async_entity_ids("media_player")
     msg_id = 1
@@ -55,8 +51,10 @@ async def test_browse_media(hass, hass_ws_client, mock_plex_server, mock_websock
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "server"
     assert result[ATTR_MEDIA_CONTENT_ID] == DEFAULT_DATA[CONF_SERVER_IDENTIFIER]
-    assert len(result["children"]) == len(mock_plex_server.library.sections()) + len(
-        SPECIAL_METHODS
+    # Library Sections + Special Sections + Playlists
+    assert (
+        len(result["children"])
+        == len(mock_plex_server.library.sections()) + len(SPECIAL_METHODS) + 1
     )
 
     tvshows = next(iter(x for x in result["children"] if x["title"] == "TV Shows"))
@@ -153,9 +151,14 @@ async def test_browse_media(hass, hass_ws_client, mock_plex_server, mock_websock
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "show"
     result_id = int(result[ATTR_MEDIA_CONTENT_ID])
-    assert result["title"] == mock_plex_server.fetchItem(result_id).title
+    assert result["title"] == mock_plex_server.fetch_item(result_id).title
 
     # Browse into a non-existent TV season
+    unknown_key = 99999999999999
+    requests_mock.get(
+        f"{mock_plex_server.url_in_use}/library/metadata/{unknown_key}", status_code=404
+    )
+
     msg_id += 1
     await websocket_client.send_json(
         {
@@ -163,7 +166,7 @@ async def test_browse_media(hass, hass_ws_client, mock_plex_server, mock_websock
             "type": "media_player/browse_media",
             "entity_id": media_players[0],
             ATTR_MEDIA_CONTENT_TYPE: result["children"][0][ATTR_MEDIA_CONTENT_TYPE],
-            ATTR_MEDIA_CONTENT_ID: str(99999999999999),
+            ATTR_MEDIA_CONTENT_ID: str(unknown_key),
         }
     )
 

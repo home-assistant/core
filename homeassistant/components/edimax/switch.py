@@ -1,14 +1,10 @@
 """Support for Edimax switches."""
-import logging
-
 from pyedimax.smartplug import SmartPlug
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "edimax"
 

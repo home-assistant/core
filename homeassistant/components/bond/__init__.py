@@ -1,7 +1,6 @@
 """The Bond integration."""
 import asyncio
 from asyncio import TimeoutError as AsyncIOTimeoutError
-import logging
 
 from aiohttp import ClientError, ClientTimeout
 from bond_api import Bond
@@ -16,7 +15,6 @@ from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 from .const import DOMAIN
 from .utils import BondHub
 
-_LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["cover", "fan", "light", "switch"]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 

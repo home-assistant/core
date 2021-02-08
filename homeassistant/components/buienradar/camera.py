@@ -17,7 +17,7 @@ CONF_DIMENSION = "dimension"
 CONF_DELTA = "delta"
 CONF_COUNTRY = "country_code"
 
-_LOG = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 # Maximum range according to docs
 DIM_RANGE = vol.All(vol.Coerce(int), vol.Range(min=120, max=700))
@@ -29,9 +29,7 @@ PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_DIMENSION, default=512): DIM_RANGE,
-            vol.Optional(CONF_DELTA, default=600.0): vol.All(
-                vol.Coerce(float), vol.Range(min=0)
-            ),
+            vol.Optional(CONF_DELTA, default=600.0): cv.positive_float,
             vol.Optional(CONF_NAME, default="Buienradar loop"): cv.string,
             vol.Optional(CONF_COUNTRY, default="NL"): vol.All(
                 vol.Coerce(str), vol.In(SUPPORTED_COUNTRY_CODES)
@@ -127,7 +125,7 @@ class BuienradarCam(Camera):
                 res.raise_for_status()
 
                 if res.status == 304:
-                    _LOG.debug("HTTP 304 - success")
+                    _LOGGER.debug("HTTP 304 - success")
                     return True
 
                 last_modified = res.headers.get("Last-Modified")
@@ -135,11 +133,11 @@ class BuienradarCam(Camera):
                     self._last_modified = last_modified
 
                 self._last_image = await res.read()
-                _LOG.debug("HTTP 200 - Last-Modified: %s", last_modified)
+                _LOGGER.debug("HTTP 200 - Last-Modified: %s", last_modified)
 
                 return True
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
-            _LOG.error("Failed to fetch image, %s", type(err))
+            _LOGGER.error("Failed to fetch image, %s", type(err))
             return False
 
     async def async_camera_image(self) -> Optional[bytes]:
@@ -168,7 +166,7 @@ class BuienradarCam(Camera):
         async with self._condition:
             # can not be tested - mocked http response returns immediately
             if self._loading:
-                _LOG.debug("already loading - waiting for notification")
+                _LOGGER.debug("already loading - waiting for notification")
                 await self._condition.wait()
                 return self._last_image
 

@@ -31,7 +31,7 @@ UPDATE_TOPIC = f"{DOMAIN}_update"
 
 ICON = "mdi:package-variant-closed"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 SERVICE_ADD_TRACKING = "add_tracking"
 SERVICE_REMOVE_TRACKING = "remove_tracking"
@@ -181,8 +181,8 @@ class AfterShipSensor(Entity):
                 track["tracking_number"] if track["title"] is None else track["title"]
             )
             last_checkpoint = (
-                "Shipment pending"
-                if track["tag"] == "Pending"
+                f"Shipment {track['tag'].lower()}"
+                if not track["checkpoints"]
                 else track["checkpoints"][-1]
             )
             status_counts[status] = status_counts.get(status, 0) + 1

@@ -82,3 +82,6 @@ put_paramset:
     paramset:
       description: A paramset dictionary
       example: '{"WEEK_PROGRAM_POINTER": 1}'
+    rx_mode:
+      description: The receive mode used.
+      example: BURST

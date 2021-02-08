@@ -1,20 +1,32 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Solo se permite una \u00fanica configuraci\u00f3n de Abode."
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "connection_error": "No se puede conectar a Abode.",
-            "identifier_exists": "Cuenta ya registrada.",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
-            "invalid_credentials": "Credenciales inv\u00e1lidas."
+            "invalid_mfa_code": "C\u00f3digo MFA inv\u00e1lido"
         },
         "step": {
+            "mfa": {
+                "data": {
+                    "mfa_code": "C\u00f3digo MFA (6 d\u00edgitos)"
+                },
+                "title": "Introduce tu c\u00f3digo MFA para Abode"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Correo electr\u00f3nico"
+                },
+                "title": "Rellene su informaci\u00f3n de inicio de sesi\u00f3n de Abode"
+            },
             "user": {
                 "data": {
                     "password": "Contrase\u00f1a",
-                    "username": "Direcci\u00f3n de correo electr\u00f3nico"
+                    "username": "Correo electr\u00f3nico"
                 },
                 "title": "Rellene la informaci\u00f3n de acceso Abode"
             }

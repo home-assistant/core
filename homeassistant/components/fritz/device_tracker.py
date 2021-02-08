@@ -1,6 +1,7 @@
 """Support for FRITZ!Box routers."""
 import logging
 
+from fritzconnection.core import exceptions as fritzexceptions
 from fritzconnection.lib.fritzhosts import FritzHosts
 import voluptuous as vol
 
@@ -14,13 +15,14 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEFAULT_IP = "169.254.1.1"  # This IP is valid for all FRITZ!Box routers.
+DEFAULT_HOST = "169.254.1.1"  # This IP is valid for all FRITZ!Box routers.
+DEFAULT_USERNAME = "admin"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
-        vol.Optional(CONF_PASSWORD, default="admin"): cv.string,
-        vol.Optional(CONF_USERNAME, default=""): cv.string,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
     }
 )
 
@@ -39,7 +41,7 @@ class FritzBoxScanner(DeviceScanner):
         self.last_results = []
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]
+        self.password = config.get(CONF_PASSWORD)
         self.success_init = True
 
         # Establish a connection to the FRITZ!Box.
@@ -81,7 +83,15 @@ class FritzBoxScanner(DeviceScanner):
 
     def get_extra_attributes(self, device):
         """Return the attributes (ip, mac) of the given device or None if is not known."""
-        ip_device = self.fritz_box.get_specific_host_entry(device).get("NewIPAddress")
+        ip_device = None
+        try:
+            ip_device = self.fritz_box.get_specific_host_entry(device).get(
+                "NewIPAddress"
+            )
+        except fritzexceptions.FritzLookUpError as fritz_lookup_error:
+            _LOGGER.warning(
+                "Host entry for %s not found: %s", device, fritz_lookup_error
+            )
 
         if not ip_device:
             return {}

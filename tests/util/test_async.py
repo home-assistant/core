@@ -1,9 +1,11 @@
 """Tests for async util methods from Python source."""
+import asyncio
+import time
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
 
 from homeassistant.util import async_ as hasync
-
-from tests.async_mock import MagicMock, Mock, patch
 
 
 @patch("asyncio.coroutines.iscoroutine")
@@ -48,7 +50,8 @@ def test_fire_coroutine_threadsafe_from_inside_event_loop(
 def test_run_callback_threadsafe_from_inside_event_loop(mock_ident, _):
     """Testing calling run_callback_threadsafe from inside an event loop."""
     callback = MagicMock()
-    loop = MagicMock()
+
+    loop = Mock(spec=["call_soon_threadsafe"])
 
     loop._thread_ident = None
     mock_ident.return_value = 5
@@ -144,3 +147,67 @@ def test_protect_loop_sync():
         hasync.protect_loop(calls.append)(1)
     assert len(mock_loop.mock_calls) == 1
     assert calls == [1]
+
+
+async def test_gather_with_concurrency():
+    """Test gather_with_concurrency limits the number of running tasks."""
+
+    runs = 0
+    now_time = time.time()
+
+    async def _increment_runs_if_in_time():
+        if time.time() - now_time > 0.1:
+            return -1
+
+        nonlocal runs
+        runs += 1
+        await asyncio.sleep(0.1)
+        return runs
+
+    results = await hasync.gather_with_concurrency(
+        2, *[_increment_runs_if_in_time() for i in range(4)]
+    )
+
+    assert results == [2, 2, -1, -1]
+
+
+async def test_shutdown_run_callback_threadsafe(hass):
+    """Test we can shutdown run_callback_threadsafe."""
+    hasync.shutdown_run_callback_threadsafe(hass.loop)
+    callback = MagicMock()
+
+    with pytest.raises(RuntimeError):
+        hasync.run_callback_threadsafe(hass.loop, callback)
+
+
+async def test_run_callback_threadsafe(hass):
+    """Test run_callback_threadsafe runs code in the event loop."""
+    it_ran = False
+
+    def callback():
+        nonlocal it_ran
+        it_ran = True
+
+    assert hasync.run_callback_threadsafe(hass.loop, callback)
+    assert it_ran is False
+
+    # Verify that async_block_till_done will flush
+    # out the callback
+    await hass.async_block_till_done()
+    assert it_ran is True
+
+
+async def test_callback_is_always_scheduled(hass):
+    """Test run_callback_threadsafe always calls call_soon_threadsafe before checking for shutdown."""
+    # We have to check the shutdown state AFTER the callback is scheduled otherwise
+    # the function could continue on and the caller call `future.result()` after
+    # the point in the main thread where callbacks are no longer run.
+
+    callback = MagicMock()
+    hasync.shutdown_run_callback_threadsafe(hass.loop)
+
+    with patch.object(hass.loop, "call_soon_threadsafe") as mock_call_soon_threadsafe:
+        with pytest.raises(RuntimeError):
+            hasync.run_callback_threadsafe(hass.loop, callback)
+
+    mock_call_soon_threadsafe.assert_called_once()

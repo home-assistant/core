@@ -1,28 +1,26 @@
 """Support for INSTEON dimmers via PowerLinc Modem."""
-import logging
-
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Insteon switches from a config entry."""
 
-    def add_entities(discovery_info=None):
+    @callback
+    def async_add_insteon_switch_entities(discovery_info=None):
         """Add the Insteon entities for the platform."""
         async_add_insteon_entities(
             hass, SWITCH_DOMAIN, InsteonSwitchEntity, async_add_entities, discovery_info
         )
 
     signal = f"{SIGNAL_ADD_ENTITIES}_{SWITCH_DOMAIN}"
-    async_dispatcher_connect(hass, signal, add_entities)
-    add_entities()
+    async_dispatcher_connect(hass, signal, async_add_insteon_switch_entities)
+    async_add_insteon_switch_entities()
 
 
 class InsteonSwitchEntity(InsteonEntity, SwitchEntity):

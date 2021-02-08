@@ -1,9 +1,5 @@
 """Adapter to wrap the pyjuicenet api for home assistant."""
 
-import logging
-
-_LOGGER = logging.getLogger(__name__)
-
 
 class JuiceNetApi:
     """Represent a connection to JuiceNet."""

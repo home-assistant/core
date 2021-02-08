@@ -1,6 +1,4 @@
 """Support for Rflink sensors."""
-import logging
-
 from rflink.parser import PACKET_FIELDS, UNITS
 import voluptuous as vol
 
@@ -27,8 +25,6 @@ from . import (
     TMP_ENTITY,
     RflinkDevice,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_ICONS = {
     "humidity": "mdi:water-percent",

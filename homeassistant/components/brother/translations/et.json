@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "unsupported_model": "Seda printeri mudelit ei toetata."
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "connection_error": "\u00dchenduse t\u00f5rge.",
             "snmp_error": "SNMP-server on v\u00e4lja l\u00fclitatud v\u00f5i printerit ei toetata.",
             "wrong_host": "Sobimatu hostinimi v\u00f5i IP-aadress."
         },
@@ -16,7 +16,7 @@
                     "host": "Host",
                     "type": "Printeri t\u00fc\u00fcp"
                 },
-                "description": "Seadistage Brotheri printeri sidumine. Kui teil on seadistamisega probleeme minge aadressile https://www.home-assistant.io/integrations/brother"
+                "description": "Seadista Brotheri printeri sidumine. Kui seadistamisega on probleeme mine aadressile https://www.home-assistant.io/integrations/brother"
             },
             "zeroconf_confirm": {
                 "data": {

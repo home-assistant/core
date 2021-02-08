@@ -117,9 +117,13 @@ class StreamOutput:
         self._cursor = segment.sequence
         return segment
 
-    @callback
     def put(self, segment: Segment) -> None:
         """Store output."""
+        self._stream.hass.loop.call_soon_threadsafe(self._async_put, segment)
+
+    @callback
+    def _async_put(self, segment: Segment) -> None:
+        """Store output from event loop."""
         # Start idle timeout when we start receiving data
         if self._unsub is None:
             self._unsub = async_call_later(

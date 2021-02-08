@@ -203,7 +203,7 @@ class SensorTrend(BinarySensorEntity):
             return
 
         # Calculate gradient of linear trend
-        await self.hass.async_add_job(self._calculate_gradient)
+        await self.hass.async_add_executor_job(self._calculate_gradient)
 
         # Update state
         self._state = (

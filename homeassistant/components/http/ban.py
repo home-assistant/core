@@ -15,7 +15,7 @@ from homeassistant.const import HTTP_BAD_REQUEST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.yaml import dump
+from homeassistant.util import dt as dt_util, yaml
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -105,16 +105,18 @@ async def process_wrong_login(request):
     except herror:
         pass
 
-    msg = f"Login attempt or request with invalid authentication from {remote_host} ({remote_addr})"
+    base_msg = f"Login attempt or request with invalid authentication from {remote_host} ({remote_addr})."
 
+    # The user-agent is unsanitized input so we only include it in the log
     user_agent = request.headers.get("user-agent")
-    if user_agent:
-        msg = f"{msg} ({user_agent})"
+    log_msg = f"{base_msg} ({user_agent})"
 
-    _LOGGER.warning(msg)
+    notification_msg = f"{base_msg} See the log for details."
+
+    _LOGGER.warning(log_msg)
 
     hass.components.persistent_notification.async_create(
-        msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
+        notification_msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
     )
 
     # Check if ban middleware is loaded
@@ -137,7 +139,7 @@ async def process_wrong_login(request):
         new_ban = IpBan(remote_addr)
         request.app[KEY_BANNED_IPS].append(new_ban)
 
-        await hass.async_add_job(
+        await hass.async_add_executor_job(
             update_ip_bans_config, hass.config.path(IP_BANS_FILE), new_ban
         )
 
@@ -179,7 +181,7 @@ class IpBan:
     def __init__(self, ip_ban: str, banned_at: Optional[datetime] = None) -> None:
         """Initialize IP Ban object."""
         self.ip_address = ip_address(ip_ban)
-        self.banned_at = banned_at or datetime.utcnow()
+        self.banned_at = banned_at or dt_util.utcnow()
 
 
 async def async_load_ip_bans_config(hass: HomeAssistant, path: str) -> List[IpBan]:
@@ -208,10 +210,6 @@ async def async_load_ip_bans_config(hass: HomeAssistant, path: str) -> List[IpBa
 def update_ip_bans_config(path: str, ip_ban: IpBan) -> None:
     """Update config file with new banned IP address."""
     with open(path, "a") as out:
-        ip_ = {
-            str(ip_ban.ip_address): {
-                ATTR_BANNED_AT: ip_ban.banned_at.strftime("%Y-%m-%dT%H:%M:%S")
-            }
-        }
+        ip_ = {str(ip_ban.ip_address): {ATTR_BANNED_AT: ip_ban.banned_at.isoformat()}}
         out.write("\n")
-        out.write(dump(ip_))
+        out.write(yaml.dump(ip_))

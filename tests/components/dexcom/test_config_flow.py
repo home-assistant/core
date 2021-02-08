@@ -1,11 +1,12 @@
 """Test the Dexcom config flow."""
+from unittest.mock import patch
+
 from pydexcom import AccountError, SessionError
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.dexcom.const import DOMAIN, MG_DL, MMOL_L
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 from tests.components.dexcom import CONFIG
 
@@ -32,11 +33,11 @@ async def test_form(hass):
             result["flow_id"],
             CONFIG,
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == CONFIG[CONF_USERNAME]
     assert result2["data"] == CONFIG
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

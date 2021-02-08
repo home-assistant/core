@@ -1,6 +1,4 @@
 """Support for Rflink binary sensors."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -16,8 +14,6 @@ from . import CONF_ALIASES, CONF_DEVICES, RflinkDevice
 
 CONF_OFF_DELAY = "off_delay"
 DEFAULT_FORCE_UPDATE = False
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

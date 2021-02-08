@@ -1,10 +1,7 @@
 """The ONVIF integration."""
 import asyncio
 
-import requests
-from requests.auth import HTTPDigestAuth
-from urllib3.exceptions import ReadTimeoutError
-import voluptuous as vol
+from onvif.exceptions import ONVIFAuthError, ONVIFError, ONVIFTimeoutError
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -17,7 +14,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
-    HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -36,8 +32,6 @@ from .const import (
 )
 from .device import ONVIFDevice
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the ONVIF component."""
@@ -48,7 +42,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
             continue
 
         config = p_config.copy()
-        if config[CONF_HOST] not in configs.keys():
+        if config[CONF_HOST] not in configs:
             configs[config[CONF_HOST]] = {
                 CONF_HOST: config[CONF_HOST],
                 CONF_NAME: config.get(CONF_NAME, DEFAULT_NAME),
@@ -78,6 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device = ONVIFDevice(hass, entry)
 
     if not await device.async_setup():
+        await device.device.close()
         return False
 
     if not device.available:
@@ -90,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     platforms = ["camera"]
 
-    if device.capabilities.events and await device.events.async_start():
+    if device.capabilities.events:
         platforms += ["binary_sensor", "sensor"]
 
     for component in platforms:
@@ -123,37 +118,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
 
-async def _get_snapshot_auth(hass, device, entry):
-    if not (device.username and device.password):
+async def _get_snapshot_auth(device):
+    """Determine auth type for snapshots."""
+    if not device.capabilities.snapshot or not (device.username and device.password):
         return HTTP_DIGEST_AUTHENTICATION
-
-    snapshot_uri = await device.async_get_snapshot_uri(device.profiles[0])
-    if not snapshot_uri:
-        return HTTP_DIGEST_AUTHENTICATION
-    auth = HTTPDigestAuth(device.username, device.password)
-
-    def _get():
-        # so we can handle keyword arguments
-        return requests.get(snapshot_uri, timeout=1, auth=auth)
 
     try:
-        response = await hass.async_add_executor_job(_get)
+        snapshot = await device.device.get_snapshot(device.profiles[0].token)
 
-        if response.status_code == HTTP_UNAUTHORIZED:
-            return HTTP_BASIC_AUTHENTICATION
-
-        return HTTP_DIGEST_AUTHENTICATION
-    except requests.exceptions.Timeout:
+        if snapshot:
+            return HTTP_DIGEST_AUTHENTICATION
         return HTTP_BASIC_AUTHENTICATION
-    except requests.exceptions.ConnectionError as error:
-        if isinstance(error.args[0], ReadTimeoutError):
-            return HTTP_BASIC_AUTHENTICATION
+    except (ONVIFAuthError, ONVIFTimeoutError):
+        return HTTP_BASIC_AUTHENTICATION
+    except ONVIFError:
         return HTTP_DIGEST_AUTHENTICATION
 
 
 async def async_populate_snapshot_auth(hass, device, entry):
     """Check if digest auth for snapshots is possible."""
-    auth = await _get_snapshot_auth(hass, device, entry)
+    auth = await _get_snapshot_auth(device)
     new_data = {**entry.data, CONF_SNAPSHOT_AUTH: auth}
     hass.config_entries.async_update_entry(entry, data=new_data)
 

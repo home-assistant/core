@@ -1,10 +1,11 @@
 """The gateway tests for the august platform."""
+from unittest.mock import MagicMock, patch
+
 from august.authenticator_common import AuthenticationState
 
 from homeassistant.components.august.const import DOMAIN
 from homeassistant.components.august.gateway import AugustGateway
 
-from tests.async_mock import MagicMock, patch
 from tests.components.august.mocks import _mock_august_authentication, _mock_get_config
 
 

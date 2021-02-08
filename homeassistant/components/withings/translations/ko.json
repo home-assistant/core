@@ -9,9 +9,6 @@
         "create_entry": {
             "default": "Withings \ub85c \uc131\uacf5\uc801\uc73c\ub85c \uc778\uc99d\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
         },
-        "error": {
-            "profile_exists": "\uc0ac\uc6a9\uc790 \ud504\ub85c\ud544\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \uace0\uc720\ud55c \ud504\ub85c\ud544 \uc774\ub984\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694."
-        },
         "flow_title": "Withings: {profile}",
         "step": {
             "pick_implementation": {

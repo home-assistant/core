@@ -1,6 +1,4 @@
 """Support for EnOcean binary sensors."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -12,8 +10,6 @@ from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 from .device import EnOceanEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "EnOcean binary sensor"
 DEPENDENCIES = ["enocean"]

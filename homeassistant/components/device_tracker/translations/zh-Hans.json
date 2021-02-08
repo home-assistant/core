@@ -3,6 +3,10 @@
         "condition_type": {
             "is_home": "{entity_name} \u5728\u5bb6",
             "is_not_home": "{entity_name} \u4e0d\u5728\u5bb6"
+        },
+        "trigger_type": {
+            "enters": "{entity_name} \u8fdb\u5165\u533a\u57df",
+            "leaves": "{entity_name} \u79bb\u5f00\u533a\u57df"
         }
     },
     "state": {

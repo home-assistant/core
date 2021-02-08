@@ -1,5 +1,4 @@
 """Config flow to configure WiLight."""
-import logging
 from urllib.parse import urlparse
 
 import pywilight
@@ -16,9 +15,7 @@ CONF_MODEL_NAME = "model_name"
 WILIGHT_MANUFACTURER = "All Automacao Ltda"
 
 # List the components supported by this integration.
-ALLOWED_WILIGHT_COMPONENTS = ["light"]
-
-_LOGGER = logging.getLogger(__name__)
+ALLOWED_WILIGHT_COMPONENTS = ["light", "fan"]
 
 
 class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):

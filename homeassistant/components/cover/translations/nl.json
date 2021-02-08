@@ -28,7 +28,7 @@
     "state": {
         "_": {
             "closed": "Gesloten",
-            "closing": "Sluit",
+            "closing": "Sluiten",
             "open": "Open",
             "opening": "Opent",
             "stopped": "Gestopt"

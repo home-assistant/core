@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Esta cuenta ya est\u00e1 configurada."
+            "already_configured": "La cuenta ya ha sido configurada"
         },
         "error": {
-            "cannot_connect": "No se pudo conectar, por favor, int\u00e9ntelo de nuevo.",
-            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "too_many_requests": "Demasiadas solicitudes, vuelva a intentarlo m\u00e1s tarde.",
             "unknown": "Error inesperado"
         },

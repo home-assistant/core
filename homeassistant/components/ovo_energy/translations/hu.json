@@ -1,7 +1,13 @@
 {
     "config": {
         "error": {
-            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van"
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "step": {
+            "reauth": {
+                "title": "\u00dajrahiteles\u00edt\u00e9s"
+            }
         }
     }
 }

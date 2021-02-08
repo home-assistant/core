@@ -1,5 +1,6 @@
 """Test the Bond config flow."""
 from typing import Any, Dict
+from unittest.mock import Mock, patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 
@@ -9,7 +10,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 
 from .common import patch_bond_device_ids, patch_bond_version
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -29,6 +29,7 @@ async def test_user_form(hass: core.HomeAssistant):
             result["flow_id"],
             {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-bond-id"
@@ -36,7 +37,6 @@ async def test_user_form(hass: core.HomeAssistant):
         CONF_HOST: "some host",
         CONF_ACCESS_TOKEN: "test-token",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -165,6 +165,7 @@ async def test_zeroconf_form(hass: core.HomeAssistant):
             result["flow_id"],
             {CONF_ACCESS_TOKEN: "test-token"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-bond-id"
@@ -172,7 +173,6 @@ async def test_zeroconf_form(hass: core.HomeAssistant):
         CONF_HOST: "test-host",
         CONF_ACCESS_TOKEN: "test-token",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

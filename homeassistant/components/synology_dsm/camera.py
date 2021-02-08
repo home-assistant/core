@@ -1,14 +1,18 @@
 """Support for Synology DSM cameras."""
+import logging
 from typing import Dict
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
+from synology_dsm.exceptions import SynologyDSMAPIErrorException
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SynologyDSMEntity
+from . import SynoApi, SynologyDSMCoordinatorEntity
 from .const import (
+    COORDINATOR_SURVEILLANCE,
     DOMAIN,
     ENTITY_CLASS,
     ENTITY_ENABLE,
@@ -18,56 +22,83 @@ from .const import (
     SYNO_API,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
-    """Set up the Synology NAS binary sensor."""
+    """Set up the Synology NAS cameras."""
 
-    api = hass.data[DOMAIN][entry.unique_id][SYNO_API]
+    data = hass.data[DOMAIN][entry.unique_id]
+    api = data[SYNO_API]
 
     if SynoSurveillanceStation.CAMERA_API_KEY not in api.dsm.apis:
         return
 
-    surveillance_station = api.surveillance_station
-    await hass.async_add_executor_job(surveillance_station.update)
-    cameras = surveillance_station.get_all_cameras()
-    entities = [SynoDSMCamera(api, camera) for camera in cameras]
+    # initial data fetch
+    coordinator = data[COORDINATOR_SURVEILLANCE]
+    await coordinator.async_refresh()
 
-    async_add_entities(entities)
+    async_add_entities(
+        SynoDSMCamera(api, coordinator, camera_id)
+        for camera_id in coordinator.data["cameras"]
+    )
 
 
-class SynoDSMCamera(SynologyDSMEntity, Camera):
+class SynoDSMCamera(SynologyDSMCoordinatorEntity, Camera):
     """Representation a Synology camera."""
 
-    def __init__(self, api, camera):
+    def __init__(
+        self, api: SynoApi, coordinator: DataUpdateCoordinator, camera_id: int
+    ):
         """Initialize a Synology camera."""
         super().__init__(
             api,
-            f"{SynoSurveillanceStation.CAMERA_API_KEY}:{camera.id}",
+            f"{SynoSurveillanceStation.CAMERA_API_KEY}:{camera_id}",
             {
-                ENTITY_NAME: camera.name,
+                ENTITY_NAME: coordinator.data["cameras"][camera_id].name,
+                ENTITY_ENABLE: coordinator.data["cameras"][camera_id].is_enabled,
                 ENTITY_CLASS: None,
                 ENTITY_ICON: None,
-                ENTITY_ENABLE: True,
                 ENTITY_UNIT: None,
             },
+            coordinator,
         )
-        self._camera = camera
+        Camera.__init__(self)
+
+        self._camera_id = camera_id
+        self._api = api
+
+    @property
+    def camera_data(self):
+        """Camera data."""
+        return self.coordinator.data["cameras"][self._camera_id]
 
     @property
     def device_info(self) -> Dict[str, any]:
         """Return the device information."""
         return {
-            "identifiers": {(DOMAIN, self._api.information.serial, self._camera.id)},
-            "name": self._camera.name,
-            "model": self._camera.model,
+            "identifiers": {
+                (
+                    DOMAIN,
+                    self._api.information.serial,
+                    self.camera_data.id,
+                )
+            },
+            "name": self.camera_data.name,
+            "model": self.camera_data.model,
             "via_device": (
                 DOMAIN,
                 self._api.information.serial,
                 SynoSurveillanceStation.INFO_API_KEY,
             ),
         }
+
+    @property
+    def available(self) -> bool:
+        """Return the availability of the camera."""
+        return self.camera_data.is_enabled and self.coordinator.last_update_success
 
     @property
     def supported_features(self) -> int:
@@ -77,25 +108,53 @@ class SynoDSMCamera(SynologyDSMEntity, Camera):
     @property
     def is_recording(self):
         """Return true if the device is recording."""
-        return self._camera.is_recording
+        return self.camera_data.is_recording
 
     @property
     def motion_detection_enabled(self):
         """Return the camera motion detection status."""
-        return self._camera.is_motion_detection_enabled
+        return self.camera_data.is_motion_detection_enabled
 
     def camera_image(self) -> bytes:
         """Return bytes of camera image."""
-        return self._api.surveillance_station.get_camera_image(self._camera.id)
+        _LOGGER.debug(
+            "SynoDSMCamera.camera_image(%s)",
+            self.camera_data.name,
+        )
+        if not self.available:
+            return None
+        try:
+            return self._api.surveillance_station.get_camera_image(self._camera_id)
+        except (SynologyDSMAPIErrorException) as err:
+            _LOGGER.debug(
+                "SynoDSMCamera.camera_image(%s) - Exception:%s",
+                self.camera_data.name,
+                err,
+            )
+            return None
 
     async def stream_source(self) -> str:
         """Return the source of the stream."""
-        return self._camera.live_view.rtsp
+        _LOGGER.debug(
+            "SynoDSMCamera.stream_source(%s)",
+            self.camera_data.name,
+        )
+        if not self.available:
+            return None
+        return self.camera_data.live_view.rtsp
 
     def enable_motion_detection(self):
         """Enable motion detection in the camera."""
-        self._api.surveillance_station.enable_motion_detection(self._camera.id)
+        _LOGGER.debug(
+            "SynoDSMCamera.enable_motion_detection(%s)",
+            self.camera_data.name,
+        )
+        self._api.surveillance_station.enable_motion_detection(self._camera_id)
 
     def disable_motion_detection(self):
         """Disable motion detection in camera."""
-        self._api.surveillance_station.disable_motion_detection(self._camera.id)
+        _LOGGER.debug(
+            "SynoDSMCamera.disable_motion_detection(%s)",
+            self.camera_data.name,
+        )
+        self._api.surveillance_station.disable_motion_detection(self._camera_id)

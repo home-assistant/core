@@ -1,20 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieses Ger\u00e4t wurde bereits konfiguriert",
-            "already_in_progress": "Dieses Ger\u00e4t wurde bereits konfiguriert",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "not_huawei_lte": "Kein Huawei LTE-Ger\u00e4t"
         },
         "error": {
-            "connection_failed": "Verbindung fehlgeschlagen.",
             "connection_timeout": "Verbindungszeit\u00fcberschreitung",
             "incorrect_password": "Ung\u00fcltiges Passwort",
             "incorrect_username": "Ung\u00fcltiger Benutzername",
-            "incorrect_username_or_password": "Ung\u00fcltiger Benutzername oder Kennwort",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "invalid_url": "Ung\u00fcltige URL",
             "login_attempts_exceeded": "Maximale Anzahl von Anmeldeversuchen \u00fcberschritten. Bitte versuche es sp\u00e4ter erneut",
             "response_error": "Unbekannter Fehler vom Ger\u00e4t",
-            "unknown_connection_error": "Unbekannter Fehler beim Herstellen der Verbindung zum Ger\u00e4t"
+            "unknown": "Unerwarteter Fehler"
         },
         "flow_title": "Huawei LTE: {name}",
         "step": {

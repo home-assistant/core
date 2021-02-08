@@ -1,6 +1,4 @@
 """Support the sensor of a BloomSky weather station."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -17,8 +15,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
-
-LOGGER = logging.getLogger(__name__)
 
 # These are the available sensors
 SENSOR_TYPES = [

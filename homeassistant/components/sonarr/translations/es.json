@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El servicio ya est\u00e1 configurado",
-            "reauth_successful": "Se ha vuelto autenticar con \u00e9xito",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
             "unknown": "Error inesperado"
         },
         "error": {
@@ -21,10 +21,9 @@
                     "base_path": "Ruta a la API",
                     "host": "Host",
                     "port": "Puerto",
-                    "ssl": "Sonarr usa un certificado SSL",
-                    "verify_ssl": "Sonarr usa un certificado adecuado"
-                },
-                "title": "Conectar a Sonarr"
+                    "ssl": "Utiliza un certificado SSL",
+                    "verify_ssl": "Verificar certificado SSL"
+                }
             }
         }
     },
@@ -37,6 +36,5 @@
                 }
             }
         }
-    },
-    "title": "Sonarr"
+    }
 }

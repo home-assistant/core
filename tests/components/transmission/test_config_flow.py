@@ -1,5 +1,6 @@
 """Tests for Transmission config flow."""
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 from transmissionrpc.error import TransmissionError
@@ -25,7 +26,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 NAME = "Transmission"
@@ -264,8 +264,8 @@ async def test_error_on_wrong_credentials(hass, auth_error):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {
-        CONF_USERNAME: "wrong_credentials",
-        CONF_PASSWORD: "wrong_credentials",
+        CONF_USERNAME: "invalid_auth",
+        CONF_PASSWORD: "invalid_auth",
     }
 
 

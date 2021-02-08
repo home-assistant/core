@@ -1,21 +1,37 @@
 {
     "config": {
         "abort": {
-            "invalid_auth": "Tuvastamise viga"
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "authorize_url_timeout": "Kinnitus-URLi loomise ajal\u00f5pp",
+            "invalid_auth": "Tuvastamise viga",
+            "missing_configuration": "Komponent pole seadistatud. Palun loe dokumentatsiooni.",
+            "no_url_available": "URL-i pole saadaval. Selle t\u00f5rke kohta teabe saamiseks vaata [spikrijaotis]({docs_url})",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "create_entry": {
+            "default": "Tuvastamine \u00f5nnestus"
         },
         "error": {
             "invalid_auth": "Tuvastamise viga",
-            "unexpected_error": "Ootamatu t\u00f5rge",
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
+            "pick_implementation": {
+                "title": "Vali tuvastusmeetod"
+            },
+            "reauth_confirm": {
+                "title": "Kas soovid alustada seadistamist?"
+            },
             "user": {
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi",
                     "vendor": "Tootja"
-                }
+                },
+                "description": "Vaata [Neato documentation] ( {docs_url} ).",
+                "title": "Neato konto teave"
             }
         }
-    }
+    },
+    "title": ""
 }

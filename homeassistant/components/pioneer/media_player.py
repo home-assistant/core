@@ -203,7 +203,7 @@ class PioneerDevice(MediaPlayerEntity):
     @property
     def source_list(self):
         """List of available input sources."""
-        return list(self._source_name_to_number.keys())
+        return list(self._source_name_to_number)
 
     @property
     def media_title(self):

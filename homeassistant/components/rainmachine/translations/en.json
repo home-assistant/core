@@ -1,11 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This RainMachine controller is already configured."
+            "already_configured": "Device is already configured"
         },
         "error": {
-            "identifier_exists": "Account already registered",
-            "invalid_credentials": "Invalid credentials"
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
             "user": {
@@ -15,6 +14,16 @@
                     "port": "Port"
                 },
                 "title": "Fill in your information"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Default zone run time (in seconds)"
+                },
+                "title": "Configure RainMachine"
             }
         }
     }

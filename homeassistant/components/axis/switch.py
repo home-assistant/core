@@ -20,7 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         event = device.api.event[event_id]
 
         if event.CLASS == CLASS_OUTPUT:
-            async_add_entities([AxisSwitch(event, device)], True)
+            async_add_entities([AxisSwitch(event, device)])
 
     device.listeners.append(
         async_dispatcher_connect(hass, device.signal_new_event, async_add_switch)
@@ -37,15 +37,11 @@ class AxisSwitch(AxisEventBase, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn on switch."""
-        await self.hass.async_add_executor_job(
-            self.device.api.vapix.ports[self.event.id].close
-        )
+        await self.device.api.vapix.ports[self.event.id].close()
 
     async def async_turn_off(self, **kwargs):
         """Turn off switch."""
-        await self.hass.async_add_executor_job(
-            self.device.api.vapix.ports[self.event.id].open
-        )
+        await self.device.api.vapix.ports[self.event.id].open()
 
     @property
     def name(self):

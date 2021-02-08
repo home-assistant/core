@@ -193,7 +193,9 @@ async def async_setup(hass, config):
     async def scan_devices(now):
         """Scan for devices."""
         try:
-            results = await hass.async_add_job(_discover, netdisco, zeroconf_instance)
+            results = await hass.async_add_executor_job(
+                _discover, netdisco, zeroconf_instance
+            )
 
             for result in results:
                 hass.async_create_task(new_service_found(*result))

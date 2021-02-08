@@ -111,7 +111,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-            errors["base"] = "connect_error"
+            errors["base"] = "cannot_connect"
 
         if self.host:
             schema = vol.Schema(GATEWAY_SETTINGS)

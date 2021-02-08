@@ -2,16 +2,17 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
+            "no_uuid": "Kodi-forekomsten har ikke en unik id. Dette skyldes mest sannsynlig en gammel Kodi-versjon (17.x eller under). Du kan konfigurere integreringen manuelt eller oppgradere til en nyere Kodi-versjon.",
             "unknown": "Uventet feil"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
-        "flow_title": "Kodi: {name}",
+        "flow_title": "",
         "step": {
             "credentials": {
                 "data": {
@@ -24,19 +25,11 @@
                 "description": "Vil du legge til Kodi ({name}) i Home Assistant?",
                 "title": "Oppdaget Kodi"
             },
-            "host": {
-                "data": {
-                    "host": "Vert",
-                    "port": "Port",
-                    "ssl": "Koble til via SSL"
-                },
-                "description": "Kodi-tilkoblingsinformasjon. Vennligst s\u00f8rg for \u00e5 aktivere \"Tillat kontroll av Kodi via HTTP\" i System / Innstillinger / Nettverk / Tjenester."
-            },
             "user": {
                 "data": {
                     "host": "Vert",
                     "port": "Port",
-                    "ssl": "Koble til via SSL"
+                    "ssl": "Bruker et SSL-sertifikat"
                 },
                 "description": "Kodi-tilkoblingsinformasjon. Vennligst s\u00f8rg for \u00e5 aktivere \"Tillat kontroll av Kodi via HTTP\" i System / Innstillinger / Nettverk / Tjenester."
             },
@@ -50,8 +43,8 @@
     },
     "device_automation": {
         "trigger_type": {
-            "turn_off": "{entity_name} ble bedt om \u00e5 sl\u00e5 av",
-            "turn_on": "{entity_name} ble bedt om \u00e5 sl\u00e5 p\u00e5"
+            "turn_off": "{entity_name} ble bedt om \u00e5 sl\u00e5es av",
+            "turn_on": "{entity_name} ble bedt om \u00e5 sl\u00e5es p\u00e5"
         }
     }
 }

@@ -1,5 +1,6 @@
 """Tests for the WiLight integration."""
-from asynctest import patch
+from unittest.mock import patch
+
 import pytest
 import pywilight
 

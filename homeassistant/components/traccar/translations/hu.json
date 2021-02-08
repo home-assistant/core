@@ -1,0 +1,7 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Ha esem\u00e9nyeket szeretne k\u00fcldeni a Home Assistant alkalmaz\u00e1snak, be kell \u00e1ll\u00edtania a webhook funkci\u00f3t a Traccar-ban. \n\n Haszn\u00e1lja a k\u00f6vetkez\u0151 URL-t: \" {webhook_url} \" \n\n Tov\u00e1bbi r\u00e9szletek\u00e9rt l\u00e1sd a [dokument\u00e1ci\u00f3t] ( {docs_url} )."
+        }
+    }
+}

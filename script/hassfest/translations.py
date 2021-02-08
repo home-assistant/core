@@ -2,7 +2,6 @@
 from functools import partial
 from itertools import chain
 import json
-import logging
 import re
 from typing import Dict
 
@@ -14,8 +13,6 @@ from homeassistant.util import slugify
 from script.translations import upload
 
 from .model import Config, Integration
-
-_LOGGER = logging.getLogger(__name__)
 
 UNDEFINED = 0
 REQUIRED = 1
@@ -101,6 +98,7 @@ def gen_data_entry_schema(
         },
         vol.Optional("error"): {str: cv.string_with_no_html},
         vol.Optional("abort"): {str: cv.string_with_no_html},
+        vol.Optional("progress"): {str: cv.string_with_no_html},
         vol.Optional("create_entry"): {str: cv.string_with_no_html},
     }
     if flow_title == REQUIRED:
@@ -140,6 +138,9 @@ def gen_strings_schema(config: Config, integration: Integration):
                 cv.schema_with_slug_keys(str, slug_validator=lowercase_validator),
                 slug_validator=vol.Any("_", cv.slug),
             ),
+            vol.Optional("system_health"): {
+                vol.Optional("info"): {str: cv.string_with_no_html}
+            },
         }
     )
 

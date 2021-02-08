@@ -1,7 +1,6 @@
 """Fans on Zigbee Home Automation networks."""
 import functools
-import logging
-from typing import List
+from typing import List, Optional
 
 from zigpy.exceptions import ZigbeeException
 import zigpy.zcl.clusters.hvac as hvac
@@ -29,8 +28,6 @@ from .core.const import (
 )
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity, ZhaGroupEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 # Additional speeds in zigbee's ZCL
 # Spec is unclear as to what this value means. On King Of Fans HBUniversal
@@ -65,7 +62,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass,
         SIGNAL_ADD_ENTITIES,
         functools.partial(
-            discovery.async_add_entities, async_add_entities, entities_to_create
+            discovery.async_add_entities,
+            async_add_entities,
+            entities_to_create,
+            update_before_add=False,
         ),
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
@@ -91,18 +91,20 @@ class BaseFan(FanEntity):
         return self._state
 
     @property
-    def is_on(self) -> bool:
-        """Return true if entity is on."""
-        if self._state is None:
-            return False
-        return self._state != SPEED_OFF
-
-    @property
     def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_SET_SPEED
 
-    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    async def async_turn_on(
+        self, speed=None, percentage=None, preset_mode=None, **kwargs
+    ) -> None:
         """Turn the entity on."""
         if speed is None:
             speed = SPEED_MEDIUM
@@ -139,24 +141,15 @@ class ZhaFan(BaseFan, ZhaEntity):
             self._fan_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
         )
 
-    @callback
-    def async_restore_last_state(self, last_state):
-        """Restore previous state."""
-        self._state = VALUE_TO_SPEED.get(last_state.state, last_state.state)
+    @property
+    def speed(self) -> Optional[str]:
+        """Return the current speed."""
+        return VALUE_TO_SPEED.get(self._fan_channel.fan_mode)
 
     @callback
     def async_set_state(self, attr_id, attr_name, value):
         """Handle state update from channel."""
-        self._state = VALUE_TO_SPEED.get(value, self._state)
         self.async_write_ha_state()
-
-    async def async_update(self):
-        """Attempt to retrieve on off state from the fan."""
-        await super().async_update()
-        if self._fan_channel:
-            state = await self._fan_channel.get_attribute_value("fan_mode")
-            if state is not None:
-                self._state = VALUE_TO_SPEED.get(state, self._state)
 
 
 @GROUP_MATCH()
@@ -188,9 +181,15 @@ class FanGroup(BaseFan, ZhaGroupEntity):
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         states: List[State] = list(filter(None, all_states))
         on_states: List[State] = [state for state in states if state.state != SPEED_OFF]
+
         self._available = any(state.state != STATE_UNAVAILABLE for state in states)
         # for now just use first non off state since its kind of arbitrary
         if not on_states:
             self._state = SPEED_OFF
         else:
-            self._state = states[0].state
+            self._state = on_states[0].state
+
+    async def async_added_to_hass(self) -> None:
+        """Run when about to be added to hass."""
+        await self.async_update()
+        await super().async_added_to_hass()

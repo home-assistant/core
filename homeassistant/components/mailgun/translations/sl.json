@@ -1,9 +1,5 @@
 {
     "config": {
-        "abort": {
-            "not_internet_accessible": "\u010ce \u017eelite prejemati sporo\u010dila Mailgun, mora biti Home Assistant dostopen prek interneta.",
-            "one_instance_allowed": "Potrebna je samo ena instanca."
-        },
         "create_entry": {
             "default": "Za po\u0161iljanje dogodkov Home Assistantu boste morali nastaviti [Webhooks z Mailgun]({mailgun_url}).\n\nIzpolnite naslednje informacije:\n\n- URL: `{webhook_url}`\n- Metoda: POST\n- Vrsta vsebine: application/json\n\nGlej [dokumentacijo]({docs_url}) o tem, kako nastavite automations za obravnavo dohodnih podatkov."
         },

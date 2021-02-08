@@ -1,5 +1,4 @@
 """Support for Verisure alarm control panels."""
-import logging
 from time import sleep
 
 import homeassistant.components.alarm_control_panel as alarm
@@ -13,9 +12,8 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
 )
 
-from . import CONF_ALARM, CONF_CODE_DIGITS, CONF_GIID, HUB as hub
-
-_LOGGER = logging.getLogger(__name__)
+from . import HUB as hub
+from .const import CONF_ALARM, CONF_CODE_DIGITS, CONF_GIID, LOGGER
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -32,12 +30,12 @@ def set_arm_state(state, code=None):
     transaction_id = hub.session.set_arm_state(code, state)[
         "armStateChangeTransactionId"
     ]
-    _LOGGER.info("verisure set arm state %s", state)
+    LOGGER.info("verisure set arm state %s", state)
     transaction = {}
     while "result" not in transaction:
         sleep(0.5)
         transaction = hub.session.get_arm_state_transaction(transaction_id)
-    hub.update_overview(no_throttle=True)
+    hub.update_overview()
 
 
 class VerisureAlarm(alarm.AlarmControlPanelEntity):
@@ -55,10 +53,10 @@ class VerisureAlarm(alarm.AlarmControlPanelEntity):
         giid = hub.config.get(CONF_GIID)
         if giid is not None:
             aliass = {i["giid"]: i["alias"] for i in hub.session.installations}
-            if giid in aliass.keys():
+            if giid in aliass:
                 return "{} alarm".format(aliass[giid])
 
-            _LOGGER.error("Verisure installation giid not found: %s", giid)
+            LOGGER.error("Verisure installation giid not found: %s", giid)
 
         return "{} alarm".format(hub.session.installations[0]["alias"])
 
@@ -93,7 +91,7 @@ class VerisureAlarm(alarm.AlarmControlPanelEntity):
         elif status == "ARMED_AWAY":
             self._state = STATE_ALARM_ARMED_AWAY
         elif status != "PENDING":
-            _LOGGER.error("Unknown alarm state %s", status)
+            LOGGER.error("Unknown alarm state %s", status)
         self._changed_by = hub.get_first("$.armState.name")
 
     def alarm_disarm(self, code=None):

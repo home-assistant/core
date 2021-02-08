@@ -1,7 +1,4 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
-
-import logging
-
 from pyrainbird import AvailableStations, RainbirdController
 import voluptuous as vol
 
@@ -11,8 +8,6 @@ from homeassistant.helpers import config_validation as cv
 
 from . import CONF_ZONES, DATA_RAINBIRD, DOMAIN, RAINBIRD_CONTROLLER
 
-_LOGGER = logging.getLogger(__name__)
-
 ATTR_DURATION = "duration"
 
 SERVICE_START_IRRIGATION = "start_irrigation"
@@ -20,7 +15,7 @@ SERVICE_START_IRRIGATION = "start_irrigation"
 SERVICE_SCHEMA_IRRIGATION = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_DURATION): vol.All(vol.Coerce(float), vol.Range(min=0)),
+        vol.Required(ATTR_DURATION): cv.positive_float,
     }
 )
 

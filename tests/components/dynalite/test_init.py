@@ -1,6 +1,8 @@
 """Test Dynalite __init__."""
 
 
+from unittest.mock import call, patch
+
 import pytest
 from voluptuous import MultipleInvalid
 
@@ -8,7 +10,6 @@ import homeassistant.components.dynalite.const as dynalite
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_ROOM
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import call, patch
 from tests.common import MockConfigEntry
 
 

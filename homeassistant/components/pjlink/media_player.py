@@ -1,6 +1,4 @@
 """Support for controlling projector via the PJLink protocol."""
-import logging
-
 from pypjlink import MUTE_AUDIO, Projector
 from pypjlink.projector import ProjectorError
 import voluptuous as vol
@@ -21,8 +19,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_ENCODING = "encoding"
 

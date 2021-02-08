@@ -1,6 +1,4 @@
 """Support Wink alarm control panels."""
-import logging
-
 import pywink
 
 import homeassistant.components.alarm_control_panel as alarm
@@ -15,8 +13,6 @@ from homeassistant.const import (
 )
 
 from . import DOMAIN, WinkDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 STATE_ALARM_PRIVACY = "Private"
 

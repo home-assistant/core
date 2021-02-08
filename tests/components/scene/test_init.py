@@ -1,149 +1,143 @@
 """The tests for the Scene component."""
 import io
-import unittest
+
+import pytest
 
 from homeassistant.components import light, scene
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_ON
+from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import loader as yaml_loader
 
-from tests.common import get_test_home_assistant, mock_service
-from tests.components.light import common as common_light
-from tests.components.scene import common
+from tests.common import async_mock_service
 
 
-class TestScene(unittest.TestCase):
-    """Test the scene component."""
+@pytest.fixture(autouse=True)
+def entities(hass):
+    """Initialize the test light."""
+    platform = getattr(hass.components, "test.light")
+    platform.init()
+    yield platform.ENTITIES[0:2]
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        test_light = getattr(self.hass.components, "test.light")
-        test_light.init()
 
-        assert setup_component(
-            self.hass, light.DOMAIN, {light.DOMAIN: {"platform": "test"}}
-        )
-        self.hass.block_till_done()
+async def test_config_yaml_alias_anchor(hass, entities):
+    """Test the usage of YAML aliases and anchors.
 
-        self.light_1, self.light_2 = test_light.ENTITIES[0:2]
+    The following test scene configuration is equivalent to:
 
-        common_light.turn_off(
-            self.hass, [self.light_1.entity_id, self.light_2.entity_id]
-        )
+    scene:
+      - name: test
+        entities:
+          light_1: &light_1_state
+            state: 'on'
+            brightness: 100
+          light_2: *light_1_state
 
-        self.hass.block_till_done()
+    When encountering a YAML alias/anchor, the PyYAML parser will use a
+    reference to the original dictionary, instead of creating a copy, so
+    care needs to be taken to not modify the original.
+    """
+    light_1, light_2 = await setup_lights(hass, entities)
+    entity_state = {"state": "on", "brightness": 100}
 
-        assert not self.light_1.is_on
-        assert not self.light_2.is_on
-        self.addCleanup(self.tear_down_cleanup)
+    assert await async_setup_component(
+        hass,
+        scene.DOMAIN,
+        {
+            "scene": [
+                {
+                    "name": "test",
+                    "entities": {
+                        light_1.entity_id: entity_state,
+                        light_2.entity_id: entity_state,
+                    },
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
 
-    def tear_down_cleanup(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+    await activate(hass, "scene.test")
 
-    def test_config_yaml_alias_anchor(self):
-        """Test the usage of YAML aliases and anchors.
+    assert light.is_on(hass, light_1.entity_id)
+    assert light.is_on(hass, light_2.entity_id)
+    assert 100 == light_1.last_call("turn_on")[1].get("brightness")
+    assert 100 == light_2.last_call("turn_on")[1].get("brightness")
 
-        The following test scene configuration is equivalent to:
 
-        scene:
-          - name: test
-            entities:
-              light_1: &light_1_state
-                state: 'on'
-                brightness: 100
-              light_2: *light_1_state
+async def test_config_yaml_bool(hass, entities):
+    """Test parsing of booleans in yaml config."""
+    light_1, light_2 = await setup_lights(hass, entities)
 
-        When encountering a YAML alias/anchor, the PyYAML parser will use a
-        reference to the original dictionary, instead of creating a copy, so
-        care needs to be taken to not modify the original.
-        """
-        entity_state = {"state": "on", "brightness": 100}
-        assert setup_component(
-            self.hass,
-            scene.DOMAIN,
-            {
-                "scene": [
-                    {
-                        "name": "test",
-                        "entities": {
-                            self.light_1.entity_id: entity_state,
-                            self.light_2.entity_id: entity_state,
-                        },
-                    }
-                ]
-            },
-        )
-        self.hass.block_till_done()
+    config = (
+        "scene:\n"
+        "  - name: test\n"
+        "    entities:\n"
+        f"      {light_1.entity_id}: on\n"
+        f"      {light_2.entity_id}:\n"
+        "        state: on\n"
+        "        brightness: 100\n"
+    )
 
-        common.activate(self.hass, "scene.test")
-        self.hass.block_till_done()
+    with io.StringIO(config) as file:
+        doc = yaml_loader.yaml.safe_load(file)
 
-        assert self.light_1.is_on
-        assert self.light_2.is_on
-        assert 100 == self.light_1.last_call("turn_on")[1].get("brightness")
-        assert 100 == self.light_2.last_call("turn_on")[1].get("brightness")
+    assert await async_setup_component(hass, scene.DOMAIN, doc)
+    await hass.async_block_till_done()
 
-    def test_config_yaml_bool(self):
-        """Test parsing of booleans in yaml config."""
-        config = (
-            "scene:\n"
-            "  - name: test\n"
-            "    entities:\n"
-            f"      {self.light_1.entity_id}: on\n"
-            f"      {self.light_2.entity_id}:\n"
-            "        state: on\n"
-            "        brightness: 100\n"
-        )
+    await activate(hass, "scene.test")
 
-        with io.StringIO(config) as file:
-            doc = yaml_loader.yaml.safe_load(file)
+    assert light.is_on(hass, light_1.entity_id)
+    assert light.is_on(hass, light_2.entity_id)
+    assert 100 == light_2.last_call("turn_on")[1].get("brightness")
 
-        assert setup_component(self.hass, scene.DOMAIN, doc)
-        common.activate(self.hass, "scene.test")
-        self.hass.block_till_done()
 
-        assert self.light_1.is_on
-        assert self.light_2.is_on
-        assert 100 == self.light_2.last_call("turn_on")[1].get("brightness")
+async def test_activate_scene(hass, entities):
+    """Test active scene."""
+    light_1, light_2 = await setup_lights(hass, entities)
 
-    def test_activate_scene(self):
-        """Test active scene."""
-        assert setup_component(
-            self.hass,
-            scene.DOMAIN,
-            {
-                "scene": [
-                    {
-                        "name": "test",
-                        "entities": {
-                            self.light_1.entity_id: "on",
-                            self.light_2.entity_id: {"state": "on", "brightness": 100},
-                        },
-                    }
-                ]
-            },
-        )
-        self.hass.block_till_done()
+    assert await async_setup_component(
+        hass,
+        scene.DOMAIN,
+        {
+            "scene": [
+                {
+                    "name": "test",
+                    "entities": {
+                        light_1.entity_id: "on",
+                        light_2.entity_id: {"state": "on", "brightness": 100},
+                    },
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await activate(hass, "scene.test")
 
-        common.activate(self.hass, "scene.test")
-        self.hass.block_till_done()
+    assert light.is_on(hass, light_1.entity_id)
+    assert light.is_on(hass, light_2.entity_id)
+    assert light_2.last_call("turn_on")[1].get("brightness") == 100
 
-        assert self.light_1.is_on
-        assert self.light_2.is_on
-        assert self.light_2.last_call("turn_on")[1].get("brightness") == 100
+    calls = async_mock_service(hass, "light", "turn_on")
 
-        turn_on_calls = mock_service(self.hass, "light", "turn_on")
+    await hass.services.async_call(
+        scene.DOMAIN, "turn_on", {"transition": 42, "entity_id": "scene.test"}
+    )
+    await hass.async_block_till_done()
 
-        self.hass.services.call(
-            scene.DOMAIN, "turn_on", {"transition": 42, "entity_id": "scene.test"}
-        )
-        self.hass.block_till_done()
+    assert len(calls) == 1
+    assert calls[0].domain == "light"
+    assert calls[0].service == "turn_on"
+    assert calls[0].data.get("transition") == 42
 
-        assert len(turn_on_calls) == 1
-        assert turn_on_calls[0].domain == "light"
-        assert turn_on_calls[0].service == "turn_on"
-        assert turn_on_calls[0].data.get("transition") == 42
+
+async def activate(hass, entity_id=ENTITY_MATCH_ALL):
+    """Activate a scene."""
+    data = {}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    await hass.services.async_call(scene.DOMAIN, SERVICE_TURN_ON, data, blocking=True)
 
 
 async def test_services_registered(hass):
@@ -152,3 +146,26 @@ async def test_services_registered(hass):
     assert hass.services.has_service("scene", "reload")
     assert hass.services.has_service("scene", "turn_on")
     assert hass.services.has_service("scene", "apply")
+
+
+async def setup_lights(hass, entities):
+    """Set up the light component."""
+    assert await async_setup_component(
+        hass, light.DOMAIN, {light.DOMAIN: {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    light_1, light_2 = entities
+
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {"entity_id": [light_1.entity_id, light_2.entity_id]},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert not light.is_on(hass, light_1.entity_id)
+    assert not light.is_on(hass, light_2.entity_id)
+
+    return light_1, light_2

@@ -9,15 +9,14 @@ from pydaikin.daikin_base import Appliance
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_HOSTS, CONF_PASSWORD
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_HOSTS, CONF_PASSWORD
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
-from . import config_flow  # noqa: F401
-from .const import CONF_KEY, CONF_UUID, KEY_MAC, TIMEOUT
+from .const import CONF_UUID, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +29,7 @@ COMPONENT_TYPES = ["climate", "sensor", "switch"]
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        cv.deprecated(DOMAIN, invalidation_version="0.113.0"),
+        cv.deprecated(DOMAIN),
         {
             DOMAIN: vol.Schema(
                 {
@@ -77,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     daikin_api = await daikin_api_setup(
         hass,
         conf[CONF_HOST],
-        conf.get(CONF_KEY),
+        conf.get(CONF_API_KEY),
         conf.get(CONF_UUID),
         conf.get(CONF_PASSWORD),
     )

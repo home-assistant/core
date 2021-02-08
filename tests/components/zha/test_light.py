@@ -1,5 +1,6 @@
 """Test zha light."""
 from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock, call, patch, sentinel
 
 import pytest
 import zigpy.profiles.zha as zha
@@ -23,7 +24,6 @@ from .common import (
     send_attributes_report,
 )
 
-from tests.async_mock import AsyncMock, MagicMock, call, patch, sentinel
 from tests.common import async_fire_time_changed
 
 ON = 1
@@ -323,7 +323,7 @@ async def async_test_on_off_from_hass(hass, cluster, entity_id):
     assert cluster.request.call_count == 1
     assert cluster.request.await_count == 1
     assert cluster.request.call_args == call(
-        False, ON, (), expect_reply=True, manufacturer=None, tsn=None
+        False, ON, (), expect_reply=True, manufacturer=None, tries=1, tsn=None
     )
 
     await async_test_off_from_hass(hass, cluster, entity_id)
@@ -340,7 +340,7 @@ async def async_test_off_from_hass(hass, cluster, entity_id):
     assert cluster.request.call_count == 1
     assert cluster.request.await_count == 1
     assert cluster.request.call_args == call(
-        False, OFF, (), expect_reply=True, manufacturer=None, tsn=None
+        False, OFF, (), expect_reply=True, manufacturer=None, tries=1, tsn=None
     )
 
 
@@ -360,7 +360,7 @@ async def async_test_level_on_off_from_hass(
     assert level_cluster.request.call_count == 0
     assert level_cluster.request.await_count == 0
     assert on_off_cluster.request.call_args == call(
-        False, ON, (), expect_reply=True, manufacturer=None, tsn=None
+        False, ON, (), expect_reply=True, manufacturer=None, tries=1, tsn=None
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
@@ -373,7 +373,7 @@ async def async_test_level_on_off_from_hass(
     assert level_cluster.request.call_count == 1
     assert level_cluster.request.await_count == 1
     assert on_off_cluster.request.call_args == call(
-        False, ON, (), expect_reply=True, manufacturer=None, tsn=None
+        False, ON, (), expect_reply=True, manufacturer=None, tries=1, tsn=None
     )
     assert level_cluster.request.call_args == call(
         False,
@@ -383,6 +383,7 @@ async def async_test_level_on_off_from_hass(
         100.0,
         expect_reply=True,
         manufacturer=None,
+        tries=1,
         tsn=None,
     )
     on_off_cluster.request.reset_mock()
@@ -396,7 +397,7 @@ async def async_test_level_on_off_from_hass(
     assert level_cluster.request.call_count == 1
     assert level_cluster.request.await_count == 1
     assert on_off_cluster.request.call_args == call(
-        False, ON, (), expect_reply=True, manufacturer=None, tsn=None
+        False, ON, (), expect_reply=True, manufacturer=None, tries=1, tsn=None
     )
     assert level_cluster.request.call_args == call(
         False,
@@ -406,6 +407,7 @@ async def async_test_level_on_off_from_hass(
         1,
         expect_reply=True,
         manufacturer=None,
+        tries=1,
         tsn=None,
     )
     on_off_cluster.request.reset_mock()
@@ -445,6 +447,7 @@ async def async_test_flash_from_hass(hass, cluster, entity_id, flash):
         0,
         expect_reply=True,
         manufacturer=None,
+        tries=1,
         tsn=None,
     )
 

@@ -10,8 +10,9 @@
             "user": {
                 "data": {
                     "email": "Adres e-mail",
-                    "password": "[%key_id:common::config_flow::data::password%]"
+                    "password": "Has\u0142o"
                 },
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?",
                 "title": "PoolSense"
             }
         }

@@ -3,6 +3,9 @@ import json
 import os
 import time
 
+# from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+
 from august.activity import (
     ACTIVITY_ACTIONS_DOOR_OPERATION,
     ACTIVITY_ACTIONS_DOORBELL_DING,
@@ -27,8 +30,6 @@ from homeassistant.components.august import (
 )
 from homeassistant.setup import async_setup_component
 
-# from tests.async_mock import AsyncMock
-from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
 from tests.common import load_fixture
 
 

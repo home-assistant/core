@@ -8,7 +8,7 @@
             "onvif_error": "Error de configuraci\u00f3n del dispositivo ONVIF.  Revise los registros para m\u00e1s informaci\u00f3n."
         },
         "error": {
-            "connection_failed": "No se pudo conectar al servicio ONVIF con las credenciales proporcionadas."
+            "cannot_connect": "No se pudo conectar"
         },
         "step": {
             "auth": {

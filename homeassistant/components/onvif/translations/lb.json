@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ONVIF Apparat ass scho konfigur\u00e9iert.",
-            "already_in_progress": "Konfiguratioun's Oflaf fir den ONVIF Apparat ass schonn am gaangen.",
+            "already_configured": "Apparat ass scho konfigur\u00e9iert.",
+            "already_in_progress": "Konfiguratioun's Oflaf ass schonn am gaangen.",
             "no_h264": "Keng H264 Streams disponibel. Iwwerpr\u00e9if Profil Konfiguratioun op dengem Apparat.",
             "no_mac": "Konnt keng eenzegarteg ID ariichte fir den ONVIF Apparat.",
             "onvif_error": "Feeler beim ariichten vum ONVIF Apparat. Kuck d'Logs fir m\u00e9i Informatiounen."
         },
         "error": {
-            "connection_failed": "Konnt sech net mam ONVIF Service mat den ugebueden Umeldungsinformatiounen verbannen."
+            "cannot_connect": "Feeler beim verbannen"
         },
         "step": {
             "auth": {

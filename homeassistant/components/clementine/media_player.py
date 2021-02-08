@@ -1,6 +1,5 @@
 """Support for Clementine Music Player as media player."""
 from datetime import timedelta
-import logging
 import time
 
 from clementineremote import ClementineRemote
@@ -27,8 +26,6 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Clementine Remote"
 DEFAULT_PORT = 5500

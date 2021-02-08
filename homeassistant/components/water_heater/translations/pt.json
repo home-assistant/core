@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "action_type": {
+            "turn_off": "Desligar {entity_name}",
+            "turn_on": "Ligar {entity_name}"
+        }
+    }
+}

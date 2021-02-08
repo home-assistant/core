@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Nur eine einzige Konfiguration von MQTT ist zul\u00e4ssig."
+            "single_instance_allowed": "Bereits konfiguriert. Es ist nur eine Konfiguration m\u00f6glich."
         },
         "error": {
-            "cannot_connect": "Es konnte keine Verbindung zum Broker hergestellt werden."
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "broker": {
@@ -49,6 +49,9 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
         "step": {
             "broker": {
                 "data": {
@@ -56,7 +59,15 @@
                     "password": "Passwort",
                     "port": "Port",
                     "username": "Benutzername"
-                }
+                },
+                "description": "Bitte gib die Verbindungsinformationen deines MQTT-Brokers ein."
+            },
+            "options": {
+                "data": {
+                    "discovery": "Erkennung aktivieren",
+                    "will_enable": "Letzten Willen aktivieren"
+                },
+                "description": "Bitte die MQTT-Einstellungen ausw\u00e4hlen."
             }
         }
     }

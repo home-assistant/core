@@ -1,8 +1,27 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt"
+        },
+        "error": {
+            "discovery_error": "Es konnte kein Xiaomi Aqara Gateway gefunden werden, versuche die IP von Home Assistant als Interface zu nutzen",
+            "invalid_host": "Ung\u00fcltiger Hostname oder IP-Adresse, schau unter https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+            "invalid_mac": "Ung\u00fcltige MAC-Adresse"
+        },
         "flow_title": "Xiaomi Aqara Gateway: {name}",
         "step": {
+            "select": {
+                "data": {
+                    "select_ip": "IP-Adresse"
+                }
+            },
             "user": {
+                "data": {
+                    "host": "IP-Adresse",
+                    "mac": "MAC-Adresse"
+                },
+                "description": "Stelle eine Verbindung zu deinem Xiaomi Aqara Gateway her. Wenn die IP- und MAC-Adressen leer bleiben, wird die automatische Erkennung verwendet",
                 "title": "Xiaomi Aqara Gateway"
             }
         }

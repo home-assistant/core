@@ -27,8 +27,6 @@ from .hls import async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-
 STREAM_SERVICE_SCHEMA = vol.Schema({vol.Required(CONF_STREAM_SOURCE): cv.string})
 
 SERVICE_RECORD_SCHEMA = STREAM_SERVICE_SCHEMA.extend(
@@ -171,7 +169,7 @@ class Stream:
         # pylint: disable=import-outside-toplevel
         from .worker import stream_worker
 
-        if self._thread is None or not self._thread.isAlive():
+        if self._thread is None or not self._thread.is_alive():
             if self._thread is not None:
                 # The thread must have crashed/exited. Join to clean up the
                 # previous thread.

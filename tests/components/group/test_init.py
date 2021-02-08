@@ -1,7 +1,7 @@
 """The tests for the Group components."""
 # pylint: disable=protected-access
 from collections import OrderedDict
-import unittest
+from unittest.mock import patch
 
 import homeassistant.components.group as group
 from homeassistant.const import (
@@ -18,307 +18,374 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState
 from homeassistant.helpers.event import TRACK_STATE_CHANGE_CALLBACKS
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.common import assert_setup_component
 from tests.components.group import common
 
 
-class TestComponentsGroup(unittest.TestCase):
-    """Test Group component."""
+async def test_setup_group_with_mixed_groupable_states(hass):
+    """Try to set up a group with mixed groupable states."""
 
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        for domain in ["device_tracker", "light", "group", "sensor"]:
-            setup_component(self.hass, domain, {})
-        self.addCleanup(self.hass.stop)
+    hass.states.async_set("light.Bowl", STATE_ON)
+    hass.states.async_set("device_tracker.Paulus", STATE_HOME)
 
-    def test_setup_group_with_mixed_groupable_states(self):
-        """Try to set up a group with mixed groupable states."""
-        self.hass.states.set("light.Bowl", STATE_ON)
-        self.hass.states.set("device_tracker.Paulus", STATE_HOME)
-        group.Group.create_group(
-            self.hass, "person_and_light", ["light.Bowl", "device_tracker.Paulus"]
-        )
+    assert await async_setup_component(hass, "group", {})
 
-        assert (
-            STATE_ON == self.hass.states.get(f"{group.DOMAIN}.person_and_light").state
-        )
+    await group.Group.async_create_group(
+        hass, "person_and_light", ["light.Bowl", "device_tracker.Paulus"]
+    )
 
-    def test_setup_group_with_a_non_existing_state(self):
-        """Try to set up a group with a non existing state."""
-        self.hass.states.set("light.Bowl", STATE_ON)
+    await hass.async_block_till_done()
 
-        grp = group.Group.create_group(
-            self.hass, "light_and_nothing", ["light.Bowl", "non.existing"]
-        )
+    assert STATE_ON == hass.states.get(f"{group.DOMAIN}.person_and_light").state
 
-        assert STATE_ON == grp.state
 
-    def test_setup_group_with_non_groupable_states(self):
-        """Test setup with groups which are not groupable."""
-        self.hass.states.set("cast.living_room", "Plex")
-        self.hass.states.set("cast.bedroom", "Netflix")
+async def test_setup_group_with_a_non_existing_state(hass):
+    """Try to set up a group with a non existing state."""
+    hass.states.async_set("light.Bowl", STATE_ON)
 
-        grp = group.Group.create_group(
-            self.hass, "chromecasts", ["cast.living_room", "cast.bedroom"]
-        )
+    assert await async_setup_component(hass, "group", {})
 
-        assert grp.state is None
+    grp = await group.Group.async_create_group(
+        hass, "light_and_nothing", ["light.Bowl", "non.existing"]
+    )
 
-    def test_setup_empty_group(self):
-        """Try to set up an empty group."""
-        grp = group.Group.create_group(self.hass, "nothing", [])
+    assert STATE_ON == grp.state
 
-        assert grp.state is None
 
-    def test_monitor_group(self):
-        """Test if the group keeps track of states."""
-        self.hass.states.set("light.Bowl", STATE_ON)
-        self.hass.states.set("light.Ceiling", STATE_OFF)
-        test_group = group.Group.create_group(
-            self.hass, "init_group", ["light.Bowl", "light.Ceiling"], False
-        )
+async def test_setup_group_with_non_groupable_states(hass):
+    """Test setup with groups which are not groupable."""
+    hass.states.async_set("cast.living_room", "Plex")
+    hass.states.async_set("cast.bedroom", "Netflix")
 
-        # Test if group setup in our init mode is ok
-        assert test_group.entity_id in self.hass.states.entity_ids()
+    assert await async_setup_component(hass, "group", {})
 
-        group_state = self.hass.states.get(test_group.entity_id)
-        assert STATE_ON == group_state.state
-        assert group_state.attributes.get(group.ATTR_AUTO)
+    grp = await group.Group.async_create_group(
+        hass, "chromecasts", ["cast.living_room", "cast.bedroom"]
+    )
 
-    def test_group_turns_off_if_all_off(self):
-        """Test if turn off if the last device that was on turns off."""
-        self.hass.states.set("light.Bowl", STATE_OFF)
-        self.hass.states.set("light.Ceiling", STATE_OFF)
-        test_group = group.Group.create_group(
-            self.hass, "init_group", ["light.Bowl", "light.Ceiling"], False
-        )
+    assert grp.state is None
 
-        self.hass.block_till_done()
 
-        group_state = self.hass.states.get(test_group.entity_id)
-        assert STATE_OFF == group_state.state
+async def test_setup_empty_group(hass):
+    """Try to set up an empty group."""
+    grp = await group.Group.async_create_group(hass, "nothing", [])
 
-    def test_group_turns_on_if_all_are_off_and_one_turns_on(self):
-        """Test if turn on if all devices were turned off and one turns on."""
-        self.hass.states.set("light.Bowl", STATE_OFF)
-        self.hass.states.set("light.Ceiling", STATE_OFF)
-        test_group = group.Group.create_group(
-            self.hass, "init_group", ["light.Bowl", "light.Ceiling"], False
-        )
+    assert grp.state is None
 
-        # Turn one on
-        self.hass.states.set("light.Ceiling", STATE_ON)
-        self.hass.block_till_done()
 
-        group_state = self.hass.states.get(test_group.entity_id)
-        assert STATE_ON == group_state.state
+async def test_monitor_group(hass):
+    """Test if the group keeps track of states."""
+    hass.states.async_set("light.Bowl", STATE_ON)
+    hass.states.async_set("light.Ceiling", STATE_OFF)
 
-    def test_allgroup_stays_off_if_all_are_off_and_one_turns_on(self):
-        """Group with all: true, stay off if one device turns on."""
-        self.hass.states.set("light.Bowl", STATE_OFF)
-        self.hass.states.set("light.Ceiling", STATE_OFF)
-        test_group = group.Group.create_group(
-            self.hass, "init_group", ["light.Bowl", "light.Ceiling"], False, mode=True
-        )
+    assert await async_setup_component(hass, "group", {})
 
-        # Turn one on
-        self.hass.states.set("light.Ceiling", STATE_ON)
-        self.hass.block_till_done()
+    test_group = await group.Group.async_create_group(
+        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+    )
 
-        group_state = self.hass.states.get(test_group.entity_id)
-        assert STATE_OFF == group_state.state
+    # Test if group setup in our init mode is ok
+    assert test_group.entity_id in hass.states.async_entity_ids()
 
-    def test_allgroup_turn_on_if_last_turns_on(self):
-        """Group with all: true, turn on if all devices are on."""
-        self.hass.states.set("light.Bowl", STATE_ON)
-        self.hass.states.set("light.Ceiling", STATE_OFF)
-        test_group = group.Group.create_group(
-            self.hass, "init_group", ["light.Bowl", "light.Ceiling"], False, mode=True
-        )
+    group_state = hass.states.get(test_group.entity_id)
+    assert STATE_ON == group_state.state
+    assert group_state.attributes.get(group.ATTR_AUTO)
 
-        # Turn one on
-        self.hass.states.set("light.Ceiling", STATE_ON)
-        self.hass.block_till_done()
 
-        group_state = self.hass.states.get(test_group.entity_id)
-        assert STATE_ON == group_state.state
+async def test_group_turns_off_if_all_off(hass):
+    """Test if turn off if the last device that was on turns off."""
+    hass.states.async_set("light.Bowl", STATE_OFF)
+    hass.states.async_set("light.Ceiling", STATE_OFF)
 
-    def test_expand_entity_ids(self):
-        """Test expand_entity_ids method."""
-        self.hass.states.set("light.Bowl", STATE_ON)
-        self.hass.states.set("light.Ceiling", STATE_OFF)
-        test_group = group.Group.create_group(
-            self.hass, "init_group", ["light.Bowl", "light.Ceiling"], False
-        )
+    assert await async_setup_component(hass, "group", {})
 
-        assert sorted(["light.ceiling", "light.bowl"]) == sorted(
-            group.expand_entity_ids(self.hass, [test_group.entity_id])
-        )
+    test_group = await group.Group.async_create_group(
+        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+    )
 
-    def test_expand_entity_ids_does_not_return_duplicates(self):
-        """Test that expand_entity_ids does not return duplicates."""
-        self.hass.states.set("light.Bowl", STATE_ON)
-        self.hass.states.set("light.Ceiling", STATE_OFF)
-        test_group = group.Group.create_group(
-            self.hass, "init_group", ["light.Bowl", "light.Ceiling"], False
-        )
+    await hass.async_block_till_done()
 
-        assert ["light.bowl", "light.ceiling"] == sorted(
-            group.expand_entity_ids(self.hass, [test_group.entity_id, "light.Ceiling"])
-        )
+    group_state = hass.states.get(test_group.entity_id)
+    assert STATE_OFF == group_state.state
 
-        assert ["light.bowl", "light.ceiling"] == sorted(
-            group.expand_entity_ids(self.hass, ["light.bowl", test_group.entity_id])
-        )
 
-    def test_expand_entity_ids_recursive(self):
-        """Test expand_entity_ids method with a group that contains itself."""
-        self.hass.states.set("light.Bowl", STATE_ON)
-        self.hass.states.set("light.Ceiling", STATE_OFF)
-        test_group = group.Group.create_group(
-            self.hass,
-            "init_group",
-            ["light.Bowl", "light.Ceiling", "group.init_group"],
-            False,
-        )
+async def test_group_turns_on_if_all_are_off_and_one_turns_on(hass):
+    """Test if turn on if all devices were turned off and one turns on."""
+    hass.states.async_set("light.Bowl", STATE_OFF)
+    hass.states.async_set("light.Ceiling", STATE_OFF)
 
-        assert sorted(["light.ceiling", "light.bowl"]) == sorted(
-            group.expand_entity_ids(self.hass, [test_group.entity_id])
-        )
+    assert await async_setup_component(hass, "group", {})
 
-    def test_expand_entity_ids_ignores_non_strings(self):
-        """Test that non string elements in lists are ignored."""
-        assert [] == group.expand_entity_ids(self.hass, [5, True])
+    test_group = await group.Group.async_create_group(
+        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+    )
 
-    def test_get_entity_ids(self):
-        """Test get_entity_ids method."""
-        self.hass.states.set("light.Bowl", STATE_ON)
-        self.hass.states.set("light.Ceiling", STATE_OFF)
-        test_group = group.Group.create_group(
-            self.hass, "init_group", ["light.Bowl", "light.Ceiling"], False
-        )
+    # Turn one on
+    hass.states.async_set("light.Ceiling", STATE_ON)
+    await hass.async_block_till_done()
 
-        assert ["light.bowl", "light.ceiling"] == sorted(
-            group.get_entity_ids(self.hass, test_group.entity_id)
-        )
+    group_state = hass.states.get(test_group.entity_id)
+    assert STATE_ON == group_state.state
 
-    def test_get_entity_ids_with_domain_filter(self):
-        """Test if get_entity_ids works with a domain_filter."""
-        self.hass.states.set("switch.AC", STATE_OFF)
 
-        mixed_group = group.Group.create_group(
-            self.hass, "mixed_group", ["light.Bowl", "switch.AC"], False
-        )
+async def test_allgroup_stays_off_if_all_are_off_and_one_turns_on(hass):
+    """Group with all: true, stay off if one device turns on."""
+    hass.states.async_set("light.Bowl", STATE_OFF)
+    hass.states.async_set("light.Ceiling", STATE_OFF)
 
-        assert ["switch.ac"] == group.get_entity_ids(
-            self.hass, mixed_group.entity_id, domain_filter="switch"
-        )
+    assert await async_setup_component(hass, "group", {})
 
-    def test_get_entity_ids_with_non_existing_group_name(self):
-        """Test get_entity_ids with a non existing group."""
-        assert [] == group.get_entity_ids(self.hass, "non_existing")
+    test_group = await group.Group.async_create_group(
+        hass, "init_group", ["light.Bowl", "light.Ceiling"], False, mode=True
+    )
 
-    def test_get_entity_ids_with_non_group_state(self):
-        """Test get_entity_ids with a non group state."""
-        assert [] == group.get_entity_ids(self.hass, "switch.AC")
+    # Turn one on
+    hass.states.async_set("light.Ceiling", STATE_ON)
+    await hass.async_block_till_done()
 
-    def test_group_being_init_before_first_tracked_state_is_set_to_on(self):
-        """Test if the groups turn on.
+    group_state = hass.states.get(test_group.entity_id)
+    assert STATE_OFF == group_state.state
 
-        If no states existed and now a state it is tracking is being added
-        as ON.
-        """
-        test_group = group.Group.create_group(
-            self.hass, "test group", ["light.not_there_1"]
-        )
 
-        self.hass.states.set("light.not_there_1", STATE_ON)
+async def test_allgroup_turn_on_if_last_turns_on(hass):
+    """Group with all: true, turn on if all devices are on."""
+    hass.states.async_set("light.Bowl", STATE_ON)
+    hass.states.async_set("light.Ceiling", STATE_OFF)
 
-        self.hass.block_till_done()
+    assert await async_setup_component(hass, "group", {})
 
-        group_state = self.hass.states.get(test_group.entity_id)
-        assert STATE_ON == group_state.state
+    test_group = await group.Group.async_create_group(
+        hass, "init_group", ["light.Bowl", "light.Ceiling"], False, mode=True
+    )
 
-    def test_group_being_init_before_first_tracked_state_is_set_to_off(self):
-        """Test if the group turns off.
+    # Turn one on
+    hass.states.async_set("light.Ceiling", STATE_ON)
+    await hass.async_block_till_done()
 
-        If no states existed and now a state it is tracking is being added
-        as OFF.
-        """
-        test_group = group.Group.create_group(
-            self.hass, "test group", ["light.not_there_1"]
-        )
+    group_state = hass.states.get(test_group.entity_id)
+    assert STATE_ON == group_state.state
 
-        self.hass.states.set("light.not_there_1", STATE_OFF)
 
-        self.hass.block_till_done()
+async def test_expand_entity_ids(hass):
+    """Test expand_entity_ids method."""
+    hass.states.async_set("light.Bowl", STATE_ON)
+    hass.states.async_set("light.Ceiling", STATE_OFF)
 
-        group_state = self.hass.states.get(test_group.entity_id)
-        assert STATE_OFF == group_state.state
+    assert await async_setup_component(hass, "group", {})
 
-    def test_groups_get_unique_names(self):
-        """Two groups with same name should both have a unique entity id."""
-        grp1 = group.Group.create_group(self.hass, "Je suis Charlie")
-        grp2 = group.Group.create_group(self.hass, "Je suis Charlie")
+    test_group = await group.Group.async_create_group(
+        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+    )
 
-        assert grp1.entity_id != grp2.entity_id
+    assert sorted(["light.ceiling", "light.bowl"]) == sorted(
+        group.expand_entity_ids(hass, [test_group.entity_id])
+    )
 
-    def test_expand_entity_ids_expands_nested_groups(self):
-        """Test if entity ids epands to nested groups."""
-        group.Group.create_group(self.hass, "light", ["light.test_1", "light.test_2"])
-        group.Group.create_group(
-            self.hass, "switch", ["switch.test_1", "switch.test_2"]
-        )
-        group.Group.create_group(
-            self.hass, "group_of_groups", ["group.light", "group.switch"]
-        )
 
-        assert [
-            "light.test_1",
-            "light.test_2",
-            "switch.test_1",
-            "switch.test_2",
-        ] == sorted(group.expand_entity_ids(self.hass, ["group.group_of_groups"]))
+async def test_expand_entity_ids_does_not_return_duplicates(hass):
+    """Test that expand_entity_ids does not return duplicates."""
+    hass.states.async_set("light.Bowl", STATE_ON)
+    hass.states.async_set("light.Ceiling", STATE_OFF)
 
-    def test_set_assumed_state_based_on_tracked(self):
-        """Test assumed state."""
-        self.hass.states.set("light.Bowl", STATE_ON)
-        self.hass.states.set("light.Ceiling", STATE_OFF)
-        test_group = group.Group.create_group(
-            self.hass, "init_group", ["light.Bowl", "light.Ceiling", "sensor.no_exist"]
-        )
+    assert await async_setup_component(hass, "group", {})
 
-        state = self.hass.states.get(test_group.entity_id)
-        assert not state.attributes.get(ATTR_ASSUMED_STATE)
+    test_group = await group.Group.async_create_group(
+        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+    )
 
-        self.hass.states.set("light.Bowl", STATE_ON, {ATTR_ASSUMED_STATE: True})
-        self.hass.block_till_done()
+    assert ["light.bowl", "light.ceiling"] == sorted(
+        group.expand_entity_ids(hass, [test_group.entity_id, "light.Ceiling"])
+    )
 
-        state = self.hass.states.get(test_group.entity_id)
-        assert state.attributes.get(ATTR_ASSUMED_STATE)
+    assert ["light.bowl", "light.ceiling"] == sorted(
+        group.expand_entity_ids(hass, ["light.bowl", test_group.entity_id])
+    )
 
-        self.hass.states.set("light.Bowl", STATE_ON)
-        self.hass.block_till_done()
 
-        state = self.hass.states.get(test_group.entity_id)
-        assert not state.attributes.get(ATTR_ASSUMED_STATE)
+async def test_expand_entity_ids_recursive(hass):
+    """Test expand_entity_ids method with a group that contains itself."""
+    hass.states.async_set("light.Bowl", STATE_ON)
+    hass.states.async_set("light.Ceiling", STATE_OFF)
 
-    def test_group_updated_after_device_tracker_zone_change(self):
-        """Test group state when device tracker in group changes zone."""
-        self.hass.states.set("device_tracker.Adam", STATE_HOME)
-        self.hass.states.set("device_tracker.Eve", STATE_NOT_HOME)
-        self.hass.block_till_done()
-        group.Group.create_group(
-            self.hass, "peeps", ["device_tracker.Adam", "device_tracker.Eve"]
-        )
-        self.hass.states.set("device_tracker.Adam", "cool_state_not_home")
-        self.hass.block_till_done()
-        assert STATE_NOT_HOME == self.hass.states.get(f"{group.DOMAIN}.peeps").state
+    assert await async_setup_component(hass, "group", {})
+
+    test_group = await group.Group.async_create_group(
+        hass,
+        "init_group",
+        ["light.Bowl", "light.Ceiling", "group.init_group"],
+        False,
+    )
+
+    assert sorted(["light.ceiling", "light.bowl"]) == sorted(
+        group.expand_entity_ids(hass, [test_group.entity_id])
+    )
+
+
+async def test_expand_entity_ids_ignores_non_strings(hass):
+    """Test that non string elements in lists are ignored."""
+    assert [] == group.expand_entity_ids(hass, [5, True])
+
+
+async def test_get_entity_ids(hass):
+    """Test get_entity_ids method."""
+    hass.states.async_set("light.Bowl", STATE_ON)
+    hass.states.async_set("light.Ceiling", STATE_OFF)
+
+    assert await async_setup_component(hass, "group", {})
+
+    test_group = await group.Group.async_create_group(
+        hass, "init_group", ["light.Bowl", "light.Ceiling"], False
+    )
+
+    assert ["light.bowl", "light.ceiling"] == sorted(
+        group.get_entity_ids(hass, test_group.entity_id)
+    )
+
+
+async def test_get_entity_ids_with_domain_filter(hass):
+    """Test if get_entity_ids works with a domain_filter."""
+    hass.states.async_set("switch.AC", STATE_OFF)
+
+    assert await async_setup_component(hass, "group", {})
+
+    mixed_group = await group.Group.async_create_group(
+        hass, "mixed_group", ["light.Bowl", "switch.AC"], False
+    )
+
+    assert ["switch.ac"] == group.get_entity_ids(
+        hass, mixed_group.entity_id, domain_filter="switch"
+    )
+
+
+async def test_get_entity_ids_with_non_existing_group_name(hass):
+    """Test get_entity_ids with a non existing group."""
+    assert [] == group.get_entity_ids(hass, "non_existing")
+
+
+async def test_get_entity_ids_with_non_group_state(hass):
+    """Test get_entity_ids with a non group state."""
+    assert [] == group.get_entity_ids(hass, "switch.AC")
+
+
+async def test_group_being_init_before_first_tracked_state_is_set_to_on(hass):
+    """Test if the groups turn on.
+
+    If no states existed and now a state it is tracking is being added
+    as ON.
+    """
+
+    assert await async_setup_component(hass, "group", {})
+
+    test_group = await group.Group.async_create_group(
+        hass, "test group", ["light.not_there_1"]
+    )
+
+    hass.states.async_set("light.not_there_1", STATE_ON)
+
+    await hass.async_block_till_done()
+
+    group_state = hass.states.get(test_group.entity_id)
+    assert STATE_ON == group_state.state
+
+
+async def test_group_being_init_before_first_tracked_state_is_set_to_off(hass):
+    """Test if the group turns off.
+
+    If no states existed and now a state it is tracking is being added
+    as OFF.
+    """
+    assert await async_setup_component(hass, "group", {})
+    test_group = await group.Group.async_create_group(
+        hass, "test group", ["light.not_there_1"]
+    )
+
+    hass.states.async_set("light.not_there_1", STATE_OFF)
+
+    await hass.async_block_till_done()
+
+    group_state = hass.states.get(test_group.entity_id)
+    assert STATE_OFF == group_state.state
+
+
+async def test_groups_get_unique_names(hass):
+    """Two groups with same name should both have a unique entity id."""
+
+    assert await async_setup_component(hass, "group", {})
+
+    grp1 = await group.Group.async_create_group(hass, "Je suis Charlie")
+    grp2 = await group.Group.async_create_group(hass, "Je suis Charlie")
+
+    assert grp1.entity_id != grp2.entity_id
+
+
+async def test_expand_entity_ids_expands_nested_groups(hass):
+    """Test if entity ids epands to nested groups."""
+
+    assert await async_setup_component(hass, "group", {})
+
+    await group.Group.async_create_group(
+        hass, "light", ["light.test_1", "light.test_2"]
+    )
+    await group.Group.async_create_group(
+        hass, "switch", ["switch.test_1", "switch.test_2"]
+    )
+    await group.Group.async_create_group(
+        hass, "group_of_groups", ["group.light", "group.switch"]
+    )
+
+    assert [
+        "light.test_1",
+        "light.test_2",
+        "switch.test_1",
+        "switch.test_2",
+    ] == sorted(group.expand_entity_ids(hass, ["group.group_of_groups"]))
+
+
+async def test_set_assumed_state_based_on_tracked(hass):
+    """Test assumed state."""
+    hass.states.async_set("light.Bowl", STATE_ON)
+    hass.states.async_set("light.Ceiling", STATE_OFF)
+
+    assert await async_setup_component(hass, "group", {})
+
+    test_group = await group.Group.async_create_group(
+        hass, "init_group", ["light.Bowl", "light.Ceiling", "sensor.no_exist"]
+    )
+
+    state = hass.states.get(test_group.entity_id)
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    hass.states.async_set("light.Bowl", STATE_ON, {ATTR_ASSUMED_STATE: True})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(test_group.entity_id)
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    hass.states.async_set("light.Bowl", STATE_ON)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(test_group.entity_id)
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+
+async def test_group_updated_after_device_tracker_zone_change(hass):
+    """Test group state when device tracker in group changes zone."""
+    hass.states.async_set("device_tracker.Adam", STATE_HOME)
+    hass.states.async_set("device_tracker.Eve", STATE_NOT_HOME)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "group", {})
+    assert await async_setup_component(hass, "device_tracker", {})
+
+    await group.Group.async_create_group(
+        hass, "peeps", ["device_tracker.Adam", "device_tracker.Eve"]
+    )
+
+    hass.states.async_set("device_tracker.Adam", "cool_state_not_home")
+    await hass.async_block_till_done()
+    assert STATE_NOT_HOME == hass.states.get(f"{group.DOMAIN}.peeps").state
 
 
 async def test_is_on(hass):
@@ -763,6 +830,7 @@ async def test_group_climate_all_cool(hass):
     hass.states.async_set("climate.two", "cool")
     hass.states.async_set("climate.three", "cool")
 
+    assert await async_setup_component(hass, "climate", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -772,7 +840,6 @@ async def test_group_climate_all_cool(hass):
             }
         },
     )
-    assert await async_setup_component(hass, "climate", {})
     await hass.async_block_till_done()
 
     assert hass.states.get("group.group_zero").state == STATE_ON
@@ -1041,6 +1108,7 @@ async def test_cover_added_after_group(hass):
         "cover.downstairs",
     ]
 
+    assert await async_setup_component(hass, "cover", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -1125,6 +1193,8 @@ async def test_group_that_references_a_group_of_covers(hass):
             }
         },
     )
+
+    assert await async_setup_component(hass, "cover", {})
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1147,6 +1217,7 @@ async def test_group_that_references_two_groups_of_covers(hass):
         hass.states.async_set(entity_id, "closed")
     await hass.async_block_till_done()
 
+    assert await async_setup_component(hass, "cover", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -1192,6 +1263,7 @@ async def test_group_that_references_two_types_of_groups(hass):
         hass.states.async_set(entity_id, "home")
     await hass.async_block_till_done()
 
+    assert await async_setup_component(hass, "device_tracker", {})
     assert await async_setup_component(
         hass,
         "group",
@@ -1205,6 +1277,7 @@ async def test_group_that_references_two_types_of_groups(hass):
             }
         },
     )
+    assert await async_setup_component(hass, "cover", {})
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1213,3 +1286,66 @@ async def test_group_that_references_two_types_of_groups(hass):
     assert hass.states.get("group.covers").state == "closed"
     assert hass.states.get("group.device_trackers").state == "home"
     assert hass.states.get("group.grouped_group").state == "on"
+
+
+async def test_plant_group(hass):
+    """Test plant states can be grouped."""
+
+    entity_ids = [
+        "plant.upstairs",
+        "plant.downstairs",
+    ]
+
+    assert await async_setup_component(
+        hass,
+        "plant",
+        {
+            "plant": {
+                "plantname": {
+                    "sensors": {
+                        "moisture": "sensor.mqtt_plant_moisture",
+                        "battery": "sensor.mqtt_plant_battery",
+                        "temperature": "sensor.mqtt_plant_temperature",
+                        "conductivity": "sensor.mqtt_plant_conductivity",
+                        "brightness": "sensor.mqtt_plant_brightness",
+                    },
+                    "min_moisture": 20,
+                    "max_moisture": 60,
+                    "min_battery": 17,
+                    "min_conductivity": 500,
+                    "min_temperature": 15,
+                    "min_brightness": 500,
+                }
+            }
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        "group",
+        {
+            "group": {
+                "plants": {"entities": entity_ids},
+                "plant_with_binary_sensors": {
+                    "entities": [*entity_ids, "binary_sensor.planter"]
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("binary_sensor.planter", "off")
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, "ok")
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("group.plants").state == "ok"
+    assert hass.states.get("group.plant_with_binary_sensors").state == "off"
+
+    hass.states.async_set("binary_sensor.planter", "on")
+    for entity_id in entity_ids:
+        hass.states.async_set(entity_id, "problem")
+
+    await hass.async_block_till_done()
+    assert hass.states.get("group.plants").state == "problem"
+    assert hass.states.get("group.plant_with_binary_sensors").state == "on"

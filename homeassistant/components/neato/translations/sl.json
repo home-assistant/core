@@ -2,16 +2,21 @@
     "config": {
         "abort": {
             "already_configured": "\u017de konfigurirano",
-            "invalid_credentials": "Neveljavne poverilnice"
+            "authorize_url_timeout": "\u010casovna omejitev pri ustvarjanju overitvenega URL je potekla.",
+            "missing_configuration": "Ta komponenta ni konfigurirana. Sledite dokumentaciji.",
+            "no_url_available": "URL ni na voljo. Za ve\u010d podatkov o tej napaki preverite [razdelek za pomo\u010d]({docs_url})",
+            "reauth_successful": "Ponovno overjanje je uspelo"
         },
         "create_entry": {
             "default": "Glejte [neato dokumentacija] ({docs_url})."
         },
-        "error": {
-            "invalid_credentials": "Neveljavne poverilnice",
-            "unexpected_error": "Nepri\u010dakovana napaka"
-        },
         "step": {
+            "pick_implementation": {
+                "title": "Izberite na\u010din overjanja"
+            },
+            "reauth_confirm": {
+                "title": "Bi radi zagnali namestitev?"
+            },
             "user": {
                 "data": {
                     "password": "Geslo",
@@ -22,5 +27,6 @@
                 "title": "Podatki o ra\u010dunu Neato"
             }
         }
-    }
+    },
+    "title": "Neato Botvac"
 }

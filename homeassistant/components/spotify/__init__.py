@@ -1,6 +1,6 @@
 """The spotify integration."""
-import logging
 
+import aiohttp
 from spotipy import Spotify, SpotifyException
 import voluptuous as vol
 
@@ -24,8 +24,6 @@ from .const import (
     DOMAIN,
     SPOTIFY_SCOPES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -65,7 +63,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Spotify from a config entry."""
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
-    await session.async_ensure_token_valid()
+
+    try:
+        await session.async_ensure_token_valid()
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady from err
+
     spotify = Spotify(auth=session.token["access_token"])
 
     try:

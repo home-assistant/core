@@ -26,7 +26,7 @@ from .storage import async_setup_frontend_storage
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 # Fix mimetypes for borked Windows machines
-# https://github.com/home-assistant/home-assistant-polymer/issues/3336
+# https://github.com/home-assistant/frontend/issues/3336
 mimetypes.add_type("text/css", ".css")
 mimetypes.add_type("application/javascript", ".js")
 
@@ -262,10 +262,10 @@ async def async_setup(hass, config):
     for path, should_cache in (
         ("service_worker.js", False),
         ("robots.txt", False),
-        ("onboarding.html", True),
-        ("static", True),
-        ("frontend_latest", True),
-        ("frontend_es5", True),
+        ("onboarding.html", not is_dev),
+        ("static", not is_dev),
+        ("frontend_latest", not is_dev),
+        ("frontend_es5", not is_dev),
     ):
         hass.http.register_static_path(f"/{path}", str(root_path / path), should_cache)
 

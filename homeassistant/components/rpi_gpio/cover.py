@@ -1,5 +1,4 @@
 """Support for controlling a Raspberry Pi cover."""
-import logging
 from time import sleep
 
 import voluptuous as vol
@@ -11,8 +10,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 
 from . import DOMAIN, PLATFORMS
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_COVERS = "covers"
 CONF_RELAY_PIN = "relay_pin"

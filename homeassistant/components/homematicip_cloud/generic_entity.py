@@ -76,6 +76,7 @@ class HomematicipGenericEntity(Entity):
         device,
         post: Optional[str] = None,
         channel: Optional[int] = None,
+        is_multi_channel: Optional[bool] = False,
     ) -> None:
         """Initialize the generic entity."""
         self._hap = hap
@@ -83,6 +84,7 @@ class HomematicipGenericEntity(Entity):
         self._device = device
         self._post = post
         self._channel = channel
+        self._is_multi_channel = is_multi_channel
         # Marker showing that the HmIP device hase been removed.
         self.hmip_device_removed = False
         _LOGGER.info("Setting up %s (%s)", self.name, self._device.modelType)
@@ -179,7 +181,7 @@ class HomematicipGenericEntity(Entity):
         name = None
         # Try to get a label from a channel.
         if hasattr(self._device, "functionalChannels"):
-            if self._channel:
+            if self._is_multi_channel:
                 name = self._device.functionalChannels[self._channel].label
             else:
                 if len(self._device.functionalChannels) > 1:
@@ -190,7 +192,7 @@ class HomematicipGenericEntity(Entity):
             name = self._device.label
             if self._post:
                 name = f"{name} {self._post}"
-            elif self._channel:
+            elif self._is_multi_channel:
                 name = f"{name} Channel{self._channel}"
 
         # Add a prefix to the name if the homematic ip home has a name.
@@ -213,7 +215,7 @@ class HomematicipGenericEntity(Entity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         unique_id = f"{self.__class__.__name__}_{self._device.id}"
-        if self._channel:
+        if self._is_multi_channel:
             unique_id = (
                 f"{self.__class__.__name__}_Channel{self._channel}_{self._device.id}"
             )

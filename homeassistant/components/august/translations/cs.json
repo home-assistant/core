@@ -1,11 +1,31 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven",
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
         "step": {
             "user": {
                 "data": {
+                    "login_method": "Zp\u016fsob p\u0159ihl\u00e1\u0161en\u00ed",
                     "password": "Heslo",
+                    "timeout": "\u010casov\u00fd limit (v sekund\u00e1ch)",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
-                }
+                },
+                "description": "Pokud je metoda p\u0159ihl\u00e1\u0161en\u00ed \"e-mail\", je e-mailovou adresou u\u017eivatelsk\u00e9 jm\u00e9no. Pokud je p\u0159ihla\u0161ovac\u00ed metoda \"telefon\", u\u017eivatelsk\u00e9 jm\u00e9no je telefonn\u00ed \u010d\u00edslo ve form\u00e1tu \"+NNNNNNNNN\".",
+                "title": "Nastavte \u00fa\u010det August"
+            },
+            "validation": {
+                "data": {
+                    "code": "Ov\u011b\u0159ovac\u00ed k\u00f3d"
+                },
+                "description": "Zkontrolujte pros\u00edm {login_method} ({username}) a n\u00ed\u017ee zadejte ov\u011b\u0159ovac\u00ed k\u00f3d",
+                "title": "Dvoufaktorov\u00e9 ov\u011b\u0159ov\u00e1n\u00ed"
             }
         }
     }

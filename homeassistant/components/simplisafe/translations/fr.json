@@ -6,7 +6,7 @@
         },
         "error": {
             "identifier_exists": "Compte d\u00e9j\u00e0 enregistr\u00e9",
-            "invalid_credentials": "Informations d'identification invalides",
+            "invalid_auth": "Authentification invalide",
             "still_awaiting_mfa": "En attente de clic sur le message \u00e9lectronique d'authentification multi facteur",
             "unknown": "Erreur inattendue"
         },

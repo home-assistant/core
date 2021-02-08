@@ -1,6 +1,5 @@
 """Support for Blinkt! lights on Raspberry Pi."""
 import importlib
-import logging
 
 import voluptuous as vol
 
@@ -15,8 +14,6 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_BLINKT = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 

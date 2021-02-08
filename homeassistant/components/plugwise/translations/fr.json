@@ -12,9 +12,17 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Adresse IP de Smile",
+                    "flow_type": "Type de connexion"
+                },
+                "description": "Veuillez saisir :",
+                "title": "Se connecter \u00e0 Smile"
+            },
+            "user_gateway": {
+                "data": {
+                    "host": "Adresse IP",
                     "password": "ID Smile",
-                    "port": "Num\u00e9ro de port Smile"
+                    "port": "Port",
+                    "username": "Nom d'utilisateur de sourire"
                 },
                 "description": "Veuillez saisir :",
                 "title": "Se connecter \u00e0 Smile"

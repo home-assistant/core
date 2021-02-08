@@ -15,7 +15,7 @@
                     "port": "Port",
                     "username": "Kasutajanimi"
                 },
-                "description": "Sisestage oma MQTT vahendaja andmed."
+                "description": "Sisesta oma MQTT vahendaja andmed."
             },
             "hassio_confirm": {
                 "data": {
@@ -52,7 +52,7 @@
         "error": {
             "bad_birth": "Kehtetu loomise teavitus.",
             "bad_will": "Kehtetu l\u00f5petamise teavitus.",
-            "cannot_connect": "Vahendajaga ei saa \u00fchendust luua."
+            "cannot_connect": "\u00dchendamine nurjus"
         },
         "step": {
             "broker": {
@@ -62,7 +62,7 @@
                     "port": "Port",
                     "username": "Kasutajanimi"
                 },
-                "description": "Sisestage oma MQTT vahendaja \u00fchenduse teave."
+                "description": "Sisesta oma MQTT vahendaja \u00fchenduse teave."
             },
             "options": {
                 "data": {
@@ -78,7 +78,7 @@
                     "will_retain": "L\u00f5petamisteate j\u00e4\u00e4dvustamine",
                     "will_topic": "L\u00f5petamisteade"
                 },
-                "description": "Valige MQTT s\u00e4tted."
+                "description": "Vali MQTT s\u00e4tted."
             }
         }
     }

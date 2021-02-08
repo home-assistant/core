@@ -1,13 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured_account": "Kontoen er allerede konfigurert",
-            "cannot_connect": "Tilkobling mislyktes.",
-            "reauth_successful": "Tilgangstoken oppdatert vellykket",
+            "already_configured": "Kontoen er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
             "unknown": "Uventet feil"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },

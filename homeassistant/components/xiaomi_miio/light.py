@@ -324,8 +324,10 @@ class XiaomiPhilipsAbstractLight(LightEntity):
 
             return result == SUCCESS
         except DeviceException as exc:
-            _LOGGER.error(mask_error, exc)
-            self._available = False
+            if self._available:
+                _LOGGER.error(mask_error, exc)
+                self._available = False
+
             return False
 
     async def async_turn_on(self, **kwargs):
@@ -356,8 +358,10 @@ class XiaomiPhilipsAbstractLight(LightEntity):
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
+
             return
 
         _LOGGER.debug("Got new state: %s", state)
@@ -380,8 +384,10 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
+
             return
 
         _LOGGER.debug("Got new state: %s", state)
@@ -536,8 +542,10 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
+
             return
 
         _LOGGER.debug("Got new state: %s", state)
@@ -593,8 +601,10 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
+
             return
 
         _LOGGER.debug("Got new state: %s", state)
@@ -637,8 +647,10 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
+
             return
 
         _LOGGER.debug("Got new state: %s", state)
@@ -778,8 +790,10 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
+
             return
 
         _LOGGER.debug("Got new state: %s", state)
@@ -932,8 +946,10 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
         try:
             state = await self.hass.async_add_executor_job(self._light.status)
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
+
             return
 
         _LOGGER.debug("Got new state: %s", state)

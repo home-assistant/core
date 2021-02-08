@@ -41,3 +41,13 @@ class KNXSensor(KnxEntity, Entity):
         if device_class in DEVICE_CLASSES:
             return device_class
         return None
+
+    @property
+    def force_update(self) -> bool:
+        """
+        Return True if state updates should be forced.
+
+        If True, a state change will be triggered anytime the state property is
+        updated, not just when the value changes.
+        """
+        return self._device.always_callback

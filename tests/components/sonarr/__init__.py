@@ -1,5 +1,6 @@
 """Tests for the Sonarr component."""
 from socket import gaierror as SocketGIAError
+from unittest.mock import patch
 
 from homeassistant.components.sonarr.const import (
     CONF_BASE_PATH,
@@ -19,7 +20,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -27,13 +27,6 @@ HOST = "192.168.1.189"
 PORT = 8989
 BASE_PATH = "/api"
 API_KEY = "MOCK_API_KEY"
-
-MOCK_SENSOR_CONFIG = {
-    "platform": DOMAIN,
-    "host": HOST,
-    "api_key": API_KEY,
-    "days": 3,
-}
 
 MOCK_REAUTH_INPUT = {CONF_API_KEY: "test-api-key-reauth"}
 

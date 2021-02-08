@@ -80,7 +80,9 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
     async_step_zeroconf = async_step_discovery
     async_step_ssdp = async_step_discovery
+    async_step_mqtt = async_step_discovery
     async_step_homekit = async_step_discovery
+    async_step_dhcp = async_step_discovery
 
     async def async_step_import(self, _: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         """Handle a flow initialized by import."""

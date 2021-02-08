@@ -1,12 +1,8 @@
 """Support for monitoring juicenet/juicepoint/juicebox based EVSE switches."""
-import logging
-
 from homeassistant.components.switch import SwitchEntity
 
 from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
 from .entity import JuiceNetDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

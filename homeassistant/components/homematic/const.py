@@ -25,6 +25,7 @@ ATTR_TIME = "time"
 ATTR_UNIQUE_ID = "unique_id"
 ATTR_PARAMSET_KEY = "paramset_key"
 ATTR_PARAMSET = "paramset"
+ATTR_RX_MODE = "rx_mode"
 ATTR_DISCOVERY_TYPE = "discovery_type"
 ATTR_LOW_BAT = "LOW_BAT"
 ATTR_LOWBAT = "LOWBAT"
@@ -45,6 +46,7 @@ HM_DEVICE_TYPES = {
         "Switch",
         "SwitchPowermeter",
         "IOSwitch",
+        "IOSwitchNoInhibit",
         "IPSwitch",
         "RFSiren",
         "IPSwitchPowermeter",
@@ -114,6 +116,10 @@ HM_DEVICE_TYPES = {
         "IPRemoteMotionV2",
         "HBUNISenWEA",
         "PresenceIPW",
+        "IPRainSensor",
+        "ValveBox",
+        "IPKeyBlind",
+        "IPKeyBlindTilt",
     ],
     DISCOVER_CLIMATE: [
         "Thermostat",
@@ -157,6 +163,7 @@ HM_DEVICE_TYPES = {
         "IPWInputDevice",
         "IPWMotionDection",
         "IPAlarmSensor",
+        "IPRainSensor",
     ],
     DISCOVER_COVER: [
         "Blind",

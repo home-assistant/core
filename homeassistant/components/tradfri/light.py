@@ -1,6 +1,4 @@
 """Support for IKEA Tradfri lights."""
-import logging
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -28,8 +26,6 @@ from .const import (
     SUPPORTED_GROUP_FEATURES,
     SUPPORTED_LIGHT_FEATURES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

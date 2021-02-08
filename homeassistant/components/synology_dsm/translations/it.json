@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host gi\u00e0 configurato"
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "connection": "Errore di connessione: controlla host, porta e SSL",
-            "login": "Errore di accesso: si prega di controllare il nome utente e la password",
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
             "missing_data": "Dati mancanti: si prega di riprovare pi\u00f9 tardi o un'altra configurazione",
             "otp_failed": "Autenticazione in due fasi fallita, riprovare con un nuovo codice di accesso",
-            "unknown": "Errore sconosciuto: si prega di controllare i registri per ottenere maggiori dettagli"
+            "unknown": "Errore imprevisto"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
@@ -23,7 +23,8 @@
                     "password": "Password",
                     "port": "Porta",
                     "ssl": "Utilizza un certificato SSL",
-                    "username": "Nome utente"
+                    "username": "Nome utente",
+                    "verify_ssl": "Verificare il certificato SSL"
                 },
                 "description": "Vuoi impostare {name} ({host})?",
                 "title": "Synology DSM"
@@ -34,7 +35,8 @@
                     "password": "Password",
                     "port": "Porta",
                     "ssl": "Utilizza un certificato SSL",
-                    "username": "Nome utente"
+                    "username": "Nome utente",
+                    "verify_ssl": "Verificare il certificato SSL"
                 },
                 "title": "Synology DSM"
             }

@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 import os
+from typing import Optional
 
 import voluptuous as vol
 
@@ -23,8 +24,9 @@ from homeassistant.util.dt import utcnow
 
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
+from .const import ATTR_DISCOVERY
 from .discovery import async_setup_discovery_view
-from .handler import HassIO, HassioAPIError
+from .handler import HassIO, HassioAPIError, api_data
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
 
@@ -42,9 +44,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-DATA_INFO = "hassio_info"
-DATA_HOST_INFO = "hassio_host_info"
 DATA_CORE_INFO = "hassio_core_info"
+DATA_HOST_INFO = "hassio_host_info"
+DATA_INFO = "hassio_info"
+DATA_OS_INFO = "hassio_os_info"
+DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=55)
 
 SERVICE_ADDON_START = "addon_start"
@@ -137,47 +141,76 @@ async def async_get_addon_info(hass: HomeAssistantType, slug: str) -> dict:
 
 
 @bind_hass
-async def async_install_addon(hass: HomeAssistantType, slug: str) -> None:
+@api_data
+async def async_install_addon(hass: HomeAssistantType, slug: str) -> dict:
     """Install add-on.
 
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/install"
-    await hassio.send_command(command)
+    return await hassio.send_command(command, timeout=None)
 
 
 @bind_hass
-async def async_uninstall_addon(hass: HomeAssistantType, slug: str) -> None:
+@api_data
+async def async_uninstall_addon(hass: HomeAssistantType, slug: str) -> dict:
     """Uninstall add-on.
 
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/uninstall"
-    await hassio.send_command(command)
+    return await hassio.send_command(command, timeout=60)
 
 
 @bind_hass
-async def async_start_addon(hass: HomeAssistantType, slug: str) -> None:
+@api_data
+async def async_start_addon(hass: HomeAssistantType, slug: str) -> dict:
     """Start add-on.
 
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/start"
-    await hassio.send_command(command)
+    return await hassio.send_command(command, timeout=60)
 
 
 @bind_hass
-async def async_stop_addon(hass: HomeAssistantType, slug: str) -> None:
+@api_data
+async def async_stop_addon(hass: HomeAssistantType, slug: str) -> dict:
     """Stop add-on.
 
     The caller of the function should handle HassioAPIError.
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/stop"
-    await hassio.send_command(command)
+    return await hassio.send_command(command, timeout=60)
+
+
+@bind_hass
+@api_data
+async def async_set_addon_options(
+    hass: HomeAssistantType, slug: str, options: dict
+) -> dict:
+    """Set add-on options.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/addons/{slug}/options"
+    return await hassio.send_command(command, payload=options)
+
+
+@bind_hass
+async def async_get_addon_discovery_info(
+    hass: HomeAssistantType, slug: str
+) -> Optional[dict]:
+    """Return discovery data for an add-on."""
+    hassio = hass.data[DOMAIN]
+    data = await hassio.retrieve_discovery_messages()
+    discovered_addons = data[ATTR_DISCOVERY]
+    return next((addon for addon in discovered_addons if addon["addon"] == slug), None)
 
 
 @callback
@@ -198,6 +231,26 @@ def get_host_info(hass):
     Async friendly.
     """
     return hass.data.get(DATA_HOST_INFO)
+
+
+@callback
+@bind_hass
+def get_supervisor_info(hass):
+    """Return Supervisor information.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_SUPERVISOR_INFO)
+
+
+@callback
+@bind_hass
+def get_os_info(hass):
+    """Return OS information.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_OS_INFO)
 
 
 @callback
@@ -340,6 +393,8 @@ async def async_setup(hass, config):
             hass.data[DATA_INFO] = await hassio.get_info()
             hass.data[DATA_HOST_INFO] = await hassio.get_host_info()
             hass.data[DATA_CORE_INFO] = await hassio.get_core_info()
+            hass.data[DATA_SUPERVISOR_INFO] = await hassio.get_supervisor_info()
+            hass.data[DATA_OS_INFO] = await hassio.get_os_info()
         except HassioAPIError as err:
             _LOGGER.warning("Can't read last version: %s", err)
 

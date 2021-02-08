@@ -5,7 +5,6 @@
         },
         "error": {
             "connection_error": "N\u00e3o \u00e9 poss\u00edvel conectar-se ao ESP. Por favor, verifique se o seu arquivo YAML cont\u00e9m uma linha 'api:'.",
-            "invalid_password": "Senha inv\u00e1lida!",
             "resolve_error": "N\u00e3o \u00e9 poss\u00edvel resolver o endere\u00e7o do ESP. Se este erro persistir, por favor, defina um endere\u00e7o IP est\u00e1tico: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",

@@ -85,12 +85,12 @@ class XiaomiDeviceScanner(DeviceScanner):
 
         Return the list if successful.
         """
-        _LOGGER.info("Refreshing device list")
+        _LOGGER.debug("Refreshing device list")
         result = _retrieve_list(self.host, self.token)
         if result:
             return result
 
-        _LOGGER.info("Refreshing token and retrying device list refresh")
+        _LOGGER.debug("Refreshing token and retrying device list refresh")
         self.token = _get_token(self.host, self.username, self.password)
         return _retrieve_list(self.host, self.token)
 

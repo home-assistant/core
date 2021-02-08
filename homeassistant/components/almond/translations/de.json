@@ -1,9 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Du kannst nur ein Almond-Konto konfigurieren.",
-            "cannot_connect": "Verbindung zum Almond-Server nicht m\u00f6glich.",
-            "missing_configuration": "Bitte \u00fcberpr\u00fcfe die Dokumentation zur Einrichtung von Almond."
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
+            "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler findest du [im Hilfebereich]({docs_url}).",
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "step": {
             "hassio_confirm": {

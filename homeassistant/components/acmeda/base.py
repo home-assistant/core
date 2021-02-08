@@ -26,9 +26,7 @@ class AcmedaBase(entity.Entity):
             ent_registry.async_remove(self.entity_id)
 
         dev_registry = await get_dev_reg(self.hass)
-        device = dev_registry.async_get_device(
-            identifiers={(DOMAIN, self.unique_id)}, connections=set()
-        )
+        device = dev_registry.async_get_device(identifiers={(DOMAIN, self.unique_id)})
         if device is not None:
             dev_registry.async_update_device(
                 device.id, remove_config_entry_id=self.registry_entry.config_entry_id

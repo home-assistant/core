@@ -193,8 +193,9 @@ class OctoPrintAPI:
         self.job_last_reading = [{}, None]
         self.job_available = False
         self.printer_available = False
-        self.available = False
         self.printer_error_logged = False
+        self.available = False
+        self.available_error_logged = False
         self.job_error_logged = False
         self.bed = bed
         self.number_of_tools = number_of_tools
@@ -240,13 +241,30 @@ class OctoPrintAPI:
                 self.printer_last_reading[0] = response.json()
                 self.printer_last_reading[1] = time.time()
                 self.printer_available = True
+
             self.available = self.printer_available and self.job_available
             if self.available:
                 self.job_error_logged = False
                 self.printer_error_logged = False
+                self.available_error_logged = False
+
             return response.json()
-        except Exception as conn_exc:  # pylint: disable=broad-except
-            log_string = "Failed to update OctoPrint status. Error: %s" % conn_exc
+
+        except requests.ConnectionError as exc_con:
+            log_string = "Failed to connect to Octoprint server. Error: %s" % exc_con
+
+            if not self.available_error_logged:
+                _LOGGER.error(log_string)
+                self.job_available = False
+                self.printer_available = False
+                self.available_error_logged = True
+
+            return None
+
+        except requests.HTTPError as ex_http:
+            status_code = ex_http.response.status_code
+
+            log_string = "Failed to update OctoPrint status. Error: %s" % ex_http
             # Only log the first failure
             if endpoint == "job":
                 log_string = f"Endpoint: job {log_string}"
@@ -255,12 +273,19 @@ class OctoPrintAPI:
                     self.job_error_logged = True
                     self.job_available = False
             elif endpoint == "printer":
-                log_string = f"Endpoint: printer {log_string}"
-                if not self.printer_error_logged:
-                    _LOGGER.error(log_string)
-                    self.printer_error_logged = True
+                if (
+                    status_code == 409
+                ):  # octoprint returns HTTP 409 when printer is not connected (and many other states)
                     self.printer_available = False
+                else:
+                    log_string = f"Endpoint: printer {log_string}"
+                    if not self.printer_error_logged:
+                        _LOGGER.error(log_string)
+                        self.printer_error_logged = True
+                        self.printer_available = False
+
             self.available = False
+
             return None
 
     def update(self, sensor_type, end_point, group, tool=None):
@@ -268,6 +293,7 @@ class OctoPrintAPI:
         response = self.get(end_point)
         if response is not None:
             return get_value_from_json(response, sensor_type, group, tool)
+
         return response
 
 
@@ -279,6 +305,7 @@ def get_value_from_json(json_dict, sensor_type, group, tool):
     if sensor_type in json_dict[group]:
         if sensor_type == "target" and json_dict[sensor_type] is None:
             return 0
+
         return json_dict[group][sensor_type]
 
     if tool is not None:

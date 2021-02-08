@@ -1,5 +1,4 @@
 """Support for Vera locks."""
-import logging
 from typing import Any, Callable, Dict, List, Optional
 
 import pyvera as veraApi
@@ -17,8 +16,6 @@ from homeassistant.helpers.entity import Entity
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
 
-_LOGGER = logging.getLogger(__name__)
-
 ATTR_LAST_USER_NAME = "changed_by_name"
 ATTR_LOW_BATTERY = "low_battery"
 
@@ -34,7 +31,8 @@ async def async_setup_entry(
         [
             VeraLock(device, controller_data)
             for device in controller_data.devices.get(PLATFORM_DOMAIN)
-        ]
+        ],
+        True,
     )
 
 

@@ -1,4 +1,6 @@
 """Support for Tuya covers."""
+from datetime import timedelta
+
 from homeassistant.components.cover import (
     DOMAIN as SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
@@ -13,7 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import TuyaDevice
 from .const import DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
 
-PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -60,23 +62,44 @@ class TuyaCover(TuyaDevice, CoverEntity):
         """Init tuya cover device."""
         super().__init__(tuya, platform)
         self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
+        self._was_closing = False
+        self._was_opening = False
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
         if self._tuya.support_stop():
-            supported_features |= SUPPORT_STOP
-        return supported_features
+            return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+        return SUPPORT_OPEN | SUPPORT_CLOSE
+
+    @property
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        state = self._tuya.state()
+        if state == 1:
+            self._was_opening = True
+            self._was_closing = False
+            return True
+        return False
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        state = self._tuya.state()
+        if state == 2:
+            self._was_opening = False
+            self._was_closing = True
+            return True
+        return False
 
     @property
     def is_closed(self):
         """Return if the cover is closed or not."""
         state = self._tuya.state()
-        if state == 1:
-            return False
-        if state == 2:
+        if state != 2 and self._was_closing:
             return True
+        if state != 1 and self._was_opening:
+            return False
         return None
 
     def open_cover(self, **kwargs):
@@ -89,4 +112,7 @@ class TuyaCover(TuyaDevice, CoverEntity):
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
+        if self.is_closed is None:
+            self._was_opening = False
+            self._was_closing = False
         self._tuya.stop_cover()

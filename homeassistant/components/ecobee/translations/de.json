@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "one_instance_only": "Diese Integration unterst\u00fctzt derzeit nur eine Ecobee-Instanz."
+            "single_instance_allowed": "Bereits eingerichtet. Es ist nur eine Konfiguration m\u00f6glich."
         },
         "error": {
             "pin_request_failed": "Fehler beim Anfordern der PIN von ecobee; Bitte \u00fcberpr\u00fcfe, ob der API-Schl\u00fcssel korrekt ist.",

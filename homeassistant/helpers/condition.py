@@ -297,7 +297,7 @@ def async_numeric_state_from_config(
 def state(
     hass: HomeAssistant,
     entity: Union[None, str, State],
-    req_state: Union[str, List[str]],
+    req_state: Any,
     for_period: Optional[timedelta] = None,
     attribute: Optional[str] = None,
 ) -> bool:
@@ -314,17 +314,20 @@ def state(
     assert isinstance(entity, State)
 
     if attribute is None:
-        value = entity.state
+        value: Any = entity.state
     else:
-        value = str(entity.attributes.get(attribute))
+        value = entity.attributes.get(attribute)
 
-    if isinstance(req_state, str):
+    if not isinstance(req_state, list):
         req_state = [req_state]
 
     is_state = False
     for req_state_value in req_state:
         state_value = req_state_value
-        if INPUT_ENTITY_ID.match(req_state_value) is not None:
+        if (
+            isinstance(req_state_value, str)
+            and INPUT_ENTITY_ID.match(req_state_value) is not None
+        ):
             state_entity = hass.states.get(req_state_value)
             if not state_entity:
                 continue
@@ -450,7 +453,7 @@ def async_template(
 ) -> bool:
     """Test if template condition matches."""
     try:
-        value = value_template.async_render(variables)
+        value: str = value_template.async_render(variables, parse_result=False)
     except TemplateError as ex:
         _LOGGER.error("Error during template condition: %s", ex)
         return False

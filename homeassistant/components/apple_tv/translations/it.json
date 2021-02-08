@@ -1,0 +1,64 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "backoff": "Il dispositivo non accetta richieste di abbinamento in questo momento (potresti aver inserito un codice PIN non valido troppe volte), riprova pi\u00f9 tardi.",
+            "device_did_not_pair": "Nessun tentativo di completare il processo di abbinamento \u00e8 stato effettuato dal dispositivo.",
+            "invalid_config": "La configurazione per questo dispositivo \u00e8 incompleta. Prova ad aggiungerlo di nuovo.",
+            "no_devices_found": "Nessun dispositivo trovato sulla rete",
+            "unknown": "Errore imprevisto"
+        },
+        "error": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "invalid_auth": "Autenticazione non valida",
+            "no_devices_found": "Nessun dispositivo trovato sulla rete",
+            "no_usable_service": "\u00c8 stato trovato un dispositivo ma non \u00e8 stato possibile identificare alcun modo per stabilire una connessione ad esso. Se continui a vedere questo messaggio, prova a specificarne l'indirizzo IP o a riavviare l'Apple TV.",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "Apple TV: {name}",
+        "step": {
+            "confirm": {
+                "description": "Stai per aggiungere l'Apple TV denominata \"{name}\" a Home Assistant. \n\n **Per completare la procedura, potrebbe essere necessario inserire pi\u00f9 codici PIN.** \n\nTieni presente che *non* sarai in grado di spegnere la tua Apple TV con questa integrazione. Solo il lettore multimediale in Home Assistant si spegner\u00e0!",
+                "title": "Conferma l'aggiunta di Apple TV"
+            },
+            "pair_no_pin": {
+                "description": "L'abbinamento \u00e8 richiesto per il servizio \"{protocol}\". Inserisci il PIN {pin} sulla tua Apple TV per continuare.",
+                "title": "Abbinamento"
+            },
+            "pair_with_pin": {
+                "data": {
+                    "pin": "Codice PIN"
+                },
+                "description": "L'abbinamento \u00e8 richiesto per il protocollo \"{protocol}\". Immettere il codice PIN visualizzato sullo schermo. Gli zeri iniziali devono essere omessi, ovvero immettere 123 se il codice visualizzato \u00e8 0123.",
+                "title": "Abbinamento"
+            },
+            "reconfigure": {
+                "description": "Questa Apple TV sta riscontrando alcune difficolt\u00e0 di connessione e deve essere riconfigurata.",
+                "title": "Riconfigurazione del dispositivo"
+            },
+            "service_problem": {
+                "description": "Si \u00e8 verificato un problema durante l'associazione del protocollo \"{protocol}\". Sar\u00e0 ignorato.",
+                "title": "Impossibile aggiungere il servizio"
+            },
+            "user": {
+                "data": {
+                    "device_input": "Dispositivo"
+                },
+                "description": "Inizia inserendo il nome del dispositivo (es. Cucina o Camera da letto) o l'indirizzo IP dell'Apple TV che desideri aggiungere. Se sono stati rilevati automaticamente dei dispositivi sulla rete, verranno visualizzati di seguito. \n\n Se non riesci a vedere il tuo dispositivo o riscontri problemi, prova a specificare l'indirizzo IP del dispositivo. \n\n {devices}",
+                "title": "Configura una nuova Apple TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "start_off": "Non accendere il dispositivo all'avvio di Home Assistant"
+                },
+                "description": "Configurare le impostazioni generali del dispositivo"
+            }
+        }
+    },
+    "title": "Apple TV"
+}

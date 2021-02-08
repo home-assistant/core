@@ -1,13 +1,7 @@
 {
     "config": {
         "abort": {
-            "mqtt_required": "\u672a\u8bbe\u7f6e MQTT \u96c6\u6210",
-            "one_instance_allowed": "\u7ec4\u4ef6\u53ea\u652f\u6301\u4e00\u4e2a Z-Wave \u5b9e\u4f8b"
-        },
-        "step": {
-            "user": {
-                "title": "\u786e\u8ba4\u8bbe\u7f6e"
-            }
+            "mqtt_required": "\u672a\u8bbe\u7f6e MQTT \u96c6\u6210"
         }
     }
 }

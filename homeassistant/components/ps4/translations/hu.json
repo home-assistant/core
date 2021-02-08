@@ -1,5 +1,9 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "login_failed": "Nem siker\u00fclt p\u00e1ros\u00edtani a PlayStation 4-gyel. Ellen\u0151rizze, hogy a  helyes-e."
+        },
         "step": {
             "creds": {
                 "title": "PlayStation 4"

@@ -7,7 +7,6 @@
         "error": {
             "invalid_dongle_path": "\uc774 \uacbd\ub85c\uc5d0 \uc720\ud6a8\ud55c \ub3d9\uae00\uc774 \uc5c6\uc2b5\ub2c8\ub2e4"
         },
-        "flow_title": "ENOcean \uc124\uc815\ud558\uae30",
         "step": {
             "detect": {
                 "data": {
@@ -22,6 +21,5 @@
                 "title": "ENOcean \ub3d9\uae00 \uacbd\ub85c \uc785\ub825\ud558\uae30"
             }
         }
-    },
-    "title": "EnOcean"
+    }
 }

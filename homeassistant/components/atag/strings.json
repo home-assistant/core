@@ -1,5 +1,4 @@
 {
-  "title": "Atag",
   "config": {
     "step": {
       "user": {
@@ -13,10 +12,10 @@
     },
     "error": {
       "unauthorized": "Pairing denied, check device for auth request",
-      "connection_error": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "This device has already been added to HomeAssistant"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }

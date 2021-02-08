@@ -1,13 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquestes coordenades o Node/Pro ID ja estan registrades."
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada o el Node/Pro ID ja est\u00e0 registrat.",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "general_error": "Error inesperat",
             "invalid_api_key": "Clau API inv\u00e0lida",
-            "unable_to_connect": "No s'ha pogut connectar a la unitat Node/Pro."
+            "location_not_found": "No s'ha trobat la ubicaci\u00f3"
         },
         "step": {
             "geography": {
@@ -17,15 +18,40 @@
                     "longitude": "Longitud"
                 },
                 "description": "Utilitza l'API d'AirVisual per monitoritzar una ubicaci\u00f3 geogr\u00e0fica.",
-                "title": "Configuraci\u00f3 localitzaci\u00f3 geogr\u00e0fica"
+                "title": "Configura una ubicaci\u00f3 geogr\u00e0fica"
+            },
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "Clau API",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud"
+                },
+                "description": "Utilitza l'API d'AirVisual per monitoritzar una latitud/longitud.",
+                "title": "Configura una ubicaci\u00f3 geogr\u00e0fica"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "Clau API",
+                    "city": "Ciutat",
+                    "country": "Pa\u00eds",
+                    "state": "Estat"
+                },
+                "description": "Utilitza l'API d'AirVisual per monitoritzar un/a ciutat/estat/pa\u00eds",
+                "title": "Configura una ubicaci\u00f3 geogr\u00e0fica"
             },
             "node_pro": {
                 "data": {
-                    "ip_address": "Adre\u00e7a IP o amfitri\u00f3 de la unitat",
+                    "ip_address": "Amfitri\u00f3",
                     "password": "Contrasenya"
                 },
                 "description": "Monitoritza una unitat personal d'AirVisual. Pots obtenir la contrasenya des de la interf\u00edcie d'usuari (UI) de la unitat.",
                 "title": "Configuraci\u00f3 d'AirVisual Node/Pro"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Clau API"
+                },
+                "title": "Re-autenticaci\u00f3 amb AirVisual"
             },
             "user": {
                 "data": {

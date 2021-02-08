@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3.",
+            "unknown": "Error inesperat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "invalid_zone": "Zona inv\u00e0lida"
+        },
+        "flow_title": "Cloudflare: {name}",
+        "step": {
+            "records": {
+                "data": {
+                    "records": "Registres"
+                },
+                "title": "Selecciona els registres a actualitzar"
+            },
+            "user": {
+                "data": {
+                    "api_token": "Token d'API"
+                },
+                "description": "Aquesta integraci\u00f3 necessita un token d'API creat amb permisos d'edici\u00f3 Zone:Zone:Read i Zone:DNS:Edit per a totes les zones del teu compte.",
+                "title": "Connexi\u00f3 amb Cloudflare"
+            },
+            "zone": {
+                "data": {
+                    "zone": "Zona"
+                },
+                "title": "Selecciona la zona a actualitzar"
+            }
+        }
+    }
+}

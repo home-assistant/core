@@ -1,6 +1,5 @@
 """Support for AdGuard Home sensors."""
 from datetime import timedelta
-import logging
 
 from adguardhome import AdGuardHomeConnectionError
 
@@ -14,8 +13,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TIME_MILLISECONDS
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=300)
 PARALLEL_UPDATES = 4

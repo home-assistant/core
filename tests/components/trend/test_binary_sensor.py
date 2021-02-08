@@ -1,13 +1,13 @@
 """The test for the Trend sensor platform."""
 from datetime import timedelta
 from os import path
+from unittest.mock import patch
 
 from homeassistant import config as hass_config, setup
 from homeassistant.components.trend import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component, get_test_home_assistant
 
 

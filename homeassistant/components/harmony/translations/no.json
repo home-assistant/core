@@ -4,10 +4,10 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "cannot_connect": "Tilkobling mislyktes",
             "unknown": "Uventet feil"
         },
-        "flow_title": "Logitech Harmony Hub {name}",
+        "flow_title": "",
         "step": {
             "link": {
                 "description": "Vil du konfigurere {name} ({host})?",

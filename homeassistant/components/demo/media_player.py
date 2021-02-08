@@ -4,12 +4,14 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
+    REPEAT_MODE_OFF,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_REPEAT_SET,
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
@@ -73,6 +75,7 @@ MUSIC_PLAYER_SUPPORT = (
     | SUPPORT_CLEAR_PLAYLIST
     | SUPPORT_PLAY
     | SUPPORT_SHUFFLE_SET
+    | SUPPORT_REPEAT_SET
     | SUPPORT_VOLUME_STEP
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_NEXT_TRACK
@@ -319,6 +322,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         """Initialize the demo device."""
         super().__init__("Walkman")
         self._cur_track = 0
+        self._repeat = REPEAT_MODE_OFF
 
     @property
     def media_content_id(self):
@@ -361,6 +365,11 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         return self._cur_track + 1
 
     @property
+    def repeat(self):
+        """Return current repeat mode."""
+        return self._repeat
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return MUSIC_PLAYER_SUPPORT
@@ -382,6 +391,11 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         self.tracks = []
         self._cur_track = 0
         self._player_state = STATE_OFF
+        self.schedule_update_ha_state()
+
+    def set_repeat(self, repeat):
+        """Enable/disable repeat mode."""
+        self._repeat = repeat
         self.schedule_update_ha_state()
 
 

@@ -22,6 +22,7 @@ from typing import (
 
 import slugify as unicode_slug
 
+from ..helpers.deprecation import deprecated_function
 from .dt import as_local, utcnow
 
 T = TypeVar("T")
@@ -32,19 +33,64 @@ RE_SANITIZE_FILENAME = re.compile(r"(~|\.\.|/|\\)")
 RE_SANITIZE_PATH = re.compile(r"(~|\.(\.)+)")
 
 
+def raise_if_invalid_filename(filename: str) -> None:
+    """
+    Check if a filename is valid.
+
+    Raises a ValueError if the filename is invalid.
+    """
+    if RE_SANITIZE_FILENAME.sub("", filename) != filename:
+        raise ValueError(f"{filename} is not a safe filename")
+
+
+def raise_if_invalid_path(path: str) -> None:
+    """
+    Check if a path is valid.
+
+    Raises a ValueError if the path is invalid.
+    """
+    if RE_SANITIZE_PATH.sub("", path) != path:
+        raise ValueError(f"{path} is not a safe path")
+
+
+@deprecated_function(replacement="raise_if_invalid_filename")
 def sanitize_filename(filename: str) -> str:
-    r"""Sanitize a filename by removing .. / and \\."""
-    return RE_SANITIZE_FILENAME.sub("", filename)
+    """Check if a filename is safe.
+
+    Only to be used to compare to original filename to check if changed.
+    If result changed, the given path is not safe and should not be used,
+    raise an error.
+
+    DEPRECATED.
+    """
+    # Backwards compatible fix for misuse of method
+    if RE_SANITIZE_FILENAME.sub("", filename) != filename:
+        return ""
+    return filename
 
 
+@deprecated_function(replacement="raise_if_invalid_path")
 def sanitize_path(path: str) -> str:
-    """Sanitize a path by removing ~ and .."""
-    return RE_SANITIZE_PATH.sub("", path)
+    """Check if a path is safe.
+
+    Only to be used to compare to original path to check if changed.
+    If result changed, the given path is not safe and should not be used,
+    raise an error.
+
+    DEPRECATED.
+    """
+    # Backwards compatible fix for misuse of method
+    if RE_SANITIZE_PATH.sub("", path) != path:
+        return ""
+    return path
 
 
 def slugify(text: str, *, separator: str = "_") -> str:
     """Slugify a given text."""
-    return unicode_slug.slugify(text, separator=separator)  # type: ignore
+    if text == "":
+        return ""
+    slug = unicode_slug.slugify(text, separator=separator)
+    return "unknown" if slug == "" else slug
 
 
 def repr_helper(inp: Any) -> str:
