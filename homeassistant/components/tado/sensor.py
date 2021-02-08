@@ -7,7 +7,6 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -59,12 +58,7 @@ async def async_setup_entry(
     entities = []
 
     # Create home sensors
-    entities.extend(
-        [
-            TadoHomeSensor(tado, variable, hass.config.units.is_metric)
-            for variable in HOME_SENSORS
-        ]
-    )
+    entities.extend([TadoHomeSensor(tado, variable) for variable in HOME_SENSORS])
 
     # Create zone sensors
     for zone in zones:
@@ -87,7 +81,7 @@ async def async_setup_entry(
 class TadoHomeSensor(TadoHomeEntity, Entity):
     """Representation of a Tado Sensor."""
 
-    def __init__(self, tado, home_variable, is_metric):
+    def __init__(self, tado, home_variable):
         """Initialize of the Tado Sensor."""
         super().__init__(tado)
         self._tado = tado
@@ -95,7 +89,6 @@ class TadoHomeSensor(TadoHomeEntity, Entity):
         self.home_variable = home_variable
 
         self._unique_id = f"{home_variable} {tado.home_id}"
-        self._is_metric = is_metric
 
         self._state = None
         self._state_attributes = None
@@ -139,7 +132,7 @@ class TadoHomeSensor(TadoHomeEntity, Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         if self.home_variable == "temperature":
-            return TEMP_CELSIUS if self._is_metric else TEMP_FAHRENHEIT
+            return TEMP_CELSIUS
         if self.home_variable == "solar percentage":
             return PERCENTAGE
         if self.home_variable == "weather condition":
@@ -168,10 +161,8 @@ class TadoHomeSensor(TadoHomeEntity, Entity):
 
         if self.home_variable == "outdoor temperature":
             self._state = self.hass.config.units.temperature(
-                self._tado_weather_data["outsideTemperature"][
-                    "celsius" if self._is_metric else "fahrenheit"
-                ],
-                TEMP_CELSIUS if self._is_metric else TEMP_FAHRENHEIT,
+                self._tado_weather_data["outsideTemperature"]["celsius"],
+                TEMP_CELSIUS,
             )
             self._state_attributes = {
                 "time": self._tado_weather_data["outsideTemperature"]["timestamp"],
