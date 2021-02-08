@@ -1,5 +1,5 @@
 """Test the condition helper."""
-from logging import ERROR
+from logging import ERROR, WARNING
 from unittest.mock import patch
 
 import pytest
@@ -338,23 +338,25 @@ async def test_time_using_input_datetime(hass):
     assert not condition.time(hass, before="input_datetime.not_existing")
 
 
-async def test_if_numeric_state_raises_on_unavailable(hass):
+async def test_if_numeric_state_raises_on_unavailable(hass, caplog):
     """Test numeric_state raises on unavailable/unknown state."""
     test = await condition.async_from_config(
         hass,
         {"condition": "numeric_state", "entity_id": "sensor.temperature", "below": 42},
     )
 
-    with patch("homeassistant.helpers.condition._LOGGER.warning") as logwarn:
-        hass.states.async_set("sensor.temperature", "unavailable")
-        with pytest.raises(ConditionError):
-            test(hass)
-        assert len(logwarn.mock_calls) == 0
+    caplog.clear()
+    caplog.set_level(WARNING)
 
-        hass.states.async_set("sensor.temperature", "unknown")
-        with pytest.raises(ConditionError):
-            test(hass)
-        assert len(logwarn.mock_calls) == 0
+    hass.states.async_set("sensor.temperature", "unavailable")
+    with pytest.raises(ConditionError):
+        test(hass)
+    assert len(caplog.record_tuples) == 0
+
+    hass.states.async_set("sensor.temperature", "unknown")
+    with pytest.raises(ConditionError):
+        test(hass)
+    assert len(caplog.record_tuples) == 0
 
 
 async def test_state_multiple_entities(hass):

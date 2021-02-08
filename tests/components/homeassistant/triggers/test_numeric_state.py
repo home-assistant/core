@@ -1,5 +1,6 @@
 """The tests for numeric state automation."""
 from datetime import timedelta
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -572,7 +573,7 @@ async def test_if_not_fires_if_entity_not_match(hass, calls, below):
     assert len(calls) == 0
 
 
-async def test_if_not_fires_and_warns_if_below_entity_unknown(hass, calls):
+async def test_if_not_fires_and_warns_if_below_entity_unknown(hass, caplog, calls):
     """Test if warns with unknown below entity."""
     assert await async_setup_component(
         hass,
@@ -589,13 +590,15 @@ async def test_if_not_fires_and_warns_if_below_entity_unknown(hass, calls):
         },
     )
 
-    with patch(
-        "homeassistant.components.homeassistant.triggers.numeric_state._LOGGER.warning"
-    ) as logwarn:
-        hass.states.async_set("test.entity", 1)
-        await hass.async_block_till_done()
-        assert len(calls) == 0
-        assert len(logwarn.mock_calls) == 1
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    hass.states.async_set("test.entity", 1)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    assert len(caplog.record_tuples) == 1
+    assert caplog.record_tuples[0][1] == logging.WARNING
 
 
 @pytest.mark.parametrize("below", (10, "input_number.value_10"))
@@ -1203,7 +1206,7 @@ async def test_wait_template_with_trigger(hass, calls, above):
     hass.states.async_set("test.entity", "8")
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert "numeric_state - test.entity - 12" == calls[0].data["some"]
+    assert calls[0].data["some"] == "numeric_state - test.entity - 12"
 
 
 @pytest.mark.parametrize(
