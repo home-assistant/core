@@ -2,7 +2,11 @@
 
 from unittest.mock import patch
 
-from tesla_powerwall import MissingAttributeError, PowerwallUnreachableError
+from tesla_powerwall import (
+    AccessDeniedError,
+    MissingAttributeError,
+    PowerwallUnreachableError,
+)
 
 from homeassistant import config_entries, setup
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
@@ -68,6 +72,27 @@ async def test_form_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
+
+
+async def test_invalid_auth(hass):
+    """Test we handle invalid auth error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_powerwall = _mock_powerwall_side_effect(site_info=AccessDeniedError("any"))
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
 async def test_form_unknown_exeption(hass):
