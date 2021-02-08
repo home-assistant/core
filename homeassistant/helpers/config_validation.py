@@ -572,7 +572,7 @@ def dynamic_template(value: Optional[Any]) -> template_helper.Template:
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
     if not template_helper.is_template_string(str(value)):
-        raise vol.Invalid("template value does not contain a dynmamic template")
+        raise vol.Invalid("template value does not contain a dynamic template")
 
     template_value = template_helper.Template(str(value))  # type: ignore
     try:
