@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
-from .const import DOMAIN
+from .const import BRIDGE_MAKE, DOMAIN
 from .utils import BondHub
 
 PLATFORMS = ["cover", "fan", "light", "switch"]
@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device_registry.async_get_or_create(
         config_entry_id=config_entry_id,
         identifiers={(DOMAIN, hub.bond_id)},
-        manufacturer=hub.make,
+        manufacturer=BRIDGE_MAKE,
         name=hub.bond_id,
         model=hub.target,
         sw_version=hub.fw_ver,

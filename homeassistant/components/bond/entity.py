@@ -52,6 +52,14 @@ class BondEntity(Entity):
         if not self._hub.is_bridge:
             device_info["model"] = self._hub.model
             device_info["sw_version"] = self._hub.fw_ver
+        else:
+            model_data = []
+            if self._hub.branding_profile:
+                model_data.append(self._hub.branding_profile)
+            if self._hub.template:
+                model_data.append(self._hub.template)
+            if model_data:
+                device_info["model"] = " ".join(model_data)
 
         return device_info
 
