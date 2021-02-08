@@ -176,3 +176,12 @@ class StringSelector(Selector):
     """Selector for a multi-line text string."""
 
     CONFIG_SCHEMA = vol.Schema({vol.Optional("multiline", default=False): bool})
+
+
+@SELECTORS.register("select")
+class SelectSelector(Selector):
+    """Selector for an single-choice input select."""
+
+    CONFIG_SCHEMA = vol.Schema(
+        {vol.Required("options"): vol.All([str], vol.Length(min=1))}
+    )

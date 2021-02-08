@@ -5,7 +5,7 @@ from typing import Any, Dict
 import voluptuous as vol
 
 # Typing imports
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 
@@ -35,7 +35,6 @@ from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401, is
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ALLOW_UNLOCK = "allow_unlock"
-CONF_API_KEY = "api_key"
 
 ENTITY_SCHEMA = vol.Schema(
     {

@@ -1938,12 +1938,10 @@ class TransportControlTrait(_Trait):
 
     def query_attributes(self):
         """Return the attributes of this trait for this entity."""
-
         return {}
 
     async def execute(self, command, data, params, challenge):
         """Execute a media command."""
-
         service_attrs = {ATTR_ENTITY_ID: self.state.entity_id}
 
         if command == COMMAND_MEDIA_SEEK_RELATIVE:

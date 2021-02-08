@@ -622,7 +622,7 @@ freesms==0.1.2
 fritzconnection==1.4.0
 
 # homeassistant.components.google_translate
-gTTS==2.2.1
+gTTS==2.2.2
 
 # homeassistant.components.garmin_connect
 garminconnect==0.1.16
@@ -765,7 +765,7 @@ hole==0.5.1
 holidays==0.10.5.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210127.7
+home-assistant-frontend==20210208.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1159,7 +1159,7 @@ pmsensor==0.4
 poolsense==0.0.8
 
 # homeassistant.components.reddit
-praw==7.1.2
+praw==7.1.4
 
 # homeassistant.components.islamic_prayer_times
 prayer_times_calculator==0.0.3
@@ -1880,7 +1880,7 @@ pyuptimerobot==0.0.5
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.3.11
+pyvera==0.3.13
 
 # homeassistant.components.versasense
 pyversasense==0.0.6
@@ -2269,7 +2269,7 @@ volkszaehler==0.2.1
 volvooncall==0.8.12
 
 # homeassistant.components.verisure
-vsure==1.6.1
+vsure==1.7.2
 
 # homeassistant.components.vasttrafik
 vtjp==0.1.14
