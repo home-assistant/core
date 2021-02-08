@@ -131,6 +131,16 @@ class BondHub:
         return self._version.get("make", BRIDGE_MAKE)
 
     @property
+    def template(self) -> str:
+        """Return this model template."""
+        return self._version.get("template")
+
+    @property
+    def branding_profile(self) -> str:
+        """Return this branding profile."""
+        return self._version.get("branding_profile")
+
+    @property
     def fw_ver(self) -> str:
         """Return this hub firmware version."""
         return self._version.get("fw_ver")
