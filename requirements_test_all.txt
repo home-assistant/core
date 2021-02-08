@@ -596,7 +596,7 @@ pmsensor==0.4
 poolsense==0.0.8
 
 # homeassistant.components.reddit
-praw==7.1.3
+praw==7.1.4
 
 # homeassistant.components.islamic_prayer_times
 prayer_times_calculator==0.0.3
