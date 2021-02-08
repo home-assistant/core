@@ -1,7 +1,11 @@
 """Support for Xiaomi Miio."""
+from datetime import timedelta
+import logging
+
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_DEVICE,
@@ -12,6 +16,8 @@ from .const import (
     MODELS_SWITCH,
 )
 from .gateway import ConnectXiaomiGateway
+
+_LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor", "light"]
 SWITCH_PLATFORMS = ["switch"]
@@ -56,7 +62,7 @@ async def async_setup_gateway_entry(
         return False
     gateway_info = gateway.gateway_info
 
-    hass.data[DOMAIN][entry.entry_id] = gateway.gateway_device
+    hass.data[DOMAIN][entry.entry_id][CONF_GATEWAY] = gateway.gateway_device
 
     gateway_model = f"{gateway_info.model}-{gateway_info.hardware_version}"
 
@@ -70,6 +76,27 @@ async def async_setup_gateway_entry(
         model=gateway_model,
         sw_version=gateway_info.firmware_version,
     )
+
+    for sub_device in gateway.devices.values():
+        async def async_update_data():
+            """Fetch data from the subdevice."""
+            try:
+                await hass.async_add_executor_job(sub_device.update)
+            except gateway.GatewayException as ex:
+                raise UpdateFailed(f"Got exception while fetching the state: {err}")
+
+        # Create update coordinator per subdevice
+        coordinator = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            # Name of the data. For logging purposes.
+            name=name,
+            update_method=async_update_data,
+            # Polling interval. Will only be polled if there are subscribers.
+            update_interval=timedelta(seconds=10),
+        )
+
+        hass.data[DOMAIN][entry.entry_id][sub_device.sid] = coordinator
 
     for component in GATEWAY_PLATFORMS:
         hass.async_create_task(

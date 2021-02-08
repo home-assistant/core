@@ -87,7 +87,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
-        gateway = hass.data[DOMAIN][config_entry.entry_id]
+        gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
         # Gateway illuminance sensor
         if gateway.model not in [
             GATEWAY_MODEL_AC_V1,
@@ -103,15 +103,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         # Gateway sub devices
         sub_devices = gateway.devices
         for sub_device in sub_devices.values():
-            sensor_variables = None
-            if sub_device.type == DeviceType.SensorHT:
-                sensor_variables = ["temperature", "humidity"]
-            if sub_device.type == DeviceType.AqaraHT:
-                sensor_variables = ["temperature", "humidity", "pressure"]
-            if sensor_variables is not None:
+            coordinator = hass.data[DOMAIN][config_entry.entry_id][sub_device.sid]
+            sensor_variables = []
+            for variable in sub_device.status.keys():
+                if variable in GATEWAY_SENSOR_TYPES.keys():
+                    sensor_variables.append(variable)
+            if sensor_variables:
                 entities.extend(
                     [
-                        XiaomiGatewaySensor(sub_device, config_entry, variable)
+                        XiaomiGatewaySensor(coordinator, sub_device, config_entry, variable)
                         for variable in sensor_variables
                     ]
                 )
@@ -240,9 +240,9 @@ class XiaomiAirQualityMonitor(Entity):
 class XiaomiGatewaySensor(XiaomiGatewayDevice):
     """Representation of a XiaomiGatewaySensor."""
 
-    def __init__(self, sub_device, entry, data_key):
+    def __init__(self, coordinator, sub_device, entry, data_key):
         """Initialize the XiaomiSensor."""
-        super().__init__(sub_device, entry)
+        super().__init__(coordinator, sub_device, entry)
         self._data_key = data_key
         self._unique_id = f"{sub_device.sid}-{data_key}"
         self._name = f"{data_key} ({sub_device.sid})".capitalize()
