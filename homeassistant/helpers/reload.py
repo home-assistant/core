@@ -157,13 +157,11 @@ async def async_setup_reload_service(
     hass: HomeAssistantType, domain: str, platforms: Iterable
 ) -> None:
     """Create the reload service for the domain."""
-
     if hass.services.has_service(domain, SERVICE_RELOAD):
         return
 
     async def _reload_config(call: Event) -> None:
         """Reload the platforms."""
-
         await async_reload_integration_platforms(hass, domain, platforms)
         hass.bus.async_fire(f"event_{domain}_reloaded", context=call.context)
 
@@ -176,7 +174,6 @@ def setup_reload_service(
     hass: HomeAssistantType, domain: str, platforms: Iterable
 ) -> None:
     """Sync version of async_setup_reload_service."""
-
     asyncio.run_coroutine_threadsafe(
         async_setup_reload_service(hass, domain, platforms),
         hass.loop,
