@@ -51,7 +51,8 @@ async def async_get_scanner(hass, config):
 
     _LOGGER.warning(
         "Your Netgear configuration has been imported into the UI, "
-        "please remove it from configuration.yaml. Loading Netgear via platform setup is now deprecated."
+        "please remove it from configuration.yaml. "
+        "Loading Netgear via platform setup is now deprecated"
     )
 
     return None
