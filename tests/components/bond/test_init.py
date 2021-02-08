@@ -1,5 +1,6 @@
 """Tests for the Bond module."""
 from aiohttp import ClientConnectionError
+from bond_api import DeviceType
 
 from homeassistant.components.bond.const import DOMAIN
 from homeassistant.config_entries import (
@@ -12,7 +13,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .common import patch_bond_version, patch_setup_entry, setup_bond_entity
+from .common import (
+    patch_bond_device,
+    patch_bond_device_ids,
+    patch_bond_device_properties,
+    patch_bond_device_state,
+    patch_bond_version,
+    patch_setup_entry,
+    setup_bond_entity,
+)
 
 from tests.common import MockConfigEntry
 
@@ -105,3 +114,52 @@ async def test_unload_config_entry(hass: HomeAssistant):
 
     assert config_entry.entry_id not in hass.data[DOMAIN]
     assert config_entry.state == ENTRY_STATE_NOT_LOADED
+
+
+async def test_old_identifiers_are_removed(hass: HomeAssistant):
+    """Test we remove the old non-unique identifiers."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+    )
+
+    old_identifers = (DOMAIN, "device_id")
+    new_identifiers = (DOMAIN, "test-bond-id", "device_id")
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={old_identifers},
+        manufacturer="any",
+        name="old",
+    )
+
+    config_entry.add_to_hass(hass)
+
+    with patch_bond_version(
+        return_value={
+            "bondid": "test-bond-id",
+            "target": "test-model",
+            "fw_ver": "test-version",
+        }
+    ), patch_bond_device_ids(
+        return_value=["bond-device-id", "device_id"]
+    ), patch_bond_device(
+        return_value={
+            "name": "test1",
+            "type": DeviceType.GENERIC_DEVICE,
+        }
+    ), patch_bond_device_properties(
+        return_value={}
+    ), patch_bond_device_state(
+        return_value={}
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        await hass.async_block_till_done()
+
+    assert config_entry.entry_id in hass.data[DOMAIN]
+    assert config_entry.state == ENTRY_STATE_LOADED
+    assert config_entry.unique_id == "test-bond-id"
+
+    # verify the device info is cleaned up
+    assert device_registry.async_get_device(identifiers={old_identifers}) is None
+    assert device_registry.async_get_device(identifiers={new_identifiers}) is not None
