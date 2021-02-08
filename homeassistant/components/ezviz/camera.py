@@ -5,7 +5,7 @@ import logging
 from typing import Callable, List
 
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
-from pyezviz.DeviceSwitchType import DeviceSwitchType
+from pyezviz.constants import DeviceSwitchType
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
@@ -339,10 +339,10 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
         """Perform a PTZ action on the camera."""
         _LOGGER.debug("PTZ action '%s' on %s", direction, self._name)
 
-        self.coordinator.ezviz_client.ptzControl(
+        self.coordinator.ezviz_client.ptz_control(
             str(direction).upper(), self._serial, "START", speed
         )
-        self.coordinator.ezviz_client.ptzControl(
+        self.coordinator.ezviz_client.ptz_control(
             str(direction).upper(), self._serial, "STOP", speed
         )
 

@@ -3,7 +3,7 @@
   "name": "Ezviz",
   "documentation": "https://www.home-assistant.io/integrations/ezviz",
   "dependencies": ["ffmpeg"],
-  "codeowners": ["@RenierM26","@baqs"],
-  "requirements": ["pyezviz==0.1.6.1"],
+  "codeowners": ["@RenierM26", "@baqs"],
+  "requirements": ["pyezviz==0.1.6.4"],
   "config_flow": true
 }
