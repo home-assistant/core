@@ -132,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             return await _async_update_powerwall_data(hass, entry, power_wall)
         except AccessDeniedError:
             if password is None:
-                return
+                raise
 
             # If the session expired, relogin, and try again
             await hass.async_add_executor_job(power_wall.login, "", password)
