@@ -577,7 +577,7 @@ async def test_wait_for_trigger_variables(hass):
         assert script_obj.last_action == wait_alias
         hass.states.async_set("switch.test", "off")
         # the script task +  2 tasks created by wait_for_trigger script step
-        await hass.async_block_till_done(3)
+        await hass.async_wait_for_task_count(3)
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
         await hass.async_block_till_done()
     except (AssertionError, asyncio.TimeoutError):
