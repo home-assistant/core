@@ -152,7 +152,7 @@ async def test_reproducing_states(hass, caplog):
     assert len(arm_vacation_calls) == 1
     assert arm_vacation_calls[0].domain == "alarm_control_panel"
     assert arm_vacation_calls[0].data == {
-        "entity_id": "alarm_control_panel.entity_armed_custom_bypass"
+        "entity_id": "alarm_control_panel.entity_disarmed"
     }
 
     assert len(disarm_calls) == 1
