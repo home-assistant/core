@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_scanner(hass, config, async_add_entities, discovery_info=None):
+async def async_get_scanner(hass, config):
     """Import Netgear configuration from YAML."""
     hass.async_create_task(
         hass.config_entries.flow.async_init(
