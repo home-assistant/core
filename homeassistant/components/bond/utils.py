@@ -4,6 +4,8 @@ from typing import List, Optional
 
 from bond_api import Action, Bond
 
+from .const import BRIDGE_MAKE
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -105,8 +107,18 @@ class BondHub:
 
     @property
     def target(self) -> str:
-        """Return this hub model."""
+        """Return this hub target."""
         return self._version.get("target")
+
+    @property
+    def model(self) -> str:
+        """Return this hub model."""
+        return self._version.get("model")
+
+    @property
+    def make(self) -> str:
+        """Return this hub make."""
+        return self._version.get("make", BRIDGE_MAKE)
 
     @property
     def fw_ver(self) -> str:
