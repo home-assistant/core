@@ -1,7 +1,7 @@
 """Support for the Tado weather service."""
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -22,7 +22,7 @@ async def async_setup_entry(
 
     tado = hass.data[DOMAIN][entry.entry_id][DATA]
 
-    async_add_entities([TadoWeatherEntity(tado, hass.config.units.is_metric)], True)
+    async_add_entities([TadoWeatherEntity(tado)], True)
 
 
 def format_condition(condition: str) -> str:
@@ -36,13 +36,12 @@ def format_condition(condition: str) -> str:
 class TadoWeatherEntity(TadoHomeEntity, WeatherEntity):
     """Define a Tado weather entity."""
 
-    def __init__(self, tado, is_metric):
+    def __init__(self, tado):
         """Initialize."""
         super().__init__(tado)
         self._tado = tado
         self._data = self._tado.data["weather"]
 
-        self._is_metric = is_metric
         self._name = tado.home_name
         self._unique_id = f"weather {tado.home_id}"
 
@@ -89,14 +88,12 @@ class TadoWeatherEntity(TadoHomeEntity, WeatherEntity):
     @property
     def temperature(self):
         """Return the temperature."""
-        return self._data["outsideTemperature"][
-            "celsius" if self._is_metric else "fahrenheit"
-        ]
+        return self._data["outsideTemperature"]["celsius"]
 
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS if self._is_metric else TEMP_FAHRENHEIT
+        return TEMP_CELSIUS
 
     @callback
     def _async_update_callback(self):
