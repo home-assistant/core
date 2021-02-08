@@ -334,7 +334,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
             template = self._config.get(CONF_GET_POSITION_TEMPLATE)
 
-            # To be deprecated:
+            # To be removed in 2021.6:
             # allow using `value_template` as position template if no `state_topic`
             if template is None and self._config.get(CONF_STATE_TOPIC) is None:
                 template = self._config.get(CONF_VALUE_TEMPLATE)

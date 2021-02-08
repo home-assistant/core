@@ -2082,10 +2082,10 @@ async def test_deprecated_tilt_invert_state_warnning(hass, caplog, mqtt_mock):
     ) in caplog.text
 
 
-async def test_no_deprecated_warnning_for_position_topic_using_position_template(
+async def test_no_deprecated_warning_for_position_topic_using_position_template(
     hass, caplog, mqtt_mock
 ):
-    """Test no warnning when position_template is used for position_topic."""
+    """Test no warning when position_template is used for position_topic."""
     assert await async_setup_component(
         hass,
         cover.DOMAIN,
