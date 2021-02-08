@@ -1,0 +1,7 @@
+{
+  "domain": "my",
+  "name": "My Home Assistant",
+  "documentation": "https://www.home-assistant.io/integrations/my",
+  "dependencies": ["frontend"],
+  "codeowners": ["@home-assistant/core"]
+}
