@@ -58,8 +58,9 @@ SSL_INTERMEDIATE = "intermediate"
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_DEVELOPMENT = "0"
-# To be able to load custom cards.
-DEFAULT_CORS = "https://cast.home-assistant.io"
+# Cast to be able to load custom cards.
+# My to be able to check url and version info.
+DEFAULT_CORS = ["https://cast.home-assistant.io", "https://my.home-assistant.io"]
 NO_LOGIN_ATTEMPT_THRESHOLD = -1
 
 MAX_CLIENT_SIZE: int = 1024 ** 2 * 16
@@ -80,7 +81,7 @@ HTTP_SCHEMA = vol.All(
             vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
             vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
             vol.Optional(CONF_SSL_KEY): cv.isfile,
-            vol.Optional(CONF_CORS_ORIGINS, default=[DEFAULT_CORS]): vol.All(
+            vol.Optional(CONF_CORS_ORIGINS, default=DEFAULT_CORS): vol.All(
                 cv.ensure_list, [cv.string]
             ),
             vol.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,
