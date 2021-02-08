@@ -32,8 +32,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_PORT): cv.port,
-    },
-    extra=vol.ALLOW_EXTRA,
+        vol.Optional(CONF_DEVICES, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_EXCLUDE, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_APS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+    }
 )
 
 
