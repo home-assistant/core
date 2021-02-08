@@ -29,6 +29,15 @@ from .common import (
 from tests.common import async_fire_time_changed
 
 
+def light(name: str):
+    """Create a light with a given name."""
+    return {
+        "name": name,
+        "type": DeviceType.LIGHT,
+        "actions": [Action.TURN_LIGHT_ON, Action.TURN_LIGHT_OFF, Action.SET_BRIGHTNESS],
+    }
+
+
 def ceiling_fan(name: str):
     """Create a ceiling fan (that has built-in light) with given name."""
     return {
@@ -115,6 +124,21 @@ async def test_fireplace_with_light_entity_registry(hass: core.HomeAssistant):
     assert entity_flame.unique_id == "test-hub-id_test-device-id"
     entity_light = registry.entities["light.fireplace_name_2"]
     assert entity_light.unique_id == "test-hub-id_test-device-id_light"
+
+
+async def test_light_entity_registry(hass: core.HomeAssistant):
+    """Tests lights are registered in the entity registry."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light("light-name"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_device_id="test-device-id",
+    )
+
+    registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    entity = registry.entities["light.light_name"]
+    assert entity.unique_id == "test-hub-id_test-device-id"
 
 
 async def test_sbb_trust_state(hass: core.HomeAssistant):
