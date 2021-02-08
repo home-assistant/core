@@ -85,6 +85,10 @@ async def async_attach_trigger(
     attribute = config.get(CONF_ATTRIBUTE)
     job = HassJob(action)
 
+    _variables = {}
+    if automation_info:
+        _variables = automation_info.get("variables") or {}
+
     @callback
     def state_automation_listener(event: Event):
         """Listen for state changes and calls action."""
@@ -143,7 +147,7 @@ async def async_attach_trigger(
             call_action()
             return
 
-        variables = {
+        trigger_info = {
             "trigger": {
                 "platform": "state",
                 "entity_id": entity,
@@ -151,6 +155,7 @@ async def async_attach_trigger(
                 "to_state": to_s,
             }
         }
+        variables = {**_variables, **trigger_info}
 
         try:
             period[entity] = cv.positive_time_period(
