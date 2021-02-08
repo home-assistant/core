@@ -52,6 +52,9 @@ class BondEntity(Entity):
     @property
     def name(self) -> Optional[str]:
         """Get entity name."""
+        if self._sub_device:
+            sub_device_name = self._sub_device.replace("_", " ").title()
+            return f"{self._device.name} {sub_device_name}"
         return self._device.name
 
     @property
