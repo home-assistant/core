@@ -61,12 +61,14 @@ def valid_subscribe_topic(value: Any) -> str:
     return value
 
 
-def valid_subscribe_topic_template(value: Any) -> Any:
+def valid_subscribe_topic_template(value: Any) -> template.Template:
     """Validate either a jinja2 template or a valid MQTT subscription topic."""
-    if template.is_template_string(value):
-        return cv.template(value)
+    tpl = template.Template(value)
 
-    return valid_subscribe_topic(value)
+    if tpl.is_static:
+        valid_subscribe_topic(value)
+
+    return tpl
 
 
 def valid_publish_topic(value: Any) -> str:
