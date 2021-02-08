@@ -9,8 +9,7 @@ from homeassistant.setup import async_setup_component
 async def test_setup(hass):
     """Test setup."""
     with mock.patch(
-        "homeassistant.components.frontend.async_register_built_in_panel",
-        return_value=True,
+        "homeassistant.components.frontend.async_register_built_in_panel"
     ) as mock_register_panel:
         assert await async_setup_component(hass, "my", {"foo": "bar"})
         assert mock_register_panel.call_args == mock.call(
