@@ -1,6 +1,7 @@
 """Support for the sensors in a GreenEye Monitor."""
 from homeassistant.const import (
     CONF_NAME,
+    CONF_SENSOR_TYPE,
     CONF_TEMPERATURE_UNIT,
     POWER_WATT,
     TIME_HOURS,
@@ -16,7 +17,6 @@ from . import (
     CONF_MONITOR_SERIAL_NUMBER,
     CONF_NET_METERING,
     CONF_NUMBER,
-    CONF_SENSOR_TYPE,
     CONF_TIME_UNIT,
     DATA_GREENEYE_MONITOR,
     SENSOR_TYPE_CURRENT,
