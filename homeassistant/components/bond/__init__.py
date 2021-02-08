@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, hub.bond_id)},
-        manufacturer="Olibra",
+        manufacturer=hub.make,
         name=hub.bond_id,
         model=hub.target,
         sw_version=hub.fw_ver,
