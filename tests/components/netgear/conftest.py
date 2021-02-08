@@ -8,7 +8,7 @@ import pytest
 def bypass_setup_fixture():
     """Mock component setup."""
     with patch(
-        "homeassistant.components.netgear.device_tracker.async_setup_scanner",
-        return_value=True,
+        "homeassistant.components.netgear.device_tracker.async_get_scanner",
+        return_value=None,
     ):
         yield
