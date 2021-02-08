@@ -317,6 +317,98 @@ async def test_turn_on_light_with_brightness(hass: core.HomeAssistant):
     )
 
 
+async def test_turn_on_up_light(hass: core.HomeAssistant):
+    """Tests that turn on command, on an up light, delegates to API."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        up_light_ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_turn_on, patch_bond_device_state():
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "light.name_1_up_light"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_turn_on.assert_called_once_with(
+        "test-device-id", Action(Action.TURN_UP_LIGHT_ON)
+    )
+
+
+async def test_turn_off_up_light(hass: core.HomeAssistant):
+    """Tests that turn off command, on an up light, delegates to API."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        up_light_ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_turn_off, patch_bond_device_state():
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "light.name_1_up_light"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_turn_off.assert_called_once_with(
+        "test-device-id", Action(Action.TURN_UP_LIGHT_OFF)
+    )
+
+
+async def test_turn_on_down_light(hass: core.HomeAssistant):
+    """Tests that turn on command, on a down light, delegates to API."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        down_light_ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_turn_on, patch_bond_device_state():
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "light.name_1_down_light"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_turn_on.assert_called_once_with(
+        "test-device-id", Action(Action.TURN_DOWN_LIGHT_ON)
+    )
+
+
+async def test_turn_off_down_light(hass: core.HomeAssistant):
+    """Tests that turn off command, on a down light, delegates to API."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        down_light_ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_turn_off, patch_bond_device_state():
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "light.name_1_down_light"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_turn_off.assert_called_once_with(
+        "test-device-id", Action(Action.TURN_DOWN_LIGHT_OFF)
+    )
+
+
 async def test_update_reports_light_is_on(hass: core.HomeAssistant):
     """Tests that update command sets correct state when Bond API reports the light is on."""
     await setup_platform(hass, LIGHT_DOMAIN, ceiling_fan("name-1"))
