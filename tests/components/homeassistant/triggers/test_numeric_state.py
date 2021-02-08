@@ -572,6 +572,32 @@ async def test_if_not_fires_if_entity_not_match(hass, calls, below):
     assert len(calls) == 0
 
 
+async def test_if_not_fires_and_warns_if_below_entity_unknown(hass, calls):
+    """Test if warns with unknown below entity."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "numeric_state",
+                    "entity_id": "test.entity",
+                    "below": "input_number.unknown",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    with patch(
+        "homeassistant.components.homeassistant.triggers.numeric_state._LOGGER.warning"
+    ) as logwarn:
+        hass.states.async_set("test.entity", 1)
+        await hass.async_block_till_done()
+        assert len(calls) == 0
+        assert len(logwarn.mock_calls) == 1
+
+
 @pytest.mark.parametrize("below", (10, "input_number.value_10"))
 async def test_if_fires_on_entity_change_below_with_attribute(hass, calls, below):
     """Test attributes change."""
