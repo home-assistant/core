@@ -446,7 +446,7 @@ class FanSchema:
         {
             vol.Required(CONF_ADDRESS): cv.string,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Required(CONF_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_STATE_ADDRESS): cv.string,
             vol.Optional(CONF_OSCILLATION_ADDRESS): cv.string,
             vol.Optional(CONF_OSCILLATION_STATE_ADDRESS): cv.string,
             vol.Optional(CONF_MAX_STEP): cv.byte,
