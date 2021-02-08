@@ -16,8 +16,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
 )
-from homeassistant.components.ozw.climate import convert_units
-from homeassistant.const import TEMP_FAHRENHEIT
 
 from .common import setup_ozw
 
@@ -38,8 +36,8 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
         HVAC_MODE_HEAT_COOL,
     ]
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 73.5
-    assert state.attributes[ATTR_TEMPERATURE] == 70.0
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 23.1
+    assert state.attributes[ATTR_TEMPERATURE] == 21.1
     assert state.attributes.get(ATTR_TARGET_TEMP_LOW) is None
     assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) is None
     assert state.attributes[ATTR_FAN_MODE] == "Auto Low"
@@ -56,7 +54,7 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     # Celsius is converted to Fahrenheit here!
-    assert round(msg["payload"]["Value"], 2) == 26.1
+    assert round(msg["payload"]["Value"], 2) == 78.98
     assert msg["payload"]["ValueIDKey"] == 281475099443218
 
     # Test hvac_mode with set_temperature
@@ -74,7 +72,7 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     msg = sent_messages[-1]
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
     # Celsius is converted to Fahrenheit here!
-    assert round(msg["payload"]["Value"], 2) == 24.1
+    assert round(msg["payload"]["Value"], 2) == 75.38
     assert msg["payload"]["ValueIDKey"] == 281475099443218
 
     # Test set mode
@@ -129,8 +127,8 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     assert state is not None
     assert state.state == HVAC_MODE_HEAT_COOL
     assert state.attributes.get(ATTR_TEMPERATURE) is None
-    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 70.0
-    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 78.0
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 21.1
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 25.6
 
     # Test setting high/low temp on multiple setpoints
     await hass.services.async_call(
@@ -146,11 +144,11 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     assert len(sent_messages) == 7  # 2 messages !
     msg = sent_messages[-2]  # low setpoint
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
-    assert round(msg["payload"]["Value"], 2) == 20.0
+    assert round(msg["payload"]["Value"], 2) == 68.0
     assert msg["payload"]["ValueIDKey"] == 281475099443218
     msg = sent_messages[-1]  # high setpoint
     assert msg["topic"] == "OpenZWave/1/command/setvalue/"
-    assert round(msg["payload"]["Value"], 2) == 25.0
+    assert round(msg["payload"]["Value"], 2) == 77.0
     assert msg["payload"]["ValueIDKey"] == 562950076153874
 
     # Test basic/single-setpoint thermostat (node 16 in dump)
@@ -327,5 +325,3 @@ async def test_climate(hass, climate_data, sent_messages, climate_msg, caplog):
     )
     assert len(sent_messages) == 12
     assert "does not support setting a mode" in caplog.text
-
-    assert convert_units("F") == TEMP_FAHRENHEIT

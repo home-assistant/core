@@ -242,7 +242,10 @@ async def test_cors_defaults(hass):
         assert await async_setup_component(hass, "http", {})
 
     assert len(mock_setup.mock_calls) == 1
-    assert mock_setup.mock_calls[0][1][1] == ["https://cast.home-assistant.io"]
+    assert mock_setup.mock_calls[0][1][1] == [
+        "https://cast.home-assistant.io",
+        "https://my.home-assistant.io",
+    ]
 
 
 async def test_storing_config(hass, aiohttp_client, aiohttp_unused_port):

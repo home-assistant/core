@@ -50,4 +50,5 @@ class VeraBinarySensor(VeraDevice[veraApi.VeraBinarySensor], BinarySensorEntity)
 
     def update(self) -> None:
         """Get the latest data and update the state."""
+        super().update()
         self._state = self.vera_device.is_tripped

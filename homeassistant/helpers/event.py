@@ -259,7 +259,7 @@ def async_track_state_change_event(
                     hass.async_run_hass_job(job, event)
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception(
-                        "Error while processing state changed for %s", entity_id
+                        "Error while processing state change for %s", entity_id
                     )
 
         hass.data[TRACK_STATE_CHANGE_LISTENER] = hass.bus.async_listen(
