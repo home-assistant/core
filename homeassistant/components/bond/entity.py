@@ -43,11 +43,25 @@ class BondEntity(Entity):
     @property
     def device_info(self) -> Optional[Dict[str, Any]]:
         """Get a an HA device representing this Bond controlled device."""
-        return {
+        device_info = {
             ATTR_NAME: self.name,
-            "identifiers": {(DOMAIN, self._device.device_id)},
+            "manufacturer": self._hub.make,
+            "identifiers": {(DOMAIN, self._hub.bond_id, self._device.device_id)},
             "via_device": (DOMAIN, self._hub.bond_id),
         }
+        if not self._hub.is_bridge:
+            device_info["model"] = self._hub.model
+            device_info["sw_version"] = self._hub.fw_ver
+        else:
+            model_data = []
+            if self._device.branding_profile:
+                model_data.append(self._device.branding_profile)
+            if self._device.template:
+                model_data.append(self._device.template)
+            if model_data:
+                device_info["model"] = " ".join(model_data)
+
+        return device_info
 
     @property
     def assumed_state(self) -> bool:
