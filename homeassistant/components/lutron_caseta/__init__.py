@@ -158,7 +158,11 @@ async def async_setup_lip(hass, config_entry, lip_devices):
     try:
         await lip.async_connect(host)
     except asyncio.TimeoutError:
-        _LOGGER.error("Failed to connect to via LIP at %s:23", host)
+        _LOGGER.warning(
+            "Failed to connect to via LIP at %s:23, Pico and Shade remotes will not be available; "
+            "Enable Telnet Support in the Lutron app under Settings >> Advanced >> Integration",
+            host,
+        )
         return
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s:23", host)
