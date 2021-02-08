@@ -135,7 +135,6 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered device."""
-        print("discovery")
         await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
         self._abort_if_unique_id_configured()
 
