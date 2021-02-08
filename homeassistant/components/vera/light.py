@@ -93,6 +93,7 @@ class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
 
     def update(self) -> None:
         """Call to update state."""
+        super().update()
         self._state = self.vera_device.is_switched_on()
         if self.vera_device.is_dimmable:
             # If it is dimmable, both functions exist. In case color

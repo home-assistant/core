@@ -23,6 +23,7 @@ async def run_sensor_test(
     vera_device = MagicMock(spec=pv.VeraSensor)  # type: pv.VeraSensor
     vera_device.device_id = 1
     vera_device.vera_device_id = vera_device.device_id
+    vera_device.comm_failure = False
     vera_device.name = "dev1"
     vera_device.category = category
     setattr(vera_device, class_property, "33")
@@ -178,6 +179,7 @@ async def test_scene_controller_sensor(
     vera_device = MagicMock(spec=pv.VeraSensor)  # type: pv.VeraSensor
     vera_device.device_id = 1
     vera_device.vera_device_id = vera_device.device_id
+    vera_device.comm_failure = False
     vera_device.name = "dev1"
     vera_device.category = pv.CATEGORY_SCENE_CONTROLLER
     vera_device.get_last_scene_id = MagicMock(return_value="id0")

@@ -70,4 +70,5 @@ class VeraSwitch(VeraDevice[veraApi.VeraSwitch], SwitchEntity):
 
     def update(self) -> None:
         """Update device state."""
+        super().update()
         self._state = self.vera_device.is_switched_on()

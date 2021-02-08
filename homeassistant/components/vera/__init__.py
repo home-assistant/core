@@ -232,6 +232,11 @@ class VeraDevice(Generic[DeviceType], Entity):
         """Update the state."""
         self.schedule_update_ha_state(True)
 
+    def update(self):
+        """Force a refresh from the device if the device is unavailable."""
+        if not self.available:
+            self.vera_device.refresh()
+
     @property
     def name(self) -> str:
         """Return the name of the device."""
@@ -275,6 +280,11 @@ class VeraDevice(Generic[DeviceType], Entity):
         attr["Vera Device Id"] = self.vera_device.vera_device_id
 
         return attr
+
+    @property
+    def available(self):
+        """If device communications have failed return false."""
+        return not self.vera_device.comm_failure
 
     @property
     def unique_id(self) -> str:
