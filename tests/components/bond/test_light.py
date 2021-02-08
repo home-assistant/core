@@ -319,7 +319,7 @@ async def test_update_reports_up_light_is_on(hass: core.HomeAssistant):
     """Tests that update command sets correct state when Bond API reports the up light is on."""
     await setup_platform(hass, LIGHT_DOMAIN, up_light_ceiling_fan("name-1"))
 
-    with patch_bond_device_state(return_value={"up_light": 1}):
+    with patch_bond_device_state(return_value={"up_light": 1, "light": 1}):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
@@ -330,7 +330,7 @@ async def test_update_reports_up_light_is_off(hass: core.HomeAssistant):
     """Tests that update command sets correct state when Bond API reports the up light is off."""
     await setup_platform(hass, LIGHT_DOMAIN, up_light_ceiling_fan("name-1"))
 
-    with patch_bond_device_state(return_value={"up_light": 0}):
+    with patch_bond_device_state(return_value={"up_light": 0, "light": 0}):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
@@ -341,7 +341,7 @@ async def test_update_reports_down_light_is_on(hass: core.HomeAssistant):
     """Tests that update command sets correct state when Bond API reports the down light is on."""
     await setup_platform(hass, LIGHT_DOMAIN, down_light_ceiling_fan("name-1"))
 
-    with patch_bond_device_state(return_value={"down_light": 1}):
+    with patch_bond_device_state(return_value={"down_light": 1, "light": 1}):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
@@ -352,7 +352,7 @@ async def test_update_reports_down_light_is_off(hass: core.HomeAssistant):
     """Tests that update command sets correct state when Bond API reports the down light is off."""
     await setup_platform(hass, LIGHT_DOMAIN, down_light_ceiling_fan("name-1"))
 
-    with patch_bond_device_state(return_value={"down_light": 0}):
+    with patch_bond_device_state(return_value={"down_light": 0, "light": 0}):
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
 
