@@ -3,3 +3,5 @@
 DOMAIN = "bond"
 
 CONF_BOND_ID: str = "bond_id"
+
+BRIDGE_MAKE = "Olibra"
