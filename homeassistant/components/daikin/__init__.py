@@ -16,7 +16,6 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
-from . import config_flow  # noqa: F401
 from .const import CONF_UUID, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
