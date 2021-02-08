@@ -16,7 +16,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv, discovery
 
 # Loading the config flow file will register the flow
-from . import config_flow  # noqa: F401
 from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_CONTEXT,
