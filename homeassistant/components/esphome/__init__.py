@@ -1,5 +1,6 @@
 """Support for esphome devices."""
 import asyncio
+import functools
 import logging
 import math
 from typing import Any, Callable, Dict, List, Optional
@@ -520,7 +521,7 @@ class EsphomeBaseEntity(Entity):
                     f"esphome_{self._entry_id}_remove_"
                     f"{self._component_key}_{self._key}"
                 ),
-                self.async_remove,
+                functools.partial(self.async_remove, force_remove=True),
             )
         )
 

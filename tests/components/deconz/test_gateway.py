@@ -66,6 +66,7 @@ async def setup_deconz_integration(
     options=ENTRY_OPTIONS,
     get_state_response=DECONZ_WEB_REQUEST,
     entry_id="1",
+    unique_id=BRIDGEID,
     source="user",
 ):
     """Create the deCONZ gateway."""
@@ -76,6 +77,7 @@ async def setup_deconz_integration(
         connection_class=CONN_CLASS_LOCAL_PUSH,
         options=deepcopy(options),
         entry_id=entry_id,
+        unique_id=unique_id,
     )
     config_entry.add_to_hass(hass)
 

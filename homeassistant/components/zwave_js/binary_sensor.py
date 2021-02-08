@@ -257,6 +257,16 @@ async def async_setup_entry(
 class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
     """Representation of a Z-Wave binary_sensor."""
 
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZWaveBooleanBinarySensor entity."""
+        super().__init__(config_entry, client, info)
+        self._name = self.generate_name(include_value_name=True)
+
     @property
     def is_on(self) -> bool:
         """Return if the sensor is on or off."""
@@ -294,8 +304,9 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         super().__init__(config_entry, client, info)
         self.state_key = state_key
         self._name = self.generate_name(
-            self.info.primary_value.property_name,
-            [self.info.primary_value.metadata.states[self.state_key]],
+            include_value_name=True,
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[self.info.primary_value.metadata.states[self.state_key]],
         )
         # check if we have a custom mapping for this value
         self._mapping_info = self._get_sensor_mapping()
@@ -347,6 +358,7 @@ class ZWavePropertyBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         super().__init__(config_entry, client, info)
         # check if we have a custom mapping for this value
         self._mapping_info = self._get_sensor_mapping()
+        self._name = self.generate_name(include_value_name=True)
 
     @property
     def is_on(self) -> bool:
