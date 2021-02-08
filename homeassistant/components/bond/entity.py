@@ -74,9 +74,9 @@ class BondEntity(Entity):
             device_info["sw_version"] = self._hub.fw_ver
         else:
             model_data = []
-            if self._hub.branding_profile is not None:
+            if self._device.branding_profile:
                 model_data.append(self._device.branding_profile)
-            if self._hub.template is not None:
+            if self._device.template:
                 model_data.append(self._device.template)
             if model_data:
                 device_info["model"] = " ".join(model_data)
