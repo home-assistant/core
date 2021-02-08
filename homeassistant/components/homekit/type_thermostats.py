@@ -595,10 +595,15 @@ class WaterHeater(HomeAccessory):
     def async_update_state(self, new_state):
         """Update water_heater state after state change."""
         # Update current and target temperature
-        temperature = _get_target_temperature(new_state, self._unit)
-        if temperature is not None:
-            if temperature != self.char_current_temp.value:
-                self.char_target_temp.set_value(temperature)
+        target_temperature = _get_target_temperature(new_state, self._unit)
+        if target_temperature is not None:
+            if target_temperature != self.char_target_temp.value:
+                self.char_target_temp.set_value(target_temperature)
+
+        current_temperature = _get_current_temperature(new_state, self._unit)
+        if current_temperature is not None:
+            if current_temperature != self.char_current_temp.value:
+                self.char_current_temp.set_value(current_temperature)
 
         # Update display units
         if self._unit and self._unit in UNIT_HASS_TO_HOMEKIT:
