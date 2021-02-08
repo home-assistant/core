@@ -160,7 +160,7 @@ async def async_setup_lip(hass, config_entry, lip_devices):
     except asyncio.TimeoutError:
         _LOGGER.warning(
             "Failed to connect to via LIP at %s:23, Pico and Shade remotes will not be available; "
-            "Enable Telnet Support enabled in the Lutron app under Settings >> Advanced >> Integration",
+            "Enable Telnet Support in the Lutron app under Settings >> Advanced >> Integration",
             host,
         )
         return
