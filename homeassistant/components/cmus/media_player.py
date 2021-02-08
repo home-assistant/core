@@ -64,15 +64,10 @@ def setup_platform(hass, config, add_entities, discover_info=None):
     port = config[CONF_PORT]
     name = config[CONF_NAME]
 
-    try:
-        cmus_remote = CmusRemote(server=host, port=port, password=password)
-        cmus_remote.connect()
+    cmus_remote = CmusRemote(server=host, port=port, password=password)
+    cmus_remote.connect()
 
-        if cmus_remote.cmus is None:
-            return
-
-    except exceptions.InvalidPassword:
-        _LOGGER.error("The provided password was rejected by cmus")
+    if cmus_remote.cmus is None:
         return
 
     add_entities([CmusDevice(device=cmus_remote, name=name, server=host)], True)
