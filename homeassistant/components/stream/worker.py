@@ -2,7 +2,6 @@
 from collections import deque
 import io
 import logging
-import time
 
 import av
 
@@ -11,8 +10,6 @@ from .const import (
     MAX_TIMESTAMP_GAP,
     MIN_SEGMENT_DURATION,
     PACKETS_TO_WAIT_FOR_AUDIO,
-    STREAM_RESTART_INCREMENT,
-    STREAM_RESTART_RESET_TIME,
     STREAM_TIMEOUT,
 )
 from .core import Segment, StreamBuffer
@@ -47,32 +44,6 @@ def create_stream_buffer(stream_output, video_stream, audio_stream, sequence):
 
 
 def stream_worker(hass, stream, quit_event):
-    """Handle consuming streams and restart keepalive streams."""
-
-    wait_timeout = 0
-    while not quit_event.wait(timeout=wait_timeout):
-        start_time = time.time()
-        try:
-            _stream_worker_internal(hass, stream, quit_event)
-        except av.error.FFmpegError:  # pylint: disable=c-extension-no-member
-            _LOGGER.exception("Stream connection failed: %s", stream.source)
-        if not stream.keepalive or quit_event.is_set():
-            break
-        # To avoid excessive restarts, wait before restarting
-        # As the required recovery time may be different for different setups, start
-        # with trying a short wait_timeout and increase it on each reconnection attempt.
-        # Reset the wait_timeout after the worker has been up for several minutes
-        if time.time() - start_time > STREAM_RESTART_RESET_TIME:
-            wait_timeout = 0
-        wait_timeout += STREAM_RESTART_INCREMENT
-        _LOGGER.debug(
-            "Restarting stream worker in %d seconds: %s",
-            wait_timeout,
-            stream.source,
-        )
-
-
-def _stream_worker_internal(hass, stream, quit_event):
     """Handle consuming streams."""
 
     try:
@@ -183,7 +154,6 @@ def _stream_worker_internal(hass, stream, quit_event):
             _LOGGER.error(
                 "Error demuxing stream while finding first packet: %s", str(ex)
             )
-            finalize_stream()
             return False
         return True
 
@@ -220,12 +190,6 @@ def _stream_worker_internal(hass, stream, quit_event):
                 packet.stream = output_streams[audio_stream]
                 buffer.output.mux(packet)
 
-    def finalize_stream():
-        if not stream.keepalive:
-            # End of stream, clear listeners and stop thread
-            for fmt in stream.outputs:
-                stream.outputs[fmt].put(None)
-
     if not peek_first_pts():
         container.close()
         return
@@ -249,7 +213,6 @@ def _stream_worker_internal(hass, stream, quit_event):
             missing_dts = 0
         except (av.AVError, StopIteration) as ex:
             _LOGGER.error("Error demuxing stream: %s", str(ex))
-            finalize_stream()
             break
 
         # Discard packet if dts is not monotonic
@@ -263,7 +226,6 @@ def _stream_worker_internal(hass, stream, quit_event):
                     last_dts[packet.stream],
                     packet.dts,
                 )
-                finalize_stream()
                 break
             continue
 

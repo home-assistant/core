@@ -106,13 +106,11 @@ async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
 
     stream_worker_sync.pause()
 
-    with patch(
-        "homeassistant.components.stream.recorder.RecorderOutput.cleanup"
-    ) as mock_cleanup:
+    with patch("homeassistant.components.stream.IdleTimer.fire") as mock_timeout:
         # Setup demo track
         source = generate_h264_video()
         stream = preload_stream(hass, source)
-        recorder = stream.add_provider("recorder")
+        recorder = stream.add_provider("recorder", timeout=30)
         stream.start()
 
         await recorder.recv()
@@ -122,7 +120,7 @@ async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-        assert mock_cleanup.called
+        assert mock_timeout.called
 
         stream_worker_sync.resume()
         stream.stop()
