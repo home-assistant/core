@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 
-from . import CONF_AVAILABLE, CONF_MODE, DATA_HIVE, DOMAIN, HiveEntity
+from . import ATTR_AVAILABLE, ATTR_MODE, DATA_HIVE, DOMAIN, HiveEntity
 
 DEVICETYPE = {
     "contactsensor": DEVICE_CLASS_OPENING,
@@ -67,8 +67,8 @@ class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
     def device_state_attributes(self):
         """Show Device Attributes."""
         return {
-            CONF_AVAILABLE: self.attributes[CONF_AVAILABLE],
-            CONF_MODE: self.attributes[CONF_MODE],
+            ATTR_AVAILABLE: self.attributes.get(ATTR_AVAILABLE),
+            ATTR_MODE: self.attributes.get(ATTR_MODE),
         }
 
     @property

@@ -16,7 +16,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
-from . import CONF_AVAILABLE, DATA_HIVE, DOMAIN, HiveEntity, refresh_system
+from . import ATTR_AVAILABLE, DATA_HIVE, DOMAIN, HiveEntity, refresh_system
 
 HIVE_TO_HASS_STATE = {
     "SCHEDULE": HVAC_MODE_AUTO,
@@ -96,7 +96,7 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
     @property
     def device_state_attributes(self):
         """Show Device Attributes."""
-        return {CONF_AVAILABLE: self.attributes[CONF_AVAILABLE]}
+        return {ATTR_AVAILABLE: self.attributes.get(ATTR_AVAILABLE)}
 
     @property
     def hvac_modes(self):

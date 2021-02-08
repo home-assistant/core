@@ -2,15 +2,15 @@
 
 from datetime import timedelta
 
+from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.icon import icon_for_battery_level
 
-from . import CONF_AVAILABLE, DATA_HIVE, DOMAIN, HiveEntity
+from . import ATTR_AVAILABLE, DATA_HIVE, DOMAIN, HiveEntity
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 DEVICETYPE = {
-    "Battery": {"icon": "mdi:thermometer", "unit": " % ", "type": "battery"},
+    "Battery": {"unit": " % ", "type": DEVICE_CLASS_BATTERY},
 }
 
 
@@ -45,24 +45,17 @@ class HiveSensorEntity(HiveEntity, Entity):
     @property
     def available(self):
         """Return if sensor is available."""
-        return self.device.get("deviceData", {}).get("online", True)
+        return self.device.get("deviceData", {}).get("online")
 
     @property
     def device_class(self):
         """Device class of the entity."""
-        return DEVICETYPE[self.device["hiveType"]].get("type", None)
-
-    @property
-    def icon(self):
-        """Return the icon to use."""
-        return icon_for_battery_level(
-            battery_level=self.device["deviceData"]["battery"]
-        )
+        return DEVICETYPE[self.device["hiveType"]].get("type")
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return DEVICETYPE[self.device["hiveType"]].get("unit", None)
+        return DEVICETYPE[self.device["hiveType"]].get("unit")
 
     @property
     def name(self):
@@ -77,7 +70,7 @@ class HiveSensorEntity(HiveEntity, Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {CONF_AVAILABLE: self.attributes[CONF_AVAILABLE]}
+        return {ATTR_AVAILABLE: self.attributes.get(ATTR_AVAILABLE)}
 
     async def async_update(self):
         """Update all Node data from Hive."""
