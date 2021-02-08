@@ -134,6 +134,12 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Site name"
     assert result["data"] == {
+        CONF_HOST: "1.2.3.4",
+        CONF_USERNAME: "username",
+        CONF_PASSWORD: "password",
+        CONF_PORT: 1234,
+        CONF_SITE_ID: "site_id",
+        CONF_VERIFY_SSL: True,
         CONF_CONTROLLER: {
             CONF_HOST: "1.2.3.4",
             CONF_USERNAME: "username",
@@ -141,7 +147,7 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
             CONF_PORT: 1234,
             CONF_SITE_ID: "site_id",
             CONF_VERIFY_SSL: True,
-        }
+        },
     }
 
 
@@ -241,16 +247,12 @@ async def test_flow_raise_already_configured(hass, aioclient_mock):
 async def test_flow_aborts_configuration_updated(hass, aioclient_mock):
     """Test config flow aborts since a connected config entry already exists."""
     entry = MockConfigEntry(
-        domain=UNIFI_DOMAIN,
-        data={"controller": {"host": "1.2.3.4", "site": "office"}},
-        unique_id="2",
+        domain=UNIFI_DOMAIN, data={"host": "1.2.3.4", "site": "office"}, unique_id="2"
     )
     entry.add_to_hass(hass)
 
     entry = MockConfigEntry(
-        domain=UNIFI_DOMAIN,
-        data={"controller": {"host": "1.2.3.4", "site": "site_id"}},
-        unique_id="1",
+        domain=UNIFI_DOMAIN, data={"host": "1.2.3.4", "site": "site_id"}, unique_id="1"
     )
     entry.add_to_hass(hass)
 
@@ -399,9 +401,9 @@ async def test_reauth_flow_update_configuration(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
-    assert config_entry.data[CONF_CONTROLLER][CONF_HOST] == "1.2.3.4"
-    assert config_entry.data[CONF_CONTROLLER][CONF_USERNAME] == "new_name"
-    assert config_entry.data[CONF_CONTROLLER][CONF_PASSWORD] == "new_pass"
+    assert config_entry.data[CONF_HOST] == "1.2.3.4"
+    assert config_entry.data[CONF_USERNAME] == "new_name"
+    assert config_entry.data[CONF_PASSWORD] == "new_pass"
 
 
 async def test_advanced_option_flow(hass, aioclient_mock):
@@ -544,7 +546,7 @@ async def test_form_ssdp_aborts_if_host_already_exists(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(
         domain=UNIFI_DOMAIN,
-        data={"controller": {"host": "192.168.208.1", "site": "site_id"}},
+        data={"host": "192.168.208.1", "site": "site_id"},
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
