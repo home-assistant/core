@@ -7,7 +7,7 @@ from bond_api import Bond, BPUPSubscriptions, start_bpup
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
@@ -29,6 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Bond from a config entry."""
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_ACCESS_TOKEN]
+    config_entry_id = entry.entry_id
 
     bond = Bond(host=host, token=token, timeout=ClientTimeout(total=_API_TIMEOUT))
     hub = BondHub(bond)
@@ -40,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     bpup_subs = BPUPSubscriptions()
     stop_bpup = await start_bpup(host, bpup_subs)
 
-    hass.data[DOMAIN][entry.entry_id] = {
+    hass.data[DOMAIN][config_entry_id] = {
         HUB: hub,
         BPUP_SUBS: bpup_subs,
         BPUP_STOP: stop_bpup,
@@ -51,13 +52,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
+        config_entry_id=config_entry_id,
         identifiers={(DOMAIN, hub.bond_id)},
         manufacturer=hub.make,
         name=hub.bond_id,
         model=hub.target,
         sw_version=hub.fw_ver,
     )
+
+    _async_remove_old_device_identifiers(config_entry_id, device_registry, hub)
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -86,3 +89,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+@callback
+def _async_remove_old_device_identifiers(
+    config_entry_id: str, device_registry: dr.DeviceRegistry, hub: BondHub
+):
+    """Remove the non-unique device registry entries."""
+    for device in hub.devices:
+        dev = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
+        if dev is None:
+            continue
+        if config_entry_id in dev.config_entries:
+            device_registry.async_remove_device(dev.id)
