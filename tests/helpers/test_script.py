@@ -990,6 +990,32 @@ async def test_wait_for_trigger_generated_exception(hass, caplog):
     assert "something bad" in caplog.text
 
 
+async def test_condition_warning(hass):
+    """Test warning on condition."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event},
+            {
+                "condition": "numeric_state",
+                "entity_id": "test.entity",
+                "above": 0,
+            },
+            {"event": event},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "string")
+    with patch("homeassistant.helpers.script._LOGGER.warning") as logwarn:
+        await script_obj.async_run(context=Context())
+        await hass.async_block_till_done()
+        assert len(logwarn.mock_calls) == 1
+
+    assert len(events) == 1
+
+
 async def test_condition_basic(hass):
     """Test if we can use conditions in a script."""
     event = "test_event"
@@ -1098,6 +1124,44 @@ async def test_repeat_count(hass):
         assert event.data.get("first") == (index == 0)
         assert event.data.get("index") == index + 1
         assert event.data.get("last") == (index == count - 1)
+
+
+@pytest.mark.parametrize("condition", ["while", "until"])
+async def test_repeat_condition_warning(hass, condition):
+    """Test warning on repeat conditions."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    count = 0 if condition == "while" else 1
+
+    sequence = {
+        "repeat": {
+            "sequence": [
+                {
+                    "event": event,
+                },
+            ],
+        }
+    }
+    sequence["repeat"][condition] = {
+        "condition": "numeric_state",
+        "entity_id": "sensor.test",
+        "value_template": "{{ unassigned_variable }}",
+        "above": "0",
+    }
+
+    script_obj = script.Script(
+        hass, cv.SCRIPT_SCHEMA(sequence), f"Test {condition}", "test_domain"
+    )
+
+    # wait_started = async_watch_for_action(script_obj, "wait")
+    hass.states.async_set("sensor.test", "1")
+
+    with patch("homeassistant.helpers.script._LOGGER.warning") as logwarn:
+        hass.async_create_task(script_obj.async_run(context=Context()))
+        await asyncio.wait_for(hass.async_block_till_done(), 1)
+        assert len(logwarn.mock_calls) == 1
+
+    assert len(events) == count
 
 
 @pytest.mark.parametrize("condition", ["while", "until"])
@@ -1303,6 +1367,51 @@ async def test_repeat_nested(hass, variables, first_last, inside_x):
             "last": result[2],
             "x": result[3],
         }
+
+
+async def test_choose_warning(hass):
+    """Test warning on choose."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "choose": [
+                {
+                    "conditions": {
+                        "condition": "numeric_state",
+                        "entity_id": "test.entity",
+                        "value_template": "{{ undefined_a + undefined_b }}",
+                        "above": 1,
+                    },
+                    "sequence": {"event": event, "event_data": {"choice": "first"}},
+                },
+                {
+                    "conditions": {
+                        "condition": "numeric_state",
+                        "entity_id": "test.entity",
+                        "value_template": "{{ 'string' }}",
+                        "above": 2,
+                    },
+                    "sequence": {"event": event, "event_data": {"choice": "second"}},
+                },
+            ],
+            "default": {"event": event, "event_data": {"choice": "default"}},
+        }
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "9")
+    await hass.async_block_till_done()
+
+    with patch("homeassistant.helpers.script._LOGGER.warning") as logwarn:
+        await script_obj.async_run(context=Context())
+        await hass.async_block_till_done()
+        print(logwarn.mock_calls)
+        assert len(logwarn.mock_calls) == 2
+
+    assert len(events) == 1
+    assert events[0].data["choice"] == "default"
 
 
 @pytest.mark.parametrize("var,result", [(1, "first"), (2, "second"), (3, "default")])
