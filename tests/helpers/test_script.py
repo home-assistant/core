@@ -990,7 +990,7 @@ async def test_wait_for_trigger_generated_exception(hass, caplog):
     assert "something bad" in caplog.text
 
 
-async def test_condition_warning(hass):
+async def test_condition_warning(hass, caplog):
     """Test warning on condition."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -1007,11 +1007,15 @@ async def test_condition_warning(hass):
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
     hass.states.async_set("test.entity", "string")
-    with patch("homeassistant.helpers.script._LOGGER.warning") as logwarn:
-        await script_obj.async_run(context=Context())
-        await hass.async_block_till_done()
-        assert len(logwarn.mock_calls) == 1
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(caplog.record_tuples) == 1
+    assert caplog.record_tuples[0][1] == logging.WARNING
 
     assert len(events) == 1
 
@@ -1127,7 +1131,7 @@ async def test_repeat_count(hass):
 
 
 @pytest.mark.parametrize("condition", ["while", "until"])
-async def test_repeat_condition_warning(hass, condition):
+async def test_repeat_condition_warning(hass, caplog, condition):
     """Test warning on repeat conditions."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -1156,10 +1160,14 @@ async def test_repeat_condition_warning(hass, condition):
     # wait_started = async_watch_for_action(script_obj, "wait")
     hass.states.async_set("sensor.test", "1")
 
-    with patch("homeassistant.helpers.script._LOGGER.warning") as logwarn:
-        hass.async_create_task(script_obj.async_run(context=Context()))
-        await asyncio.wait_for(hass.async_block_till_done(), 1)
-        assert len(logwarn.mock_calls) == 1
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    hass.async_create_task(script_obj.async_run(context=Context()))
+    await asyncio.wait_for(hass.async_block_till_done(), 1)
+
+    assert len(caplog.record_tuples) == 1
+    assert caplog.record_tuples[0][1] == logging.WARNING
 
     assert len(events) == count
 
@@ -1369,7 +1377,7 @@ async def test_repeat_nested(hass, variables, first_last, inside_x):
         }
 
 
-async def test_choose_warning(hass):
+async def test_choose_warning(hass, caplog):
     """Test warning on choose."""
     event = "test_event"
     events = async_capture_events(hass, event)
@@ -1404,11 +1412,15 @@ async def test_choose_warning(hass):
     hass.states.async_set("test.entity", "9")
     await hass.async_block_till_done()
 
-    with patch("homeassistant.helpers.script._LOGGER.warning") as logwarn:
-        await script_obj.async_run(context=Context())
-        await hass.async_block_till_done()
-        print(logwarn.mock_calls)
-        assert len(logwarn.mock_calls) == 2
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(caplog.record_tuples) == 2
+    assert caplog.record_tuples[0][1] == logging.WARNING
+    assert caplog.record_tuples[1][1] == logging.WARNING
 
     assert len(events) == 1
     assert events[0].data["choice"] == "default"
