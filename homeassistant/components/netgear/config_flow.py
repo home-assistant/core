@@ -131,8 +131,6 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input=None):
         """Import a config entry."""
-        print("import")
-        print(user_input)
         return await self.async_step_user(user_input)
 
     async def async_step_ssdp(self, discovery_info):
