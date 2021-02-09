@@ -14,6 +14,8 @@ from homeassistant.util.percentage import (
 from .const import DOMAIN
 from .knx_entity import KnxEntity
 
+DEFAULT_PERCENTAGE = 50
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up fans for KNX platform."""
@@ -72,7 +74,10 @@ class KNXFan(KnxEntity, FanEntity):
         **kwargs,
     ) -> None:
         """Turn on the fan."""
-        await self.async_set_percentage(percentage)
+        if percentage is None:
+            await self.async_set_percentage(DEFAULT_PERCENTAGE)
+        else:
+            await self.async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
