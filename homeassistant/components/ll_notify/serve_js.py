@@ -41,7 +41,9 @@ class ModView(HomeAssistantView):
         try:
             filecontent = SCRIPT_PATH.read_text(encoding="utf-8", errors="ignore")
         except Exception as err:
-            _LOGGER.error(f"Unable to read {SCRIPT_PATH}. Err: {err}")
+            _LOGGER.error(
+                "Unable to read %s. Err: %s", str(SCRIPT_PATH), str(err)
+            )  # pylint: disable=broad-except
             filecontent = ""
 
         return web.Response(
