@@ -102,7 +102,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
     @callback
     def _delete_callback(self):
         """Remove this entity."""
-        self.hass.async_create_task(self.async_remove())
+        self.hass.async_create_task(self.async_remove(force_remove=True))
 
     @callback
     def _update_callback(self):

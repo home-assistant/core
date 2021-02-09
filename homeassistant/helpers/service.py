@@ -26,6 +26,7 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     CONF_SERVICE,
+    CONF_SERVICE_DATA,
     CONF_SERVICE_TEMPLATE,
     CONF_TARGET,
     ENTITY_MATCH_ALL,
@@ -62,7 +63,6 @@ if TYPE_CHECKING:
 
 
 CONF_SERVICE_ENTITY_ID = "entity_id"
-CONF_SERVICE_DATA = "data"
 CONF_SERVICE_DATA_TEMPLATE = "data_template"
 
 _LOGGER = logging.getLogger(__name__)
@@ -669,10 +669,14 @@ def async_register_admin_service(
 
 @bind_hass
 @ha.callback
-def verify_domain_control(hass: HomeAssistantType, domain: str) -> Callable:
+def verify_domain_control(
+    hass: HomeAssistantType, domain: str
+) -> Callable[[Callable[[ha.ServiceCall], Any]], Callable[[ha.ServiceCall], Any]]:
     """Ensure permission to access any entity under domain in service call."""
 
-    def decorator(service_handler: Callable[[ha.ServiceCall], Any]) -> Callable:
+    def decorator(
+        service_handler: Callable[[ha.ServiceCall], Any]
+    ) -> Callable[[ha.ServiceCall], Any]:
         """Decorate."""
         if not asyncio.iscoroutinefunction(service_handler):
             raise HomeAssistantError("Can only decorate async functions.")

@@ -89,12 +89,14 @@ class TriggerInstance:
     async def async_attach_trigger(self):
         """Attach MQTT trigger."""
         mqtt_config = {
+            mqtt_trigger.CONF_PLATFORM: mqtt.DOMAIN,
             mqtt_trigger.CONF_TOPIC: self.trigger.topic,
             mqtt_trigger.CONF_ENCODING: DEFAULT_ENCODING,
             mqtt_trigger.CONF_QOS: self.trigger.qos,
         }
         if self.trigger.payload:
             mqtt_config[CONF_PAYLOAD] = self.trigger.payload
+        mqtt_config = mqtt_trigger.TRIGGER_SCHEMA(mqtt_config)
 
         if self.remove:
             self.remove()
