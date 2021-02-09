@@ -14,7 +14,10 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -149,9 +152,9 @@ def refresh_system(func):
     """Force update all entities after state change."""
 
     @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        func(self, *args, **kwargs)
-        dispatcher_send(self.hass, DOMAIN)
+    async def wrapper(self, *args, **kwargs):
+        await func(self, *args, **kwargs)
+        async_dispatcher_send(self.hass, DOMAIN)
 
     return wrapper
 
