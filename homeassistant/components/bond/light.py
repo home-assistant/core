@@ -64,7 +64,7 @@ async def async_setup_entry(
     ]
 
     lights: List[Entity] = [
-        BondLight(hub, device)
+        BondLight(hub, device, bpup_subs)
         for device in hub.devices
         if DeviceType.is_light(device.type)
     ]
