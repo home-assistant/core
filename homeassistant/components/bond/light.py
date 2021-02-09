@@ -85,7 +85,7 @@ class BondBaseLight(BondEntity, LightEntity):
         bpup_subs: BPUPSubscriptions,
         sub_device: Optional[str] = None,
     ):
-        """Create HA entity representing Bond fan."""
+        """Create HA entity representing Bond light."""
         super().__init__(hub, device, bpup_subs, sub_device)
         self._light: Optional[int] = None
 
@@ -110,7 +110,7 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
         bpup_subs: BPUPSubscriptions,
         sub_device: Optional[str] = None,
     ):
-        """Create HA entity representing Bond fan."""
+        """Create HA entity representing Bond light."""
         super().__init__(hub, device, bpup_subs, sub_device)
         self._brightness: Optional[int] = None
 
