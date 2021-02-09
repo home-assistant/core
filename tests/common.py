@@ -232,6 +232,13 @@ async def async_test_home_assistant(loop):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
 
+    # Load the registries
+    asyncio.gather(
+        device_registry.async_load(hass),
+        entity_registry.async_load(hass),
+        area_registry.async_load(hass),
+    )
+
     return hass
 
 
