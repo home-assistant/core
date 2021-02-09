@@ -320,13 +320,6 @@ async def test_action(hass):
         == STATE_ALARM_ARMED_NIGHT
     )
 
-    hass.bus.async_fire("test_event_arm_vacation")
-    await hass.async_block_till_done()
-    assert (
-        hass.states.get("alarm_control_panel.alarm_no_arm_code").state
-        == STATE_ALARM_ARMED_VACATION
-    )
-
     hass.bus.async_fire("test_event_disarm")
     await hass.async_block_till_done()
     assert (
