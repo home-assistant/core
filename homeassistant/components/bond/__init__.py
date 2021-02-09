@@ -3,7 +3,7 @@ import asyncio
 from asyncio import TimeoutError as AsyncIOTimeoutError
 
 from aiohttp import ClientError, ClientTimeout
-from bond_api import Bond
+from bond_api import Bond, BPUPSubscriptions, start_bpup
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
-from .const import BRIDGE_MAKE, DOMAIN
+from .const import BPUP_STOP, BPUP_SUBS, BRIDGE_MAKE, DOMAIN, HUB
 from .utils import BondHub
 
 PLATFORMS = ["cover", "fan", "light", "switch"]
@@ -38,7 +38,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except (ClientError, AsyncIOTimeoutError, OSError) as error:
         raise ConfigEntryNotReady from error
 
-    hass.data[DOMAIN][config_entry_id] = hub
+    bpup_subs = BPUPSubscriptions()
+    stop_bpup = await start_bpup(host, bpup_subs)
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        HUB: hub,
+        BPUP_SUBS: bpup_subs,
+        BPUP_STOP: stop_bpup,
+    }
 
     if not entry.unique_id:
         hass.config_entries.async_update_entry(entry, unique_id=hub.bond_id)
@@ -73,6 +80,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ]
         )
     )
+
+    data = hass.data[DOMAIN][entry.entry_id]
+    if BPUP_STOP in data:
+        data[BPUP_STOP]()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)

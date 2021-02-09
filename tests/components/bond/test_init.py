@@ -20,6 +20,7 @@ from .common import (
     patch_bond_device_state,
     patch_bond_version,
     patch_setup_entry,
+    patch_start_bpup,
     setup_bond_entity,
 )
 
@@ -141,7 +142,7 @@ async def test_old_identifiers_are_removed(hass: HomeAssistant):
             "target": "test-model",
             "fw_ver": "test-version",
         }
-    ), patch_bond_device_ids(
+    ), patch_start_bpup(), patch_bond_device_ids(
         return_value=["bond-device-id", "device_id"]
     ), patch_bond_device(
         return_value={

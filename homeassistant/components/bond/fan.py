@@ -3,7 +3,7 @@ import logging
 import math
 from typing import Any, Callable, List, Optional, Tuple
 
-from bond_api import Action, DeviceType, Direction
+from bond_api import Action, BPUPSubscriptions, DeviceType, Direction
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
@@ -20,7 +20,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import DOMAIN
+from .const import BPUP_SUBS, DOMAIN, HUB
 from .entity import BondEntity
 from .utils import BondDevice, BondHub
 
@@ -33,10 +33,14 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up Bond fan devices."""
-    hub: BondHub = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
+    hub: BondHub = data[HUB]
+    bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
 
     fans = [
-        BondFan(hub, device) for device in hub.devices if DeviceType.is_fan(device.type)
+        BondFan(hub, device, bpup_subs)
+        for device in hub.devices
+        if DeviceType.is_fan(device.type)
     ]
 
     async_add_entities(fans, True)
@@ -45,9 +49,9 @@ async def async_setup_entry(
 class BondFan(BondEntity, FanEntity):
     """Representation of a Bond fan."""
 
-    def __init__(self, hub: BondHub, device: BondDevice):
+    def __init__(self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions):
         """Create HA entity representing Bond fan."""
-        super().__init__(hub, device)
+        super().__init__(hub, device, bpup_subs)
 
         self._power: Optional[bool] = None
         self._speed: Optional[int] = None
