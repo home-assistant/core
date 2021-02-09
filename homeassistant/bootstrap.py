@@ -510,10 +510,12 @@ async def _async_set_up_integrations(
 
     stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
 
-    # Kick off loading the registries. They don't need to be awaited.
-    asyncio.create_task(hass.helpers.device_registry.async_get_registry())
-    asyncio.create_task(hass.helpers.entity_registry.async_get_registry())
-    asyncio.create_task(hass.helpers.area_registry.async_get_registry())
+    # Load the registries
+    asyncio.gather(
+        hass.helpers.device_registry.async_load(),
+        hass.helpers.entity_registry.async_load(),
+        hass.helpers.area_registry.async_load(),
+    )
 
     # Start setup
     if stage_1_domains:

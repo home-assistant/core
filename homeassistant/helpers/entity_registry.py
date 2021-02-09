@@ -19,6 +19,7 @@ from typing import (
     Optional,
     Tuple,
     Union,
+    cast,
 )
 
 import attr
@@ -35,10 +36,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, callback, split_entity_id, valid_entity_id
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
+from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 from homeassistant.util.yaml import load_yaml
 
-from .singleton import singleton
 from .typing import UNDEFINED, HomeAssistantType, UndefinedType
 
 if TYPE_CHECKING:
@@ -566,12 +567,31 @@ class EntityRegistry:
             self._add_index(entry)
 
 
-@singleton(DATA_REGISTRY)
+@bind_hass
+@callback
+def async_get(hass: HomeAssistantType) -> EntityRegistry:
+    """Get entity registry."""
+    return cast(EntityRegistry, hass.data[DATA_REGISTRY])
+
+
+@bind_hass
+async def async_load(hass: HomeAssistantType) -> None:
+    """Load entity registry."""
+    assert DATA_REGISTRY not in hass.data
+    hass.data[DATA_REGISTRY] = EntityRegistry(hass)
+    await hass.data[DATA_REGISTRY].async_load()
+
+
+@bind_hass
 async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
-    """Create entity registry."""
-    reg = EntityRegistry(hass)
-    await reg.async_load()
-    return reg
+    """Wait until entity registry is loaded, then return it.
+
+    This is deprecated and will be removed in the future. Use async_get instead.
+    """
+    if DATA_REGISTRY not in hass.data:
+        await async_load(hass)
+
+    return async_get(hass)
 
 
 @callback
