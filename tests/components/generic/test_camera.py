@@ -176,17 +176,18 @@ async def test_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
                 "still_image_url": "https://example.com",
                 "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
                 "limit_refetch_to_url_change": True,
-            }
+            },
         },
     )
+    assert await async_setup_component(hass, "stream", {})
     await hass.async_block_till_done()
 
     hass.states.async_set("sensor.temp", "5")
 
     with patch(
-        "homeassistant.components.camera.request_stream",
+        "homeassistant.components.camera.Stream.endpoint_url",
         return_value="http://home.assistant/playlist.m3u8",
-    ) as mock_request_stream:
+    ) as mock_stream_url:
         # Request playlist through WebSocket
         client = await hass_ws_client(hass)
 
@@ -196,25 +197,47 @@ async def test_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
         msg = await client.receive_json()
 
         # Assert WebSocket response
-        assert mock_request_stream.call_count == 1
-        assert mock_request_stream.call_args[0][1] == "http://example.com/5a"
+        assert mock_stream_url.call_count == 1
         assert msg["id"] == 1
         assert msg["type"] == TYPE_RESULT
         assert msg["success"]
         assert msg["result"]["url"][-13:] == "playlist.m3u8"
 
-        # Cause a template render error
-        hass.states.async_remove("sensor.temp")
+
+async def test_stream_source_error(aioclient_mock, hass, hass_client, hass_ws_client):
+    """Test that the stream source has an error."""
+    assert await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "still_image_url": "https://example.com",
+                # Does not exist
+                "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
+                "limit_refetch_to_url_change": True,
+            },
+        },
+    )
+    assert await async_setup_component(hass, "stream", {})
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.camera.Stream.endpoint_url",
+        return_value="http://home.assistant/playlist.m3u8",
+    ) as mock_stream_url:
+        # Request playlist through WebSocket
+        client = await hass_ws_client(hass)
 
         await client.send_json(
-            {"id": 2, "type": "camera/stream", "entity_id": "camera.config_test"}
+            {"id": 1, "type": "camera/stream", "entity_id": "camera.config_test"}
         )
         msg = await client.receive_json()
 
-        # Assert that no new call to the stream request should have been made
-        assert mock_request_stream.call_count == 1
-        # Assert the websocket error message
-        assert msg["id"] == 2
+        # Assert WebSocket response
+        assert mock_stream_url.call_count == 0
+        assert msg["id"] == 1
         assert msg["type"] == TYPE_RESULT
         assert msg["success"] is False
         assert msg["error"] == {
@@ -240,7 +263,7 @@ async def test_no_stream_source(aioclient_mock, hass, hass_client, hass_ws_clien
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.camera.request_stream",
+        "homeassistant.components.camera.Stream.endpoint_url",
         return_value="http://home.assistant/playlist.m3u8",
     ) as mock_request_stream:
         # Request playlist through WebSocket

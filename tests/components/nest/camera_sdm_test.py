@@ -16,6 +16,7 @@ import pytest
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_IDLE
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from .common import async_setup_sdm_platform
@@ -245,11 +246,16 @@ async def test_refresh_expired_stream_token(hass, auth):
         DEVICE_TRAITS,
         auth=auth,
     )
+    assert await async_setup_component(hass, "stream", {})
 
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
     assert cam.state == STATE_IDLE
+
+    # Request a stream for the camera entity to exercise nest cam + camera interaction
+    # and shutdown on url expiration
+    await camera.async_request_stream(hass, cam.entity_id, "hls")
 
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.1.streamingToken"

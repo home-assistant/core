@@ -8,13 +8,15 @@ from unittest.mock import patch
 import av
 import pytest
 
+from homeassistant.components.stream import create_stream
 from homeassistant.components.stream.core import Segment
 from homeassistant.components.stream.recorder import recorder_save_worker
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.stream.common import generate_h264_video, preload_stream
+from tests.components.stream.common import generate_h264_video
 
 TEST_TIMEOUT = 10
 
@@ -75,10 +77,11 @@ async def test_record_stream(hass, hass_client, stream_worker_sync, record_worke
 
     # Setup demo track
     source = generate_h264_video()
-    stream = preload_stream(hass, source)
-    recorder = stream.add_provider("recorder")
-    stream.start()
+    stream = create_stream(hass, source)
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await stream.async_record("/example/path")
 
+    recorder = stream.add_provider("recorder")
     while True:
         segment = await recorder.recv()
         if not segment:
@@ -95,6 +98,27 @@ async def test_record_stream(hass, hass_client, stream_worker_sync, record_worke
     record_worker_sync.join()
 
 
+async def test_record_lookback(
+    hass, hass_client, stream_worker_sync, record_worker_sync
+):
+    """Exercise record with loopback."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    source = generate_h264_video()
+    stream = create_stream(hass, source)
+
+    # Start an HLS feed to enable lookback
+    stream.add_provider("hls")
+    stream.start()
+
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await stream.async_record("/example/path", lookback=4)
+
+    # This test does not need recorder cleanup since it is not fully exercised
+
+    stream.stop()
+
+
 async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
     """
     Test recorder timeout.
@@ -109,9 +133,11 @@ async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
     with patch("homeassistant.components.stream.IdleTimer.fire") as mock_timeout:
         # Setup demo track
         source = generate_h264_video()
-        stream = preload_stream(hass, source)
-        recorder = stream.add_provider("recorder", timeout=30)
-        stream.start()
+
+        stream = create_stream(hass, source)
+        with patch.object(hass.config, "is_allowed_path", return_value=True):
+            await stream.async_record("/example/path")
+        recorder = stream.add_provider("recorder")
 
         await recorder.recv()
 
@@ -126,6 +152,19 @@ async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
         stream.stop()
         await hass.async_block_till_done()
         await hass.async_block_till_done()
+
+
+async def test_record_path_not_allowed(hass, hass_client):
+    """Test where the output path is not allowed by home assistant configuration."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    # Setup demo track
+    source = generate_h264_video()
+    stream = create_stream(hass, source)
+    with patch.object(
+        hass.config, "is_allowed_path", return_value=False
+    ), pytest.raises(HomeAssistantError):
+        await stream.async_record("/example/path")
 
 
 async def test_recorder_save(tmpdir):
@@ -165,9 +204,10 @@ async def test_record_stream_audio(
         source = generate_h264_video(
             container_format="mov", audio_codec=a_codec
         )  # mov can store PCM
-        stream = preload_stream(hass, source)
+        stream = create_stream(hass, source)
+        with patch.object(hass.config, "is_allowed_path", return_value=True):
+            await stream.async_record("/example/path")
         recorder = stream.add_provider("recorder")
-        stream.start()
 
         while True:
             segment = await recorder.recv()
