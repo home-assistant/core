@@ -1,0 +1,4 @@
+js/node_modules
+tmp/
+!js/dist/* # This actually won't work, but a reminder. Must force add.
+__pycache__/

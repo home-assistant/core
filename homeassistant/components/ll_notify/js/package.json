@@ -1,0 +1,46 @@
+{
+  "name": "ll_notify",
+  "version": "0.0.1",
+  "description": "Home Assistant ll_notify component front end",
+  "keywords": [
+    "home-assistant",
+    "homeassistant",
+    "hass",
+    "automation",
+    "lovelace",
+    "custom-cards",
+    "notify"
+  ],
+  "module": "notify-card.js",
+  "repository": "https://github.com/rr326/ha_ll_notify.git",
+  "author": "Ross Rosen <rrosen326@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "alertifyjs": "^1.13.1",
+    "lodash.has": "^4.5.2",
+    "lodash.merge": "^4.6.2"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^17.0.0",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^11.1.0",
+    "eslint": "^7.18.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^7.2.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-prettier": "^3.1.4",
+    "postcss": "^8.2.4",
+    "prettier": "^2.2.1",
+    "rollup": "^2.38.0",
+    "rollup-plugin-postcss": "^4.0.0",
+    "rollup-plugin-serve": "^1.1.0",
+    "rollup-plugin-terser": "^7.0.2"
+  },
+  "scripts": {
+    "start": "rollup -c rollup.config.js --watch",
+    "build": "npm run fix && rm -f dist/* && npm run rollup",
+    "lint": "eslint *.js src/*.js",
+    "fix": "eslint --fix *.js src/*.js",
+    "rollup": "rollup -c"
+  }
+}

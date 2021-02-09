@@ -1,0 +1,69 @@
+success:
+  description: Signal notification (success) to front end
+  fields:
+    message:
+      description: Text of notification
+      example: "Success message"
+    wait:
+      description: (Optional) Time (in seconds) to wait before the message is dismissed, a value of 0 means keep open till clicked.
+      example: 3
+    after_close:
+      description: "See documentation undeer Actions"
+warning:
+  description: Signal notification (warning) to front end
+  fields:
+    message:
+      description: Text of notification
+      example: "Warning message"
+    wait:
+      description: (Optional) Time (in seconds) to wait before the message is dismissed, a value of 0 means keep open till clicked.
+      example: 3
+    after_close:
+      description: "See documentation undeer Actions"
+error:
+  description: Signal notification (error) to front end
+  fields:
+    message:
+      description: Text of notification
+      example: "Error message"
+    wait:
+      description: (Optional) Time (in seconds) to wait before the message is dismissed, a value of 0 means keep open till clicked.
+      example: 3
+    after_close:
+      description: "See documentation undeer Actions"
+alert:
+  description: Create Lovelace Alert box
+  fields:
+    title:
+      description: Title of alert
+      example: "Alert title"
+    message:
+      description: Text of alert
+      example: "Alert body"
+    after_close:
+      description: "See documentation undeer Actions"
+confirm:
+  description: Create Lovelace Confirm Dialog
+  fields:
+    title:
+      description: Title of Confirm
+      example: "Confirm title"
+    message:
+      description: Text of alert
+      example: "Confirm body"
+    after_ok:
+      description: "See documentation undeer Actions"
+    after_cancel:
+      description: "See documentation undeer Actions"
+dismiss_all:
+  description: Dismiss all open notifications
+fire_event:
+  description: Advanced - see documentation under "Actions"
+get_defaults:
+  description: For developers only
+notify:
+  description: Advanced - see AlertifyJS documentation
+message:
+  description: Like "success" but no default styling. Can be hard to see.
+ping:
+  description: For developers only

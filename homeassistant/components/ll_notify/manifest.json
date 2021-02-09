@@ -1,0 +1,16 @@
+{
+  "domain": "ll_notify",
+  "name": "ll_notify",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/ll_notify",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [
+    "http"
+  ],
+  "codeowners": [
+    "@rr326"
+  ]
+}

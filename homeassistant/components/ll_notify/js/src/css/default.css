@@ -1,0 +1,15 @@
+/*
+ * Needed for Dark Mode defaults
+ */
+
+.alertify {
+  color: black;
+}
+
+.alertify-notifier {
+  color: black;
+}
+
+.ajs-message {
+  background-color: "#BFC9CA";
+}
