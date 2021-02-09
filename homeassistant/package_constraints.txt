@@ -13,8 +13,10 @@ cryptography==3.3.1
 defusedxml==0.6.0
 distro==1.5.0
 emoji==1.2.0
+h11>=0.12.0
 hass-nabucasa==0.41.0
 home-assistant-frontend==20210208.0
+httpcore>=0.12.3
 httpx==0.16.1
 jinja2>=2.11.3
 netdisco==2.8.2
