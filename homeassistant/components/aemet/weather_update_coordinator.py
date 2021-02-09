@@ -110,6 +110,10 @@ def format_int(value) -> int:
         return None
 
 
+class TownNotFound(Exception):
+    """Raised when town is not found."""
+
+
 class WeatherUpdateCoordinator(DataUpdateCoordinator):
     """Weather data update coordinator."""
 
@@ -183,6 +187,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 self._latitude,
                 self._longitude,
             )
+            raise TownNotFound
         return self._town
 
     def _get_weather_and_forecast(self):
@@ -235,7 +240,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     def _convert_weather_response(self, weather_response):
         """Format the weather response correctly."""
-        if not weather_response.hourly:
+        if not weather_response or not weather_response.hourly:
             return None
 
         elaborated = dt_util.parse_datetime(
