@@ -52,6 +52,47 @@ async def test_call_service(hass, websocket_client):
     assert call.data == {"hello": "world"}
 
 
+async def test_call_service_target(hass, websocket_client):
+    """Test call service command with target."""
+    calls = []
+
+    @callback
+    def service_call(call):
+        calls.append(call)
+
+    hass.services.async_register("domain_test", "test_service", service_call)
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "call_service",
+            "domain": "domain_test",
+            "service": "test_service",
+            "service_data": {"hello": "world"},
+            "target": {
+                "entity_id": ["entity.one", "entity.two"],
+                "device_id": "deviceid",
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    assert len(calls) == 1
+    call = calls[0]
+
+    assert call.domain == "domain_test"
+    assert call.service == "test_service"
+    assert call.data == {
+        "hello": "world",
+        "entity_id": ["entity.one", "entity.two"],
+        "device_id": ["deviceid"],
+    }
+
+
 async def test_call_service_not_found(hass, websocket_client):
     """Test call service command."""
     await websocket_client.send_json(
