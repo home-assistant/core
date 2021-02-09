@@ -191,6 +191,7 @@ async def test_websocket_get_action_capabilities(
         "arm_away": {"extra_fields": []},
         "arm_home": {"extra_fields": []},
         "arm_night": {"extra_fields": []},
+        "arm_vacation": {"extra_fields": []},
         "disarm": {
             "extra_fields": [{"name": "code", "optional": True, "type": "string"}]
         },
