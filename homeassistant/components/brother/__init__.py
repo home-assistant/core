@@ -66,7 +66,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     if unload_ok:
         hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
-        if not len(hass.data[DOMAIN][DATA_CONFIG_ENTRY]):
+        if not hass.data[DOMAIN][DATA_CONFIG_ENTRY]:
             hass.data[DOMAIN].pop(SNMP)
             hass.data[DOMAIN].pop(DATA_CONFIG_ENTRY)
 
