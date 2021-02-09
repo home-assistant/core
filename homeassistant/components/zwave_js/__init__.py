@@ -131,15 +131,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # grab device in device registry attached to this node
         dev_id = get_device_id(client, node)
         device = dev_reg.async_get_device({dev_id})
-        assert device
         # note: removal of entity registry entry is handled by core
-        dev_reg.async_remove_device(device.id)
+        dev_reg.async_remove_device(device.id)  # type: ignore
 
     @callback
     def async_on_value_notification(notification: ValueNotification) -> None:
         """Relay stateless value notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
-        assert device
         value = notification.value
         if notification.metadata.states:
             value = notification.metadata.states.get(str(value), value)
@@ -151,7 +149,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ATTR_NODE_ID: notification.node.node_id,
                 ATTR_HOME_ID: client.driver.controller.home_id,
                 ATTR_ENDPOINT: notification.endpoint,
-                ATTR_DEVICE_ID: device.id,
+                ATTR_DEVICE_ID: device.id,  # type: ignore
                 ATTR_COMMAND_CLASS: notification.command_class,
                 ATTR_COMMAND_CLASS_NAME: notification.command_class_name,
                 ATTR_LABEL: notification.metadata.label,
@@ -165,7 +163,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def async_on_notification(notification: Notification) -> None:
         """Relay stateless notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
-        assert device
         hass.bus.async_fire(
             ZWAVE_JS_EVENT,
             {
@@ -173,7 +170,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ATTR_DOMAIN: DOMAIN,
                 ATTR_NODE_ID: notification.node.node_id,
                 ATTR_HOME_ID: client.driver.controller.home_id,
-                ATTR_DEVICE_ID: device.id,
+                ATTR_DEVICE_ID: device.id,  # type: ignore
                 ATTR_LABEL: notification.notification_label,
                 ATTR_PARAMETERS: notification.parameters,
             },
