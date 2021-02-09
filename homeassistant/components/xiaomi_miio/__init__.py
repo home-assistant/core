@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from miio.gateway import GatewayException
+
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers import device_registry as dr
@@ -85,7 +87,7 @@ async def async_setup_gateway_entry(
             for sub_device in gateway.gateway_device.devices.values():
                 await hass.async_add_executor_job(sub_device.update)
         except GatewayException as ex:
-            raise UpdateFailed(f"Got exception while fetching the state: {err}")
+            raise UpdateFailed("Got exception while fetching the state") from ex
 
     # Create update coordinator
     coordinator = DataUpdateCoordinator(

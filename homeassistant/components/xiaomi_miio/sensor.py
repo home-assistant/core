@@ -1,15 +1,18 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
-import logging
 from dataclasses import dataclass
+import logging
 
 import voluptuous as vol
-from miio import (AirQualityMonitor,  # pylint: disable=import-error
-                  DeviceException)
-from miio.gateway import (GATEWAY_MODEL_AC_V1, GATEWAY_MODEL_AC_V2,
-                          GATEWAY_MODEL_AC_V3, GATEWAY_MODEL_EU, DeviceType,
-                          GatewayException)
+from miio import AirQualityMonitor  # pylint: disable=import-error
+from miio import DeviceException
+from miio.gateway import (
+    GATEWAY_MODEL_AC_V1,
+    GATEWAY_MODEL_AC_V2,
+    GATEWAY_MODEL_AC_V3,
+    GATEWAY_MODEL_EU,
+    GatewayException,
+)
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
@@ -17,16 +20,17 @@ from homeassistant.const import (
     CONF_TOKEN,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     LIGHT_LUX,
     PERCENTAGE,
-    PRESSURE_HPA,
     POWER_WATT,
+    PRESSURE_HPA,
     TEMP_CELSIUS,
 )
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from .const import CONF_FLOW_TYPE, CONF_GATEWAY, DOMAIN, KEY_COORDINATOR
