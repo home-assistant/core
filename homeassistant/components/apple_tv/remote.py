@@ -57,7 +57,7 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
                 except OverflowError:
                     _LOGGER.error("Command delay must be a numeric %s", single_command)
                 else:
-                    await asyncio.sleep(float(delay))
+                    await sleep(float(delay))
             elif not hasattr(self.atv.remote_control, single_command):
                 _LOGGER.error("No attributes for command %s", single_command)
                 continue
