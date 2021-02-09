@@ -24,7 +24,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if discovery_info is None:
         return
 
-    hive = hass.data.get(DATA_HIVE)
+    hive = hass.data[DOMAIN].get(DATA_HIVE)
     devices = hive.devices.get("binary_sensor")
     entities = []
     if devices:
