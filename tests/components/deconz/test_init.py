@@ -14,11 +14,9 @@ from homeassistant.components.deconz.const import (
     CONF_GROUP_ID_BASE,
     DOMAIN as DECONZ_DOMAIN,
 )
-from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.helpers import entity_registry
-from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
