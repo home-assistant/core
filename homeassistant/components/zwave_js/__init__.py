@@ -131,13 +131,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # grab device in device registry attached to this node
         dev_id = get_device_id(client, node)
         device = dev_reg.async_get_device({dev_id})
-        # note: removal of entity registry is handled by core
+        assert device
+        # note: removal of entity registry entry is handled by core
         dev_reg.async_remove_device(device.id)
 
     @callback
     def async_on_value_notification(notification: ValueNotification) -> None:
         """Relay stateless value notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
+        assert device
         value = notification.value
         if notification.metadata.states:
             value = notification.metadata.states.get(str(value), value)
@@ -163,6 +165,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def async_on_notification(notification: Notification) -> None:
         """Relay stateless notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
+        assert device
         hass.bus.async_fire(
             ZWAVE_JS_EVENT,
             {
