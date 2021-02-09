@@ -49,7 +49,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
 )
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -110,7 +110,7 @@ def format_int(value) -> int:
         return None
 
 
-class TownNotFound(Exception):
+class TownNotFound(UpdateFailed):
     """Raised when town is not found."""
 
 
@@ -193,8 +193,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     def _get_weather_and_forecast(self):
         """Get weather and forecast data from AEMET OpenData."""
 
-        if not self._get_weather_town():
-            return None
+        self._get_weather_town()
 
         daily = None
         if self._forecast_mode == FORECAST_MODE_DAILY:
