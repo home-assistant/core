@@ -14,7 +14,7 @@ from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
 
-async def test_humanifying_deconz_event(hass):
+async def test_humanifying_deconz_event(hass, aioclient_mock):
     """Test humanifying deCONZ event."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = {
@@ -53,7 +53,9 @@ async def test_humanifying_deconz_event(hass):
             "uniqueid": "00:00:00:00:00:00:00:04-00",
         },
     }
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     hass.config.components.add("recorder")
