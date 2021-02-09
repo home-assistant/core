@@ -1,14 +1,10 @@
 """deCONZ light platform tests."""
 
 from copy import deepcopy
-from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.deconz.const import (
-    CONF_ALLOW_DECONZ_GROUPS,
-    DOMAIN as DECONZ_DOMAIN,
-)
+from homeassistant.components.deconz.const import CONF_ALLOW_DECONZ_GROUPS
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -33,9 +29,12 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.setup import async_setup_component
 
-from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+from .test_gateway import (
+    DECONZ_WEB_REQUEST,
+    mock_deconz_put_request,
+    setup_deconz_integration,
+)
 
 GROUPS = {
     "1": {
@@ -107,29 +106,20 @@ LIGHTS = {
 }
 
 
-async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a gateway."""
-    assert (
-        await async_setup_component(
-            hass, LIGHT_DOMAIN, {"light": {"platform": DECONZ_DOMAIN}}
-        )
-        is True
-    )
-    assert DECONZ_DOMAIN not in hass.data
-
-
-async def test_no_lights_or_groups(hass):
+async def test_no_lights_or_groups(hass, aioclient_mock):
     """Test that no lights or groups entities are created."""
-    await setup_deconz_integration(hass)
+    await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
 
 
-async def test_lights_and_groups(hass):
+async def test_lights_and_groups(hass, aioclient_mock):
     """Test that lights or groups entities are created."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["groups"] = deepcopy(GROUPS)
     data["lights"] = deepcopy(LIGHTS)
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 6
@@ -183,73 +173,63 @@ async def test_lights_and_groups(hass):
 
     # Verify service calls
 
-    rgb_light_device = gateway.api.lights["1"]
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/1/state")
 
     # Service turn on light with short color loop
 
-    with patch.object(rgb_light_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {
-                ATTR_ENTITY_ID: "light.rgb_light",
-                ATTR_COLOR_TEMP: 2500,
-                ATTR_BRIGHTNESS: 200,
-                ATTR_TRANSITION: 5,
-                ATTR_FLASH: FLASH_SHORT,
-                ATTR_EFFECT: EFFECT_COLORLOOP,
-            },
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with(
-            "put",
-            "/lights/1/state",
-            json={
-                "ct": 2500,
-                "bri": 200,
-                "transitiontime": 50,
-                "alert": "select",
-                "effect": "colorloop",
-            },
-        )
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.rgb_light",
+            ATTR_COLOR_TEMP: 2500,
+            ATTR_BRIGHTNESS: 200,
+            ATTR_TRANSITION: 5,
+            ATTR_FLASH: FLASH_SHORT,
+            ATTR_EFFECT: EFFECT_COLORLOOP,
+        },
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[1][2] == {
+        "ct": 2500,
+        "bri": 200,
+        "transitiontime": 50,
+        "alert": "select",
+        "effect": "colorloop",
+    }
 
     # Service turn on light disabling color loop with long flashing
 
-    with patch.object(rgb_light_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {
-                ATTR_ENTITY_ID: "light.rgb_light",
-                ATTR_HS_COLOR: (20, 30),
-                ATTR_FLASH: FLASH_LONG,
-                ATTR_EFFECT: "None",
-            },
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with(
-            "put",
-            "/lights/1/state",
-            json={"xy": (0.411, 0.351), "alert": "lselect", "effect": "none"},
-        )
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.rgb_light",
+            ATTR_HS_COLOR: (20, 30),
+            ATTR_FLASH: FLASH_LONG,
+            ATTR_EFFECT: "None",
+        },
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[2][2] == {
+        "xy": (0.411, 0.351),
+        "alert": "lselect",
+        "effect": "none",
+    }
 
-    # Service turn on light with short flashing
+    # Service turn on light with short flashing not supported
 
-    with patch.object(rgb_light_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {
-                ATTR_ENTITY_ID: "light.rgb_light",
-                ATTR_TRANSITION: 5,
-                ATTR_FLASH: FLASH_SHORT,
-            },
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        assert not set_callback.called
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {
+            ATTR_ENTITY_ID: "light.rgb_light",
+            ATTR_TRANSITION: 5,
+            ATTR_FLASH: FLASH_SHORT,
+        },
+        blocking=True,
+    )
+    assert len(aioclient_mock.mock_calls) == 3  # Not called
 
     state_changed_event = {
         "t": "event",
@@ -263,37 +243,31 @@ async def test_lights_and_groups(hass):
 
     # Service turn off light with short flashing
 
-    with patch.object(rgb_light_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {
-                ATTR_ENTITY_ID: "light.rgb_light",
-                ATTR_TRANSITION: 5,
-                ATTR_FLASH: FLASH_SHORT,
-            },
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with(
-            "put",
-            "/lights/1/state",
-            json={"bri": 0, "transitiontime": 50, "alert": "select"},
-        )
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {
+            ATTR_ENTITY_ID: "light.rgb_light",
+            ATTR_TRANSITION: 5,
+            ATTR_FLASH: FLASH_SHORT,
+        },
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[3][2] == {
+        "bri": 0,
+        "transitiontime": 50,
+        "alert": "select",
+    }
 
     # Service turn off light with long flashing
 
-    with patch.object(rgb_light_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.rgb_light", ATTR_FLASH: FLASH_LONG},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with(
-            "put", "/lights/1/state", json={"alert": "lselect"}
-        )
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "light.rgb_light", ATTR_FLASH: FLASH_LONG},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[4][2] == {"alert": "lselect"}
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
@@ -307,13 +281,14 @@ async def test_lights_and_groups(hass):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_disable_light_groups(hass):
+async def test_disable_light_groups(hass, aioclient_mock):
     """Test disallowing light groups work."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["groups"] = deepcopy(GROUPS)
     data["lights"] = deepcopy(LIGHTS)
     config_entry = await setup_deconz_integration(
         hass,
+        aioclient_mock,
         options={CONF_ALLOW_DECONZ_GROUPS: False},
         get_state_response=data,
     )
@@ -341,7 +316,7 @@ async def test_disable_light_groups(hass):
     assert hass.states.get("light.light_group") is None
 
 
-async def test_configuration_tool(hass):
+async def test_configuration_tool(hass, aioclient_mock):
     """Test that lights or groups entities are created."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["lights"] = {
@@ -359,12 +334,12 @@ async def test_configuration_tool(hass):
             "uniqueid": "00:21:2e:ff:ff:05:a7:a3-01",
         }
     }
-    await setup_deconz_integration(hass, get_state_response=data)
+    await setup_deconz_integration(hass, aioclient_mock, get_state_response=data)
 
     assert len(hass.states.async_all()) == 0
 
 
-async def test_lidl_christmas_light(hass):
+async def test_lidl_christmas_light(hass, aioclient_mock):
     """Test that lights or groups entities are created."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["lights"] = {
@@ -390,33 +365,27 @@ async def test_lidl_christmas_light(hass):
             "uniqueid": "58:8e:81:ff:fe:db:7b:be-01",
         }
     }
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
-    gateway = get_gateway_from_config_entry(hass, config_entry)
-    xmas_light_device = gateway.api.lights["0"]
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
 
-    assert len(hass.states.async_all()) == 1
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/0/state")
 
-    with patch.object(xmas_light_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {
-                ATTR_ENTITY_ID: "light.xmas_light",
-                ATTR_HS_COLOR: (20, 30),
-            },
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with(
-            "put",
-            "/lights/0/state",
-            json={"on": True, "hue": 3640, "sat": 76},
-        )
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.xmas_light",
+            ATTR_HS_COLOR: (20, 30),
+        },
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[1][2] == {"on": True, "hue": 3640, "sat": 76}
 
     assert hass.states.get("light.xmas_light")
 
 
-async def test_non_color_light_reports_color(hass):
+async def test_non_color_light_reports_color(hass, aioclient_mock):
     """Verify hs_color does not crash when a group gets updated with a bad color value.
 
     After calling a scene color temp light of certain manufacturers
@@ -500,7 +469,9 @@ async def test_non_color_light_reports_color(hass):
             "uniqueid": "ec:1b:bd:ff:fe:ee:ed:dd-01",
         },
     }
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 3
@@ -531,7 +502,7 @@ async def test_non_color_light_reports_color(hass):
         assert hass.states.get("light.all").attributes[ATTR_HS_COLOR]
 
 
-async def test_verify_group_supported_features(hass):
+async def test_verify_group_supported_features(hass, aioclient_mock):
     """Test that group supported features reflect what included lights support."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["groups"] = deepcopy(
@@ -581,7 +552,7 @@ async def test_verify_group_supported_features(hass):
             },
         }
     )
-    await setup_deconz_integration(hass, get_state_response=data)
+    await setup_deconz_integration(hass, aioclient_mock, get_state_response=data)
 
     assert len(hass.states.async_all()) == 4
 
