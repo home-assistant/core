@@ -92,7 +92,7 @@ async def test_aemet_weather_create_sensors(hass):
     assert state.state == "-0.7"
 
     state = hass.states.get("sensor.aemet_temperature_feeling")
-    assert state.state == "-0.7"
+    assert state.state == "-4"
 
     state = hass.states.get("sensor.aemet_town_id")
     assert state.state == "id28065"

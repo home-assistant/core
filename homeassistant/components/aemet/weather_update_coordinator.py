@@ -26,7 +26,6 @@ from aemet_opendata.const import (
     AEMET_ATTR_STATION_LOCATION,
     AEMET_ATTR_STATION_PRESSURE_SEA,
     AEMET_ATTR_STATION_TEMPERATURE,
-    AEMET_ATTR_STATION_TEMPERATURE_RELATIVE,
     AEMET_ATTR_STORM_PROBABILITY,
     AEMET_ATTR_TEMPERATURE,
     AEMET_ATTR_TEMPERATURE_FEELING,
@@ -318,10 +317,6 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 pressure = format_float(station_data[AEMET_ATTR_STATION_PRESSURE_SEA])
             if AEMET_ATTR_STATION_TEMPERATURE in station_data:
                 temperature = format_float(station_data[AEMET_ATTR_STATION_TEMPERATURE])
-            if AEMET_ATTR_STATION_TEMPERATURE_RELATIVE in station_data:
-                temperature_feeling = format_float(
-                    station_data[AEMET_ATTR_STATION_TEMPERATURE_RELATIVE]
-                )
 
         # Get forecast from weather data
         forecast_weather = self._get_forecast_from_weather_response(weather_response)
