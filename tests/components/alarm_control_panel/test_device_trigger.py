@@ -54,7 +54,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
     hass.states.async_set(
-        "alarm_control_panel.test_5678", "attributes", {"supported_features": 23}
+        "alarm_control_panel.test_5678", "attributes", {"supported_features": 63}
     )
     expected_triggers = [
         {
