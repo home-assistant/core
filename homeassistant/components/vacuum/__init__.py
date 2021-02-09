@@ -16,11 +16,6 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     STATE_PAUSED,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-    make_entity_service_schema,
-)
 from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.icon import icon_for_battery_level

@@ -7,10 +7,6 @@ from typing import Any, Dict
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
