@@ -359,6 +359,37 @@ async def test_if_numeric_state_raises_on_unavailable(hass, caplog):
     assert len(caplog.record_tuples) == 0
 
 
+async def test_state_raises(hass):
+    """Test that state raises ConditionError on errors."""
+    # Unknown entity_id
+    with pytest.raises(ConditionError, match="Unknown entity"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "state",
+                "entity_id": "sensor.door_unknown",
+                "state": "open",
+            },
+        )
+
+        test(hass)
+
+    # Unknown attribute
+    with pytest.raises(ConditionError, match=r"Attribute .* does not exist"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "state",
+                "entity_id": "sensor.door",
+                "attribute": "model",
+                "state": "acme",
+            },
+        )
+
+        hass.states.async_set("sensor.door", "open")
+        test(hass)
+
+
 async def test_state_multiple_entities(hass):
     """Test with multiple entities in condition."""
     test = await condition.async_from_config(
@@ -466,7 +497,8 @@ async def test_state_attribute_boolean(hass):
     assert not test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"no_happening": 201})
-    assert not test(hass)
+    with pytest.raises(ConditionError):
+        test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"happening": False})
     assert test(hass)
@@ -567,7 +599,7 @@ async def test_numeric_state_raises(hass):
             },
         )
 
-        assert test(hass)
+        test(hass)
 
     # Unknown attribute
     with pytest.raises(ConditionError, match=r"Attribute .* does not exist"):
