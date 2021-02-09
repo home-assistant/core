@@ -5,7 +5,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, CONF_ENTITY_ID, CONF_NAME
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_SOURCE,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -39,7 +45,6 @@ ATTR_GLASSES = "glasses"
 ATTR_MOTION = "motion"
 ATTR_TOTAL_FACES = "total_faces"
 
-CONF_SOURCE = "source"
 CONF_CONFIDENCE = "confidence"
 
 DEFAULT_TIMEOUT = 10
