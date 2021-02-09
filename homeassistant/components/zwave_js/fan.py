@@ -87,8 +87,11 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         await self.info.node.async_set_value(target_value, 0)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> Optional[bool]:  # type: ignore
         """Return true if device is on (speed above 0)."""
+        if self.info.primary_value.value is None:
+            # guard missing value
+            return None
         return bool(self.info.primary_value.value > 0)
 
     @property
@@ -98,6 +101,10 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         The Z-Wave speed value is a byte 0-255. 255 means previous value.
         The normal range of the speed is 0-99. 0 means off.
         """
+        if self.info.primary_value.value is None:
+            # guard missing value
+            return None
+
         value = math.ceil(self.info.primary_value.value * 3 / 100)
         return VALUE_TO_SPEED.get(value, self._previous_speed)
 
