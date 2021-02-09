@@ -1,6 +1,7 @@
 """Remote control support for Apple TV."""
 
 import logging
+import asyncio
 
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.const import CONF_NAME
@@ -48,7 +49,17 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
             return
 
         for single_command in command:
-            if not hasattr(self.atv.remote_control, single_command):
+            _LOGGER.info("Sending command %s", single_command)
+            if single_command.startswith("delay="):
+                delay = single_command[6:]
+                try:
+                    float(delay)
+                except:
+                    _LOGGER.error("Command delay must be a numeric %s", single_command)
+                else:
+                    await asyncio.sleep(float(delay))
+            elif not hasattr(self.atv.remote_control, single_command):
+                _LOGGER.error("No attributes for command %s", single_command)
                 continue
-
-            await getattr(self.atv.remote_control, single_command)()
+            else:
+                await getattr(self.atv.remote_control, single_command)()
