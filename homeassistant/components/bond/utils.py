@@ -39,7 +39,7 @@ class BondDevice:
     @property
     def location(self) -> str:
         """Get the location of this device."""
-        return self._attrs["location"]
+        return self._attrs.get("location")
 
     @property
     def trust_state(self) -> bool:
