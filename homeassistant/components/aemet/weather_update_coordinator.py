@@ -1,5 +1,4 @@
 """Weather data coordinator for the AEMET OpenData service."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -125,7 +124,6 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         self._latitude = latitude
         self._longitude = longitude
         self._forecast_mode = forecast_mode
-        self._weather_data = None
         self._data = {
             "daily": None,
             "hourly": None,
@@ -134,14 +132,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         data = {}
-        try:
-            with async_timeout.timeout(120):
-                weather_response = await self._get_aemet_weather()
-                data = self._convert_weather_response(weather_response)
-                self._weather_data = data
-        except asyncio.TimeoutError:
-            data = self._weather_data
-            _LOGGER.error("AEMET OpenData API timeout")
+        with async_timeout.timeout(120):
+            weather_response = await self._get_aemet_weather()
+            data = self._convert_weather_response(weather_response)
         return data
 
     async def _get_aemet_weather(self):
