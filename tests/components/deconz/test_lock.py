@@ -1,9 +1,7 @@
 """deCONZ lock platform tests."""
 
 from copy import deepcopy
-from unittest.mock import patch
 
-from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
@@ -16,9 +14,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNLOCKED,
 )
-from homeassistant.setup import async_setup_component
 
-from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
+from .test_gateway import (
+    DECONZ_WEB_REQUEST,
+    mock_deconz_put_request,
+    setup_deconz_integration,
+)
 
 LOCKS = {
     "1": {
@@ -37,28 +38,19 @@ LOCKS = {
 }
 
 
-async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a gateway."""
-    assert (
-        await async_setup_component(
-            hass, LOCK_DOMAIN, {"lock": {"platform": DECONZ_DOMAIN}}
-        )
-        is True
-    )
-    assert DECONZ_DOMAIN not in hass.data
-
-
-async def test_no_locks(hass):
+async def test_no_locks(hass, aioclient_mock):
     """Test that no lock entities are created."""
-    await setup_deconz_integration(hass)
+    await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
 
 
-async def test_locks(hass):
+async def test_locks(hass, aioclient_mock):
     """Test that all supported lock entities are created."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["lights"] = deepcopy(LOCKS)
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 1
@@ -81,31 +73,27 @@ async def test_locks(hass):
 
     # Verify service calls
 
-    door_lock_device = gateway.api.lights["1"]
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/1/state")
 
     # Service lock door
 
-    with patch.object(door_lock_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            LOCK_DOMAIN,
-            SERVICE_LOCK,
-            {ATTR_ENTITY_ID: "lock.door_lock"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/1/state", json={"on": True})
+    await hass.services.async_call(
+        LOCK_DOMAIN,
+        SERVICE_LOCK,
+        {ATTR_ENTITY_ID: "lock.door_lock"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[1][2] == {"on": True}
 
     # Service unlock door
 
-    with patch.object(door_lock_device, "_request", return_value=True) as set_callback:
-        await hass.services.async_call(
-            LOCK_DOMAIN,
-            SERVICE_UNLOCK,
-            {ATTR_ENTITY_ID: "lock.door_lock"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        set_callback.assert_called_with("put", "/lights/1/state", json={"on": False})
+    await hass.services.async_call(
+        LOCK_DOMAIN,
+        SERVICE_UNLOCK,
+        {ATTR_ENTITY_ID: "lock.door_lock"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[2][2] == {"on": False}
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
