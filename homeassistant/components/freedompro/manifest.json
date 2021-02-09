@@ -1,0 +1,14 @@
+{
+  "domain": "freedompro",
+  "name": "Freedompro",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/freedompro",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@stefano055415"
+  ]
+}
