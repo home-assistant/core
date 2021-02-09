@@ -1,7 +1,7 @@
 """Remote control support for Apple TV."""
 
+from asyncio import sleep
 import logging
-import asyncio
 
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.const import CONF_NAME
@@ -54,7 +54,7 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
                 delay = single_command[6:]
                 try:
                     float(delay)
-                except:
+                except OverflowError:
                     _LOGGER.error("Command delay must be a numeric %s", single_command)
                 else:
                     await asyncio.sleep(float(delay))
