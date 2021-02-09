@@ -140,5 +140,10 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         existing_entry = await self.async_set_unique_id(self.username)
-        self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
+        new_entry = {
+            CONF_USERNAME: self.username,
+            CONF_PASSWORD: user_input[CONF_PASSWORD],
+            CONF_USERCODES: self.usercodes,
+        }
+        self.hass.config_entries.async_update_entry(existing_entry, data=new_entry)
         return self.async_abort(reason="reauth_successful")
