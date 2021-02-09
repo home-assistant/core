@@ -210,6 +210,14 @@ async def async_test_home_assistant(loop):
     hass.config_entries._entries = []
     hass.config_entries._store._async_ensure_stop_listener = lambda: None
 
+    # Load the registries
+    await asyncio.gather(
+        device_registry.async_load(hass),
+        entity_registry.async_load(hass),
+        area_registry.async_load(hass),
+    )
+    await hass.async_block_till_done()
+
     hass.state = ha.CoreState.running
 
     # Mock async_start
@@ -231,13 +239,6 @@ async def async_test_home_assistant(loop):
         INSTANCES.remove(hass)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
-
-    # Load the registries
-    await asyncio.gather(
-        device_registry.async_load(hass),
-        entity_registry.async_load(hass),
-        area_registry.async_load(hass),
-    )
 
     return hass
 
