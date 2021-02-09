@@ -121,7 +121,7 @@ SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 def _parse_onkyo_tuple(tup):
     """Parse a tuple returned from the eiscp library."""
     if isinstance(tup, bool):
-        return None
+        return False
 
     if len(tup) < 2:
         return None
@@ -270,6 +270,8 @@ class OnkyoDevice(MediaPlayerEntity):
         self._reverse_mapping = {value: key for key, value in sources.items()}
         self._attributes = {}
         self._hdmi_out_supported = True
+        self._audio_info_supported = True
+        self._video_info_supported = True
 
     def command(self, command):
         """Run an eiscp command and catch connection errors."""
@@ -312,8 +314,10 @@ class OnkyoDevice(MediaPlayerEntity):
         else:
             hdmi_out_raw = []
         preset_raw = self.command("preset query")
-        audio_information_raw = self.command("audio-information query")
-        video_information_raw = self.command("video-information query")
+        if self._audio_info_supported:
+            audio_information_raw = self.command("audio-information query")
+        if self._video_info_supported:
+            video_information_raw = self.command("video-information query")
         if not (volume_raw and mute_raw and current_source_raw):
             return
 
@@ -445,6 +449,10 @@ class OnkyoDevice(MediaPlayerEntity):
 
     def _parse_audio_information(self, audio_information_raw):
         values = _parse_onkyo_tuple(audio_information_raw)
+        if values is False:
+            self._audio_info_supported = False
+            return
+
         if values:
             info = {
                 "format": _tuple_get(values, 1),
@@ -460,6 +468,10 @@ class OnkyoDevice(MediaPlayerEntity):
 
     def _parse_video_information(self, video_information_raw):
         values = _parse_onkyo_tuple(video_information_raw)
+        if values is False:
+            self._video_info_supported = False
+            return
+
         if values:
             info = {
                 "input_resolution": _tuple_get(values, 1),
