@@ -69,7 +69,7 @@ class BondEntity(Entity):
             ATTR_NAME: self.name,
             "suggested_area": self._device.location,
             "manufacturer": self._hub.make,
-            "identifiers": {(DOMAIN, self._hub.bond_id, self._device.device_id)},
+            "identifiers": {(DOMAIN, self._hub.bond_id, self._device_id)},
             "via_device": (DOMAIN, self._hub.bond_id),
         }
         if not self._hub.is_bridge:
