@@ -608,13 +608,10 @@ async def async_load(hass: HomeAssistantType) -> None:
 
 @bind_hass
 async def async_get_registry(hass: HomeAssistantType) -> DeviceRegistry:
-    """Wait until device registry is loaded, then return it.
+    """Get device registry.
 
     This is deprecated and will be removed in the future. Use async_get instead.
     """
-    if DATA_REGISTRY not in hass.data:
-        await async_load(hass)
-
     return async_get(hass)
 
 
