@@ -44,6 +44,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa: F401
 from homeassistant.helpers.entity import Entity, entity_sources
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url

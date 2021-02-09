@@ -6,6 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa: F401
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 

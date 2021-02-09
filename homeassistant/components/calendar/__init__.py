@@ -8,6 +8,7 @@ from aiohttp import web
 
 from homeassistant.components import http
 from homeassistant.const import HTTP_BAD_REQUEST, STATE_OFF, STATE_ON
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa: F401
 from homeassistant.helpers.config_validation import time_period_str
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent

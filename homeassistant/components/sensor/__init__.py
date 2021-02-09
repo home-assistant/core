@@ -19,6 +19,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
 )
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa: F401
 from homeassistant.helpers.entity_component import EntityComponent
 
 # mypy: allow-untyped-defs, no-check-untyped-defs

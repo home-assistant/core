@@ -16,7 +16,10 @@ from homeassistant.const import (
     SERVICE_ALARM_TRIGGER,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import make_entity_service_schema
+from homeassistant.helpers.config_validation import (  # noqa: F401
+    PLATFORM_SCHEMA,
+    make_entity_service_schema,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
