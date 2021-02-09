@@ -63,8 +63,15 @@ async def async_setup_entry(
         if DeviceType.is_fireplace(device.type) and device.supports_light()
     ]
 
+    lights: List[Entity] = [
+        BondLight(hub, device)
+        for device in hub.devices
+        if DeviceType.is_light(device.type)
+    ]
+
     async_add_entities(
-        fan_lights + fan_up_lights + fan_down_lights + fireplaces + fp_lights, True
+        fan_lights + fan_up_lights + fan_down_lights + fireplaces + fp_lights + lights,
+        True,
     )
 
 
