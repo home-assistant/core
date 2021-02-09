@@ -761,7 +761,7 @@ async def test_disable_device_disables_entities(hass, registry):
 
 
 async def test_disabled_entities_excluded_from_entity_list(hass, registry):
-    """Test that disabled entities are exclduded from async_entries_for_device."""
+    """Test that disabled entities are excluded from async_entries_for_device."""
     device_registry = mock_device_registry(hass)
     config_entry = MockConfigEntry(domain="light")
 
