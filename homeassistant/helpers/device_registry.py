@@ -593,14 +593,12 @@ class DeviceRegistry:
                 self._async_update_device(dev_id, area_id=None)
 
 
-@bind_hass
 @callback
 def async_get(hass: HomeAssistantType) -> DeviceRegistry:
     """Get device registry."""
     return cast(DeviceRegistry, hass.data[DATA_REGISTRY])
 
 
-@bind_hass
 async def async_load(hass: HomeAssistantType) -> None:
     """Load device registry."""
     assert DATA_REGISTRY not in hass.data

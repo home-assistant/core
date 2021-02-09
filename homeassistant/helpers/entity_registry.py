@@ -567,14 +567,12 @@ class EntityRegistry:
             self._add_index(entry)
 
 
-@bind_hass
 @callback
 def async_get(hass: HomeAssistantType) -> EntityRegistry:
     """Get entity registry."""
     return cast(EntityRegistry, hass.data[DATA_REGISTRY])
 
 
-@bind_hass
 async def async_load(hass: HomeAssistantType) -> None:
     """Load entity registry."""
     assert DATA_REGISTRY not in hass.data

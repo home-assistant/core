@@ -154,14 +154,12 @@ class AreaRegistry:
         return data
 
 
-@bind_hass
 @callback
 def async_get(hass: HomeAssistantType) -> AreaRegistry:
     """Get area registry."""
     return cast(AreaRegistry, hass.data[DATA_REGISTRY])
 
 
-@bind_hass
 async def async_load(hass: HomeAssistantType) -> None:
     """Load area registry."""
     assert DATA_REGISTRY not in hass.data
