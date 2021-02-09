@@ -118,7 +118,7 @@ async def async_setup(hass, config):
         _LOGGER.error("Hive API initialization failed")
         return False
 
-    hass.data[DATA_HIVE] = hive
+    hass.data[DOMAIN][DATA_HIVE] = hive
     hass.data[DOMAIN]["entity_lookup"] = {}
 
     for ha_type in DEVICETYPES:
