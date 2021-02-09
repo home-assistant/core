@@ -5,13 +5,13 @@ from urllib.parse import urlparse
 
 import av
 
-from homeassistant.components.stream import request_stream
+from homeassistant.components.stream import create_stream
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.stream.common import generate_h264_video, preload_stream
+from tests.components.stream.common import generate_h264_video
 
 
 async def test_hls_stream(hass, hass_client, stream_worker_sync):
@@ -27,11 +27,12 @@ async def test_hls_stream(hass, hass_client, stream_worker_sync):
 
     # Setup demo HLS track
     source = generate_h264_video()
-    stream = preload_stream(hass, source)
-    stream.add_provider("hls")
+    stream = create_stream(hass, source)
 
     # Request stream
-    url = request_stream(hass, source)
+    stream.add_provider("hls")
+    stream.start()
+    url = stream.endpoint_url("hls")
 
     http_client = await hass_client()
 
@@ -72,11 +73,12 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync):
 
     # Setup demo HLS track
     source = generate_h264_video()
-    stream = preload_stream(hass, source)
-    stream.add_provider("hls")
+    stream = create_stream(hass, source)
 
     # Request stream
-    url = request_stream(hass, source)
+    stream.add_provider("hls")
+    stream.start()
+    url = stream.endpoint_url("hls")
 
     http_client = await hass_client()
 
@@ -113,11 +115,13 @@ async def test_stream_ended(hass, stream_worker_sync):
 
     # Setup demo HLS track
     source = generate_h264_video()
-    stream = preload_stream(hass, source)
+    stream = create_stream(hass, source)
     track = stream.add_provider("hls")
 
     # Request stream
-    request_stream(hass, source)
+    stream.add_provider("hls")
+    stream.start()
+    stream.endpoint_url("hls")
 
     # Run it dead
     while True:
@@ -142,9 +146,10 @@ async def test_stream_keepalive(hass):
 
     # Setup demo HLS track
     source = "test_stream_keepalive_source"
-    stream = preload_stream(hass, source)
+    stream = create_stream(hass, source)
     track = stream.add_provider("hls")
     track.num_segments = 2
+    stream.start()
 
     cur_time = 0
 
@@ -163,7 +168,8 @@ async def test_stream_keepalive(hass):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
         mock_time.time.side_effect = time_side_effect
         # Request stream
-        request_stream(hass, source, keepalive=True)
+        stream.keepalive = True
+        stream.start()
         stream._thread.join()
         stream._thread = None
         assert av_open.call_count == 2
