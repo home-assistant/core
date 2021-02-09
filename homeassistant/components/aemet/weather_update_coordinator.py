@@ -90,6 +90,7 @@ def format_condition(condition: str) -> str:
     for key, value in CONDITIONS_MAP.items():
         if condition in value:
             return key
+    _LOGGER.error('condition "%s" not found in CONDITIONS_MAP', condition)
     return condition
 
 
