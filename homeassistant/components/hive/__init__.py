@@ -77,9 +77,9 @@ async def async_setup(hass, config):
     async def heating_boost(service):
         """Handle the service call."""
 
-        entity_lookup = hass.data[DATA_HIVE]["entity_lookup"]
-        entity = entity_lookup.get(service.data[ATTR_ENTITY_ID])
-        if not entity:
+        entity_lookup = hass.data[DOMAIN]["entity_lookup"]
+        hive_id = entity_lookup.get(service.data[ATTR_ENTITY_ID])
+        if not hive_id:
             # log or raise error
             _LOGGER.error("Cannot boost entity id entered")
             return
@@ -87,13 +87,13 @@ async def async_setup(hass, config):
         minutes = service.data[ATTR_TIME_PERIOD]
         temperature = service.data[ATTR_TEMPERATURE]
 
-        hive.heating.turn_boost_on(entity, minutes, temperature)
+        hive.heating.turn_boost_on(hive_id, minutes, temperature)
 
     async def hot_water_boost(service):
         """Handle the service call."""
-        entity_lookup = hass.data[DATA_HIVE]["entity_lookup"]
-        entity = entity_lookup.get(service.data[ATTR_ENTITY_ID])
-        if not entity:
+        entity_lookup = hass.data[DOMAIN]["entity_lookup"]
+        hive_id = entity_lookup.get(service.data[ATTR_ENTITY_ID])
+        if not hive_id:
             # log or raise error
             _LOGGER.error("Cannot boost entity id entered")
             return
@@ -101,9 +101,9 @@ async def async_setup(hass, config):
         mode = service.data[ATTR_MODE]
 
         if mode == "on":
-            hive.hotwater.turn_boost_on(entity, minutes)
+            hive.hotwater.turn_boost_on(hive_id, minutes)
         elif mode == "off":
-            hive.hotwater.turn_boost_off(entity)
+            hive.hotwater.turn_boost_off(hive_id)
 
     hive = Hive()
 
@@ -119,6 +119,7 @@ async def async_setup(hass, config):
         return False
 
     hass.data[DATA_HIVE] = hive
+    hass.data[DOMAIN]["entity_lookup"] = {}
 
     for ha_type in DEVICETYPES:
         devicelist = devices.get(DEVICETYPES[ha_type])
@@ -171,6 +172,5 @@ class HiveEntity(Entity):
             async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
         )
         if self.device["hiveType"] in SERVICES:
-            self.hass.data[DATA_HIVE]["entity_lookup"] = {}
-            entity_lookup = self.hass.data[DATA_HIVE]["entity_lookup"]
+            entity_lookup = self.hass.data[DOMAIN]["entity_lookup"]
             entity_lookup[self.entity_id] = self.device["hiveID"]
