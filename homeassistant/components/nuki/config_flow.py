@@ -7,6 +7,7 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
+from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 
 from .const import (  # pylint: disable=unused-import
@@ -54,6 +55,10 @@ async def validate_input(hass, data):
 class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Nuki config flow."""
 
+    def __init__(self):
+        """Initialize the Nuki config flow."""
+        self.discovery_schema = {}
+
     async def async_step_import(self, user_input=None):
         """Handle a flow initiated by import."""
         return await self.async_step_validate(user_input)
@@ -62,7 +67,23 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         return await self.async_step_validate(user_input)
 
-    async def async_step_validate(self, user_input):
+    async def async_step_dhcp(self, discovery_info: dict):
+        """Prepare configuration for a DHCP discovered Nuki bridge."""
+        await self.async_set_unique_id(int(discovery_info.get(HOSTNAME)[12:], 16))
+
+        self._abort_if_unique_id_configured()
+
+        self.discovery_schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=discovery_info[IP_ADDRESS]): str,
+                vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                vol.Required(CONF_TOKEN): str,
+            }
+        )
+
+        return await self.async_step_validate()
+
+    async def async_step_validate(self, user_input=None):
         """Handle init step of a flow."""
 
         errors = {}
@@ -84,8 +105,10 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=info["ids"]["hardwareId"], data=user_input
                 )
 
+        data_schema = self.discovery_schema or USER_SCHEMA
+
         return self.async_show_form(
-            step_id="user", data_schema=USER_SCHEMA, errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
 
 
