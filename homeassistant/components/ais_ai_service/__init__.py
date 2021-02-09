@@ -11,6 +11,7 @@ import warnings
 
 from aiohttp.web import json_response
 import async_timeout
+import psutil
 import requests
 import voluptuous as vol
 
@@ -3533,6 +3534,58 @@ def _process_command_from_frame(hass, service):
                 {"key": "setTtsVoice", "val": voice},
             )
 
+    elif service.data["topic"] == "ais/trim_memory":
+        _LOGGER.warning("trim_memory " + str(service.data["payload"]))
+        try:
+            import os
+
+            if str(service.data["payload"]) == "15":
+                # TRIM_MEMORY_RUNNING_CRITICAL
+                tot_m, used_m, free_m = map(
+                    int, os.popen("free -t -m").readlines()[-1].split()[1:]
+                )
+                _LOGGER.warning(
+                    "TRIM_MEMORY_RUNNING_CRITICAL, used memory: " + str(used_m)
+                )
+                # check if we can clear database
+                if "dbUrl" in ais_global.G_DB_SETTINGS_INFO:
+                    if ais_global.G_DB_SETTINGS_INFO["dbUrl"].startswith(
+                        "sqlite:///:memory:"
+                    ):
+                        _LOGGER.warning("recorder -> purge keep_days: 0")
+                        hass.services.call(
+                            "recorder", "purge", {"keep_days": 0, "repack": True}
+                        )
+                else:
+                    # try to kill some heavy process
+                    # Get List of all running process sorted by Highest Memory Usage
+                    list_of_proc_objects = []
+                    # Iterate over the list
+                    for proc in psutil.process_iter():
+                        try:
+                            # Fetch process details as dict
+                            pinfo = proc.as_dict(attrs=["pid", "name", "username"])
+                            pinfo["vms"] = proc.memory_info().vms / (1024 * 1024)
+                            # Append dict to list
+                            list_of_proc_objects.append(pinfo)
+                        except (
+                            psutil.NoSuchProcess,
+                            psutil.AccessDenied,
+                            psutil.ZombieProcess,
+                        ):
+                            pass
+                    # Sort list of dict by key vms i.e. memory usage
+                    list_of_proc_objects = sorted(
+                        list_of_proc_objects,
+                        key=lambda proc_obj: proc_obj["vms"],
+                        reverse=True,
+                    )
+                    # print top 5 process by memory usage
+                    for elem in list_of_proc_objects[:5]:
+                        _LOGGER.error("We should kill: " + str(elem))
+
+        except Exception as e:
+            pass
     else:
         # TODO process this without mqtt
         # player_status and speech_status
