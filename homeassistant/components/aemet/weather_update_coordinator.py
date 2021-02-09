@@ -319,7 +319,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 temperature = format_float(station_data[AEMET_ATTR_STATION_TEMPERATURE])
 
         # Get forecast from weather data
-        forecast_weather = self._get_forecast_from_weather_response(weather_response)
+        forecast_weather = self._get_forecast_from_weather_response(
+            weather_response, now
+        )
 
         return {
             ATTR_API_CONDITION: condition,
@@ -344,19 +346,22 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_WIND_SPEED: wind_speed,
         }
 
-    def _get_forecast_from_weather_response(self, weather_response):
+    def _get_forecast_from_weather_response(self, weather_response, now):
         if self._forecast_mode == FORECAST_MODE_DAILY:
-            forecast = self._get_daily_forecast_from_weather_response(weather_response)
+            forecast = self._get_daily_forecast_from_weather_response(
+                weather_response, now
+            )
         elif self._forecast_mode == FORECAST_MODE_HOURLY:
-            forecast = self._get_hourly_forecast_from_weather_response(weather_response)
+            forecast = self._get_hourly_forecast_from_weather_response(
+                weather_response, now
+            )
         else:
             forecast = None
         return forecast
 
-    def _get_daily_forecast_from_weather_response(self, weather_response):
+    def _get_daily_forecast_from_weather_response(self, weather_response, now):
         if weather_response.daily:
             parse = False
-            now = dt_util.now()
             forecast = []
             for day in weather_response.daily[ATTR_DATA][0][AEMET_ATTR_FORECAST][
                 AEMET_ATTR_DAY
@@ -371,10 +376,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             return forecast
         return None
 
-    def _get_hourly_forecast_from_weather_response(self, weather_response):
+    def _get_hourly_forecast_from_weather_response(self, weather_response, now):
         if weather_response.hourly:
             parse = False
-            now = dt_util.now()
             hour = now.hour
             forecast = []
             for day in weather_response.hourly[ATTR_DATA][0][AEMET_ATTR_FORECAST][
