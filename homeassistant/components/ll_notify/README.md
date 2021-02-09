@@ -107,7 +107,7 @@ You can trigger one action, or multiple actions. See the example dashboard above
 
 ## Missing Alertify features
 
-I have NOT implemented every Alertify feature. I'm not sure it would be useful to do so.
+Every AlertifyJS feature has not been implemented.
 
 Alertify's [notifications](https://alertifyjs.com/notifier.html) are implemented fully and are quite easy to use.
 
