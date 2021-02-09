@@ -10,10 +10,12 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry, async_get_registry
 from homeassistant.helpers.typing import ConfigType
 
-from . import LOGGER, PhilipsTVDataUpdateCoordinator
+from . import PhilipsTVDataUpdateCoordinator
 from .const import DOMAIN
 
-TRIGGER_TYPES = {"turn_on"}
+TRIGGER_TYPE_TURN_ON = "turn_on"
+
+TRIGGER_TYPES = {TRIGGER_TYPE_TURN_ON}
 TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
@@ -29,7 +31,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
             CONF_PLATFORM: "device",
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "turn_on",
+            CONF_TYPE: TRIGGER_TYPE_TURN_ON,
         }
     )
 
@@ -44,25 +46,20 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     registry: DeviceRegistry = await async_get_registry(hass)
-    device = registry.async_get(config[CONF_DEVICE_ID])
-    if device is None:
-        LOGGER.error(
-            "Unable to find device %s for device trigger", config[CONF_DEVICE_ID]
-        )
-        return
-
-    variables = {
-        "trigger": {
-            "platform": "device",
-            "domain": DOMAIN,
-            "device_id": config[CONF_DEVICE_ID],
-            "description": f"philips_js '{config[CONF_TYPE]}' event",
+    if config[CONF_TYPE] == TRIGGER_TYPE_TURN_ON:
+        variables = {
+            "trigger": {
+                "platform": "device",
+                "domain": DOMAIN,
+                "device_id": config[CONF_DEVICE_ID],
+                "description": f"philips_js '{config[CONF_TYPE]}' event",
+            }
         }
-    }
 
-    for config_entry_id in device.config_entries:
-        coordinator: PhilipsTVDataUpdateCoordinator = hass.data[DOMAIN].get(
-            config_entry_id
-        )
-        if coordinator:
-            return coordinator.turn_on.async_attach(action, variables)
+        device = registry.async_get(config[CONF_DEVICE_ID])
+        for config_entry_id in device.config_entries:
+            coordinator: PhilipsTVDataUpdateCoordinator = hass.data[DOMAIN].get(
+                config_entry_id
+            )
+            if coordinator:
+                return coordinator.turn_on.async_attach(action, variables)
