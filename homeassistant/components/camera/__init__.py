@@ -46,6 +46,8 @@ from homeassistant.helpers.network import get_url
 from homeassistant.loader import bind_hass
 
 from .const import (
+    CAMERA_IMAGE_TIMEOUT,
+    CAMERA_STREAM_SOURCE_TIMEOUT,
     CONF_DURATION,
     CONF_LOOKBACK,
     DATA_CAMERA_PREFS,
@@ -359,7 +361,7 @@ class Camera(Entity):
         """Create a Stream for stream_source."""
         # There is at most one stream (a decode worker) per camera
         if not self.stream:
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
                 source = await self.stream_source()
             if not source:
                 return None
@@ -506,7 +508,7 @@ class CameraImageView(CameraView):
     async def handle(self, request: web.Request, camera: Camera) -> web.Response:
         """Serve camera image."""
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(CAMERA_IMAGE_TIMEOUT):
                 image = await camera.async_camera_image()
 
             if image:
@@ -717,8 +719,7 @@ async def _async_stream_endpoint_url(hass, camera, fmt):
 
 async def async_handle_record_service(camera, call):
     """Handle stream recording service calls."""
-    async with async_timeout.timeout(10):
-        stream = await camera.create_stream()
+    stream = await camera.create_stream()
 
     if not stream:
         raise HomeAssistantError(f"{camera.entity_id} does not support record service")
