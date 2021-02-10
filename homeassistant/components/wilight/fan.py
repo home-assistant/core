@@ -23,7 +23,7 @@ from homeassistant.components.fan import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import WiLightDevice, DOMAIN
+from . import DOMAIN, WiLightDevice
 
 SUPPORTED_SPEEDS = [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
