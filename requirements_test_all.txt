@@ -177,7 +177,7 @@ async-upnp-client==0.14.13
 auroranoaa==0.0.2
 
 # homeassistant.components.stream
-av==8.0.2
+av==8.0.3
 
 # homeassistant.components.axis
 axis==43

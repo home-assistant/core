@@ -2,7 +2,7 @@
   "domain": "stream",
   "name": "Stream",
   "documentation": "https://www.home-assistant.io/integrations/stream",
-  "requirements": ["av==8.0.2"],
+  "requirements": ["av==8.0.3"],
   "dependencies": ["http"],
   "codeowners": ["@hunterjm", "@uvjustin"],
   "quality_scale": "internal"
