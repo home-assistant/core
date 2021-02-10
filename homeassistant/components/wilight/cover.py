@@ -68,8 +68,8 @@ class WiLightCover(WiLightDevice, CoverEntity):
         None is unknown, 0 is closed, 100 is fully open.
         """
         if "position_current" in self._status:
-            self._position = wilight_to_hass_position(self._status["position_current"])
-        return self._position
+            return wilight_to_hass_position(self._status["position_current"])
+        return None
 
     @property
     def is_opening(self):
