@@ -602,8 +602,10 @@ async def entity_service_call(
 
     done, pending = await asyncio.wait(
         [
-            entity.async_request_call(
-                _handle_entity_call(hass, entity, func, data, call.context)
+            asyncio.create_task(
+                entity.async_request_call(
+                    _handle_entity_call(hass, entity, func, data, call.context)
+                )
             )
             for entity in entities
         ]

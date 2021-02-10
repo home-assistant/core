@@ -1055,7 +1055,7 @@ class Script:
             raise
 
     async def _async_stop(self, update_state):
-        aws = [run.async_stop() for run in self._runs]
+        aws = [asyncio.create_task(run.async_stop()) for run in self._runs]
         if not aws:
             return
         await asyncio.wait(aws)

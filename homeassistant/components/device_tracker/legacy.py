@@ -153,7 +153,7 @@ async def async_setup_integration(hass: HomeAssistantType, config: ConfigType) -
     legacy_platforms = await async_extract_config(hass, config)
 
     setup_tasks = [
-        legacy_platform.async_setup_legacy(hass, tracker)
+        asyncio.create_task(legacy_platform.async_setup_legacy(hass, tracker))
         for legacy_platform in legacy_platforms
     ]
 

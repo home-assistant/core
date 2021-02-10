@@ -81,7 +81,7 @@ async def async_setup(hass, config):
         update_tasks = []
         for entity in image_entities:
             entity.async_set_context(service.context)
-            update_tasks.append(entity.async_update_ha_state(True))
+            update_tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
 
         if update_tasks:
             await asyncio.wait(update_tasks)
