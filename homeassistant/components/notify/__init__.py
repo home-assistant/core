@@ -312,7 +312,7 @@ async def async_setup(hass, config):
     )
 
     setup_tasks = [
-        async_setup_platform(integration_name, p_config)
+        asyncio.create_task(async_setup_platform(integration_name, p_config))
         for integration_name, p_config in config_per_platform(config, DOMAIN)
     ]
 
