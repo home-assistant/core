@@ -109,8 +109,9 @@ class Stream:
         self.keepalive = False
         self.access_token = None
         self._thread = None
-        self._thread_quit = None
+        self._thread_quit = threading.Event()
         self._outputs = {}
+        self._fast_restart_once = False
 
         if self.options is None:
             self.options = {}
@@ -167,13 +168,20 @@ class Stream:
                 # The thread must have crashed/exited. Join to clean up the
                 # previous thread.
                 self._thread.join(timeout=0)
-            self._thread_quit = threading.Event()
+            self._thread_quit.clear()
             self._thread = threading.Thread(
                 name="stream_worker",
                 target=self._run_worker,
             )
             self._thread.start()
             _LOGGER.info("Started stream: %s", self.source)
+
+    def update_source(self, new_source):
+        """Restart the stream with a new stream source."""
+        _LOGGER.debug("Updating stream source %s", self.source)
+        self.source = new_source
+        self._fast_restart_once = True
+        self._thread_quit.set()
 
     def _run_worker(self):
         """Handle consuming streams and restart keepalive streams."""
@@ -186,8 +194,12 @@ class Stream:
             start_time = time.time()
             stream_worker(self.hass, self, self._thread_quit)
             if not self.keepalive or self._thread_quit.is_set():
+                if self._fast_restart_once:
+                    # The stream source is updated, restart without any delay.
+                    self._fast_restart_once = False
+                    self._thread_quit.clear()
+                    continue
                 break
-
             # To avoid excessive restarts, wait before restarting
             # As the required recovery time may be different for different setups, start
             # with trying a short wait_timeout and increase it on each reconnection attempt.
