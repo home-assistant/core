@@ -62,8 +62,7 @@ class GaragesamsterdamSensor(CoordinatorEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        if getattr(self.coordinator.data[self._garage_name], self._info_type) != "":
-            return True
+        return getattr(self.coordinator.data[self._garage_name], self._info_type) != ""
 
     @property
     def state(self):

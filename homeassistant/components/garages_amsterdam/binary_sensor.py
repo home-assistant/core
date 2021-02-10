@@ -50,11 +50,10 @@ class GaragesamsterdamBinarySensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """If the binary sensor is currently on or off."""
-        if (
+        return (
             getattr(self.coordinator.data[self._garage_name], self._info_type)
             == "error"
-        ):
-            return True
+        )
 
     @property
     def device_class(self):

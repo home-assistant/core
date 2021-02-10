@@ -7,8 +7,8 @@ import async_timeout
 import garages_amsterdam
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client, entity_registry, update_coordinator
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import aiohttp_client, update_coordinator
 
 from .const import DOMAIN
 
@@ -17,34 +17,12 @@ PLATFORMS = ["binary_sensor", "sensor"]
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Garages Amsterdam component."""
-    await get_coordinator(hass)
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Garages Amsterdam from a config entry."""
-    if isinstance(entry.data["garage_name"], int):
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, "garage_name": entry.title}
-        )
-
-        @callback
-        def _async_migrator(entity_entry: entity_registry.RegistryEntry):
-            """Migrate away from unstable ID."""
-            garage_name, info_type = entity_entry.unique_id.rsplit("-", 1)
-            if not garage_name.isnumeric():
-                return None
-            return {"new_unique_id": f"{entry.title}-{info_type}"}
-
-        await entity_registry.async_migrate_entries(
-            hass, entry.entry_id, _async_migrator
-        )
-
-    if not entry.unique_id:
-        hass.config_entries.async_update_entry(
-            entry, unique_id=entry.data["garage_name"]
-        )
-
+    await get_coordinator(hass)
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
@@ -72,11 +50,11 @@ async def get_coordinator(hass):
     if DOMAIN in hass.data:
         return hass.data[DOMAIN]
 
-    async def async_get_cases():
+    async def async_get_garages():
         with async_timeout.timeout(10):
             return {
-                case.garage_name: case
-                for case in await garages_amsterdam.get_cases(
+                garage.garage_name: garage
+                for garage in await garages_amsterdam.get_garages(
                     aiohttp_client.async_get_clientsession(hass)
                 )
             }
@@ -85,7 +63,7 @@ async def get_coordinator(hass):
         hass,
         logging.getLogger(__name__),
         name=DOMAIN,
-        update_method=async_get_cases,
+        update_method=async_get_garages,
         update_interval=timedelta(minutes=10),
     )
     await hass.data[DOMAIN].async_refresh()
