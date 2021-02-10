@@ -40,7 +40,8 @@ class WorkerSync:
         # Block the worker thread until the test has a chance to verify
         # the segments under test.
         logging.debug("blocking worker")
-        self._event.wait()
+        if self._event:
+            self._event.wait()
 
         # Forward to actual implementation
         self._original(stream)
