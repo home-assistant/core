@@ -8,7 +8,7 @@ import aiohttp
 import async_timeout
 
 from homeassistant.const import HTTP_ACCEPTED, MATCH_ALL, STATE_ON
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.significant_change import create_checker
 import homeassistant.util.dt as dt_util
 
@@ -28,7 +28,20 @@ async def async_enable_proactive_mode(hass, smart_home_config):
     # Validate we can get access token.
     await smart_home_config.async_get_access_token()
 
-    checker = await create_checker(hass, DOMAIN)
+    @callback
+    def extra_significant_check(
+        hass: HomeAssistant,
+        old_state: str,
+        old_attrs: dict,
+        old_extra_arg: dict,
+        new_state: str,
+        new_attrs: dict,
+        new_extra_arg: dict,
+    ):
+        """Check if the serialized data has changed."""
+        return old_extra_arg is not None and old_extra_arg != new_extra_arg
+
+    checker = await create_checker(hass, DOMAIN, extra_significant_check)
 
     async def async_entity_state_listener(
         changed_entity: str,
@@ -70,15 +83,22 @@ async def async_enable_proactive_mode(hass, smart_home_config):
         if not should_report and not should_doorbell:
             return
 
-        if not checker.async_is_significant_change(new_state):
-            return
-
         if should_doorbell:
             should_report = False
 
         if should_report:
+            alexa_properties = list(alexa_changed_entity.serialize_properties())
+        else:
+            alexa_properties = None
+
+        if not checker.async_is_significant_change(
+            new_state, extra_arg=alexa_properties
+        ):
+            return
+
+        if should_report:
             await async_send_changereport_message(
-                hass, smart_home_config, alexa_changed_entity
+                hass, smart_home_config, alexa_changed_entity, alexa_properties
             )
 
         elif should_doorbell:
@@ -92,7 +112,7 @@ async def async_enable_proactive_mode(hass, smart_home_config):
 
 
 async def async_send_changereport_message(
-    hass, config, alexa_entity, *, invalidate_access_token=True
+    hass, config, alexa_entity, alexa_properties, *, invalidate_access_token=True
 ):
     """Send a ChangeReport message for an Alexa entity.
 
@@ -107,7 +127,7 @@ async def async_send_changereport_message(
     payload = {
         API_CHANGE: {
             "cause": {"type": Cause.APP_INTERACTION},
-            "properties": list(alexa_entity.serialize_properties()),
+            "properties": alexa_properties,
         }
     }
 
@@ -146,7 +166,7 @@ async def async_send_changereport_message(
     ):
         config.async_invalidate_access_token()
         return await async_send_changereport_message(
-            hass, config, alexa_entity, invalidate_access_token=False
+            hass, config, alexa_entity, alexa_properties, invalidate_access_token=False
         )
 
     _LOGGER.error(
