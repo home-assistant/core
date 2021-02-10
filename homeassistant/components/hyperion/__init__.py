@@ -158,8 +158,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady
     version = await hyperion_client.async_sysinfo_version()
     if version is not None:
-        _LOGGER.critical(AwesomeVersion(version))
-        _LOGGER.critical(AwesomeVersion(HYPERION_VERSION_WARN_CUTOFF))
         try:
             if AwesomeVersion(version) < AwesomeVersion(HYPERION_VERSION_WARN_CUTOFF):
                 _LOGGER.warning(
