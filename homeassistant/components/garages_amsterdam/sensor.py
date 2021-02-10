@@ -21,10 +21,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
     coordinator = await get_coordinator(hass)
 
-    async_add_entities(
-        GaragesamsterdamSensor(coordinator, config_entry.data["garage_name"], info_type)
-        for info_type in SENSORS
-    )
+    entities = []
+
+    for info_type in SENSORS:
+        if getattr(coordinator.data[config_entry.data["garage_name"]], info_type) != "":
+            entities.append(
+                GaragesamsterdamSensor(
+                    coordinator, config_entry.data["garage_name"], info_type
+                )
+            )
+    async_add_entities(entities)
 
 
 class GaragesamsterdamSensor(CoordinatorEntity):
@@ -58,11 +64,6 @@ class GaragesamsterdamSensor(CoordinatorEntity):
         return self.coordinator.last_update_success and (
             self._garage_name in self.coordinator.data
         )
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return getattr(self.coordinator.data[self._garage_name], self._info_type) != ""
 
     @property
     def state(self):
