@@ -720,7 +720,7 @@ async def test_update_device_race(hass, registry):
         config_entry_id=config_entry.entry_id,
         connections={("mac", "12:34:56:AB:CD:EF")},
     )
-    # Updatete it
+    # Update it
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={("bridgeid", "0123")},
