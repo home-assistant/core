@@ -1,8 +1,8 @@
 """Test helpers."""
 
-import pytest
+from unittest.mock import Mock, patch
 
-from tests.async_mock import Mock, patch
+import pytest
 
 
 @pytest.fixture(autouse=True)
