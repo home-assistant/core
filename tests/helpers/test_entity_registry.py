@@ -710,6 +710,39 @@ async def test_remove_device_removes_entities(hass, registry):
     assert not registry.async_is_registered(entry.entity_id)
 
 
+async def test_update_device_race(hass, registry):
+    """Test race when a device is created, updated and removed."""
+    device_registry = mock_device_registry(hass)
+    config_entry = MockConfigEntry(domain="light")
+
+    # Create device
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={("mac", "12:34:56:AB:CD:EF")},
+    )
+    # Updatete it
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+        connections={("mac", "12:34:56:AB:CD:EF")},
+    )
+    # Add entity to the device
+    entry = registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+
+    assert registry.async_is_registered(entry.entity_id)
+
+    device_registry.async_remove_device(device_entry.id)
+    await hass.async_block_till_done()
+
+    assert not registry.async_is_registered(entry.entity_id)
+
+
 async def test_disable_device_disables_entities(hass, registry):
     """Test that we disable entities tied to a device."""
     device_registry = mock_device_registry(hass)
