@@ -212,22 +212,23 @@ async def test_camera_stream_source_configured(hass, run_driver, events):
     )
     with patch("turbojpeg.TurboJPEG", return_value=turbo_jpeg):
         TurboJPEGSingleton()
-        assert await hass.async_add_executor_job(
-            acc.get_snapshot, {"aid": 2, "image-width": 300, "image-height": 200}
+        assert await acc.async_get_snapshot(
+            {"aid": 2, "image-width": 300, "image-height": 200}
         )
-        # Verify the bridge only forwards get_snapshot for
+        # Verify the bridge only forwards async_get_snapshot for
         # cameras and valid accessory ids
-        assert await hass.async_add_executor_job(
-            bridge.get_snapshot, {"aid": 2, "image-width": 300, "image-height": 200}
+        assert await bridge.async_get_snapshot(
+            {"aid": 2, "image-width": 300, "image-height": 200}
         )
 
     with pytest.raises(ValueError):
-        assert await hass.async_add_executor_job(
-            bridge.get_snapshot, {"aid": 3, "image-width": 300, "image-height": 200}
+        assert await bridge.async_get_snapshot(
+            {"aid": 3, "image-width": 300, "image-height": 200}
         )
+
     with pytest.raises(ValueError):
-        assert await hass.async_add_executor_job(
-            bridge.get_snapshot, {"aid": 4, "image-width": 300, "image-height": 200}
+        assert await bridge.async_get_snapshot(
+            {"aid": 4, "image-width": 300, "image-height": 200}
         )
 
 
@@ -400,8 +401,8 @@ async def test_camera_with_no_stream(hass, run_driver, events):
     await _async_stop_all_streams(hass, acc)
 
     with pytest.raises(HomeAssistantError):
-        await hass.async_add_executor_job(
-            acc.get_snapshot, {"aid": 2, "image-width": 300, "image-height": 200}
+        assert await acc.async_get_snapshot(
+            {"aid": 2, "image-width": 300, "image-height": 200}
         )
 
 

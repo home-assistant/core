@@ -9,6 +9,8 @@ from homeassistant import bootstrap
 from homeassistant.core import callback
 from homeassistant.helpers.frame import warn_use
 
+# mypy: disallow-any-generics
+
 #
 # Python 3.8 has significantly less workers by default
 # than Python 3.7.  In order to be consistent between
@@ -81,7 +83,7 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid
 
 
 @callback
-def _async_loop_exception_handler(_: Any, context: Dict) -> None:
+def _async_loop_exception_handler(_: Any, context: Dict[str, Any]) -> None:
     """Handle all exception inside the core loop."""
     kwargs = {}
     exception = context.get("exception")

@@ -2,11 +2,17 @@
     "config": {
         "abort": {
             "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
             "auth_new_token_not_granted_error": "Hyperion UI'de yeni olu\u015fturulan belirte\u00e7 onaylanmad\u0131",
             "auth_new_token_not_work_error": "Yeni olu\u015fturulan belirte\u00e7 kullan\u0131larak kimlik do\u011frulamas\u0131 ba\u015far\u0131s\u0131z oldu",
             "auth_required_error": "Yetkilendirmenin gerekli olup olmad\u0131\u011f\u0131 belirlenemedi",
             "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "no_id": "Hyperion Ambilight \u00f6rne\u011fi kimli\u011fini bildirmedi"
+            "no_id": "Hyperion Ambilight \u00f6rne\u011fi kimli\u011fini bildirmedi",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_access_token": "Ge\u00e7ersiz eri\u015fim belirteci"
         },
         "step": {
             "auth": {
@@ -14,6 +20,9 @@
                     "create_token": "Otomatik olarak yeni belirte\u00e7 olu\u015fturma",
                     "token": "Veya \u00f6nceden varolan belirte\u00e7 leri sa\u011flay\u0131n"
                 }
+            },
+            "confirm": {
+                "title": "Hyperion Ambilight hizmetinin eklenmesini onaylay\u0131n"
             },
             "create_token": {
                 "title": "Otomatik olarak yeni kimlik do\u011frulama belirteci olu\u015fturun"
@@ -23,6 +32,7 @@
             },
             "user": {
                 "data": {
+                    "host": "Ana Bilgisayar",
                     "port": "Port"
                 }
             }

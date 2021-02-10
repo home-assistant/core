@@ -11,16 +11,23 @@ from homeassistant.components.utility_meter.const import (
     SERVICE_CALIBRATE_METER,
     SERVICE_SELECT_TARIFF,
 )
+from homeassistant.components.utility_meter.sensor import (
+    ATTR_LAST_RESET,
+    ATTR_STATUS,
+    COLLECTING,
+    PAUSED,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
 )
+from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_restore_cache
 
 
 @contextmanager
@@ -55,6 +62,21 @@ async def test_state(hass):
     )
     await hass.async_block_till_done()
 
+    state = hass.states.get("sensor.energy_bill_onpeak")
+    assert state is not None
+    assert state.state == "0"
+    assert state.attributes.get("status") == COLLECTING
+
+    state = hass.states.get("sensor.energy_bill_midpeak")
+    assert state is not None
+    assert state.state == "0"
+    assert state.attributes.get("status") == PAUSED
+
+    state = hass.states.get("sensor.energy_bill_offpeak")
+    assert state is not None
+    assert state.state == "0"
+    assert state.attributes.get("status") == PAUSED
+
     now = dt_util.utcnow() + timedelta(seconds=10)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         hass.states.async_set(
@@ -68,14 +90,17 @@ async def test_state(hass):
     state = hass.states.get("sensor.energy_bill_onpeak")
     assert state is not None
     assert state.state == "1"
+    assert state.attributes.get("status") == COLLECTING
 
     state = hass.states.get("sensor.energy_bill_midpeak")
     assert state is not None
     assert state.state == "0"
+    assert state.attributes.get("status") == PAUSED
 
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state is not None
     assert state.state == "0"
+    assert state.attributes.get("status") == PAUSED
 
     await hass.services.async_call(
         DOMAIN,
@@ -99,14 +124,17 @@ async def test_state(hass):
     state = hass.states.get("sensor.energy_bill_onpeak")
     assert state is not None
     assert state.state == "1"
+    assert state.attributes.get("status") == PAUSED
 
     state = hass.states.get("sensor.energy_bill_midpeak")
     assert state is not None
     assert state.state == "0"
+    assert state.attributes.get("status") == PAUSED
 
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state is not None
     assert state.state == "3"
+    assert state.attributes.get("status") == COLLECTING
 
     await hass.services.async_call(
         DOMAIN,
@@ -129,6 +157,65 @@ async def test_state(hass):
     state = hass.states.get("sensor.energy_bill_midpeak")
     assert state is not None
     assert state.state == "0.123"
+
+
+async def test_restore_state(hass):
+    """Test utility sensor restore state."""
+    config = {
+        "utility_meter": {
+            "energy_bill": {
+                "source": "sensor.energy",
+                "tariffs": ["onpeak", "midpeak", "offpeak"],
+            }
+        }
+    }
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                "sensor.energy_bill_onpeak",
+                "3",
+                attributes={
+                    ATTR_STATUS: PAUSED,
+                    ATTR_LAST_RESET: "2020-12-21T00:00:00.013073+00:00",
+                },
+            ),
+            State(
+                "sensor.energy_bill_offpeak",
+                "6",
+                attributes={
+                    ATTR_STATUS: COLLECTING,
+                    ATTR_LAST_RESET: "2020-12-21T00:00:00.013073+00:00",
+                },
+            ),
+        ],
+    )
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    # restore from cache
+    state = hass.states.get("sensor.energy_bill_onpeak")
+    assert state.state == "3"
+    assert state.attributes.get("status") == PAUSED
+
+    state = hass.states.get("sensor.energy_bill_offpeak")
+    assert state.state == "6"
+    assert state.attributes.get("status") == COLLECTING
+
+    # utility_meter is loaded, now set sensors according to utility_meter:
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("utility_meter.energy_bill")
+    assert state.state == "onpeak"
+
+    state = hass.states.get("sensor.energy_bill_onpeak")
+    assert state.attributes.get("status") == COLLECTING
+
+    state = hass.states.get("sensor.energy_bill_offpeak")
+    assert state.attributes.get("status") == PAUSED
 
 
 async def test_net_consumption(hass):

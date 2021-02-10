@@ -140,14 +140,6 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_auth()
         return await self.async_step_confirm()
 
-    async def async_step_import(self, import_data: ConfigType) -> Dict[str, Any]:
-        """Handle a flow initiated by a YAML config import."""
-        self._data.update(import_data)
-        async with self._create_client(raw_connection=True) as hyperion_client:
-            if not hyperion_client:
-                return self.async_abort(reason="cannot_connect")
-            return await self._advance_to_auth_step_if_necessary(hyperion_client)
-
     async def async_step_reauth(
         self,
         config_data: ConfigType,

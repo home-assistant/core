@@ -40,7 +40,6 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
 
 # Loading the config flow file will register the flow
-from . import config_flow  # noqa: F401 pylint: disable=unused-import
 from . import debug_info, discovery
 from .const import (
     ATTR_PAYLOAD,
@@ -865,7 +864,7 @@ class MQTT:
             "Received message on %s%s: %s",
             msg.topic,
             " (retained)" if msg.retain else "",
-            msg.payload,
+            msg.payload[0:8192],
         )
         timestamp = dt_util.utcnow()
 
@@ -880,7 +879,7 @@ class MQTT:
                 except (AttributeError, UnicodeDecodeError):
                     _LOGGER.warning(
                         "Can't decode payload %s on %s with encoding %s (for %s)",
-                        msg.payload,
+                        msg.payload[0:8192],
                         msg.topic,
                         subscription.encoding,
                         subscription.job,

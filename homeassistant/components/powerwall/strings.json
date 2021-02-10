@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "Tesla Powerwall ({ip_address})",
     "step": {
       "user": {
         "title": "Connect to the powerwall",

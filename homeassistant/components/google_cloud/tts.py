@@ -55,6 +55,7 @@ SUPPORTED_LANGUAGES = [
     "pl-PL",
     "pt-BR",
     "pt-PT",
+    "ro-RO",
     "ru-RU",
     "sk-SK",
     "sv-SE",

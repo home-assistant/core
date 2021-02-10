@@ -27,5 +27,21 @@
                 "description": "Prima della configurazione, i dispositivi alimentati a batteria devono essere riattivati premendo il pulsante sul dispositivo."
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Pulsante",
+            "button1": "Primo pulsante",
+            "button2": "Secondo pulsante",
+            "button3": "Terzo pulsante"
+        },
+        "trigger_type": {
+            "double": "{subtype} premuto due volte",
+            "long": "{subtype} premuto a lungo",
+            "long_single": "{subtype} premuto a lungo e poi singolarmente",
+            "single": "{subtype} premuto singolarmente",
+            "single_long": "{subtype} premuto singolarmente e poi a lungo",
+            "triple": "{subtype} premuto tre volte"
+        }
     }
 }

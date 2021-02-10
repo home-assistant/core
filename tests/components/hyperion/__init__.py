@@ -4,12 +4,11 @@ from __future__ import annotations
 import logging
 from types import TracebackType
 from typing import Any, Dict, Optional, Type
-from unittest.mock import AsyncMock, Mock, patch  # type: ignore[attr-defined]
+from unittest.mock import AsyncMock, Mock, patch
 
 from hyperion import const
 
 from homeassistant.components.hyperion.const import CONF_PRIORITY, DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.typing import HomeAssistantType
@@ -20,14 +19,14 @@ TEST_HOST = "test"
 TEST_PORT = const.DEFAULT_PORT_JSON + 1
 TEST_PORT_UI = const.DEFAULT_PORT_UI + 1
 TEST_INSTANCE = 1
+TEST_ID = "default"
 TEST_SYSINFO_ID = "f9aab089-f85a-55cf-b7c1-222a72faebe9"
 TEST_SYSINFO_VERSION = "2.0.0-alpha.8"
 TEST_PRIORITY = 180
-TEST_YAML_NAME = f"{TEST_HOST}_{TEST_PORT}_{TEST_INSTANCE}"
-TEST_YAML_ENTITY_ID = f"{LIGHT_DOMAIN}.{TEST_YAML_NAME}"
 TEST_ENTITY_ID_1 = "light.test_instance_1"
 TEST_ENTITY_ID_2 = "light.test_instance_2"
 TEST_ENTITY_ID_3 = "light.test_instance_3"
+TEST_PRIORITY_LIGHT_ENTITY_ID_1 = "light.test_instance_1_priority"
 TEST_TITLE = f"{TEST_HOST}:{TEST_PORT}"
 
 TEST_TOKEN = "sekr1t"
@@ -67,7 +66,7 @@ TEST_AUTH_NOT_REQUIRED_RESP = {
 _LOGGER = logging.getLogger(__name__)
 
 
-class AsyncContextManagerMock(Mock):  # type: ignore[misc]
+class AsyncContextManagerMock(Mock):
     """An async context manager mock for Hyperion."""
 
     async def __aenter__(self) -> Optional[AsyncContextManagerMock]:
@@ -99,7 +98,7 @@ def create_mock_client() -> Mock:
     )
 
     mock_client.async_sysinfo_id = AsyncMock(return_value=TEST_SYSINFO_ID)
-    mock_client.async_sysinfo_version = AsyncMock(return_value=TEST_SYSINFO_ID)
+    mock_client.async_sysinfo_version = AsyncMock(return_value=TEST_SYSINFO_VERSION)
     mock_client.async_client_switch_instance = AsyncMock(return_value=True)
     mock_client.async_client_login = AsyncMock(return_value=True)
     mock_client.async_get_serverinfo = AsyncMock(
@@ -111,6 +110,7 @@ def create_mock_client() -> Mock:
         }
     )
 
+    mock_client.priorities = []
     mock_client.adjustment = None
     mock_client.effects = None
     mock_client.instances = [
@@ -159,3 +159,12 @@ async def setup_test_config_entry(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
     return config_entry
+
+
+def call_registered_callback(
+    client: AsyncMock, key: str, *args: Any, **kwargs: Any
+) -> None:
+    """Call Hyperion entity callbacks that were registered with the client."""
+    for call in client.add_callbacks.call_args_list:
+        if key in call[0][0]:
+            call[0][0][key](*args, **kwargs)

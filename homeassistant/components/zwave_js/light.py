@@ -1,6 +1,6 @@
 """Support for Z-Wave lights."""
 import logging
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, Optional, Tuple
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
@@ -41,11 +41,15 @@ async def async_setup_entry(
     def async_add_light(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Light."""
 
-        light = ZwaveLight(client, info)
+        light = ZwaveLight(config_entry, client, info)
         async_add_entities([light])
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
-        async_dispatcher_connect(hass, f"{DOMAIN}_add_{LIGHT_DOMAIN}", async_add_light)
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_{config_entry.entry_id}_add_{LIGHT_DOMAIN}",
+            async_add_light,
+        )
     )
 
 
@@ -62,13 +66,15 @@ def byte_to_zwave_brightness(value: int) -> int:
 class ZwaveLight(ZWaveBaseEntity, LightEntity):
     """Representation of a Z-Wave light."""
 
-    def __init__(self, client: ZwaveClient, info: ZwaveDiscoveryInfo) -> None:
+    def __init__(
+        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+    ) -> None:
         """Initialize the light."""
-        super().__init__(client, info)
+        super().__init__(config_entry, client, info)
         self._supports_color = False
         self._supports_white_value = False
         self._supports_color_temp = False
-        self._hs_color: Optional[List[float]] = None
+        self._hs_color: Optional[Tuple[float, float]] = None
         self._white_value: Optional[int] = None
         self._color_temp: Optional[int] = None
         self._min_mireds = 153  # 6500K as a safe default
@@ -99,8 +105,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         Z-Wave multilevel switches use a range of [0, 99] to control brightness.
         """
-        if self._target_value is not None and self._target_value.value is not None:
-            return round((self._target_value.value / 99) * 255)
         if self.info.primary_value.value is not None:
             return round((self.info.primary_value.value / 99) * 255)
         return 0
@@ -111,7 +115,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         return self.brightness > 0
 
     @property
-    def hs_color(self) -> Optional[List[float]]:
+    def hs_color(self) -> Optional[Tuple[float, float]]:
         """Return the hs color."""
         return self._hs_color
 
@@ -152,15 +156,14 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             await self._async_set_color("Red", red)
             await self._async_set_color("Green", green)
             await self._async_set_color("Blue", blue)
-        else:
-            # turn off rgb when setting white values
-            await self._async_set_color("Red", 0)
-            await self._async_set_color("Green", 0)
-            await self._async_set_color("Blue", 0)
 
         # Color temperature
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
         if color_temp is not None and self._supports_color_temp:
+            # turn off rgb when setting white values
+            await self._async_set_color("Red", 0)
+            await self._async_set_color("Green", 0)
+            await self._async_set_color("Blue", 0)
             # Limit color temp to min/max values
             cold = max(
                 0,
@@ -180,6 +183,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # White value
         white_value = kwargs.get(ATTR_WHITE_VALUE)
         if white_value is not None and self._supports_white_value:
+            # turn off rgb when setting white values
+            await self._async_set_color("Red", 0)
+            await self._async_set_color("Green", 0)
+            await self._async_set_color("Blue", 0)
             await self._async_set_color("Warm White", white_value)
 
         # set brightness
@@ -201,9 +208,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # guard for unsupported command
         if cur_zwave_value is None:
             return
-        # no need to send same value
-        if cur_zwave_value.value == new_value:
-            return
         # actually set the new color value
         target_zwave_value = self.get_zwave_value(
             "targetColor",
@@ -218,22 +222,20 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self, brightness: Optional[int], transition: Optional[int] = None
     ) -> None:
         """Set new brightness to light."""
-        if self.info.primary_value.value == brightness:
-            # no point in setting same brightness
-            return
         if brightness is None and self.info.primary_value.value:
             # there is no point in setting default brightness when light is already on
             return
         if brightness is None:
             # Level 255 means to set it to previous value.
-            brightness = 255
+            zwave_brightness = 255
         else:
             # Zwave multilevel switches use a range of [0, 99] to control brightness.
-            brightness = byte_to_zwave_brightness(brightness)
-        # set transition value before seinding new brightness
+            zwave_brightness = byte_to_zwave_brightness(brightness)
+
+        # set transition value before sending new brightness
         await self._async_set_transition_duration(transition)
         # setting a value requires setting targetValue
-        await self.info.node.async_set_value(self._target_value, brightness)
+        await self.info.node.async_set_value(self._target_value, zwave_brightness)
 
     async def _async_set_transition_duration(
         self, duration: Optional[int] = None
@@ -249,7 +251,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if duration is None:  # type: ignore
             # no transition specified by user, use defaults
             duration = 7621  # anything over 7620 uses the factory default
-        else:
+        else:  # pragma: no cover
             # transition specified by user
             transition = duration
             if transition <= 127:
@@ -265,7 +267,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # only send value if it differs from current
         # this prevents sending a command for nothing
-        if self._dimming_duration.value != duration:
+        if self._dimming_duration.value != duration:  # pragma: no cover
             await self.info.node.async_set_value(self._dimming_duration, duration)
 
     @callback
@@ -290,7 +292,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                 and green_val.value is not None
                 and blue_val.value is not None
             ):
-                self._hs = color_util.color_RGB_to_hs(
+                self._hs_color = color_util.color_RGB_to_hs(
                     red_val.value, green_val.value, blue_val.value
                 )
 
@@ -317,6 +319,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
                 )
             else:
                 self._color_temp = None
-        elif ww_val or cw_val:
-            # only one white channel
+        elif ww_val:
+            # only one white channel (warm white)
             self._supports_white_value = True
+            self._white_value = ww_val.value
+        elif cw_val:
+            # only one white channel (cool white)
+            self._supports_white_value = True
+            self._white_value = cw_val.value

@@ -174,6 +174,18 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=self.bridge_id, data=self.deconz_config)
 
+    async def async_step_reauth(self, config: dict):
+        """Trigger a reauthentication flow."""
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {CONF_HOST: config[CONF_HOST]}
+
+        self.deconz_config = {
+            CONF_HOST: config[CONF_HOST],
+            CONF_PORT: config[CONF_PORT],
+        }
+
+        return await self.async_step_link()
+
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered deCONZ bridge."""
         if (

@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
-            "mqtt_required": "Die MQTT-Integration ist nicht eingerichtet"
+            "mqtt_required": "Die MQTT-Integration ist nicht eingerichtet",
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "progress": {
             "install_addon": "Bitte warten, bis die Installation des OpenZWave-Add-Ons abgeschlossen ist. Dies kann einige Minuten dauern."
@@ -14,6 +15,15 @@
             },
             "install_addon": {
                 "title": "Die Installation des OpenZWave-Add-On wurde gestartet"
+            },
+            "on_supervisor": {
+                "title": "Verbindungstyp ausw\u00e4hlen"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "Netzwerk-Schl\u00fcssel",
+                    "usb_path": "USB-Ger\u00e4te-Pfad"
+                }
             }
         }
     }

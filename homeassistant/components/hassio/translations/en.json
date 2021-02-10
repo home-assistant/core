@@ -9,11 +9,11 @@
             "host_os": "Host Operating System",
             "installed_addons": "Installed Add-ons",
             "supervisor_api": "Supervisor API",
-            "supervisor_version": "Version",
+            "supervisor_version": "Supervisor Version",
             "supported": "Supported",
             "update_channel": "Update Channel",
             "version_api": "Version API"
         }
     },
-    "title": "Home Assistant Supervisor"
+    "title": "Hass.io"
 }

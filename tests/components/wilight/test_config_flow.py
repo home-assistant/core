@@ -21,7 +21,6 @@ from tests.common import MockConfigEntry
 from tests.components.wilight import (
     CONF_COMPONENTS,
     HOST,
-    MOCK_SSDP_DISCOVERY_INFO_LIGHT_FAN,
     MOCK_SSDP_DISCOVERY_INFO_MISSING_MANUFACTORER,
     MOCK_SSDP_DISCOVERY_INFO_P_B,
     MOCK_SSDP_DISCOVERY_INFO_WRONG_MANUFACTORER,
@@ -32,9 +31,20 @@ from tests.components.wilight import (
 
 
 @pytest.fixture(name="dummy_get_components_from_model_clear")
-def mock_dummy_get_components_from_model():
+def mock_dummy_get_components_from_model_clear():
     """Mock a clear components list."""
     components = []
+    with patch(
+        "pywilight.get_components_from_model",
+        return_value=components,
+    ):
+        yield components
+
+
+@pytest.fixture(name="dummy_get_components_from_model_wrong")
+def mock_dummy_get_components_from_model_wrong():
+    """Mock a clear components list."""
+    components = ["wrong"]
     with patch(
         "pywilight.get_components_from_model",
         return_value=components,
@@ -96,10 +106,12 @@ async def test_ssdp_not_wilight_abort_3(
     assert result["reason"] == "not_wilight_device"
 
 
-async def test_ssdp_not_supported_abort(hass: HomeAssistantType) -> None:
+async def test_ssdp_not_supported_abort(
+    hass: HomeAssistantType, dummy_get_components_from_model_wrong
+) -> None:
     """Test that the ssdp aborts not_supported."""
 
-    discovery_info = MOCK_SSDP_DISCOVERY_INFO_LIGHT_FAN.copy()
+    discovery_info = MOCK_SSDP_DISCOVERY_INFO_P_B.copy()
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
     )

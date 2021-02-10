@@ -17,9 +17,9 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import aiohttp_client
 
-from . import get_coap_context
 from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC
 from .const import DOMAIN  # pylint:disable=unused-import
+from .utils import get_coap_context, get_device_sleep_period
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +53,8 @@ async def validate_input(hass: core.HomeAssistant, host, data):
     return {
         "title": device.settings["name"],
         "hostname": device.settings["device"]["hostname"],
+        "sleep_period": get_device_sleep_period(device.settings),
+        "model": device.settings["device"]["type"],
     }
 
 
@@ -63,6 +65,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
     host = None
     info = None
+    device_info = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -95,7 +98,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     return self.async_create_entry(
                         title=device_info["title"] or device_info["hostname"],
-                        data=user_input,
+                        data={
+                            **user_input,
+                            "sleep_period": device_info["sleep_period"],
+                            "model": device_info["model"],
+                        },
                     )
 
         return self.async_show_form(
@@ -121,7 +128,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(
                     title=device_info["title"] or device_info["hostname"],
-                    data={**user_input, CONF_HOST: self.host},
+                    data={
+                        **user_input,
+                        CONF_HOST: self.host,
+                        "sleep_period": device_info["sleep_period"],
+                        "model": device_info["model"],
+                    },
                 )
         else:
             user_input = {}
@@ -149,6 +161,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(info["mac"])
         self._abort_if_unique_id_configured({CONF_HOST: zeroconf_info["host"]})
         self.host = zeroconf_info["host"]
+
+        if not info["auth"] and info.get("sleep_mode", False):
+            try:
+                self.device_info = await validate_input(self.hass, self.host, {})
+            except HTTP_CONNECT_ERRORS:
+                return self.async_abort(reason="cannot_connect")
+
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             "name": zeroconf_info.get("name", "").split(".")[0]
@@ -162,6 +181,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self.info["auth"]:
                 return await self.async_step_credentials()
 
+            if self.device_info:
+                return self.async_create_entry(
+                    title=self.device_info["title"] or self.device_info["hostname"],
+                    data={
+                        "host": self.host,
+                        "sleep_period": self.device_info["sleep_period"],
+                        "model": self.device_info["model"],
+                    },
+                )
+
             try:
                 device_info = await validate_input(self.hass, self.host, {})
             except HTTP_CONNECT_ERRORS:
@@ -172,7 +201,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(
                     title=device_info["title"] or device_info["hostname"],
-                    data={"host": self.host},
+                    data={
+                        "host": self.host,
+                        "sleep_period": device_info["sleep_period"],
+                        "model": device_info["model"],
+                    },
                 )
 
         return self.async_show_form(

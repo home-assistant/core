@@ -244,3 +244,26 @@ async def test_discovery_requirements_zeroconf(hass, partial_manifest):
 
     assert len(mock_process.mock_calls) == 2  # zeroconf also depends on http
     assert mock_process.mock_calls[0][1][2] == zeroconf.requirements
+
+
+async def test_discovery_requirements_dhcp(hass):
+    """Test that we load dhcp discovery requirements."""
+    hass.config.skip_pip = False
+    dhcp = await loader.async_get_integration(hass, "dhcp")
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            partial_manifest={
+                "dhcp": [{"hostname": "somfy_*", "macaddress": "B8B7F1*"}]
+            },
+        ),
+    )
+    with patch(
+        "homeassistant.requirements.async_process_requirements",
+    ) as mock_process:
+        await async_get_integration_with_requirements(hass, "comp")
+
+    assert len(mock_process.mock_calls) == 1  # dhcp does not depend on http
+    assert mock_process.mock_calls[0][1][2] == dhcp.requirements

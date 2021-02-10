@@ -27,5 +27,21 @@
                 "description": "F\u00f8r du setter opp, m\u00e5 batteridrevne enheter vekkes ved \u00e5 trykke p\u00e5 knappen p\u00e5 enheten."
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Knapp",
+            "button1": "F\u00f8rste knapp",
+            "button2": "Andre knapp",
+            "button3": "Tredje knapp"
+        },
+        "trigger_type": {
+            "double": "{subtype} dobbeltklikket",
+            "long": "{subtype} lenge klikket",
+            "long_single": "{subtype} lengre klikk og deretter et enkeltklikk",
+            "single": "{subtype} enkeltklikket",
+            "single_long": "{subtype} enkeltklikket og deretter et lengre klikk",
+            "triple": "{subtype} trippelklikket"
+        }
     }
 }

@@ -87,7 +87,7 @@ from homeassistant.helpers import (
     template as template_helper,
 )
 from homeassistant.helpers.logging import KeywordStyleAdapter
-from homeassistant.util import sanitize_path, slugify as util_slugify
+from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
 # pylint: disable=invalid-name
@@ -118,8 +118,10 @@ def path(value: Any) -> str:
     if not isinstance(value, str):
         raise vol.Invalid("Expected a string")
 
-    if sanitize_path(value) != value:
-        raise vol.Invalid("Invalid path")
+    try:
+        raise_if_invalid_path(value)
+    except ValueError as err:
+        raise vol.Invalid("Invalid path") from err
 
     return value
 
@@ -264,7 +266,7 @@ def entity_id(value: Any) -> str:
     if valid_entity_id(str_value):
         return str_value
 
-    raise vol.Invalid(f"Entity ID {value} is an invalid entity id")
+    raise vol.Invalid(f"Entity ID {value} is an invalid entity ID")
 
 
 def entity_ids(value: Union[str, List]) -> List[str]:
@@ -547,7 +549,6 @@ unit_system = vol.All(
 
 def template(value: Optional[Any]) -> template_helper.Template:
     """Validate a jinja2 template."""
-
     if value is None:
         raise vol.Invalid("template value is None")
     if isinstance(value, (list, dict, template_helper.Template)):
@@ -564,13 +565,12 @@ def template(value: Optional[Any]) -> template_helper.Template:
 
 def dynamic_template(value: Optional[Any]) -> template_helper.Template:
     """Validate a dynamic (non static) jinja2 template."""
-
     if value is None:
         raise vol.Invalid("template value is None")
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
     if not template_helper.is_template_string(str(value)):
-        raise vol.Invalid("template value does not contain a dynmamic template")
+        raise vol.Invalid("template value does not contain a dynamic template")
 
     template_value = template_helper.Template(str(value))  # type: ignore
     try:
@@ -916,18 +916,18 @@ SERVICE_SCHEMA = vol.All(
     has_at_least_one_key(CONF_SERVICE, CONF_SERVICE_TEMPLATE),
 )
 
+NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
+    vol.Coerce(float), vol.All(str, entity_domain("input_number"))
+)
+
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_CONDITION): "numeric_state",
             vol.Required(CONF_ENTITY_ID): entity_ids,
             vol.Optional(CONF_ATTRIBUTE): str,
-            CONF_BELOW: vol.Any(
-                vol.Coerce(float), vol.All(str, entity_domain("input_number"))
-            ),
-            CONF_ABOVE: vol.Any(
-                vol.Coerce(float), vol.All(str, entity_domain("input_number"))
-            ),
+            CONF_BELOW: NUMERIC_STATE_THRESHOLD_SCHEMA,
+            CONF_ABOVE: NUMERIC_STATE_THRESHOLD_SCHEMA,
             vol.Optional(CONF_VALUE_TEMPLATE): template,
         }
     ),

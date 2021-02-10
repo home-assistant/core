@@ -10,7 +10,7 @@ from .const import DOMAIN
 from .parent_device import WiLightParent
 
 # List the platforms that you want to support.
-PLATFORMS = ["light"]
+PLATFORMS = ["fan", "light"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):

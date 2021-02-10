@@ -40,6 +40,8 @@ from .const import (
     EVENT_STARTED_TORRENT,
     SERVICE_ADD_TORRENT,
     SERVICE_REMOVE_TORRENT,
+    SERVICE_START_TORRENT,
+    SERVICE_STOP_TORRENT,
 )
 from .errors import AuthenticationError, CannotConnect, UnknownError
 
@@ -55,6 +57,20 @@ SERVICE_REMOVE_TORRENT_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ID): cv.positive_int,
         vol.Optional(ATTR_DELETE_DATA, default=DEFAULT_DELETE_DATA): cv.boolean,
+    }
+)
+
+SERVICE_START_TORRENT_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_ID): cv.positive_int,
+    }
+)
+
+SERVICE_STOP_TORRENT_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_ID): cv.positive_int,
     }
 )
 
@@ -116,6 +132,8 @@ async def async_unload_entry(hass, config_entry):
     if not hass.data[DOMAIN]:
         hass.services.async_remove(DOMAIN, SERVICE_ADD_TORRENT)
         hass.services.async_remove(DOMAIN, SERVICE_REMOVE_TORRENT)
+        hass.services.async_remove(DOMAIN, SERVICE_START_TORRENT)
+        hass.services.async_remove(DOMAIN, SERVICE_STOP_TORRENT)
 
     return True
 
@@ -207,6 +225,34 @@ class TransmissionClient:
                     "Could not add torrent: unsupported type or no permission"
                 )
 
+        def start_torrent(service):
+            """Start torrent."""
+            tm_client = None
+            for entry in self.hass.config_entries.async_entries(DOMAIN):
+                if entry.data[CONF_NAME] == service.data[CONF_NAME]:
+                    tm_client = self.hass.data[DOMAIN][entry.entry_id]
+                    break
+            if tm_client is None:
+                _LOGGER.error("Transmission instance is not found")
+                return
+            torrent_id = service.data[CONF_ID]
+            tm_client.tm_api.start_torrent(torrent_id)
+            tm_client.api.update()
+
+        def stop_torrent(service):
+            """Stop torrent."""
+            tm_client = None
+            for entry in self.hass.config_entries.async_entries(DOMAIN):
+                if entry.data[CONF_NAME] == service.data[CONF_NAME]:
+                    tm_client = self.hass.data[DOMAIN][entry.entry_id]
+                    break
+            if tm_client is None:
+                _LOGGER.error("Transmission instance is not found")
+                return
+            torrent_id = service.data[CONF_ID]
+            tm_client.tm_api.stop_torrent(torrent_id)
+            tm_client.api.update()
+
         def remove_torrent(service):
             """Remove torrent."""
             tm_client = None
@@ -231,6 +277,20 @@ class TransmissionClient:
             SERVICE_REMOVE_TORRENT,
             remove_torrent,
             schema=SERVICE_REMOVE_TORRENT_SCHEMA,
+        )
+
+        self.hass.services.async_register(
+            DOMAIN,
+            SERVICE_START_TORRENT,
+            start_torrent,
+            schema=SERVICE_START_TORRENT_SCHEMA,
+        )
+
+        self.hass.services.async_register(
+            DOMAIN,
+            SERVICE_STOP_TORRENT,
+            stop_torrent,
+            schema=SERVICE_STOP_TORRENT_SCHEMA,
         )
 
         self.config_entry.add_update_listener(self.async_options_updated)

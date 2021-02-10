@@ -27,7 +27,7 @@
                 "data": {
                     "forecast": "V\u00e6rmelding"
                 },
-                "description": "P\u00e5 grunn av begrensningene i gratisversjonen av AccuWeather API-n\u00f8kkelen, n\u00e5r du aktiverer v\u00e6rmelding, vil dataoppdateringer bli utf\u00f8rt hvert 64. minutt i stedet for hvert 32. minutt.",
+                "description": "P\u00e5 grunn av begrensningene i den gratis versjonen av AccuWeather API-n\u00f8kkelen, vil dataoppdateringer utf\u00f8res hvert 80. minutt i stedet for hvert 40. minutt n\u00e5r du aktiverer v\u00e6rmelding.",
                 "title": "AccuWeather-alternativer"
             }
         }

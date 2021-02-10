@@ -1,5 +1,6 @@
 """Support for esphome devices."""
 import asyncio
+import functools
 import logging
 import math
 from typing import Any, Callable, Dict, List, Optional
@@ -224,6 +225,14 @@ async def _setup_auto_reconnect_logic(
         if entry.entry_id not in hass.data[DOMAIN]:
             # When removing/disconnecting manually
             return
+
+        device_registry = await hass.helpers.device_registry.async_get_registry()
+        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+        for device in devices:
+            # There is only one device in ESPHome
+            if device.disabled:
+                # Don't attempt to connect if it's disabled
+                return
 
         data: RuntimeEntryData = hass.data[DOMAIN][entry.entry_id]
         for disconnect_cb in data.disconnect_callbacks:
@@ -512,7 +521,7 @@ class EsphomeBaseEntity(Entity):
                     f"esphome_{self._entry_id}_remove_"
                     f"{self._component_key}_{self._key}"
                 ),
-                self.async_remove,
+                functools.partial(self.async_remove, force_remove=True),
             )
         )
 
