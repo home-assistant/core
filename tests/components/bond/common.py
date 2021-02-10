@@ -3,7 +3,7 @@ from asyncio import TimeoutError as AsyncIOTimeoutError
 from contextlib import nullcontext
 from datetime import timedelta
 from typing import Any, Dict, Optional
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from homeassistant import core
 from homeassistant.components.bond.const import DOMAIN as BOND_DOMAIN
@@ -33,9 +33,11 @@ async def setup_bond_entity(
     """Set up Bond entity."""
     config_entry.add_to_hass(hass)
 
-    with patch_bond_version(enabled=patch_version), patch_bond_device_ids(
-        enabled=patch_device_ids
-    ), patch_setup_entry("cover", enabled=patch_platforms), patch_setup_entry(
+    with patch_start_bpup(), patch_bond_version(
+        enabled=patch_version
+    ), patch_bond_device_ids(enabled=patch_device_ids), patch_setup_entry(
+        "cover", enabled=patch_platforms
+    ), patch_setup_entry(
         "fan", enabled=patch_platforms
     ), patch_setup_entry(
         "light", enabled=patch_platforms
@@ -65,7 +67,7 @@ async def setup_platform(
     with patch("homeassistant.components.bond.PLATFORMS", [platform]):
         with patch_bond_version(return_value=bond_version), patch_bond_device_ids(
             return_value=[bond_device_id]
-        ), patch_bond_device(
+        ), patch_start_bpup(), patch_bond_device(
             return_value=discovered_device
         ), patch_bond_device_properties(
             return_value=props
@@ -115,6 +117,14 @@ def patch_bond_device(return_value=None):
     return patch(
         "homeassistant.components.bond.Bond.device",
         return_value=return_value,
+    )
+
+
+def patch_start_bpup():
+    """Patch start_bpup."""
+    return patch(
+        "homeassistant.components.bond.start_bpup",
+        return_value=MagicMock(),
     )
 
 
