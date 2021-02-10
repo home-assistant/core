@@ -97,7 +97,12 @@ async def test_form_cannot_connect(hass):
 
 async def test_form_repeat_identifier(hass):
     """Test we handle repeat identifiers."""
-    entry = MockConfigEntry(domain=DOMAIN, title="test-username", data={}, options=None)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="test-username",
+        data={"username": "test-username", "password": "test-password"},
+        options=None,
+    )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -112,8 +117,36 @@ async def test_form_repeat_identifier(hass):
             {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
         )
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {CONF_USERNAME: "already_configured"}
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"
+
+
+async def test_form_reauth(hass):
+    """Test we handle reauth."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="test-username",
+        data={"username": "test-username", "password": "same"},
+        options=None,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_REAUTH},
+        data={"username": "test-username"},
+    )
+    with patch(
+        "homeassistant.components.tesla.config_flow.TeslaAPI.connect",
+        return_value=("test-refresh-token", "test-access-token"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "test-username", CONF_PASSWORD: "new-password"},
+        )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"
 
 
 async def test_import(hass):
