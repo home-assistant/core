@@ -45,7 +45,7 @@ async def test_invalid_auth(hass):
 async def test_connection_error(hass):
     """Test that errors are shown when API key is invalid."""
     with patch(
-        "homeassistant.components.freedompro.config_flow.list",
+        "homeassistant.components.freedompro.config_flow.get_list",
         return_value={
             "state": False,
             "code": -200,
@@ -61,29 +61,10 @@ async def test_connection_error(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_connection_exception(hass):
-    """Test that errors are shown when API key is invalid."""
-    with patch(
-        "homeassistant.components.freedompro.config_flow.list",
-        return_value={
-            "state": False,
-            "code": -202,
-        },
-    ):
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=VALID_CONFIG,
-        )
-
-        assert result["errors"] == {"base": "unknown"}
-
-
 async def test_create_entry(hass):
     """Test that the user step works."""
     with patch(
-        "homeassistant.components.freedompro.config_flow.list",
+        "homeassistant.components.freedompro.config_flow.get_list",
         return_value={
             "state": True,
             "devices": DEVICES,

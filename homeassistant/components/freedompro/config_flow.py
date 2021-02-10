@@ -3,8 +3,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 
-from .const import DOMAIN, FREEDOMPRO_URL
-from .utils import list
+from .const import DOMAIN  # pylint:disable=unused-import
+from .const import FREEDOMPRO_URL
+from .utils import get_list
 
 STEP_USER_DATA_SCHEMA = vol.Schema({"api_key": str})
 
@@ -20,7 +21,7 @@ class Hub:
 
     async def authenticate(self) -> bool:
         """Freedompro Hub class authenticate."""
-        result = await list(self._hass, self._api_key)
+        result = await get_list(self._hass, self._api_key)
         return result
 
 
@@ -33,7 +34,6 @@ async def validate_input(hass: core.HomeAssistant, data):
             raise InvalidAuth
         if result["code"] == -200:
             raise CannotConnect
-        raise Exception
     return {"title": "Freedompro"}
 
 
@@ -58,8 +58,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except Exception:
-            errors["base"] = "unknown"
         else:
             return self.async_create_entry(title=info["title"], data=user_input)
 

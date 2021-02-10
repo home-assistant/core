@@ -14,7 +14,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DOMAIN
-from .utils import putState
+from .utils import put_state
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -43,8 +43,8 @@ class Device(CoordinatorEntity, ClimateEntity):
         self._type = device["type"]
         self._characteristics = device["characteristics"]
         self._mode = 1
-        self._currentTemperature = 0
-        self._targetTemperature = 0
+        self._current_temperature = 0
+        self._target_temperature = 0
 
     @property
     def name(self):
@@ -112,8 +112,8 @@ class Device(CoordinatorEntity, ClimateEntity):
             if "state" in device:
                 state = device["state"]
                 if "currentTemperature" in state:
-                    self._currentTemperature = state["currentTemperature"]
-        return self._currentTemperature
+                    self._current_temperature = state["currentTemperature"]
+        return self._current_temperature
 
     @property
     def target_temperature(self):
@@ -126,8 +126,8 @@ class Device(CoordinatorEntity, ClimateEntity):
             if "state" in device:
                 state = device["state"]
                 if "targetTemperature" in state:
-                    self._targetTemperature = state["targetTemperature"]
-        return self._targetTemperature
+                    self._target_temperature = state["targetTemperature"]
+        return self._target_temperature
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Async function to set mode to climate."""
@@ -139,15 +139,15 @@ class Device(CoordinatorEntity, ClimateEntity):
             self._mode = 2
         payload = {"heatingCoolingState": self._mode}
         payload = json.dumps(payload)
-        await putState(self._hass, self._api_key, self._uid, payload)
+        await put_state(self._hass, self._api_key, self._uid, payload)
         await self.coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs):
         """Async function to set temperature to climate."""
         payload = {}
         if ATTR_TEMPERATURE in kwargs:
-            self._targetTemperature = kwargs[ATTR_TEMPERATURE]
-            payload["targetTemperature"] = self._targetTemperature
+            self._target_temperature = kwargs[ATTR_TEMPERATURE]
+            payload["targetTemperature"] = self._target_temperature
         payload = json.dumps(payload)
-        await putState(self._hass, self._api_key, self._uid, payload)
+        await put_state(self._hass, self._api_key, self._uid, payload)
         await self.coordinator.async_request_refresh()

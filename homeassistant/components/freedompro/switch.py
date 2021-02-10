@@ -11,7 +11,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DOMAIN
-from .utils import putState
+from .utils import put_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,7 +87,7 @@ class Device(CoordinatorEntity, SwitchEntity):
         self._on = True
         payload = {"on": self._on}
         payload = json.dumps(payload)
-        await putState(self._hass, self._api_key, self._uid, payload)
+        await put_state(self._hass, self._api_key, self._uid, payload)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
@@ -95,5 +95,5 @@ class Device(CoordinatorEntity, SwitchEntity):
         self._on = False
         payload = {"on": self._on}
         payload = json.dumps(payload)
-        await putState(self._hass, self._api_key, self._uid, payload)
+        await put_state(self._hass, self._api_key, self._uid, payload)
         await self.coordinator.async_request_refresh()

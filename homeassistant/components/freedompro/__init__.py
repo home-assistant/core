@@ -10,7 +10,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import COORDINATOR, DOMAIN, UNDO_UPDATE_LISTENER
-from .utils import getStates, list
+from .utils import get_list, get_states
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     undo_listener = entry.add_update_listener(update_listener)
 
-    print(entry.entry_id)
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,
         UNDO_UPDATE_LISTENER: undo_listener,
@@ -93,13 +92,13 @@ class FreedomproDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         if self._devices is None:
-            result = await list(self._hass, self._api_key)
+            result = await get_list(self._hass, self._api_key)
             if result["state"]:
                 self._devices = result["devices"]
             else:
                 raise UpdateFailed()
 
-        result = await getStates(self._hass, self._api_key)
+        result = await get_states(self._hass, self._api_key)
 
         devices = []
         for device in self._devices:

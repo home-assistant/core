@@ -15,7 +15,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DOMAIN
-from .utils import putState
+from .utils import put_state
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -70,10 +70,7 @@ class Device(CoordinatorEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return true if cover is closed."""
-        if self._position == 0:
-            return True
-        else:
-            return False
+        return bool(self._position == 0)
 
     @property
     def current_cover_position(self):
@@ -111,5 +108,5 @@ class Device(CoordinatorEntity, CoverEntity):
             self._position = kwargs[ATTR_POSITION]
             payload["position"] = self._position
         payload = json.dumps(payload)
-        await putState(self._hass, self._api_key, self._uid, payload)
+        await put_state(self._hass, self._api_key, self._uid, payload)
         await self.coordinator.async_request_refresh()

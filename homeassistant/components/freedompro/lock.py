@@ -6,7 +6,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DOMAIN
-from .utils import putState
+from .utils import put_state
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -64,17 +64,14 @@ class Device(CoordinatorEntity, LockEntity):
                 state = device["state"]
                 if "lock" in state:
                     self._lock = state["lock"]
-        if self._lock == 0:
-            return False
-        else:
-            return True
+        return not bool(self._lock == 0)
 
     async def async_lock(self, **kwargs):
         """Async function to lock the lock."""
         self._lock = 1
         payload = {"lock": self._lock}
         payload = json.dumps(payload)
-        await putState(self._hass, self._api_key, self._uid, payload)
+        await put_state(self._hass, self._api_key, self._uid, payload)
         await self.coordinator.async_request_refresh()
 
     async def async_unlock(self, **kwargs):
@@ -82,5 +79,5 @@ class Device(CoordinatorEntity, LockEntity):
         self._lock = 0
         payload = {"lock": self._lock}
         payload = json.dumps(payload)
-        await putState(self._hass, self._api_key, self._uid, payload)
+        await put_state(self._hass, self._api_key, self._uid, payload)
         await self.coordinator.async_request_refresh()

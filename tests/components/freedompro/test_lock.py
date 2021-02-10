@@ -24,7 +24,7 @@ async def test_lock_get_state(hass):
     )
 
 
-async def test_lock_set_on(hass):
+async def test_lock_set_lock(hass):
     """Test set on of the lock."""
     await init_integration(hass)
     registry = await hass.helpers.entity_registry.async_get_registry()

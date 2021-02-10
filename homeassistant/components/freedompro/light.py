@@ -13,7 +13,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DOMAIN
-from .utils import putState
+from .utils import put_state
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -123,7 +123,7 @@ class Device(CoordinatorEntity, LightEntity):
             payload["saturation"] = self._saturation
             payload["hue"] = self._hue
         payload = json.dumps(payload)
-        await putState(self._hass, self._api_key, self._uid, payload)
+        await put_state(self._hass, self._api_key, self._uid, payload)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
@@ -131,5 +131,5 @@ class Device(CoordinatorEntity, LightEntity):
         self._on = False
         payload = {"on": self._on}
         payload = json.dumps(payload)
-        await putState(self._hass, self._api_key, self._uid, payload)
+        await put_state(self._hass, self._api_key, self._uid, payload)
         await self.coordinator.async_request_refresh()

@@ -37,7 +37,7 @@ async def test_config_not_ready(hass):
     )
 
     with patch(
-        "homeassistant.components.freedompro.list",
+        "homeassistant.components.freedompro.get_list",
         return_value={
             "state": False,
         },
@@ -58,4 +58,3 @@ async def test_unload_entry(hass):
     await hass.async_block_till_done()
 
     assert entry.state == ENTRY_STATE_NOT_LOADED
-    assert not hass.data.get(DOMAIN)

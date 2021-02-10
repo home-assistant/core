@@ -6,7 +6,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DOMAIN
-from .utils import putState
+from .utils import put_state
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -66,12 +66,14 @@ class Device(CoordinatorEntity, FanEntity):
                     self._on = state["on"]
         return self._on
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(
+        self, speed=None, percentage=None, preset_mode=None, **kwargs
+    ):
         """Async function to set on to fan."""
         self._on = True
         payload = {"on": self._on}
         payload = json.dumps(payload)
-        await putState(self._hass, self._api_key, self._uid, payload)
+        await put_state(self._hass, self._api_key, self._uid, payload)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
@@ -79,5 +81,5 @@ class Device(CoordinatorEntity, FanEntity):
         self._on = False
         payload = {"on": self._on}
         payload = json.dumps(payload)
-        await putState(self._hass, self._api_key, self._uid, payload)
+        await put_state(self._hass, self._api_key, self._uid, payload)
         await self.coordinator.async_request_refresh()

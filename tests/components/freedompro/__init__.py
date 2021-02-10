@@ -19,13 +19,13 @@ async def init_integration(hass) -> MockConfigEntry:
     )
 
     with patch(
-        "homeassistant.components.freedompro.list",
+        "homeassistant.components.freedompro.get_list",
         return_value={
             "state": True,
             "devices": DEVICES,
         },
     ), patch(
-        "homeassistant.components.freedompro.getStates",
+        "homeassistant.components.freedompro.get_states",
         return_value=DEVICES_STATE,
     ):
         entry.add_to_hass(hass)

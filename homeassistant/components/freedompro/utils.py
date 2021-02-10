@@ -14,7 +14,7 @@ from .const import FREEDOMPRO_URL
 _LOGGER = logging.getLogger(__name__)
 
 
-async def list(hass, apikey):
+async def get_list(hass, apikey):
     """Return list of accessories."""
     headers = {
         AUTHORIZATION: f"Bearer {apikey}",
@@ -38,10 +38,10 @@ async def list(hass, apikey):
         return {"state": False, "code": -201}
 
     _LOGGER.error("HTTP error %d on %s", resp.status, FREEDOMPRO_URL)
-    return {"state": False, "code": -202}
+    return {"state": False, "code": -200}
 
 
-async def getStates(hass, apikey):
+async def get_states(hass, apikey):
     """Return state of accessories."""
     headers = {
         AUTHORIZATION: f"Bearer {apikey}",
@@ -61,7 +61,7 @@ async def getStates(hass, apikey):
         return []
 
 
-async def putState(hass, apikey, uid, payload):
+async def put_state(hass, apikey, uid, payload):
     """Set state of accessory."""
     headers = {
         AUTHORIZATION: f"Bearer {apikey}",
