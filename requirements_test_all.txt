@@ -390,7 +390,7 @@ hangups==0.4.11
 hass-nabucasa==0.41.0
 
 # homeassistant.components.tasmota
-hatasmota==0.2.7
+hatasmota==0.2.8
 
 # homeassistant.components.jewish_calendar
 hdate==0.9.12
@@ -974,7 +974,7 @@ pywebpush==1.9.2
 pywemo==0.6.1
 
 # homeassistant.components.wilight
-pywilight==0.0.66
+pywilight==0.0.68
 
 # homeassistant.components.zerproc
 pyzerproc==0.4.7
