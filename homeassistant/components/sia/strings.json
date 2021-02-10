@@ -20,7 +20,7 @@
           "encryption_key": "Encryption Key",
           "ping_interval": "Ping Interval (min)",
           "zones": "Number of zones for the account",
-          "ignore_timestamps": "Ignre the timestamp check of the SIA events",
+          "ignore_timestamps": "Ignore the timestamp check of the SIA events",
           "additional_account": "Add more accounts?"
         },
         "title": "Add another account to the current port."

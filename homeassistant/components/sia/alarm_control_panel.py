@@ -157,7 +157,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
             self.state = state.state
         else:
             self.state = None
-        await self._async_track_unavailable()
+        self._async_track_unavailable()
         async_dispatcher_connect(
             self.hass, DATA_UPDATED, self._schedule_immediate_update
         )
@@ -174,29 +174,33 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         if self._remove_unavailability_tracker:
             self._remove_unavailability_tracker()
 
-    async def async_handle_event(self, event: Event):
+    @callback
+    def async_handle_event(self, event: Event):
         """Listen to events for this port and account and update states.
 
         If the port and account combo receives any message it means it is online and can therefore be set to available.
         """
-        await self.assume_available()
-        if int(event.data[EVENT_ZONE]) == self._zone:
-            new_state = CODE_CONSEQUENCES.get(event.data[EVENT_CODE])
-            if new_state:
-                self._attr.update(
-                    {
-                        ATTR_LAST_MESSAGE: event.data[EVENT_MESSAGE],
-                        ATTR_LAST_CODE: event.data[EVENT_CODE],
-                        ATTR_LAST_TIMESTAMP: event.data[EVENT_TIMESTAMP],
-                    }
-                )
-                self.state = new_state
-                if not self.registry_entry.disabled:
-                    self.async_schedule_update_ha_state()
+        self.assume_available()
+        new_state = CODE_CONSEQUENCES.get(event.data[EVENT_CODE])
+        if (
+            int(event.data[EVENT_ZONE]) != self._zone
+            or self.registry_entry.disabled
+            or new_state is None
+        ):
+            return
+        self._attr.update(
+            {
+                ATTR_LAST_MESSAGE: event.data[EVENT_MESSAGE],
+                ATTR_LAST_CODE: event.data[EVENT_CODE],
+                ATTR_LAST_TIMESTAMP: event.data[EVENT_TIMESTAMP],
+            }
+        )
+        self.state = new_state
+        self.async_write_ha_state()
 
     @callback
     def _schedule_immediate_update(self):
-        self.async_schedule_update_ha_state(True)
+        self.async_write_ha_state()
 
     @property
     def name(self) -> str:
@@ -245,13 +249,13 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         self._old_state = self._state
         self._state = temp
 
-    async def assume_available(self):
+    def assume_available(self):
         """Reset unavalability tracker."""
         if not self.registry_entry.disabled:
-            await self._async_track_unavailable()
+            self._async_track_unavailable()
 
     @callback
-    async def _async_track_unavailable(self) -> bool:
+    def _async_track_unavailable(self) -> bool:
         """Reset unavailability."""
         if self._remove_unavailability_tracker:
             self._remove_unavailability_tracker()
@@ -262,7 +266,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         )
         if not self._is_available:
             self._is_available = True
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
             return True
         return False
 
@@ -271,7 +275,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         """Set availability."""
         self._remove_unavailability_tracker = None
         self._is_available = False
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def supported_features(self) -> int:
