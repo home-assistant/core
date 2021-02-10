@@ -38,13 +38,13 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
         if not entity.is_supported():
             return
 
-        if not checker.async_is_significant_change(new_state):
-            return
-
         try:
             entity_data = entity.query_serialize()
         except SmartHomeError as err:
             _LOGGER.debug("Not reporting state for %s: %s", changed_entity, err.code)
+            return
+
+        if not checker.async_is_significant_change(new_state, extra_arg=entity_data):
             return
 
         _LOGGER.debug("Reporting state for %s: %s", changed_entity, entity_data)
@@ -53,26 +53,43 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
             {"devices": {"states": {changed_entity: entity_data}}}
         )
 
+    @callback
+    def extra_significant_check(
+        hass: HomeAssistant,
+        old_state: str,
+        old_attrs: dict,
+        old_extra_arg: dict,
+        new_state: str,
+        new_attrs: dict,
+        new_extra_arg: dict,
+    ):
+        """Check if the serialized data has changed."""
+        return old_extra_arg != new_extra_arg
+
     async def inital_report(_now):
         """Report initially all states."""
         nonlocal unsub, checker
         entities = {}
 
-        checker = await create_checker(hass, DOMAIN)
+        checker = await create_checker(hass, DOMAIN, extra_significant_check)
 
         for entity in async_get_entities(hass, google_config):
             if not entity.should_expose():
                 continue
 
-            # Tell our significant change checker that we're reporting
-            # So it knows with subsequent changes what was already reported.
-            if not checker.async_is_significant_change(entity.state):
-                continue
-
             try:
-                entities[entity.entity_id] = entity.query_serialize()
+                entity_data = entity.query_serialize()
             except SmartHomeError:
                 continue
+
+            # Tell our significant change checker that we're reporting
+            # So it knows with subsequent changes what was already reported.
+            if not checker.async_is_significant_change(
+                entity.state, extra_arg=entity_data
+            ):
+                continue
+
+            entities[entity.entity_id] = entity_data
 
         if not entities:
             return
