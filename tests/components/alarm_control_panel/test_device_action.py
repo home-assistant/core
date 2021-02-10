@@ -324,7 +324,7 @@ async def test_action(hass):
     await hass.async_block_till_done()
     assert (
         hass.states.get("alarm_control_panel.alarm_no_arm_code").state
-        == STATE_ALARM_ARMED_NIGHT
+        == STATE_ALARM_ARMED_VACATION
     )
 
     hass.bus.async_fire("test_event_disarm")
