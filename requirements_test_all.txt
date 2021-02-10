@@ -1105,7 +1105,7 @@ synologydsm-api==1.0.1
 tellduslive==0.10.11
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.3.3
+tesla-powerwall==0.3.5
 
 # homeassistant.components.tesla
 teslajsonpy==0.11.5
