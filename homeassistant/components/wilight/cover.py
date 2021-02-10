@@ -53,10 +53,6 @@ def hass_to_wilight_position(value):
 class WiLightCover(WiLightDevice, CoverEntity):
     """Representation of a WiLights cover."""
 
-    def __init__(self, api_device, index, item_name):
-        """Initialize the device."""
-        super().__init__(api_device, index, item_name)
-
     @property
     def current_cover_position(self):
         """Return current position of cover.
