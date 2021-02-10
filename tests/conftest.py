@@ -121,7 +121,13 @@ def hass_storage():
 
 
 @pytest.fixture
-def hass(loop, hass_storage, request):
+def load_registries():
+    """Fixture to disable loading registries."""
+    return True
+
+
+@pytest.fixture
+def hass(loop, load_registries, hass_storage, request):
     """Fixture to provide a test instance of Home Assistant."""
 
     def exc_handle(loop, context):
@@ -141,7 +147,7 @@ def hass(loop, hass_storage, request):
         orig_exception_handler(loop, context)
 
     exceptions = []
-    hass = loop.run_until_complete(async_test_home_assistant(loop))
+    hass = loop.run_until_complete(async_test_home_assistant(loop, load_registries))
     orig_exception_handler = loop.get_exception_handler()
     loop.set_exception_handler(exc_handle)
 
