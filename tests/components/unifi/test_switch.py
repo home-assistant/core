@@ -17,6 +17,7 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.components.unifi.switch import POE_SWITCH
 from homeassistant.helpers import entity_registry
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .test_controller import (
     CONTROLLER_HOST,
@@ -370,6 +371,7 @@ async def test_switches(hass, aioclient_mock):
     dpi_switch = hass.states.get("switch.block_media_streaming")
     assert dpi_switch is not None
     assert dpi_switch.state == "on"
+    assert dpi_switch.attributes["icon"] == "mdi:network"
 
     # Block and unblock client
 
@@ -418,6 +420,11 @@ async def test_switches(hass, aioclient_mock):
     )
     assert aioclient_mock.call_count == 14
     assert aioclient_mock.mock_calls[13][2] == {"enabled": True}
+
+    # Make sure no duplicates arise on generic signal update
+    async_dispatcher_send(hass, controller.signal_update)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 4
 
 
 async def test_remove_switches(hass, aioclient_mock):
