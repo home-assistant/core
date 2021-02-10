@@ -10,6 +10,7 @@ import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
 from pychromecast.controllers.multizone import MultizoneManager
 from pychromecast.controllers.plex import PlexController
+from pychromecast.controllers.receiver import VOLUME_CONTROL_TYPE_FIXED
 from pychromecast.quick_play import quick_play
 from pychromecast.socket_client import (
     CONNECTION_STATUS_CONNECTED,
@@ -82,8 +83,6 @@ SUPPORT_CAST = (
     | SUPPORT_STOP
     | SUPPORT_TURN_OFF
     | SUPPORT_TURN_ON
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
 )
 
 
@@ -742,6 +741,10 @@ class CastDevice(MediaPlayerEntity):
         """Flag media player features that are supported."""
         support = SUPPORT_CAST
         media_status = self._media_status()[0]
+
+        if self.cast_status:
+            if self.cast_status.volume_control_type != VOLUME_CONTROL_TYPE_FIXED:
+                support |= SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
 
         if media_status:
             if media_status.supports_queue_next:
