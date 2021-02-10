@@ -45,6 +45,7 @@ from .schema import (
     ConnectionSchema,
     CoverSchema,
     ExposeSchema,
+    FanSchema,
     LightSchema,
     NotifySchema,
     SceneSchema,
@@ -135,6 +136,9 @@ CONFIG_SCHEMA = vol.Schema(
                     ),
                     vol.Optional(SupportedPlatforms.weather.value): vol.All(
                         cv.ensure_list, [WeatherSchema.SCHEMA]
+                    ),
+                    vol.Optional(SupportedPlatforms.fan.value): vol.All(
+                        cv.ensure_list, [FanSchema.SCHEMA]
                     ),
                 }
             ),
