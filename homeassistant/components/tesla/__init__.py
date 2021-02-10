@@ -226,7 +226,7 @@ def _async_start_reauth(hass: HomeAssistant, entry: ConfigEntry):
             data=entry.data,
         )
     )
-    _LOGGER.error("Credentials are is no longer valid. Please reauthenticate")
+    _LOGGER.error("Credentials are no longer valid. Please reauthenticate")
 
 
 async def update_listener(hass, config_entry):
