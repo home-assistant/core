@@ -16,7 +16,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
 from homeassistant.helpers.entity import ToggleEntity
