@@ -7,9 +7,7 @@ from aioasuswrt.asuswrt import AsusWrt
 
 from homeassistant.components.device_tracker.const import (
     CONF_CONSIDER_HOME,
-    CONF_TRACK_NEW,
     DEFAULT_CONSIDER_HOME,
-    DEFAULT_TRACK_NEW,
     DOMAIN as TRACKER_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -183,23 +181,21 @@ class AsusWrtRouter:
         consider_home = self._options.get(
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
         )
-        track_new = self._options.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
         track_unknown = self._options.get(CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN)
 
         for device_mac in self._devices:
             dev_info = wrt_devices.get(device_mac)
             self._devices[device_mac].update(dev_info, consider_home)
 
-        if track_new:
-            for device_mac, dev_info in wrt_devices.items():
-                if device_mac in self._devices:
-                    continue
-                if not track_unknown and not dev_info.name:
-                    continue
-                new_device = True
-                device = AsusWrtDevInfo(device_mac)
-                device.update(dev_info)
-                self._devices[device_mac] = device
+        for device_mac, dev_info in wrt_devices.items():
+            if device_mac in self._devices:
+                continue
+            if not track_unknown and not dev_info.name:
+                continue
+            new_device = True
+            device = AsusWrtDevInfo(device_mac)
+            device.update(dev_info)
+            self._devices[device_mac] = device
 
         async_dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
