@@ -122,7 +122,11 @@ def hass_storage():
 
 @pytest.fixture
 def load_registries():
-    """Fixture to disable loading registries."""
+    """Fixture to control the loading of registries when setting up the hass fixture.
+
+    To avoid loading the registries, tests can be marked with:
+    @pytest.mark.parametrize("load_registries", [False])
+    """
     return True
 
 
