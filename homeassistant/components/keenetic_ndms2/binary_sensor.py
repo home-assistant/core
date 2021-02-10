@@ -23,8 +23,6 @@ async def async_setup_entry(
 
     async_add_entities([RouterOnlineBinarySensor(router)])
 
-    return True
-
 
 class RouterOnlineBinarySensor(BinarySensorEntity):
     """Representation router connection status."""
@@ -41,7 +39,7 @@ class RouterOnlineBinarySensor(BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        return f"online@{self.router.config_entry.entry_id}"
+        return f"online_{self.router.config_entry.entry_id}"
 
     @property
     def is_on(self):
@@ -69,6 +67,6 @@ class RouterOnlineBinarySensor(BinarySensorEntity):
             async_dispatcher_connect(
                 self.hass,
                 self.router.signal_update,
-                self.async_schedule_update_ha_state,
+                self.async_write_ha_state,
             )
         )

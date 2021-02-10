@@ -45,7 +45,7 @@ async def async_setup_entry(
             entity_entry.config_entry_id == config_entry.entry_id
             and entity_entry.domain == DEVICE_TRACKER_DOMAIN
         ):
-            mac = entity_entry.unique_id.partition("@")[0]
+            mac = entity_entry.unique_id.partition("_")[0]
             if mac not in tracked:
                 tracked.add(mac)
                 restored.append(
@@ -65,8 +65,6 @@ async def async_setup_entry(
         async_add_entities(restored)
 
     async_dispatcher_connect(hass, router.signal_update, update_from_router)
-
-    return True
 
 
 @callback
@@ -120,7 +118,17 @@ class KeeneticTracker(ScannerEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        return f"{self.device.mac}@{self.router.config_entry.entry_id}"
+        return f"{self.device.mac}_{self.router.config_entry.entry_id}"
+
+    @property
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return self.device.ip if self.is_connected else None
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self.device.mac
 
     @property
     def available(self) -> bool:
@@ -132,7 +140,6 @@ class KeeneticTracker(ScannerEntity):
         """Return the device state attributes."""
         if self.is_connected:
             return {
-                "ip": self.device.ip,
                 "interface": self.device.interface,
             }
         return None
@@ -166,7 +173,7 @@ class KeeneticTracker(ScannerEntity):
                 self.device = new_device
                 self._last_seen = dt_util.utcnow()
 
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(

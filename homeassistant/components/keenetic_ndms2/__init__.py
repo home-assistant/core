@@ -7,6 +7,8 @@ from homeassistant.core import Config, HomeAssistant
 from .const import DOMAIN
 from .router import KeeneticRouter
 
+PLATFORMS = [device_tracker.DOMAIN, binary_sensor.DOMAIN]
+
 
 async def async_setup(hass: HomeAssistant, _config: Config) -> bool:
     """Set up configured entries."""
@@ -21,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await router.async_setup()
 
     hass.data[DOMAIN][config_entry.entry_id] = router
-    for component in [device_tracker.DOMAIN, binary_sensor.DOMAIN]:
+    for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )

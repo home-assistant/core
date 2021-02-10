@@ -14,10 +14,10 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import async_call_later
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -100,24 +100,6 @@ class KeeneticRouter:
         """Event specific per router entry to signal updates."""
         return f"keenetic-update-{self.config_entry.entry_id}"
 
-    async def async_add_defaults(self):
-        """Populate default options."""
-        data = dict(self.config_entry.data)
-        options = {
-            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-            CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME,
-            CONF_INTERFACES: [DEFAULT_INTERFACE],
-            CONF_TRY_HOTSPOT: True,
-            CONF_INCLUDE_ARP: True,
-            CONF_INCLUDE_ASSOCIATED: True,
-            **self.config_entry.options,
-        }
-
-        if options.keys() - self.config_entry.options.keys():
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, data=data, options=options
-            )
-
     async def request_update(self):
         """Request an update."""
         if self.progress is not None:
@@ -150,15 +132,14 @@ class KeeneticRouter:
         except ConnectionException as error:
             raise ConfigEntryNotReady from error
 
-        await self.async_add_defaults()
+        self._async_add_defaults()
 
         async def async_update_data(_now):
             await self.request_update()
-            self._cancel_periodic_update = async_track_point_in_utc_time(
+            self._cancel_periodic_update = async_call_later(
                 self.hass,
+                self.config_entry.options[CONF_SCAN_INTERVAL],
                 async_update_data,
-                dt_util.utcnow()
-                + timedelta(seconds=self.config_entry.options[CONF_SCAN_INTERVAL]),
             )
 
         await async_update_data(dt_util.utcnow())
@@ -167,6 +148,25 @@ class KeeneticRouter:
         """Teardown up the connection."""
         if self._cancel_periodic_update:
             self._cancel_periodic_update()
+
+    @callback
+    def _async_add_defaults(self):
+        """Populate default options."""
+        data = dict(self.config_entry.data)
+        options = {
+            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+            CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME,
+            CONF_INTERFACES: [DEFAULT_INTERFACE],
+            CONF_TRY_HOTSPOT: True,
+            CONF_INCLUDE_ARP: True,
+            CONF_INCLUDE_ASSOCIATED: True,
+            **self.config_entry.options,
+        }
+
+        if options.keys() - self.config_entry.options.keys():
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data=data, options=options
+            )
 
     def _update_router_info(self):
         try:
