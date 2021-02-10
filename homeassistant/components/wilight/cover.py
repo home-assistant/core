@@ -84,9 +84,12 @@ class WiLightCover(WiLightDevice, CoverEntity):
     @property
     def is_closed(self):
         """Return if the cover is closed or not."""
-        if "motor_state" not in self._status or "position_current" not in self._status::
-		    return None
-        return self._status["motor_state"] == WL_STOPPED and wilight_to_hass_position(self._status["position_current"]) == 0 
+        if "motor_state" not in self._status or "position_current" not in self._status:
+            return None
+        return (
+            self._status["motor_state"] == WL_STOPPED
+            and wilight_to_hass_position(self._status["position_current"]) == 0
+        )
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
