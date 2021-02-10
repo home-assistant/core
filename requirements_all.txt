@@ -450,9 +450,6 @@ coronavirus==1.1.1
 # homeassistant.scripts.credstash
 # credstash==1.15.0
 
-# homeassistant.components.crimereports
-crimereports==1.0.1
-
 # homeassistant.components.datadog
 datadog==0.15.0
 
