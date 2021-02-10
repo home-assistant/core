@@ -14,6 +14,7 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    TypedDict,
     Union,
     cast,
 )
@@ -68,6 +69,15 @@ CONF_SERVICE_DATA_TEMPLATE = "data_template"
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_DESCRIPTION_CACHE = "service_description_cache"
+
+
+class ServiceParams(TypedDict):
+    """Type for service call parameters."""
+
+    domain: str
+    service: str
+    service_data: Dict[str, Any]
+    target: Optional[Dict]
 
 
 @dataclasses.dataclass
@@ -136,7 +146,7 @@ async def async_call_from_config(
             raise
         _LOGGER.error(ex)
     else:
-        await hass.services.async_call(*params, blocking, context)
+        await hass.services.async_call(**params, blocking=blocking, context=context)
 
 
 @ha.callback
@@ -146,7 +156,7 @@ def async_prepare_call_from_config(
     config: ConfigType,
     variables: TemplateVarsType = None,
     validate_config: bool = False,
-) -> Tuple[str, str, Dict[str, Any]]:
+) -> ServiceParams:
     """Prepare to call a service based on a config hash."""
     if validate_config:
         try:
@@ -177,10 +187,9 @@ def async_prepare_call_from_config(
 
     domain, service = domain_service.split(".", 1)
 
-    service_data = {}
+    target = config.get(CONF_TARGET)
 
-    if CONF_TARGET in config:
-        service_data.update(config[CONF_TARGET])
+    service_data = {}
 
     for conf in [CONF_SERVICE_DATA, CONF_SERVICE_DATA_TEMPLATE]:
         if conf not in config:
@@ -192,9 +201,17 @@ def async_prepare_call_from_config(
             raise HomeAssistantError(f"Error rendering data template: {ex}") from ex
 
     if CONF_SERVICE_ENTITY_ID in config:
-        service_data[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
+        if target:
+            target[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
+        else:
+            target = {ATTR_ENTITY_ID: config[CONF_SERVICE_ENTITY_ID]}
 
-    return domain, service, service_data
+    return {
+        "domain": domain,
+        "service": service,
+        "service_data": service_data,
+        "target": target,
+    }
 
 
 @bind_hass
@@ -431,6 +448,7 @@ async def async_get_all_descriptions(
 
                 description = descriptions_cache[cache_key] = {
                     "description": yaml_description.get("description", ""),
+                    "target": yaml_description.get("target"),
                     "fields": yaml_description.get("fields", {}),
                 }
 

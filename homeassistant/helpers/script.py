@@ -433,14 +433,14 @@ class _ScriptRun:
         self._script.last_action = self._action.get(CONF_ALIAS, "call service")
         self._log("Executing step %s", self._script.last_action)
 
-        domain, service_name, service_data = service.async_prepare_call_from_config(
+        params = service.async_prepare_call_from_config(
             self._hass, self._action, self._variables
         )
 
         running_script = (
-            domain == "automation"
-            and service_name == "trigger"
-            or domain in ("python_script", "script")
+            params["domain"] == "automation"
+            and params["service_name"] == "trigger"
+            or params["domain"] in ("python_script", "script")
         )
         # If this might start a script then disable the call timeout.
         # Otherwise use the normal service call limit.
@@ -451,9 +451,7 @@ class _ScriptRun:
 
         service_task = self._hass.async_create_task(
             self._hass.services.async_call(
-                domain,
-                service_name,
-                service_data,
+                **params,
                 blocking=True,
                 context=self._context,
                 limit=limit,
