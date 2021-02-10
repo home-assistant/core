@@ -20,9 +20,9 @@ async def test_discovery_new_devices_single_netif(hass):
 
     device = get_device("Office")
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        *_, mock_discovery = await device.setup_entry(hass, mock_discovery=results)
+        mock_setup = await device.setup_entry(hass, mock_discovery=results)
 
-    assert mock_discovery.call_count == 1
+    assert mock_setup.discovery.call_count == 1
     assert mock_init.call_count == len(devices) - 1
 
 
@@ -36,9 +36,9 @@ async def test_discovery_new_devices_mult_netifs(hass):
 
     device = get_device("Office")
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        *_, mock_discovery = await device.setup_entry(hass, mock_discovery=results)
+        mock_setup = await device.setup_entry(hass, mock_discovery=results)
 
-    assert mock_discovery.call_count == 2
+    assert mock_setup.discovery.call_count == 2
     assert mock_init.call_count == len(devices_a) + len(devices_b) - 1
 
 
@@ -48,9 +48,9 @@ async def test_discovery_no_devices(hass):
 
     device = get_device("Office")
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        *_, mock_discovery = await device.setup_entry(hass, mock_discovery=results)
+        mock_setup = await device.setup_entry(hass, mock_discovery=results)
 
-    assert mock_discovery.call_count == 1
+    assert mock_setup.discovery.call_count == 1
     assert mock_init.call_count == 0
 
 
@@ -63,9 +63,9 @@ async def test_discovery_already_known_device(hass):
 
     device_b = get_device("Bedroom")
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        *_, mock_discovery = await device_b.setup_entry(hass, mock_discovery=results)
+        mock_setup = await device_b.setup_entry(hass, mock_discovery=results)
 
-    assert mock_discovery.call_count == 1
+    assert mock_setup.discovery.call_count == 1
     assert mock_init.call_count == 0
 
 
@@ -76,16 +76,16 @@ async def test_discovery_unsupported_device(hass):
 
     device = get_device("Entrance")
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        *_, mock_discovery = await device.setup_entry(hass, mock_discovery=results)
+        mock_setup = await device.setup_entry(hass, mock_discovery=results)
 
-    assert mock_discovery.call_count == 1
+    assert mock_setup.discovery.call_count == 1
     assert mock_init.call_count == 0
 
 
 async def test_discovery_update_ip_address(hass):
     """Test we update the entry when a known device is discovered with a different IP address."""
     device = get_device("Living Room")
-    _, mock_entry, _ = await device.setup_entry(hass)
+    mock_setup = await device.setup_entry(hass)
 
     previous_host = device.host
     device.host = "192.168.1.128"
@@ -98,8 +98,8 @@ async def test_discovery_update_ip_address(hass):
         async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=10))
         await hass.async_block_till_done()
 
+    assert mock_setup.entry.data["host"] == device.host
     assert mock_host.call_count == 2
-    assert mock_entry.data["host"] == device.host
 
 
 async def test_discovery_update_hostname(hass):
@@ -108,7 +108,7 @@ async def test_discovery_update_hostname(hass):
     results = device.get_mock_discovery()
     device.host = "invalidhostname"
 
-    _, mock_entry, _ = await device.setup_entry(hass, mock_discovery=results)
+    mock_setup = await device.setup_entry(hass, mock_discovery=results)
 
     device.host = "192.168.1.128"
     results = device.get_mock_discovery() * 2
@@ -120,8 +120,8 @@ async def test_discovery_update_hostname(hass):
         async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=10))
         await hass.async_block_till_done()
 
+    assert mock_setup.entry.data["host"] == device.host
     assert mock_host.call_count == 2
-    assert mock_entry.data["host"] == device.host
 
 
 async def test_discovery_do_not_change_hostname(hass):
@@ -130,7 +130,7 @@ async def test_discovery_do_not_change_hostname(hass):
     results = device.get_mock_discovery()
     device.host = "somethingthatworks"
 
-    _, mock_entry, _ = await device.setup_entry(hass, mock_discovery=results)
+    mock_setup = await device.setup_entry(hass, mock_discovery=results)
 
     with device.patch_setup(mock_discovery=results), patch(
         "homeassistant.components.broadlink.helpers.socket.gethostbyname",
@@ -139,14 +139,14 @@ async def test_discovery_do_not_change_hostname(hass):
         async_fire_time_changed(hass, dt.utcnow() + timedelta(minutes=10))
         await hass.async_block_till_done()
 
+    assert mock_setup.entry.data["host"] == "somethingthatworks"
     assert mock_host.call_count == 1
-    assert mock_entry.data["host"] == "somethingthatworks"
 
 
 async def test_discovery_ignore_os_error(hass):
     """Test we do not propagate an OS error during a discovery."""
     device = get_device("Living Room")
-    _, mock_entry, _ = await device.setup_entry(hass)
+    await device.setup_entry(hass)
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_init, patch(
         "homeassistant.components.broadlink.get_broadcast_addrs",
@@ -171,7 +171,7 @@ async def test_discovery_run_once(hass):
     num_calls = 0
 
     for device in map(get_device, devices):
-        *_, mock_discovery = await device.setup_entry(hass)
-        num_calls += mock_discovery.call_count
+        mock_setup = await device.setup_entry(hass)
+        num_calls += mock_setup.discovery.call_count
 
     assert num_calls == 1

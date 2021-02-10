@@ -91,22 +91,46 @@ BROADLINK_DEVICES = {
 }
 
 
+class MockSetup:
+    """Representation of a mock setup."""
+
+    def __init__(
+        self,
+        api: MagicMock,
+        entry: MockConfigEntry,
+        discovery: MagicMock,
+    ):
+        """Initialize the mock setup."""
+        self.api = api
+        self.entry = entry
+        self.discovery = discovery
+
+
 class BroadlinkDevice:
     """Representation of a Broadlink device."""
 
     def __init__(
-        self, name, host, mac, model, manufacturer, type_, devtype, fwversion, timeout
+        self,
+        name: str,
+        host: str,
+        mac: str,
+        model: str,
+        manufacturer: str,
+        type_: str,
+        devtype: int,
+        fwversion: int,
+        timeout: int,
     ):
         """Initialize the device."""
-        self.name: str = name
-        self.host: str = host
-        self.mac: str = mac
-        self.model: str = model
-        self.manufacturer: str = manufacturer
-        self.type: str = type_
-        self.devtype: int = devtype
-        self.timeout: int = timeout
-        self.fwversion: int = fwversion
+        self.name = name
+        self.host = host
+        self.mac = mac
+        self.model = model
+        self.manufacturer = manufacturer
+        self.type = type_
+        self.devtype = devtype
+        self.timeout = timeout
+        self.fwversion = fwversion
 
     async def setup_entry(
         self, hass, mock_api=None, mock_entry=None, mock_discovery=None
@@ -119,7 +143,7 @@ class BroadlinkDevice:
             await hass.config_entries.async_setup(mock_entry.entry_id)
             await hass.async_block_till_done()
 
-        return mock_api, mock_entry, mock_discovery
+        return MockSetup(mock_api, mock_entry, mock_discovery)
 
     @contextmanager
     def patch_setup(self, mock_api=None, mock_discovery=None):
