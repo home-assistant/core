@@ -15,14 +15,7 @@ from .utils import get_list, get_states
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    "switch",
     "light",
-    "fan",
-    "lock",
-    "cover",
-    "climate",
-    "binary_sensor",
-    "sensor",
 ]
 
 
