@@ -97,9 +97,8 @@ class WiLightCover(WiLightDevice, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        if ATTR_POSITION in kwargs:
-            position = hass_to_wilight_position(kwargs[ATTR_POSITION])
-            await self._client.set_cover_position(self._index, position)
+        position = hass_to_wilight_position(kwargs[ATTR_POSITION])
+        await self._client.set_cover_position(self._index, position)
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
