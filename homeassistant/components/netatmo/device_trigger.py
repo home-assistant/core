@@ -5,6 +5,9 @@ import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -60,13 +63,32 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
+async def async_validate_trigger_config(hass, config):
+    """Validate config."""
+    config = TRIGGER_SCHEMA(config)
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device = device_registry.async_get(config[CONF_DEVICE_ID])
+
+    trigger = config[CONF_TYPE]
+
+    if (
+        not device
+        or device.model not in DEVICES
+        or trigger not in DEVICES[device.model]
+    ):
+        raise InvalidDeviceAutomationConfig
+
+    return config
+
+
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
     """List device triggers for Netatmo devices."""
     registry = await entity_registry.async_get_registry(hass)
+    device_registry = await hass.helpers.device_registry.async_get_registry()
     triggers = []
 
     for entry in entity_registry.async_entries_for_device(registry, device_id):
-        device_registry = await hass.helpers.device_registry.async_get_registry()
         device = device_registry.async_get(device_id)
 
         for trigger in DEVICES.get(device.model, []):

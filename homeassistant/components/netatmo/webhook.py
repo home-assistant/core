@@ -83,13 +83,13 @@ async def async_send_event(hass, event_type, data):
     if event_type not in EVENT_ID_MAP:
         return
 
+    data_device_id = data[EVENT_ID_MAP[event_type]]
+
     hass.bus.async_fire(
         event_type=NETATMO_EVENT,
         event_data={
             "type": event_type,
             "data": data,
-            ATTR_DEVICE_ID: hass.data[DOMAIN][DATA_DEVICE_IDS].get(
-                data.get(EVENT_ID_MAP.get(event_type))
-            ),
+            ATTR_DEVICE_ID: hass.data[DOMAIN][DATA_DEVICE_IDS].get(data_device_id),
         },
     )
