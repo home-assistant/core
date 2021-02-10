@@ -78,6 +78,9 @@ SERVICE_SET_PERSONS_HOME = "set_persons_home"
 SERVICE_SET_PERSON_AWAY = "set_person_away"
 
 EVENT_TYPE_CANCEL_SET_POINT = "cancel_set_point"
+EVENT_TYPE_THERM_MODE = "therm_mode"
+EVENT_TYPE_HOME_EVENT_CHANGED = "home_event_changed"
+# Camera events
 EVENT_TYPE_LIGHT_MODE = "light_mode"
 EVENT_TYPE_OFF = "off"
 EVENT_TYPE_ON = "on"

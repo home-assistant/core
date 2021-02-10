@@ -1,0 +1,595 @@
+{
+    "body": {
+        "homes": [
+            {
+                "id": "91763b24c43d3e344f424e8b",
+                "name": "MYHOME",
+                "altitude": 112,
+                "coordinates": [
+                    52.516263,
+                    13.377726
+                ],
+                "country": "DE",
+                "timezone": "Europe/Berlin",
+                "rooms": [
+                    {
+                        "id": "2746182631",
+                        "name": "Livingroom",
+                        "type": "livingroom",
+                        "module_ids": [
+                            "12:34:56:00:01:ae"
+                        ]
+                    },
+                    {
+                        "id": "3688132631",
+                        "name": "Hall",
+                        "type": "custom",
+                        "module_ids": [
+                            "12:34:56:00:f1:62"
+                        ]
+                    },
+                    {
+                        "id": "2833524037",
+                        "name": "Entrada",
+                        "type": "lobby",
+                        "module_ids": [
+                            "12:34:56:03:a5:54"
+                        ]
+                    },
+                    {
+                        "id": "2940411577",
+                        "name": "Cocina",
+                        "type": "kitchen",
+                        "module_ids": [
+                            "12:34:56:03:a0:ac"
+                        ]
+                    }
+                ],
+                "modules": [
+                    {
+                        "id": "12:34:56:00:fa:d0",
+                        "type": "NAPlug",
+                        "name": "Thermostat",
+                        "setup_date": 1494963356,
+                        "modules_bridged": [
+                            "12:34:56:00:01:ae",
+                            "12:34:56:03:a0:ac",
+                            "12:34:56:03:a5:54"
+                        ]
+                    },
+                    {
+                        "id": "12:34:56:00:01:ae",
+                        "type": "NATherm1",
+                        "name": "Livingroom",
+                        "setup_date": 1494963356,
+                        "room_id": "2746182631",
+                        "bridge": "12:34:56:00:fa:d0"
+                    },
+                    {
+                        "id": "12:34:56:03:a5:54",
+                        "type": "NRV",
+                        "name": "Valve1",
+                        "setup_date": 1554549767,
+                        "room_id": "2833524037",
+                        "bridge": "12:34:56:00:fa:d0"
+                    },
+                    {
+                        "id": "12:34:56:03:a0:ac",
+                        "type": "NRV",
+                        "name": "Valve2",
+                        "setup_date": 1554554444,
+                        "room_id": "2940411577",
+                        "bridge": "12:34:56:00:fa:d0"
+                    },
+                    {
+                        "id": "12:34:56:00:f1:62",
+                        "type": "NACamera",
+                        "name": "Hall",
+                        "setup_date": 1544828430,
+                        "room_id": "3688132631"
+                    }
+                ],
+                "therm_schedules": [
+                    {
+                        "zones": [
+                            {
+                                "type": 0,
+                                "name": "Comfort",
+                                "rooms_temp": [
+                                    {
+                                        "temp": 21,
+                                        "room_id": "2746182631"
+                                    }
+                                ],
+                                "id": 0
+                            },
+                            {
+                                "type": 1,
+                                "name": "Night",
+                                "rooms_temp": [
+                                    {
+                                        "temp": 17,
+                                        "room_id": "2746182631"
+                                    }
+                                ],
+                                "id": 1
+                            },
+                            {
+                                "type": 5,
+                                "name": "Eco",
+                                "rooms_temp": [
+                                    {
+                                        "temp": 17,
+                                        "room_id": "2746182631"
+                                    }
+                                ],
+                                "id": 4
+                            }
+                        ],
+                        "timetable": [
+                            {
+                                "zone_id": 1,
+                                "m_offset": 0
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 360
+                            },
+                            {
+                                "zone_id": 4,
+                                "m_offset": 420
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 960
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 1410
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 1800
+                            },
+                            {
+                                "zone_id": 4,
+                                "m_offset": 1860
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 2400
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 2850
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 3240
+                            },
+                            {
+                                "zone_id": 4,
+                                "m_offset": 3300
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 3840
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 4290
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 4680
+                            },
+                            {
+                                "zone_id": 4,
+                                "m_offset": 4740
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 5280
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 5730
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 6120
+                            },
+                            {
+                                "zone_id": 4,
+                                "m_offset": 6180
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 6720
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 7170
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 7620
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 8610
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 9060
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 10050
+                            }
+                        ],
+                        "hg_temp": 7,
+                        "away_temp": 14,
+                        "name": "Default",
+                        "selected": true,
+                        "id": "591b54a2764ff4d50d8b5795",
+                        "type": "therm"
+                    },
+                    {
+                        "zones": [
+                            {
+                                "type": 0,
+                                "name": "Comfort",
+                                "rooms_temp": [
+                                    {
+                                        "temp": 21,
+                                        "room_id": "2746182631"
+                                    }
+                                ],
+                                "id": 0
+                            },
+                            {
+                                "type": 1,
+                                "name": "Night",
+                                "rooms_temp": [
+                                    {
+                                        "temp": 17,
+                                        "room_id": "2746182631"
+                                    }
+                                ],
+                                "id": 1
+                            },
+                            {
+                                "type": 5,
+                                "name": "Eco",
+                                "rooms_temp": [
+                                    {
+                                        "temp": 17,
+                                        "room_id": "2746182631"
+                                    }
+                                ],
+                                "id": 4
+                            }
+                        ],
+                        "timetable": [
+                            {
+                                "zone_id": 1,
+                                "m_offset": 0
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 360
+                            },
+                            {
+                                "zone_id": 4,
+                                "m_offset": 420
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 960
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 1410
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 1800
+                            },
+                            {
+                                "zone_id": 4,
+                                "m_offset": 1860
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 2400
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 2850
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 3240
+                            },
+                            {
+                                "zone_id": 4,
+                                "m_offset": 3300
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 3840
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 4290
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 4680
+                            },
+                            {
+                                "zone_id": 4,
+                                "m_offset": 4740
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 5280
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 5730
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 6120
+                            },
+                            {
+                                "zone_id": 4,
+                                "m_offset": 6180
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 6720
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 7170
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 7620
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 8610
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 9060
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 10050
+                            }
+                        ],
+                        "hg_temp": 7,
+                        "away_temp": 14,
+                        "name": "Winter",
+                        "id": "b1b54a2f45795764f59d50d8",
+                        "type": "therm"
+                    }
+                ],
+                "therm_setpoint_default_duration": 120,
+                "persons": [
+                    {
+                        "id": "91827374-7e04-5298-83ad-a0cb8372dff1",
+                        "pseudo": "John Doe",
+                        "url": "https://netatmocameraimage.blob.core.windows.net/production/d74fad765b9100ef480720a9a4a95c24b808a89f8d1730fb69ecdf2bb8b72039d2c69928b029d67fc40cb2d7"
+                    },
+                    {
+                        "id": "91827375-7e04-5298-83ae-a0cb8372dff2",
+                        "pseudo": "Jane Doe",
+                        "url": "https://netatmocameraimage.blob.core.windows.net/production/d74fad765b9100ef480720a9a4a95c24b808a89f8d1730039d2c69928b029d67fc40cb2d7fb69ecdf2bb8b72"
+                    },
+                    {
+                        "id": "91827376-7e04-5298-83af-a0cb8372dff3",
+                        "pseudo": "Richard Doe",
+                        "url": "https://netatmocameraimage.blob.core.windows.net/production/d74fad765b9100ef480720a9a4a95c2d1730fb69ecdf2bb8b72039d2c69928b029d67fc40cb2d74b808a89f8"
+                    }
+                ],
+                "schedules": [
+                    {
+                        "zones": [
+                            {
+                                "type": 0,
+                                "name": "Komfort",
+                                "rooms_temp": [
+                                    {
+                                        "temp": 21,
+                                        "room_id": "2746182631"
+                                    }
+                                ],
+                                "id": 0,
+                                "rooms": [
+                                    {
+                                        "id": "2746182631",
+                                        "therm_setpoint_temperature": 21
+                                    }
+                                ]
+                            },
+                            {
+                                "type": 1,
+                                "name": "Nacht",
+                                "rooms_temp": [
+                                    {
+                                        "temp": 17,
+                                        "room_id": "2746182631"
+                                    }
+                                ],
+                                "id": 1,
+                                "rooms": [
+                                    {
+                                        "id": "2746182631",
+                                        "therm_setpoint_temperature": 17
+                                    }
+                                ]
+                            },
+                            {
+                                "type": 5,
+                                "name": "Eco",
+                                "rooms_temp": [
+                                    {
+                                        "temp": 17,
+                                        "room_id": "2746182631"
+                                    }
+                                ],
+                                "id": 4,
+                                "rooms": [
+                                    {
+                                        "id": "2746182631",
+                                        "therm_setpoint_temperature": 17
+                                    }
+                                ]
+                            }
+                        ],
+                        "timetable": [
+                            {
+                                "zone_id": 1,
+                                "m_offset": 0
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 360
+                            },
+                            {
+                                "zone_id": 4,
+                                "m_offset": 420
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 960
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 1410
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 1800
+                            },
+                            {
+                                "zone_id": 4,
+                                "m_offset": 1860
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 2400
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 2850
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 3240
+                            },
+                            {
+                                "zone_id": 4,
+                                "m_offset": 3300
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 3840
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 4290
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 4680
+                            },
+                            {
+                                "zone_id": 4,
+                                "m_offset": 4740
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 5280
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 5730
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 6120
+                            },
+                            {
+                                "zone_id": 4,
+                                "m_offset": 6180
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 6720
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 7170
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 7620
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 8610
+                            },
+                            {
+                                "zone_id": 0,
+                                "m_offset": 9060
+                            },
+                            {
+                                "zone_id": 1,
+                                "m_offset": 10050
+                            }
+                        ],
+                        "hg_temp": 7,
+                        "away_temp": 14,
+                        "name": "Default",
+                        "id": "591b54a2764ff4d50d8b5795",
+                        "selected": true,
+                        "type": "therm"
+                    }
+                ],
+                "therm_mode": "schedule"
+            },
+            {
+                "id": "91763b24c43d3e344f424e8c",
+                "altitude": 112,
+                "coordinates": [
+                    52.516263,
+                    13.377726
+                ],
+                "country": "DE",
+                "timezone": "Europe/Berlin",
+                "therm_setpoint_default_duration": 180,
+                "therm_mode": "schedule"
+            }
+        ],
+        "user": {
+            "email": "john@doe.com",
+            "language": "de-DE",
+            "locale": "de-DE",
+            "feel_like_algorithm": 0,
+            "unit_pressure": 0,
+            "unit_system": 0,
+            "unit_wind": 0,
+            "id": "91763b24c43d3e344f424e8b"
+        }
+    },
+    "status": "ok",
+    "time_exec": 0.056135892868042,
+    "time_server": 1559171003
+}

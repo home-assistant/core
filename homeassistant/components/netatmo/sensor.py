@@ -625,7 +625,7 @@ class NetatmoPublicSensor(NetatmoBase):
         elif self.type == "guststrength":
             data = self._data.get_latest_gust_strengths()
 
-        if not data:
+        if data is None:
             if self._state is None:
                 return
             _LOGGER.debug(
