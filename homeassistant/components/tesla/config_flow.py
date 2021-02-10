@@ -140,6 +140,8 @@ async def validate_input(hass: core.HomeAssistant, data):
         (config[CONF_TOKEN], config[CONF_ACCESS_TOKEN]) = await controller.connect(
             test_login=True
         )
+        config[CONF_USERNAME] = data[CONF_USERNAME]
+        config[CONF_PASSWORD] = data[CONF_PASSWORD]
     except TeslaException as ex:
         if ex.code == HTTP_UNAUTHORIZED:
             _LOGGER.error("Invalid credentials: %s", ex)
