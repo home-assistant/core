@@ -1,7 +1,6 @@
 """Support for WiLight Fan."""
 
 from pywilight.const import (
-    DOMAIN,
     FAN_V1,
     ITEM_FAN,
     WL_DIRECTION_FORWARD,
@@ -24,7 +23,7 @@ from homeassistant.components.fan import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import WiLightDevice
+from . import WiLightDevice, DOMAIN
 
 SUPPORTED_SPEEDS = [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 

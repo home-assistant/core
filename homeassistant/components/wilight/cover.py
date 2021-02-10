@@ -15,9 +15,7 @@ from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import WiLightDevice
-
-DOMAIN = "wilight"
+from . import WiLightDevice, DOMAIN
 
 
 async def async_setup_entry(
