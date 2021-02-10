@@ -56,10 +56,6 @@ class WiLightCover(WiLightDevice, CoverEntity):
     def __init__(self, api_device, index, item_name):
         """Initialize the device."""
         super().__init__(api_device, index, item_name)
-        # Initialize the WiLights cover.
-        self._motor_state = WL_STOPPED
-        self._position = 100
-        self._target = 100
 
     @property
     def current_cover_position(self):
