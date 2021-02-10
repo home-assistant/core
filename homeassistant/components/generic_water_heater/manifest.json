@@ -1,6 +1,6 @@
 {
   "domain": "generic_water_heater",
-  "name": "Generic Water Meter",
+  "name": "Generic Water Heater",
   "documentation": "https://www.home-assistant.io/integrations/generic_water_heater",
   "dependencies": ["sensor", "switch"],
   "codeowners": ["@dgomes"]
