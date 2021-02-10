@@ -46,6 +46,24 @@ async def test_report_state(hass, caplog, legacy_patchable_time):
         "devices": {"states": {"light.kitchen": {"on": True, "online": True}}}
     }
 
+    # Test that if serialize returns same value, we don't send
+    with patch(
+        "homeassistant.components.google_assistant.report_state.GoogleEntity.query_serialize",
+        return_value={"same": "info"},
+    ), patch.object(BASIC_CONFIG, "async_report_state_all", AsyncMock()) as mock_report:
+        # New state, so reported
+        hass.states.async_set("light.double_report", "on")
+        await hass.async_block_till_done()
+
+        # Changed, but serialize is same, so filtered out by extra check
+        hass.states.async_set("light.double_report", "off")
+        await hass.async_block_till_done()
+
+        assert len(mock_report.mock_calls) == 1
+        assert mock_report.mock_calls[0][1][0] == {
+            "devices": {"states": {"light.double_report": {"same": "info"}}}
+        }
+
     # Test that only significant state changes are reported
     with patch.object(
         BASIC_CONFIG, "async_report_state_all", AsyncMock()
