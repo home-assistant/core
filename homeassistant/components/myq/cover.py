@@ -160,8 +160,6 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
             device_info["via_device"] = (DOMAIN, self._device.parent_device_id)
         return device_info
 
-    @callback
-    def _async_consume_update(self):
     async def async_added_to_hass(self):
         """Subscribe to updates."""
         self.async_on_remove(
