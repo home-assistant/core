@@ -162,10 +162,8 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
 
     @callback
     def _async_consume_update(self):
-        self.async_write_ha_state()
-
     async def async_added_to_hass(self):
         """Subscribe to updates."""
         self.async_on_remove(
-            self.coordinator.async_add_listener(self._async_consume_update)
+            self.coordinator.async_add_listener(self.async_write_ha_state)
         )
