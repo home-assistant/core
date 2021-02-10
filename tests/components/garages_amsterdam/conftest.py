@@ -7,9 +7,9 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def mock_cases():
-    """Mock garages_amsterdam cases."""
+    """Mock garages_amsterdam garages."""
     with patch(
-        "garages_amsterdam.get_cases",
+        "garages_amsterdam.get_garages",
         return_value=[
             Mock(
                 garage_name="IJDok",
@@ -28,5 +28,5 @@ def mock_cases():
                 state="error",
             ),
         ],
-    ) as mock_get_cases:
-        yield mock_get_cases
+    ) as mock_get_garages:
+        yield mock_get_garages
