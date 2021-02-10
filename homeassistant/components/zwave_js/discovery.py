@@ -65,8 +65,8 @@ class ZWaveDiscoverySchema:
     hint: Optional[str] = None
     # [optional] the node's manufacturer_id must match ANY of these values
     manufacturer_id: Optional[Set[int]] = None
-    # [optional] the node's model_id must match ANY of these values
-    model_id: Optional[Set[int]] = None
+    # [optional] the node's product_id must match ANY of these values
+    product_id: Optional[Set[int]] = None
     # [optional] the node's product_type must match ANY of these values
     product_type: Optional[Set[int]] = None
     # [optional] the node's firmware_version must match ANY of these values
@@ -91,7 +91,7 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform="fan",
         manufacturer_id={57},
-        model_id={12593},
+        product_id={12593},
         product_type={18756},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
@@ -103,7 +103,7 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform="fan",
         manufacturer_id={1584},
-        model_id={12340, 12593},
+        product_id={12340, 12593},
         product_type={18756},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
@@ -116,7 +116,7 @@ DISCOVERY_SCHEMAS = [
         platform="cover",
         hint="fibaro_fgs222",
         manufacturer_id={271},
-        model_id={4096},
+        product_id={4096},
         product_type={770},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
@@ -129,7 +129,7 @@ DISCOVERY_SCHEMAS = [
         platform="cover",
         hint="fibaro_fgs222",
         manufacturer_id={345},
-        model_id={82},
+        product_id={82},
         product_type={3},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
@@ -142,7 +142,7 @@ DISCOVERY_SCHEMAS = [
         platform="cover",
         hint="fibaro_fgs222",
         manufacturer_id={622},
-        model_id={23089},
+        product_id={23089},
         product_type={17235},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
@@ -370,6 +370,30 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
     """Run discovery on ZWave node and return matching (primary) values."""
     for value in node.values.values():
         for schema in DISCOVERY_SCHEMAS:
+            # check manufacturer_id
+            if (
+                schema.manufacturer_id is not None
+                and value.node.manufacturer_id not in schema.manufacturer_id
+            ):
+                continue
+            # check product_id
+            if (
+                schema.product_id is not None
+                and value.node.product_id not in schema.product_id
+            ):
+                continue
+            # check product_type
+            if (
+                schema.product_type is not None
+                and value.node.product_type not in schema.product_type
+            ):
+                continue
+            # check firmware_version
+            if (
+                schema.firmware_version is not None
+                and value.node.firmware_version not in schema.firmware_version
+            ):
+                continue
             # check device_class_basic
             if (
                 schema.device_class_basic is not None
