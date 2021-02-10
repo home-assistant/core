@@ -48,6 +48,8 @@ async def test_form(hass):
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "test@email.com"
     assert result2["data"] == {
+        CONF_USERNAME: "test@email.com",
+        CONF_PASSWORD: "test",
         CONF_TOKEN: "test-refresh-token",
         CONF_ACCESS_TOKEN: "test-access-token",
     }
