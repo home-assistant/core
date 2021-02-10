@@ -220,7 +220,6 @@ class HueLight(CoordinatorEntity, LightEntity):
             self.is_osram = light.manufacturername == "OSRAM"
             self.is_philips = light.manufacturername == "Philips"
             self.is_innr = light.manufacturername == "innr"
-            #test livarno facturer
             self.is_livarno = light.manufacturername == "_TZ3000_49qchf10"
             self.gamut_typ = self.light.colorgamuttype
             self.gamut = self.light.colorgamut
