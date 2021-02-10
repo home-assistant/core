@@ -512,7 +512,7 @@ async def _async_set_up_integrations(
     stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
 
     # Load the registries
-    asyncio.gather(
+    await asyncio.gather(
         device_registry.async_load(hass),
         entity_registry.async_load(hass),
         area_registry.async_load(hass),
