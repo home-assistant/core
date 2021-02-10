@@ -74,9 +74,9 @@ class WiLightCover(WiLightDevice, CoverEntity):
     @property
     def is_opening(self):
         """Return if the cover is opening or not."""
-        if "motor_state" in self._status:
-            self._motor_state = self._status["motor_state"]
-        return self._motor_state == WL_OPENING
+        if "motor_state" not in self._status:
+            return None
+        return self._status["motor_state"] == WL_OPENING
 
     @property
     def is_closing(self):
