@@ -6,10 +6,6 @@
   "requirements": [
     "pyrituals==0.0.1"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@milanmeu"
   ]
