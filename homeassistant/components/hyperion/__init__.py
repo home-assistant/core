@@ -4,8 +4,8 @@ import asyncio
 import logging
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, cast
 
+from awesomeversion import AwesomeVersion
 from hyperion import client, const as hyperion_const
-from pkg_resources import parse_version
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -159,7 +159,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     version = await hyperion_client.async_sysinfo_version()
     if version is not None:
         try:
-            if parse_version(version) < parse_version(HYPERION_VERSION_WARN_CUTOFF):
+            if AwesomeVersion(version) < AwesomeVersion(HYPERION_VERSION_WARN_CUTOFF):
                 _LOGGER.warning(
                     "Using a Hyperion server version < %s is not recommended -- "
                     "some features may be unavailable or may not function correctly. "
