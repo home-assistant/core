@@ -6,7 +6,7 @@ from aiohttp import web
 
 from homeassistant.core import callback
 
-from .const import FORMAT_CONTENT_TYPE, NUM_HLS_SEGMENTS
+from .const import FORMAT_CONTENT_TYPE, NUM_PLAYLIST_SEGMENTS
 from .core import PROVIDERS, StreamOutput, StreamView
 from .fmp4utils import get_codec_string, get_init, get_m4s
 
@@ -77,14 +77,14 @@ class HlsPlaylistView(StreamView):
     @staticmethod
     def render_playlist(track):
         """Render playlist."""
-        segments = track.segments
+        segments = track.segments[-NUM_PLAYLIST_SEGMENTS:]
 
-        if not segments or len(segments) < NUM_HLS_SEGMENTS:
+        if not segments:
             return []
 
-        playlist = ["#EXT-X-MEDIA-SEQUENCE:{}".format(segments[-NUM_HLS_SEGMENTS])]
+        playlist = ["#EXT-X-MEDIA-SEQUENCE:{}".format(segments[0])]
 
-        for sequence in segments[-NUM_HLS_SEGMENTS:]:
+        for sequence in segments:
             segment = track.get_segment(sequence)
             playlist.extend(
                 [
