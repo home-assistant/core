@@ -140,7 +140,7 @@ aiopylgtv==0.3.3
 aiorecollect==1.0.1
 
 # homeassistant.components.shelly
-aioshelly==0.5.4
+aioshelly==0.6.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -180,7 +180,7 @@ async-upnp-client==0.14.13
 auroranoaa==0.0.2
 
 # homeassistant.components.stream
-av==8.0.2
+av==8.0.3
 
 # homeassistant.components.axis
 axis==43
@@ -684,7 +684,7 @@ pybotvac==0.0.20
 pycfdns==1.2.1
 
 # homeassistant.components.cast
-pychromecast==8.0.0
+pychromecast==8.1.0
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.4
@@ -1001,7 +1001,7 @@ rokuecp==0.6.0
 roombapy==1.6.2
 
 # homeassistant.components.roon
-roonapi==0.0.31
+roonapi==0.0.32
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0

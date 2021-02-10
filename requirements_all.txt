@@ -218,7 +218,7 @@ aiopylgtv==0.3.3
 aiorecollect==1.0.1
 
 # homeassistant.components.shelly
-aioshelly==0.5.4
+aioshelly==0.6.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -297,7 +297,7 @@ auroranoaa==0.0.2
 aurorapy==0.2.6
 
 # homeassistant.components.stream
-av==8.0.2
+av==8.0.3
 
 # homeassistant.components.avea
 # avea==1.5.1
@@ -449,9 +449,6 @@ coronavirus==1.1.1
 
 # homeassistant.scripts.credstash
 # credstash==1.15.0
-
-# homeassistant.components.crimereports
-crimereports==1.0.1
 
 # homeassistant.components.datadog
 datadog==0.15.0
@@ -1310,7 +1307,7 @@ pycfdns==1.2.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==8.0.0
+pychromecast==8.1.0
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.0
@@ -1967,7 +1964,7 @@ rokuecp==0.6.0
 roombapy==1.6.2
 
 # homeassistant.components.roon
-roonapi==0.0.31
+roonapi==0.0.32
 
 # homeassistant.components.rova
 rova==0.2.1
