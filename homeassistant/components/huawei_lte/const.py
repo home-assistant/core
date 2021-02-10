@@ -27,6 +27,7 @@ KEY_DEVICE_BASIC_INFORMATION = "device_basic_information"
 KEY_DEVICE_INFORMATION = "device_information"
 KEY_DEVICE_SIGNAL = "device_signal"
 KEY_DIALUP_MOBILE_DATASWITCH = "dialup_mobile_dataswitch"
+KEY_LAN_HOST_INFO = "lan_host_info"
 KEY_MONITORING_CHECK_NOTIFICATIONS = "monitoring_check_notifications"
 KEY_MONITORING_MONTH_STATISTICS = "monitoring_month_statistics"
 KEY_MONITORING_STATUS = "monitoring_status"
@@ -34,7 +35,6 @@ KEY_MONITORING_TRAFFIC_STATISTICS = "monitoring_traffic_statistics"
 KEY_NET_CURRENT_PLMN = "net_current_plmn"
 KEY_NET_NET_MODE = "net_net_mode"
 KEY_SMS_SMS_COUNT = "sms_sms_count"
-KEY_WLAN_HOST_LIST = "wlan_host_list"
 KEY_WLAN_WIFI_FEATURE_SWITCH = "wlan_wifi_feature_switch"
 
 BINARY_SENSOR_KEYS = {
@@ -43,7 +43,7 @@ BINARY_SENSOR_KEYS = {
     KEY_WLAN_WIFI_FEATURE_SWITCH,
 }
 
-DEVICE_TRACKER_KEYS = {KEY_WLAN_HOST_LIST}
+DEVICE_TRACKER_KEYS = {KEY_LAN_HOST_INFO}
 
 SENSOR_KEYS = {
     KEY_DEVICE_INFORMATION,

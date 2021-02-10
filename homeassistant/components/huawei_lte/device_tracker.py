@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import HuaweiLteBaseEntity
-from .const import DOMAIN, KEY_WLAN_HOST_LIST, UPDATE_SIGNAL
+from .const import DOMAIN, KEY_LAN_HOST_INFO, UPDATE_SIGNAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,9 +40,9 @@ async def async_setup_entry(
     # with adding and tracking entities if it is.
     router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
     try:
-        _ = router.data[KEY_WLAN_HOST_LIST]["Hosts"]["Host"]
+        _ = router.data[KEY_LAN_HOST_INFO]["Hosts"]["Host"]
     except KeyError:
-        _LOGGER.debug("%s[%s][%s] not in data", KEY_WLAN_HOST_LIST, "Hosts", "Host")
+        _LOGGER.debug("%s[%s][%s] not in data", KEY_LAN_HOST_INFO, "Hosts", "Host")
         return
 
     # Initialize already tracked entities
@@ -61,7 +61,7 @@ async def async_setup_entry(
     async_add_entities(known_entities, True)
 
     # Tell parent router to poll hosts list to gather new devices
-    router.subscriptions[KEY_WLAN_HOST_LIST].add(_DEVICE_SCAN)
+    router.subscriptions[KEY_LAN_HOST_INFO].add(_DEVICE_SCAN)
 
     async def _async_maybe_add_new_entities(url: str) -> None:
         """Add new entities if the update signal comes from our router."""
@@ -88,9 +88,9 @@ def async_add_new_entities(
     """Add new entities that are not already being tracked."""
     router = hass.data[DOMAIN].routers[router_url]
     try:
-        hosts = router.data[KEY_WLAN_HOST_LIST]["Hosts"]["Host"]
+        hosts = router.data[KEY_LAN_HOST_INFO]["Hosts"]["Host"]
     except KeyError:
-        _LOGGER.debug("%s[%s][%s] not in data", KEY_WLAN_HOST_LIST, "Hosts", "Host")
+        _LOGGER.debug("%s[%s][%s] not in data", KEY_LAN_HOST_INFO, "Hosts", "Host")
         return
 
     new_entities: List[Entity] = []
@@ -157,9 +157,9 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
 
     async def async_update(self) -> None:
         """Update state."""
-        hosts = self.router.data[KEY_WLAN_HOST_LIST]["Hosts"]["Host"]
+        hosts = self.router.data[KEY_LAN_HOST_INFO]["Hosts"]["Host"]
         host = next((x for x in hosts if x.get("MacAddress") == self.mac), None)
-        self._is_connected = host is not None
+        self._is_connected = host is not None and host.get("AssociatedTime") is not None
         if host is not None:
             self._hostname = host.get("HostName")
             self._device_state_attributes = {
