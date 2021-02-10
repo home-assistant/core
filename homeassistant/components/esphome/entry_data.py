@@ -29,8 +29,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 if TYPE_CHECKING:
     from . import APIClient
 
-DATA_KEY = "esphome"
-
 SAVE_DELAY = 120
 
 # Mapping from ESPHome info type to HA platform
