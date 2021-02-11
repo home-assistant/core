@@ -21,9 +21,12 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNELS,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
+    SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
@@ -57,6 +60,9 @@ SUPPORT_PHILIPS_JS = (
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_BROWSE_MEDIA
+    | SUPPORT_PLAY
+    | SUPPORT_PAUSE
+    | SUPPORT_STOP
 )
 
 CONF_ON_ACTION = "turn_on_action"
@@ -251,6 +257,26 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def media_next_track(self):
         """Send fast forward command."""
         self._tv.sendKey("Next")
+        self._update_soon()
+
+    def media_play_pause(self):
+        """Send pause command to media player."""
+        self._tv.sendKey("PlayPause")
+        self._update_soon()
+
+    def media_play(self):
+        """Send pause command to media player."""
+        self._tv.sendKey("Play")
+        self._update_soon()
+
+    def media_pause(self):
+        """Send play command to media player."""
+        self._tv.sendKey("Pause")
+        self._update_soon()
+
+    def media_stop(self):
+        """Send play command to media player."""
+        self._tv.sendKey("Stop")
         self._update_soon()
 
     @property
