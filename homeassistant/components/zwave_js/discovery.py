@@ -77,7 +77,7 @@ class ZWaveDiscoverySchema:
     device_class_generic: Optional[Set[str]] = None
     # [optional] the node's specific device class must match ANY of these values
     device_class_specific: Optional[Set[str]] = None
-    # [optional] additional values that need to be present on the node for this scheme to pass
+    # [optional] additional values that ALL need to be present on the node for this scheme to pass
     required_values: Optional[Set[ZWaveValueDiscoverySchema]] = None
     # [optional] bool to specify if this primary value may be discovered by multiple platforms
     allow_multi: bool = False
@@ -429,8 +429,14 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
                 continue
             # check additional required values
             if schema.required_values is not None:
-                pass
-
+                required_values_present = True
+                for val_scheme in schema.required_values:
+                    for val in node.values.values():
+                        if not check_value(val, val_scheme):
+                            required_values_present = False
+                            break
+                if not required_values_present:
+                    continue
             # all checks passed, this value belongs to an entity
             yield ZwaveDiscoveryInfo(
                 node=value.node,
@@ -446,8 +452,6 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
 @callback
 def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
     """Check if value matches scheme."""
-    if value is None or schema is None:
-        return False
     # check command_class
     if (
         schema.command_class is not None
