@@ -14,5 +14,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "friendly_name": "Usa nomi descrittivi per i tipi di ritiro (quando possibile)"
+                },
+                "title": "Configura la raccolta dei rifiuti"
+            }
+        }
     }
 }

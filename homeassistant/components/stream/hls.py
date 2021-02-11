@@ -6,7 +6,7 @@ from aiohttp import web
 
 from homeassistant.core import callback
 
-from .const import FORMAT_CONTENT_TYPE
+from .const import FORMAT_CONTENT_TYPE, NUM_PLAYLIST_SEGMENTS
 from .core import PROVIDERS, StreamOutput, StreamView
 from .fmp4utils import get_codec_string, get_init, get_m4s
 
@@ -52,7 +52,8 @@ class HlsMasterPlaylistView(StreamView):
         stream.start()
         # Wait for a segment to be ready
         if not track.segments:
-            await track.recv()
+            if not await track.recv():
+                return web.HTTPNotFound()
         headers = {"Content-Type": FORMAT_CONTENT_TYPE["hls"]}
         return web.Response(body=self.render(track).encode("utf-8"), headers=headers)
 
@@ -76,7 +77,7 @@ class HlsPlaylistView(StreamView):
     @staticmethod
     def render_playlist(track):
         """Render playlist."""
-        segments = track.segments
+        segments = track.segments[-NUM_PLAYLIST_SEGMENTS:]
 
         if not segments:
             return []
@@ -105,7 +106,8 @@ class HlsPlaylistView(StreamView):
         stream.start()
         # Wait for a segment to be ready
         if not track.segments:
-            await track.recv()
+            if not await track.recv():
+                return web.HTTPNotFound()
         headers = {"Content-Type": FORMAT_CONTENT_TYPE["hls"]}
         return web.Response(body=self.render(track).encode("utf-8"), headers=headers)
 

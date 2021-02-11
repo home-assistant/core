@@ -48,7 +48,7 @@ COOLDOWN_TIME = 60
 
 MAX_LOAD_CONCURRENTLY = 6
 
-DEBUGGER_INTEGRATIONS = {"debugpy", "ptvsd"}
+DEBUGGER_INTEGRATIONS = {"debugpy"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
 LOGGING_INTEGRATIONS = {
     # Set log levels
@@ -307,12 +307,10 @@ def async_enable_logging(
     sys.excepthook = lambda *args: logging.getLogger(None).exception(
         "Uncaught exception", exc_info=args  # type: ignore
     )
-
-    if sys.version_info[:2] >= (3, 8):
-        threading.excepthook = lambda args: logging.getLogger(None).exception(
-            "Uncaught thread exception",
-            exc_info=(args.exc_type, args.exc_value, args.exc_traceback),
-        )
+    threading.excepthook = lambda args: logging.getLogger(None).exception(
+        "Uncaught thread exception",
+        exc_info=(args.exc_type, args.exc_value, args.exc_traceback),  # type: ignore[arg-type]
+    )
 
     # Log errors to a file if we have write access to file or config dir
     if log_file is None:
@@ -383,7 +381,7 @@ def _get_domains(hass: core.HomeAssistant, config: Dict[str, Any]) -> Set[str]:
 
 
 async def _async_log_pending_setups(
-    domains: Set[str], setup_started: Dict[str, datetime]
+    hass: core.HomeAssistant, domains: Set[str], setup_started: Dict[str, datetime]
 ) -> None:
     """Periodic log of setups that are pending for longer than LOG_SLOW_STARTUP_INTERVAL."""
     while True:
@@ -395,6 +393,7 @@ async def _async_log_pending_setups(
                 "Waiting on integrations to complete setup: %s",
                 ", ".join(remaining),
             )
+        _LOGGER.debug("Running timeout Zones: %s", hass.timeout.zones)
 
 
 async def async_setup_multi_components(
@@ -408,7 +407,9 @@ async def async_setup_multi_components(
         domain: hass.async_create_task(async_setup_component(hass, domain, config))
         for domain in domains
     }
-    log_task = asyncio.create_task(_async_log_pending_setups(domains, setup_started))
+    log_task = asyncio.create_task(
+        _async_log_pending_setups(hass, domains, setup_started)
+    )
     await asyncio.wait(futures.values())
     log_task.cancel()
     errors = [domain for domain in domains if futures[domain].exception()]

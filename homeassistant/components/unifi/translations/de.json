@@ -4,7 +4,7 @@
             "already_configured": "Controller-Site ist bereits konfiguriert"
         },
         "error": {
-            "faulty_credentials": "Ung\u00fcltige Anmeldeinformationen",
+            "faulty_credentials": "Ung\u00fcltige Authentifizierung",
             "service_unavailable": "Verbindung fehlgeschlagen",
             "unknown_client_mac": "Unter dieser MAC-Adresse ist kein Client verf\u00fcgbar."
         },
@@ -16,7 +16,7 @@
                     "port": "Port",
                     "site": "Site-ID",
                     "username": "Benutzername",
-                    "verify_ssl": "Controller mit ordnungsgem\u00e4ssem Zertifikat"
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },
                 "title": "UniFi-Controller einrichten"
             }
@@ -51,7 +51,9 @@
             },
             "simple_options": {
                 "data": {
-                    "track_clients": "Netzwerk Ger\u00e4te \u00fcberwachen"
+                    "block_client": "Clients mit Netzwerkzugriffskontrolle",
+                    "track_clients": "Netzwerger\u00e4te \u00fcberwachen",
+                    "track_devices": "Verfolgen von Netzwerkger\u00e4ten (Ubiquiti-Ger\u00e4te)"
                 },
                 "description": "Konfigurieren Sie die UniFi-Integration"
             },

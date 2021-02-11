@@ -1,6 +1,7 @@
 """The tests for the input_boolean component."""
 # pylint: disable=protected-access
 import logging
+from unittest.mock import patch
 
 import pytest
 
@@ -22,7 +23,6 @@ from homeassistant.core import Context, CoreState, State
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import mock_component, mock_restore_cache
 
 _LOGGER = logging.getLogger(__name__)
@@ -264,7 +264,7 @@ async def test_reload(hass, hass_admin_user):
     assert "mdi:work_reloaded" == state_2.attributes.get(ATTR_ICON)
 
 
-async def test_load_person_storage(hass, storage_setup):
+async def test_load_from_storage(hass, storage_setup):
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")

@@ -12,6 +12,11 @@ SSDP = {
             "manufacturer": "ARCAM"
         }
     ],
+    "axis": [
+        {
+            "manufacturer": "AXIS"
+        }
+    ],
     "control4": [
         {
             "st": "c4:director"
@@ -164,6 +169,18 @@ SSDP = {
         {
             "deviceType": "urn:schemas-upnp-org:device:Basic:1",
             "manufacturer": "Synology"
+        }
+    ],
+    "unifi": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine Pro"
         }
     ],
     "upnp": [

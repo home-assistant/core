@@ -23,6 +23,9 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Impossibile connettersi"
+        },
         "error": {
             "dev_multi_type": "Pi\u00f9 dispositivi selezionati da configurare devono essere dello stesso tipo",
             "dev_not_config": "Tipo di dispositivo non configurabile",

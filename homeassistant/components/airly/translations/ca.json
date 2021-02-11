@@ -19,5 +19,10 @@
                 "title": "Airly"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Servidor d'Airly accessible"
+        }
     }
 }

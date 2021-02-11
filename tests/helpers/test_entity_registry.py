@@ -1,5 +1,7 @@
 """Tests for the Entity Registry."""
 import asyncio
+import unittest.mock
+from unittest.mock import patch
 
 import pytest
 
@@ -7,8 +9,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, callback, valid_entity_id
 from homeassistant.helpers import entity_registry
 
-import tests.async_mock
-from tests.async_mock import patch
 from tests.common import (
     MockConfigEntry,
     flush_store,
@@ -429,7 +429,7 @@ async def test_loading_invalid_entity_id(hass, hass_storage):
 
 async def test_loading_race_condition(hass):
     """Test only one storage load called when concurrent loading occurred ."""
-    with tests.async_mock.patch(
+    with unittest.mock.patch(
         "homeassistant.helpers.entity_registry.EntityRegistry.async_load"
     ) as mock_load:
         results = await asyncio.gather(
@@ -694,6 +694,39 @@ async def test_remove_device_removes_entities(hass, registry):
         connections={("mac", "12:34:56:AB:CD:EF")},
     )
 
+    entry = registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+
+    assert registry.async_is_registered(entry.entity_id)
+
+    device_registry.async_remove_device(device_entry.id)
+    await hass.async_block_till_done()
+
+    assert not registry.async_is_registered(entry.entity_id)
+
+
+async def test_update_device_race(hass, registry):
+    """Test race when a device is created, updated and removed."""
+    device_registry = mock_device_registry(hass)
+    config_entry = MockConfigEntry(domain="light")
+
+    # Create device
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={("mac", "12:34:56:AB:CD:EF")},
+    )
+    # Update it
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+        connections={("mac", "12:34:56:AB:CD:EF")},
+    )
+    # Add entity to the device
     entry = registry.async_get_or_create(
         "light",
         "hue",

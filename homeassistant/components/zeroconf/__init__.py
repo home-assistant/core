@@ -45,7 +45,11 @@ ATTR_TYPE = "type"
 ATTR_PROPERTIES = "properties"
 
 ZEROCONF_TYPE = "_home-assistant._tcp.local."
-HOMEKIT_TYPE = "_hap._tcp.local."
+HOMEKIT_TYPES = [
+    "_hap._tcp.local.",
+    # Thread based devices
+    "_hap._udp.local.",
+]
 
 CONF_DEFAULT_INTERFACE = "default_interface"
 CONF_IPV6 = "ipv6"
@@ -229,8 +233,9 @@ async def _async_start_zeroconf_browser(hass, zeroconf):
 
     types = list(zeroconf_types)
 
-    if HOMEKIT_TYPE not in zeroconf_types:
-        types.append(HOMEKIT_TYPE)
+    for hk_type in HOMEKIT_TYPES:
+        if hk_type not in zeroconf_types:
+            types.append(hk_type)
 
     def service_update(zeroconf, service_type, name, state_change):
         """Service state changed."""
@@ -261,7 +266,7 @@ async def _async_start_zeroconf_browser(hass, zeroconf):
         _LOGGER.debug("Discovered new device %s %s", name, info)
 
         # If we can handle it as a HomeKit discovery, we do that here.
-        if service_type == HOMEKIT_TYPE:
+        if service_type in HOMEKIT_TYPES:
             discovery_was_forwarded = handle_homekit(hass, homekit_models, info)
             # Continue on here as homekit_controller
             # still needs to get updates on devices
@@ -284,22 +289,32 @@ async def _async_start_zeroconf_browser(hass, zeroconf):
                     # likely bad homekit data
                     return
 
-        for entry in zeroconf_types[service_type]:
+        if "name" in info:
+            lowercase_name = info["name"].lower()
+        else:
+            lowercase_name = None
+
+        if "macaddress" in info.get("properties", {}):
+            uppercase_mac = info["properties"]["macaddress"].upper()
+        else:
+            uppercase_mac = None
+
+        # Not all homekit types are currently used for discovery
+        # so not all service type exist in zeroconf_types
+        for entry in zeroconf_types.get(service_type, []):
             if len(entry) > 1:
-                if "macaddress" in entry:
-                    if "properties" not in info:
-                        continue
-                    if "macaddress" not in info["properties"]:
-                        continue
-                    if not fnmatch.fnmatch(
-                        info["properties"]["macaddress"], entry["macaddress"]
-                    ):
-                        continue
-                if "name" in entry:
-                    if "name" not in info:
-                        continue
-                    if not fnmatch.fnmatch(info["name"], entry["name"]):
-                        continue
+                if (
+                    uppercase_mac is not None
+                    and "macaddress" in entry
+                    and not fnmatch.fnmatch(uppercase_mac, entry["macaddress"])
+                ):
+                    continue
+                if (
+                    lowercase_name is not None
+                    and "name" in entry
+                    and not fnmatch.fnmatch(lowercase_name, entry["name"])
+                ):
+                    continue
 
             hass.add_job(
                 hass.config_entries.flow.async_init(

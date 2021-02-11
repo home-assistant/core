@@ -18,5 +18,10 @@
                 "title": "Airly"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Dostop do Airly stre\u017enika"
+        }
     }
 }

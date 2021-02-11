@@ -14,6 +14,7 @@ from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
+from homeassistant.components.number import DOMAIN as NUMBER
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 
@@ -61,6 +62,7 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.closures.DoorLock.cluster_id: LOCK,
     zcl.clusters.closures.WindowCovering.cluster_id: COVER,
     zcl.clusters.general.AnalogInput.cluster_id: SENSOR,
+    zcl.clusters.general.AnalogOutput.cluster_id: NUMBER,
     zcl.clusters.general.MultistateInput.cluster_id: SENSOR,
     zcl.clusters.general.OnOff.cluster_id: SWITCH,
     zcl.clusters.general.PowerConfiguration.cluster_id: SENSOR,

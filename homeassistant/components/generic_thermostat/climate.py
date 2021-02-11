@@ -33,7 +33,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, callback
+from homeassistant.core import DOMAIN as HA_DOMAIN, CoreState, callback
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
@@ -207,7 +207,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             )
 
         @callback
-        def _async_startup(event):
+        def _async_startup(*_):
             """Init on startup."""
             sensor_state = self.hass.states.get(self.sensor_entity_id)
             if sensor_state and sensor_state.state not in (
@@ -215,8 +215,12 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 STATE_UNKNOWN,
             ):
                 self._async_update_temp(sensor_state)
+                self.async_write_ha_state()
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
+        if self.hass.state == CoreState.running:
+            _async_startup()
+        else:
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
 
         # Check If we have an old state
         old_state = await self.async_get_last_state()
@@ -271,6 +275,13 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         if self._temp_precision is not None:
             return self._temp_precision
         return super().precision
+
+    @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
+        # Since this integration does not yet have a step size parameter
+        # we have to re-use the precision as the step size for now.
+        return self.precision
 
     @property
     def temperature_unit(self):

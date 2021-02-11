@@ -169,3 +169,44 @@ def test_target_selector_schema(schema):
 def test_action_selector_schema(schema):
     """Test action sequence selector."""
     selector.validate_selector({"action": schema})
+
+
+@pytest.mark.parametrize(
+    "schema",
+    ({},),
+)
+def test_object_selector_schema(schema):
+    """Test object selector."""
+    selector.validate_selector({"object": schema})
+
+
+@pytest.mark.parametrize(
+    "schema",
+    ({}, {"multiline": True}, {"multiline": False}),
+)
+def test_text_selector_schema(schema):
+    """Test text selector."""
+    selector.validate_selector({"text": schema})
+
+
+@pytest.mark.parametrize(
+    "schema",
+    ({"options": ["red", "green", "blue"]},),
+)
+def test_select_selector_schema(schema):
+    """Test select selector."""
+    selector.validate_selector({"select": schema})
+
+
+@pytest.mark.parametrize(
+    "schema",
+    (
+        {},
+        {"options": {"hello": "World"}},
+        {"options": []},
+    ),
+)
+def test_select_selector_schema_error(schema):
+    """Test select selector."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"select": schema})

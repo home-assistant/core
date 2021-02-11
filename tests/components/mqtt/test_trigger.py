@@ -1,11 +1,12 @@
 """The tests for the MQTT automation."""
+from unittest.mock import ANY
+
 import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import ANY
 from tests.common import async_fire_mqtt_message, async_mock_service, mock_component
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 
@@ -78,6 +79,58 @@ async def test_if_fires_on_topic_and_payload_match(hass, calls):
     async_fire_mqtt_message(hass, "test-topic", "hello")
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+
+async def test_if_fires_on_templated_topic_and_payload_match(hass, calls):
+    """Test if message is fired on templated topic and payload match."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "mqtt",
+                    "topic": "test-topic-{{ sqrt(16)|round }}",
+                    "payload": '{{ "foo"|regex_replace("foo", "bar") }}',
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    async_fire_mqtt_message(hass, "test-topic-", "foo")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    async_fire_mqtt_message(hass, "test-topic-4", "foo")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    async_fire_mqtt_message(hass, "test-topic-4", "bar")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_non_allowed_templates(hass, calls, caplog):
+    """Test non allowed function in template."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "mqtt",
+                    "topic": "test-topic-{{ states() }}",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    assert (
+        "Got error 'TemplateError: str: Use of 'states' is not supported in limited templates' when setting up triggers"
+        in caplog.text
+    )
 
 
 async def test_if_not_fires_on_topic_but_no_payload_match(hass, calls):

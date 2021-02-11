@@ -32,6 +32,9 @@ def validate_above_below(value):
     if above is None or below is None:
         return value
 
+    if isinstance(above, str) or isinstance(below, str):
+        return value
+
     if above > below:
         raise vol.Invalid(
             f"A value can never be above {above} and below {below} at the same time. You probably want two different triggers.",
@@ -45,8 +48,8 @@ TRIGGER_SCHEMA = vol.All(
         {
             vol.Required(CONF_PLATFORM): "numeric_state",
             vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_BELOW): vol.Coerce(float),
-            vol.Optional(CONF_ABOVE): vol.Coerce(float),
+            vol.Optional(CONF_BELOW): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
+            vol.Optional(CONF_ABOVE): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_FOR): cv.positive_time_period_template,
             vol.Optional(CONF_ATTRIBUTE): cv.match_all,
@@ -75,12 +78,16 @@ async def async_attach_trigger(
     attribute = config.get(CONF_ATTRIBUTE)
     job = HassJob(action)
 
+    _variables = {}
+    if automation_info:
+        _variables = automation_info.get("variables") or {}
+
     if value_template is not None:
         value_template.hass = hass
 
     def variables(entity_id):
         """Return a dict with trigger variables."""
-        return {
+        trigger_info = {
             "trigger": {
                 "platform": "numeric_state",
                 "entity_id": entity_id,
@@ -89,16 +96,24 @@ async def async_attach_trigger(
                 "attribute": attribute,
             }
         }
+        return {**_variables, **trigger_info}
 
     @callback
     def check_numeric_state(entity_id, from_s, to_s):
         """Return True if criteria are now met."""
-        if to_s is None:
+        try:
+            return condition.async_numeric_state(
+                hass,
+                to_s,
+                below,
+                above,
+                value_template,
+                variables(entity_id),
+                attribute,
+            )
+        except exceptions.ConditionError as err:
+            _LOGGER.warning("%s", err)
             return False
-
-        return condition.async_numeric_state(
-            hass, to_s, below, above, value_template, variables(entity_id), attribute
-        )
 
     @callback
     def state_automation_listener(event):

@@ -10,9 +10,10 @@ _LOGGER = logging.getLogger(__name__)
 class ConnectMotionGateway:
     """Class to async connect to a Motion Gateway."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, multicast):
         """Initialize the entity."""
         self._hass = hass
+        self._multicast = multicast
         self._gateway_device = None
 
     @property
@@ -24,11 +25,15 @@ class ConnectMotionGateway:
         """Update all information of the gateway."""
         self.gateway_device.GetDeviceList()
         self.gateway_device.Update()
+        for blind in self.gateway_device.device_list.values():
+            blind.Update_from_cache()
 
     async def async_connect_gateway(self, host, key):
         """Connect to the Motion Gateway."""
         _LOGGER.debug("Initializing with host %s (key %s...)", host, key[:3])
-        self._gateway_device = MotionGateway(ip=host, key=key)
+        self._gateway_device = MotionGateway(
+            ip=host, key=key, multicast=self._multicast
+        )
         try:
             # update device info and get the connected sub devices
             await self._hass.async_add_executor_job(self.update_gateway)

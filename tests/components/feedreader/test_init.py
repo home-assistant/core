@@ -6,6 +6,7 @@ from os.path import exists
 import time
 import unittest
 from unittest import mock
+from unittest.mock import patch
 
 from homeassistant.components import feedreader
 from homeassistant.components.feedreader import (
@@ -21,7 +22,6 @@ from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
 from homeassistant.core import callback
 from homeassistant.setup import setup_component
 
-from tests.async_mock import patch
 from tests.common import get_test_home_assistant, load_fixture
 
 _LOGGER = getLogger(__name__)

@@ -1,4 +1,6 @@
 """The tests for the Sure Petcare binary sensor platform."""
+from surepy import MESTART_RESOURCE
+
 from homeassistant.components.surepetcare.const import DOMAIN
 from homeassistant.setup import async_setup_component
 
@@ -16,8 +18,7 @@ EXPECTED_ENTITY_IDS = {
 async def test_binary_sensors(hass, surepetcare) -> None:
     """Test the generation of unique ids."""
     instance = surepetcare.return_value
-    instance.data = MOCK_API_DATA
-    instance.get_data.return_value = MOCK_API_DATA
+    instance._resource[MESTART_RESOURCE] = {"data": MOCK_API_DATA}
 
     with _patch_sensor_setup():
         assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)

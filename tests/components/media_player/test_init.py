@@ -1,11 +1,10 @@
 """Test the base functions of the media player."""
 import base64
+from unittest.mock import patch
 
 from homeassistant.components import media_player
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 async def test_get_image(hass, hass_ws_client, caplog):

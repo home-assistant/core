@@ -1,7 +1,7 @@
 """Test configuration and mocks for the google integration."""
-import pytest
+from unittest.mock import patch
 
-from tests.async_mock import patch
+import pytest
 
 TEST_CALENDAR = {
     "id": "qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com",

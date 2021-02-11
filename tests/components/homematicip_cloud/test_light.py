@@ -175,7 +175,7 @@ async def test_hmip_dimmer(hass, default_mock_hap_factory):
         "light", "turn_on", {"entity_id": entity_id}, blocking=True
     )
     assert hmip_device.mock_calls[-1][0] == "set_dim_level"
-    assert hmip_device.mock_calls[-1][1] == (1,)
+    assert hmip_device.mock_calls[-1][1] == (1, 1)
 
     await hass.services.async_call(
         "light",
@@ -185,7 +185,7 @@ async def test_hmip_dimmer(hass, default_mock_hap_factory):
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 2
     assert hmip_device.mock_calls[-1][0] == "set_dim_level"
-    assert hmip_device.mock_calls[-1][1] == (1.0,)
+    assert hmip_device.mock_calls[-1][1] == (1.0, 1)
     await async_manipulate_test_data(hass, hmip_device, "dimLevel", 1)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
@@ -196,7 +196,7 @@ async def test_hmip_dimmer(hass, default_mock_hap_factory):
     )
     assert len(hmip_device.mock_calls) == service_call_counter + 4
     assert hmip_device.mock_calls[-1][0] == "set_dim_level"
-    assert hmip_device.mock_calls[-1][1] == (0,)
+    assert hmip_device.mock_calls[-1][1] == (0, 1)
     await async_manipulate_test_data(hass, hmip_device, "dimLevel", 0)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF

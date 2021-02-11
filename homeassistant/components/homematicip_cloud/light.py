@@ -106,9 +106,17 @@ class HomematicipLightMeasuring(HomematicipLight):
 class HomematicipMultiDimmer(HomematicipGenericEntity, LightEntity):
     """Representation of HomematicIP Cloud dimmer."""
 
-    def __init__(self, hap: HomematicipHAP, device, channel: int) -> None:
+    def __init__(
+        self,
+        hap: HomematicipHAP,
+        device,
+        channel=1,
+        is_multi_channel=True,
+    ) -> None:
         """Initialize the dimmer light entity."""
-        super().__init__(hap, device, channel=channel)
+        super().__init__(
+            hap, device, channel=channel, is_multi_channel=is_multi_channel
+        )
 
     @property
     def is_on(self) -> bool:
@@ -142,38 +150,12 @@ class HomematicipMultiDimmer(HomematicipGenericEntity, LightEntity):
         await self._device.set_dim_level(0, self._channel)
 
 
-class HomematicipDimmer(HomematicipGenericEntity, LightEntity):
+class HomematicipDimmer(HomematicipMultiDimmer, LightEntity):
     """Representation of HomematicIP Cloud dimmer."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the dimmer light entity."""
-        super().__init__(hap, device)
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if dimmer is on."""
-        return self._device.dimLevel is not None and self._device.dimLevel > 0.0
-
-    @property
-    def brightness(self) -> int:
-        """Return the brightness of this light between 0..255."""
-        return int((self._device.dimLevel or 0.0) * 255)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
-
-    async def async_turn_on(self, **kwargs) -> None:
-        """Turn the dimmer on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            await self._device.set_dim_level(kwargs[ATTR_BRIGHTNESS] / 255.0)
-        else:
-            await self._device.set_dim_level(1)
-
-    async def async_turn_off(self, **kwargs) -> None:
-        """Turn the dimmer off."""
-        await self._device.set_dim_level(0)
+        super().__init__(hap, device, is_multi_channel=False)
 
 
 class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
@@ -182,9 +164,13 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
     def __init__(self, hap: HomematicipHAP, device, channel: int) -> None:
         """Initialize the notification light entity."""
         if channel == 2:
-            super().__init__(hap, device, post="Top", channel=channel)
+            super().__init__(
+                hap, device, post="Top", channel=channel, is_multi_channel=True
+            )
         else:
-            super().__init__(hap, device, post="Bottom", channel=channel)
+            super().__init__(
+                hap, device, post="Bottom", channel=channel, is_multi_channel=True
+            )
 
         self._color_switcher = {
             RGBColorState.WHITE: [0.0, 0.0],

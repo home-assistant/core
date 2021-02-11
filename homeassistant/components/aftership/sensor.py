@@ -181,8 +181,8 @@ class AfterShipSensor(Entity):
                 track["tracking_number"] if track["title"] is None else track["title"]
             )
             last_checkpoint = (
-                "Shipment pending"
-                if track["tag"] == "Pending"
+                f"Shipment {track['tag'].lower()}"
+                if not track["checkpoints"]
                 else track["checkpoints"][-1]
             )
             status_counts[status] = status_counts.get(status, 0) + 1

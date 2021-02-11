@@ -1,5 +1,6 @@
 """Tests for the AsusWrt sensor."""
 from datetime import timedelta
+from unittest.mock import AsyncMock, patch
 
 from aioasuswrt.asuswrt import Device
 import pytest
@@ -18,7 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 HOST = "myrouter.asuswrt.com"

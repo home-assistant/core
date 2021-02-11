@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "connection_upgrade": "Verbindung zum Drucker fehlgeschlagen, da ein Verbindungsupgrade erforderlich ist.",
             "ipp_error": "IPP-Fehler festgestellt.",
             "ipp_version_error": "IPP-Version wird vom Drucker nicht unterst\u00fctzt.",
@@ -9,6 +10,7 @@
             "unique_id_required": "Ger\u00e4t fehlt die f\u00fcr die Entdeckung erforderliche eindeutige Identifizierung."
         },
         "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "connection_upgrade": "Verbindung zum Drucker fehlgeschlagen. Bitte versuchen Sie es erneut mit aktivierter SSL / TLS-Option."
         },
         "flow_title": "Drucker: {name}",
@@ -18,14 +20,14 @@
                     "base_path": "Relativer Pfad zum Drucker",
                     "host": "Host",
                     "port": "Port",
-                    "ssl": "Der Drucker unterst\u00fctzt die Kommunikation \u00fcber SSL / TLS",
-                    "verify_ssl": "Der Drucker verwendet ein ordnungsgem\u00e4\u00dfes SSL-Zertifikat"
+                    "ssl": "Verwendet ein SSL-Zertifikat",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },
                 "description": "Richten Sie Ihren Drucker \u00fcber das Internet Printing Protocol (IPP) f\u00fcr die Integration in Home Assistant ein.",
                 "title": "Verbinden Sie Ihren Drucker"
             },
             "zeroconf_confirm": {
-                "description": "M\u00f6chten Sie den Drucker mit dem Namen \"{name}\" zu Home Assistant hinzuf\u00fcgen?",
+                "description": "M\u00f6chtest du {name} einrichten?",
                 "title": "Entdeckter Drucker"
             }
         }

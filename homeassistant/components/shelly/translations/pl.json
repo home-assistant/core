@@ -27,5 +27,21 @@
                 "description": "Przed skonfigurowaniem urz\u0105dzenia zasilane bateryjnie nale\u017cy, wybudzi\u0107 naciskaj\u0105c przycisk na urz\u0105dzeniu."
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Przycisk",
+            "button1": "pierwszy",
+            "button2": "drugi",
+            "button3": "trzeci"
+        },
+        "trigger_type": {
+            "double": "przycisk \"{subtype}\" zostanie dwukrotnie naci\u015bni\u0119ty",
+            "long": "przycisk \"{subtype}\" zostanie d\u0142ugo naci\u015bni\u0119ty",
+            "long_single": "przycisk \"{subtype}\" zostanie d\u0142ugo naci\u015bni\u0119ty, a nast\u0119pnie pojedynczo naci\u015bni\u0119ty",
+            "single": "przycisk \"{subtype}\" zostanie pojedynczo naci\u015bni\u0119ty",
+            "single_long": "przycisk \"{subtype}\" pojedynczo naci\u015bni\u0119ty, a nast\u0119pnie d\u0142ugo naci\u015bni\u0119ty",
+            "triple": "przycisk \"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
+        }
     }
 }

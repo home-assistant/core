@@ -520,7 +520,7 @@ class RflinkCommand(RflinkDevice):
 
         if self._wait_ack:
             # Puts command on outgoing buffer then waits for Rflink to confirm
-            # the command has been send out in the ether.
+            # the command has been sent out.
             await self._protocol.send_command_ack(self._device_id, cmd)
         else:
             # Puts command on outgoing buffer and returns straight away.

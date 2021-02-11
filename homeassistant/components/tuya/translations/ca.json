@@ -23,6 +23,9 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
         "error": {
             "dev_multi_type": "Per configurar una selecci\u00f3 de m\u00faltiples dispositius, aquests han de ser del mateix tipus",
             "dev_not_config": "El tipus d'aquest dispositiu no \u00e9s configurable",
@@ -42,7 +45,7 @@
                     "tuya_max_coltemp": "Temperatura de color m\u00e0xima enviada pel dispositiu",
                     "unit_of_measurement": "Unitat de temperatura utilitzada pel dispositiu"
                 },
-                "description": "Configura les opcions per ajustar la informaci\u00f3 mostrada per {device_type} dispositiu `{device_name}`",
+                "description": "Configura les opcions per ajustar la informaci\u00f3 mostrada pel dispositiu {device_type} `{device_name}`",
                 "title": "Configuraci\u00f3 de dispositiu Tuya"
             },
             "init": {

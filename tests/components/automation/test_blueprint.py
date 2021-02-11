@@ -3,6 +3,7 @@ import asyncio
 import contextlib
 from datetime import timedelta
 import pathlib
+from unittest.mock import patch
 
 from homeassistant.components import automation
 from homeassistant.components.blueprint import models
@@ -10,7 +11,6 @@ from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, yaml
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, async_mock_service
 
 BUILTIN_BLUEPRINT_FOLDER = pathlib.Path(automation.__file__).parent / "blueprints"

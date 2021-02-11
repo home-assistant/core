@@ -1,5 +1,6 @@
 """Tests for the AsusWrt config flow."""
 from socket import gaierror
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -15,7 +16,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 HOST = "myrouter.asuswrt.com"
@@ -224,25 +224,27 @@ async def test_on_connect_failed(hass):
         context={"source": SOURCE_USER},
     )
 
-    with patch("homeassistant.components.asuswrt.router.AsusWrt") as AsusWrt:
-        AsusWrt.return_value.connection.async_connect = AsyncMock()
-        AsusWrt.return_value.is_connected = False
+    with patch("homeassistant.components.asuswrt.router.AsusWrt") as asus_wrt:
+        asus_wrt.return_value.connection.async_connect = AsyncMock()
+        asus_wrt.return_value.is_connected = False
         result = await hass.config_entries.flow.async_configure(
             flow_result["flow_id"], user_input=CONFIG_DATA
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "cannot_connect"}
 
-    with patch("homeassistant.components.asuswrt.router.AsusWrt") as AsusWrt:
-        AsusWrt.return_value.connection.async_connect = AsyncMock(side_effect=OSError)
+    with patch("homeassistant.components.asuswrt.router.AsusWrt") as asus_wrt:
+        asus_wrt.return_value.connection.async_connect = AsyncMock(side_effect=OSError)
         result = await hass.config_entries.flow.async_configure(
             flow_result["flow_id"], user_input=CONFIG_DATA
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "cannot_connect"}
 
-    with patch("homeassistant.components.asuswrt.router.AsusWrt") as AsusWrt:
-        AsusWrt.return_value.connection.async_connect = AsyncMock(side_effect=TypeError)
+    with patch("homeassistant.components.asuswrt.router.AsusWrt") as asus_wrt:
+        asus_wrt.return_value.connection.async_connect = AsyncMock(
+            side_effect=TypeError
+        )
         result = await hass.config_entries.flow.async_configure(
             flow_result["flow_id"], user_input=CONFIG_DATA
         )

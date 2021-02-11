@@ -33,7 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .accessories import TYPES, HomeAccessory, debounce
+from .accessories import TYPES, HomeAccessory
 from .const import (
     ATTR_OBSTRUCTION_DETECTED,
     CHAR_CURRENT_DOOR_STATE,
@@ -233,7 +233,6 @@ class OpeningDeviceBase(HomeAccessory):
             return
         self.call_service(DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: self.entity_id})
 
-    @debounce
     def set_tilt(self, value):
         """Set tilt to value if call came from HomeKit."""
         _LOGGER.info("%s: Set tilt to %d", self.entity_id, value)
@@ -284,7 +283,6 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         )
         self.async_update_state(state)
 
-    @debounce
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set position to %d", self.entity_id, value)
@@ -360,7 +358,6 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
         )
         self.async_update_state(state)
 
-    @debounce
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set position to %d", self.entity_id, value)

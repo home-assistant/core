@@ -1,9 +1,8 @@
 """Tests for the auth store."""
 import asyncio
+from unittest.mock import patch
 
 from homeassistant.auth import auth_store
-
-from tests.async_mock import patch
 
 
 async def test_loading_no_group_data_format(hass, hass_storage):
@@ -38,6 +37,7 @@ async def test_loading_no_group_data_format(hass, hass_storage):
                     "last_used_at": "2018-10-03T13:43:19.774712+00:00",
                     "token": "some-token",
                     "user_id": "user-id",
+                    "version": "1.2.3",
                 },
                 {
                     "access_token_expiration": 1800.0,
@@ -88,12 +88,14 @@ async def test_loading_no_group_data_format(hass, hass_storage):
     assert len(owner.refresh_tokens) == 1
     owner_token = list(owner.refresh_tokens.values())[0]
     assert owner_token.id == "user-token-id"
+    assert owner_token.version == "1.2.3"
 
     assert system.system_generated is True
     assert system.groups == []
     assert len(system.refresh_tokens) == 1
     system_token = list(system.refresh_tokens.values())[0]
     assert system_token.id == "system-token-id"
+    assert system_token.version is None
 
 
 async def test_loading_all_access_group_data_format(hass, hass_storage):
@@ -130,6 +132,7 @@ async def test_loading_all_access_group_data_format(hass, hass_storage):
                     "last_used_at": "2018-10-03T13:43:19.774712+00:00",
                     "token": "some-token",
                     "user_id": "user-id",
+                    "version": "1.2.3",
                 },
                 {
                     "access_token_expiration": 1800.0,
@@ -140,6 +143,7 @@ async def test_loading_all_access_group_data_format(hass, hass_storage):
                     "last_used_at": "2018-10-03T13:43:19.774712+00:00",
                     "token": "some-token",
                     "user_id": "system-id",
+                    "version": None,
                 },
                 {
                     "access_token_expiration": 1800.0,
@@ -180,12 +184,14 @@ async def test_loading_all_access_group_data_format(hass, hass_storage):
     assert len(owner.refresh_tokens) == 1
     owner_token = list(owner.refresh_tokens.values())[0]
     assert owner_token.id == "user-token-id"
+    assert owner_token.version == "1.2.3"
 
     assert system.system_generated is True
     assert system.groups == []
     assert len(system.refresh_tokens) == 1
     system_token = list(system.refresh_tokens.values())[0]
     assert system_token.id == "system-token-id"
+    assert system_token.version is None
 
 
 async def test_loading_empty_data(hass, hass_storage):

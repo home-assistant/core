@@ -4,12 +4,18 @@
             "port_name_in_use": "P\u0159\u00edslu\u0161enstv\u00ed nebo p\u0159emost\u011bn\u00ed se stejn\u00fdm n\u00e1zvem nebo portem je ji\u017e nastaveno."
         },
         "step": {
+            "accessory_mode": {
+                "data": {
+                    "entity_id": "Entita"
+                }
+            },
             "pairing": {
                 "title": "P\u00e1rov\u00e1n\u00ed s HomeKit"
             },
             "user": {
                 "data": {
-                    "include_domains": "Dom\u00e9ny, kter\u00e9 maj\u00ed b\u00fdt zahrnuty"
+                    "include_domains": "Dom\u00e9ny, kter\u00e9 maj\u00ed b\u00fdt zahrnuty",
+                    "mode": "Re\u017eim"
                 },
                 "title": "Aktivace HomeKit"
             }

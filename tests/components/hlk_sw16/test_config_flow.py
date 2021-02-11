@@ -1,10 +1,9 @@
 """Test the Hi-Link HLK-SW16 config flow."""
 import asyncio
+from unittest.mock import patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.hlk_sw16.const import DOMAIN
-
-from tests.async_mock import patch
 
 
 class MockSW16Client:

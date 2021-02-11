@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_PROTOCOL,
+    CONF_SENSORS,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -38,7 +39,6 @@ from .router import AsusWrtRouter
 PLATFORMS = ["device_tracker", "sensor"]
 
 CONF_PUB_KEY = "pub_key"
-CONF_SENSORS = "sensors"
 SECRET_GROUP = "Password or SSH Key"
 
 _LOGGER = logging.getLogger(__name__)

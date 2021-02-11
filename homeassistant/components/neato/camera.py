@@ -45,7 +45,7 @@ class NeatoCleaningMap(Camera):
         self.robot = robot
         self.neato = neato
         self._mapdata = mapdata
-        self._available = self.neato.logged_in if self.neato is not None else False
+        self._available = neato is not None
         self._robot_name = f"{self.robot.name} Cleaning Map"
         self._robot_serial = self.robot.serial
         self._generated_at = None

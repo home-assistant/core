@@ -7,7 +7,18 @@
             "user": {
                 "data": {
                     "password": "Wachtwoord"
-                }
+                },
+                "title": "Tegel configureren"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_inactive": "Toon inactieve tegels"
+                },
+                "title": "Tegel configureren"
             }
         }
     }

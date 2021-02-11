@@ -1,9 +1,10 @@
 """The tests for the MQTT statestream component."""
+from unittest.mock import ANY, call
+
 import homeassistant.components.mqtt_statestream as statestream
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import ANY, call
 from tests.common import mock_state_change_event
 
 

@@ -1,5 +1,7 @@
 """Tests for IPMA config flow."""
 
+from unittest.mock import Mock, patch
+
 from homeassistant.components.ipma import DOMAIN, config_flow
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
 from homeassistant.helpers import entity_registry
@@ -7,7 +9,6 @@ from homeassistant.setup import async_setup_component
 
 from .test_weather import MockLocation
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry, mock_registry
 
 

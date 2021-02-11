@@ -3,11 +3,10 @@
 import os
 import tempfile
 from typing import Tuple
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components import shell_command
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import MagicMock, patch
 
 
 def mock_process_creator(error: bool = False):

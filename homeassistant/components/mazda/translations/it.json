@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La riautenticazione ha avuto successo"
+        },
+        "error": {
+            "account_locked": "Account bloccato. Per favore riprova pi\u00f9 tardi.",
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "email": "E-mail",
+                    "password": "Password",
+                    "region": "Area geografica"
+                },
+                "description": "Autenticazione non riuscita per Mazda Connected Services. Inserisci le tue credenziali attuali.",
+                "title": "Mazda Connected Services - Autenticazione non riuscita"
+            },
+            "user": {
+                "data": {
+                    "email": "E-mail",
+                    "password": "Password",
+                    "region": "Area geografica"
+                },
+                "description": "Inserisci l'indirizzo e-mail e la password che utilizzi per accedere all'app mobile MyMazda.",
+                "title": "Mazda Connected Services - Aggiungi account"
+            }
+        }
+    },
+    "title": "Mazda Connected Services"
+}
