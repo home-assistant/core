@@ -4,9 +4,7 @@ import logging
 from homeassistant.const import CONF_DEVICE, CONF_NAME, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 
-from . import CONF_SENSOR
-
-DOMAIN = "kira"
+from . import CONF_SENSOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
