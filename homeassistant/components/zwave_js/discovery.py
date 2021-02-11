@@ -87,11 +87,11 @@ class ZWaveDiscoverySchema:
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/deviceClasses.json
 DISCOVERY_SCHEMAS = [
     # ====== START OF DEVICE SPECIFIC MAPPING SCHEMAS =======
-    # Honeywell/Jasco 39358 In-Wall Fan Control using switch multilevel CC
+    # Honeywell 39358 In-Wall Fan Control using switch multilevel CC
     ZWaveDiscoverySchema(
         platform="fan",
         manufacturer_id={0x0039},
-        product_id={0x3131, 0x3138},
+        product_id={0x3131},
         product_type={0x4944},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
@@ -99,11 +99,11 @@ DISCOVERY_SCHEMAS = [
             type={"number"},
         ),
     ),
-    # GE fan controllers using switch multilevel CC
+    # GE/Jasco fan controllers using switch multilevel CC
     ZWaveDiscoverySchema(
         platform="fan",
         manufacturer_id={0x0063},
-        product_id={0x3034, 0x3131},
+        product_id={0x3034, 0x3131, 0x3138},
         product_type={0x4944},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
