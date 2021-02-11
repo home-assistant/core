@@ -109,7 +109,7 @@ async def test_webhook_handle_fire_event(hass, create_registrations, webhook_cli
 
     @callback
     def store_event(event):
-        """Helepr to store events."""
+        """Help store events."""
         events.append(event)
 
     hass.bus.async_listen("test_event", store_event)
