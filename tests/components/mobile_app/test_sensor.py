@@ -66,9 +66,23 @@ async def test_sensor(hass, create_registrations, webhook_client):
 
     updated_entity = hass.states.get("sensor.test_1_battery_state")
     assert updated_entity.state == "123"
+    assert "foo" not in updated_entity.attributes
 
     dev_reg = await device_registry.async_get_registry(hass)
     assert len(dev_reg.devices) == len(create_registrations)
+
+    # Reload to verify state is restored
+    config_entry = hass.config_entries.async_entries("mobile_app")[1]
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    unloaded_entity = hass.states.get("sensor.test_1_battery_state")
+    assert unloaded_entity.state == "unavailable"
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    restored_entity = hass.states.get("sensor.test_1_battery_state")
+    assert restored_entity.state == updated_entity.state
+    assert restored_entity.attributes == updated_entity.attributes
 
 
 async def test_sensor_must_register(hass, create_registrations, webhook_client):
