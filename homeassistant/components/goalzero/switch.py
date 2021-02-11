@@ -52,15 +52,14 @@ class YetiSwitch(YetiEntity, SwitchEntity):
         """Return state of the switch."""
         return self.api.data[self._condition]
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
     async def async_turn_off(self, **kwargs):
         """Turn off the switch."""
-        await self.api.post_state(payload={self._condition: 0})
+        _payload = {self._condition: 0}
+        await self.api.post_state(payload=_payload)
+        self.coordinator.async_set_updated_data(data=_payload)
 
     async def async_turn_on(self, **kwargs):
         """Turn on the switch."""
-        await self.api.post_state(payload={self._condition: 1})
+        _payload = {self._condition: 1}
+        await self.api.post_state(payload=_payload)
+        self.coordinator.async_set_updated_data(data=_payload)
