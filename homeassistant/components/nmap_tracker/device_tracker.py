@@ -12,13 +12,12 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOSTS
+from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_EXCLUDE = "exclude"
 # Interval in minutes to exclude devices from a scan while they are home
 CONF_HOME_INTERVAL = "home_interval"
 CONF_OPTIONS = "scan_options"
