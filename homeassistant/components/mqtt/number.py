@@ -67,7 +67,6 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT number dynamically through MQTT discovery."""
-
     setup = functools.partial(
         _async_setup_entity, async_add_entities, config_entry=config_entry
     )
@@ -110,7 +109,6 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT messages."""
-
             try:
                 if msg.payload.decode("utf-8").isnumeric():
                     self._current_number = int(msg.payload)
@@ -149,7 +147,6 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Update the current value."""
-
         current_number = value
 
         if value.is_integer():

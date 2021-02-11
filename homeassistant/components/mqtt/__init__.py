@@ -19,6 +19,7 @@ from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.const import (
     CONF_CLIENT_ID,
+    CONF_DISCOVERY,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_PORT,
@@ -28,7 +29,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.const import CONF_UNIQUE_ID  # noqa: F401
 from homeassistant.core import CoreState, Event, HassJob, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
@@ -48,7 +48,6 @@ from .const import (
     ATTR_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
-    CONF_DISCOVERY,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
@@ -1053,7 +1052,6 @@ async def websocket_subscribe(hass, connection, msg):
 @callback
 def async_subscribe_connection_status(hass, connection_status_callback):
     """Subscribe to MQTT connection changes."""
-
     connection_status_callback_job = HassJob(connection_status_callback)
 
     async def connected():

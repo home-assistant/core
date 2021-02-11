@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_COLOR_TEMP,
     CONF_DEVICE,
     CONF_EFFECT,
+    CONF_HS,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_RGB,
@@ -75,7 +76,6 @@ CONF_EFFECT_LIST = "effect_list"
 
 CONF_FLASH_TIME_LONG = "flash_time_long"
 CONF_FLASH_TIME_SHORT = "flash_time_short"
-CONF_HS = "hs"
 
 CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"

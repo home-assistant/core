@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
+    CONF_DISCOVERY,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PAYLOAD,
@@ -22,7 +23,6 @@ from .const import (
     ATTR_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
-    CONF_DISCOVERY,
     CONF_WILL_MESSAGE,
     DATA_MQTT_CONFIG,
     DEFAULT_BIRTH,
