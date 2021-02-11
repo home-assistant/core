@@ -21,7 +21,12 @@ from homeassistant.components.climate.const import (
     PRESET_BOOST,
 )
 from homeassistant.components.netatmo import climate
-from homeassistant.components.netatmo.climate import NA_THERM, NA_VALVE
+from homeassistant.components.netatmo.climate import (
+    NA_THERM,
+    NA_VALVE,
+    PRESET_FROST_GUARD,
+    PRESET_SCHEDULE,
+)
 from homeassistant.components.netatmo.const import (
     ATTR_SCHEDULE_NAME,
     SERVICE_SET_SCHEDULE,
@@ -67,7 +72,7 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry, caplog):
     )
     await hass.async_block_till_done()
 
-    # Test webhook thermostat manual set point
+    # Fake webhook thermostat manual set point
     webhook_data = {
         "user_id": "91763b24c43d3e344f424e8b",
         "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
@@ -119,7 +124,7 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry, caplog):
     )
     await hass.async_block_till_done()
 
-    # Test webhook thermostat mode change to "Max"
+    # Fake webhook thermostat mode change to "Max"
     webhook_data = {
         "user_id": "91763b24c43d3e344f424e8b",
         "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
@@ -165,7 +170,7 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry, caplog):
     )
     await hass.async_block_till_done()
 
-    # Test webhook turn thermostat off
+    # Fake webhook turn thermostat off
     webhook_data = {
         "user_id": "91763b24c43d3e344f424e8b",
         "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
@@ -209,7 +214,7 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry, caplog):
     )
     await hass.async_block_till_done()
 
-    # Test webhook thermostat mode cancel set point
+    # Fake webhook thermostat mode cancel set point
     webhook_data = {
         "user_id": "91763b24c43d3e344f424e8b",
         "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
@@ -248,6 +253,31 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry, caplog):
         == "Schedule"
     )
 
+
+async def test_service_preset_mode_frost_guard_thermostat(hass, climate_entry, caplog):
+    """Test service with frost guard preset for thermostats."""
+    await hass.async_block_till_done()
+
+    climate_entity_livingroom = "climate.netatmo_livingroom"
+
+    assert hass.states.get(climate_entity_livingroom).state == "auto"
+    assert (
+        hass.states.get(climate_entity_livingroom).attributes["preset_mode"]
+        == "Schedule"
+    )
+
+    # Test service setting the preset mode to "frost guard"
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: climate_entity_livingroom,
+            ATTR_PRESET_MODE: PRESET_FROST_GUARD,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
     # Test webhook thermostat mode change to "Frost Guard"
     webhook_data = {
         "user_id": "91763b24c43d3e344f424e8b",
@@ -272,6 +302,18 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry, caplog):
         == "Frost Guard"
     )
 
+    # Test service setting the preset mode to "frost guard"
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            ATTR_ENTITY_ID: climate_entity_livingroom,
+            ATTR_PRESET_MODE: PRESET_SCHEDULE,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
     # Test webhook thermostat mode change to "Schedule"
     webhook_data = {
         "user_id": "91763b24c43d3e344f424e8b",
@@ -289,6 +331,19 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry, caplog):
         {"type": None, "data": webhook_data},
     )
     await hass.async_block_till_done()
+
+    assert hass.states.get(climate_entity_livingroom).state == "auto"
+    assert (
+        hass.states.get(climate_entity_livingroom).attributes["preset_mode"]
+        == "Schedule"
+    )
+
+
+async def test_service_preset_modes_thermostat(hass, climate_entry, caplog):
+    """Test service with preset modes for thermostats."""
+    await hass.async_block_till_done()
+
+    climate_entity_livingroom = "climate.netatmo_livingroom"
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     assert (
@@ -473,14 +528,9 @@ async def test_service_schedule_thermostats(hass, climate_entry, caplog):
     assert "summer is not a invalid schedule" in caplog.text
 
 
-async def test_valves(hass, climate_entry, caplog):
-    """Test setup with valves."""
+async def test_service_preset_mode_already_boost_valves(hass, climate_entry, caplog):
+    """Test service with boost preset for valves when already in boost mode."""
     await hass.async_block_till_done()
-
-    assert (
-        "HomeData"
-        in hass.data["netatmo"][climate_entry.entry_id]["netatmo_data_handler"].data
-    )
 
     climate_entity_entrada = "climate.netatmo_entrada"
 
@@ -489,6 +539,48 @@ async def test_valves(hass, climate_entry, caplog):
         hass.states.get(climate_entity_entrada).attributes["preset_mode"]
         == "Frost Guard"
     )
+    assert hass.states.get(climate_entity_entrada).attributes["temperature"] == 7
+
+    # Test webhook valve mode change to "Max"
+    webhook_data = {
+        "user_id": "91763b24c43d3e344f424e8b",
+        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
+        "home_id": "91763b24c43d3e344f424e8b",
+        "room_id": "2833524037",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2833524037",
+                    "name": "Entrada",
+                    "type": "lobby",
+                    "therm_setpoint_mode": "max",
+                    "therm_setpoint_end_time": 1612749189,
+                }
+            ],
+            "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
+        },
+        "mode": "max",
+        "event_type": "set_point",
+        "push_type": "display_change",
+    }
+    async_dispatcher_send(
+        hass,
+        "signal-netatmo-webhook-set_point",
+        {"type": None, "data": webhook_data},
+    )
+    await hass.async_block_till_done()
+
+    # Test service setting the preset mode to "boost"
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: climate_entity_entrada, ATTR_PRESET_MODE: PRESET_BOOST},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
 
     # Test webhook valve mode change to "Max"
     webhook_data = {
@@ -524,17 +616,6 @@ async def test_valves(hass, climate_entry, caplog):
 
     assert hass.states.get(climate_entity_entrada).state == "heat"
     assert hass.states.get(climate_entity_entrada).attributes["temperature"] == 30
-
-    # Test service setting the preset mode to "boost"
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: climate_entity_entrada, ATTR_PRESET_MODE: PRESET_BOOST},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    # assert hass.states.get(climate_entity_entrada).state == "heat"
 
 
 async def test_service_preset_mode_boost_valves(hass, climate_entry, caplog):
