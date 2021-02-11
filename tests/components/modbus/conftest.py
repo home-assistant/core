@@ -46,7 +46,6 @@ async def setup_base_test(
     scan_interval,
 ):
     """Run setup device for given config."""
-
     # Full sensor configuration
     config = {
         entity_domain: {
@@ -79,7 +78,6 @@ async def run_base_read_test(
     now,
 ):
     """Run test for given config."""
-
     # Setup inputs for the sensor
     read_result = ReadResult(register_words)
     if register_type == CALL_TYPE_COIL:
