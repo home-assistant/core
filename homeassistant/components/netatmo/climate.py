@@ -2,6 +2,7 @@
 import logging
 from typing import List, Optional
 
+import pyatmo
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
@@ -251,7 +252,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         """Handle webhook events."""
         data = event["data"]
 
-        if not data.get("home"):
+        if data.get("home") is None:
             return
 
         home = data["home"]
@@ -586,7 +587,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         return {**super().device_info, "suggested_area": self._room_data["name"]}
 
 
-def interpolate(batterylevel, module_type):
+def interpolate(batterylevel: int, module_type: str) -> int:
     """Interpolate battery level depending on device type."""
     na_battery_levels = {
         NA_THERM: {
@@ -628,7 +629,7 @@ def interpolate(batterylevel, module_type):
     return int(pct)
 
 
-def get_all_home_ids(home_data):
+def get_all_home_ids(home_data: pyatmo.HomeData) -> List[str]:
     """Get all the home ids returned by NetAtmo API."""
     if home_data is None:
         return []
