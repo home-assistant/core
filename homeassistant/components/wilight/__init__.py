@@ -1,14 +1,14 @@
 """The WiLight integration."""
 import asyncio
 
-from pywilight.const import DOMAIN
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 
 from .parent_device import WiLightParent
+
+DOMAIN = "wilight"
 
 # List the platforms that you want to support.
 PLATFORMS = ["cover", "fan", "light"]

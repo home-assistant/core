@@ -2,7 +2,6 @@
 
 from pywilight.const import (
     COVER_V1,
-    DOMAIN,
     ITEM_COVER,
     WL_CLOSE,
     WL_CLOSING,
@@ -16,7 +15,7 @@ from homeassistant.components.cover import ATTR_POSITION, CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import WiLightDevice
+from . import DOMAIN, WiLightDevice
 
 
 async def async_setup_entry(

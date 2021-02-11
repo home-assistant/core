@@ -1,7 +1,6 @@
 """Support for WiLight Fan."""
 
 from pywilight.const import (
-    DOMAIN,
     FAN_V1,
     ITEM_FAN,
     WL_DIRECTION_FORWARD,
@@ -25,7 +24,7 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from . import WiLightDevice
+from . import DOMAIN, WiLightDevice
 
 ORDERED_NAMED_FAN_SPEEDS = [WL_SPEED_LOW, WL_SPEED_MEDIUM, WL_SPEED_HIGH]
 
@@ -80,6 +79,9 @@ class WiLightFan(WiLightDevice, FanEntity):
     @property
     def percentage(self) -> str:
         """Return the current speed percentage."""
+        if "direction" in self._status:
+            if self._status["direction"] == WL_DIRECTION_OFF:
+                return 0
         wl_speed = self._status.get("speed")
         if wl_speed is None:
             return None
@@ -111,6 +113,9 @@ class WiLightFan(WiLightDevice, FanEntity):
         if percentage == 0:
             await self._client.set_fan_direction(self._index, WL_DIRECTION_OFF)
             return
+        if "direction" in self._status:
+            if self._status["direction"] == WL_DIRECTION_OFF:
+                await self._client.set_fan_direction(self._index, self._direction)
         wl_speed = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
         await self._client.set_fan_speed(self._index, wl_speed)
 
