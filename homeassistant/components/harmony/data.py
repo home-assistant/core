@@ -35,16 +35,20 @@ class HarmonyData(HarmonySubscriberMixin):
         )
 
     @property
+    def activities(self):
+        """List of all non-poweroff activity objects."""
+        activity_infos = self._client.config.get("activity", [])
+        return [
+            info
+            for info in activity_infos
+            if info["label"] is not None and info["label"] != ACTIVITY_POWER_OFF
+        ]
+
+    @property
     def activity_names(self):
         """Names of all the remotes activities."""
-        activity_infos = self._client.config.get("activity", [])
+        activity_infos = self.activities
         activities = [activity["label"] for activity in activity_infos]
-
-        # Remove both ways of representing PowerOff
-        if None in activities:
-            activities.remove(None)
-        if ACTIVITY_POWER_OFF in activities:
-            activities.remove(ACTIVITY_POWER_OFF)
 
         return activities
 

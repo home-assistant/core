@@ -15,12 +15,12 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up harmony activity switches."""
     data = hass.data[DOMAIN][entry.entry_id]
-    activities = data.activity_names
+    activities = data.activities
 
     switches = []
     for activity in activities:
         _LOGGER.debug("creating switch for activity: %s", activity)
-        name = f"{entry.data[CONF_NAME]} {activity}"
+        name = f"{entry.data[CONF_NAME]} {activity['label']}"
         switches.append(HarmonyActivitySwitch(name, activity, data))
 
     async_add_entities(switches, True)
@@ -29,11 +29,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class HarmonyActivitySwitch(ConnectionStateMixin, SwitchEntity):
     """Switch representation of a Harmony activity."""
 
-    def __init__(self, name: str, activity: str, data: HarmonyData):
+    def __init__(self, name: str, activity: dict, data: HarmonyData):
         """Initialize HarmonyActivitySwitch class."""
         super().__init__()
         self._name = name
-        self._activity = activity
+        self._activity_name = activity["label"]
+        self._activity_id = activity["id"]
         self._data = data
 
     @property
@@ -44,7 +45,7 @@ class HarmonyActivitySwitch(ConnectionStateMixin, SwitchEntity):
     @property
     def unique_id(self):
         """Return the unique id."""
-        return f"{self._data.unique_id}-{self._activity}"
+        return f"activity_{self._activity_id}"
 
     @property
     def device_info(self):
@@ -55,7 +56,7 @@ class HarmonyActivitySwitch(ConnectionStateMixin, SwitchEntity):
     def is_on(self):
         """Return if the current activity is the one for this switch."""
         _, activity_name = self._data.current_activity
-        return activity_name == self._activity
+        return activity_name == self._activity_name
 
     @property
     def should_poll(self):
@@ -69,7 +70,7 @@ class HarmonyActivitySwitch(ConnectionStateMixin, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Start this activity."""
-        await self._data.async_start_activity(self._activity)
+        await self._data.async_start_activity(self._activity_name)
 
     async def async_turn_off(self, **kwargs):
         """Stop this activity."""
