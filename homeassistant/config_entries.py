@@ -1145,17 +1145,23 @@ class EntityRegistryDisabledHandler:
     def async_setup(self) -> None:
         """Set up the disable handler."""
         self.hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, self._handle_entry_updated
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            self._handle_entry_updated,
+            event_filter=self._handle_entry_updated_filter,
         )
 
-    async def _handle_entry_updated(self, event: Event) -> None:
+    @callback
+    def _handle_entry_updated_filter(self, event: Event) -> bool:
         """Handle entity registry entry update."""
         if (
             event.data["action"] != "update"
             or "disabled_by" not in event.data["changes"]
         ):
-            return
+            return False
+        return True
 
+    async def _handle_entry_updated(self, event: Event) -> None:
+        """Handle entity registry entry update."""
         if self.registry is None:
             self.registry = await entity_registry.async_get_registry(self.hass)
 
