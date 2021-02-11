@@ -63,13 +63,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is not None:
         host = discovery_info["host"]
         name = discovery_info["hostname"]
+        device_id = discovery_info["properties"]["id"]
+
         # if device already exists via config, skip discovery setup
         if host in hass.data[DATA_NANOLEAF]:
             return
         _LOGGER.info("Discovered a new Nanoleaf: %s", discovery_info)
         conf = load_json(hass.config.path(CONFIG_FILE))
-        if conf.get(host, {}).get("token"):
-            token = conf[host]["token"]
+        if host in conf and device_id not in conf:
+            conf[device_id] = conf.pop(host)
+            save_json(hass.config.path(CONFIG_FILE), conf)
+        token = conf.get(device_id, {}).get("token", "")
     else:
         host = config[CONF_HOST]
         name = config[CONF_NAME]
