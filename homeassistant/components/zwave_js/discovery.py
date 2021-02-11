@@ -102,7 +102,7 @@ DISCOVERY_SCHEMAS = [
     # GE fan controllers using switch multilevel CC
     ZWaveDiscoverySchema(
         platform="fan",
-        manufacturer_id={1584},
+        manufacturer_id={99},
         product_id={12340, 12593},
         product_type={18756},
         primary_value=ZWaveValueDiscoverySchema(
