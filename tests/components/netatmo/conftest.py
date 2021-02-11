@@ -89,6 +89,8 @@ async def mock_camera_entry_fixture(hass, config_entry):
     """Mock setup of camera platform."""
     with selected_platforms(["camera"]):
         await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.async_block_till_done()
     return config_entry
 
 
@@ -97,6 +99,8 @@ async def mock_light_entry_fixture(hass, config_entry):
     """Mock setup of light platform."""
     with selected_platforms(["light"]):
         await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.async_block_till_done()
     return config_entry
 
 
