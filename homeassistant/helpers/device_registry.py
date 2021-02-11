@@ -603,14 +603,12 @@ class DeviceRegistry:
                 self._async_update_device(dev_id, area_id=None)
 
 
-@bind_hass
 @callback
 def async_get(hass: HomeAssistantType) -> DeviceRegistry:
     """Get device registry."""
     return cast(DeviceRegistry, hass.data[DATA_REGISTRY])
 
 
-@bind_hass
 async def async_load(hass: HomeAssistantType) -> None:
     """Load device registry."""
     assert DATA_REGISTRY not in hass.data
@@ -620,13 +618,10 @@ async def async_load(hass: HomeAssistantType) -> None:
 
 @bind_hass
 async def async_get_registry(hass: HomeAssistantType) -> DeviceRegistry:
-    """Wait until device registry is loaded, then return it.
+    """Get device registry.
 
     This is deprecated and will be removed in the future. Use async_get instead.
     """
-    if DATA_REGISTRY not in hass.data:
-        await async_load(hass)
-
     return async_get(hass)
 
 

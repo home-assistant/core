@@ -17,6 +17,7 @@ from homeassistant import config as conf_util, config_entries, core, loader
 from homeassistant.components import http
 from homeassistant.const import REQUIRED_NEXT_PYTHON_DATE, REQUIRED_NEXT_PYTHON_VER
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import area_registry, device_registry, entity_registry
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
     DATA_SETUP,
@@ -511,10 +512,10 @@ async def _async_set_up_integrations(
     stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
 
     # Load the registries
-    asyncio.gather(
-        hass.helpers.device_registry.async_load(),
-        hass.helpers.entity_registry.async_load(),
-        hass.helpers.area_registry.async_load(),
+    await asyncio.gather(
+        device_registry.async_load(hass),
+        entity_registry.async_load(hass),
+        area_registry.async_load(hass),
     )
 
     # Start setup

@@ -7,11 +7,10 @@ from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
-    CONF_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_INPUTS,
 )
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, STATE_OFF, STATE_ON
 
 from .conftest import run_base_read_test, setup_base_test
 

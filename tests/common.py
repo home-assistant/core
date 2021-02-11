@@ -146,7 +146,7 @@ def get_test_home_assistant():
 
 
 # pylint: disable=protected-access
-async def async_test_home_assistant(loop):
+async def async_test_home_assistant(loop, load_registries=True):
     """Return a Home Assistant object pointing at test config dir."""
     hass = ha.HomeAssistant()
     store = auth_store.AuthStore(hass)
@@ -279,6 +279,15 @@ async def async_test_home_assistant(loop):
     hass.config_entries = config_entries.ConfigEntries(hass, {})
     hass.config_entries._entries = []
     hass.config_entries._store._async_ensure_stop_listener = lambda: None
+
+    # Load the registries
+    if load_registries:
+        await asyncio.gather(
+            device_registry.async_load(hass),
+            entity_registry.async_load(hass),
+            area_registry.async_load(hass),
+        )
+        await hass.async_block_till_done()
 
     hass.state = ha.CoreState.running
 

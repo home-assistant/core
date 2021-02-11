@@ -154,14 +154,12 @@ class AreaRegistry:
         return data
 
 
-@bind_hass
 @callback
 def async_get(hass: HomeAssistantType) -> AreaRegistry:
     """Get area registry."""
     return cast(AreaRegistry, hass.data[DATA_REGISTRY])
 
 
-@bind_hass
 async def async_load(hass: HomeAssistantType) -> None:
     """Load area registry."""
     assert DATA_REGISTRY not in hass.data
@@ -171,11 +169,8 @@ async def async_load(hass: HomeAssistantType) -> None:
 
 @bind_hass
 async def async_get_registry(hass: HomeAssistantType) -> AreaRegistry:
-    """Wait until area registry is loaded, then return it.
+    """Get area registry.
 
     This is deprecated and will be removed in the future. Use async_get instead.
     """
-    if DATA_REGISTRY not in hass.data:
-        await async_load(hass)
-
     return async_get(hass)
