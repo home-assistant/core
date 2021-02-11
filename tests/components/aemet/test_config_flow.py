@@ -37,8 +37,6 @@ CONFIG = {
     CONF_MODE: DEFAULT_FORECAST_MODE,
 }
 
-VALID_YAML_CONFIG = {CONF_API_KEY: "foo"}
-
 
 async def test_form(hass):
     """Test that the form is served with valid input."""
@@ -132,3 +130,19 @@ async def test_form_options(hass):
         await hass.async_block_till_done()
 
         assert config_entry.state == ENTRY_STATE_LOADED
+
+
+async def test_form_api_offline(hass):
+    """Test setting up with api call error."""
+
+    with requests_mock.mock() as _m:
+        _m.get(
+            "https://opendata.aemet.es/opendata/api/observacion/convencional/todas",
+            text="",
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
+
+        assert result["errors"] == {"base": "invalid_api_key"}
