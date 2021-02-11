@@ -380,6 +380,7 @@ DISCOVERY_SCHEMAS = [
 @callback
 def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None, None]:
     """Run discovery on ZWave node and return matching (primary) values."""
+    # pylint: disable=too-many-nested-blocks
     for value in node.values.values():
         for schema in DISCOVERY_SCHEMAS:
             # check manufacturer_id
