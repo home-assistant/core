@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    for component in [device_tracker.DOMAIN, binary_sensor.DOMAIN]:
+    for component in PLATFORMS:
         await hass.config_entries.async_forward_entry_unload(config_entry, component)
 
     router: KeeneticRouter = hass.data[DOMAIN].pop(config_entry.entry_id)
