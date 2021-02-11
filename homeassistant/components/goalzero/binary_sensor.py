@@ -5,8 +5,6 @@ from homeassistant.const import CONF_NAME
 from . import YetiEntity
 from .const import BINARY_SENSOR_DICT, DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
 
-PARALLEL_UPDATES = 0
-
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Goal Zero Yeti sensor."""

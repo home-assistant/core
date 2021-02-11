@@ -20,12 +20,11 @@ from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN, MIN_TIME_BETWEEN_
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORMS = ["binary_sensor"]
+PLATFORMS = ["binary_sensor", "switch"]
 
 
 async def async_setup(hass: HomeAssistant, config):
     """Set up the Goal Zero Yeti component."""
-
     hass.data[DOMAIN] = {}
 
     return True
