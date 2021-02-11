@@ -56,10 +56,20 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
             _LOGGER.error("Unable to send commands, not connected to %s", self._name)
             return
 
+        exit_loop = False
         for _ in range(num_repeats):
             for single_command in command:
                 attr_value = getattr(self.atv.remote_control, single_command, None)
                 if attr_value:
                     _LOGGER.info("Sending command %s", single_command)
                     await attr_value()
-                await asyncio.sleep(delay)
+                    await asyncio.sleep(delay)
+                else:
+                    exit_loop = True
+                    _LOGGER.error(
+                        'Command "%s" not found. Exiting command sequence',
+                        single_command,
+                    )
+                    break
+            if exit_loop:
+                break
