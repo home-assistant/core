@@ -209,7 +209,7 @@ class CoreState(enum.Enum):
 
     def __str__(self) -> str:  # pylint: disable=invalid-str-returned
         """Return the event."""
-        return self.value  # type: ignore
+        return self.value
 
 
 class HomeAssistant:
@@ -596,7 +596,7 @@ class EventOrigin(enum.Enum):
 
     def __str__(self) -> str:  # pylint: disable=invalid-str-returned
         """Return the event."""
-        return self.value  # type: ignore
+        return self.value
 
 
 class Event:
@@ -718,10 +718,10 @@ class EventBus:
         if not listeners:
             return
 
-        for job, filter in listeners:
-            if filter is not None:
+        for job, event_filter in listeners:
+            if event_filter is not None:
                 try:
-                    if not filter(event):
+                    if not event_filter(event):
                         continue
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Error in event filter")
@@ -746,7 +746,10 @@ class EventBus:
 
     @callback
     def async_listen(
-        self, event_type: str, listener: Callable, filter: Optional[Callable] = None
+        self,
+        event_type: str,
+        listener: Callable,
+        event_filter: Optional[Callable] = None,
     ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
@@ -755,10 +758,10 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if filter is not None and not is_callback(filter):
-            raise HomeAssistantError(f"Event filter {filter} is not a callback")
+        if event_filter is not None and not is_callback(event_filter):
+            raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
         return self._async_listen_filterable_job(
-            event_type, (HassJob(listener), filter)
+            event_type, (HassJob(listener), event_filter)
         )
 
     @callback

@@ -393,7 +393,7 @@ async def test_eventbus_filtered_listener(hass):
         """Mock filter."""
         return not event.data["filtered"]
 
-    unsub = hass.bus.async_listen("test", listener, filter=filter)
+    unsub = hass.bus.async_listen("test", listener, event_filter=filter)
 
     hass.bus.async_fire("test", {"filtered": True})
     await hass.async_block_till_done()

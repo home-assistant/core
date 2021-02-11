@@ -230,7 +230,7 @@ def async_track_state_change(
         return async_track_state_change_event(hass, entity_ids, state_change_listener)
 
     return hass.bus.async_listen(
-        EVENT_STATE_CHANGED, state_change_dispatcher, filter=state_change_filter
+        EVENT_STATE_CHANGED, state_change_dispatcher, event_filter=state_change_filter
     )
 
 
@@ -272,6 +272,9 @@ def async_track_state_change_event(
             """Dispatch state changes by entity_id."""
             entity_id = event.data.get("entity_id")
 
+            if entity_id not in entity_callbacks:
+                return
+
             for job in entity_callbacks[entity_id][:]:
                 try:
                     hass.async_run_hass_job(job, event)
@@ -283,7 +286,7 @@ def async_track_state_change_event(
         hass.data[TRACK_STATE_CHANGE_LISTENER] = hass.bus.async_listen(
             EVENT_STATE_CHANGED,
             _async_state_change_dispatcher,
-            filter=_async_state_change_filter,
+            event_filter=_async_state_change_filter,
         )
 
     job = HassJob(action)
@@ -360,6 +363,9 @@ def async_track_entity_registry_updated_event(
             """Dispatch entity registry updates by entity_id."""
             entity_id = event.data.get("old_entity_id", event.data["entity_id"])
 
+            if entity_id not in entity_callbacks:
+                return
+
             for job in entity_callbacks[entity_id][:]:
                 try:
                     hass.async_run_hass_job(job, event)
@@ -372,7 +378,7 @@ def async_track_entity_registry_updated_event(
         hass.data[TRACK_ENTITY_REGISTRY_UPDATED_LISTENER] = hass.bus.async_listen(
             EVENT_ENTITY_REGISTRY_UPDATED,
             _async_entity_registry_updated_dispatcher,
-            filter=_async_entity_registry_updated_filter,
+            event_filter=_async_entity_registry_updated_filter,
         )
 
     job = HassJob(action)
@@ -437,12 +443,15 @@ def async_track_state_added_domain(
         @callback
         def _async_state_change_dispatcher(event: Event) -> None:
             """Dispatch state changes by entity_id."""
+            if event.data.get("old_state") is not None:
+                return
+
             _async_dispatch_domain_event(hass, event, domain_callbacks)
 
         hass.data[TRACK_STATE_ADDED_DOMAIN_LISTENER] = hass.bus.async_listen(
             EVENT_STATE_CHANGED,
             _async_state_change_dispatcher,
-            filter=_async_state_change_filter,
+            event_filter=_async_state_change_filter,
         )
 
     job = HassJob(action)
@@ -487,12 +496,15 @@ def async_track_state_removed_domain(
         @callback
         def _async_state_change_dispatcher(event: Event) -> None:
             """Dispatch state changes by entity_id."""
+            if event.data.get("new_state") is not None:
+                return
+
             _async_dispatch_domain_event(hass, event, domain_callbacks)
 
         hass.data[TRACK_STATE_REMOVED_DOMAIN_LISTENER] = hass.bus.async_listen(
             EVENT_STATE_CHANGED,
             _async_state_change_dispatcher,
-            filter=_async_state_change_filter,
+            event_filter=_async_state_change_filter,
         )
 
     job = HassJob(action)

@@ -253,7 +253,7 @@ class Recorder(threading.Thread):
     def async_initialize(self):
         """Initialize the recorder."""
         self.hass.bus.async_listen(
-            MATCH_ALL, self.event_listener, filter=self._async_event_filter
+            MATCH_ALL, self.event_listener, event_filter=self._async_event_filter
         )
 
     @callback

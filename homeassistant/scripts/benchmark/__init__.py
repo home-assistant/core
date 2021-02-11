@@ -102,7 +102,7 @@ async def fire_events_with_filter(hass):
         nonlocal count
         count += 1
 
-    hass.bus.async_listen(event_name, listener, filter=event_filter)
+    hass.bus.async_listen(event_name, listener, event_filter=event_filter)
 
     for _ in range(events_to_fire):
         hass.bus.async_fire(event_name)
