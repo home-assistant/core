@@ -20,7 +20,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     switches = []
     for activity in activities:
         _LOGGER.debug("creating switch for activity: %s", activity)
-        name = f"{entry.data[CONF_NAME]} {activity['name']}"
+        name = f"{entry.data[CONF_NAME]} {activity['label']}"
         switches.append(HarmonyActivitySwitch(name, activity, data))
 
     async_add_entities(switches, True)
@@ -33,7 +33,7 @@ class HarmonyActivitySwitch(ConnectionStateMixin, SwitchEntity):
         """Initialize HarmonyActivitySwitch class."""
         super().__init__()
         self._name = name
-        self._activity_name = activity["name"]
+        self._activity_name = activity["label"]
         self._activity_id = activity["id"]
         self._data = data
 

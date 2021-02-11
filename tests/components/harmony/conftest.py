@@ -123,6 +123,8 @@ class FakeHarmonyClient:
         type(config).config = PropertyMock(
             return_value={
                 "activity": [
+                    {"id": 10000, "label": None},
+                    {"id": -1, "label": "PowerOff"},
                     {"id": WATCH_TV_ACTIVITY_ID, "label": "Watch TV"},
                     {"id": PLAY_MUSIC_ACTIVITY_ID, "label": "Play Music"},
                     {"id": NILE_TV_ACTIVITY_ID, "label": "Nile-TV"},
