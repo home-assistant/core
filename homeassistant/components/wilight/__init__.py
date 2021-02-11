@@ -6,9 +6,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 
+from .const import DOMAIN
 from .parent_device import WiLightParent
-
-DOMAIN = "wilight"
 
 # List the platforms that you want to support.
 PLATFORMS = ["cover", "fan", "light"]

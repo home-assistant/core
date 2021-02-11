@@ -18,7 +18,8 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import DOMAIN, WiLightDevice
+from . import WiLightDevice
+from .const import DOMAIN
 
 
 def entities_from_discovered_wilight(hass, api_device):
