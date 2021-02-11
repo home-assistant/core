@@ -11,8 +11,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 
 @freeze_time("2019-06-16")
-async def test_setup_component_with_webhook(hass, light_entry):
-    """Test ."""
+async def test_light_setup_and_services(hass, light_entry):
+    """Test setup and services."""
     await hass.async_block_till_done()
 
     assert (
@@ -20,6 +20,7 @@ async def test_setup_component_with_webhook(hass, light_entry):
         is False
     )
 
+    # Fake webhook activation
     webhook_data = {
         "user_id": "123",
         "user": {"id": "123", "email": "foo@bar.com"},
@@ -39,6 +40,7 @@ async def test_setup_component_with_webhook(hass, light_entry):
     light_entity = "light.netatmo_garden"
     assert hass.states.get(light_entity).state == "unavailable"
 
+    # Trigger light mode change
     webhook_data = {
         "user_id": "91763b24c43d3e344f424e8d",
         "event_type": "light_mode",
@@ -59,7 +61,7 @@ async def test_setup_component_with_webhook(hass, light_entry):
 
     assert hass.states.get(light_entity).state == "on"
 
-    # Trigger
+    # Trigger light mode change with erroneous webhook data
     webhook_data = {
         "user_id": "91763b24c43d3e344f424e8d",
         "event_type": "light_mode",
