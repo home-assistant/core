@@ -1,6 +1,4 @@
 """Tests for the Entity Registry."""
-import asyncio
-import unittest.mock
 from unittest.mock import patch
 
 import pytest
@@ -219,6 +217,7 @@ def test_is_registered(registry):
     assert not registry.async_is_registered("light.non_existing")
 
 
+@pytest.mark.parametrize("load_registries", [False])
 async def test_loading_extra_values(hass, hass_storage):
     """Test we load extra data from the registry."""
     hass_storage[entity_registry.STORAGE_KEY] = {
@@ -258,7 +257,8 @@ async def test_loading_extra_values(hass, hass_storage):
         },
     }
 
-    registry = await entity_registry.async_get_registry(hass)
+    await entity_registry.async_load(hass)
+    registry = entity_registry.async_get(hass)
 
     assert len(registry.entities) == 4
 
@@ -350,6 +350,7 @@ async def test_removing_area_id(registry):
     assert entry_w_area != entry_wo_area
 
 
+@pytest.mark.parametrize("load_registries", [False])
 async def test_migration(hass):
     """Test migration from old data to new."""
     mock_config = MockConfigEntry(domain="test-platform", entry_id="test-config-id")
@@ -366,7 +367,8 @@ async def test_migration(hass):
     with patch("os.path.isfile", return_value=True), patch("os.remove"), patch(
         "homeassistant.helpers.entity_registry.load_yaml", return_value=old_conf
     ):
-        registry = await entity_registry.async_get_registry(hass)
+        await entity_registry.async_load(hass)
+        registry = entity_registry.async_get(hass)
 
     assert registry.async_is_registered("light.kitchen")
     entry = registry.async_get_or_create(
@@ -425,20 +427,6 @@ async def test_loading_invalid_entity_id(hass, hass_storage):
     )
 
     assert valid_entity_id(entity_invalid_start.entity_id)
-
-
-async def test_loading_race_condition(hass):
-    """Test only one storage load called when concurrent loading occurred ."""
-    with unittest.mock.patch(
-        "homeassistant.helpers.entity_registry.EntityRegistry.async_load"
-    ) as mock_load:
-        results = await asyncio.gather(
-            entity_registry.async_get_registry(hass),
-            entity_registry.async_get_registry(hass),
-        )
-
-        mock_load.assert_called_once_with()
-        assert results[0] == results[1]
 
 
 async def test_update_entity_unique_id(registry):
@@ -794,7 +782,7 @@ async def test_disable_device_disables_entities(hass, registry):
 
 
 async def test_disabled_entities_excluded_from_entity_list(hass, registry):
-    """Test that disabled entities are exclduded from async_entries_for_device."""
+    """Test that disabled entities are excluded from async_entries_for_device."""
     device_registry = mock_device_registry(hass)
     config_entry = MockConfigEntry(domain="light")
 
