@@ -148,7 +148,6 @@ class ModbusCover(CoverEntity, RestoreEntity):
 
         False if entity pushes its state to HA.
         """
-
         # Handle polling directly in this entity
         return False
 
