@@ -58,8 +58,8 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
 
         for _ in range(num_repeats):
             for single_command in command:
-                _LOGGER.info("Sending command %s", single_command)
                 attr_value = getattr(self.atv.remote_control, single_command, None)
                 if attr_value:
+                    _LOGGER.info("Sending command %s", single_command)
                     await attr_value()
                 await asyncio.sleep(delay)
