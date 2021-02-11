@@ -163,7 +163,7 @@ async def test_unique_id(hass, setup_comp_1):
     """Test heater switching input_boolean."""
     unique_id = "some_unique_id"
     _setup_sensor(hass, 18)
-    _setup_switch(hass, on)
+    _setup_switch(hass, True)
     assert await async_setup_component(
         hass,
         DOMAIN,
