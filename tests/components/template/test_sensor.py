@@ -3,6 +3,8 @@ from asyncio import Event
 from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.components import sensor
 from homeassistant.const import (
@@ -403,6 +405,7 @@ async def test_setup_valid_device_class(hass):
     assert "device_class" not in state.attributes
 
 
+@pytest.mark.parametrize("load_registries", [False])
 async def test_creating_sensor_loads_group(hass):
     """Test setting up template sensor loads group component first."""
     order = []

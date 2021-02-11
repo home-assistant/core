@@ -1,5 +1,4 @@
 """Tests for the Device Registry."""
-import asyncio
 import time
 from unittest.mock import patch
 
@@ -135,6 +134,7 @@ async def test_multiple_config_entries(registry):
     assert entry2.config_entries == {"123", "456"}
 
 
+@pytest.mark.parametrize("load_registries", [False])
 async def test_loading_from_storage(hass, hass_storage):
     """Test loading stored devices on start."""
     hass_storage[device_registry.STORAGE_KEY] = {
@@ -167,7 +167,8 @@ async def test_loading_from_storage(hass, hass_storage):
         },
     }
 
-    registry = await device_registry.async_get_registry(hass)
+    await device_registry.async_load(hass)
+    registry = device_registry.async_get(hass)
     assert len(registry.devices) == 1
     assert len(registry.deleted_devices) == 1
 
@@ -687,20 +688,6 @@ async def test_update_remove_config_entries(hass, registry, update_events):
     assert update_events[4]["device_id"] == entry3.id
 
 
-async def test_loading_race_condition(hass):
-    """Test only one storage load called when concurrent loading occurred ."""
-    with patch(
-        "homeassistant.helpers.device_registry.DeviceRegistry.async_load"
-    ) as mock_load:
-        results = await asyncio.gather(
-            device_registry.async_get_registry(hass),
-            device_registry.async_get_registry(hass),
-        )
-
-        mock_load.assert_called_once_with()
-        assert results[0] == results[1]
-
-
 async def test_update_sw_version(registry):
     """Verify that we can update software version of a device."""
     entry = registry.async_get_or_create(
@@ -798,10 +785,16 @@ async def test_cleanup_startup(hass):
     assert len(mock_call.mock_calls) == 1
 
 
+@pytest.mark.parametrize("load_registries", [False])
 async def test_cleanup_entity_registry_change(hass):
-    """Test we run a cleanup when entity registry changes."""
-    await device_registry.async_get_registry(hass)
-    ent_reg = await entity_registry.async_get_registry(hass)
+    """Test we run a cleanup when entity registry changes.
+
+    Don't pre-load the registries as the debouncer will then not be waiting for
+    EVENT_ENTITY_REGISTRY_UPDATED events.
+    """
+    await device_registry.async_load(hass)
+    await entity_registry.async_load(hass)
+    ent_reg = entity_registry.async_get(hass)
 
     with patch(
         "homeassistant.helpers.device_registry.Debouncer.async_call"

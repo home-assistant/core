@@ -71,6 +71,7 @@ async def test_load_hassio(hass):
         assert bootstrap._get_domains(hass, {}) == {"hassio"}
 
 
+@pytest.mark.parametrize("load_registries", [False])
 async def test_empty_setup(hass):
     """Test an empty set up loads the core."""
     await bootstrap.async_from_config_dict({}, hass)
@@ -91,6 +92,7 @@ async def test_core_failure_loads_safe_mode(hass, caplog):
     assert "group" not in hass.config.components
 
 
+@pytest.mark.parametrize("load_registries", [False])
 async def test_setting_up_config(hass):
     """Test we set up domains in config."""
     await bootstrap._async_set_up_integrations(
@@ -100,6 +102,7 @@ async def test_setting_up_config(hass):
     assert "group" in hass.config.components
 
 
+@pytest.mark.parametrize("load_registries", [False])
 async def test_setup_after_deps_all_present(hass):
     """Test after_dependencies when all present."""
     order = []
@@ -144,6 +147,7 @@ async def test_setup_after_deps_all_present(hass):
     assert order == ["logger", "root", "first_dep", "second_dep"]
 
 
+@pytest.mark.parametrize("load_registries", [False])
 async def test_setup_after_deps_in_stage_1_ignored(hass):
     """Test after_dependencies are ignored in stage 1."""
     # This test relies on this
@@ -190,6 +194,7 @@ async def test_setup_after_deps_in_stage_1_ignored(hass):
     assert order == ["cloud", "an_after_dep", "normal_integration"]
 
 
+@pytest.mark.parametrize("load_registries", [False])
 async def test_setup_after_deps_via_platform(hass):
     """Test after_dependencies set up via platform."""
     order = []
@@ -239,6 +244,7 @@ async def test_setup_after_deps_via_platform(hass):
     assert order == ["after_dep_of_platform_int", "platform_int"]
 
 
+@pytest.mark.parametrize("load_registries", [False])
 async def test_setup_after_deps_not_trigger_load(hass):
     """Test after_dependencies does not trigger loading it."""
     order = []
@@ -277,6 +283,7 @@ async def test_setup_after_deps_not_trigger_load(hass):
     assert "second_dep" in hass.config.components
 
 
+@pytest.mark.parametrize("load_registries", [False])
 async def test_setup_after_deps_not_present(hass):
     """Test after_dependencies when referenced integration doesn't exist."""
     order = []

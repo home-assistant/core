@@ -2,16 +2,16 @@
 from collections import OrderedDict
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import attr
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, callback
+from homeassistant.loader import bind_hass
 import homeassistant.util.uuid as uuid_util
 
 from .debounce import Debouncer
-from .singleton import singleton
 from .typing import UNDEFINED, HomeAssistantType, UndefinedType
 
 # mypy: disallow_any_generics
@@ -593,12 +593,26 @@ class DeviceRegistry:
                 self._async_update_device(dev_id, area_id=None)
 
 
-@singleton(DATA_REGISTRY)
+@callback
+def async_get(hass: HomeAssistantType) -> DeviceRegistry:
+    """Get device registry."""
+    return cast(DeviceRegistry, hass.data[DATA_REGISTRY])
+
+
+async def async_load(hass: HomeAssistantType) -> None:
+    """Load device registry."""
+    assert DATA_REGISTRY not in hass.data
+    hass.data[DATA_REGISTRY] = DeviceRegistry(hass)
+    await hass.data[DATA_REGISTRY].async_load()
+
+
+@bind_hass
 async def async_get_registry(hass: HomeAssistantType) -> DeviceRegistry:
-    """Create entity registry."""
-    reg = DeviceRegistry(hass)
-    await reg.async_load()
-    return reg
+    """Get device registry.
+
+    This is deprecated and will be removed in the future. Use async_get instead.
+    """
+    return async_get(hass)
 
 
 @callback
