@@ -13,7 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 @freeze_time("2019-06-16")
 async def test_setup_component_with_webhook(hass, camera_entry):
-    """Test ."""
+    """Test setup with webhook."""
     await hass.async_block_till_done()
 
     camera_entity_indoor = "camera.netatmo_hall"
@@ -122,7 +122,7 @@ IMAGE_BYTES_FROM_STREAM = b"test stream image bytes"
 
 
 async def test_camera_image_local(hass, camera_entry, requests_mock):
-    """Test ."""
+    """Test retrieval or local camera image."""
     await hass.async_block_till_done()
 
     uri = "http://192.168.0.123/678460a0d47e5618699fb31169e2b47d"
@@ -145,7 +145,7 @@ async def test_camera_image_local(hass, camera_entry, requests_mock):
 
 
 async def test_camera_image_vpn(hass, camera_entry, requests_mock):
-    """Test ."""
+    """Test retrieval or remote camera image."""
     await hass.async_block_till_done()
 
     uri = "https://prodvpn-eu-2.netatmo.net/restricted/10.255.248.91/6d278460699e56180d47ab47169efb31/MpEylTU2MDYzNjRVD-LJxUnIndumKzLboeAwMDqTTw,,"
@@ -168,7 +168,7 @@ async def test_camera_image_vpn(hass, camera_entry, requests_mock):
 
 
 async def test_service_set_person_away(hass, camera_entry, caplog):
-    """Test ."""
+    """Test service to set person as away."""
     await hass.async_block_till_done()
 
     data = {
@@ -196,7 +196,7 @@ async def test_service_set_person_away(hass, camera_entry, caplog):
 
 
 async def test_service_set_persons_home(hass, camera_entry, caplog):
-    """Test ."""
+    """Test service to set persons as home."""
     await hass.async_block_till_done()
 
     data = {
@@ -213,7 +213,7 @@ async def test_service_set_persons_home(hass, camera_entry, caplog):
 
 
 async def test_service_set_camera_light(hass, camera_entry, caplog):
-    """Test ."""
+    """Test service to set the outdoor camera light mode."""
     await hass.async_block_till_done()
 
     data = {
