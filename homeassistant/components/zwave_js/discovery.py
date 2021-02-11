@@ -123,7 +123,7 @@ DISCOVERY_SCHEMAS = [
             type={"number"},
         ),
     ),
-    # Fibaro FGS222
+    # Fibaro Shutter Fibaro FGS222
     ZWaveDiscoverySchema(
         platform="cover",
         hint="fibaro_fgs222",
