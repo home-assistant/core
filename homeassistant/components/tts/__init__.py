@@ -194,7 +194,7 @@ async def async_setup(hass, config):
         )
 
     setup_tasks = [
-        async_setup_platform(p_type, p_config)
+        asyncio.create_task(async_setup_platform(p_type, p_config))
         for p_type, p_config in config_per_platform(config, DOMAIN)
     ]
 

@@ -19,7 +19,7 @@ from homeassistant.components.cover import (
     STATE_OPENING,
 )
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
@@ -193,4 +193,4 @@ async def test_unload_config_entry(hass, device_factory):
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, COVER_DOMAIN)
     # Assert
-    assert not hass.states.get("cover.garage")
+    assert hass.states.get("cover.garage").state == STATE_UNAVAILABLE

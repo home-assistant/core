@@ -178,6 +178,7 @@ class APIDiscoveryView(HomeAssistantView):
     requires_auth = False
     url = URL_API_DISCOVERY_INFO
     name = "api:discovery"
+    cors_allowed = True
 
     async def get(self, request):
         """Get discovery information."""
@@ -377,7 +378,7 @@ class APIDomainServicesView(HomeAssistantView):
         with AsyncTrackStates(hass) as changed_states:
             try:
                 await hass.services.async_call(
-                    domain, service, data, True, self.context(request)
+                    domain, service, data, blocking=True, context=self.context(request)
                 )
             except (vol.Invalid, ServiceNotFound) as ex:
                 raise HTTPBadRequest() from ex

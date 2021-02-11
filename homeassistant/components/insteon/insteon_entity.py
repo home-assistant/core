@@ -1,4 +1,5 @@
 """Insteon base entity."""
+import functools
 import logging
 
 from pyinsteon import devices
@@ -122,7 +123,11 @@ class InsteonEntity(Entity):
         )
         remove_signal = f"{self._insteon_device.address.id}_{SIGNAL_REMOVE_ENTITY}"
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, remove_signal, self.async_remove)
+            async_dispatcher_connect(
+                self.hass,
+                remove_signal,
+                functools.partial(self.async_remove, force_remove=True),
+            )
         )
 
     async def async_will_remove_from_hass(self):
