@@ -383,7 +383,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             values["flash"] = kwargs.get(ATTR_FLASH)
 
         if ATTR_TRANSITION in kwargs:
-            values["transition"] = int(kwargs[ATTR_TRANSITION])
+            values["transition"] = kwargs[ATTR_TRANSITION]
 
         mqtt.async_publish(
             self.hass,
@@ -408,7 +408,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             self._state = False
 
         if ATTR_TRANSITION in kwargs:
-            values["transition"] = int(kwargs[ATTR_TRANSITION])
+            values["transition"] = kwargs[ATTR_TRANSITION]
 
         mqtt.async_publish(
             self.hass,
