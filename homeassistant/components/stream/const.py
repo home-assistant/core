@@ -10,7 +10,8 @@ FORMAT_CONTENT_TYPE = {"hls": "application/vnd.apple.mpegurl"}
 
 OUTPUT_IDLE_TIMEOUT = 300  # Idle timeout due to inactivity
 
-MAX_SEGMENTS = 3  # Max number of segments to keep around
+NUM_PLAYLIST_SEGMENTS = 3  # Number of segments to use in HLS playlist
+MAX_SEGMENTS = 4  # Max number of segments to keep around
 MIN_SEGMENT_DURATION = 1.5  # Each segment is at least this many seconds
 
 PACKETS_TO_WAIT_FOR_AUDIO = 20  # Some streams have an audio stream with no audio
