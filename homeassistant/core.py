@@ -726,7 +726,6 @@ class EventBus:
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Error in event filter")
                     continue
-            _LOGGER.debug("Processing job %s for event %s", job, event)
             self._hass.async_add_hass_job(job, event)
 
     def listen(self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
@@ -846,7 +845,7 @@ class EventBus:
             # KeyError is key event_type listener did not exist
             # ValueError if listener did not exist within event_type
             _LOGGER.exception(
-                "Unable to remove unknown filterale job listener %s", filterable_job
+                "Unable to remove unknown job listener %s", filterable_job
             )
 
 
