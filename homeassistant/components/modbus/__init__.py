@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_METHOD,
     CONF_NAME,
+    CONF_OFFSET,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
@@ -46,7 +47,6 @@ from .const import (
     CONF_INPUT_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
-    CONF_OFFSET,
     CONF_PARITY,
     CONF_PRECISION,
     CONF_REGISTER,
@@ -257,7 +257,6 @@ class ModbusHub:
 
     def __init__(self, client_config):
         """Initialize the Modbus hub."""
-
         # generic configuration
         self._client = None
         self._lock = threading.Lock()

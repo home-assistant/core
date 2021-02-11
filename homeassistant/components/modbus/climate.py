@@ -15,6 +15,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,
+    CONF_OFFSET,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_STRUCTURE,
@@ -39,7 +40,6 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
-    CONF_OFFSET,
     CONF_PRECISION,
     CONF_SCALE,
     CONF_STEP,
@@ -146,7 +146,6 @@ class ModbusThermostat(ClimateEntity):
 
         False if entity pushes its state to HA.
         """
-
         # Handle polling directly in this entity
         return False
 
