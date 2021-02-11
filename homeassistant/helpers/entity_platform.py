@@ -420,7 +420,6 @@ class EntityPlatform:
         if entity is None:
             raise ValueError("Entity cannot be None")
 
-        print(entity)
         entity.add_to_platform_start(
             self.hass,
             self,
