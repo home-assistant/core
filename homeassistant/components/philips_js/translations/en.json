@@ -20,6 +20,5 @@
         "trigger_type": {
             "turn_on": "Device is requested to turn on"
         }
-    },
-    "title": "Philips TV"
+    }
 }
