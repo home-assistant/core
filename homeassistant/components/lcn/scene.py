@@ -4,14 +4,13 @@ from typing import Any
 import pypck
 
 from homeassistant.components.scene import Scene
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, CONF_SCENE
 
 from . import LcnEntity
 from .const import (
     CONF_CONNECTIONS,
     CONF_OUTPUTS,
     CONF_REGISTER,
-    CONF_SCENE,
     CONF_TRANSITION,
     DATA_LCN,
     OUTPUT_PORTS,
