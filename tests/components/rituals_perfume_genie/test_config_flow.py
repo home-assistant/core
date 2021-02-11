@@ -1,6 +1,7 @@
 """Test the Rituals Perfume Genie config flow."""
 from unittest.mock import patch
 
+from aiohttp import ClientResponseError
 from pyrituals import AuthenticationException
 
 from homeassistant import config_entries
@@ -62,3 +63,47 @@ async def test_form_invalid_auth(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_auth_exception(hass):
+    """Test we handle auth exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.rituals_perfume_genie.config_flow.Account.authenticate",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_EMAIL: TEST_EMAIL,
+                CONF_PASSWORD: VALID_PASSWORD,
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_cannot_connect(hass):
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.rituals_perfume_genie.config_flow.Account.authenticate",
+        side_effect=ClientResponseError(None, None, status=500),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_EMAIL: TEST_EMAIL,
+                CONF_PASSWORD: VALID_PASSWORD,
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "cannot_connect"}
