@@ -21,12 +21,7 @@ from homeassistant.components.climate.const import (
     PRESET_BOOST,
 )
 from homeassistant.components.netatmo import climate
-from homeassistant.components.netatmo.climate import (
-    NA_THERM,
-    NA_VALVE,
-    PRESET_FROST_GUARD,
-    PRESET_SCHEDULE,
-)
+from homeassistant.components.netatmo.climate import NA_THERM, NA_VALVE
 from homeassistant.components.netatmo.const import (
     ATTR_SCHEDULE_NAME,
     SERVICE_SET_SCHEDULE,
@@ -45,12 +40,13 @@ async def test_setup_no_data(hass, entry_error):
     )
 
 
-async def test_setup(hass, entry, caplog):
-    """Test setup and functionality with thermostats."""
+async def test_webhook_event_handling_thermostats(hass, climate_entry, caplog):
+    """Test service and webhook event handling with thermostats."""
     await hass.async_block_till_done()
 
     assert (
-        "HomeData" in hass.data["netatmo"][entry.entry_id]["netatmo_data_handler"].data
+        "HomeData"
+        in hass.data["netatmo"][climate_entry.entry_id]["netatmo_data_handler"].data
     )
 
     climate_entity_livingroom = "climate.netatmo_livingroom"
@@ -60,6 +56,16 @@ async def test_setup(hass, entry, caplog):
         hass.states.get(climate_entity_livingroom).attributes["preset_mode"]
         == "Schedule"
     )
+    assert hass.states.get(climate_entity_livingroom).attributes["temperature"] == 12
+
+    # Test service setting the temperature
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_TEMPERATURE: 21},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
 
     # Test webhook thermostat manual set point
     webhook_data = {
@@ -102,6 +108,16 @@ async def test_setup(hass, entry, caplog):
         hass.states.get(climate_entity_livingroom).attributes["preset_mode"]
         == "Schedule"
     )
+    assert hass.states.get(climate_entity_livingroom).attributes["temperature"] == 21
+
+    # Test service setting the HVAC mode to "heat"
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVAC_MODE_HEAT},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
 
     # Test webhook thermostat mode change to "Max"
     webhook_data = {
@@ -138,6 +154,16 @@ async def test_setup(hass, entry, caplog):
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "heat"
+    assert hass.states.get(climate_entity_livingroom).attributes["temperature"] == 30
+
+    # Test service setting the HVAC mode to "off"
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVAC_MODE_OFF},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
 
     # Test webhook turn thermostat off
     webhook_data = {
@@ -173,6 +199,15 @@ async def test_setup(hass, entry, caplog):
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "off"
+
+    # Test service setting the HVAC mode to "auto"
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVAC_MODE_AUTO},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
 
     # Test webhook thermostat mode cancel set point
     webhook_data = {
@@ -261,6 +296,15 @@ async def test_setup(hass, entry, caplog):
         == "Schedule"
     )
 
+    # Test service setting the preset mode to "away"
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_PRESET_MODE: PRESET_AWAY},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
     # Test webhook thermostat mode change to "Away"
     webhook_data = {
         "user_id": "91763b24c43d3e344f424e8b",
@@ -280,9 +324,60 @@ async def test_setup(hass, entry, caplog):
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
-    # assert (
-    #     hass.states.get(climate_entity_livingroom).attributes["preset_mode"] == "away"
-    # )
+    assert (
+        hass.states.get(climate_entity_livingroom).attributes["preset_mode"] == "away"
+    )
+
+    # Test service setting the preset mode to "boost"
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_PRESET_MODE: PRESET_BOOST},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Test webhook thermostat mode change to "Max"
+    webhook_data = {
+        "user_id": "91763b24c43d3e344f424e8b",
+        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
+        "home_id": "91763b24c43d3e344f424e8b",
+        "room_id": "2746182631",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2746182631",
+                    "name": "Livingroom",
+                    "type": "livingroom",
+                    "therm_setpoint_mode": "max",
+                    "therm_setpoint_end_time": 1612749189,
+                }
+            ],
+            "modules": [
+                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
+            ],
+        },
+        "mode": "max",
+        "event_type": "set_point",
+        "push_type": "display_change",
+    }
+    async_dispatcher_send(
+        hass,
+        "signal-netatmo-webhook-set_point",
+        {"type": None, "data": webhook_data},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(climate_entity_livingroom).state == "heat"
+    assert hass.states.get(climate_entity_livingroom).attributes["temperature"] == 30
+
+
+async def test_webhook_event_handling_no_data(hass, climate_entry, caplog):
+    """Test service and webhook event handling with erroneous data."""
+    await hass.async_block_till_done()
 
     # Test webhook without home entry
     webhook_data = {
@@ -345,96 +440,12 @@ async def test_setup(hass, entry, caplog):
     )
     await hass.async_block_till_done()
 
-    # Test service setting the HVAC mode to "off"
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVAC_MODE_OFF},
-        blocking=True,
-    )
+
+async def test_service_schedule_thermostats(hass, climate_entry, caplog):
+    """Test service for selecting Netatmo schedule with thermostats."""
     await hass.async_block_till_done()
 
-    # assert hass.states.get(climate_entity_livingroom).state == "off"
-
-    # Test service setting the HVAC mode to "auto"
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVAC_MODE_AUTO},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get(climate_entity_livingroom).state == "auto"
-
-    # Test service setting the HVAC mode to "heat"
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_HVAC_MODE: HVAC_MODE_HEAT},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    # assert hass.states.get(climate_entity_livingroom).state == "heat"
-
-    # Test service setting the preset mode to "away"
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_PRESET_MODE: PRESET_AWAY},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    # assert hass.states.get(climate_entity_livingroom).state == "heat"
-
-    # Test service setting the preset mode to "boost"
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_PRESET_MODE: PRESET_BOOST},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    # assert hass.states.get(climate_entity_livingroom).state == "heat"
-
-    # Test service setting the preset mode to "Frost Guard"
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {
-            ATTR_ENTITY_ID: climate_entity_livingroom,
-            ATTR_PRESET_MODE: PRESET_FROST_GUARD,
-        },
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    # assert hass.states.get(climate_entity_livingroom).state == "heat"
-
-    # Test service setting the preset mode to "Schedule"
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_PRESET_MODE: PRESET_SCHEDULE},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    # assert hass.states.get(climate_entity_livingroom).state == "heat"
-
-    # Test service setting the temperature
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_TEMPERATURE: 19},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    # assert hass.states.get(climate_entity_livingroom).state == "heat"
+    climate_entity_livingroom = "climate.netatmo_livingroom"
 
     # Test setting a valid schedule
     await hass.services.async_call(
@@ -472,7 +483,6 @@ async def test_valves(hass, climate_entry, caplog):
     )
 
     climate_entity_entrada = "climate.netatmo_entrada"
-    climate_entity_cocina = "climate.netatmo_cocina"
 
     assert hass.states.get(climate_entity_entrada).state == "auto"
     assert (
@@ -526,30 +536,96 @@ async def test_valves(hass, climate_entry, caplog):
 
     # assert hass.states.get(climate_entity_entrada).state == "heat"
 
+
+async def test_service_preset_mode_boost_valves(hass, climate_entry, caplog):
+    """Test service with boost preset for valves."""
+    await hass.async_block_till_done()
+
+    assert (
+        "HomeData"
+        in hass.data["netatmo"][climate_entry.entry_id]["netatmo_data_handler"].data
+    )
+    climate_entity_entrada = "climate.netatmo_entrada"
+
     # Test service setting the preset mode to "boost"
-    assert hass.states.get(climate_entity_cocina).state == "auto"
+    assert hass.states.get(climate_entity_entrada).state == "auto"
+    assert hass.states.get(climate_entity_entrada).attributes["temperature"] == 7
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: climate_entity_cocina, ATTR_PRESET_MODE: PRESET_BOOST},
+        {ATTR_ENTITY_ID: climate_entity_entrada, ATTR_PRESET_MODE: PRESET_BOOST},
         blocking=True,
     )
     await hass.async_block_till_done()
 
-    # assert hass.states.get(climate_entity_cocina).state == "heat"
-    # assert hass.states.get(climate_entity_cocina).attributes["temperature"] == 30
+    # Fake backend response
+    webhook_data = {
+        "user_id": "91763b24c43d3e344f424e8b",
+        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
+        "home_id": "91763b24c43d3e344f424e8b",
+        "room_id": "2833524037",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2833524037",
+                    "name": "Entrada",
+                    "type": "lobby",
+                    "therm_setpoint_mode": "max",
+                    "therm_setpoint_end_time": 1612749189,
+                }
+            ],
+            "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
+        },
+        "mode": "max",
+        "event_type": "set_point",
+        "push_type": "display_change",
+    }
+    async_dispatcher_send(
+        hass,
+        "signal-netatmo-webhook-set_point",
+        {"type": None, "data": webhook_data},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(climate_entity_entrada).state == "heat"
+    assert hass.states.get(climate_entity_entrada).attributes["temperature"] == 30
+
+
+async def test_service_preset_mode_invalid(hass, climate_entry, caplog):
+    """Test service with invalid preset."""
+    await hass.async_block_till_done()
+
+    assert (
+        "HomeData"
+        in hass.data["netatmo"][climate_entry.entry_id]["netatmo_data_handler"].data
+    )
 
     # Test setting invalid preset mode
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: climate_entity_cocina, ATTR_PRESET_MODE: "invalid"},
+        {ATTR_ENTITY_ID: "climate.netatmo_cocina", ATTR_PRESET_MODE: "invalid"},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     assert "Preset mode 'invalid' not available" in caplog.text
+
+
+async def test_valves_service_turn_off(hass, climate_entry, caplog):
+    """Test service turn off for valves."""
+    await hass.async_block_till_done()
+
+    assert (
+        "HomeData"
+        in hass.data["netatmo"][climate_entry.entry_id]["netatmo_data_handler"].data
+    )
+
+    climate_entity_entrada = "climate.netatmo_entrada"
 
     # Test turning valve off
     await hass.services.async_call(
@@ -592,6 +668,18 @@ async def test_valves(hass, climate_entry, caplog):
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_entrada).state == "off"
+
+
+async def test_valves_service_turn_on(hass, climate_entry, caplog):
+    """Test service turn on for valves."""
+    await hass.async_block_till_done()
+
+    assert (
+        "HomeData"
+        in hass.data["netatmo"][climate_entry.entry_id]["netatmo_data_handler"].data
+    )
+
+    climate_entity_entrada = "climate.netatmo_entrada"
 
     # Test turning valve on
     await hass.services.async_call(
