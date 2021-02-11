@@ -90,9 +90,9 @@ DISCOVERY_SCHEMAS = [
     # Honeywell/Jasco 39358 In-Wall Fan Control using switch multilevel CC
     ZWaveDiscoverySchema(
         platform="fan",
-        manufacturer_id={57},
-        product_id={12593},
-        product_type={18756},
+        manufacturer_id={0x0039},
+        product_id={0x3131, 0x3138},
+        product_type={0x4944},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
             property={"currentValue"},
@@ -102,9 +102,21 @@ DISCOVERY_SCHEMAS = [
     # GE fan controllers using switch multilevel CC
     ZWaveDiscoverySchema(
         platform="fan",
-        manufacturer_id={99},
-        product_id={12340, 12593},
-        product_type={18756},
+        manufacturer_id={0x0063},
+        product_id={0x3034, 0x3131},
+        product_type={0x4944},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            property={"currentValue"},
+            type={"number"},
+        ),
+    ),
+    # Leviton ZW4SF fan controllers using switch multilevel CC
+    ZWaveDiscoverySchema(
+        platform="fan",
+        manufacturer_id={0x001D},
+        product_id={0x0002},
+        product_type={0x0038},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
             property={"currentValue"},
@@ -115,9 +127,9 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform="cover",
         hint="fibaro_fgs222",
-        manufacturer_id={271},
-        product_id={4096},
-        product_type={770},
+        manufacturer_id={0x010F},
+        product_id={0x1000},
+        product_type={0x0302},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
             property={"currentValue"},
@@ -128,9 +140,9 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform="cover",
         hint="fibaro_fgs222",
-        manufacturer_id={345},
-        product_id={82},
-        product_type={3},
+        manufacturer_id={0x0159},
+        product_id={0x0052},
+        product_type={0x0003},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
             property={"currentValue"},
@@ -141,9 +153,9 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform="cover",
         hint="fibaro_fgs222",
-        manufacturer_id={622},
-        product_id={23089},
-        product_type={17235},
+        manufacturer_id={0x026E},
+        product_id={0x5A31},
+        product_type={0x4353},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SWITCH_MULTILEVEL},
             property={"currentValue"},
