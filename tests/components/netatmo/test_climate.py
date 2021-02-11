@@ -45,7 +45,7 @@ async def test_setup_no_data(hass, entry_error):
     )
 
 
-async def test_webhook_event_handling_thermostats(hass, climate_entry, caplog):
+async def test_webhook_event_handling_thermostats(hass, climate_entry):
     """Test service and webhook event handling with thermostats."""
     await hass.async_block_till_done()
 
@@ -254,7 +254,7 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry, caplog):
     )
 
 
-async def test_service_preset_mode_frost_guard_thermostat(hass, climate_entry, caplog):
+async def test_service_preset_mode_frost_guard_thermostat(hass, climate_entry):
     """Test service with frost guard preset for thermostats."""
     await hass.async_block_till_done()
 
@@ -339,7 +339,7 @@ async def test_service_preset_mode_frost_guard_thermostat(hass, climate_entry, c
     )
 
 
-async def test_service_preset_modes_thermostat(hass, climate_entry, caplog):
+async def test_service_preset_modes_thermostat(hass, climate_entry):
     """Test service with preset modes for thermostats."""
     await hass.async_block_till_done()
 
@@ -430,7 +430,7 @@ async def test_service_preset_modes_thermostat(hass, climate_entry, caplog):
     assert hass.states.get(climate_entity_livingroom).attributes["temperature"] == 30
 
 
-async def test_webhook_event_handling_no_data(hass, climate_entry, caplog):
+async def test_webhook_event_handling_no_data(hass, climate_entry):
     """Test service and webhook event handling with erroneous data."""
     await hass.async_block_till_done()
 
@@ -528,7 +528,7 @@ async def test_service_schedule_thermostats(hass, climate_entry, caplog):
     assert "summer is not a invalid schedule" in caplog.text
 
 
-async def test_service_preset_mode_already_boost_valves(hass, climate_entry, caplog):
+async def test_service_preset_mode_already_boost_valves(hass, climate_entry):
     """Test service with boost preset for valves when already in boost mode."""
     await hass.async_block_till_done()
 
@@ -618,7 +618,7 @@ async def test_service_preset_mode_already_boost_valves(hass, climate_entry, cap
     assert hass.states.get(climate_entity_entrada).attributes["temperature"] == 30
 
 
-async def test_service_preset_mode_boost_valves(hass, climate_entry, caplog):
+async def test_service_preset_mode_boost_valves(hass, climate_entry):
     """Test service with boost preset for valves."""
     await hass.async_block_till_done()
 
@@ -697,7 +697,7 @@ async def test_service_preset_mode_invalid(hass, climate_entry, caplog):
     assert "Preset mode 'invalid' not available" in caplog.text
 
 
-async def test_valves_service_turn_off(hass, climate_entry, caplog):
+async def test_valves_service_turn_off(hass, climate_entry):
     """Test service turn off for valves."""
     await hass.async_block_till_done()
 
@@ -751,7 +751,7 @@ async def test_valves_service_turn_off(hass, climate_entry, caplog):
     assert hass.states.get(climate_entity_entrada).state == "off"
 
 
-async def test_valves_service_turn_on(hass, climate_entry, caplog):
+async def test_valves_service_turn_on(hass, climate_entry):
     """Test service turn on for valves."""
     await hass.async_block_till_done()
 
