@@ -36,9 +36,9 @@ async def async_setup_platform(
     entities = []
 
     for config in discovery_info:
-        name = config.get(CONF_NAME)
-        heater_entity_id = config.get(CONF_HEATER)
-        sensor_entity_id = config.get(CONF_SENSOR)
+        name = config[CONF_NAME]
+        heater_entity_id = config[CONF_HEATER]
+        sensor_entity_id = config[CONF_SENSOR]
         target_temp = config.get(CONF_TARGET_TEMP)
         temp_delta = config.get(CONF_TEMP_DELTA)
         unit = hass.config.units.temperature_unit
