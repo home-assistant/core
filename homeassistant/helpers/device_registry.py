@@ -686,25 +686,34 @@ def async_setup_cleanup(hass: HomeAssistantType, dev_reg: DeviceRegistry) -> Non
     )
 
     async def entity_registry_changed(event: Event) -> None:
-        """Handle entity updated or removed."""
+        """Handle entity updated or removed dispatch."""
+        await debounced_cleanup.async_call()
+
+    @callback
+    def entity_registry_changed_filter(event: Event) -> bool:
+        """Handle entity updated or removed filter."""
         if (
             event.data["action"] == "update"
             and "device_id" not in event.data["changes"]
         ) or event.data["action"] == "create":
-            return
+            return False
 
-        await debounced_cleanup.async_call()
+        return True
 
     if hass.is_running:
         hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, entity_registry_changed
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            entity_registry_changed,
+            event_filter=entity_registry_changed_filter,
         )
         return
 
     async def startup_clean(event: Event) -> None:
         """Clean up on startup."""
         hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, entity_registry_changed
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            entity_registry_changed,
+            event_filter=entity_registry_changed_filter,
         )
         await debounced_cleanup.async_call()
 
