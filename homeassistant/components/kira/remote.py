@@ -6,9 +6,7 @@ from homeassistant.components import remote
 from homeassistant.const import CONF_DEVICE, CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-from . import CONF_REMOTE
-
-DOMAIN = "kira"
+from . import CONF_REMOTE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
