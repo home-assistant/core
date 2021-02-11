@@ -3,14 +3,10 @@
   "name": "Litter-Robot",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/litterrobot",
-  "requirements": [
-    "pylitterbot==2021.2.2"
-  ],
+  "requirements": ["pylitterbot==2021.2.3"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
-  "codeowners": [
-    "@natekspencer"
-  ]
+  "codeowners": ["@natekspencer"]
 }
