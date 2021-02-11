@@ -116,7 +116,7 @@ aiohue==2.1.0
 aiokafka==0.6.0
 
 # homeassistant.components.lutron_caseta
-aiolip==1.0.1
+aiolip==1.1.4
 
 # homeassistant.components.notion
 aionotion==1.1.0
@@ -210,7 +210,7 @@ bravia-tv==1.0.8
 broadlink==0.16.0
 
 # homeassistant.components.brother
-brother==0.1.20
+brother==0.1.21
 
 # homeassistant.components.bsblan
 bsblan==0.4.0
@@ -802,7 +802,7 @@ pymodbus==2.3.0
 pymonoprice==0.3
 
 # homeassistant.components.myq
-pymyq==2.0.14
+pymyq==3.0.1
 
 # homeassistant.components.nut
 pynut2==2.1.2
@@ -983,7 +983,7 @@ rokuecp==0.6.0
 roombapy==1.6.2
 
 # homeassistant.components.roon
-roonapi==0.0.31
+roonapi==0.0.32
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
@@ -1087,10 +1087,10 @@ synologydsm-api==1.0.1
 tellduslive==0.10.11
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.3.3
+tesla-powerwall==0.3.5
 
 # homeassistant.components.tesla
-teslajsonpy==0.10.4
+teslajsonpy==0.11.5
 
 # homeassistant.components.toon
 toonapi==0.2.0
