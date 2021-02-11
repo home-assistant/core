@@ -113,7 +113,7 @@ async def test_if_fires_on_change_str_crazy(hass, calls):
 
 
 async def test_if_not_fires_when_true_at_setup(hass, calls):
-    """Test for not firing on boolean change."""
+    """Test for not firing during startup."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -136,7 +136,7 @@ async def test_if_not_fires_when_true_at_setup(hass, calls):
 
 
 async def test_if_not_fires_because_fail(hass, calls):
-    """Test for not firing on boolean change."""
+    """Test for not firing after TemplateError."""
     hass.states.async_set("test.number", "1")
 
     assert await async_setup_component(
