@@ -197,7 +197,7 @@ aiolifx==0.6.9
 aiolifx_effects==0.2.2
 
 # homeassistant.components.lutron_caseta
-aiolip==1.0.1
+aiolip==1.1.4
 
 # homeassistant.components.keyboard_remote
 aionotify==0.2.0
@@ -383,7 +383,7 @@ bravia-tv==1.0.8
 broadlink==0.16.0
 
 # homeassistant.components.brother
-brother==0.1.20
+brother==0.1.21
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -1545,7 +1545,7 @@ pymsteams==0.1.12
 pymusiccast==0.1.6
 
 # homeassistant.components.myq
-pymyq==2.0.14
+pymyq==3.0.1
 
 # homeassistant.components.mysensors
 pymysensors==0.18.0
@@ -1961,7 +1961,7 @@ rokuecp==0.6.0
 roombapy==1.6.2
 
 # homeassistant.components.roon
-roonapi==0.0.31
+roonapi==0.0.32
 
 # homeassistant.components.rova
 rova==0.1.0
@@ -2178,10 +2178,10 @@ temperusb==1.5.3
 # tensorflow==2.3.0
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.3.3
+tesla-powerwall==0.3.5
 
 # homeassistant.components.tesla
-teslajsonpy==0.10.4
+teslajsonpy==0.11.5
 
 # homeassistant.components.tensorflow
 # tf-models-official==2.3.0
