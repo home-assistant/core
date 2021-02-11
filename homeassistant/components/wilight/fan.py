@@ -1,7 +1,6 @@
 """Support for WiLight Fan."""
 
 from pywilight.const import (
-    DOMAIN,
     FAN_V1,
     ITEM_FAN,
     WL_DIRECTION_FORWARD,
@@ -25,7 +24,7 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from . import WiLightDevice
+from . import DOMAIN, WiLightDevice
 
 ORDERED_NAMED_FAN_SPEEDS = [WL_SPEED_LOW, WL_SPEED_MEDIUM, WL_SPEED_HIGH]
 
