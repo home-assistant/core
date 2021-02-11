@@ -25,7 +25,7 @@
                 "data": {
                     "password": "Passord"
                 },
-                "description": "Passordet kunne ikke hentes automatisk fra enheten. F\u00f8lg trinnene som er beskrevet i dokumentasjonen p\u00e5: {auth_help_url}",
+                "description": "Passordet kan ikke hentes fra enheten automatisk. F\u00f8lg trinnene som er beskrevet i dokumentasjonen p\u00e5: {auth_help_url}",
                 "title": "Skriv inn passord"
             },
             "manual": {
