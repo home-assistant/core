@@ -26,19 +26,19 @@ async def test_public_weather_sensor(hass, sensor_entry):
     """Test public weather sensor setup."""
     await hass.async_block_till_done()
 
-    prefix = "sensor.netatmo_home_avg_"
-
-    assert hass.states.get(prefix + "temperature").state == "22.7"
-    assert hass.states.get(prefix + "humidity").state == "63.2"
-    assert hass.states.get(prefix + "pressure").state == "1010.3"
-
     prefix = "sensor.netatmo_home_max_"
 
     assert hass.states.get(prefix + "temperature").state == "27.4"
     assert hass.states.get(prefix + "humidity").state == "76"
     assert hass.states.get(prefix + "pressure").state == "1014.4"
 
-    #
+    prefix = "sensor.netatmo_home_avg_"
+
+    assert hass.states.get(prefix + "temperature").state == "22.7"
+    assert hass.states.get(prefix + "humidity").state == "63.2"
+    assert hass.states.get(prefix + "pressure").state == "1010.3"
+
+    # Test adding new public area
     area_a = NetatmoArea(
         lat_ne=32.2345678,
         lon_ne=-117.1234567,
@@ -55,7 +55,7 @@ async def test_public_weather_sensor(hass, sensor_entry):
     )
     await hass.async_block_till_done()
 
-    #
+    # Test overwriting existing area
     area_b = NetatmoArea(
         lat_ne=32.2345678,
         lon_ne=-117.1234567,
@@ -71,6 +71,10 @@ async def test_public_weather_sensor(hass, sensor_entry):
         area_b,
     )
     await hass.async_block_till_done()
+
+    assert hass.states.get(prefix + "temperature").state == "22.7"
+    assert hass.states.get(prefix + "humidity").state == "63.2"
+    assert hass.states.get(prefix + "pressure").state == "1010.3"
 
 
 @pytest.mark.parametrize(
