@@ -9,7 +9,13 @@ from homeassistant.components.generic_water_heater import (
     CONF_TEMP_DELTA,
     DOMAIN,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import CoreState, State
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -184,3 +190,9 @@ async def test_invalid_heater_and_sensor_events(hass):
     assert state.state == STATE_OFF
     state = hass.states.get(WATER_HEATER)
     assert state.attributes.get("current_temperature") is None
+
+    # sensor comes back but unknown
+    hass.states.async_set(SENSOR_TEMPERATURE, STATE_UNKNOWN)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SWITCH_HEATER).state == STATE_OFF
