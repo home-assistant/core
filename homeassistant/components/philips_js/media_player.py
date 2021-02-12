@@ -57,7 +57,7 @@ SUPPORT_PHILIPS_JS = (
 
 CONF_ON_ACTION = "turn_on_action"
 
-DEFAULT_API_VERSION = "1"
+DEFAULT_API_VERSION = 1
 
 PREFIX_SEPARATOR = ": "
 PREFIX_SOURCE = "Input"
@@ -72,7 +72,9 @@ PLATFORM_SCHEMA = vol.All(
         {
             vol.Required(CONF_HOST): cv.string,
             vol.Remove(CONF_NAME): cv.string,
-            vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): cv.string,
+            vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): vol.Coerce(
+                int
+            ),
             vol.Remove(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
         }
     ),
