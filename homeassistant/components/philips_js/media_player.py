@@ -83,7 +83,7 @@ def _inverted(data):
     return {v: k for k, v in data.items()}
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Philips TV platform."""
     hass.async_create_task(
         hass.config_entries.flow.async_init(
