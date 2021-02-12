@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SENSORS,
     CONF_SSL,
+    CONF_VERIFY_SSL,
     CONTENT_TYPE_JSON,
     PERCENTAGE,
     TEMP_CELSIUS,
@@ -108,6 +109,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Required(CONF_API_KEY): cv.string,
                         vol.Required(CONF_HOST): cv.string,
                         vol.Optional(CONF_SSL, default=False): cv.boolean,
+                        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
                         vol.Optional(CONF_PORT, default=80): cv.port,
                         vol.Optional(CONF_PATH, default="/"): ensure_valid_path,
                         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -149,11 +151,14 @@ def setup(hass, config):
             f"{protocol}://{printer[CONF_HOST]}:{printer[CONF_PORT]}"
             f"{printer[CONF_PATH]}api/"
         )
+        verify_ssl = printer[CONF_VERIFY_SSL]
         api_key = printer[CONF_API_KEY]
         number_of_tools = printer[CONF_NUMBER_OF_TOOLS]
         bed = printer[CONF_BED]
         try:
-            octoprint_api = OctoPrintAPI(base_url, api_key, bed, number_of_tools)
+            octoprint_api = OctoPrintAPI(
+                base_url, verify_ssl, api_key, bed, number_of_tools
+            )
             printers[base_url] = octoprint_api
             octoprint_api.get("printer")
             octoprint_api.get("job")
@@ -185,9 +190,10 @@ def setup(hass, config):
 class OctoPrintAPI:
     """Simple JSON wrapper for OctoPrint's API."""
 
-    def __init__(self, api_url, key, bed, number_of_tools):
+    def __init__(self, api_url, verify_ssl, key, bed, number_of_tools):
         """Initialize OctoPrint API and set headers needed later."""
         self.api_url = api_url
+        self.verify_ssl = verify_ssl
         self.headers = {CONTENT_TYPE: CONTENT_TYPE_JSON, "X-Api-Key": key}
         self.printer_last_reading = [{}, None]
         self.job_last_reading = [{}, None]
@@ -231,7 +237,9 @@ class OctoPrintAPI:
 
         url = self.api_url + endpoint
         try:
-            response = requests.get(url, headers=self.headers, timeout=9)
+            response = requests.get(
+                url, headers=self.headers, timeout=9, verify=self.verify_ssl
+            )
             response.raise_for_status()
             if endpoint == "job":
                 self.job_last_reading[0] = response.json()
