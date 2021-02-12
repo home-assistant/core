@@ -29,10 +29,12 @@ CONFIG = {
 async def test_form(hass):
     """Test that the form is served with valid input."""
 
-    now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
-    with patch("homeassistant.util.dt.now", return_value=now), patch(
-        "homeassistant.util.dt.utcnow", return_value=now
-    ), requests_mock.mock() as _m:
+    with patch(
+        "homeassistant.components.aemet.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.aemet.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, requests_mock.mock() as _m:
         aemet_requests_mock(_m)
 
         result = await hass.config_entries.flow.async_init(
@@ -58,6 +60,9 @@ async def test_form(hass):
         assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
         assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
         assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
+
+        assert len(mock_setup.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_duplicated_id(hass):
