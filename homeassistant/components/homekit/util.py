@@ -495,7 +495,7 @@ def pid_is_alive(pid) -> bool:
     return False
 
 
-def accesory_friendly_name(hass_name, accessory):
+def accessory_friendly_name(hass_name, accessory):
     """Return the combined name for the accessory.
 
     The mDNS name and the Home Assistant config entry
