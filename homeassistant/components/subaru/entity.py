@@ -23,7 +23,7 @@ class SubaruEntity(CoordinatorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return slugify(f"{DOMAIN} {self.vin} {self.title}")
+        return f"{self.vin}_{self.title}"
 
     @property
     def icon(self):
