@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, split_entity_id
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entityfilter import CONF_INCLUDE_ENTITIES
 from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.util.temperature as temp_util
 
@@ -32,6 +33,8 @@ from .const import (
     CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
+    CONF_FILTER,
+    CONF_HOMEKIT_MODE,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
@@ -67,6 +70,7 @@ from .const import (
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     HOMEKIT_FILE,
+    HOMEKIT_MODE_ACCESSORY,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
     TYPE_FAUCET,
@@ -329,9 +333,7 @@ def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
         f"### {pin}\n"
         f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
     )
-    hass.components.persistent_notification.create(
-        message, "HomeKit Bridge Setup", entry_id
-    )
+    hass.components.persistent_notification.create(message, "HomeKit Pairing", entry_id)
 
 
 def dismiss_setup_message(hass, entry_id):
@@ -492,3 +494,39 @@ def pid_is_alive(pid) -> bool:
     except OSError:
         pass
     return False
+
+
+def accessory_friendly_name(hass_name, accessory):
+    """Return the combined name for the accessory.
+
+    The mDNS name and the Home Assistant config entry
+    name are usually different which means they need to
+    see both to identify the accessory.
+    """
+    accessory_mdns_name = accessory.display_name
+    if hass_name.startswith(accessory_mdns_name):
+        return hass_name
+    return f"{hass_name} ({accessory_mdns_name})"
+
+
+def entity_ids_with_accessory_mode(hass):
+    """Return a set of entity ids that have config entries in accessory mode."""
+
+    entity_ids = set()
+
+    current_entries = hass.config_entries.async_entries(DOMAIN)
+    for entry in current_entries:
+        # We have to handle the case where the data has not yet
+        # been migrated to options because the data was just
+        # imported
+        if CONF_HOMEKIT_MODE in entry.options:
+            target = entry.options
+        else:
+            target = entry.data
+
+        if target.get(CONF_HOMEKIT_MODE) != HOMEKIT_MODE_ACCESSORY:
+            continue
+
+        entity_ids.add(target[CONF_FILTER][CONF_INCLUDE_ENTITIES][0])
+
+    return entity_ids

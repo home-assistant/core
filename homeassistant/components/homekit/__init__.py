@@ -87,6 +87,7 @@ from .const import (
     DOMAIN,
     HOMEKIT,
     HOMEKIT_MODE_ACCESSORY,
+    HOMEKIT_MODE_BRIDGE,
     HOMEKIT_MODES,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
@@ -97,7 +98,9 @@ from .const import (
     UNDO_UPDATE_LISTENER,
 )
 from .util import (
+    accessory_friendly_name,
     dismiss_setup_message,
+    entity_ids_with_accessory_mode,
     get_persist_fullpath_for_entry_id,
     migrate_filesystem_state_data_for_primary_imported_entry_id,
     port_is_available,
@@ -267,6 +270,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         homekit_mode,
         advertise_ip,
         entry.entry_id,
+        entry.title,
     )
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
@@ -440,6 +444,7 @@ class HomeKit:
         homekit_mode,
         advertise_ip=None,
         entry_id=None,
+        entry_title=None,
     ):
         """Initialize a HomeKit object."""
         self.hass = hass
@@ -450,6 +455,7 @@ class HomeKit:
         self._config = entity_config
         self._advertise_ip = advertise_ip
         self._entry_id = entry_id
+        self._entry_title = entry_title
         self._homekit_mode = homekit_mode
         self.status = STATUS_READY
 
@@ -466,6 +472,7 @@ class HomeKit:
             self.hass,
             self._entry_id,
             self._name,
+            self._entry_title,
             loop=self.hass.loop,
             address=ip_addr,
             port=self._port,
@@ -587,9 +594,20 @@ class HomeKit:
             }
         )
 
+        entity_ids_accessory_mode = set()
+        if self._homekit_mode == HOMEKIT_MODE_BRIDGE:
+            entity_ids_accessory_mode = entity_ids_with_accessory_mode(self.hass)
+
         bridged_states = []
         for state in self.hass.states.async_all():
             entity_id = state.entity_id
+
+            if entity_id in entity_ids_accessory_mode:
+                _LOGGER.info(
+                    "The entity %s was not bridged because it already has an entry in accessory mode.",
+                    entity_id,
+                )
+                continue
 
             if not self._filter(entity_id):
                 continue
@@ -659,6 +677,7 @@ class HomeKit:
             state = entity_states[0]
             conf = self._config.pop(state.entity_id, {})
             acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
+
             self.driver.add_accessory(acc)
         else:
             self.bridge = HomeBridge(self.hass, self.driver, self._name)
@@ -672,7 +691,7 @@ class HomeKit:
             show_setup_message(
                 self.hass,
                 self._entry_id,
-                self._name,
+                accessory_friendly_name(self._entry_title, self.driver.accessory),
                 self.driver.state.pincode,
                 self.driver.accessory.xhm_uri(),
             )
