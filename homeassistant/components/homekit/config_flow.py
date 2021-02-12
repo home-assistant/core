@@ -16,6 +16,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
 )
+from homeassistant.util import slugify
+
 from homeassistant.core import callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
@@ -155,7 +157,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data=self.hk_data,
             )
 
-        self.hk_data[CONF_NAME] = self._async_available_name(HOMEKIT_MODE_BRIDGE)
+        self.hk_data[CONF_NAME] = self._async_available_name(SHORT_BRIDGE_NAME)
         return self.async_show_form(
             step_id="pairing",
             description_placeholders={CONF_NAME: self.hk_data[CONF_NAME]},
@@ -234,20 +236,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
     @callback
-    def _async_available_name(self, homekit_mode):
+    def _async_available_name(self, requested_name):
         """Return an available for the bridge."""
+        base_name = slugify(requested_name)
 
-        base_name = SHORT_BRIDGE_NAME
-        if homekit_mode == HOMEKIT_MODE_ACCESSORY:
-            base_name = SHORT_ACCESSORY_NAME
-
-        # We always pick a RANDOM name to avoid Zeroconf
-        # name collisions.  If the name has been seen before
-        # pairing will probably fail.
+        current_names = self._async_current_names()
+        if base_name not in current_names:
+            return base_name
+  
         acceptable_chars = string.ascii_uppercase + string.digits
         suggested_name = None
-        while not suggested_name or suggested_name in self._async_current_names():
-            trailer = "".join(random.choices(acceptable_chars, k=4))
+        while not suggested_name or suggested_name in current_names:
+            trailer = "".join(random.choices(acceptable_chars, k=2))
             suggested_name = f"{base_name} {trailer}"
 
         return suggested_name
