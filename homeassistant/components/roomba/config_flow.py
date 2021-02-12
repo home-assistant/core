@@ -9,15 +9,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import callback
 
 from . import CannotConnect, async_connect_or_timeout, async_disconnect_or_timeout
 from .const import (
     CONF_BLID,
     CONF_CONTINUOUS,
-    CONF_DELAY,
-    CONF_NAME,
     DEFAULT_CONTINUOUS,
     DEFAULT_DELAY,
     ROOMBA_SESSION,
