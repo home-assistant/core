@@ -82,6 +82,7 @@ from .const import (
     CONF_ZEROCONF_DEFAULT_INTERFACE,
     CONFIG_OPTIONS,
     DEFAULT_AUTO_START,
+    DEFAULT_EXCLUDE_ACCESSORY_MODE,
     DEFAULT_HOMEKIT_MODE,
     DEFAULT_PORT,
     DEFAULT_SAFE_MODE,
@@ -148,7 +149,9 @@ BRIDGE_SCHEMA = vol.All(
             vol.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
             vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
             vol.Optional(CONF_ZEROCONF_DEFAULT_INTERFACE): cv.boolean,
-            vol.Optional(CONF_EXCLUDE_ACCESSORY_MODE): cv.boolean,
+            vol.Optional(
+                CONF_EXCLUDE_ACCESSORY_MODE, default=DEFAULT_EXCLUDE_ACCESSORY_MODE
+            ): cv.boolean,
         },
         extra=vol.ALLOW_EXTRA,
     ),
