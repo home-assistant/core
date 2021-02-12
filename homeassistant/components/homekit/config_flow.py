@@ -7,10 +7,8 @@ import string
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     CONF_DOMAINS,
     CONF_ENTITIES,
@@ -43,7 +41,7 @@ from .const import (
     VIDEO_CODEC_COPY,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
-from .util import async_find_next_available_port
+from .util import async_find_next_available_port, state_needs_accessory_mode
 
 CONF_CAMERA_COPY = "camera_copy"
 CONF_INCLUDE_EXCLUDE_MODE = "include_exclude_mode"
@@ -53,10 +51,10 @@ MODE_EXCLUDE = "exclude"
 
 INCLUDE_EXCLUDE_MODES = [MODE_EXCLUDE, MODE_INCLUDE]
 
-DOMAINS_NEED_ACCESSORY_MODE = ["camera", "media_player"]
-
 CAMERA_DOMAIN = "camera"
 MEDIA_PLAYER_DOMAIN = "media_player"
+
+DOMAINS_NEED_ACCESSORY_MODE = [CAMERA_DOMAIN, MEDIA_PLAYER_DOMAIN]
 CAMERA_ENTITY_PREFIX = f"{CAMERA_DOMAIN}."
 
 SUPPORTED_DOMAINS = [
@@ -478,19 +476,15 @@ def _async_get_entity_ids_for_accessory_mode(hass, include_domains):
     accessory_mode_domains = {
         domain for domain in include_domains if domain in DOMAINS_NEED_ACCESSORY_MODE
     }
+
     if not accessory_mode_domains:
         return []
 
-    entity_ids = set()
-    for state in hass.states.async_all(accessory_mode_domains):
-        if (
-            state.domain == MEDIA_PLAYER_DOMAIN
-            and state.attributes.get(ATTR_DEVICE_CLASS) != DEVICE_CLASS_TV
-        ):
-            continue
-        entity_ids.add(state.entity_id)
-
-    return entity_ids
+    return [
+        state.entity_id
+        for state in hass.states.async_all(accessory_mode_domains)
+        if state_needs_accessory_mode(state)
+    ]
 
 
 @callback
