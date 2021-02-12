@@ -142,7 +142,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_pairing(self, user_input=None):
         """Pairing instructions."""
         if user_input is not None:
-            await self.async_add_entries_for_accessory_mode_entities()
+            #
+            # Order matters here. The config entries for the entities
+            # in accessory mode must be created before the bridge.
+            #
+            await self._async_add_entries_for_accessory_mode_entities()
             self.hk_data[CONF_PORT] = await async_find_next_available_port(
                 self.hass, DEFAULT_CONFIG_FLOW_PORT
             )
@@ -157,7 +161,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_NAME: self.hk_data[CONF_NAME]},
         )
 
-    async def async_add_entries_for_accessory_mode_entities(self):
+    async def _async_add_entries_for_accessory_mode_entities(self):
         """Generate new flows for entities that need their own instances."""
         accessory_mode_entity_ids = _async_get_entity_ids_for_accessory_mode(
             self.hass, self.hk_data[CONF_FILTER][CONF_INCLUDE_DOMAINS]
