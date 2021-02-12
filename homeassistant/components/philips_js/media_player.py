@@ -300,6 +300,19 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         return self._media_content_id
 
     @property
+    def media_image_url(self):
+        """Image url of current playing media."""
+        if self._media_content_id and self._media_content_type in (
+            MEDIA_CLASS_APP,
+            MEDIA_CLASS_CHANNEL,
+        ):
+            return self.get_browse_image_url(
+                self._media_content_type, self._media_content_id, media_image_id=None
+            )
+        else:
+            return None
+
+    @property
     def app_id(self):
         """ID of the current running app."""
         if self._application:
@@ -466,7 +479,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     async def async_get_media_image(self):
         """Serve album art. Returns (content, content_type)."""
-        return self.async_get_browse_image(
+        return await self.async_get_browse_image(
             self.media_content_type, self.media_content_id, None
         )
 
