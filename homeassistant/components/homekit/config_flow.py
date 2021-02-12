@@ -1,18 +1,20 @@
 """Config flow for HomeKit integration."""
 import logging
 import random
+import re
 import string
 
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.media_player import DEVICE_CLASS_TV
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntry
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     CONF_DOMAINS,
     CONF_ENTITIES,
+    CONF_ENTITY_ID,
     CONF_NAME,
     CONF_PORT,
 )
@@ -28,6 +30,7 @@ from homeassistant.helpers.entityfilter import (
 from .const import (
     CONF_AUTO_START,
     CONF_ENTITY_CONFIG,
+    CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
     CONF_VIDEO_CODEC,
@@ -41,7 +44,7 @@ from .const import (
     VIDEO_CODEC_COPY,
 )
 from .const import DOMAIN  # pylint:disable=unused-import
-from .util import async_find_next_available_port, entity_ids_with_accessory_mode
+from .util import async_find_next_available_port, state_needs_accessory_mode
 
 CONF_CAMERA_COPY = "camera_copy"
 CONF_INCLUDE_EXCLUDE_MODE = "include_exclude_mode"
@@ -51,10 +54,7 @@ MODE_EXCLUDE = "exclude"
 
 INCLUDE_EXCLUDE_MODES = [MODE_EXCLUDE, MODE_INCLUDE]
 
-DOMAINS_NEED_ACCESSORY_MODE = ["camera", "media_player"]
-
-CAMERA_DOMAIN = "camera"
-MEDIA_PLAYER_DOMAIN = "media_player"
+DOMAINS_NEED_ACCESSORY_MODE = [CAMERA_DOMAIN, MEDIA_PLAYER_DOMAIN]
 CAMERA_ENTITY_PREFIX = f"{CAMERA_DOMAIN}."
 
 SUPPORTED_DOMAINS = [
@@ -141,10 +141,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_pairing(self, user_input=None):
         """Pairing instructions."""
         if user_input is not None:
-            #
-            # Order matters here. The config entries for the entities
-            # in accessory mode must be created before the bridge.
-            #
             await self._async_add_entries_for_accessory_mode_entities()
             self.hk_data[CONF_PORT] = await async_find_next_available_port(
                 self.hass, DEFAULT_CONFIG_FLOW_PORT
@@ -155,6 +151,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self.hk_data[CONF_NAME] = self._async_available_name(SHORT_BRIDGE_NAME)
+        self.hk_data[CONF_EXCLUDE_ACCESSORY_MODE] = True
         return self.async_show_form(
             step_id="pairing",
             description_placeholders={CONF_NAME: self.hk_data[CONF_NAME]},
@@ -165,54 +162,49 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         accessory_mode_entity_ids = _async_get_entity_ids_for_accessory_mode(
             self.hass, self.hk_data[CONF_FILTER][CONF_INCLUDE_DOMAINS]
         )
-        exiting_entity_ids_accessory_mode = entity_ids_with_accessory_mode(self.hass)
+        exiting_entity_ids_accessory_mode = _async_entity_ids_with_accessory_mode(
+            self.hass
+        )
         for entity_id in accessory_mode_entity_ids:
-            if entity_id not in exiting_entity_ids_accessory_mode:
-                await self._async_add_entry_in_accessory_mode(entity_id)
+            if entity_id in exiting_entity_ids_accessory_mode:
+                continue
+            port = await async_find_next_available_port(
+                self.hass, DEFAULT_CONFIG_FLOW_PORT
+            )
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": "accessory"},
+                    data={CONF_ENTITY_ID: entity_id, CONF_PORT: port},
+                )
+            )
 
-    async def _async_add_entry_in_accessory_mode(self, entity_id):
+    async def async_step_accessory(self, input):
         """Handle creation a single accessory in accessory mode."""
+        entity_id = input[CONF_ENTITY_ID]
+        port = input[CONF_PORT]
+
         state = self.hass.states.get(entity_id)
         if state:
             name = state.attributes.get(ATTR_FRIENDLY_NAME) or state.entity_id
         if not name:
             name = HOMEKIT_MODE_ACCESSORY
-        entry_data = {}
-        entry_data[CONF_PORT] = await async_find_next_available_port(
-            self.hass, DEFAULT_CONFIG_FLOW_PORT
-        )
-        entry_data[CONF_NAME] = self._async_available_name(name)
         entity_filter = _EMPTY_ENTITY_FILTER.copy()
         entity_filter[CONF_INCLUDE_ENTITIES] = [entity_id]
-        entry_options = {
-            CONF_FILTER: entity_filter,
+
+        entry_data = {
+            CONF_PORT: port,
+            CONF_NAME: self._async_available_name(name),
             CONF_HOMEKIT_MODE: HOMEKIT_MODE_ACCESSORY,
+            CONF_FILTER: entity_filter,
         }
         if entity_id.startswith(CAMERA_ENTITY_PREFIX):
-            entry_options[CONF_ENTITY_CONFIG] = {
+            entry_data[CONF_ENTITY_CONFIG] = {
                 entity_id: {CONF_VIDEO_CODEC: VIDEO_CODEC_COPY}
             }
 
-        # We have to add the accessory mode entries before
-        # creating the bridge entries to ensure
-        #
-        # 1. The bridge will exclude the entity ids that
-        #    are in accessory mode.
-        # 2. We do not end up with a race condition on the port
-        #    allocation which results in two entries with the same
-        #    port.
-        #
-        await self.hass.config_entries.async_add(
-            ConfigEntry(
-                version=self.VERSION,
-                domain=DOMAIN,
-                title=f"{name}:{entry_data[CONF_PORT]}",
-                data=entry_data,
-                options=entry_options,
-                system_options={},
-                source=SOURCE_USER,
-                connection_class=self.CONNECTION_CLASS,
-            )
+        return self.async_create_entry(
+            title=f"{name}:{entry_data[CONF_PORT]}", data=entry_data
         )
 
     async def async_step_import(self, user_input=None):
@@ -236,14 +228,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _async_available_name(self, requested_name):
         """Return an available for the bridge."""
         current_names = self._async_current_names()
-        if requested_name not in current_names:
-            return requested_name
+        valid_mdns_name = re.sub("[^A-Za-z0-9 ]+", " ", requested_name)
+
+        if valid_mdns_name not in current_names:
+            return valid_mdns_name
 
         acceptable_mdns_chars = string.ascii_uppercase + string.digits
         suggested_name = None
         while not suggested_name or suggested_name in current_names:
             trailer = "".join(random.choices(acceptable_mdns_chars, k=2))
-            suggested_name = f"{requested_name} {trailer}"
+            suggested_name = f"{valid_mdns_name} {trailer}"
 
         return suggested_name
 
@@ -471,27 +465,41 @@ def _async_get_matching_entities(hass, domains=None):
 
 def _domains_set_from_entities(entity_ids):
     """Build a set of domains for the given entity ids."""
-    domains = set()
-    for entity_id in entity_ids:
-        domains.add(split_entity_id(entity_id)[0])
-    return domains
+    return {split_entity_id(entity_id)[0] for entity_id in entity_ids}
 
 
+@callback
 def _async_get_entity_ids_for_accessory_mode(hass, include_domains):
     """Build a list of entities that should be paired in accessory mode."""
     accessory_mode_domains = {
         domain for domain in include_domains if domain in DOMAINS_NEED_ACCESSORY_MODE
     }
+
     if not accessory_mode_domains:
         return []
 
+    return [
+        state.entity_id
+        for state in hass.states.async_all(accessory_mode_domains)
+        if state_needs_accessory_mode(state)
+    ]
+
+
+@callback
+def _async_entity_ids_with_accessory_mode(hass):
+    """Return a set of entity ids that have config entries in accessory mode."""
+
     entity_ids = set()
-    for state in hass.states.async_all(accessory_mode_domains):
-        if (
-            state.domain == MEDIA_PLAYER_DOMAIN
-            and state.attributes.get(ATTR_DEVICE_CLASS) != DEVICE_CLASS_TV
-        ):
+
+    current_entries = hass.config_entries.async_entries(DOMAIN)
+    for entry in current_entries:
+        # We have to handle the case where the data has not yet
+        # been migrated to options because the data was just
+        # imported and the entry was never started
+        target = entry.options if CONF_HOMEKIT_MODE in entry.options else entry.data
+        if target.get(CONF_HOMEKIT_MODE) != HOMEKIT_MODE_ACCESSORY:
             continue
-        entity_ids.add(state.entity_id)
+
+        entity_ids.add(target[CONF_FILTER][CONF_INCLUDE_ENTITIES][0])
 
     return entity_ids

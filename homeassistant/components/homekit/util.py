@@ -11,8 +11,14 @@ import pyqrcode
 import voluptuous as vol
 
 from homeassistant.components import binary_sensor, media_player, sensor
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.media_player import (
+    DEVICE_CLASS_TV,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+)
 from homeassistant.const import (
     ATTR_CODE,
+    ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
     CONF_NAME,
     CONF_PORT,
@@ -21,7 +27,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, split_entity_id
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entityfilter import CONF_INCLUDE_ENTITIES
 from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.util.temperature as temp_util
 
@@ -33,8 +38,6 @@ from .const import (
     CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
-    CONF_FILTER,
-    CONF_HOMEKIT_MODE,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
@@ -70,7 +73,6 @@ from .const import (
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     HOMEKIT_FILE,
-    HOMEKIT_MODE_ACCESSORY,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
     TYPE_FAUCET,
@@ -509,24 +511,15 @@ def accessory_friendly_name(hass_name, accessory):
     return f"{hass_name} ({accessory_mdns_name})"
 
 
-def entity_ids_with_accessory_mode(hass):
-    """Return a set of entity ids that have config entries in accessory mode."""
+def state_needs_accessory_mode(state):
+    """Return if the entity represented by the state must be paired in accessory mode."""
+    if state.domain == CAMERA_DOMAIN:
+        return True
 
-    entity_ids = set()
+    if (
+        state.domain == MEDIA_PLAYER_DOMAIN
+        and state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TV
+    ):
+        return True
 
-    current_entries = hass.config_entries.async_entries(DOMAIN)
-    for entry in current_entries:
-        # We have to handle the case where the data has not yet
-        # been migrated to options because the data was just
-        # imported
-        if CONF_HOMEKIT_MODE in entry.options:
-            target = entry.options
-        else:
-            target = entry.data
-
-        if target.get(CONF_HOMEKIT_MODE) != HOMEKIT_MODE_ACCESSORY:
-            continue
-
-        entity_ids.add(target[CONF_FILTER][CONF_INCLUDE_ENTITIES][0])
-
-    return entity_ids
+    return False
