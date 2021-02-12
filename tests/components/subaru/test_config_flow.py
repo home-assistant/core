@@ -4,6 +4,7 @@ Test the Subaru config flow.
 Borrowed heavily from Tesla tests (thanks @alandtse)
 """
 from datetime import datetime
+from unittest.mock import patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.subaru.const import (
@@ -23,7 +24,6 @@ from homeassistant.const import (
 )
 from subarulink.exceptions import InvalidCredentials, InvalidPIN, SubaruException
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 TEST_USERNAME = "test@fake.com"

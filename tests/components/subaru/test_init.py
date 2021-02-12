@@ -1,7 +1,6 @@
 """Test Subaru init process."""
 from datetime import datetime, timedelta
-
-from subarulink import InvalidCredentials, SubaruException
+from unittest.mock import patch
 
 from homeassistant.components import subaru
 from homeassistant.components.subaru.const import (
@@ -26,6 +25,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.setup import async_setup_component
+from subarulink import InvalidCredentials, SubaruException
 
 from .api_responses import (
     TEST_VIN_1_G1,
@@ -36,7 +36,6 @@ from .api_responses import (
     VEHICLE_STATUS_G2,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

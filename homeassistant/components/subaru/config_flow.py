@@ -21,6 +21,7 @@ from subarulink import (
     SubaruException,
 )
 
+# pylint: disable=unused-import
 from .const import (
     CONF_HARD_POLL_INTERVAL,
     DEFAULT_HARD_POLL_INTERVAL,

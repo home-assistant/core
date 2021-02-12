@@ -1,5 +1,7 @@
 """Test Subaru sensors."""
 
+from unittest.mock import patch
+
 from homeassistant.components.subaru.const import VEHICLE_NAME
 from homeassistant.components.subaru.sensor import (
     API_GEN_2_SENSORS,
@@ -19,8 +21,6 @@ from .api_responses import (
     VEHICLE_STATUS_EV,
 )
 from .test_init import setup_subaru_integration
-
-from tests.async_mock import patch
 
 
 async def test_sensors_ev_imperial(hass):
