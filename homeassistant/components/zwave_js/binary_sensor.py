@@ -258,8 +258,10 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
     """Representation of a Z-Wave binary_sensor."""
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> Optional[bool]:
         """Return if the sensor is on or off."""
+        if self.info.primary_value.value is None:
+            return None
         return bool(self.info.primary_value.value)
 
     @property
@@ -301,8 +303,10 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         self._mapping_info = self._get_sensor_mapping()
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> Optional[bool]:
         """Return if the sensor is on or off."""
+        if self.info.primary_value.value is None:
+            return None
         return int(self.info.primary_value.value) == int(self.state_key)
 
     @property
@@ -349,8 +353,10 @@ class ZWavePropertyBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         self._mapping_info = self._get_sensor_mapping()
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> Optional[bool]:
         """Return if the sensor is on or off."""
+        if self.info.primary_value.value is None:
+            return None
         return self.info.primary_value.value in self._mapping_info["on_states"]
 
     @property
