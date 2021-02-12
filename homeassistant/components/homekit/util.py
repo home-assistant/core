@@ -503,7 +503,10 @@ def accessory_friendly_name(hass_name, accessory):
     name are usually different which means they need to
     see both to identify the accessory.
     """
-    return f"{hass_name} ({accessory.display_name})"
+    accessory_mdns_name = accessory.display_name
+    if hass_name.startswith(accessory_mdns_name):
+        return hass_name
+    return f"{hass_name} ({accessory_mdns_name})"
 
 
 def entity_ids_with_accessory_mode(hass):
