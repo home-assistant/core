@@ -19,12 +19,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import (  # pylint:disable=unused-import
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    ZEROCONF_MAP,
-)
+from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN, ZEROCONF_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -152,7 +147,6 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
-
         # PLACEHOLDER USB vs Gateway Logic
         return await self.async_step_user_gateway()
 
