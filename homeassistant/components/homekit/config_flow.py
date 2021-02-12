@@ -463,10 +463,7 @@ def _async_get_matching_entities(hass, domains=None):
 
 def _domains_set_from_entities(entity_ids):
     """Build a set of domains for the given entity ids."""
-    domains = set()
-    for entity_id in entity_ids:
-        domains.add(split_entity_id(entity_id)[0])
-    return domains
+    return {split_entity_id(entity_id)[0] for entity_id in entity_ids}
 
 
 @callback
