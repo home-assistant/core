@@ -1028,6 +1028,7 @@ omit =
     homeassistant/components/route53/*
     homeassistant/components/rova/sensor.py
     homeassistant/components/rpi_camera/*
+    homeassistant/components/rrd_recorder/*
     homeassistant/components/rtorrent/sensor.py
     homeassistant/components/russound_rio/media_player.py
     homeassistant/components/russound_rnet/media_player.py
