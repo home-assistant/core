@@ -50,7 +50,7 @@ async def mock_entity(hass, mock_device_reg, mock_config_entry):
     """Get standard player."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    yield MOCK_ENTITY_ID
+    return MOCK_ENTITY_ID
 
 
 @fixture
