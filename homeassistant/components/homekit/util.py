@@ -33,6 +33,7 @@ from .const import (
     CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
+    CONF_FILTER,
     CONF_HOMEKIT_MODE,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
@@ -523,9 +524,6 @@ def entity_ids_with_accessory_mode(hass):
         if target.get(CONF_HOMEKIT_MODE) != HOMEKIT_MODE_ACCESSORY:
             continue
 
-        if CONF_INCLUDE_ENTITIES not in target:
-            continue
-
-        entity_ids.add(target[CONF_INCLUDE_ENTITIES][0])
+        entity_ids.add(target[CONF_FILTER][CONF_INCLUDE_ENTITIES][0])
 
     return entity_ids
