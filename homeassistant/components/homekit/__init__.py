@@ -97,7 +97,9 @@ from .const import (
     UNDO_UPDATE_LISTENER,
 )
 from .util import (
+    accessory_friendly_name,
     dismiss_setup_message,
+    entity_ids_with_accessory_mode,
     get_persist_fullpath_for_entry_id,
     migrate_filesystem_state_data_for_primary_imported_entry_id,
     port_is_available,
@@ -587,9 +589,20 @@ class HomeKit:
             }
         )
 
+        entity_ids_accessory_mode = set()
+        if self._homekit_mode == HOMEKIT_MODE_ACCESSORY:
+            entity_ids_accessory_mode = entity_ids_with_accessory_mode(self.hass)
+
         bridged_states = []
         for state in self.hass.states.async_all():
             entity_id = state.entity_id
+
+            if entity_id in entity_ids_accessory_mode:
+                _LOGGER.info(
+                    "The entity %s was not bridged because it already has an entry in accessory mode.",
+                    entity_id,
+                )
+                continue
 
             if not self._filter(entity_id):
                 continue
@@ -673,7 +686,7 @@ class HomeKit:
             show_setup_message(
                 self.hass,
                 self._entry_id,
-                self.driver.accessory.display_name,
+                accessory_friendly_name(self._name, self.driver.accessory),
                 self.driver.state.pincode,
                 self.driver.accessory.xhm_uri(),
             )

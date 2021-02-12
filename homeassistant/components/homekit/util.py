@@ -32,6 +32,8 @@ from .const import (
     CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
+    CONF_HOMEKIT_MODE,
+    CONF_INCLUDE_ENTITIES,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
@@ -67,6 +69,7 @@ from .const import (
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     HOMEKIT_FILE,
+    HOMEKIT_MODE_ACCESSORY,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
     TYPE_FAUCET,
@@ -329,9 +332,7 @@ def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
         f"### {pin}\n"
         f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
     )
-    hass.components.persistent_notification.create(
-        message, "HomeKit Bridge Setup", entry_id
-    )
+    hass.components.persistent_notification.create(message, "HomeKit Pairing", entry_id)
 
 
 def dismiss_setup_message(hass, entry_id):
@@ -492,3 +493,27 @@ def pid_is_alive(pid) -> bool:
     except OSError:
         pass
     return False
+
+
+def accesory_friendly_name(hass_name, accessory):
+    """Return the combined name for the accessory.
+
+    The mDNS name and the Home Assistant config entry
+    name are usually different which means they need to
+    see both to identify the accessory.
+    """
+    return f"{hass_name} ({accessory.display_name})"
+
+
+def entity_ids_with_accessory_mode(hass):
+    """Return a set of entity ids that have config entries in accessory mode."""
+
+    entity_ids = set()
+
+    current_entries = hass.config_entries.async_entries(DOMAIN)
+    for entry in current_entries:
+        if entry.data.get(CONF_HOMEKIT_MODE) != HOMEKIT_MODE_ACCESSORY:
+            continue
+        entity_ids.add(entry.data[CONF_INCLUDE_ENTITIES][0])
+
+    return entity_ids
