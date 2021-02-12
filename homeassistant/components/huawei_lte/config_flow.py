@@ -1,4 +1,5 @@
 """Config flow for the Huawei LTE platform."""
+from __future__ import annotations
 
 from collections import OrderedDict
 import logging
@@ -48,7 +49,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> "OptionsFlowHandler":
+    ) -> OptionsFlowHandler:
         """Get options flow."""
         return OptionsFlowHandler(config_entry)
 
