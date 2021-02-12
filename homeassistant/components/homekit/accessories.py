@@ -71,6 +71,7 @@ from .const import (
     TYPE_VALVE,
 )
 from .util import (
+    accessory_friendly_name,
     convert_to_float,
     dismiss_setup_message,
     format_sw_version,
@@ -515,7 +516,7 @@ class HomeDriver(AccessoryDriver):
         show_setup_message(
             self.hass,
             self._entry_id,
-            self.accessory.display_name,
+            accessory_friendly_name(self._bridge_name, self.accessory),
             self.state.pincode,
             self.accessory.xhm_uri(),
         )

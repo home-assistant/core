@@ -159,6 +159,7 @@ FLOWS = [
     "owntracks",
     "ozw",
     "panasonic_viera",
+    "philips_js",
     "pi_hole",
     "plaato",
     "plex",
