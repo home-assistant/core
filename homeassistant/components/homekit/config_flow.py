@@ -141,10 +141,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_pairing(self, user_input=None):
         """Pairing instructions."""
         if user_input is not None:
-            await self._async_add_entries_for_accessory_mode_entities()
-            self.hk_data[CONF_PORT] = await async_find_next_available_port(
+            port = await async_find_next_available_port(
                 self.hass, DEFAULT_CONFIG_FLOW_PORT
             )
+            await self._async_add_entries_for_accessory_mode_entities(port)
+            self.hk_data[CONF_PORT] = port
             return self.async_create_entry(
                 title=f"{self.hk_data[CONF_NAME]}:{self.hk_data[CONF_PORT]}",
                 data=self.hk_data,
@@ -157,7 +158,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_NAME: self.hk_data[CONF_NAME]},
         )
 
-    async def _async_add_entries_for_accessory_mode_entities(self):
+    async def _async_add_entries_for_accessory_mode_entities(self, last_assigned_port):
         """Generate new flows for entities that need their own instances."""
         accessory_mode_entity_ids = _async_get_entity_ids_for_accessory_mode(
             self.hass, self.hk_data[CONF_FILTER][CONF_INCLUDE_DOMAINS]
@@ -168,9 +169,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for entity_id in accessory_mode_entity_ids:
             if entity_id in exiting_entity_ids_accessory_mode:
                 continue
-            port = await async_find_next_available_port(
-                self.hass, DEFAULT_CONFIG_FLOW_PORT
-            )
+            port = await async_find_next_available_port(self.hass, last_assigned_port)
+            last_assigned_port = port
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_init(
                     DOMAIN,
