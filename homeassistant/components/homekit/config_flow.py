@@ -166,11 +166,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         exiting_entity_ids_accessory_mode = _async_entity_ids_with_accessory_mode(
             self.hass
         )
+        next_port_to_check = last_assigned_port + 1
         for entity_id in accessory_mode_entity_ids:
             if entity_id in exiting_entity_ids_accessory_mode:
                 continue
-            port = await async_find_next_available_port(self.hass, last_assigned_port)
-            last_assigned_port = port
+            port = await async_find_next_available_port(self.hass, next_port_to_check)
+            next_port_to_check = port + 1
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_init(
                     DOMAIN,
