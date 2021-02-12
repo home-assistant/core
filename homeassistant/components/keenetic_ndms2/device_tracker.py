@@ -1,25 +1,96 @@
 """Support for Keenetic routers as device tracker."""
+from datetime import timedelta
 import logging
-from typing import List, Set
+from typing import List, Optional, Set
 
 from ndms2_client import Device
+import voluptuous as vol
 
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_SCHEMA,
     SOURCE_TYPE_ROUTER,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, ROUTER
+from .const import (
+    CONF_CONSIDER_HOME,
+    CONF_INTERFACES,
+    CONF_LEGACY_INTERFACE,
+    DEFAULT_CONSIDER_HOME,
+    DEFAULT_INTERFACE,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_TELNET_PORT,
+    DOMAIN,
+    ROUTER,
+)
 from .router import KeeneticRouter
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORM_SCHEMA = DEVICE_TRACKER_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PORT, default=DEFAULT_TELNET_PORT): cv.port,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_LEGACY_INTERFACE, default=DEFAULT_INTERFACE): cv.string,
+    }
+)
+
+
+async def async_get_scanner(hass: HomeAssistant, config):
+    """Import legacy configuration from YAML."""
+
+    scanner_config = config[DEVICE_TRACKER_DOMAIN]
+    scan_interval: Optional[timedelta] = scanner_config.get(CONF_SCAN_INTERVAL)
+    consider_home: Optional[timedelta] = scanner_config.get(CONF_CONSIDER_HOME)
+
+    host: str = scanner_config[CONF_HOST]
+    hass.data[DOMAIN][f"imported_options_{host}"] = {
+        CONF_INTERFACES: [scanner_config[CONF_LEGACY_INTERFACE]],
+        CONF_SCAN_INTERVAL: int(scan_interval.total_seconds())
+        if scan_interval
+        else DEFAULT_SCAN_INTERVAL,
+        CONF_CONSIDER_HOME: int(consider_home.total_seconds())
+        if consider_home
+        else DEFAULT_CONSIDER_HOME,
+    }
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_HOST: scanner_config[CONF_HOST],
+                CONF_PORT: scanner_config[CONF_PORT],
+                CONF_USERNAME: scanner_config[CONF_USERNAME],
+                CONF_PASSWORD: scanner_config[CONF_PASSWORD],
+            },
+        )
+    )
+
+    _LOGGER.warning(
+        "Your Keenetic NDMS2 configuration has been imported into the UI, "
+        "please remove it from configuration.yaml. "
+        "Loading Keenetic NDMS2 via scanner setup is now deprecated"
+    )
+
+    return None
 
 
 async def async_setup_entry(

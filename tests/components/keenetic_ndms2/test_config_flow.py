@@ -9,6 +9,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import keenetic_ndms2 as keenetic
 from homeassistant.components.keenetic_ndms2 import const
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import MOCK_DATA, MOCK_NAME, MOCK_OPTIONS
 
@@ -42,7 +43,7 @@ def mock_keenetic_connect_failed():
         yield
 
 
-async def test_flow_works(hass, connect):
+async def test_flow_works(hass: HomeAssistantType, connect):
     """Test config flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -65,6 +66,28 @@ async def test_flow_works(hass, connect):
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == MOCK_DATA
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_import_works(hass: HomeAssistantType, connect):
+    """Test config flow."""
+
+    with patch(
+        "homeassistant.components.keenetic_ndms2.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            keenetic.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=MOCK_DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == MOCK_NAME
+    assert result["data"] == MOCK_DATA
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

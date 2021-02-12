@@ -17,3 +17,5 @@ CONF_INTERFACES = "interfaces"
 CONF_TRY_HOTSPOT = "try_hotspot"
 CONF_INCLUDE_ARP = "include_arp"
 CONF_INCLUDE_ASSOCIATED = "include_associated"
+
+CONF_LEGACY_INTERFACE = "interface"

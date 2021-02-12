@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -26,9 +26,6 @@ from .const import (
     CONF_INCLUDE_ASSOCIATED,
     CONF_INTERFACES,
     CONF_TRY_HOTSPOT,
-    DEFAULT_CONSIDER_HOME,
-    DEFAULT_INTERFACE,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
 
@@ -142,8 +139,6 @@ class KeeneticRouter:
         except ConnectionException as error:
             raise ConfigEntryNotReady from error
 
-        self._async_add_defaults()
-
         async def async_update_data(_now):
             await self.request_update()
             self._cancel_periodic_update = async_call_later(
@@ -159,25 +154,6 @@ class KeeneticRouter:
         if self._cancel_periodic_update:
             self._cancel_periodic_update()
         self._connection.disconnect()
-
-    @callback
-    def _async_add_defaults(self):
-        """Populate default options."""
-        data = dict(self.config_entry.data)
-        options = {
-            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-            CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME,
-            CONF_INTERFACES: [DEFAULT_INTERFACE],
-            CONF_TRY_HOTSPOT: True,
-            CONF_INCLUDE_ARP: True,
-            CONF_INCLUDE_ASSOCIATED: True,
-            **self.config_entry.options,
-        }
-
-        if options.keys() - self.config_entry.options.keys():
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, data=data, options=options
-            )
 
     def _update_router_info(self):
         try:

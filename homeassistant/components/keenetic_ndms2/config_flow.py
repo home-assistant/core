@@ -84,6 +84,10 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_import(self, user_input=None):
+        """Import a config entry."""
+        return await self.async_step_user(user_input)
+
 
 class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options."""
@@ -113,10 +117,7 @@ class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_user(self, user_input=None):
         """Manage the device tracker options."""
         if user_input is not None:
-            return self.async_create_entry(
-                title="",
-                data={**user_input},
-            )
+            return self.async_create_entry(title="", data=user_input)
 
         options = vol.Schema(
             {
