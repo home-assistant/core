@@ -3,14 +3,7 @@
 import requests_mock
 
 from homeassistant.components.aemet import DOMAIN
-from homeassistant.components.aemet.const import FORECAST_MODE_DAILY
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_MODE,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -90,7 +83,6 @@ async def async_init_integration(
                 CONF_API_KEY: "mock",
                 CONF_LATITUDE: "40.30403754",
                 CONF_LONGITUDE: "-3.72935236",
-                CONF_MODE: FORECAST_MODE_DAILY,
                 CONF_NAME: "AEMET",
             },
         )

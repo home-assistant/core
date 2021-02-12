@@ -12,20 +12,10 @@
                     "api_key": "API Key",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
-                    "mode": "Mode",
                     "name": "Name of the integration"
                 },
                 "description": "Set up AEMET OpenData integration. To generate API key go to https://opendata.aemet.es/centrodedescargas/altaUsuario",
                 "title": "AEMET OpenData"
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "mode": "Mode"
-                }
             }
         }
     }
