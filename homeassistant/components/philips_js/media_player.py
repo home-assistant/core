@@ -1,5 +1,5 @@
 """Media Player component to integrate TVs exposing the Joint Space API."""
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from haphilipsjs import ConnectionFailure
 import voluptuous as vol
@@ -136,6 +136,10 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         self._system = system
         self._unique_id = unique_id
         self._state = STATE_OFF
+        self._media_content_type: Optional[str] = None
+        self._media_content_id: Optional[str] = None
+        self._media_title: Optional[str] = None
+        self._media_channel: Optional[str] = None
 
         super().__init__(coordinator)
         self._update_from_coordinator()
@@ -252,30 +256,34 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def media_channel(self):
         """Get current channel if it's a channel."""
-        if self.media_content_type == MEDIA_TYPE_CHANNEL:
-            return self._channels.get(self._tv.channel_id)
-        return None
+        return self._media_channel
 
     @property
     def media_title(self):
         """Title of current playing media."""
-        if self.media_content_type == MEDIA_TYPE_CHANNEL:
-            return self._channels.get(self._tv.channel_id)
-        return self._sources.get(self._tv.source_id)
+        return self._media_title
 
     @property
     def media_content_type(self):
         """Return content type of playing media."""
-        if self._tv.channel_active:
-            return MEDIA_TYPE_CHANNEL
-        return None
+        return self._media_content_type
 
     @property
     def media_content_id(self):
         """Content type of current playing media."""
-        if self.media_content_type == MEDIA_TYPE_CHANNEL:
-            return self._channels.get(self._tv.channel_id)
-        return None
+        return self._media_content_id
+
+    @property
+    def app_id(self):
+        """ID of the current running app."""
+        if self._application:
+            return self._application["id"]
+
+    @property
+    def app_name(self):
+        """Name of the current running app."""
+        if self._application:
+            return self._application["label"]
 
     @property
     def device_state_attributes(self):
@@ -469,6 +477,22 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             self._application = self._applications.get(appid)
         else:
             self._application = None
+
+        if self._tv.channel_active:
+            self._media_content_type = MEDIA_TYPE_CHANNEL
+            self._media_content_id = self._tv.channel_id
+            self._media_title = self._channels.get(self._tv.channel_id)
+            self._media_channel = self._channels.get(self._tv.channel_id)
+        elif self._application:
+            self._media_content_type = MEDIA_TYPE_APP
+            self._media_content_id = self._application["id"]
+            self._media_title = self._application["label"]
+            self._media_channel = None
+        else:
+            self._media_content_type = None
+            self._media_content_id = None
+            self._media_title = self._sources.get(self._tv.source_id)
+            self._media_channel = None
 
     @callback
     def _handle_coordinator_update(self) -> None:
