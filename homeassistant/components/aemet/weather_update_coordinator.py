@@ -1,4 +1,5 @@
 """Weather data coordinator for the AEMET OpenData service."""
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 
@@ -642,11 +643,10 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         return None
 
 
+@dataclass
 class AemetWeather:
     """Class to harmonize weather data model."""
 
-    def __init__(self, daily, hourly, station):
-        """Initialize weather object."""
-        self.daily = daily
-        self.hourly = hourly
-        self.station = station
+    daily: dict = field(default_factory=dict)
+    hourly: dict = field(default_factory=dict)
+    station: dict = field(default_factory=dict)
