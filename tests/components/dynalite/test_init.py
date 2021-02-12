@@ -12,8 +12,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-dynalite.CONF_DEFAULT = CONF_DEFAULT
-
 
 async def test_empty_config(hass):
     """Test with an empty config."""
@@ -56,7 +54,7 @@ async def test_async_setup(hass):
                                     dynalite.CONF_TEMPLATE: dynalite.CONF_TIME_COVER,
                                 },
                             },
-                            dynalite.CONF_DEFAULT: {dynalite.CONF_FADE: 2.3},
+                            CONF_DEFAULT: {dynalite.CONF_FADE: 2.3},
                             dynalite.CONF_ACTIVE: dynalite.ACTIVE_INIT,
                             dynalite.CONF_PRESET: {
                                 "5": {CONF_NAME: "pres5", dynalite.CONF_FADE: 4.5}
