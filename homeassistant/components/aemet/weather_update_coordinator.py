@@ -308,7 +308,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 station_dt = dt_util.parse_datetime(
                     station_data[AEMET_ATTR_STATION_DATE] + "Z"
                 )
-                station_timestamp = dt_util.as_utc(station_dt)
+                station_timestamp = dt_util.as_utc(station_dt).isoformat()
             if AEMET_ATTR_STATION_HUMIDITY in station_data:
                 humidity = format_float(station_data[AEMET_ATTR_STATION_HUMIDITY])
             if AEMET_ATTR_STATION_PRESSURE_SEA in station_data:

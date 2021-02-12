@@ -83,7 +83,7 @@ async def test_aemet_weather_create_sensors(hass):
     assert state.state == "MADRID RETIRO"
 
     state = hass.states.get("sensor.aemet_station_timestamp")
-    assert state.state == "2021-01-09 12:00:00+00:00"
+    assert state.state == "2021-01-09T12:00:00+00:00"
 
     state = hass.states.get("sensor.aemet_storm_probability")
     assert state.state == "0"
