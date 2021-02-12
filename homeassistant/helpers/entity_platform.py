@@ -1,4 +1,6 @@
 """Class to manage the entities for a single platform."""
+from __future__ import annotations
+
 import asyncio
 from contextvars import ContextVar
 from datetime import datetime, timedelta
@@ -245,7 +247,7 @@ class EntityPlatform:
             warn_task.cancel()
 
     def _schedule_add_entities(
-        self, new_entities: Iterable["Entity"], update_before_add: bool = False
+        self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
         """Schedule adding entities for a single platform, synchronously."""
         run_callback_threadsafe(
@@ -257,7 +259,7 @@ class EntityPlatform:
 
     @callback
     def _async_schedule_add_entities(
-        self, new_entities: Iterable["Entity"], update_before_add: bool = False
+        self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
         """Schedule adding entities for a single platform async."""
         task = self.hass.async_create_task(
@@ -268,7 +270,7 @@ class EntityPlatform:
             self._tasks.append(task)
 
     def add_entities(
-        self, new_entities: Iterable["Entity"], update_before_add: bool = False
+        self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
         """Add entities for a single platform."""
         # That avoid deadlocks
@@ -284,7 +286,7 @@ class EntityPlatform:
         ).result()
 
     async def async_add_entities(
-        self, new_entities: Iterable["Entity"], update_before_add: bool = False
+        self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
         """Add entities for a single platform async.
 
@@ -547,7 +549,7 @@ class EntityPlatform:
 
     async def async_extract_from_service(
         self, service_call: ServiceCall, expand_group: bool = True
-    ) -> List["Entity"]:
+    ) -> List[Entity]:
         """Extract all known and available entities from a service call.
 
         Will return an empty list if entities specified but unknown.

@@ -1,4 +1,6 @@
 """Service calling related helpers."""
+from __future__ import annotations
+
 import asyncio
 import dataclasses
 from functools import partial, wraps
@@ -230,10 +232,10 @@ def extract_entity_ids(
 @bind_hass
 async def async_extract_entities(
     hass: HomeAssistantType,
-    entities: Iterable["Entity"],
+    entities: Iterable[Entity],
     service_call: ha.ServiceCall,
     expand_group: bool = True,
-) -> List["Entity"]:
+) -> List[Entity]:
     """Extract a list of entity objects from a service call.
 
     Will convert group entity ids to the entity ids it represents.
@@ -634,7 +636,7 @@ async def entity_service_call(
 
 async def _handle_entity_call(
     hass: HomeAssistantType,
-    entity: "Entity",
+    entity: Entity,
     func: Union[str, Callable[..., Any]],
     data: Union[Dict, ha.ServiceCall],
     context: ha.Context,
