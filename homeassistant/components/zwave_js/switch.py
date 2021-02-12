@@ -85,7 +85,7 @@ class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
         """Initialize a ZWaveBarrierEventSignalingSwitch entity."""
         super().__init__(config_entry, client, info)
         self._name = self.generate_name(include_value_name=True)
-        self._state: Optional[int] = None
+        self._state: Optional[bool] = None
 
         self._update_state()
 
@@ -102,7 +102,7 @@ class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
     @property
     def is_on(self) -> Optional[bool]:  # type: ignore
         """Return a boolean for the state of the switch."""
-        return bool(self._state)
+        return self._state
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
