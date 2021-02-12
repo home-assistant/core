@@ -5,24 +5,13 @@ from unittest.mock import patch
 import requests_mock
 
 from homeassistant import data_entry_flow
-from homeassistant.components.aemet.const import (
-    DEFAULT_FORECAST_MODE,
-    DOMAIN,
-    FORECAST_MODE_DAILY,
-    FORECAST_MODE_HOURLY,
-)
+from homeassistant.components.aemet.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
     SOURCE_USER,
 )
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_MODE,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 import homeassistant.util.dt as dt_util
 
 from .util import aemet_requests_mock
@@ -34,7 +23,6 @@ CONFIG = {
     CONF_API_KEY: "foo",
     CONF_LATITUDE: 40.30403754,
     CONF_LONGITUDE: -3.72935236,
-    CONF_MODE: DEFAULT_FORECAST_MODE,
 }
 
 
@@ -91,42 +79,6 @@ async def test_form_options(hass):
         config_entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert config_entry.state == ENTRY_STATE_LOADED
-
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "init"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_MODE: FORECAST_MODE_DAILY}
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert config_entry.options == {
-            CONF_MODE: FORECAST_MODE_DAILY,
-        }
-
-        await hass.async_block_till_done()
-
-        assert config_entry.state == ENTRY_STATE_LOADED
-
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "init"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_MODE: FORECAST_MODE_HOURLY}
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert config_entry.options == {
-            CONF_MODE: FORECAST_MODE_HOURLY,
-        }
-
         await hass.async_block_till_done()
 
         assert config_entry.state == ENTRY_STATE_LOADED

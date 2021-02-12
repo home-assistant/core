@@ -55,7 +55,8 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_API_CONDITION,
-    ATTR_API_FORECAST,
+    ATTR_API_FORECAST_DAILY,
+    ATTR_API_FORECAST_HOURLY,
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
     ATTR_API_RAIN,
@@ -76,8 +77,6 @@ from .const import (
     ATTR_API_WIND_SPEED,
     CONDITIONS_MAP,
     DOMAIN,
-    FORECAST_MODE_DAILY,
-    FORECAST_MODE_HOURLY,
     WIND_BEARING_MAP,
 )
 
@@ -118,7 +117,7 @@ class TownNotFound(UpdateFailed):
 class WeatherUpdateCoordinator(DataUpdateCoordinator):
     """Weather data update coordinator."""
 
-    def __init__(self, hass, aemet, latitude, longitude, forecast_mode):
+    def __init__(self, hass, aemet, latitude, longitude):
         """Initialize coordinator."""
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=WEATHER_UPDATE_INTERVAL
@@ -129,7 +128,6 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         self._town = None
         self._latitude = latitude
         self._longitude = longitude
-        self._forecast_mode = forecast_mode
         self._data = {
             "daily": None,
             "hourly": None,
@@ -196,15 +194,11 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         self._get_weather_town()
 
-        daily = None
-        if self._forecast_mode == FORECAST_MODE_DAILY:
-            daily = self._aemet.get_specific_forecast_town_daily(
-                self._town[AEMET_ATTR_ID]
+        daily = self._aemet.get_specific_forecast_town_daily(self._town[AEMET_ATTR_ID])
+        if not daily:
+            _LOGGER.error(
+                'error fetching daily data for town "%s"', self._town[AEMET_ATTR_ID]
             )
-            if not daily:
-                _LOGGER.error(
-                    'error fetching daily data for town "%s"', self._town[AEMET_ATTR_ID]
-                )
 
         hourly = self._aemet.get_specific_forecast_town_hourly(
             self._town[AEMET_ATTR_ID]
@@ -318,13 +312,17 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 temperature = format_float(station_data[AEMET_ATTR_STATION_TEMPERATURE])
 
         # Get forecast from weather data
-        forecast_weather = self._get_forecast_from_weather_response(
+        forecast_daily = self._get_daily_forecast_from_weather_response(
+            weather_response, now
+        )
+        forecast_hourly = self._get_hourly_forecast_from_weather_response(
             weather_response, now
         )
 
         return {
             ATTR_API_CONDITION: condition,
-            ATTR_API_FORECAST: forecast_weather,
+            ATTR_API_FORECAST_DAILY: forecast_daily,
+            ATTR_API_FORECAST_HOURLY: forecast_hourly,
             ATTR_API_HUMIDITY: humidity,
             ATTR_API_TEMPERATURE: temperature,
             ATTR_API_TEMPERATURE_FEELING: temperature_feeling,
@@ -344,19 +342,6 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_WIND_MAX_SPEED: wind_max_speed,
             ATTR_API_WIND_SPEED: wind_speed,
         }
-
-    def _get_forecast_from_weather_response(self, weather_response, now):
-        if self._forecast_mode == FORECAST_MODE_DAILY:
-            forecast = self._get_daily_forecast_from_weather_response(
-                weather_response, now
-            )
-        elif self._forecast_mode == FORECAST_MODE_HOURLY:
-            forecast = self._get_hourly_forecast_from_weather_response(
-                weather_response, now
-            )
-        else:
-            forecast = None
-        return forecast
 
     def _get_daily_forecast_from_weather_response(self, weather_response, now):
         if weather_response.daily:

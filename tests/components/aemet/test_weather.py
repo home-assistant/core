@@ -36,7 +36,7 @@ async def test_aemet_weather(hass):
     ):
         await async_init_integration(hass)
 
-    state = hass.states.get("weather.aemet")
+    state = hass.states.get("weather.aemet_daily")
     assert state
     assert state.state == ATTR_CONDITION_SNOWY
     assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
@@ -56,3 +56,24 @@ async def test_aemet_weather(hass):
     )
     assert forecast.get(ATTR_FORECAST_WIND_BEARING) == 45.0
     assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 20
+
+    state = hass.states.get("weather.aemet_hourly")
+    assert state
+    assert state.state == ATTR_CONDITION_SNOWY
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_WEATHER_HUMIDITY) == 99.0
+    assert state.attributes.get(ATTR_WEATHER_PRESSURE) == 1004.4
+    assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == -0.7
+    assert state.attributes.get(ATTR_WEATHER_WIND_BEARING) == 90.0
+    assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 15
+    forecast = state.attributes.get(ATTR_FORECAST)[0]
+    assert forecast.get(ATTR_FORECAST_CONDITION) == ATTR_CONDITION_SNOWY
+    assert forecast.get(ATTR_FORECAST_PRECIPITATION) == 3.6
+    assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 100
+    assert forecast.get(ATTR_FORECAST_TEMP) == 0
+    assert forecast.get(ATTR_FORECAST_TEMP_LOW) is None
+    assert forecast.get(ATTR_FORECAST_TIME) == dt_util.parse_datetime(
+        "2021-01-9 12:00:00+00:00"
+    )
+    assert forecast.get(ATTR_FORECAST_WIND_BEARING) == 90.0
+    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 15

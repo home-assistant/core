@@ -5,7 +5,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_API_CONDITION,
-    ATTR_API_FORECAST,
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
     ATTR_API_TEMPERATURE,
@@ -15,6 +14,8 @@ from .const import (
     DOMAIN,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
+    FORECAST_MODE_ATTR_API,
+    FORECAST_MODES,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
@@ -22,13 +23,16 @@ from .weather_update_coordinator import WeatherUpdateCoordinator
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up AEMET OpenData weather entity based on a config entry."""
     domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    name = domain_data[ENTRY_NAME]
     weather_coordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
 
-    unique_id = f"{config_entry.unique_id}"
-    aemet_weather = AemetWeather(name, unique_id, weather_coordinator)
+    entities = []
+    for mode in FORECAST_MODES:
+        name = f"{domain_data[ENTRY_NAME]} {mode}"
+        unique_id = f"{config_entry.unique_id} {mode}"
+        entities.append(AemetWeather(name, unique_id, weather_coordinator, mode))
 
-    async_add_entities([aemet_weather], False)
+    if entities:
+        async_add_entities(entities, False)
 
 
 class AemetWeather(CoordinatorEntity, WeatherEntity):
@@ -39,12 +43,14 @@ class AemetWeather(CoordinatorEntity, WeatherEntity):
         name,
         unique_id,
         coordinator: WeatherUpdateCoordinator,
+        forecast_mode,
     ):
         """Initialize the sensor."""
         CoordinatorEntity.__init__(self, coordinator)
         WeatherEntity.__init__(self)
         self._name = name
         self._unique_id = unique_id
+        self._forecast_mode = forecast_mode
 
     @property
     def attribution(self):
@@ -64,7 +70,7 @@ class AemetWeather(CoordinatorEntity, WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        return self.coordinator.data[ATTR_API_FORECAST]
+        return self.coordinator.data[FORECAST_MODE_ATTR_API[self._forecast_mode]]
 
     @property
     def humidity(self):

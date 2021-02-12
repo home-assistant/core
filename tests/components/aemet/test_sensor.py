@@ -21,29 +21,53 @@ async def test_aemet_forecast_create_sensors(hass):
     ):
         await async_init_integration(hass)
 
-    state = hass.states.get("sensor.aemet_forecast_condition")
+    state = hass.states.get("sensor.aemet_daily_forecast_condition")
     assert state.state == ATTR_CONDITION_PARTLYCLOUDY
 
-    state = hass.states.get("sensor.aemet_forecast_precipitation")
+    state = hass.states.get("sensor.aemet_daily_forecast_precipitation")
     assert state.state == STATE_UNKNOWN
 
-    state = hass.states.get("sensor.aemet_forecast_precipitation_probability")
+    state = hass.states.get("sensor.aemet_daily_forecast_precipitation_probability")
     assert state.state == "30"
 
-    state = hass.states.get("sensor.aemet_forecast_temperature")
+    state = hass.states.get("sensor.aemet_daily_forecast_temperature")
     assert state.state == "4"
 
-    state = hass.states.get("sensor.aemet_forecast_temperature_low")
+    state = hass.states.get("sensor.aemet_daily_forecast_temperature_low")
     assert state.state == "-4"
 
-    state = hass.states.get("sensor.aemet_forecast_time")
+    state = hass.states.get("sensor.aemet_daily_forecast_time")
     assert state.state == "2021-01-10 00:00:00+00:00"
 
-    state = hass.states.get("sensor.aemet_forecast_wind_bearing")
+    state = hass.states.get("sensor.aemet_daily_forecast_wind_bearing")
     assert state.state == "45.0"
 
-    state = hass.states.get("sensor.aemet_forecast_wind_speed")
+    state = hass.states.get("sensor.aemet_daily_forecast_wind_speed")
     assert state.state == "20"
+
+    state = hass.states.get("sensor.aemet_hourly_forecast_condition")
+    assert state.state == ATTR_CONDITION_SNOWY
+
+    state = hass.states.get("sensor.aemet_hourly_forecast_precipitation")
+    assert state.state == "3.6"
+
+    state = hass.states.get("sensor.aemet_hourly_forecast_precipitation_probability")
+    assert state.state == "100"
+
+    state = hass.states.get("sensor.aemet_hourly_forecast_temperature")
+    assert state.state == "0"
+
+    state = hass.states.get("sensor.aemet_hourly_forecast_temperature_low")
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get("sensor.aemet_hourly_forecast_time")
+    assert state.state == "2021-01-09 12:00:00+00:00"
+
+    state = hass.states.get("sensor.aemet_hourly_forecast_wind_bearing")
+    assert state.state == "90.0"
+
+    state = hass.states.get("sensor.aemet_hourly_forecast_wind_speed")
+    assert state.state == "15"
 
 
 async def test_aemet_weather_create_sensors(hass):
