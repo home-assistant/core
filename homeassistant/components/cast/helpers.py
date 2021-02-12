@@ -1,4 +1,6 @@
 """Helpers to deal with Cast devices."""
+from __future__ import annotations
+
 from typing import Optional
 
 import attr
@@ -57,7 +59,7 @@ class ChromecastInfo:
             return None
         return CAST_MANUFACTURERS.get(self.model_name.lower(), "Google Inc.")
 
-    def fill_out_missing_chromecast_info(self) -> "ChromecastInfo":
+    def fill_out_missing_chromecast_info(self) -> ChromecastInfo:
         """Return a new ChromecastInfo object with missing attributes filled in.
 
         Uses blocking HTTP / HTTPS.

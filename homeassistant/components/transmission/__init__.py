@@ -1,4 +1,6 @@
 """Support for the Transmission BitTorrent client API."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 from typing import List
@@ -176,7 +178,7 @@ class TransmissionClient:
         self.unsub_timer = None
 
     @property
-    def api(self) -> "TransmissionData":
+    def api(self) -> TransmissionData:
         """Return the TransmissionData object."""
         return self._tm_data
 

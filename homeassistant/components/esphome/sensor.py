@@ -78,11 +78,11 @@ class EsphomeTextSensor(EsphomeEntity):
     """A text sensor implementation for ESPHome."""
 
     @property
-    def _static_info(self) -> "TextSensorInfo":
+    def _static_info(self) -> TextSensorInfo:
         return super()._static_info
 
     @property
-    def _state(self) -> Optional["TextSensorState"]:
+    def _state(self) -> Optional[TextSensorState]:
         return super()._state
 
     @property

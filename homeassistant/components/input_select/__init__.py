@@ -1,4 +1,6 @@
 """Support to select an option from a list."""
+from __future__ import annotations
+
 import logging
 import typing
 
@@ -207,7 +209,7 @@ class InputSelect(RestoreEntity):
         self._current_option = config.get(CONF_INITIAL)
 
     @classmethod
-    def from_yaml(cls, config: typing.Dict) -> "InputSelect":
+    def from_yaml(cls, config: typing.Dict) -> InputSelect:
         """Return entity instance initialized from yaml storage."""
         input_select = cls(config)
         input_select.entity_id = f"{DOMAIN}.{config[CONF_ID]}"

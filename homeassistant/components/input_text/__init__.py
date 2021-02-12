@@ -1,4 +1,6 @@
 """Support to enter a value into a text box."""
+from __future__ import annotations
+
 import logging
 import typing
 
@@ -196,7 +198,7 @@ class InputText(RestoreEntity):
         self._current_value = config.get(CONF_INITIAL)
 
     @classmethod
-    def from_yaml(cls, config: typing.Dict) -> "InputText":
+    def from_yaml(cls, config: typing.Dict) -> InputText:
         """Return entity instance initialized from yaml storage."""
         input_text = cls(config)
         input_text.entity_id = f"{DOMAIN}.{config[CONF_ID]}"

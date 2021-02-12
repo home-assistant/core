@@ -1,4 +1,6 @@
 """Component to count within automations."""
+from __future__ import annotations
+
 import logging
 from typing import Dict, Optional
 
@@ -179,7 +181,7 @@ class Counter(RestoreEntity):
         self.editable: bool = True
 
     @classmethod
-    def from_yaml(cls, config: Dict) -> "Counter":
+    def from_yaml(cls, config: Dict) -> Counter:
         """Create counter instance from yaml config."""
         counter = cls(config)
         counter.editable = False
