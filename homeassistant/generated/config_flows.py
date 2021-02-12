@@ -73,6 +73,7 @@ FLOWS = [
     "faa_delays",
     "fireservicerota",
     "flick_electric",
+    "flipr",
     "flo",
     "flume",
     "flunearyou",
