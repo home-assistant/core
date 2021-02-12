@@ -1,4 +1,6 @@
 """Helper to check the configuration file."""
+from __future__ import annotations
+
 from collections import OrderedDict
 import logging
 import os
@@ -49,7 +51,7 @@ class HomeAssistantConfig(OrderedDict):
         message: str,
         domain: Optional[str] = None,
         config: Optional[ConfigType] = None,
-    ) -> "HomeAssistantConfig":
+    ) -> HomeAssistantConfig:
         """Add a single error."""
         self.errors.append(CheckConfigError(str(message), domain, config))
         return self

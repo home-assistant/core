@@ -1,4 +1,6 @@
 """Classes to help gather user submissions."""
+from __future__ import annotations
+
 import abc
 import asyncio
 from typing import Any, Dict, List, Optional, cast
@@ -75,7 +77,7 @@ class FlowManager(abc.ABC):
         *,
         context: Optional[Dict[str, Any]] = None,
         data: Optional[Dict[str, Any]] = None,
-    ) -> "FlowHandler":
+    ) -> FlowHandler:
         """Create a flow for specified handler.
 
         Handler key is the domain of the component that we want to set up.

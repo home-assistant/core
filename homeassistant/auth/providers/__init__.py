@@ -1,4 +1,6 @@
 """Auth providers for Home Assistant."""
+from __future__ import annotations
+
 import importlib
 import logging
 import types
@@ -92,7 +94,7 @@ class AuthProvider:
 
     # Implement by extending class
 
-    async def async_login_flow(self, context: Optional[Dict]) -> "LoginFlow":
+    async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
         """Return the data flow for logging in with auth provider.
 
         Auth provider should extend LoginFlow and return an instance.

@@ -26,6 +26,8 @@ The following cases will never be passed to your function:
 - if either state is unknown/unavailable
 - state adding/removing
 """
+from __future__ import annotations
+
 from types import MappingProxyType
 from typing import Any, Callable, Dict, Optional, Tuple, Union
 
@@ -65,7 +67,7 @@ async def create_checker(
     hass: HomeAssistant,
     _domain: str,
     extra_significant_check: Optional[ExtraCheckTypeFunc] = None,
-) -> "SignificantlyChangedChecker":
+) -> SignificantlyChangedChecker:
     """Create a significantly changed checker for a domain."""
     await _initialize(hass)
     return SignificantlyChangedChecker(hass, extra_significant_check)

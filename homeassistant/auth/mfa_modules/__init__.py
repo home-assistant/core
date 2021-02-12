@@ -1,4 +1,6 @@
 """Pluggable auth modules for Home Assistant."""
+from __future__ import annotations
+
 import importlib
 import logging
 import types
@@ -66,7 +68,7 @@ class MultiFactorAuthModule:
         """Return a voluptuous schema to define mfa auth module's input."""
         raise NotImplementedError
 
-    async def async_setup_flow(self, user_id: str) -> "SetupFlow":
+    async def async_setup_flow(self, user_id: str) -> SetupFlow:
         """Return a data entry flow handler for setup module.
 
         Mfa module should extend SetupFlow

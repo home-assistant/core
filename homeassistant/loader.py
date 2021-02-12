@@ -4,6 +4,8 @@ The methods for loading Home Assistant integrations.
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
 """
+from __future__ import annotations
+
 import asyncio
 import functools as ft
 import importlib
@@ -114,7 +116,7 @@ def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
 
 async def _async_get_custom_components(
     hass: "HomeAssistant",
-) -> Dict[str, "Integration"]:
+) -> Dict[str, Integration]:
     """Return list of custom integrations."""
     if hass.config.safe_mode:
         return {}
@@ -155,7 +157,7 @@ async def _async_get_custom_components(
 
 async def async_get_custom_components(
     hass: "HomeAssistant",
-) -> Dict[str, "Integration"]:
+) -> Dict[str, Integration]:
     """Return cached list of custom integrations."""
     reg_or_evt = hass.data.get(DATA_CUSTOM_COMPONENTS)
 
@@ -175,7 +177,7 @@ async def async_get_custom_components(
     return cast(Dict[str, "Integration"], reg_or_evt)
 
 
-async def async_get_config_flows(hass: "HomeAssistant") -> Set[str]:
+async def async_get_config_flows(hass: HomeAssistant) -> Set[str]:
     """Return cached list of config flows."""
     # pylint: disable=import-outside-toplevel
     from homeassistant.generated.config_flows import FLOWS
@@ -195,7 +197,7 @@ async def async_get_config_flows(hass: "HomeAssistant") -> Set[str]:
     return flows
 
 
-async def async_get_zeroconf(hass: "HomeAssistant") -> Dict[str, List[Dict[str, str]]]:
+async def async_get_zeroconf(hass: HomeAssistant) -> Dict[str, List[Dict[str, str]]]:
     """Return cached list of zeroconf types."""
     zeroconf: Dict[str, List[Dict[str, str]]] = ZEROCONF.copy()
 
@@ -218,7 +220,7 @@ async def async_get_zeroconf(hass: "HomeAssistant") -> Dict[str, List[Dict[str, 
     return zeroconf
 
 
-async def async_get_dhcp(hass: "HomeAssistant") -> List[Dict[str, str]]:
+async def async_get_dhcp(hass: HomeAssistant) -> List[Dict[str, str]]:
     """Return cached list of dhcp types."""
     dhcp: List[Dict[str, str]] = DHCP.copy()
 
@@ -232,7 +234,7 @@ async def async_get_dhcp(hass: "HomeAssistant") -> List[Dict[str, str]]:
     return dhcp
 
 
-async def async_get_homekit(hass: "HomeAssistant") -> Dict[str, str]:
+async def async_get_homekit(hass: HomeAssistant) -> Dict[str, str]:
     """Return cached list of homekit models."""
 
     homekit: Dict[str, str] = HOMEKIT.copy()
@@ -251,7 +253,7 @@ async def async_get_homekit(hass: "HomeAssistant") -> Dict[str, str]:
     return homekit
 
 
-async def async_get_ssdp(hass: "HomeAssistant") -> Dict[str, List[Dict[str, str]]]:
+async def async_get_ssdp(hass: HomeAssistant) -> Dict[str, List[Dict[str, str]]]:
     """Return cached list of ssdp mappings."""
 
     ssdp: Dict[str, List[Dict[str, str]]] = SSDP.copy()
@@ -266,7 +268,7 @@ async def async_get_ssdp(hass: "HomeAssistant") -> Dict[str, List[Dict[str, str]
     return ssdp
 
 
-async def async_get_mqtt(hass: "HomeAssistant") -> Dict[str, List[str]]:
+async def async_get_mqtt(hass: HomeAssistant) -> Dict[str, List[str]]:
     """Return cached list of MQTT mappings."""
 
     mqtt: Dict[str, List[str]] = MQTT.copy()
@@ -287,7 +289,7 @@ class Integration:
     @classmethod
     def resolve_from_root(
         cls, hass: "HomeAssistant", root_module: ModuleType, domain: str
-    ) -> "Optional[Integration]":
+    ) -> Optional[Integration]:
         """Resolve an integration from a root module."""
         for base in root_module.__path__:  # type: ignore
             manifest_path = pathlib.Path(base) / domain / "manifest.json"
@@ -312,7 +314,7 @@ class Integration:
     @classmethod
     def resolve_legacy(
         cls, hass: "HomeAssistant", domain: str
-    ) -> "Optional[Integration]":
+    ) -> Optional[Integration]:
         """Resolve legacy component.
 
         Will create a stub manifest.
@@ -671,7 +673,7 @@ class ModuleWrapper:
 class Components:
     """Helper to load components."""
 
-    def __init__(self, hass: "HomeAssistant") -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Components class."""
         self._hass = hass
 
@@ -697,7 +699,7 @@ class Components:
 class Helpers:
     """Helper to load helpers."""
 
-    def __init__(self, hass: "HomeAssistant") -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Helpers class."""
         self._hass = hass
 
@@ -758,7 +760,7 @@ async def _async_component_dependencies(
     return loaded
 
 
-def _async_mount_config_dir(hass: "HomeAssistant") -> bool:
+def _async_mount_config_dir(hass: HomeAssistant) -> bool:
     """Mount config dir in order to load custom_component.
 
     Async friendly but not a coroutine.
@@ -771,7 +773,7 @@ def _async_mount_config_dir(hass: "HomeAssistant") -> bool:
     return True
 
 
-def _lookup_path(hass: "HomeAssistant") -> List[str]:
+def _lookup_path(hass: HomeAssistant) -> List[str]:
     """Return the lookup paths for legacy lookups."""
     if hass.config.safe_mode:
         return [PACKAGE_BUILTIN]
