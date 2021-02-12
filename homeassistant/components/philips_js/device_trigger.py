@@ -63,3 +63,5 @@ async def async_attach_trigger(
             )
             if coordinator:
                 return coordinator.turn_on.async_attach(action, variables)
+
+    return None
