@@ -107,7 +107,7 @@ async def test_sensors(hass, connect):
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_DATA,
-        options={CONF_CONSIDER_HOME: 0},
+        options={CONF_CONSIDER_HOME: 60},
     )
     config_entry.add_to_hass(hass)
 
@@ -133,7 +133,18 @@ async def test_sensors(hass, connect):
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_NOT_HOME
+    # consider home option set, all devices still home
+    assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_HOME
     assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_HOME
     assert hass.states.get(f"{device_tracker.DOMAIN}.testthree").state == STATE_HOME
     assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_connected_devices").state == "2"
+
+    hass.config_entries.async_update_entry(
+        config_entry, options={CONF_CONSIDER_HOME: 0}
+    )
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+
+    # consider home option not set, device "test" not home
+    assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_NOT_HOME

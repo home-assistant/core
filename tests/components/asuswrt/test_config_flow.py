@@ -5,7 +5,15 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.asuswrt.const import CONF_REQUIRE_IP, CONF_SSH_KEY, DOMAIN
+from homeassistant.components.asuswrt.const import (
+    CONF_DNSMASQ,
+    CONF_INTERFACE,
+    CONF_REQUIRE_IP,
+    CONF_SSH_KEY,
+    CONF_TRACK_UNKNOWN,
+    DOMAIN,
+)
+from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -270,8 +278,19 @@ async def test_options_flow(hass):
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_REQUIRE_IP: False}
+            result["flow_id"],
+            user_input={
+                CONF_CONSIDER_HOME: 20,
+                CONF_TRACK_UNKNOWN: True,
+                CONF_INTERFACE: "aaa",
+                CONF_DNSMASQ: "bbb",
+                CONF_REQUIRE_IP: False,
+            },
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert config_entry.options[CONF_CONSIDER_HOME] == 20
+        assert config_entry.options[CONF_TRACK_UNKNOWN] is True
+        assert config_entry.options[CONF_INTERFACE] == "aaa"
+        assert config_entry.options[CONF_DNSMASQ] == "bbb"
         assert config_entry.options[CONF_REQUIRE_IP] is False
