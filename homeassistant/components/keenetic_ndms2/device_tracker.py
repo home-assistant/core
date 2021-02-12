@@ -16,7 +16,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, ROUTER
 from .router import KeeneticRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ):
     """Set up device tracker for Keenetic NDMS2 component."""
-    router: KeeneticRouter = hass.data[DOMAIN][config_entry.entry_id]
+    router: KeeneticRouter = hass.data[DOMAIN][config_entry.entry_id][ROUTER]
 
     tracked = set()
 

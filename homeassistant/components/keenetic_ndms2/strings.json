@@ -21,11 +21,11 @@
   },
   "options": {
     "step": {
-      "device_tracker": {
+      "user": {
         "data": {
           "scan_interval": "Scan interval",
           "consider_home": "Consider home interval",
-          "interfaces": "Names of the interface to scan (comma-separated)",
+          "interfaces": "Choose interfaces to scan",
           "try_hotspot": "Use 'ip hotspot' data (most accurate)",
           "include_arp": "Use ARP data (ignored if hotspot data used)",
           "include_associated": "Use WiFi AP associations data (ignored if hotspot data used)"

@@ -1,8 +1,11 @@
 """Config flow for Keenetic NDMS2."""
-from ndms2_client import Client, ConnectionException, TelnetConnection
+from typing import List, Optional
+
+from ndms2_client import Client, ConnectionException, InterfaceInfo, TelnetConnection
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -11,6 +14,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_CONSIDER_HOME,
@@ -23,7 +27,9 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TELNET_PORT,
     DOMAIN,
+    ROUTER,
 )
+from .router import KeeneticRouter
 
 
 class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -82,50 +88,55 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options."""
 
-    def __init__(self, config_entry):
+    router: Optional[KeeneticRouter] = None
+    interface_options = {}
+
+    def __init__(self, config_entry: ConfigEntry):
         """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(self, _user_input=None):
         """Manage the options."""
-        return await self.async_step_device_tracker()
+        self.router = self.hass.data[DOMAIN][self.config_entry.entry_id][ROUTER]
 
-    async def async_step_device_tracker(self, user_input=None):
+        interfaces: List[InterfaceInfo] = await self.hass.async_add_executor_job(
+            self.router.client.get_interfaces
+        )
+        self.interface_options = {
+            interface.name: (interface.description or interface.name)
+            for interface in interfaces
+            if interface.type.lower() == "bridge"
+        }
+        return await self.async_step_user()
+
+    async def async_step_user(self, user_input=None):
         """Manage the device tracker options."""
         if user_input is not None:
             return self.async_create_entry(
                 title="",
-                data={
-                    **user_input,
-                    CONF_INTERFACES: [
-                        interface.strip()
-                        for interface in user_input[CONF_INTERFACES].split(",")
-                    ],
-                },
+                data={**user_input},
             )
 
         options = vol.Schema(
             {
-                vol.Optional(
+                vol.Required(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
                 ): int,
-                vol.Optional(
+                vol.Required(
                     CONF_CONSIDER_HOME,
                     default=self.config_entry.options.get(
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME
                     ),
                 ): int,
-                vol.Optional(
+                vol.Required(
                     CONF_INTERFACES,
-                    default=", ".join(
-                        self.config_entry.options.get(
-                            CONF_INTERFACES, [DEFAULT_INTERFACE]
-                        )
+                    default=self.config_entry.options.get(
+                        CONF_INTERFACES, [DEFAULT_INTERFACE]
                     ),
-                ): str,
+                ): cv.multi_select(self.interface_options),
                 vol.Optional(
                     CONF_TRY_HOTSPOT,
                     default=self.config_entry.options.get(CONF_TRY_HOTSPOT, True),
@@ -143,4 +154,4 @@ class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
 
-        return self.async_show_form(step_id="device_tracker", data_schema=options)
+        return self.async_show_form(step_id="user", data_schema=options)

@@ -42,12 +42,18 @@ class KeeneticRouter:
         """Initialize the Client."""
         self.hass = hass
         self.config_entry = config_entry
-        self.last_devices = {}  # type: Dict[str, Device]
-        self._router_info = None  # type: Optional[RouterInfo]
-        self._client = None  # type: Optional[Client]
-        self._cancel_periodic_update = None  # type: Optional[Callable]
+        self.last_devices: Dict[str, Device] = {}
+        self._router_info: Optional[RouterInfo] = None
+        self._connection: Optional[TelnetConnection] = None
+        self._client: Optional[Client] = None
+        self._cancel_periodic_update: Optional[Callable] = None
         self._available = False
         self.progress = None
+
+    @property
+    def client(self):
+        """Read-only accessor for the client connection."""
+        return self._client
 
     @property
     def host(self):
@@ -118,14 +124,13 @@ class KeeneticRouter:
 
     async def async_setup(self):
         """Set up the connection."""
-        self._client = Client(
-            TelnetConnection(
-                self.config_entry.data[CONF_HOST],
-                self.config_entry.data[CONF_PORT],
-                self.config_entry.data[CONF_USERNAME],
-                self.config_entry.data[CONF_PASSWORD],
-            )
+        self._connection = TelnetConnection(
+            self.config_entry.data[CONF_HOST],
+            self.config_entry.data[CONF_PORT],
+            self.config_entry.data[CONF_USERNAME],
+            self.config_entry.data[CONF_PASSWORD],
         )
+        self._client = Client(self._connection)
 
         try:
             await self.hass.async_add_executor_job(self._update_router_info)
@@ -148,6 +153,7 @@ class KeeneticRouter:
         """Teardown up the connection."""
         if self._cancel_periodic_update:
             self._cancel_periodic_update()
+        self._connection.disconnect()
 
     @callback
     def _async_add_defaults(self):

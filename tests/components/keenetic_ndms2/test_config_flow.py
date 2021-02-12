@@ -1,9 +1,9 @@
 """Test Keenetic NDMS2 setup process."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from ndms2_client import ConnectionException
-from ndms2_client.client import RouterInfo
+from ndms2_client.client import InterfaceInfo, RouterInfo
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -73,20 +73,40 @@ async def test_options(hass):
     """Test updating options."""
     entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.keenetic_ndms2.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    # fake router
+    hass.data.setdefault(keenetic.DOMAIN, {})
+    hass.data[keenetic.DOMAIN][entry.entry_id] = {
+        keenetic.ROUTER: Mock(
+            client=Mock(
+                get_interfaces=Mock(
+                    return_value=[
+                        InterfaceInfo.from_dict({"id": name, "type": "bridge"})
+                        for name in MOCK_OPTIONS[const.CONF_INTERFACES]
+                    ]
+                )
+            )
+        )
+    }
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "device_tracker"
+    assert result["step_id"] == "user"
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            **MOCK_OPTIONS,
-            const.CONF_INTERFACES: ", ".join(MOCK_OPTIONS[const.CONF_INTERFACES]),
-        },
+        user_input=MOCK_OPTIONS,
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
