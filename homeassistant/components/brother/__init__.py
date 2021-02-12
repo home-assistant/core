@@ -6,12 +6,13 @@ import logging
 from brother import Brother, SnmpError, UnsupportedModel
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_TYPE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DATA_CONFIG_ENTRY, DOMAIN, SNMP
+from .utils import get_snmp_engine
 
 PLATFORMS = ["sensor"]
 
@@ -30,15 +31,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     host = entry.data[CONF_HOST]
     kind = entry.data[CONF_TYPE]
 
-    coordinator = BrotherDataUpdateCoordinator(hass, host=host, kind=kind)
+    snmp_engine = get_snmp_engine(hass)
+
+    coordinator = BrotherDataUpdateCoordinator(
+        hass, host=host, kind=kind, snmp_engine=snmp_engine
+    )
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
-        coordinator.shutdown()
         raise ConfigEntryNotReady
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data[DOMAIN].setdefault(DATA_CONFIG_ENTRY, {})
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = coordinator
+    hass.data[DOMAIN][SNMP] = snmp_engine
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -59,7 +65,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id).shutdown()
+        hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
+        if not hass.data[DOMAIN][DATA_CONFIG_ENTRY]:
+            hass.data[DOMAIN].pop(SNMP)
+            hass.data[DOMAIN].pop(DATA_CONFIG_ENTRY)
 
     return unload_ok
 
@@ -67,12 +76,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class BrotherDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Brother data from the printer."""
 
-    def __init__(self, hass, host, kind):
+    def __init__(self, hass, host, kind, snmp_engine):
         """Initialize."""
-        self.brother = Brother(host, kind=kind)
-        self._unsub_stop = hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop
-        )
+        self.brother = Brother(host, kind=kind, snmp_engine=snmp_engine)
 
         super().__init__(
             hass,
@@ -83,22 +89,8 @@ class BrotherDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Update data via library."""
-        # Race condition on shutdown. Stop all the fetches.
-        if self._unsub_stop is None:
-            return None
-
         try:
             await self.brother.async_update()
         except (ConnectionError, SnmpError, UnsupportedModel) as error:
             raise UpdateFailed(error) from error
         return self.brother.data
-
-    def shutdown(self):
-        """Shutdown the Brother coordinator."""
-        self._unsub_stop()
-        self._unsub_stop = None
-        self.brother.shutdown()
-
-    def _handle_ha_stop(self, _):
-        """Handle Home Assistant stopping."""
-        self.shutdown()

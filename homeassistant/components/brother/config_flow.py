@@ -9,6 +9,7 @@ from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_TYPE
 
 from .const import DOMAIN, PRINTER_TYPES  # pylint:disable=unused-import
+from .utils import get_snmp_engine
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -48,9 +49,10 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not host_valid(user_input[CONF_HOST]):
                     raise InvalidHost()
 
-                brother = Brother(user_input[CONF_HOST])
+                snmp_engine = get_snmp_engine(self.hass)
+
+                brother = Brother(user_input[CONF_HOST], snmp_engine=snmp_engine)
                 await brother.async_update()
-                brother.shutdown()
 
                 await self.async_set_unique_id(brother.serial.lower())
                 self._abort_if_unique_id_configured()
@@ -83,7 +85,9 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Hostname is format: brother.local.
         self.host = discovery_info["hostname"].rstrip(".")
 
-        self.brother = Brother(self.host)
+        snmp_engine = get_snmp_engine(self.hass)
+
+        self.brother = Brother(self.host, snmp_engine=snmp_engine)
         try:
             await self.brother.async_update()
         except (ConnectionError, SnmpError, UnsupportedModel):
