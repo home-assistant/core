@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.somfy import config_flow
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_OPTIMISTIC
 from homeassistant.core import callback
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
@@ -25,7 +25,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import api
-from .const import API, CONF_OPTIMISTIC, COORDINATOR, DOMAIN
+from .const import API, COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

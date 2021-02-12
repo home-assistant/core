@@ -48,7 +48,6 @@ HVAC_MODES_MAPPING = {HvacState.COOL: HVAC_MODE_COOL, HvacState.HEAT: HVAC_MODE_
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Somfy climate platform."""
-
     domain_data = hass.data[DOMAIN]
     coordinator = domain_data[COORDINATOR]
     api = domain_data[API]
