@@ -14,6 +14,7 @@
                 "data": {
                     "ip_address": "IP aadress"
                 },
+                "description": "Parool on tavaliselt Backup Gateway seerianumbri viimased 5 t\u00e4hem\u00e4rki ja selle leiad Tesla rakendusest v\u00f5i Backup Gateway 2 luugilt leitud parooli viimased 5 m\u00e4rki.",
                 "title": "Powerwalliga \u00fchendamine"
             }
         }

@@ -1,5 +1,5 @@
 """Test the condition helper."""
-from logging import ERROR, WARNING
+from logging import WARNING
 from unittest.mock import patch
 
 import pytest
@@ -334,8 +334,11 @@ async def test_time_using_input_datetime(hass):
             hass, after="input_datetime.pm", before="input_datetime.am"
         )
 
-    assert not condition.time(hass, after="input_datetime.not_existing")
-    assert not condition.time(hass, before="input_datetime.not_existing")
+    with pytest.raises(ConditionError):
+        condition.time(hass, after="input_datetime.not_existing")
+
+    with pytest.raises(ConditionError):
+        condition.time(hass, before="input_datetime.not_existing")
 
 
 async def test_if_numeric_state_raises_on_unavailable(hass, caplog):
@@ -1041,19 +1044,14 @@ async def test_extract_devices():
     )
 
 
-async def test_condition_template_error(hass, caplog):
+async def test_condition_template_error(hass):
     """Test invalid template."""
-    caplog.set_level(ERROR)
-
     test = await condition.async_from_config(
         hass, {"condition": "template", "value_template": "{{ undefined.state }}"}
     )
 
-    assert not test(hass)
-    assert len(caplog.records) == 1
-    assert caplog.records[0].message.startswith(
-        "Error during template condition: UndefinedError:"
-    )
+    with pytest.raises(ConditionError, match="template"):
+        test(hass)
 
 
 async def test_condition_template_invalid_results(hass):

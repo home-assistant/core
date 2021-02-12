@@ -45,7 +45,6 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
 
 async def async_setup_entry(hass, config_entry):
     """Set up MQTT tag scan dynamically through MQTT discovery."""
-
     setup = functools.partial(async_setup_tag, hass, config_entry=config_entry)
     await async_setup_entry_helper(hass, "tag", setup, PLATFORM_SCHEMA)
 
