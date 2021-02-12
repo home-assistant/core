@@ -22,7 +22,7 @@ from .conftest import base_test
         ),
     ],
 )
-async def test_temperature_climate(hass, ModbusHubMock, regs, expected):
+async def test_temperature_climate(hass, regs, expected):
     """Run test for given config."""
     cover_name = "modbus_test_climate"
     await base_test(

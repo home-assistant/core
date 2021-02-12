@@ -39,7 +39,7 @@ from .conftest import base_test
         ),
     ],
 )
-async def test_coil_cover(hass, ModbusHubMock, regs, expected):
+async def test_coil_cover(hass, regs, expected):
     """Run test for given config."""
     cover_name = "modbus_test_cover"
     await base_test(
@@ -87,7 +87,7 @@ async def test_coil_cover(hass, ModbusHubMock, regs, expected):
         ),
     ],
 )
-async def test_register_COVER(hass, ModbusHubMock, regs, expected):
+async def test_register_COVER(hass, regs, expected):
     """Run test for given config."""
     cover_name = "modbus_test_cover"
     await base_test(

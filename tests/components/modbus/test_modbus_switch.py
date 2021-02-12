@@ -45,7 +45,7 @@ from .conftest import base_test
         ),
     ],
 )
-async def test_coil_switch(hass, ModbusHubMock, regs, expected):
+async def test_coil_switch(hass, regs, expected):
     """Run test for given config."""
     switch_name = "modbus_test_switch"
     await base_test(
@@ -88,7 +88,7 @@ async def test_coil_switch(hass, ModbusHubMock, regs, expected):
         ),
     ],
 )
-async def test_register_switch(hass, ModbusHubMock, regs, expected):
+async def test_register_switch(hass, regs, expected):
     """Run test for given config."""
     switch_name = "modbus_test_switch"
     await base_test(
@@ -129,7 +129,7 @@ async def test_register_switch(hass, ModbusHubMock, regs, expected):
         ),
     ],
 )
-async def test_register_state_switch(hass, ModbusHubMock, regs, expected):
+async def test_register_state_switch(hass, regs, expected):
     """Run test for given config."""
     switch_name = "modbus_test_switch"
     await base_test(

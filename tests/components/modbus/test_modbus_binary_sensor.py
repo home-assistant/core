@@ -67,7 +67,7 @@ from .conftest import base_test
         ),
     ],
 )
-async def test_all_binary_sensor(hass, ModbusHubMock, cfg, regs, expected):
+async def test_all_binary_sensor(hass, cfg, regs, expected):
     """Run test for given config."""
     sensor_name = "modbus_test_binary_sensor"
     await base_test(

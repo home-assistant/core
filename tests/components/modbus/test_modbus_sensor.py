@@ -233,7 +233,7 @@ from .conftest import base_test
         ),
     ],
 )
-async def test_all_sensor(hass, ModbusHubMock, cfg, regs, expected):
+async def test_all_sensor(hass, cfg, regs, expected):
     """Run test for sensor."""
     sensor_name = "modbus_test_sensor"
     await base_test(
