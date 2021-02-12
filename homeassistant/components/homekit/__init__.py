@@ -5,7 +5,7 @@ import logging
 import os
 
 from aiohttp import web
-from pyhap.const import CATEGORY_CAMERA, CATEGORY_TELEVISION, STANDALONE_AID
+from pyhap.const import STANDALONE_AID
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
@@ -70,6 +70,7 @@ from .const import (
     CONF_AUTO_START,
     CONF_ENTITY_CONFIG,
     CONF_ENTRY_INDEX,
+    CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
@@ -87,7 +88,6 @@ from .const import (
     DOMAIN,
     HOMEKIT,
     HOMEKIT_MODE_ACCESSORY,
-    HOMEKIT_MODE_BRIDGE,
     HOMEKIT_MODES,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
@@ -100,12 +100,12 @@ from .const import (
 from .util import (
     accessory_friendly_name,
     dismiss_setup_message,
-    entity_ids_with_accessory_mode,
     get_persist_fullpath_for_entry_id,
     migrate_filesystem_state_data_for_primary_imported_entry_id,
     port_is_available,
     remove_state_files_for_entry_id,
     show_setup_message,
+    state_needs_accessory_mode,
     validate_entity_config,
 )
 
@@ -148,6 +148,7 @@ BRIDGE_SCHEMA = vol.All(
             vol.Optional(CONF_FILTER, default={}): BASE_FILTER_SCHEMA,
             vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
             vol.Optional(CONF_ZEROCONF_DEFAULT_INTERFACE): cv.boolean,
+            vol.Optional(CONF_EXCLUDE_ACCESSORY_MODE): cv.boolean,
         },
         extra=vol.ALLOW_EXTRA,
     ),
@@ -255,6 +256,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # ip_address and advertise_ip are yaml only
     ip_address = conf.get(CONF_IP_ADDRESS)
     advertise_ip = conf.get(CONF_ADVERTISE_IP)
+    exclude_accessory_mode = conf.get(CONF_EXCLUDE_ACCESSORY_MODE)
     homekit_mode = options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
     entity_config = options.get(CONF_ENTITY_CONFIG, {}).copy()
     auto_start = options.get(CONF_AUTO_START, DEFAULT_AUTO_START)
@@ -266,6 +268,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         port,
         ip_address,
         entity_filter,
+        exclude_accessory_mode,
         entity_config,
         homekit_mode,
         advertise_ip,
@@ -440,6 +443,7 @@ class HomeKit:
         port,
         ip_address,
         entity_filter,
+        exclude_accessory_mode,
         entity_config,
         homekit_mode,
         advertise_ip=None,
@@ -453,6 +457,7 @@ class HomeKit:
         self._ip_address = ip_address
         self._filter = entity_filter
         self._config = entity_config
+        self._exclude_accessory_mode = exclude_accessory_mode
         self._advertise_ip = advertise_ip
         self._entry_id = entry_id
         self._entry_title = entry_title
@@ -534,6 +539,18 @@ class HomeKit:
             )
             return
 
+        if state_needs_accessory_mode(state):
+            if self._exclude_accessory_mode:
+                return
+            _LOGGER.warning(
+                "The bridge %s has entity %s. For best performance, "
+                "and to prevent unexpected unavailability, create and "
+                "pair a separate HomeKit instance in accessory mode for "
+                "this entity.",
+                self._name,
+                state.entity_id,
+            )
+
         aid = self.hass.data[DOMAIN][self._entry_id][
             AID_STORAGE
         ].get_or_allocate_aid_for_entity_id(state.entity_id)
@@ -542,27 +559,9 @@ class HomeKit:
         # of any kind (usually in pyhap) it should not prevent
         # the rest of the accessories from being created
         try:
-            acc = get_accessory(self.hass, self.driver, state, aid, conf)
-            if acc is not None:
-                if acc.category == CATEGORY_CAMERA:
-                    _LOGGER.warning(
-                        "The bridge %s has camera %s. For best performance, "
-                        "and to prevent unexpected unavailability, create and "
-                        "pair a separate HomeKit instance in accessory mode for "
-                        "each camera.",
-                        self._name,
-                        acc.entity_id,
-                    )
-                elif acc.category == CATEGORY_TELEVISION:
-                    _LOGGER.warning(
-                        "The bridge %s has tv %s. For best performance, "
-                        "and to prevent unexpected unavailability, create and "
-                        "pair a separate HomeKit instance in accessory mode for "
-                        "each tv media player.",
-                        self._name,
-                        acc.entity_id,
-                    )
-                self.bridge.add_accessory(acc)
+            self.bridge.add_accessory(
+                get_accessory(self.hass, self.driver, state, aid, conf)
+            )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Failed to create a HomeKit accessory for %s", state.entity_id
@@ -594,20 +593,9 @@ class HomeKit:
             }
         )
 
-        entity_ids_accessory_mode = set()
-        if self._homekit_mode == HOMEKIT_MODE_BRIDGE:
-            entity_ids_accessory_mode = entity_ids_with_accessory_mode(self.hass)
-
         bridged_states = []
         for state in self.hass.states.async_all():
             entity_id = state.entity_id
-
-            if entity_id in entity_ids_accessory_mode:
-                _LOGGER.info(
-                    "The entity %s was not bridged because it already has an entry in accessory mode.",
-                    entity_id,
-                )
-                continue
 
             if not self._filter(entity_id):
                 continue
