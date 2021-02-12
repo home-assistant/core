@@ -504,12 +504,13 @@ class HomeBridge(Bridge):
 class HomeDriver(AccessoryDriver):
     """Adapter class for AccessoryDriver."""
 
-    def __init__(self, hass, entry_id, bridge_name, **kwargs):
+    def __init__(self, hass, entry_id, bridge_name, entry_title, **kwargs):
         """Initialize a AccessoryDriver object."""
         super().__init__(**kwargs)
         self.hass = hass
         self._entry_id = entry_id
         self._bridge_name = bridge_name
+        self._entry_title = entry_title
 
     def pair(self, client_uuid, client_public):
         """Override super function to dismiss setup message if paired."""
@@ -524,7 +525,7 @@ class HomeDriver(AccessoryDriver):
         show_setup_message(
             self.hass,
             self._entry_id,
-            accessory_friendly_name(self._bridge_name, self.accessory),
+            accessory_friendly_name(self._entry_title, self.accessory),
             self.state.pincode,
             self.accessory.xhm_uri(),
         )

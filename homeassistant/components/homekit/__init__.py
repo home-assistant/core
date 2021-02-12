@@ -269,6 +269,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         homekit_mode,
         advertise_ip,
         entry.entry_id,
+        entry.title,
     )
     zeroconf_instance = await zeroconf.async_get_instance(hass)
 
@@ -442,6 +443,7 @@ class HomeKit:
         homekit_mode,
         advertise_ip=None,
         entry_id=None,
+        entry_title=None,
     ):
         """Initialize a HomeKit object."""
         self.hass = hass
@@ -452,6 +454,7 @@ class HomeKit:
         self._config = entity_config
         self._advertise_ip = advertise_ip
         self._entry_id = entry_id
+        self._entry_title = entry_title
         self._homekit_mode = homekit_mode
         self.status = STATUS_READY
 
@@ -468,6 +471,7 @@ class HomeKit:
             self.hass,
             self._entry_id,
             self._name,
+            self._entry_title,
             loop=self.hass.loop,
             address=ip_addr,
             port=self._port,
@@ -686,7 +690,7 @@ class HomeKit:
             show_setup_message(
                 self.hass,
                 self._entry_id,
-                accessory_friendly_name(self._name, self.driver.accessory),
+                accessory_friendly_name(self._entry_title, self.driver.accessory),
                 self.driver.state.pincode,
                 self.driver.accessory.xhm_uri(),
             )
