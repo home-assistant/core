@@ -512,8 +512,8 @@ def entity_ids_with_accessory_mode(hass):
 
     current_entries = hass.config_entries.async_entries(DOMAIN)
     for entry in current_entries:
-        if entry.data.get(CONF_HOMEKIT_MODE) != HOMEKIT_MODE_ACCESSORY:
+        if entry.options.get(CONF_HOMEKIT_MODE) != HOMEKIT_MODE_ACCESSORY:
             continue
-        entity_ids.add(entry.data[CONF_INCLUDE_ENTITIES][0])
+        entity_ids.add(entry.options[CONF_INCLUDE_ENTITIES][0])
 
     return entity_ids

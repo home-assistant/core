@@ -174,11 +174,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_add_entry_in_accessory_mode(self, entity_id):
         """Handle creation a single accessory in accessory mode."""
         state = self.hass.states.get(entity_id)
-        name = (
-            state.attributes.get(ATTR_FRIENDLY_NAME)
-            if state
-            else HOMEKIT_MODE_ACCESSORY
-        )
+        if state:
+            name = state.attributes.get(ATTR_FRIENDLY_NAME)
+        if not name:
+            name = HOMEKIT_MODE_ACCESSORY
         entry_data = {}
         entry_data[CONF_PORT] = await async_find_next_available_port(
             self.hass, DEFAULT_CONFIG_FLOW_PORT
@@ -186,9 +185,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         entry_data[CONF_NAME] = self._async_available_name(name)
         entity_filter = _EMPTY_ENTITY_FILTER.copy()
         entity_filter[CONF_INCLUDE_ENTITIES] = [entity_id]
-        self.hk_data[CONF_FILTER] = entity_filter
+        entry_options = {
+            CONF_FILTER: entity_filter,
+            CONF_HOMEKIT_MODE: HOMEKIT_MODE_ACCESSORY,
+        }
         if entity_id.startswith(CAMERA_ENTITY_PREFIX):
-            entry_data[CONF_ENTITY_CONFIG] = {
+            entry_options[CONF_ENTITY_CONFIG] = {
                 entity_id: {CONF_VIDEO_CODEC: VIDEO_CODEC_COPY}
             }
 
@@ -207,7 +209,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 domain=DOMAIN,
                 title=f"{name}:{entry_data[CONF_PORT]}",
                 data=entry_data,
-                options={},
+                options=entry_options,
                 system_options={},
                 source=SOURCE_USER,
                 connection_class=self.CONNECTION_CLASS,
