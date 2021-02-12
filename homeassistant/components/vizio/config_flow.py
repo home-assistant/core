@@ -206,7 +206,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Handle a flow initialized by the user."""
-        assert self.hass
         errors = {}
 
         if user_input is not None:
@@ -346,8 +345,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: Optional[DiscoveryInfoType] = None
     ) -> Dict[str, Any]:
         """Handle zeroconf discovery."""
-        assert self.hass
-
         # If host already has port, no need to add it again
         if ":" not in discovery_info[CONF_HOST]:
             discovery_info[
