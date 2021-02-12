@@ -1,11 +1,11 @@
 """Provide a way to connect devices to one physical location."""
-from asyncio import gather
 from collections import OrderedDict
 from typing import Container, Dict, Iterable, List, MutableMapping, Optional, cast
 
 import attr
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 
@@ -72,12 +72,11 @@ class AreaRegistry:
         )
         return area
 
-    async def async_delete(self, area_id: str) -> None:
+    @callback
+    def async_delete(self, area_id: str) -> None:
         """Delete area."""
-        device_registry, entity_registry = await gather(
-            self.hass.helpers.device_registry.async_get_registry(),
-            self.hass.helpers.entity_registry.async_get_registry(),
-        )
+        device_registry = dr.async_get(self.hass)
+        entity_registry = er.async_get(self.hass)
         device_registry.async_clear_area_id(area_id)
         entity_registry.async_clear_area_id(area_id)
 
