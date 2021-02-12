@@ -1,7 +1,6 @@
 """Config flow for HomeKit integration."""
 import logging
 import random
-import re
 import string
 
 import voluptuous as vol
@@ -237,16 +236,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _async_available_name(self, requested_name):
         """Return an available for the bridge."""
         current_names = self._async_current_names()
-        valid_mdns_name = re.sub("[^A-Za-z0-9 ]+", " ", requested_name)
-
-        if valid_mdns_name not in current_names:
-            return valid_mdns_name
+        if requested_name not in current_names:
+            return requested_name
 
         acceptable_mdns_chars = string.ascii_uppercase + string.digits
         suggested_name = None
         while not suggested_name or suggested_name in current_names:
             trailer = "".join(random.choices(acceptable_mdns_chars, k=2))
-            suggested_name = f"{valid_mdns_name} {trailer}"
+            suggested_name = f"{requested_name} {trailer}"
 
         return suggested_name
 
