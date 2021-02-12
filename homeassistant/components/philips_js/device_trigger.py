@@ -10,7 +10,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry, async_get_registry
 from homeassistant.helpers.typing import ConfigType
 
-from . import PhilipsTVDataUpdateCoordinator
+from . import LOGGER, PhilipsTVDataUpdateCoordinator
 from .const import DOMAIN
 
 TRIGGER_TYPE_TURN_ON = "turn_on"
@@ -63,3 +63,6 @@ async def async_attach_trigger(
             )
             if coordinator:
                 return coordinator.turn_on.async_attach(action, variables)
+
+    LOGGER.error("Unexpected trigger %s", config)
+    return lambda: None
