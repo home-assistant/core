@@ -64,12 +64,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class PluggableAction:
     """A pluggable action handler."""
 
-    _actions: Dict[Any, AutomationActionType]
-
     def __init__(self, update: Callable[[], None]):
         """Initialize."""
         self._update = update
-        self._actions = {}
+        self._actions: Dict[Any, AutomationActionType] = {}
 
     def __bool__(self):
         """Return if we have something attached."""
