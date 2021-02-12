@@ -522,6 +522,10 @@ def entity_ids_with_accessory_mode(hass):
 
         if target.get(CONF_HOMEKIT_MODE) != HOMEKIT_MODE_ACCESSORY:
             continue
+
+        if CONF_INCLUDE_ENTITIES not in target:
+            continue
+
         entity_ids.add(target[CONF_INCLUDE_ENTITIES][0])
 
     return entity_ids
