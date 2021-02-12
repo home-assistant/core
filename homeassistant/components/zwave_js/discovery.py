@@ -350,9 +350,11 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform="switch",
         hint="barrier_event_signaling_state",
-        command_class={CommandClass.BARRIER_OPERATOR},
-        property={"signalingState"},
-        type={"number"},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BARRIER_OPERATOR},
+            property={"signalingState"},
+            type={"number"},
+        ),
     ),
     # cover
     # window coverings
@@ -381,9 +383,11 @@ DISCOVERY_SCHEMAS = [
         device_class_specific={
             "Secure Barrier Add-on",
         },
-        command_class={CommandClass.BARRIER_OPERATOR},
-        property={"currentState"},
-        type={"number"},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BARRIER_OPERATOR},
+            property={"currentState"},
+            type={"number"},
+        ),
     ),
     # fan
     ZWaveDiscoverySchema(
