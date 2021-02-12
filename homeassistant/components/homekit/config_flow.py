@@ -175,7 +175,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle creation a single accessory in accessory mode."""
         state = self.hass.states.get(entity_id)
         if state:
-            name = state.attributes.get(ATTR_FRIENDLY_NAME)
+            name = state.attributes.get(ATTR_FRIENDLY_NAME) or state.entity_id
         if not name:
             name = HOMEKIT_MODE_ACCESSORY
         entry_data = {}
