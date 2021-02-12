@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, split_entity_id
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entityfilter import CONF_INCLUDE_ENTITIES
 from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.util.temperature as temp_util
 
@@ -33,7 +34,6 @@ from .const import (
     CONF_FEATURE,
     CONF_FEATURE_LIST,
     CONF_HOMEKIT_MODE,
-    CONF_INCLUDE_ENTITIES,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
