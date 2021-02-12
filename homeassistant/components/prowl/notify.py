@@ -48,8 +48,8 @@ class ProwlNotificationService(BaseNotificationService):
             "description": message,
             "priority": data["priority"] if data and "priority" in data else 0,
         }
-        if data and "url" in data:
-            payload["url"] = data["url"]
+        if data.get("url") is not None:
+            payload["url"] = data.get("url")
 
         _LOGGER.debug("Attempting call Prowl service at %s", url)
         session = async_get_clientsession(self._hass)
