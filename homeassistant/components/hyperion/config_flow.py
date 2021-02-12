@@ -412,7 +412,6 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         entry = await self.async_set_unique_id(hyperion_id, raise_on_progress=False)
 
-        # pylint: disable=no-member
         if self.context.get(CONF_SOURCE) == SOURCE_REAUTH and entry is not None:
             self.hass.config_entries.async_update_entry(entry, data=self._data)
             # Need to manually reload, as the listener won't have been installed because
@@ -423,7 +422,6 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._abort_if_unique_id_configured()
 
-        # pylint: disable=no-member  # https://github.com/PyCQA/pylint/issues/3167
         return self.async_create_entry(
             title=f"{self._data[CONF_HOST]}:{self._data[CONF_PORT]}", data=self._data
         )

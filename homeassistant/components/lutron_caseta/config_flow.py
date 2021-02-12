@@ -77,7 +77,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured({CONF_HOST: host})
 
         self.data[CONF_HOST] = host
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_NAME: self.bridge_id,
             CONF_HOST: host,
@@ -201,8 +200,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import_failed(self, user_input=None):
         """Make failed import surfaced to user."""
-
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {CONF_NAME: self.data[CONF_HOST]}
 
         if user_input is None:
