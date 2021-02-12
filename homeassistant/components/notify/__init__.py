@@ -10,8 +10,12 @@ import homeassistant.components.persistent_notification as pn
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.core import ServiceCall
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    config_per_platform,
+    config_validation as cv,
+    discovery,
+    template,
+)
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_prepare_setup_platform
@@ -51,7 +55,7 @@ NOTIFY_SERVICE_SCHEMA = vol.Schema(
         vol.Required(ATTR_MESSAGE): cv.template,
         vol.Optional(ATTR_TITLE): cv.template,
         vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_DATA): dict,
+        vol.Optional(ATTR_DATA): cv.template_complex,
     }
 )
 
@@ -144,7 +148,12 @@ class BaseNotificationService:
 
         message.hass = self.hass
         kwargs[ATTR_MESSAGE] = message.async_render(parse_result=False)
-        kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
+
+        platform_data = service.data.get(ATTR_DATA)
+        # TODO(eddiezane): linter requires the 2nd check because hass is optional. Should there be an else?
+        if platform_data and self.hass:
+            template.attach(self.hass, platform_data)
+            kwargs[ATTR_DATA] = template.render_complex(platform_data)
 
         await self.async_send_message(**kwargs)
 
