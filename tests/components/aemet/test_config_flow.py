@@ -1,6 +1,6 @@
 """Define tests for the AEMET OpenData config flow."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import requests_mock
 
@@ -88,13 +88,14 @@ async def test_form_duplicated_id(hass):
 
 async def test_form_api_offline(hass):
     """Test setting up with api call error."""
+    mocked_aemet = MagicMock()
 
-    with requests_mock.mock() as _m:
-        _m.get(
-            "https://opendata.aemet.es/opendata/api/observacion/convencional/todas",
-            text="",
-        )
+    mocked_aemet.get_conventional_observation_stations.return_value = None
 
+    with patch(
+        "homeassistant.components.aemet.config_flow.AEMET",
+        return_value=mocked_aemet,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
