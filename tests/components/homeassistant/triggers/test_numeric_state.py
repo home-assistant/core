@@ -1522,6 +1522,48 @@ async def test_if_fires_on_change_with_for_template_3(hass, calls, above, below)
     assert len(calls) == 1
 
 
+async def test_if_not_fires_on_error_with_for_template(hass, caplog, calls):
+    """Test for not firing on error with for template."""
+    hass.states.async_set("test.entity", 0)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "numeric_state",
+                    "entity_id": "test.entity",
+                    "above": 100,
+                    "for": "00:00:05",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set("test.entity", 101)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
+    hass.states.async_set("test.entity", "unavailable")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    assert len(caplog.record_tuples) == 1
+    assert caplog.record_tuples[0][1] == logging.WARNING
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
+    hass.states.async_set("test.entity", 101)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
 @pytest.mark.parametrize(
     "above, below",
     (
