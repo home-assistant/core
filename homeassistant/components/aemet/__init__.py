@@ -36,8 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up AEMET OpenData as config entry."""
     name = config_entry.data[CONF_NAME]
     api_key = config_entry.data[CONF_API_KEY]
-    latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
+    latitude = config_entry.data[CONF_LATITUDE]
+    longitude = config_entry.data[CONF_LONGITUDE]
     forecast_mode = _get_config_value(config_entry, CONF_MODE)
 
     aemet = AEMET(api_key)
