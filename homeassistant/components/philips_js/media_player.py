@@ -106,7 +106,7 @@ async def async_setup_entry(
             PhilipsTVMediaPlayer(
                 coordinator,
                 config_entry.data[CONF_SYSTEM],
-                config_entry.unique_id or config_entry.entry_id,
+                config_entry.unique_id,
             )
         ]
     )
