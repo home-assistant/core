@@ -1,6 +1,7 @@
 """Config flow for HomeKit integration."""
 import logging
 import random
+import re
 import string
 
 import voluptuous as vol
@@ -16,8 +17,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
 )
-from homeassistant.util import slugify
-
 from homeassistant.core import callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
@@ -39,7 +38,6 @@ from .const import (
     HOMEKIT_MODE_ACCESSORY,
     HOMEKIT_MODE_BRIDGE,
     HOMEKIT_MODES,
-    SHORT_ACCESSORY_NAME,
     SHORT_BRIDGE_NAME,
     VIDEO_CODEC_COPY,
 )
@@ -177,7 +175,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle creation a single accessory in accessory mode."""
         state = self.hass.states.get(entity_id)
         if state:
-            name = state.attributes.get(ATTR_FRIENDLY_NAME)
+            name = state.attributes.get(ATTR_FRIENDLY_NAME) or state.entity_id
         if not name:
             name = HOMEKIT_MODE_ACCESSORY
         entry_data = {}
@@ -238,17 +236,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _async_available_name(self, requested_name):
         """Return an available for the bridge."""
-        base_name = slugify(requested_name)
-
         current_names = self._async_current_names()
-        if base_name not in current_names:
-            return base_name
-  
-        acceptable_chars = string.ascii_uppercase + string.digits
+        valid_mdns_name = re.sub("[^A-Za-z0-9 ]+", " ", requested_name)
+
+        if valid_mdns_name not in current_names:
+            return valid_mdns_name
+
+        acceptable_mdns_chars = string.ascii_uppercase + string.digits
         suggested_name = None
         while not suggested_name or suggested_name in current_names:
-            trailer = "".join(random.choices(acceptable_chars, k=2))
-            suggested_name = f"{base_name} {trailer}"
+            trailer = "".join(random.choices(acceptable_mdns_chars, k=2))
+            suggested_name = f"{valid_mdns_name} {trailer}"
 
         return suggested_name
 
