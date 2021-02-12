@@ -23,9 +23,13 @@ def mock_tv():
     tv = Mock(autospec="philips_js.PhilipsTV")
     tv.sources = {}
     tv.channels = {}
+    tv.application = None
+    tv.applications = {}
     tv.system = MOCK_SYSTEM
     tv.api_version = 1
     tv.api_version_detected = None
+    tv.on = True
+    tv.notify_change_supported = False
     tv.pairing_type = None
 
     with patch(

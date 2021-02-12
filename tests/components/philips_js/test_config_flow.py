@@ -140,7 +140,7 @@ async def test_pairing(hass, mock_tv, mock_setup, mock_setup_entry):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    mock_tv.setTransport.assert_called_with(True, 6)
+    mock_tv.setTransport.assert_called_with(True)
     mock_tv.pairRequest.assert_called()
 
     result = await hass.config_entries.flow.async_configure(
