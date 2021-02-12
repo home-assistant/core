@@ -1,5 +1,5 @@
 """Provides device automations for control of device."""
-from typing import List
+from typing import List, Optional
 
 import voluptuous as vol
 
@@ -10,7 +10,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry, async_get_registry
 from homeassistant.helpers.typing import ConfigType
 
-from . import LOGGER, PhilipsTVDataUpdateCoordinator
+from . import PhilipsTVDataUpdateCoordinator
 from .const import DOMAIN
 
 TRIGGER_TYPE_TURN_ON = "turn_on"
@@ -43,7 +43,7 @@ async def async_attach_trigger(
     config: ConfigType,
     action: AutomationActionType,
     automation_info: dict,
-) -> CALLBACK_TYPE:
+) -> Optional[CALLBACK_TYPE]:
     """Attach a trigger."""
     registry: DeviceRegistry = await async_get_registry(hass)
     if config[CONF_TYPE] == TRIGGER_TYPE_TURN_ON:
@@ -63,6 +63,3 @@ async def async_attach_trigger(
             )
             if coordinator:
                 return coordinator.turn_on.async_attach(action, variables)
-
-    LOGGER.error("Unexpected trigger %s", config)
-    return lambda: None
