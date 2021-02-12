@@ -81,7 +81,7 @@ async def test_delete_area(hass, registry, update_events):
     """Make sure that we can delete an area."""
     area = registry.async_create("mock")
 
-    await registry.async_delete(area.id)
+    registry.async_delete(area.id)
 
     assert not registry.areas
 
