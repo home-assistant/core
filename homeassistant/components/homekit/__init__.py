@@ -87,6 +87,7 @@ from .const import (
     DOMAIN,
     HOMEKIT,
     HOMEKIT_MODE_ACCESSORY,
+    HOMEKIT_MODE_BRIDGE,
     HOMEKIT_MODES,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
@@ -594,7 +595,7 @@ class HomeKit:
         )
 
         entity_ids_accessory_mode = set()
-        if self._homekit_mode == HOMEKIT_MODE_ACCESSORY:
+        if self._homekit_mode == HOMEKIT_MODE_BRIDGE:
             entity_ids_accessory_mode = entity_ids_with_accessory_mode(self.hass)
 
         bridged_states = []
