@@ -81,7 +81,6 @@ async def base_test(
         }
 
     # mock timer and add modbus platform with devices (new config)
-    # first add modbus platform, then devices (old config)
     now = dt_util.utcnow()
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
         # setup modbus platform
@@ -90,7 +89,7 @@ async def base_test(
                 hass, entity_domain, DOMAIN, config[DOMAIN], config
             )
         else:
-            # setup modbus old style
+            # first add modbus platform using old config
             assert await async_setup_component(hass, DOMAIN, config)
             await hass.async_block_till_done()
 
