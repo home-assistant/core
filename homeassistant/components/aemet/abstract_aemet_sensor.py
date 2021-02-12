@@ -1,12 +1,12 @@
 """Abstraction form AEMET OpenData sensors."""
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, SENSOR_DEVICE_CLASS, SENSOR_NAME, SENSOR_UNIT
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
 
-class AbstractAemetSensor(Entity):
+class AbstractAemetSensor(CoordinatorEntity):
     """Abstract class for an AEMET OpenData sensor."""
 
     def __init__(
@@ -18,13 +18,13 @@ class AbstractAemetSensor(Entity):
         coordinator: WeatherUpdateCoordinator,
     ):
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self._name = name
         self._unique_id = unique_id
         self._sensor_type = sensor_type
         self._sensor_name = sensor_configuration[SENSOR_NAME]
         self._unit_of_measurement = sensor_configuration.get(SENSOR_UNIT)
         self._device_class = sensor_configuration.get(SENSOR_DEVICE_CLASS)
-        self._coordinator = coordinator
 
     @property
     def name(self):
@@ -64,14 +64,14 @@ class AbstractAemetSensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._coordinator.last_update_success
+        return self.coordinator.last_update_success
 
     async def async_added_to_hass(self):
         """Connect to dispatcher listening for entity data notifications."""
         self.async_on_remove(
-            self._coordinator.async_add_listener(self.async_write_ha_state)
+            self.coordinator.async_add_listener(self.async_write_ha_state)
         )
 
     async def async_update(self):
         """Get the latest data from AEMET OpenData and updates the states."""
-        await self._coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh()
