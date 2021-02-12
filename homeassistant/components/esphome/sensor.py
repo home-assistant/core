@@ -1,6 +1,4 @@
 """Support for esphome sensors."""
-from __future__ import annotations
-
 import math
 from typing import Optional
 
