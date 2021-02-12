@@ -85,8 +85,8 @@ class KeeneticTracker(ScannerEntity):
 
     def __init__(self, device: Device, router: KeeneticRouter):
         """Initialize the tracked device."""
-        self.device = device
-        self.router = router
+        self._device = device
+        self._router = router
         self._last_seen = (
             dt_util.utcnow() if device.mac in router.last_devices else None
         )
@@ -102,7 +102,7 @@ class KeeneticTracker(ScannerEntity):
         return (
             self._last_seen
             and (dt_util.utcnow() - self._last_seen)
-            < self.router.consider_home_interval
+            < self._router.consider_home_interval
         )
 
     @property
@@ -113,34 +113,34 @@ class KeeneticTracker(ScannerEntity):
     @property
     def name(self) -> str:
         """Return the name of the device."""
-        return self.device.name or self.device.mac
+        return self._device.name or self._device.mac
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        return f"{self.device.mac}_{self.router.config_entry.entry_id}"
+        return f"{self._device.mac}_{self._router.config_entry.entry_id}"
 
     @property
     def ip_address(self) -> str:
         """Return the primary ip address of the device."""
-        return self.device.ip if self.is_connected else None
+        return self._device.ip if self.is_connected else None
 
     @property
     def mac_address(self) -> str:
         """Return the mac address of the device."""
-        return self.device.mac
+        return self._device.mac
 
     @property
     def available(self) -> bool:
         """Return if controller is available."""
-        return self.router.available
+        return self._router.available
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         if self.is_connected:
             return {
-                "interface": self.device.interface,
+                "interface": self._device.interface,
             }
         return None
 
@@ -148,12 +148,12 @@ class KeeneticTracker(ScannerEntity):
     def device_info(self):
         """Return a client description for device registry."""
         info = {
-            "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
-            "identifiers": {(DOMAIN, self.device.mac)},
+            "connections": {(CONNECTION_NETWORK_MAC, self._device.mac)},
+            "identifiers": {(DOMAIN, self._device.mac)},
         }
 
-        if self.device.name:
-            info["name"] = self.device.name
+        if self._device.name:
+            info["name"] = self._device.name
 
         return info
 
@@ -168,15 +168,15 @@ class KeeneticTracker(ScannerEntity):
                 self.entity_id,
                 self.unique_id,
             )
-            new_device = self.router.last_devices.get(self.device.mac)
+            new_device = self._router.last_devices.get(self._device.mac)
             if new_device:
-                self.device = new_device
+                self._device = new_device
                 self._last_seen = dt_util.utcnow()
 
             self.async_write_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, self.router.signal_update, update_device
+                self.hass, self._router.signal_update, update_device
             )
         )

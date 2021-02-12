@@ -29,22 +29,22 @@ class RouterOnlineBinarySensor(BinarySensorEntity):
 
     def __init__(self, router: KeeneticRouter):
         """Initialize the APCUPSd binary device."""
-        self.router = router
+        self._router = router
 
     @property
     def name(self):
         """Return the name of the online status sensor."""
-        return f"{self.router.name} Online"
+        return f"{self._router.name} Online"
 
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        return f"online_{self.router.config_entry.entry_id}"
+        return f"online_{self._router.config_entry.entry_id}"
 
     @property
     def is_on(self):
         """Return true if the UPS is online, else false."""
-        return self.router.available
+        return self._router.available
 
     @property
     def device_class(self):
@@ -59,14 +59,14 @@ class RouterOnlineBinarySensor(BinarySensorEntity):
     @property
     def device_info(self):
         """Return a client description for device registry."""
-        return self.router.device_info
+        return self._router.device_info
 
     async def async_added_to_hass(self):
         """Client entity created."""
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                self.router.signal_update,
+                self._router.signal_update,
                 self.async_write_ha_state,
             )
         )

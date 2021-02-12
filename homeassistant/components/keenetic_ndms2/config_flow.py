@@ -1,5 +1,5 @@
 """Config flow for Keenetic NDMS2."""
-from typing import List, Optional
+from typing import List
 
 from ndms2_client import Client, ConnectionException, InterfaceInfo, TelnetConnection
 import voluptuous as vol
@@ -88,21 +88,22 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options."""
 
-    router: Optional[KeeneticRouter] = None
-    interface_options = {}
-
     def __init__(self, config_entry: ConfigEntry):
         """Initialize options flow."""
         self.config_entry = config_entry
+        self._interface_options = {}
 
     async def async_step_init(self, _user_input=None):
         """Manage the options."""
-        self.router = self.hass.data[DOMAIN][self.config_entry.entry_id][ROUTER]
+        router: KeeneticRouter = self.hass.data[DOMAIN][self.config_entry.entry_id][
+            ROUTER
+        ]
 
         interfaces: List[InterfaceInfo] = await self.hass.async_add_executor_job(
-            self.router.client.get_interfaces
+            router.client.get_interfaces
         )
-        self.interface_options = {
+
+        self._interface_options = {
             interface.name: (interface.description or interface.name)
             for interface in interfaces
             if interface.type.lower() == "bridge"
@@ -136,7 +137,7 @@ class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_INTERFACES, [DEFAULT_INTERFACE]
                     ),
-                ): cv.multi_select(self.interface_options),
+                ): cv.multi_select(self._interface_options),
                 vol.Optional(
                     CONF_TRY_HOTSPOT,
                     default=self.config_entry.options.get(CONF_TRY_HOTSPOT, True),

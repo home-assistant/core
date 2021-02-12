@@ -42,18 +42,23 @@ class KeeneticRouter:
         """Initialize the Client."""
         self.hass = hass
         self.config_entry = config_entry
-        self.last_devices: Dict[str, Device] = {}
+        self._last_devices: Dict[str, Device] = {}
         self._router_info: Optional[RouterInfo] = None
         self._connection: Optional[TelnetConnection] = None
         self._client: Optional[Client] = None
         self._cancel_periodic_update: Optional[Callable] = None
         self._available = False
-        self.progress = None
+        self._progress = None
 
     @property
     def client(self):
         """Read-only accessor for the client connection."""
         return self._client
+
+    @property
+    def last_devices(self):
+        """Read-only accessor for last_devices."""
+        return self._last_devices
 
     @property
     def host(self):
@@ -108,14 +113,14 @@ class KeeneticRouter:
 
     async def request_update(self):
         """Request an update."""
-        if self.progress is not None:
-            await self.progress
+        if self._progress is not None:
+            await self._progress
             return
 
-        self.progress = self.hass.async_create_task(self.async_update())
-        await self.progress
+        self._progress = self.hass.async_create_task(self.async_update())
+        await self._progress
 
-        self.progress = None
+        self._progress = None
 
     async def async_update(self):
         """Update devices information."""
@@ -192,7 +197,7 @@ class KeeneticRouter:
                 include_arp=self.config_entry.options[CONF_INCLUDE_ARP],
                 include_associated=self.config_entry.options[CONF_INCLUDE_ASSOCIATED],
             )
-            self.last_devices = {
+            self._last_devices = {
                 dev.mac: dev
                 for dev in _response
                 if dev.interface in self.config_entry.options[CONF_INTERFACES]
