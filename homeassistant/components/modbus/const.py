@@ -16,7 +16,7 @@ CONF_PRECISION = "precision"
 CONF_COILS = "coils"
 
 # integration names
-DEFAULT_HUB = "modbusHub"
+DEFAULT_HUB = "modbus_hub"
 MODBUS_DOMAIN = "modbus"
 
 # data types
