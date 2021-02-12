@@ -5,6 +5,7 @@ from .const import (
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
     FORECAST_MODE_ATTR_API,
+    FORECAST_MODE_DAILY,
     FORECAST_MODES,
     FORECAST_MONITORED_CONDITIONS,
     FORECAST_SENSOR_TYPES,
@@ -96,6 +97,11 @@ class AemetForecastSensor(AbstractAemetSensor):
         )
         self._weather_coordinator = weather_coordinator
         self._forecast_mode = forecast_mode
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._forecast_mode == FORECAST_MODE_DAILY
 
     @property
     def state(self):

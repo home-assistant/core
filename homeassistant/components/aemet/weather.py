@@ -15,6 +15,7 @@ from .const import (
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
     FORECAST_MODE_ATTR_API,
+    FORECAST_MODE_DAILY,
     FORECAST_MODES,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
@@ -66,6 +67,11 @@ class AemetWeather(CoordinatorEntity, WeatherEntity):
     def condition(self):
         """Return the current condition."""
         return self.coordinator.data[ATTR_API_CONDITION]
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._forecast_mode == FORECAST_MODE_DAILY
 
     @property
     def forecast(self):

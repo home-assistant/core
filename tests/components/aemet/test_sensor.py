@@ -46,28 +46,28 @@ async def test_aemet_forecast_create_sensors(hass):
     assert state.state == "20"
 
     state = hass.states.get("sensor.aemet_hourly_forecast_condition")
-    assert state.state == ATTR_CONDITION_SNOWY
+    assert state is None
 
     state = hass.states.get("sensor.aemet_hourly_forecast_precipitation")
-    assert state.state == "3.6"
+    assert state is None
 
     state = hass.states.get("sensor.aemet_hourly_forecast_precipitation_probability")
-    assert state.state == "100"
+    assert state is None
 
     state = hass.states.get("sensor.aemet_hourly_forecast_temperature")
-    assert state.state == "0"
+    assert state is None
 
     state = hass.states.get("sensor.aemet_hourly_forecast_temperature_low")
-    assert state.state == STATE_UNKNOWN
+    assert state is None
 
     state = hass.states.get("sensor.aemet_hourly_forecast_time")
-    assert state.state == "2021-01-09 12:00:00+00:00"
+    assert state is None
 
     state = hass.states.get("sensor.aemet_hourly_forecast_wind_bearing")
-    assert state.state == "90.0"
+    assert state is None
 
     state = hass.states.get("sensor.aemet_hourly_forecast_wind_speed")
-    assert state.state == "15"
+    assert state is None
 
 
 async def test_aemet_weather_create_sensors(hass):
