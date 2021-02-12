@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import abc
 import asyncio
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional
 import uuid
 
 import voluptuous as vol
@@ -264,9 +264,9 @@ class FlowHandler:
     """Handle the configuration flow of a component."""
 
     # Set by flow manager
-    flow_id: str = None  # type: ignore
-    hass: Optional[HomeAssistant] = None
-    handler: Optional[str] = None
+    flow_id: str
+    hass: HomeAssistant
+    handler: str
     cur_step: Optional[Dict[str, str]] = None
     context: Dict
 
@@ -339,7 +339,7 @@ class FlowHandler:
     ) -> Dict[str, Any]:
         """Abort the config flow."""
         return _create_abort_data(
-            self.flow_id, cast(str, self.handler), reason, description_placeholders
+            self.flow_id, self.handler, reason, description_placeholders
         )
 
     @callback
