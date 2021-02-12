@@ -27,6 +27,7 @@ BARRIER_TARGET_OPEN = 255
 
 BARRIER_STATE_CLOSED = 0
 BARRIER_STATE_CLOSING = 252
+BARRIER_STATE_STOPPED = 253
 BARRIER_STATE_OPENING = 254
 BARRIER_STATE_OPEN = 255
 
@@ -144,6 +145,13 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
         """Return if the cover is closed or not."""
         if self.info.primary_value.value is None:
             return None
+        # If a barrier is in the stopped state, the only way to proceed is by
+        # issuing an open cover command. Return None in this case which
+        # produces an unknown state and allows it to be resolved with an open
+        # command.
+        if self.info.primary_value.value == BARRIER_STATE_STOPPED:
+            return None
+
         return bool(self.info.primary_value.value == BARRIER_STATE_CLOSED)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
