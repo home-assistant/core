@@ -268,7 +268,7 @@ class FlowHandler:
     flow_id: str = None  # type: ignore
     hass: HomeAssistant = None  # type: ignore
     handler: str = None  # type: ignore
-    context: Dict = None  # type: ignore
+    context: Dict = {}
     cur_step: Optional[Dict[str, str]] = None
 
     # Set by _async_create_flow callback
