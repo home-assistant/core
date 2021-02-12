@@ -139,7 +139,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         data = {}
         with async_timeout.timeout(120):
             weather_response = await self._get_aemet_weather()
-            data = self._convert_weather_response(weather_response)
+        data = self._convert_weather_response(weather_response)
         return data
 
     async def _get_aemet_weather(self):
