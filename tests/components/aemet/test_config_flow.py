@@ -6,17 +6,11 @@ import requests_mock
 
 from homeassistant import data_entry_flow
 from homeassistant.components.aemet.const import DOMAIN
-from homeassistant.config_entries import (
-    ENTRY_STATE_LOADED,
-    ENTRY_STATE_NOT_LOADED,
-    SOURCE_USER,
-)
+from homeassistant.config_entries import ENTRY_STATE_LOADED, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 import homeassistant.util.dt as dt_util
 
 from .util import aemet_requests_mock
-
-from tests.common import MockConfigEntry
 
 CONFIG = {
     CONF_NAME: "aemet",
@@ -53,35 +47,11 @@ async def test_form(hass):
         entry = conf_entries[0]
         assert entry.state == ENTRY_STATE_LOADED
 
-        await hass.config_entries.async_unload(conf_entries[0].entry_id)
-        await hass.async_block_till_done()
-        assert entry.state == ENTRY_STATE_NOT_LOADED
-
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == CONFIG[CONF_NAME]
         assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
         assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
         assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
-
-
-async def test_form_options(hass):
-    """Test that the options form."""
-
-    now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
-    with patch("homeassistant.util.dt.now", return_value=now), patch(
-        "homeassistant.util.dt.utcnow", return_value=now
-    ), requests_mock.mock() as _m:
-        aemet_requests_mock(_m)
-
-        config_entry = MockConfigEntry(
-            domain=DOMAIN, unique_id="aemet_unique_id", data=CONFIG
-        )
-        config_entry.add_to_hass(hass)
-
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert config_entry.state == ENTRY_STATE_LOADED
 
 
 async def test_form_api_offline(hass):
