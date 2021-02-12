@@ -284,13 +284,22 @@ def websocket_get_configuration_values(
     values = node.get_configuration_values()
     result = {}
     for value in values:
+        metadata = values[value].metadata
         result[value] = {
-            "property": values[value].data["property"],
-            "property_name": values[value].data["propertyName"],
-            "metadata": values[value].data["metadata"],
-            "value": values[value].data.get(
-                "value"
-            ),  # Some config properties don't return a value
+            "property": values[value].property_,
+            "property_name": values[value].property_name,
+            "property_key": values[value].property_key,
+            "type": values[value].type.value,
+            "metadata": {
+                "description": metadata.description,
+                "label": metadata.label,
+                "type": metadata.type,
+                "min": metadata.min,
+                "max": metadata.max,
+                "unit": metadata.unit,
+                "writeable": metadata.writeable,
+            },
+            "value": values[value].value,
         }
     connection.send_result(
         msg[ID],
