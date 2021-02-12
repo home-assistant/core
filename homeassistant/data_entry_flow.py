@@ -264,11 +264,12 @@ class FlowHandler:
     """Handle the configuration flow of a component."""
 
     # Set by flow manager
-    flow_id: str
-    hass: HomeAssistant
-    handler: str
+    # Ignore types, pylint workaround: https://github.com/PyCQA/pylint/issues/3167
+    flow_id: str = None  # type: ignore
+    hass: HomeAssistant = None  # type: ignore
+    handler: str = None  # type: ignore
+    context: Dict = None  # type: ignore
     cur_step: Optional[Dict[str, str]] = None
-    context: Dict
 
     # Set by _async_create_flow callback
     init_step = "init"
