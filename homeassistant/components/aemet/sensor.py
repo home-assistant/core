@@ -76,7 +76,7 @@ class AemetSensor(AbstractAemetSensor):
     @property
     def state(self):
         """Return the state of the device."""
-        return self._weather_coordinator.data.get(self._sensor_type, None)
+        return self._weather_coordinator.data.get(self._sensor_type)
 
 
 class AemetForecastSensor(AbstractAemetSensor):

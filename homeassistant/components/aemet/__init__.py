@@ -8,13 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    COMPONENTS,
-    DOMAIN,
-    ENTRY_NAME,
-    ENTRY_WEATHER_COORDINATOR,
-    UPDATE_LISTENER,
-)
+from .const import COMPONENTS, DOMAIN, ENTRY_NAME, ENTRY_WEATHER_COORDINATOR
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,15 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
 
-    update_listener = config_entry.add_update_listener(async_update_options)
-    hass.data[DOMAIN][config_entry.entry_id][UPDATE_LISTENER] = update_listener
-
     return True
-
-
-async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Update options."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
@@ -70,8 +56,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         )
     )
     if unload_ok:
-        update_listener = hass.data[DOMAIN][config_entry.entry_id][UPDATE_LISTENER]
-        update_listener()
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
