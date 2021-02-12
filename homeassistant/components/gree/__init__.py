@@ -16,6 +16,7 @@ from .const import (
     DATA_DISCOVERY_INTERVAL,
     DATA_DISCOVERY_SERVICE,
     DISCOVERY_SCAN_INTERVAL,
+    DISPATCHERS,
     DOMAIN,
 )
 
@@ -66,6 +67,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+    if hass.data[DOMAIN].get(DISPATCHERS) is not None:
+        for cleanup in hass.data[DOMAIN][DISPATCHERS]:
+            cleanup()
+
     if hass.data[DOMAIN].get(DATA_DISCOVERY_INTERVAL) is not None:
         hass.data[DOMAIN][DATA_DISCOVERY_INTERVAL]()
         hass.data[DOMAIN].pop(DATA_DISCOVERY_INTERVAL)
@@ -81,5 +86,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(await results)
     if unload_ok:
         hass.data[DOMAIN].pop(COORDINATORS, None)
+        hass.data[DOMAIN].pop(DISPATCHERS, None)
 
     return unload_ok

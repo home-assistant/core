@@ -8,7 +8,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DOMAIN
+from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DISPATCHERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +24,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for coordinator in hass.data[DOMAIN][COORDINATORS]:
         init_device(coordinator)
 
-    async_dispatcher_connect(hass, DISPATCH_DEVICE_DISCOVERED, init_device)
+    if hass.data[DOMAIN].get(DISPATCHERS) is None:
+        hass.data[DOMAIN][DISPATCHERS] = []
+
+    hass.data[DOMAIN][DISPATCHERS].append(
+        async_dispatcher_connect(hass, DISPATCH_DEVICE_DISCOVERED, init_device)
+    )
 
 
 class GreeSwitchEntity(CoordinatorEntity, SwitchEntity):
