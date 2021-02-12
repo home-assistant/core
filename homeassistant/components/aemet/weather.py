@@ -59,11 +59,6 @@ class AemetWeather(CoordinatorEntity, WeatherEntity):
         return ATTRIBUTION
 
     @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
-
-    @property
     def condition(self):
         """Return the current condition."""
         return self.coordinator.data[ATTR_API_CONDITION]
@@ -94,11 +89,6 @@ class AemetWeather(CoordinatorEntity, WeatherEntity):
         return self.coordinator.data[ATTR_API_PRESSURE]
 
     @property
-    def should_poll(self):
-        """Return the polling requirement of the entity."""
-        return False
-
-    @property
     def temperature(self):
         """Return the temperature."""
         return self.coordinator.data[ATTR_API_TEMPERATURE]
@@ -122,13 +112,3 @@ class AemetWeather(CoordinatorEntity, WeatherEntity):
     def wind_speed(self):
         """Return the temperature."""
         return self.coordinator.data[ATTR_API_WIND_SPEED]
-
-    async def async_added_to_hass(self):
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Get the latest data from AEMET and updates the states."""
-        await self.coordinator.async_request_refresh()

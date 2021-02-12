@@ -37,11 +37,6 @@ class AbstractAemetSensor(CoordinatorEntity):
         return self._unique_id
 
     @property
-    def should_poll(self):
-        """Return the polling requirement of the entity."""
-        return False
-
-    @property
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
@@ -60,18 +55,3 @@ class AbstractAemetSensor(CoordinatorEntity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
-
-    async def async_added_to_hass(self):
-        """Connect to dispatcher listening for entity data notifications."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Get the latest data from AEMET OpenData and updates the states."""
-        await self.coordinator.async_request_refresh()
