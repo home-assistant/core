@@ -1,4 +1,6 @@
 """Template helper methods for rendering strings with Home Assistant data."""
+from __future__ import annotations
+
 from ast import literal_eval
 import asyncio
 import base64
@@ -155,7 +157,7 @@ class TupleWrapper(tuple, ResultWrapper):
 
     def __new__(
         cls, value: tuple, *, render_result: Optional[str] = None
-    ) -> "TupleWrapper":
+    ) -> TupleWrapper:
         """Create a new tuple class."""
         return super().__new__(cls, tuple(value))
 
@@ -297,7 +299,7 @@ class Template:
         self._limited = None
 
     @property
-    def _env(self) -> "TemplateEnvironment":
+    def _env(self) -> TemplateEnvironment:
         if self.hass is None or self._limited:
             return _NO_HASS_ENV
         ret: Optional[TemplateEnvironment] = self.hass.data.get(_ENVIRONMENT)
@@ -530,7 +532,7 @@ class Template:
                 )
             return value if error_value is _SENTINEL else error_value
 
-    def _ensure_compiled(self, limited: bool = False) -> "Template":
+    def _ensure_compiled(self, limited: bool = False) -> Template:
         """Bind a template to a specific hass instance."""
         self.ensure_valid()
 

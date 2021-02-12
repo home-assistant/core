@@ -1,4 +1,6 @@
 """Manage config entries in Home Assistant."""
+from __future__ import annotations
+
 import asyncio
 import functools
 import logging
@@ -526,7 +528,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(
         self, handler_key: Any, *, context: Optional[Dict] = None, data: Any = None
-    ) -> "ConfigFlow":
+    ) -> ConfigFlow:
         """Create a flow for specified handler.
 
         Handler key is the domain of the component that we want to set up.
@@ -890,7 +892,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> "OptionsFlow":
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         raise data_entry_flow.UnknownHandler
 
@@ -1074,7 +1076,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         *,
         context: Optional[Dict[str, Any]] = None,
         data: Optional[Dict[str, Any]] = None,
-    ) -> "OptionsFlow":
+    ) -> OptionsFlow:
         """Create an options flow for a config entry.
 
         Entry_id and flow.handler is the same thing to map entry with flow.

@@ -929,7 +929,9 @@ class MQTT:
         try:
             await asyncio.wait_for(self._pending_operations[mid].wait(), TIMEOUT_ACK)
         except asyncio.TimeoutError:
-            _LOGGER.error("Timed out waiting for mid %s", mid)
+            _LOGGER.warning(
+                "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
+            )
         finally:
             del self._pending_operations[mid]
 
