@@ -44,12 +44,14 @@ CONF_IGNORE_DEVICES = "ignore_devices"
 CONF_RECONNECT_INTERVAL = "reconnect_interval"
 CONF_SIGNAL_REPETITIONS = "signal_repetitions"
 CONF_WAIT_FOR_ACK = "wait_for_ack"
+CONF_KEEPALIVE_IDLE = "tcp_keepalive_idle_timer"
 
 DATA_DEVICE_REGISTER = "rflink_device_register"
 DATA_ENTITY_LOOKUP = "rflink_entity_lookup"
 DATA_ENTITY_GROUP_LOOKUP = "rflink_entity_group_only_lookup"
 DEFAULT_RECONNECT_INTERVAL = 10
 DEFAULT_SIGNAL_REPETITIONS = 1
+DEFAULT_TCP_KEEPALIVE_IDLE_TIMER = 3600
 CONNECTION_TIMEOUT = 10
 
 EVENT_BUTTON_PRESSED = "button_pressed"
@@ -85,6 +87,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_PORT): vol.Any(cv.port, cv.string),
                 vol.Optional(CONF_HOST): cv.string,
                 vol.Optional(CONF_WAIT_FOR_ACK, default=True): cv.boolean,
+                vol.Optional(
+                    CONF_KEEPALIVE_IDLE, default=DEFAULT_TCP_KEEPALIVE_IDLE_TIMER
+                ): int,
                 vol.Optional(
                     CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL
                 ): int,
@@ -199,6 +204,26 @@ async def async_setup(hass, config):
     # TCP port when host configured, otherwise serial port
     port = config[DOMAIN][CONF_PORT]
 
+    # TCP KEEPALIVE will be enabled if value > 0
+    keepalive_idle_timer = config[DOMAIN][CONF_KEEPALIVE_IDLE]
+    if keepalive_idle_timer < 0:
+        _LOGGER.error(
+            "A bogus TCP Keepalive IDLE timer was provided (%d secs), "
+            "default value will be used. "
+            "Recommended values: 60-3600 (seconds)",
+            keepalive_idle_timer,
+        )
+        keepalive_idle_timer = DEFAULT_TCP_KEEPALIVE_IDLE_TIMER
+    elif keepalive_idle_timer == 0:
+        keepalive_idle_timer = None
+    elif keepalive_idle_timer <= 30:
+        _LOGGER.warning(
+            "A very short TCP Keepalive IDLE timer was provided (%d secs), "
+            "and may produce unexpected disconnections from RFlink device."
+            " Recommended values: 60-3600 (seconds)",
+            keepalive_idle_timer,
+        )
+
     @callback
     def reconnect(exc=None):
         """Schedule reconnect after connection has been unexpectedly lost."""
@@ -223,6 +248,7 @@ async def async_setup(hass, config):
         connection = create_rflink_connection(
             port=port,
             host=host,
+            keepalive=keepalive_idle_timer,
             event_callback=event_callback,
             disconnect_callback=reconnect,
             loop=hass.loop,
