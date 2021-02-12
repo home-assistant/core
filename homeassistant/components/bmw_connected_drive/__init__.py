@@ -1,4 +1,6 @@
 """Reads vehicle status from BMW connected drive portal."""
+from __future__ import annotations
+
 import asyncio
 import logging
 
@@ -195,7 +197,7 @@ async def update_listener(hass, config_entry):
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-def setup_account(entry: ConfigEntry, hass, name: str) -> "BMWConnectedDriveAccount":
+def setup_account(entry: ConfigEntry, hass, name: str) -> BMWConnectedDriveAccount:
     """Set up a new BMWConnectedDriveAccount based on the config."""
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]

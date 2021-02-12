@@ -1,4 +1,6 @@
 """Support to select a date and/or a time."""
+from __future__ import annotations
+
 import datetime as py_datetime
 import logging
 import typing
@@ -228,7 +230,7 @@ class InputDatetime(RestoreEntity):
             )
 
     @classmethod
-    def from_yaml(cls, config: typing.Dict) -> "InputDatetime":
+    def from_yaml(cls, config: typing.Dict) -> InputDatetime:
         """Return entity instance initialized from yaml storage."""
         input_dt = cls(config)
         input_dt.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
