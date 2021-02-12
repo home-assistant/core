@@ -309,8 +309,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             return self.get_browse_image_url(
                 self._media_content_type, self._media_content_id, media_image_id=None
             )
-        else:
-            return None
+        return None
 
     @property
     def app_id(self):
