@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional, TypedDict
 from haphilipsjs import ConnectionFailure, PhilipsTV
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, core
 from homeassistant.const import CONF_API_VERSION, CONF_HOST
 
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -84,7 +84,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""

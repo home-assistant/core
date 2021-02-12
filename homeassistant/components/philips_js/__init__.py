@@ -64,11 +64,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class PluggableAction:
     """A pluggable action handler."""
 
-    _actions: Dict[Any, AutomationActionType] = {}
-
     def __init__(self, update: Callable[[], None]):
         """Initialize."""
         self._update = update
+        self._actions: Dict[Any, AutomationActionType] = {}
 
     def __bool__(self):
         """Return if we have something attached."""
@@ -101,8 +100,6 @@ class PluggableAction:
 class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinator to update data."""
 
-    api: PhilipsTV
-
     def __init__(self, hass, api: PhilipsTV) -> None:
         """Set up the coordinator."""
         self.api = api
@@ -113,19 +110,19 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         self.turn_on = PluggableAction(_update_listeners)
 
-        async def _async_update():
-            try:
-                await self.hass.async_add_executor_job(self.api.update)
-            except ConnectionFailure:
-                pass
-
         super().__init__(
             hass,
             LOGGER,
             name=DOMAIN,
-            update_method=_async_update,
             update_interval=timedelta(seconds=30),
             request_refresh_debouncer=Debouncer(
                 hass, LOGGER, cooldown=2.0, immediate=False
             ),
         )
+
+    async def _async_update_data(self):
+        """Fetch the latest data from the source."""
+        try:
+            await self.hass.async_add_executor_job(self.api.update)
+        except ConnectionFailure:
+            pass
