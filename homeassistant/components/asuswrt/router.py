@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional
 from aioasuswrt.asuswrt import AsusWrt
 
 from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
     DOMAIN as TRACKER_DOMAIN,
 )
@@ -30,8 +31,10 @@ from .const import (
     CONF_INTERFACE,
     CONF_REQUIRE_IP,
     CONF_SSH_KEY,
+    CONF_TRACK_UNKNOWN,
     DEFAULT_DNSMASQ,
     DEFAULT_INTERFACE,
+    DEFAULT_TRACK_UNKNOWN,
     DOMAIN,
     PROTOCOL_TELNET,
 )
@@ -175,14 +178,19 @@ class AsusWrtRouter:
             self._connect_error = False
             _LOGGER.info("Reconnected to ASUS router %s", self._host)
 
+        consider_home = self._options.get(
+            CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
+        )
+        track_unknown = self._options.get(CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN)
+
         for device_mac in self._devices:
             dev_info = wrt_devices.get(device_mac)
-            self._devices[device_mac].update(
-                dev_info, DEFAULT_CONSIDER_HOME.total_seconds()
-            )
+            self._devices[device_mac].update(dev_info, consider_home)
 
         for device_mac, dev_info in wrt_devices.items():
             if device_mac in self._devices:
+                continue
+            if not track_unknown and not dev_info.name:
                 continue
             new_device = True
             device = AsusWrtDevInfo(device_mac)
