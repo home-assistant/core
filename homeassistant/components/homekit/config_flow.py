@@ -7,6 +7,8 @@ import string
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
@@ -50,9 +52,6 @@ MODE_INCLUDE = "include"
 MODE_EXCLUDE = "exclude"
 
 INCLUDE_EXCLUDE_MODES = [MODE_EXCLUDE, MODE_INCLUDE]
-
-CAMERA_DOMAIN = "camera"
-MEDIA_PLAYER_DOMAIN = "media_player"
 
 DOMAINS_NEED_ACCESSORY_MODE = [CAMERA_DOMAIN, MEDIA_PLAYER_DOMAIN]
 CAMERA_ENTITY_PREFIX = f"{CAMERA_DOMAIN}."

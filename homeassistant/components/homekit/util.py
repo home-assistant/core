@@ -11,7 +11,11 @@ import pyqrcode
 import voluptuous as vol
 
 from homeassistant.components import binary_sensor, media_player, sensor
-from homeassistant.components.media_player import DEVICE_CLASS_TV
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.media_player import (
+    DEVICE_CLASS_TV,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+)
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
@@ -509,11 +513,11 @@ def accessory_friendly_name(hass_name, accessory):
 
 def state_needs_accessory_mode(state):
     """Return if the entity represented by the state must be paired in accessory mode."""
-    if state.domain == "camera":
+    if state.domain == CAMERA_DOMAIN:
         return True
 
     if (
-        state.domain == "media_player"
+        state.domain == MEDIA_PLAYER_DOMAIN
         and state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TV
     ):
         return True
