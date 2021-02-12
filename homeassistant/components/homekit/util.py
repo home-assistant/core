@@ -513,7 +513,8 @@ def entity_ids_with_accessory_mode(hass):
     current_entries = hass.config_entries.async_entries(DOMAIN)
     for entry in current_entries:
         # We have to handle the case where the data has not yet
-        # been migrated to options
+        # been migrated to options because the data was just
+        # imported
         if CONF_HOMEKIT_MODE in entry.options:
             target = entry.options
         else:
