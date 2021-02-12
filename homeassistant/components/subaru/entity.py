@@ -1,6 +1,5 @@
 """Base class for all Subaru Entities."""
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
 
 from .const import DOMAIN, ICONS, VEHICLE_NAME, VEHICLE_VIN
 

@@ -2,12 +2,6 @@
 from datetime import datetime
 import logging
 
-from subarulink import (
-    Controller as SubaruAPI,
-    InvalidCredentials,
-    InvalidPIN,
-    SubaruException,
-)
 import voluptuous as vol
 
 from homeassistant import config_entries, core
@@ -20,6 +14,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from subarulink import (
+    Controller as SubaruAPI,
+    InvalidCredentials,
+    InvalidPIN,
+    SubaruException,
+)
 
 from .const import (
     CONF_HARD_POLL_INTERVAL,
@@ -33,12 +33,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@callback
-def configured_instances(hass):
-    """Return a set of configured Subaru instances."""
-    return {entry.title for entry in hass.config_entries.async_entries(DOMAIN)}
-
-
 class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Subaru."""
 
@@ -50,7 +44,9 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         error = None
 
         if user_input:
-            if user_input[CONF_USERNAME] in configured_instances(self.hass):
+            if user_input[CONF_USERNAME] in [
+                entry.data[CONF_USERNAME] for entry in self._async_current_entries()
+            ]:
                 return self.async_abort(reason="already_configured")
 
             try:

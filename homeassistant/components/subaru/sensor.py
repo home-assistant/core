@@ -1,8 +1,4 @@
 """Support for the Subaru sensors."""
-import logging
-
-import subarulink.const as sc
-
 from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_MILES,
@@ -22,6 +18,7 @@ from homeassistant.util.unit_system import (
     TEMPERATURE_UNITS,
 )
 from homeassistant.util.volume import convert as vol_convert
+import subarulink.const as sc
 
 from .const import (
     API_GEN_2,
@@ -34,7 +31,6 @@ from .const import (
 )
 from .entity import SubaruEntity
 
-_LOGGER = logging.getLogger(__name__)
 L_PER_GAL = vol_convert(1, VOLUME_GALLONS, VOLUME_LITERS)
 KM_PER_MI = dist_convert(1, LENGTH_MILES, LENGTH_KILOMETERS)
 
@@ -126,11 +122,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     vehicle_info = hass.data[DOMAIN][config_entry.entry_id][ENTRY_VEHICLES]
     entities = []
     for vin in vehicle_info.keys():
-        _create_sensor_entities(entities, vehicle_info[vin], coordinator, hass)
+        _create_sensor_entities(entities, vehicle_info[vin], coordinator)
     async_add_entities(entities, True)
 
 
-def _create_sensor_entities(entities, vehicle_info, coordinator, hass):
+def _create_sensor_entities(entities, vehicle_info, coordinator):
     sensors_to_add = []
     if vehicle_info[VEHICLE_HAS_SAFETY_SERVICE]:
         sensors_to_add.extend(SAFETY_SENSORS)
@@ -146,7 +142,6 @@ def _create_sensor_entities(entities, vehicle_info, coordinator, hass):
             SubaruSensor(
                 vehicle_info,
                 coordinator,
-                hass,
                 subaru_sensor[SENSOR_NAME],
                 subaru_sensor[SENSOR_FIELD],
                 subaru_sensor[SENSOR_UNITS],
@@ -157,12 +152,11 @@ def _create_sensor_entities(entities, vehicle_info, coordinator, hass):
 class SubaruSensor(SubaruEntity):
     """Class for Subaru sensors."""
 
-    def __init__(self, vehicle_info, coordinator, hass, title, data_field, api_unit):
+    def __init__(self, vehicle_info, coordinator, title, data_field, api_unit):
         """Initialize the sensor."""
         super().__init__(vehicle_info, coordinator)
         self.hass_type = "sensor"
         self.current_value = None
-        self.hass = hass
         self.title = title
         self.data_field = data_field
         self.api_unit = api_unit

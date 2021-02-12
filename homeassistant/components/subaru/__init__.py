@@ -1,10 +1,8 @@
 """The Subaru integration."""
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 import time
-
-from subarulink import Controller as SubaruAPI, SubaruException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from subarulink import Controller as SubaruAPI, SubaruException
 
 from .const import (
     API_GEN_2,
@@ -54,8 +53,6 @@ async def async_setup_entry(hass, entry):
     """Set up Subaru from a config entry."""
     config = entry.data
     websession = aiohttp_client.async_get_clientsession(hass)
-    date = datetime.now().strftime("%Y-%m-%d")
-    device_name = "Home Assistant: Added " + date
     try:
         controller = SubaruAPI(
             websession,
@@ -63,7 +60,7 @@ async def async_setup_entry(hass, entry):
             config[CONF_PASSWORD],
             config[CONF_DEVICE_ID],
             config[CONF_PIN],
-            device_name,
+            None,
             update_interval=entry.options.get(
                 CONF_HARD_POLL_INTERVAL, DEFAULT_HARD_POLL_INTERVAL
             ),

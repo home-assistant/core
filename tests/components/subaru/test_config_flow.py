@@ -5,8 +5,6 @@ Borrowed heavily from Tesla tests (thanks @alandtse)
 """
 from datetime import datetime
 
-from subarulink.exceptions import InvalidCredentials, InvalidPIN, SubaruException
-
 from homeassistant import config_entries, setup
 from homeassistant.components.subaru.const import (
     CONF_HARD_POLL_INTERVAL,
@@ -23,6 +21,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from subarulink.exceptions import InvalidCredentials, InvalidPIN, SubaruException
 
 from tests.async_mock import patch
 from tests.common import MockConfigEntry
@@ -31,6 +30,11 @@ TEST_USERNAME = "test@fake.com"
 TEST_TITLE = TEST_USERNAME
 TEST_PASSWORD = "test-password"
 TEST_PIN = "1234"
+TEST_DATA = {
+    CONF_USERNAME: TEST_USERNAME,
+    CONF_PASSWORD: TEST_PASSWORD,
+    CONF_PIN: TEST_PIN,
+}
 
 
 async def test_form(hass):
@@ -180,7 +184,9 @@ async def test_form_cannot_connect(hass):
 
 async def test_form_repeat_identifier(hass):
     """Test we handle repeat identifiers."""
-    entry = MockConfigEntry(domain=DOMAIN, title=TEST_USERNAME, data={}, options=None)
+    entry = MockConfigEntry(
+        domain=DOMAIN, title=TEST_USERNAME, data=TEST_DATA, options=None
+    )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -206,7 +212,7 @@ async def test_form_repeat_identifier(hass):
 
 async def test_option_flow(hass):
     """Test config flow options."""
-    entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_DATA, options=None)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -230,7 +236,7 @@ async def test_option_flow(hass):
 
 async def test_option_flow_defaults(hass):
     """Test config flow options."""
-    entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_DATA, options=None)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -254,7 +260,7 @@ async def test_option_flow_defaults(hass):
 
 async def test_option_flow_input_floor(hass):
     """Test config flow options."""
-    entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_DATA, options=None)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
