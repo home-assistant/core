@@ -41,6 +41,24 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     assert not result["is_secure"]
     assert result["status"] == 1
 
+    # Test getting configuration values
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/get_configuration_values",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: node.node_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+    result = msg["result"]
+
+    assert len(result) == 44
+    key = "52-112-00-2-00"
+    assert result[key]["property"] == 2
+    assert result[key]["property_name"] == "Stay Awake in Battery Mode"
+    assert result[key]["metadata"]["type"] == "number"
+
 
 async def test_add_node(
     hass, integration, client, hass_ws_client, nortek_thermostat_added_event
