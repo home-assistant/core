@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     aemet = AEMET(api_key)
     weather_coordinator = WeatherUpdateCoordinator(
-        aemet, latitude, longitude, forecast_mode, hass
+        hass, aemet, latitude, longitude, forecast_mode
     )
 
     await weather_coordinator.async_refresh()
