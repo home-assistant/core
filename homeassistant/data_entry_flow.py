@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import abc
 import asyncio
+from types import MappingProxyType
 from typing import Any, Dict, List, Optional
 import uuid
 
@@ -264,12 +265,14 @@ class FlowHandler:
     """Handle the configuration flow of a component."""
 
     # Set by flow manager
+    cur_step: Optional[Dict[str, str]] = None
     # Ignore types, pylint workaround: https://github.com/PyCQA/pylint/issues/3167
     flow_id: str = None  # type: ignore
     hass: HomeAssistant = None  # type: ignore
     handler: str = None  # type: ignore
-    context: Dict = {}
-    cur_step: Optional[Dict[str, str]] = None
+    # Pylint workaround: https://github.com/PyCQA/pylint/issues/3167
+    # Ensure the attribute has an subscriptable, but immutable, default value.
+    context: Dict = MappingProxyType({})  # type: ignore
 
     # Set by _async_create_flow callback
     init_step = "init"
