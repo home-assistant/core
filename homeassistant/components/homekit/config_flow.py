@@ -30,6 +30,7 @@ from homeassistant.helpers.entityfilter import (
 from .const import (
     CONF_AUTO_START,
     CONF_ENTITY_CONFIG,
+    CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
     CONF_VIDEO_CODEC,
@@ -150,6 +151,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self.hk_data[CONF_NAME] = self._async_available_name(SHORT_BRIDGE_NAME)
+        self.hk_data[CONF_EXCLUDE_ACCESSORY_MODE] = True
         return self.async_show_form(
             step_id="pairing",
             description_placeholders={CONF_NAME: self.hk_data[CONF_NAME]},
