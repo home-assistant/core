@@ -484,7 +484,7 @@ def _async_get_entity_ids_for_accessory_mode(hass, include_domains):
     if not accessory_mode_domains:
         return []
 
-    entity_ids = {}
+    entity_ids = set()
     for state in hass.states.async_all(accessory_mode_domains):
         if (
             state.domain == MEDIA_PLAYER_DOMAIN
