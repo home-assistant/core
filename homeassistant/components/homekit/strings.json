@@ -48,8 +48,8 @@
                 "title": "Select domains to be included"
             },
             "pairing": {
-                "title": "Pair HomeKit {title}",
-                "description": "Scan the QR code or enter the following code:\n### {pin}\n![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
+                "title": "Pair HomeKit",
+                "description": "To set up {title} in the Home App, scan the QR code or enter the following code:\n### {pin}\n![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
             }
         },
         "abort": {
