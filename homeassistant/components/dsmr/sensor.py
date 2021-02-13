@@ -215,6 +215,7 @@ async def async_setup_entry(
             config[CONF_DSMR_VERSION],
             update_entities_telegram,
             loop=hass.loop,
+            keep_alive_interval=60,
         )
     else:
         reader_factory = partial(
