@@ -3,6 +3,9 @@
 
 -r requirements_test.txt
 
+# homeassistant.components.aemet
+AEMET-OpenData==0.1.8
+
 # homeassistant.components.homekit
 HAP-python==3.3.0
 
