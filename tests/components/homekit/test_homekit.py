@@ -51,7 +51,7 @@ from homeassistant.const import (
     CONF_PORT,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     SERVICE_RELOAD,
@@ -136,7 +136,7 @@ async def test_setup_min(hass, mock_zeroconf):
 
     # Test auto start enabled
     mock_homekit.reset_mock()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
     mock_homekit().async_start.assert_called()
@@ -175,7 +175,7 @@ async def test_setup_auto_start_disabled(hass, mock_zeroconf):
     # Test auto_start disabled
     homekit.reset_mock()
     homekit.async_start.reset_mock()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
     assert homekit.async_start.called is False
 
@@ -879,7 +879,7 @@ async def test_setup_imported(hass, mock_zeroconf):
 
     # Test auto start enabled
     mock_homekit.reset_mock()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
     mock_homekit().async_start.assert_called()
@@ -935,7 +935,7 @@ async def test_yaml_updates_update_config_entry_for_name(hass, mock_zeroconf):
 
     # Test auto start enabled
     mock_homekit.reset_mock()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
     mock_homekit().async_start.assert_called()

@@ -169,8 +169,6 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     # class variable to store/share discovered host information
     discovered_hosts = {}
 
-    # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-
     def __init__(self):
         """Initialize the Konnected flow."""
         self.data = {}

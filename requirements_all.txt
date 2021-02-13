@@ -14,7 +14,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==3.2.0
+HAP-python==3.3.0
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -502,7 +502,7 @@ doorbirdpy==2.1.0
 dovado==0.4.1
 
 # homeassistant.components.dsmr
-dsmr_parser==0.25
+dsmr_parser==0.28
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.3
@@ -1211,9 +1211,6 @@ py-nightscout==1.2.2
 
 # homeassistant.components.schluter
 py-schluter==0.1.7
-
-# homeassistant.components.synology
-py-synology==0.2.0
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -2317,9 +2314,6 @@ xbox-webapi==2.0.8
 
 # homeassistant.components.xbox_live
 xboxapi==2.0.1
-
-# homeassistant.components.xfinity
-xfinity-gateway==0.0.4
 
 # homeassistant.components.knx
 xknx==0.16.3

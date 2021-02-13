@@ -9,14 +9,13 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
-from homeassistant.const import CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
 import homeassistant.helpers.config_validation as cv
 
 from . import (
     CONF_ALIASES,
     CONF_AUTOMATIC_ADD,
     CONF_DEVICE_DEFAULTS,
-    CONF_DEVICES,
     CONF_FIRE_EVENT,
     CONF_GROUP,
     CONF_GROUP_ALIASES,
