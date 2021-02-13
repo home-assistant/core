@@ -70,7 +70,9 @@ async def test_form_duplicated_id(hass):
     ), requests_mock.mock() as _m:
         aemet_requests_mock(_m)
 
-        entry = MockConfigEntry(domain=DOMAIN, unique_id="40.30403754--3.72935236", data=CONFIG)
+        entry = MockConfigEntry(
+            domain=DOMAIN, unique_id="40.30403754--3.72935236", data=CONFIG
+        )
         entry.add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
