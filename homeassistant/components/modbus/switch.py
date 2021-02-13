@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_COMMAND_ON,
     CONF_NAME,
     CONF_SLAVE,
+    CONF_SWITCHES,
     STATE_ON,
 )
 from homeassistant.helpers import config_validation as cv
@@ -86,15 +87,31 @@ async def async_setup_platform(
 ):
     """Read configuration and create Modbus switches."""
     switches = []
-    if CONF_COILS in config:
-        for coil in config[CONF_COILS]:
-            hub: ModbusHub = hass.data[MODBUS_DOMAIN][coil[CONF_HUB]]
-            switches.append(ModbusCoilSwitch(hub, coil))
-    if CONF_REGISTERS in config:
-        for register in config[CONF_REGISTERS]:
-            hub: ModbusHub = hass.data[MODBUS_DOMAIN][register[CONF_HUB]]
-            switches.append(ModbusRegisterSwitch(hub, register))
 
+    #  check for old config:
+    if discovery_info is None:
+        _LOGGER.warning(
+            "switch configuration depreciated, will be removed in a future release"
+        )
+        discovery_info = {
+            CONF_NAME: "noName",
+            CONF_SWITCHES: [],
+        }
+        if CONF_COILS in config:
+            discovery_info[CONF_SWITCHES].extend(config[CONF_COILS])
+        if CONF_REGISTERS in config:
+            discovery_info[CONF_SWITCHES].extend(config[CONF_REGISTERS])
+        config = None
+
+    for entry in discovery_info[CONF_SWITCHES]:
+        if CONF_HUB in entry:
+            # from old config!
+            discovery_info[CONF_NAME] = entry[CONF_HUB]
+        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+        if CONF_REGISTER in entry:
+            switches.append(ModbusRegisterSwitch(hub, entry))
+        else:
+            switches.append(ModbusCoilSwitch(hub, entry))
     async_add_entities(switches)
 
 

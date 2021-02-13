@@ -1,5 +1,7 @@
 """Support for Modbus Coil and Discrete Input sensors."""
 from __future__ import annotations
+import logging
+from typing import Optional
 
 from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
@@ -12,10 +14,16 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, CONF_SLAVE
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    HomeAssistantType,
+)
 
 from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
+    CONF_BINARY_SENSORS,
     CONF_COILS,
     CONF_HUB,
     CONF_INPUT_TYPE,
@@ -23,6 +31,10 @@ from .const import (
     DEFAULT_HUB,
     MODBUS_DOMAIN,
 )
+from .modbus import ModbusHub
+
+_LOGGER = logging.getLogger(__name__)
+
 
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_COILS, CONF_INPUTS),
@@ -50,11 +62,31 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType,
+    config: ConfigType,
+    async_add_entities,
+    discovery_info: Optional[DiscoveryInfoType] = None,
+):
     """Set up the Modbus binary sensors."""
     sensors = []
-    for entry in config[CONF_INPUTS]:
-        hub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
+
+    #  check for old config:
+    if discovery_info is None:
+        _LOGGER.warning(
+            "Binary_sensor configuration depreciated, will be removed in a future release"
+        )
+        discovery_info = {
+            CONF_NAME: "noName",
+            CONF_BINARY_SENSORS: config[CONF_INPUTS],
+        }
+        config = None
+
+    for entry in discovery_info[CONF_BINARY_SENSORS]:
+        if CONF_HUB in entry:
+            # from old config!
+            discovery_info[CONF_NAME] = entry[CONF_HUB]
+        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         sensors.append(
             ModbusBinarySensor(
                 hub,
@@ -66,7 +98,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
         )
 
-    add_entities(sensors)
+    async_add_entities(sensors)
 
 
 class ModbusBinarySensor(BinarySensorEntity):

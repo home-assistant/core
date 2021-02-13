@@ -24,6 +24,11 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    HomeAssistantType,
+)
 
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
@@ -37,6 +42,7 @@ from .const import (
     CONF_REGISTERS,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
+    CONF_SENSORS,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
@@ -46,6 +52,7 @@ from .const import (
     DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
 )
+from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,63 +110,81 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType,
+    config: ConfigType,
+    async_add_entities,
+    discovery_info: Optional[DiscoveryInfoType] = None,
+):
     """Set up the Modbus sensors."""
     sensors = []
 
-    for register in config[CONF_REGISTERS]:
-        if register[CONF_DATA_TYPE] == DATA_TYPE_STRING:
-            structure = str(register[CONF_COUNT] * 2) + "s"
-        elif register[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
+    #  check for old config:
+    if discovery_info is None:
+        _LOGGER.warning(
+            "Sensor configuration depreciated, will be removed in a future release"
+        )
+        discovery_info = {
+            CONF_NAME: "noName",
+            CONF_SENSORS: config[CONF_REGISTERS],
+        }
+        config = None
+
+    for entry in discovery_info[CONF_SENSORS]:
+        if entry[CONF_DATA_TYPE] == DATA_TYPE_STRING:
+            structure = str(entry[CONF_COUNT] * 2) + "s"
+        elif entry[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
             try:
-                structure = f">{DEFAULT_STRUCT_FORMAT[register[CONF_DATA_TYPE]][register[CONF_COUNT]]}"
+                structure = f">{DEFAULT_STRUCT_FORMAT[entry[CONF_DATA_TYPE]][entry[CONF_COUNT]]}"
             except KeyError:
                 _LOGGER.error(
                     "Unable to detect data type for %s sensor, try a custom type",
-                    register[CONF_NAME],
+                    entry[CONF_NAME],
                 )
                 continue
         else:
-            structure = register.get(CONF_STRUCTURE)
+            structure = entry.get(CONF_STRUCTURE)
 
         try:
             size = struct.calcsize(structure)
         except struct.error as err:
-            _LOGGER.error("Error in sensor %s structure: %s", register[CONF_NAME], err)
+            _LOGGER.error("Error in sensor %s structure: %s", entry[CONF_NAME], err)
             continue
 
-        if register[CONF_COUNT] * 2 != size:
+        if entry[CONF_COUNT] * 2 != size:
             _LOGGER.error(
                 "Structure size (%d bytes) mismatch registers count (%d words)",
                 size,
-                register[CONF_COUNT],
+                entry[CONF_COUNT],
             )
             continue
 
-        hub_name = register[CONF_HUB]
-        hub = hass.data[MODBUS_DOMAIN][hub_name]
+        if CONF_HUB in entry:
+            # from old config!
+            discovery_info[CONF_NAME] = entry[CONF_HUB]
+        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         sensors.append(
             ModbusRegisterSensor(
                 hub,
-                register[CONF_NAME],
-                register.get(CONF_SLAVE),
-                register[CONF_REGISTER],
-                register[CONF_REGISTER_TYPE],
-                register.get(CONF_UNIT_OF_MEASUREMENT),
-                register[CONF_COUNT],
-                register[CONF_REVERSE_ORDER],
-                register[CONF_SCALE],
-                register[CONF_OFFSET],
+                entry[CONF_NAME],
+                entry.get(CONF_SLAVE),
+                entry[CONF_REGISTER],
+                entry[CONF_REGISTER_TYPE],
+                entry.get(CONF_UNIT_OF_MEASUREMENT),
+                entry[CONF_COUNT],
+                entry[CONF_REVERSE_ORDER],
+                entry[CONF_SCALE],
+                entry[CONF_OFFSET],
                 structure,
-                register[CONF_PRECISION],
-                register[CONF_DATA_TYPE],
-                register.get(CONF_DEVICE_CLASS),
+                entry[CONF_PRECISION],
+                entry[CONF_DATA_TYPE],
+                entry.get(CONF_DEVICE_CLASS),
             )
         )
 
     if not sensors:
         return False
-    add_entities(sensors)
+    async_add_entities(sensors)
 
 
 class ModbusRegisterSensor(RestoreEntity, SensorEntity):

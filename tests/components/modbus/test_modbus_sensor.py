@@ -12,6 +12,7 @@ from homeassistant.components.modbus.const import (
     CONF_REGISTERS,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
+    CONF_SENSORS,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
@@ -23,8 +24,9 @@ from homeassistant.const import CONF_NAME, CONF_OFFSET, CONF_SLAVE
 from .conftest import base_config_test, base_test
 
 
+@pytest.mark.parametrize("do_discovery", [False, True])
 @pytest.mark.parametrize("do_options", [False, True])
-async def test_config_sensor(hass, do_options):
+async def test_config_sensor(hass, do_discovery, do_options):
     """Run test for sensor."""
     sensor_name = "test_sensor"
     config_sensor = {
@@ -49,9 +51,9 @@ async def test_config_sensor(hass, do_options):
         config_sensor,
         sensor_name,
         SENSOR_DOMAIN,
-        None,
+        CONF_SENSORS,
         CONF_REGISTERS,
-        method_discovery=False,
+        method_discovery=do_discovery,
     )
 
 
@@ -273,11 +275,11 @@ async def test_all_sensor(hass, cfg, regs, expected):
         {CONF_NAME: sensor_name, CONF_REGISTER: 1234, **cfg},
         sensor_name,
         SENSOR_DOMAIN,
-        None,
+        CONF_SENSORS,
         CONF_REGISTERS,
         regs,
         expected,
-        method_discovery=False,
+        method_discovery=True,
         scan_interval=5,
     )
     assert state == expected

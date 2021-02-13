@@ -6,6 +6,7 @@ from homeassistant.components.modbus.const import (
     CONF_COILS,
     CONF_REGISTER,
     CONF_REGISTERS,
+    CONF_SWITCHES,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -20,9 +21,10 @@ from homeassistant.const import (
 from .conftest import base_config_test, base_test
 
 
+@pytest.mark.parametrize("do_discovery", [False, True])
 @pytest.mark.parametrize("do_options", [False, True])
 @pytest.mark.parametrize("read_type", [CALL_TYPE_COIL, CONF_REGISTER])
-async def test_config_switch(hass, do_options, read_type):
+async def test_config_switch(hass, do_discovery, do_options, read_type):
     """Run test for switch."""
     device_name = "test_switch"
 
@@ -50,9 +52,9 @@ async def test_config_switch(hass, do_options, read_type):
         device_config,
         device_name,
         SWITCH_DOMAIN,
-        None,
+        CONF_SWITCHES,
         array_type,
-        method_discovery=False,
+        method_discovery=do_discovery,
     )
 
 
@@ -93,7 +95,7 @@ async def test_coil_switch(hass, regs, expected):
         },
         switch_name,
         SWITCH_DOMAIN,
-        None,
+        CONF_SWITCHES,
         CONF_COILS,
         regs,
         expected,
@@ -142,7 +144,7 @@ async def test_register_switch(hass, regs, expected):
         },
         switch_name,
         SWITCH_DOMAIN,
-        None,
+        CONF_SWITCHES,
         CONF_REGISTERS,
         regs,
         expected,
@@ -183,7 +185,7 @@ async def test_register_state_switch(hass, regs, expected):
         },
         switch_name,
         SWITCH_DOMAIN,
-        None,
+        CONF_SWITCHES,
         CONF_REGISTERS,
         regs,
         expected,
