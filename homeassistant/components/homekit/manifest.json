@@ -3,7 +3,7 @@
   "name": "HomeKit",
   "documentation": "https://www.home-assistant.io/integrations/homekit",
   "requirements": [
-    "HAP-python==3.2.0",
+    "HAP-python==3.3.0",
     "fnvhash==0.1.0",
     "PyQRCode==1.2.1",
     "base36==0.1.1",
