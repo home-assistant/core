@@ -439,7 +439,7 @@ class _ScriptRun:
 
         running_script = (
             params["domain"] == "automation"
-            and params["service_name"] == "trigger"
+            and params["service"] == "trigger"
             or params["domain"] in ("python_script", "script")
         )
         # If this might start a script then disable the call timeout.
