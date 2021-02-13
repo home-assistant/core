@@ -55,6 +55,8 @@ MODE_EXCLUDE = "exclude"
 INCLUDE_EXCLUDE_MODES = [MODE_EXCLUDE, MODE_INCLUDE]
 
 DOMAINS_NEED_ACCESSORY_MODE = [CAMERA_DOMAIN, MEDIA_PLAYER_DOMAIN]
+NEVER_BRIDGED_DOMAINS = [CAMERA_DOMAIN]
+
 CAMERA_ENTITY_PREFIX = f"{CAMERA_DOMAIN}."
 
 SUPPORTED_DOMAINS = [
@@ -146,6 +148,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             await self._async_add_entries_for_accessory_mode_entities(port)
             self.hk_data[CONF_PORT] = port
+            include_domains_filter = self.hk_data[CONF_FILTER][CONF_INCLUDE_DOMAINS]
+            for domain in NEVER_BRIDGED_DOMAINS:
+                if domain in include_domains_filter:
+                    include_domains_filter.remove(domain)
             return self.async_create_entry(
                 title=f"{self.hk_data[CONF_NAME]}:{self.hk_data[CONF_PORT]}",
                 data=self.hk_data,
@@ -180,16 +186,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             )
 
-    async def async_step_accessory(self, input):
+    async def async_step_accessory(self, accessory_input):
         """Handle creation a single accessory in accessory mode."""
-        entity_id = input[CONF_ENTITY_ID]
-        port = input[CONF_PORT]
+        entity_id = accessory_input[CONF_ENTITY_ID]
+        port = accessory_input[CONF_PORT]
 
         state = self.hass.states.get(entity_id)
-        if state:
-            name = state.attributes.get(ATTR_FRIENDLY_NAME) or state.entity_id
-        if not name:
-            name = HOMEKIT_MODE_ACCESSORY
+        name = state.attributes.get(ATTR_FRIENDLY_NAME) or state.entity_id
         entity_filter = _EMPTY_ENTITY_FILTER.copy()
         entity_filter[CONF_INCLUDE_ENTITIES] = [entity_id]
 

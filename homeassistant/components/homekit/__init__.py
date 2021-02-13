@@ -259,7 +259,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # ip_address and advertise_ip are yaml only
     ip_address = conf.get(CONF_IP_ADDRESS)
     advertise_ip = conf.get(CONF_ADVERTISE_IP)
-    exclude_accessory_mode = conf.get(CONF_EXCLUDE_ACCESSORY_MODE)
+    # exclude_accessory_mode is only used for config flow
+    # to indicate that the config entry was setup after
+    # we started creating config entries for entities that
+    # to run in accessory mode and that we should never include
+    # these entities on the bridge. For backwards compatibility
+    # with users who have not migrated yet we do not do exclude
+    # these entities by default as we cannot migrate automatically
+    # since it requires a re-pairing.
+    exclude_accessory_mode = conf.get(
+        CONF_EXCLUDE_ACCESSORY_MODE, DEFAULT_EXCLUDE_ACCESSORY_MODE
+    )
     homekit_mode = options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
     entity_config = options.get(CONF_ENTITY_CONFIG, {}).copy()
     auto_start = options.get(CONF_AUTO_START, DEFAULT_AUTO_START)
