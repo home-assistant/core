@@ -515,7 +515,7 @@ class HomeDriver(AccessoryDriver):
         """Override super function to show setup message if unpaired."""
         super().unpair(client_uuid)
 
-        if self.accessory.paired:
+        if self.state.paired:
             return
 
         show_setup_message(
