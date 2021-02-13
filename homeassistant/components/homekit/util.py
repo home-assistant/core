@@ -338,8 +338,7 @@ def show_setup_message(hass, entry_id, title, pincode, uri):
             data={
                 "entry_id": entry_id,
                 "title": title,
-                "pincode": pincode,
-                "uri": uri,
+                "pairing_secret": pairing_secret,
             },
         )
     )
