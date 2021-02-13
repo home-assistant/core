@@ -16,6 +16,7 @@ from homeassistant.components.media_player import (
     DEVICE_CLASS_TV,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
@@ -316,7 +317,7 @@ def validate_media_player_features(state, feature_list):
     return True
 
 
-def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
+def show_setup_message(hass, entry_id, title, pincode, uri):
     """Display persistent notification with setup information."""
     pin = pincode.decode()
     _LOGGER.info("Pincode: %s", pin)
@@ -326,11 +327,25 @@ def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
     url.svg(buffer, scale=5, module_color="#000", background="#FFF")
     pairing_secret = secrets.token_hex(32)
 
-    hass.data[DOMAIN][entry_id][HOMEKIT_PAIRING_QR] = buffer.getvalue()
-    hass.data[DOMAIN][entry_id][HOMEKIT_PAIRING_QR_SECRET] = pairing_secret
+    data = hass.data[DOMAIN][entry_id]
+    data[HOMEKIT_PAIRING_QR] = buffer.getvalue()
+    data[HOMEKIT_PAIRING_QR_SECRET] = pairing_secret
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH},
+            data={
+                "entry_id": entry_id,
+                "title": title,
+                "pincode": pincode,
+                "uri": uri,
+            },
+        )
+    )
 
     message = (
-        f"To set up {bridge_name} in the Home App, "
+        f"To set up {title} in the Home App, "
         f"scan the QR code or enter the following code:\n"
         f"### {pin}\n"
         f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
@@ -340,6 +355,15 @@ def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
 
 def dismiss_setup_message(hass, entry_id):
     """Dismiss persistent notification and remove QR code."""
+    for flow in hass.config_entries.flow.async_progress():
+        if flow["domain"] != DOMAIN:
+            continue
+
+        if flow["context"]["source"] != SOURCE_REAUTH:
+            continue
+
+        hass.config_entries.flow.async_abort(flow["flow_id"])
+
     hass.components.persistent_notification.dismiss(entry_id)
 
 
