@@ -99,9 +99,6 @@ async def test_reauth(hass):
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
-        "homeassistant.components.totalconnect.async_setup_entry",
-        return_value=True,
-    ), patch(
         "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
     ) as client_mock:
         client_mock.return_value.is_valid_credentials.return_value = True
