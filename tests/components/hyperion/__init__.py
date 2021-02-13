@@ -187,3 +187,12 @@ def register_test_entity(
         suggested_object_id=entity_id,
         disabled_by=None,
     )
+
+
+async def async_call_registered_callback(
+    client: AsyncMock, key: str, *args: Any, **kwargs: Any
+) -> None:
+    """Call Hyperion entity callbacks that were registered with the client."""
+    for call in client.add_callbacks.call_args_list:
+        if key in call[0][0]:
+            await call[0][0][key](*args, **kwargs)

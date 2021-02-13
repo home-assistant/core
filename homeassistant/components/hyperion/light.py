@@ -486,7 +486,7 @@ class HyperionBaseLight(LightEntity):
         # Explicit type specifier to ensure this works when the underlying (typed)
         # library is installed along with the tests. Casts would trigger a
         # redundant-cast warning in this case.
-        priority: dict[str, Any] | None = self._client.visible_priority
+        priority: Optional[Dict[str, Any]] = self._client.visible_priority
         return priority
 
     # pylint: disable=no-self-use
