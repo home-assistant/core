@@ -29,6 +29,11 @@ SIGNAL_XBEE_FRAME_RECEIVED = "xbee_frame_received"
 
 CONF_BAUD = "baud"
 
+CONF_ON_STATE = "on_state"
+
+DEFAULT_ON_STATE = "high"
+STATES = ["high", "low"]
+
 DEFAULT_DEVICE = "/dev/ttyUSB0"
 DEFAULT_BAUD = 9600
 DEFAULT_ADC_MAX_VOLTS = 1.2
@@ -59,7 +64,6 @@ PLATFORM_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the connection to the XBee Zigbee device."""
-
     usb_device = config[DOMAIN].get(CONF_DEVICE, DEFAULT_DEVICE)
     baud = int(config[DOMAIN].get(CONF_BAUD, DEFAULT_BAUD))
     try:

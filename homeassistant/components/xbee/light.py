@@ -3,12 +3,15 @@ import voluptuous as vol
 
 from homeassistant.components.light import LightEntity
 
-from . import DOMAIN, PLATFORM_SCHEMA, XBeeDigitalOut, XBeeDigitalOutConfig
-
-CONF_ON_STATE = "on_state"
-
-DEFAULT_ON_STATE = "high"
-STATES = ["high", "low"]
+from . import (
+    CONF_ON_STATE,
+    DEFAULT_ON_STATE,
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    STATES,
+    XBeeDigitalOut,
+    XBeeDigitalOutConfig,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_ON_STATE, default=DEFAULT_ON_STATE): vol.In(STATES)}
