@@ -5,7 +5,7 @@ from miio import DeviceException
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.components.xiaomi_miio import config_flow, const
+from homeassistant.components.xiaomi_miio import const
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 
 ZEROCONF_NAME = "name"
@@ -291,7 +291,7 @@ async def test_config_flow_step_unknown_device(hass):
 
 
 async def config_flow_device_success(hass, model_to_test):
-    """Base test a successful config flow for a device."""
+    """Test a successful config flow for a base device."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -334,7 +334,7 @@ async def config_flow_device_success(hass, model_to_test):
 
 
 async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
-    """Base test a successful zeroconf discovery of a device."""
+    """Test a successful zeroconf discovery of a base device."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
