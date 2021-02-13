@@ -82,7 +82,7 @@ async def test_form_duplicated_id(hass):
         )
         
         assert result["type"] == "abort"
-        assert result["reason" == "already_configured"
+        assert result["reason"] == "already_configured"
 
 
 async def test_form_api_offline(hass):
