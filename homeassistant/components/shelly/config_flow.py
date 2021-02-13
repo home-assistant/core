@@ -1,7 +1,6 @@
 """Config flow for Shelly integration."""
 import asyncio
 import logging
-from socket import gethostbyname
 
 import aiohttp
 import aioshelly
@@ -33,10 +32,9 @@ async def validate_input(hass: core.HomeAssistant, host, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    ip_address = await hass.async_add_executor_job(gethostbyname, host)
 
     options = aioshelly.ConnectionOptions(
-        ip_address, data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
+        host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
     )
     coap_context = await get_coap_context(hass)
 
