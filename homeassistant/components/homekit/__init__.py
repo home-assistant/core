@@ -100,12 +100,12 @@ from .const import (
 )
 from .util import (
     accessory_friendly_name,
-    dismiss_setup_message,
+    async_abort_pairing_flow,
+    async_start_pairing_flow,
     get_persist_fullpath_for_entry_id,
     migrate_filesystem_state_data_for_primary_imported_entry_id,
     port_is_available,
     remove_state_files_for_entry_id,
-    show_setup_message,
     state_needs_accessory_mode,
     validate_entity_config,
 )
@@ -322,7 +322,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    dismiss_setup_message(hass, entry.entry_id)
+    async_abort_pairing_flow(hass, entry.entry_id)
 
     hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
 
@@ -686,7 +686,7 @@ class HomeKit:
         await self.hass.async_add_executor_job(self.driver.add_accessory, acc)
 
         if not self.driver.state.paired:
-            show_setup_message(
+            async_start_pairing_flow(
                 self.hass,
                 self._entry_id,
                 accessory_friendly_name(self._entry_title, self.driver.accessory),
