@@ -1,10 +1,18 @@
 """Tesla Config Flow."""
+import datetime
 import logging
+from typing import Any, Dict, List, Optional, Text
 
-from teslajsonpy import Controller as TeslaAPI, TeslaException
+from aiohttp import web, web_response
+from aiohttp.web_exceptions import HTTPBadRequest
+from teslajsonpy import Controller as TeslaAPI
+from teslajsonpy.exceptions import IncompleteCredentials, TeslaException
+from teslajsonpy.teslaproxy import TeslaProxy
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
@@ -14,9 +22,17 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import UnknownFlow
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.network import get_url
 
 from .const import (
+    AUTH_CALLBACK_NAME,
+    AUTH_CALLBACK_PATH,
+    AUTH_PROXY_NAME,
+    AUTH_PROXY_PATH,
+    CONF_EXPIRATION,
     CONF_WAKE_ON_START,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_WAKE_ON_START,
@@ -32,10 +48,11 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-
-    def __init__(self):
-        """Initialize the tesla flow."""
-        self.username = None
+    proxy: TeslaProxy = None
+    proxy_view: "TeslaAuthorizationProxyView" = None
+    data: Dict[Text, Any] = None
+    warning_shown: bool = False
+    callback_url: Optional[URL] = None
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
@@ -43,46 +60,91 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
-        errors = {}
-
-        if user_input is not None:
-            existing_entry = self._async_entry_for_username(user_input[CONF_USERNAME])
-            if (
-                existing_entry
-                and existing_entry.data[CONF_PASSWORD] == user_input[CONF_PASSWORD]
-            ):
-                return self.async_abort(reason="already_configured")
-
-            try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-
-            if not errors:
-                if existing_entry:
-                    self.hass.config_entries.async_update_entry(
-                        existing_entry, data=info
-                    )
-                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
-
-                return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=info
-                )
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=self._async_schema(),
-            errors=errors,
-            description_placeholders={},
-        )
+        if not self.warning_shown:
+            self.warning_shown = True
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema({}),
+                errors={},
+                description_placeholders={},
+            )
+        return await self.async_step_start_oauth()
 
     async def async_step_reauth(self, data):
         """Handle configuration by re-auth."""
-        self.username = data[CONF_USERNAME]
+        self.warning_shown = False
         return await self.async_step_user()
+
+    async def async_step_start_oauth(self, user_input=None):
+        """Start oauth step for login."""
+        self.warning_shown = False
+        websession = aiohttp_client.async_get_clientsession(self.hass)
+        self.controller = TeslaAPI(
+            websession,
+            update_interval=DEFAULT_SCAN_INTERVAL,
+        )
+        host_url: URL = self.controller.get_oauth_url()
+        hass_proxy_url: URL = URL(get_url(self.hass, prefer_external=True)).with_path(
+            AUTH_PROXY_PATH
+        )
+
+        TeslaConfigFlow.proxy: TeslaProxy = TeslaProxy(
+            proxy_url=hass_proxy_url,
+            host_url=host_url,
+        )
+        TeslaConfigFlow.callback_url: URL = (
+            URL(get_url(self.hass, prefer_external=True))
+            .with_path(AUTH_CALLBACK_PATH)
+            .with_query({"flow_id": self.flow_id})
+        )
+
+        proxy_url: URL = self.proxy.access_url().with_query(
+            {"config_flow_id": self.flow_id, "callback_url": str(self.callback_url)}
+        )
+
+        if not self.proxy_view:
+            TeslaConfigFlow.proxy_view = TeslaAuthorizationProxyView(
+                self.proxy.all_handler
+            )
+        self.hass.http.register_view(TeslaAuthorizationCallbackView())
+        self.hass.http.register_view(self.proxy_view)
+        return self.async_external_step(step_id="check_proxy", url=str(proxy_url))
+
+    async def async_step_check_proxy(self, user_input=None):
+        """Check status of oauth response for login."""
+        self.data = user_input
+        self.proxy_view.reset()
+        return self.async_external_step_done(next_step_id="finish_oauth")
+
+    async def async_step_finish_oauth(self, user_input=None):
+        """Finish auth."""
+        info = {}
+        errors = {}
+        self.controller.set_authorization_code(self.data.get("code", ""))
+        try:
+            info = await validate_input(self.hass, info, self.controller)
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
+        # convert from teslajsonpy to HA keys
+        info = {
+            CONF_TOKEN: info["refresh_token"],
+            CONF_ACCESS_TOKEN: info[CONF_ACCESS_TOKEN],
+            CONF_EXPIRATION: info[CONF_EXPIRATION],
+        }
+        if info and not errors:
+            existing_entry = self._async_entry_for_username(self.data[CONF_USERNAME])
+            if existing_entry and existing_entry.data == info:
+                return self.async_abort(reason="already_configured")
+
+            if existing_entry:
+                self.hass.config_entries.async_update_entry(existing_entry, data=info)
+                await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+            return self.async_create_entry(title=self.data[CONF_USERNAME], data=info)
+        return self.async_abort(reason="login_failed")
 
     @staticmethod
     @callback
@@ -91,20 +153,10 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler(config_entry)
 
     @callback
-    def _async_schema(self):
-        """Fetch schema with defaults."""
-        return vol.Schema(
-            {
-                vol.Required(CONF_USERNAME, default=self.username): str,
-                vol.Required(CONF_PASSWORD): str,
-            }
-        )
-
-    @callback
     def _async_entry_for_username(self, username):
         """Find an existing entry for a username."""
         for entry in self._async_current_entries():
-            if entry.data.get(CONF_USERNAME) == username:
+            if entry.title == username:
                 return entry
         return None
 
@@ -140,7 +192,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: core.HomeAssistant, data, controller: TeslaAPI = None):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -150,17 +202,20 @@ async def validate_input(hass: core.HomeAssistant, data):
     websession = aiohttp_client.async_create_clientsession(hass)
 
     try:
-        controller = TeslaAPI(
-            websession,
-            email=data[CONF_USERNAME],
-            password=data[CONF_PASSWORD],
-            update_interval=DEFAULT_SCAN_INTERVAL,
+        if not controller:
+            controller = TeslaAPI(
+                websession,
+                email=data.get(CONF_USERNAME),
+                password=data.get(CONF_PASSWORD),
+                refresh_token=data[CONF_TOKEN],
+                access_token=data[CONF_ACCESS_TOKEN],
+                expiration=data.get(CONF_EXPIRATION, 0),
+                update_interval=data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+            )
+        config = await controller.connect(
+            wake_if_asleep=data.get(CONF_WAKE_ON_START, DEFAULT_WAKE_ON_START),
+            test_login=True,
         )
-        (config[CONF_TOKEN], config[CONF_ACCESS_TOKEN]) = await controller.connect(
-            test_login=True
-        )
-        config[CONF_USERNAME] = data[CONF_USERNAME]
-        config[CONF_PASSWORD] = data[CONF_PASSWORD]
     except TeslaException as ex:
         if ex.code == HTTP_UNAUTHORIZED:
             _LOGGER.error("Invalid credentials: %s", ex)
@@ -177,3 +232,88 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class TeslaAuthorizationCallbackView(HomeAssistantView):
+    """Handle callback from external auth."""
+
+    url = AUTH_CALLBACK_PATH
+    name = AUTH_CALLBACK_NAME
+    requires_auth = False
+
+    async def get(self, request: web.Request):
+        """Receive authorization confirmation."""
+        hass = request.app["hass"]
+        try:
+            await hass.config_entries.flow.async_configure(
+                flow_id=request.query["flow_id"],
+                user_input=request.query,
+            )
+        except (KeyError, UnknownFlow) as ex:
+            _LOGGER.debug("Callback flow_id is invalid.")
+            raise HTTPBadRequest() from ex
+        return web_response.Response(
+            headers={"content-type": "text/html"},
+            text="<script>window.close()</script>Success! This window can be closed",
+        )
+
+
+class TeslaAuthorizationProxyView(HomeAssistantView):
+    """Handle proxy connections."""
+
+    url: Text = AUTH_PROXY_PATH
+    extra_urls: List[Text] = [f"{AUTH_PROXY_PATH}/{{tail:.*}}"]
+    name: Text = AUTH_PROXY_NAME
+    requires_auth: bool = False
+    handler: web.RequestHandler = None
+    known_ips: Dict[Text, datetime.datetime] = {}
+    auth_seconds: int = 300
+    cors_allowed = False
+
+    def __init__(self, handler: web.RequestHandler):
+        """Initialize routes for view.
+
+        Args:
+            handler (web.RequestHandler): Handler to apply to all method types
+
+        """
+        TeslaAuthorizationProxyView.handler = handler
+        for method in ("get", "post", "delete", "put", "patch", "head", "options"):
+            setattr(self, method, self.check_auth())
+
+    @classmethod
+    def check_auth(cls):
+        """Wrap access control into the handler."""
+
+        async def wrapped(request, **kwargs):
+            """Wrap the handler to require knowledge of config_flow_id."""
+            hass = request.app["hass"]
+            success = False
+            if (
+                request.remote not in cls.known_ips
+                or (datetime.datetime.now() - cls.known_ips.get(request.remote)).seconds
+                > cls.auth_seconds
+            ):
+                try:
+                    flow_id = request.url.query["config_flow_id"]
+                except KeyError as ex:
+                    raise Unauthorized() from ex
+                for flow in hass.config_entries.flow.async_progress():
+                    if flow["flow_id"] == flow_id:
+                        _LOGGER.debug(
+                            "Found flow_id; adding %s to known_ips for %s seconds",
+                            request.remote,
+                            cls.auth_seconds,
+                        )
+                        success = True
+                if not success:
+                    raise Unauthorized()
+                cls.known_ips[request.remote] = datetime.datetime.now()
+            return await cls.handler(request, **kwargs)
+
+        return wrapped
+
+    @classmethod
+    def reset(cls) -> None:
+        """Reset the view."""
+        cls.known_ips = {}

@@ -3,11 +3,11 @@ import asyncio
 from collections import defaultdict
 from datetime import timedelta
 import logging
+from typing import Optional, Text
 
 import async_timeout
 from teslajsonpy import Controller as TeslaAPI
 from teslajsonpy.exceptions import IncompleteCredentials, TeslaException
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -21,7 +21,9 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -31,6 +33,7 @@ from homeassistant.util import slugify
 
 from .config_flow import CannotConnect, InvalidAuth, validate_input
 from .const import (
+    CONF_EXPIRATION,
     CONF_WAKE_ON_START,
     DATA_LISTENER,
     DEFAULT_SCAN_INTERVAL,
@@ -43,30 +46,16 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): vol.All(cv.positive_int, vol.Clamp(min=MIN_SCAN_INTERVAL)),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
 
 @callback
-def _async_save_tokens(hass, config_entry, access_token, refresh_token):
+def _async_save_tokens(hass, config_entry, access_token, refresh_token, expiration):
     hass.config_entries.async_update_entry(
         config_entry,
         data={
             **config_entry.data,
             CONF_ACCESS_TOKEN: access_token,
             CONF_TOKEN: refresh_token,
+            CONF_EXPIRATION: expiration,
         },
     )
 
@@ -109,10 +98,9 @@ async def async_setup(hass, base_config):
         _update_entry(
             email,
             data={
-                CONF_USERNAME: email,
-                CONF_PASSWORD: password,
                 CONF_ACCESS_TOKEN: info[CONF_ACCESS_TOKEN],
                 CONF_TOKEN: info[CONF_TOKEN],
+                CONF_EXPIRATION: info[CONF_EXPIRATION],
             },
             options={CONF_SCAN_INTERVAL: scan_interval},
         )
@@ -149,15 +137,19 @@ async def async_setup_entry(hass, config_entry):
             password=config.get(CONF_PASSWORD),
             refresh_token=config[CONF_TOKEN],
             access_token=config[CONF_ACCESS_TOKEN],
+            expiration=config.get(CONF_EXPIRATION, 0),
             update_interval=config_entry.options.get(
                 CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
             ),
         )
-        (refresh_token, access_token) = await controller.connect(
+        result = await controller.connect(
             wake_if_asleep=config_entry.options.get(
                 CONF_WAKE_ON_START, DEFAULT_WAKE_ON_START
             )
         )
+        refresh_token = result["refresh_token"]
+        access_token = result["access_token"]
+        expiration = result["expiration"]
     except IncompleteCredentials:
         _async_start_reauth(hass, config_entry)
         return False
@@ -166,7 +158,7 @@ async def async_setup_entry(hass, config_entry):
             _async_start_reauth(hass, config_entry)
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
         return False
-    _async_save_tokens(hass, config_entry, access_token, refresh_token)
+    _async_save_tokens(hass, config_entry, access_token, refresh_token, expiration)
     coordinator = TeslaDataUpdateCoordinator(
         hass, config_entry=config_entry, controller=controller
     )
@@ -260,9 +252,12 @@ class TeslaDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
         if self.controller.is_token_refreshed():
-            (refresh_token, access_token) = self.controller.get_tokens()
+            result = self.controller.get_tokens()
+            refresh_token = result["refresh_token"]
+            access_token = result["access_token"]
+            expiration = result["expiration"]
             _async_save_tokens(
-                self.hass, self.config_entry, access_token, refresh_token
+                self.hass, self.config_entry, access_token, refresh_token, expiration
             )
             _LOGGER.debug("Saving new tokens in config_entry")
 
@@ -271,6 +266,8 @@ class TeslaDataUpdateCoordinator(DataUpdateCoordinator):
             # handled by the data update coordinator.
             async with async_timeout.timeout(30):
                 return await self.controller.update()
+        except IncompleteCredentials:
+            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
         except TeslaException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
@@ -282,9 +279,10 @@ class TeslaDevice(CoordinatorEntity):
         """Initialise the Tesla device."""
         super().__init__(coordinator)
         self.tesla_device = tesla_device
-        self._name = self.tesla_device.name
-        self._unique_id = slugify(self.tesla_device.uniq_name)
-        self._attributes = self.tesla_device.attrs.copy()
+        self._name: Text = self.tesla_device.name
+        self._unique_id: Text = slugify(self.tesla_device.uniq_name)
+        self._attributes: Text = self.tesla_device.attrs.copy()
+        self._config_entry_id: Optional[Text] = None
 
     @property
     def name(self):
@@ -327,6 +325,8 @@ class TeslaDevice(CoordinatorEntity):
     async def async_added_to_hass(self):
         """Register state update callback."""
         self.async_on_remove(self.coordinator.async_add_listener(self.refresh))
+        registry = await async_get_registry(self.hass)
+        self._config_entry_id = registry.entities.get(self.entity_id).config_entry_id
 
     @callback
     def refresh(self) -> None:

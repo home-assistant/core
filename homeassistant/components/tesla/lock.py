@@ -4,6 +4,7 @@ import logging
 from homeassistant.components.lock import LockEntity
 
 from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
+from .helper import check_for_reauth
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,11 +24,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class TeslaLock(TeslaDevice, LockEntity):
     """Representation of a Tesla door lock."""
 
+    @check_for_reauth
     async def async_lock(self, **kwargs):
         """Send the lock command."""
         _LOGGER.debug("Locking doors for: %s", self.name)
         await self.tesla_device.lock()
 
+    @check_for_reauth
     async def async_unlock(self, **kwargs):
         """Send the unlock command."""
         _LOGGER.debug("Unlocking doors for: %s", self.name)

@@ -1,5 +1,6 @@
 """Const file for Tesla cars."""
 CONF_WAKE_ON_START = "enable_wake_on_start"
+CONF_EXPIRATION = "expiration"
 DOMAIN = "tesla"
 DATA_LISTENER = "listener"
 DEFAULT_SCAN_INTERVAL = 660
@@ -29,3 +30,7 @@ ICONS = {
     "charging rate sensor": "mdi:speedometer",
     "sentry mode switch": "mdi:shield-car",
 }
+AUTH_CALLBACK_PATH = "/auth/tesla/callback"
+AUTH_CALLBACK_NAME = "auth:tesla:callback"
+AUTH_PROXY_PATH = "/auth/tesla/proxy"
+AUTH_PROXY_NAME = "auth:tesla:proxy"
