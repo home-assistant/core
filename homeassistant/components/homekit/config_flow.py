@@ -156,6 +156,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pairing(self, reauth_data):
         """Pairing instructions."""
+        _LOGGER.debug("async_step_pairing: %s", reauth_data)
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             "title": reauth_data["title"],
