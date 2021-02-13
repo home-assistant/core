@@ -338,6 +338,7 @@ def async_start_pairing_flow(hass, entry_id, title, pincode, uri):
             data={
                 "entry_id": entry_id,
                 "title": title,
+                "pin": pin,
                 "pairing_secret": pairing_secret,
             },
         )

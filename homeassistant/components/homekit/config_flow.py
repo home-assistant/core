@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import DEFAULT_DISCOVERY_UNIQUE_ID, SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_DOMAINS,
@@ -158,6 +158,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_zeroconf(self, discovery_info):
+        """Handle a flow initialized by zeroconf discovery."""
+        await self.async_set_unique_id(DEFAULT_DISCOVERY_UNIQUE_ID)
+        self._abort_if_unique_id_configured()
+        self.context["title_placeholders"] = {
+            "title": "Bridge",
+        }
+        return await self.async_step_user()
+
     async def async_step_pairing(self, pairing_data):
         """Pairing instructions."""
         if pairing_data:
@@ -169,7 +178,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="pairing",
             description_placeholders={
+                "title": self.pairing_data["title"],
                 "entry_id": self.pairing_data["entry_id"],
+                "pin": self.pairing_data["pin"],
                 "pairing_secret": self.pairing_data["pairing_secret"],
             },
         )
