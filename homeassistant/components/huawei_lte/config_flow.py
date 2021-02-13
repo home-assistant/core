@@ -70,10 +70,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                                 CONF_URL,
                                 default=user_input.get(
                                     CONF_URL,
-                                    # https://github.com/PyCQA/pylint/issues/3167
-                                    self.context.get(  # pylint: disable=no-member
-                                        CONF_URL, ""
-                                    ),
+                                    self.context.get(CONF_URL, ""),
                                 ),
                             ),
                             str,
@@ -192,7 +189,6 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     title = info.get("DeviceName")
             return title or DEFAULT_DEVICE_NAME
 
-        assert self.hass is not None
         try:
             conn = await self.hass.async_add_executor_job(try_connect, user_input)
         except LoginErrorUsernameWrongException:
@@ -218,7 +214,6 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
-        # pylint: disable=no-member
         title = self.context.get("title_placeholders", {}).get(
             CONF_NAME
         ) or await self.hass.async_add_executor_job(get_router_title, conn)
@@ -238,8 +233,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if "mobile" not in discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "").lower():
             return self.async_abort(reason="not_huawei_lte")
 
-        # https://github.com/PyCQA/pylint/issues/3167
-        url = self.context[CONF_URL] = url_normalize(  # pylint: disable=no-member
+        url = self.context[CONF_URL] = url_normalize(
             discovery_info.get(
                 ssdp.ATTR_UPNP_PRESENTATION_URL,
                 f"http://{urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname}/",
@@ -255,7 +249,6 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._already_configured(user_input):
             return self.async_abort(reason="already_configured")
 
-        # pylint: disable=no-member
         self.context["title_placeholders"] = {
             CONF_NAME: discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
         }

@@ -73,7 +73,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_HOST: host,
             CONF_BOND_ID: bond_id,
         }
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": self._discovered})
 
         return await self.async_step_confirm()
