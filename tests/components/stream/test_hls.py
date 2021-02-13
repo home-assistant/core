@@ -1,17 +1,24 @@
 """The tests for hls streams."""
 from datetime import timedelta
+import io
 from unittest.mock import patch
 from urllib.parse import urlparse
 
 import av
 
 from homeassistant.components.stream import create_stream
+from homeassistant.components.stream.core import Segment
+from homeassistant.components.stream.hls import HlsPlaylistView
 from homeassistant.const import HTTP_NOT_FOUND
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video
+
+STREAM_SOURCE = "some-stream_source"
+SEQUENCE_BYTES = io.BytesIO(b"some-bytes")
+DURATION = 1000
 
 
 async def test_hls_stream(hass, hass_client, stream_worker_sync):
@@ -176,3 +183,62 @@ async def test_stream_keepalive(hass):
 
     # Stop stream, if it hasn't quit already
     stream.stop()
+
+
+async def test_hls_playlist_view_no_output(hass):
+    """Test rendering the hls playlist with no output segments."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    stream = create_stream(hass, STREAM_SOURCE)
+    hls = stream.add_provider("hls")
+    assert HlsPlaylistView.render_playlist(hls) == []
+
+
+async def test_hls_playlist_view(hass):
+    """Test rendering the hls playlist."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    stream = create_stream(hass, STREAM_SOURCE)
+    hls = stream.add_provider("hls")
+
+    hls.put(Segment(1, SEQUENCE_BYTES, DURATION))
+    await hass.async_block_till_done()
+    assert HlsPlaylistView.render_playlist(hls) == [
+        "#EXT-X-MEDIA-SEQUENCE:1",
+        "#EXTINF:1000.0000,",
+        "./segment/1.m4s",
+    ]
+
+    hls.put(Segment(2, SEQUENCE_BYTES, DURATION))
+    await hass.async_block_till_done()
+    assert HlsPlaylistView.render_playlist(hls) == [
+        "#EXT-X-MEDIA-SEQUENCE:1",
+        "#EXTINF:1000.0000,",
+        "./segment/1.m4s",
+        "#EXTINF:1000.0000,",
+        "./segment/2.m4s",
+    ]
+
+    hls.put(Segment(3, SEQUENCE_BYTES, DURATION))
+    await hass.async_block_till_done()
+    assert HlsPlaylistView.render_playlist(hls) == [
+        "#EXT-X-MEDIA-SEQUENCE:1",
+        "#EXTINF:1000.0000,",
+        "./segment/1.m4s",
+        "#EXTINF:1000.0000,",
+        "./segment/2.m4s",
+        "#EXTINF:1000.0000,",
+        "./segment/3.m4s",
+    ]
+
+    hls.put(Segment(4, SEQUENCE_BYTES, DURATION))
+    await hass.async_block_till_done()
+    assert HlsPlaylistView.render_playlist(hls) == [
+        "#EXT-X-MEDIA-SEQUENCE:2",
+        "#EXTINF:1000.0000,",
+        "./segment/2.m4s",
+        "#EXTINF:1000.0000,",
+        "./segment/3.m4s",
+        "#EXTINF:1000.0000,",
+        "./segment/4.m4s",
+    ]
