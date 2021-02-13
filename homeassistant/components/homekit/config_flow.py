@@ -160,6 +160,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle a flow initialized by zeroconf discovery."""
+        if self._async_current_entries():
+            return self.async_abort(reason="already_configured")
         await self.async_set_unique_id(DEFAULT_DISCOVERY_UNIQUE_ID)
         self._abort_if_unique_id_configured()
         self.context["title_placeholders"] = {
