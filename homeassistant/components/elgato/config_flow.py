@@ -35,7 +35,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         self.port = user_input[CONF_PORT]
 
         try:
-            await self._get_elgato_serial_number()
+            await self._get_elgato_serial_number(raise_on_progress=False)
         except ElgatoError:
             return self._async_show_setup_form({"base": "cannot_connect"})
 
@@ -91,7 +91,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _get_elgato_serial_number(self) -> None:
+    async def _get_elgato_serial_number(self, raise_on_progress: bool = True) -> None:
         """Get device information from an Elgato Key Light device."""
         session = async_get_clientsession(self.hass)
         elgato = Elgato(
@@ -102,7 +102,9 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         info = await elgato.info()
 
         # Check if already configured
-        await self.async_set_unique_id(info.serial_number)
+        await self.async_set_unique_id(
+            info.serial_number, raise_on_progress=raise_on_progress
+        )
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self.host, CONF_PORT: self.port}
         )

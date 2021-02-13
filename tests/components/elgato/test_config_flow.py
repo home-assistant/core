@@ -23,6 +23,18 @@ async def test_full_user_flow_implementation(
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
+    # Start a discovered configuration flow, to guarantee a user flow doesn't abort
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_ZEROCONF},
+        data={
+            "host": "127.0.0.1",
+            "hostname": "example.local.",
+            "port": 9123,
+            "properties": {},
+        },
+    )
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
