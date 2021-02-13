@@ -6,11 +6,7 @@ import requests_mock
 
 from homeassistant import data_entry_flow
 from homeassistant.components.aemet.const import DOMAIN
-from homeassistant.config_entries import (
-    ENTRY_STATE_LOADED,
-    ENTRY_STATE_NOT_LOADED,
-    SOURCE_USER,
-)
+from homeassistant.config_entries import ENTRY_STATE_LOADED, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 import homeassistant.util.dt as dt_util
 
@@ -80,7 +76,15 @@ async def test_form_duplicated_id(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
-        
+
+        assert result["type"] == "create_entry"
+
+        entry.add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
+
         assert result["type"] == "abort"
         assert result["reason"] == "already_configured"
 
