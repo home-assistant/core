@@ -1,6 +1,9 @@
 # Home Assistant Core, full dependency set
 -r requirements.txt
 
+# homeassistant.components.aemet
+AEMET-OpenData==0.1.8
+
 # homeassistant.components.dht
 # Adafruit-DHT==1.4.0
 
