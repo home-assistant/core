@@ -20,6 +20,46 @@ from homeassistant.const import (
 from .conftest import base_test
 
 
+@pytest.mark.parametrize("do_options", [False, True])
+@pytest.mark.parametrize("read_type", [CALL_TYPE_COIL, CONF_REGISTER])
+async def test_config_switch(hass, do_options, read_type):
+    """Run test for switch."""
+    device_name = "test_switch"
+
+    if read_type == CONF_REGISTER:
+        device_config = {
+            CONF_NAME: device_name,
+            CONF_REGISTER: 1234,
+            CONF_SLAVE: 1,
+            CONF_COMMAND_OFF: 0x00,
+            CONF_COMMAND_ON: 0x01,
+        }
+        array_type = CONF_REGISTERS
+    else:
+        device_config = {
+            CONF_NAME: device_name,
+            read_type: 1234,
+            CONF_SLAVE: 10,
+        }
+        array_type = CONF_COILS
+    if do_options:
+        device_config.update({})
+
+    await base_test(
+        hass,
+        device_config,
+        device_name,
+        SWITCH_DOMAIN,
+        None,
+        array_type,
+        None,
+        None,
+        method_discovery=False,
+        check_config_only=True,
+        scan_interval=5,
+    )
+
+
 @pytest.mark.parametrize(
     "regs,expected",
     [
@@ -49,17 +89,20 @@ async def test_coil_switch(hass, regs, expected):
     """Run test for given config."""
     switch_name = "modbus_test_switch"
     await base_test(
-        switch_name,
         hass,
         {
-            CONF_COILS: [
-                {CONF_NAME: switch_name, CALL_TYPE_COIL: 1234, CONF_SLAVE: 1},
-            ]
+            CONF_NAME: switch_name,
+            CALL_TYPE_COIL: 1234,
+            CONF_SLAVE: 1,
         },
+        switch_name,
         SWITCH_DOMAIN,
-        5,
+        None,
+        CONF_COILS,
         regs,
         expected,
+        method_discovery=False,
+        scan_interval=5,
     )
 
 
@@ -92,23 +135,22 @@ async def test_register_switch(hass, regs, expected):
     """Run test for given config."""
     switch_name = "modbus_test_switch"
     await base_test(
-        switch_name,
         hass,
         {
-            CONF_REGISTERS: [
-                {
-                    CONF_NAME: switch_name,
-                    CONF_REGISTER: 1234,
-                    CONF_SLAVE: 1,
-                    CONF_COMMAND_OFF: 0x00,
-                    CONF_COMMAND_ON: 0x01,
-                },
-            ]
+            CONF_NAME: switch_name,
+            CONF_REGISTER: 1234,
+            CONF_SLAVE: 1,
+            CONF_COMMAND_OFF: 0x00,
+            CONF_COMMAND_ON: 0x01,
         },
+        switch_name,
         SWITCH_DOMAIN,
-        5,
+        None,
+        CONF_REGISTERS,
         regs,
         expected,
+        method_discovery=False,
+        scan_interval=5,
     )
 
 
@@ -133,21 +175,20 @@ async def test_register_state_switch(hass, regs, expected):
     """Run test for given config."""
     switch_name = "modbus_test_switch"
     await base_test(
-        switch_name,
         hass,
         {
-            CONF_REGISTERS: [
-                {
-                    CONF_NAME: switch_name,
-                    CONF_REGISTER: 1234,
-                    CONF_SLAVE: 1,
-                    CONF_COMMAND_OFF: 0x04,
-                    CONF_COMMAND_ON: 0x40,
-                },
-            ]
+            CONF_NAME: switch_name,
+            CONF_REGISTER: 1234,
+            CONF_SLAVE: 1,
+            CONF_COMMAND_OFF: 0x04,
+            CONF_COMMAND_ON: 0x40,
         },
+        switch_name,
         SWITCH_DOMAIN,
-        5,
+        None,
+        CONF_REGISTERS,
         regs,
         expected,
+        method_discovery=False,
+        scan_interval=5,
     )

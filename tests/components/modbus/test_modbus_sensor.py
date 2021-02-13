@@ -18,9 +18,45 @@ from homeassistant.components.modbus.const import (
     DATA_TYPE_UINT,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_NAME, CONF_OFFSET
+from homeassistant.const import CONF_NAME, CONF_OFFSET, CONF_SLAVE
 
 from .conftest import base_test
+
+
+@pytest.mark.parametrize("do_options", [False, True])
+async def test_config_sensor(hass, do_options):
+    """Run test for sensor."""
+    sensor_name = "test_sensor"
+    config_sensor = {
+        CONF_NAME: sensor_name,
+        CONF_REGISTER: 51,
+    }
+    if do_options:
+        config_sensor.update(
+            {
+                CONF_SLAVE: 10,
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: "int",
+                CONF_PRECISION: 0,
+                CONF_SCALE: 1,
+                CONF_REVERSE_ORDER: False,
+                CONF_OFFSET: 0,
+                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+            }
+        )
+    await base_test(
+        hass,
+        config_sensor,
+        sensor_name,
+        SENSOR_DOMAIN,
+        None,
+        CONF_REGISTERS,
+        None,
+        None,
+        method_discovery=False,
+        check_config_only=True,
+        scan_interval=5,
+    )
 
 
 @pytest.mark.parametrize(
@@ -237,15 +273,14 @@ async def test_all_sensor(hass, cfg, regs, expected):
     """Run test for sensor."""
     sensor_name = "modbus_test_sensor"
     await base_test(
-        sensor_name,
         hass,
-        {
-            CONF_REGISTERS: [
-                dict(**{CONF_NAME: sensor_name, CONF_REGISTER: 1234}, **cfg)
-            ]
-        },
+        {CONF_NAME: sensor_name, CONF_REGISTER: 1234, **cfg},
+        sensor_name,
         SENSOR_DOMAIN,
-        5,
+        None,
+        CONF_REGISTERS,
         regs,
         expected,
+        method_discovery=False,
+        scan_interval=5,
     )

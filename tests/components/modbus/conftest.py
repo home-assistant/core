@@ -33,43 +33,29 @@ class ReadResult:
 
 
 async def base_test(
-    sensor_name,
     hass,
-    data_array,
+    config_device,
+    device_name,
     entity_domain,
-    scan_interval,
+    array_name_discovery,
+    array_name_old_config,
     register_words,
     expected,
     method_discovery=False,
+    check_config_only=False,
+    config_modbus=None,
+    scan_interval=None,
 ):
     """Run test on device for given config."""
 
-    # Full sensor configuration
-    if method_discovery:
-        config = {
-            DOMAIN: {
-                CONF_NAME: DEFAULT_HUB,
-                CONF_TYPE: "tcp",
-                CONF_HOST: "modbusTest",
-                CONF_PORT: 5001,
-                **data_array,
-            },
-        }
-    else:
-        config = {
+    if config_modbus is None:
+        config_modbus = {
             DOMAIN: {
                 CONF_NAME: DEFAULT_HUB,
                 CONF_TYPE: "tcp",
                 CONF_HOST: "modbusTest",
                 CONF_PORT: 5001,
             },
-        }
-        configDeviceOLD = {
-            entity_domain: {
-                CONF_PLATFORM: DOMAIN,
-                CONF_SCAN_INTERVAL: scan_interval,
-                **data_array,
-            }
         }
 
     mock_sync = mock.MagicMock()
@@ -92,36 +78,55 @@ async def base_test(
         # mock timer and add modbus platform with devices (new config)
         now = dt_util.utcnow()
         with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
-            # setup modbus platform
             if method_discovery:
+                # setup modbus which in turn does setup for the devices
+                if config_device is not None:
+                    config_modbus[DOMAIN].update(
+                        {array_name_discovery: [{**config_device}]}
+                    )
                 await async_load_platform(
-                    hass, entity_domain, DOMAIN, config[DOMAIN], config
+                    hass, DOMAIN, DOMAIN, config_modbus[DOMAIN], config_modbus
                 )
             else:
                 # first add modbus platform using old config
-                assert await async_setup_component(hass, DOMAIN, config)
-                await hass.async_block_till_done()
+                assert await async_setup_component(hass, DOMAIN, config_modbus)
 
                 # setup component old style
-                assert await async_setup_component(
-                    hass,
-                    entity_domain,
-                    configDeviceOLD,
-                )
-
+                if config_device is not None:
+                    config_device = {
+                        entity_domain: {
+                            CONF_PLATFORM: DOMAIN,
+                            array_name_old_config: [
+                                {
+                                    **config_device,
+                                }
+                            ],
+                        }
+                    }
+                    if scan_interval is not None:
+                        config_device[entity_domain][CONF_SCAN_INTERVAL] = scan_interval
+                    await hass.async_block_till_done()
+                    assert await async_setup_component(
+                        hass, entity_domain, config_device
+                    )
             await hass.async_block_till_done()
 
-        entity_id = f"{entity_domain}.{sensor_name}"
-        device = hass.states.get(entity_id)
-        if device is None:
-            pytest.fail("CONFIG failed, see output")
+        assert DOMAIN in hass.data
+        if config_device is not None:
+            entity_id = f"{entity_domain}.{device_name}"
+            device = hass.states.get(entity_id)
+            if device is None:
+                pytest.fail("CONFIG failed, see output")
+        if check_config_only:
+            return
 
         # Trigger update call with time_changed event
-        now = now + timedelta(seconds=scan_interval + 1)
+        now = now + timedelta(seconds=scan_interval + 60)
         with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
             async_fire_time_changed(hass, now)
             await hass.async_block_till_done()
 
         # Check state
+        entity_id = f"{entity_domain}.{device_name}"
         state = hass.states.get(entity_id).state
         assert state == expected

@@ -8,74 +8,79 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_INPUTS,
 )
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_SLAVE, STATE_OFF, STATE_ON
 
 from .conftest import base_test
 
 
+@pytest.mark.parametrize("do_options", [False, True])
+async def test_config_binary_sensor(hass, do_options):
+    """Run test for binary sensor."""
+    sensor_name = "test_sensor"
+    config_sensor = {
+        CONF_NAME: sensor_name,
+        CONF_ADDRESS: 51,
+    }
+    if do_options:
+        config_sensor.update(
+            {
+                CONF_SLAVE: 10,
+                CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
+            }
+        )
+    await base_test(
+        hass,
+        config_sensor,
+        sensor_name,
+        SENSOR_DOMAIN,
+        None,
+        CONF_INPUTS,
+        None,
+        None,
+        method_discovery=False,
+        check_config_only=True,
+        scan_interval=5,
+    )
+
+
+@pytest.mark.parametrize("do_type", [CALL_TYPE_COIL, CALL_TYPE_DISCRETE])
 @pytest.mark.parametrize(
-    "cfg,regs,expected",
+    "regs,expected",
     [
         (
-            {
-                CONF_INPUT_TYPE: CALL_TYPE_COIL,
-            },
             [0xFF],
             STATE_ON,
         ),
         (
-            {
-                CONF_INPUT_TYPE: CALL_TYPE_COIL,
-            },
             [0x01],
             STATE_ON,
         ),
         (
-            {
-                CONF_INPUT_TYPE: CALL_TYPE_COIL,
-            },
             [0x00],
             STATE_OFF,
         ),
         (
-            {
-                CONF_INPUT_TYPE: CALL_TYPE_COIL,
-            },
             [0x80],
             STATE_OFF,
         ),
         (
-            {
-                CONF_INPUT_TYPE: CALL_TYPE_COIL,
-            },
             [0xFE],
-            STATE_OFF,
-        ),
-        (
-            {
-                CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
-            },
-            [0xFF],
-            STATE_ON,
-        ),
-        (
-            {
-                CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
-            },
-            [0x00],
             STATE_OFF,
         ),
     ],
 )
-async def test_all_binary_sensor(hass, cfg, regs, expected):
+async def test_all_binary_sensor(hass, do_type, regs, expected):
     """Run test for given config."""
     sensor_name = "modbus_test_binary_sensor"
     await base_test(
-        sensor_name,
         hass,
-        {CONF_INPUTS: [dict(**{CONF_NAME: sensor_name, CONF_ADDRESS: 1234}, **cfg)]},
+        {CONF_NAME: sensor_name, CONF_ADDRESS: 1234, CONF_INPUT_TYPE: do_type},
+        sensor_name,
         SENSOR_DOMAIN,
-        5,
+        None,
+        CONF_INPUTS,
         regs,
         expected,
+        method_discovery=False,
+        scan_interval=5,
     )
