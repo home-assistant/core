@@ -45,8 +45,8 @@ async def test_form(hass):
         assert result["step_id"] == SOURCE_USER
         assert result["errors"] == {}
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], CONFIG
         )
 
         await hass.async_block_till_done()
@@ -77,18 +77,12 @@ async def test_form_duplicated_id(hass):
         entry = MockConfigEntry(domain=DOMAIN, unique_id="aemet_unique_id", data=CONFIG)
         entry.add_to_hass(hass)
 
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        assert entry.state == ENTRY_STATE_LOADED
-
-        entry_dup = MockConfigEntry(
-            domain=DOMAIN, unique_id="aemet_unique_id", data=CONFIG
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
-        entry_dup.add_to_hass(hass)
-
-        await hass.config_entries.async_unload(entry_dup.entry_id)
-        await hass.async_block_till_done()
-        assert entry_dup.state == ENTRY_STATE_NOT_LOADED
+        
+        assert result["type"] == "abort"
+        assert result["reason" == "already_configured"
 
 
 async def test_form_api_offline(hass):
