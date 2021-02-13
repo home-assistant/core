@@ -614,6 +614,9 @@ fitbit==0.3.1
 # homeassistant.components.fixer
 fixerio==1.0.0a0
 
+# homeassistant.components.flipr
+flipr-api==1.1.0
+
 # homeassistant.components.flux_led
 flux_led==0.22
 
