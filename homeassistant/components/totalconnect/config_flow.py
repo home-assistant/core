@@ -120,6 +120,7 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(self, user_input=None):
         """Dialog that informs the user that reauth is required."""
+        errors = {}
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
@@ -134,8 +135,10 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if not client.is_valid_credentials():
+            errors["base"] = "invalid_auth"
             return self.async_show_form(
                 step_id="reauth_confirm",
+                errors=errors,
                 data_schema=PASSWORD_DATA_SCHEMA,
             )
 

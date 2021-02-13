@@ -101,6 +101,17 @@ async def test_reauth(hass):
     with patch(
         "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
     ) as client_mock:
+        # first test with an invalid password
+        client_mock.return_value.is_valid_credentials.return_value = False
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PASSWORD: "password"}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] == {"base": "invalid_auth"}
+
+        # now test with the password valid
         client_mock.return_value.is_valid_credentials.return_value = True
 
         result = await hass.config_entries.flow.async_configure(
