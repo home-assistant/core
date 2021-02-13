@@ -495,7 +495,7 @@ async def test_homekit_start(hass, hk_driver, device_reg):
     state = hass.states.async_all()[0]
 
     with patch(f"{PATH_HOMEKIT}.HomeKit.add_bridge_accessory") as mock_add_acc, patch(
-        f"{PATH_HOMEKIT}.show_setup_message"
+        f"{PATH_HOMEKIT}.async_start_pairing_flow"
     ) as mock_setup_msg, patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory"
     ) as hk_driver_add_acc, patch(
@@ -530,7 +530,7 @@ async def test_homekit_start(hass, hk_driver, device_reg):
     # Start again to make sure the registry entry is kept
     homekit.status = STATUS_READY
     with patch(f"{PATH_HOMEKIT}.HomeKit.add_bridge_accessory") as mock_add_acc, patch(
-        f"{PATH_HOMEKIT}.show_setup_message"
+        f"{PATH_HOMEKIT}.async_start_pairing_flow"
     ) as mock_setup_msg, patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory"
     ) as hk_driver_add_acc, patch(
@@ -568,7 +568,7 @@ async def test_homekit_start_with_a_broken_accessory(hass, hk_driver, mock_zeroc
     hass.states.async_set("light.broken", "on")
 
     with patch(f"{PATH_HOMEKIT}.get_accessory", side_effect=Exception), patch(
-        f"{PATH_HOMEKIT}.show_setup_message"
+        f"{PATH_HOMEKIT}.async_start_pairing_flow"
     ) as mock_setup_msg, patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory",
     ) as hk_driver_add_acc, patch(
@@ -681,7 +681,7 @@ async def test_homekit_too_many_accessories(hass, hk_driver, caplog, mock_zeroco
 
     with patch("pyhap.accessory_driver.AccessoryDriver.start_service"), patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory"
-    ), patch(f"{PATH_HOMEKIT}.show_setup_message"), patch(
+    ), patch(f"{PATH_HOMEKIT}.async_start_pairing_flow"), patch(
         f"{PATH_HOMEKIT}.HomeBridge", _mock_bridge
     ):
         await homekit.async_start()
@@ -741,7 +741,7 @@ async def test_homekit_finds_linked_batteries(
     hass.states.async_set(light.entity_id, STATE_ON)
 
     with patch.object(homekit.bridge, "add_accessory"), patch(
-        f"{PATH_HOMEKIT}.show_setup_message"
+        f"{PATH_HOMEKIT}.async_start_pairing_flow"
     ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
         "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
@@ -813,7 +813,7 @@ async def test_homekit_async_get_integration_fails(
     hass.states.async_set(light.entity_id, STATE_ON)
 
     with patch.object(homekit.bridge, "add_accessory"), patch(
-        f"{PATH_HOMEKIT}.show_setup_message"
+        f"{PATH_HOMEKIT}.async_start_pairing_flow"
     ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
         "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
@@ -1031,7 +1031,7 @@ async def test_homekit_ignored_missing_devices(
     hass.states.async_set("light.two", STATE_ON)
 
     with patch.object(homekit.bridge, "add_accessory"), patch(
-        f"{PATH_HOMEKIT}.show_setup_message"
+        f"{PATH_HOMEKIT}.async_start_pairing_flow"
     ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
         "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
@@ -1093,7 +1093,7 @@ async def test_homekit_finds_linked_motion_sensors(
     hass.states.async_set(camera.entity_id, STATE_ON)
 
     with patch.object(homekit.bridge, "add_accessory"), patch(
-        f"{PATH_HOMEKIT}.show_setup_message"
+        f"{PATH_HOMEKIT}.async_start_pairing_flow"
     ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
         "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
@@ -1158,7 +1158,7 @@ async def test_homekit_finds_linked_humidity_sensors(
     hass.states.async_set(humidifier.entity_id, STATE_ON)
 
     with patch.object(homekit.bridge, "add_accessory"), patch(
-        f"{PATH_HOMEKIT}.show_setup_message"
+        f"{PATH_HOMEKIT}.async_start_pairing_flow"
     ), patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc, patch(
         "pyhap.accessory_driver.AccessoryDriver.start_service"
     ):
@@ -1219,7 +1219,7 @@ async def test_reload(hass, mock_zeroconf):
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch(
         f"{PATH_HOMEKIT}.HomeKit"
     ) as mock_homekit2, patch.object(homekit.bridge, "add_accessory"), patch(
-        f"{PATH_HOMEKIT}.show_setup_message"
+        f"{PATH_HOMEKIT}.async_start_pairing_flow"
     ), patch(
         f"{PATH_HOMEKIT}.get_accessory"
     ), patch(
@@ -1274,7 +1274,7 @@ async def test_homekit_start_in_accessory_mode(hass, hk_driver, device_reg):
 
     with patch(f"{PATH_HOMEKIT}.HomeKit.add_bridge_accessory") as mock_add_acc, patch(
         "pyhap.accessory_driver.AccessoryDriver.add_accessory"
-    ), patch(f"{PATH_HOMEKIT}.show_setup_message") as mock_setup_msg, patch(
+    ), patch(f"{PATH_HOMEKIT}.async_start_pairing_flow") as mock_setup_msg, patch(
         "pyhap.accessory_driver.AccessoryDriver.start_service"
     ) as hk_driver_start:
         await homekit.async_start()
