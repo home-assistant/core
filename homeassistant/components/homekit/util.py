@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_TYPE,
     TEMP_CELSIUS,
 )
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.util.temperature as temp_util
@@ -316,7 +316,8 @@ def validate_media_player_features(state, feature_list):
     return True
 
 
-def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
+@callback
+def async_start_pairing_flow(hass, entry_id, title, pincode, uri):
     """Display persistent notification with setup information."""
     pin = pincode.decode()
     _LOGGER.info("Pincode: %s", pin)
@@ -326,21 +327,36 @@ def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
     url.svg(buffer, scale=5, module_color="#000", background="#FFF")
     pairing_secret = secrets.token_hex(32)
 
-    hass.data[DOMAIN][entry_id][HOMEKIT_PAIRING_QR] = buffer.getvalue()
-    hass.data[DOMAIN][entry_id][HOMEKIT_PAIRING_QR_SECRET] = pairing_secret
+    data = hass.data[DOMAIN][entry_id]
+    data[HOMEKIT_PAIRING_QR] = buffer.getvalue()
+    data[HOMEKIT_PAIRING_QR_SECRET] = pairing_secret
 
-    message = (
-        f"To set up {bridge_name} in the Home App, "
-        f"scan the QR code or enter the following code:\n"
-        f"### {pin}\n"
-        f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "pairing"},
+            data={
+                "entry_id": entry_id,
+                "title": title,
+                "pin": pin,
+                "pairing_secret": pairing_secret,
+            },
+        )
     )
-    hass.components.persistent_notification.create(message, "HomeKit Pairing", entry_id)
 
 
-def dismiss_setup_message(hass, entry_id):
+@callback
+def async_abort_pairing_flow(hass, entry_id):
     """Dismiss persistent notification and remove QR code."""
-    hass.components.persistent_notification.dismiss(entry_id)
+    for flow in hass.config_entries.flow.async_progress():
+        _LOGGER.debug("Flow: %s", flow)
+        if flow["handler"] != DOMAIN:
+            continue
+
+        if flow["context"]["source"] != "pairing":
+            continue
+
+        hass.config_entries.flow.async_abort(flow["flow_id"])
 
 
 def convert_to_float(state):
