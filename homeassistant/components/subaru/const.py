@@ -40,7 +40,7 @@ ICONS = {
     "EV Time to Full Charge": "mdi:car-electric",
     "EV Range": "mdi:ev-station",
     "External Temp": "mdi:thermometer",
-    "Odometer": "mdi:counter",
+    "Odometer": "mdi:road-variant",
     "Range": "mdi:gas-station",
     "Tire Pressure FL": "mdi:gauge",
     "Tire Pressure FR": "mdi:gauge",

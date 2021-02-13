@@ -1,4 +1,4 @@
-"""Support for the Subaru sensors."""
+"""Support for Subaru sensors."""
 from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_MILES,
@@ -10,6 +10,7 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
+from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.distance import convert as dist_convert
 from homeassistant.util.unit_system import (
     IMPERIAL_SYSTEM,
@@ -46,6 +47,15 @@ SENSOR_UNITS = "units"
 # Sensor data available to "Subaru Safety Plus" subscribers with Gen1 or Gen2 vehicles
 SAFETY_SENSORS = [
     {
+        SENSOR_NAME: "Odometer",
+        SENSOR_FIELD: sc.ODOMETER,
+        SENSOR_UNITS: LENGTH_KILOMETERS,
+    },
+]
+
+# Sensor data available to "Subaru Safety Plus" subscribers with Gen2 vehicles
+API_GEN_2_SENSORS = [
+    {
         SENSOR_NAME: "Avg Fuel Consumption",
         SENSOR_FIELD: sc.AVG_FUEL_CONSUMPTION,
         SENSOR_UNITS: FUEL_CONSUMPTION_L_PER_100KM,
@@ -53,11 +63,6 @@ SAFETY_SENSORS = [
     {
         SENSOR_NAME: "Range",
         SENSOR_FIELD: sc.DIST_TO_EMPTY,
-        SENSOR_UNITS: LENGTH_KILOMETERS,
-    },
-    {
-        SENSOR_NAME: "Odometer",
-        SENSOR_FIELD: sc.ODOMETER,
         SENSOR_UNITS: LENGTH_KILOMETERS,
     },
     {
@@ -80,10 +85,6 @@ SAFETY_SENSORS = [
         SENSOR_FIELD: sc.TIRE_PRESSURE_RR,
         SENSOR_UNITS: PRESSURE_HPA,
     },
-]
-
-# Sensor data available to "Subaru Safety Plus" subscribers with Gen2 vehicles
-API_GEN_2_SENSORS = [
     {
         SENSOR_NAME: "External Temp",
         SENSOR_FIELD: sc.EXTERNAL_TEMP,
@@ -162,6 +163,19 @@ class SubaruSensor(SubaruEntity):
         self.api_unit = api_unit
 
     @property
+    def icon(self):
+        """Return icon for sensor."""
+        if self.title == "EV Battery Level" and self.coordinator.data.get(self.vin):
+            charge_status = (
+                self.coordinator.data[self.vin]["status"].get(sc.EV_CHARGER_STATE_TYPE)
+                == "CHARGING"
+            )
+            return icon_for_battery_level(
+                battery_level=self.current_value, charging=charge_status
+            )
+        return super().icon
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         self.current_value = self.get_current_value()
@@ -215,12 +229,13 @@ class SubaruSensor(SubaruEntity):
 
     def get_current_value(self):
         """Get raw value from the coordinator."""
-        value = self.coordinator.data[self.vin]["status"][self.data_field]
-        if value in sc.BAD_SENSOR_VALUES:
-            value = None
-        if isinstance(value, str):
-            if "." in value:
-                value = float(value)
-            else:
-                value = int(value)
-        return value
+        if self.coordinator.data.get(self.vin):
+            value = self.coordinator.data[self.vin]["status"].get(self.data_field)
+            if value in sc.BAD_SENSOR_VALUES:
+                value = None
+            if isinstance(value, str):
+                if "." in value:
+                    value = float(value)
+                else:
+                    value = int(value)
+            return value

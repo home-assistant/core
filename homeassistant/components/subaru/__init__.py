@@ -19,7 +19,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from subarulink import Controller as SubaruAPI, SubaruException
 
 from .const import (
-    API_GEN_2,
     CONF_HARD_POLL_INTERVAL,
     COORDINATOR_NAME,
     DEFAULT_HARD_POLL_INTERVAL,
@@ -78,7 +77,7 @@ async def async_setup_entry(hass, entry):
         try:
             return await subaru_update(vehicle_info, controller)
         except SubaruException as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(err.message) from err
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -167,32 +166,32 @@ async def subaru_update(vehicle_info, controller):
     data = {}
 
     for vehicle in vehicle_info.values():
-        # Only g2 api vehicles have data updates
-        if vehicle[VEHICLE_API_GEN] != API_GEN_2:
+        vin = vehicle[VEHICLE_VIN]
+
+        # Active subscription required
+        if not vehicle[VEHICLE_HAS_SAFETY_SERVICE]:
             continue
 
-        # Refresh subarulink locally cached data with subaru API
+        # Poll vehicle (throttled with update_interval)
         await refresh_subaru_data(vehicle, controller)
 
-        # Gets subarulink locally cached data
-        vin = vehicle[VEHICLE_VIN]
+        # Fetch data from Subaru servers
+        await controller.fetch(vin, force=True)
+
+        # Update our local data that will go to entity states
         data[vin] = await controller.get_data(vin)
 
     return data
 
 
 async def refresh_subaru_data(vehicle, controller):
-    """Refresh locally stored cached data with data from subaru API."""
+    """Commands remote vehicle update (polls the vehicle to update subaru API cache)."""
     cur_time = time.time()
     last_update = vehicle[VEHICLE_LAST_UPDATE]
 
     if cur_time - last_update > controller.get_update_interval():
-        # Commands remote vehicle update (polls the vehicle to update subaru API cache)
         await controller.update(vehicle[VEHICLE_VIN], force=True)
         vehicle[VEHICLE_LAST_UPDATE] = cur_time
-    else:
-        # Performs fetch of subaru API cached data
-        await controller.fetch(vehicle[VEHICLE_VIN], force=True)
 
 
 def get_vehicle_info(controller, vin):

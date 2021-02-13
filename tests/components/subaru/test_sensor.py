@@ -14,7 +14,7 @@ from homeassistant.components.subaru.sensor import (
     SENSOR_NAME,
 )
 from homeassistant.util import slugify
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .api_responses import (
     EXPECTED_STATE_EV_IMPERIAL,
@@ -43,15 +43,7 @@ async def test_sensors_ev_imperial(hass, ev_entry):
 
 async def test_sensors_ev_metric(hass, ev_entry):
     """Test sensors supporting metric units."""
-    with patch("homeassistant.components.subaru.config_flow.SubaruAPI.fetch"), patch(
-        "homeassistant.components.subaru.config_flow.SubaruAPI.get_data",
-        return_value=VEHICLE_STATUS_EV,
-    ):
-        hass.config.units = METRIC_SYSTEM
-        coordinator = hass.data[DOMAIN][ev_entry.entry_id][ENTRY_COORDINATOR]
-        await coordinator.async_refresh()
-        await hass.async_block_till_done()
-        _assert_data(hass, EXPECTED_STATE_EV_METRIC)
+    _assert_data(hass, EXPECTED_STATE_EV_METRIC)
 
 
 def _assert_data(hass, expected_state):
