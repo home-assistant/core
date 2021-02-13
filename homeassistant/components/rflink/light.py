@@ -221,7 +221,6 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         return SUPPORT_BRIGHTNESS
 
 
-# class HybridRflinkLight(SwitchableRflinkDevice, LightEntity):
 class HybridRflinkLight(DimmableRflinkLight, LightEntity):
     """Rflink light device that sends out both dim and on/off commands.
 
@@ -244,65 +243,6 @@ class HybridRflinkLight(DimmableRflinkLight, LightEntity):
         # will ensure it is turned on when full brightness is set
         if self.brightness == 255:
             await super()._async_handle_command("turn_on")
-
-    # _brightness = 255
-
-    # async def async_added_to_hass(self):
-    #     """Restore RFLink light brightness attribute."""
-    #     await super().async_added_to_hass()
-
-    #     old_state = await self.async_get_last_state()
-    #     if (
-    #         old_state is not None
-    #         and old_state.attributes.get(ATTR_BRIGHTNESS) is not None
-    #     ):
-    #         # restore also brightness in dimmables devices
-    #         self._brightness = int(old_state.attributes[ATTR_BRIGHTNESS])
-
-    # async def async_turn_on(self, **kwargs):
-    #     """Turn the device on and set dim level."""
-    #     if ATTR_BRIGHTNESS in kwargs:
-    #         # rflink only support 16 brightness levels
-    #         self._brightness = int(kwargs[ATTR_BRIGHTNESS] / 17) * 17
-
-    #     # if receiver supports dimming this will turn on the light
-    #     # at the requested dim level
-    #     await self._async_handle_command("dim", self._brightness)
-
-    #     # if the receiving device does not support dimlevel this
-    #     # will ensure it is turned on when full brightness is set
-    #     if self._brightness == 255:
-    #         await self._async_handle_command("turn_on")
-
-    # def _handle_event(self, event):
-    #     """Adjust state if Rflink picks up a remote command for this device."""
-    #     self.cancel_queued_send_commands()
-
-    #     command = event["command"]
-    #     if command in ["on", "allon"]:
-    #         self._state = True
-    #     elif command in ["off", "alloff"]:
-    #         self._state = False
-    #     elif re.search('^set_level=(0?[0-9]|1[0-5])$', command, re.IGNORECASE):
-    #         self._brightness = int(command.split('=')[1]) * 17
-    #         self._state = True
-
-    # @property
-    # def brightness(self):
-    #     """Return the brightness of this light between 0..255."""
-    #     return self._brightness
-
-    # @property
-    # def device_state_attributes(self):
-    #     """Return the device state attributes."""
-    #     if self._brightness is None:
-    #         return {}
-    #     return {ATTR_BRIGHTNESS: self._brightness}
-
-    # @property
-    # def supported_features(self):
-    #     """Flag supported features."""
-    #     return SUPPORT_BRIGHTNESS
 
 
 class ToggleRflinkLight(SwitchableRflinkDevice, LightEntity):
