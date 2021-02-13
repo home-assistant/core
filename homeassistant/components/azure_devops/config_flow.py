@@ -95,7 +95,6 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             self._project = user_input[CONF_PROJECT]
         self._pat = user_input[CONF_PAT]
 
-        # pylint: disable=no-member
         self.context["title_placeholders"] = {
             "project_url": f"{self._organization}/{self._project}",
         }

@@ -56,7 +56,6 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """
 
         if config is not None and CONF_MIGRATE in config:
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             self.context.update({CONF_MIGRATE: config[CONF_MIGRATE]})
         else:
             await self._async_handle_discovery_without_unique_id()
@@ -87,10 +86,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return await self._create_entry(self.agreements[agreement_index])
 
     async def _create_entry(self, agreement: Agreement) -> Dict[str, Any]:
-        if (  # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-            CONF_MIGRATE in self.context
-        ):
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        if CONF_MIGRATE in self.context:
             await self.hass.config_entries.async_remove(self.context[CONF_MIGRATE])
 
         await self.async_set_unique_id(agreement.agreement_id)

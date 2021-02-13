@@ -230,10 +230,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         entry = await self.async_set_unique_id(server_id)
-        if (
-            self.context[CONF_SOURCE]  # pylint: disable=no-member
-            == config_entries.SOURCE_REAUTH
-        ):
+        if self.context[CONF_SOURCE] == config_entries.SOURCE_REAUTH:
             self.hass.config_entries.async_update_entry(entry, data=data)
             _LOGGER.debug("Updated config entry for %s", plex_server.friendly_name)
             await self.hass.config_entries.async_reload(entry.entry_id)
@@ -280,7 +277,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         host = f"{discovery_info['from'][0]}:{discovery_info['data']['Port']}"
         name = discovery_info["data"]["Name"]
-        self.context["title_placeholders"] = {  # pylint: disable=no-member
+        self.context["title_placeholders"] = {
             "host": host,
             "name": name,
         }

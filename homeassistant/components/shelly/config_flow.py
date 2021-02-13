@@ -166,7 +166,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except HTTP_CONNECT_ERRORS:
                 return self.async_abort(reason="cannot_connect")
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             "name": zeroconf_info.get("name", "").split(".")[0]
         }

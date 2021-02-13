@@ -79,7 +79,6 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery_info.get(ATTR_UPNP_SERIAL):
             receiver_id = discovery_info[ATTR_UPNP_SERIAL][4:]  # strips off RID-
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {"name": host}})
 
         self.discovery_info.update(

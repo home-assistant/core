@@ -48,12 +48,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @property
     def _name(self):
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         return self.context.get(CONF_NAME)
 
     @_name.setter
     def _name(self, value):
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context[CONF_NAME] = value
         self.context["title_placeholders"] = {"name": self._name}
 

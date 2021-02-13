@@ -62,7 +62,6 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input and user_input.get(CONF_USERNAME):
             self.username = user_input[CONF_USERNAME]
 
-        # pylint: disable=no-member
         self.context["title_placeholders"] = {CONF_USERNAME: self.username}
 
         if user_input is not None and user_input.get(CONF_PASSWORD) is not None:

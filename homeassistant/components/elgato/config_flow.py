@@ -63,7 +63,6 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(info.serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
             {
                 CONF_HOST: user_input[CONF_HOST],
@@ -76,7 +75,6 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         # Prepare configuration flow
         return self._show_confirm_dialog()
 
-    # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
     async def async_step_zeroconf_confirm(
         self, user_input: ConfigType = None
     ) -> Dict[str, Any]:
@@ -119,7 +117,6 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def _show_confirm_dialog(self) -> Dict[str, Any]:
         """Show the confirm dialog to the user."""
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         serial_number = self.context.get(CONF_SERIAL_NUMBER)
         return self.async_show_form(
             step_id="zeroconf_confirm",
