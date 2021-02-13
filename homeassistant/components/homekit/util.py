@@ -16,7 +16,6 @@ from homeassistant.components.media_player import (
     DEVICE_CLASS_TV,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
@@ -335,7 +334,7 @@ def async_start_pairing_flow(hass, entry_id, title, pincode, uri):
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_REAUTH},
+            context={"source": "pairing"},
             data={
                 "entry_id": entry_id,
                 "title": title,
@@ -352,7 +351,7 @@ def async_abort_pairing_flow(hass, entry_id):
         if flow["domain"] != DOMAIN:
             continue
 
-        if flow["context"]["source"] != SOURCE_REAUTH:
+        if flow["context"]["source"] != "pairing":
             continue
 
         hass.config_entries.flow.async_abort(flow["flow_id"])
