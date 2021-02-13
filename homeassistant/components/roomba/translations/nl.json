@@ -1,9 +1,33 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken",
+            "not_irobot_device": "Het gevonden apparaat is geen iRobot-apparaat"
+        },
         "error": {
             "cannot_connect": "Verbinding mislukt, probeer het opnieuw"
         },
+        "flow_title": "iRobot {naam} ({host})",
         "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Kies een Roomba of Braava.",
+                "title": "Automatisch verbinding maken met het apparaat"
+            },
+            "link": {
+                "description": "Houd de Home-knop op {naam} ingedrukt totdat het apparaat een geluid genereert (ongeveer twee seconden).",
+                "title": "Wachtwoord opvragen"
+            },
+            "link_manual": {
+                "data": {
+                    "password": "Wachtwoord"
+                },
+                "description": "Het wachtwoord kon niet automatisch van het apparaat worden opgehaald. Volg de stappen zoals beschreven in de documentatie op: {auth_help_url}",
+                "title": "Voer wachtwoord in"
+            },
             "user": {
                 "data": {
                     "blid": "BLID",
