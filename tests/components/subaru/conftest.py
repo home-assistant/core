@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.subaru.const import (
+    CONF_COUNTRY,
     CONF_HARD_POLL_INTERVAL,
     DEFAULT_HARD_POLL_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
@@ -24,25 +25,28 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 from subarulink import InvalidCredentials
+from subarulink.const import COUNTRY_USA
 
 from .api_responses import TEST_VIN_2_EV, VEHICLE_DATA, VEHICLE_STATUS_EV
 
 from tests.common import MockConfigEntry
 
-TEST_USERNAME = "user"
+TEST_USERNAME = "user@email.com"
 TEST_PASSWORD = "password"
 TEST_PIN = "1234"
 TEST_DEVICE_ID = 1613183362
+TEST_COUNTRY = COUNTRY_USA
 
 TEST_CREDS = {
     CONF_USERNAME: TEST_USERNAME,
     CONF_PASSWORD: TEST_PASSWORD,
-    CONF_PIN: TEST_PIN,
+    CONF_COUNTRY: TEST_COUNTRY,
 }
 
 TEST_CONFIG = {
     CONF_USERNAME: TEST_USERNAME,
     CONF_PASSWORD: TEST_PASSWORD,
+    CONF_COUNTRY: TEST_COUNTRY,
     CONF_PIN: TEST_PIN,
     CONF_DEVICE_ID: TEST_DEVICE_ID,
 }

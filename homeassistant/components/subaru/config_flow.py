@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant import config_entries, core
+from homeassistant import config_entries
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_PASSWORD,
@@ -20,9 +20,11 @@ from subarulink import (
     InvalidPIN,
     SubaruException,
 )
+from subarulink.const import COUNTRY_CAN, COUNTRY_USA
 
 # pylint: disable=unused-import
 from .const import (
+    CONF_COUNTRY,
     CONF_HARD_POLL_INTERVAL,
     DEFAULT_HARD_POLL_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
@@ -32,6 +34,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+PIN_SCHEMA = vol.Schema({vol.Required(CONF_PIN): str})
 
 
 class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -39,6 +42,8 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    config_data = {CONF_PIN: None}
+    controller = None
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
@@ -51,17 +56,17 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
             try:
-                info = await validate_input(self.hass, user_input)
+                await self.validate_login_creds(user_input)
             except InvalidCredentials:
                 error = {"base": "invalid_auth"}
-            except InvalidPIN:
-                error = {"base": "invalid_pin"}
             except SubaruException as ex:
                 _LOGGER.error("Unable to communicate with Subaru API: %s", ex.message)
                 return self.async_abort(reason="cannot_connect")
             else:
+                if self.controller.is_pin_required():
+                    return await self.async_step_pin()
                 return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=info
+                    title=user_input[CONF_USERNAME], data=self.config_data
                 )
 
         return self.async_show_form(
@@ -77,8 +82,11 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         default=user_input.get(CONF_PASSWORD) if user_input else "",
                     ): str,
                     vol.Required(
-                        CONF_PIN, default=user_input.get(CONF_PIN) if user_input else ""
-                    ): str,
+                        CONF_COUNTRY,
+                        default=user_input.get(CONF_COUNTRY)
+                        if user_input
+                        else COUNTRY_USA,
+                    ): vol.In([COUNTRY_CAN, COUNTRY_USA]),
                 }
             ),
             errors=error,
@@ -89,6 +97,55 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
+
+    async def validate_login_creds(self, data):
+        """Validate the user input allows us to connect.
+
+        data: contains values provided by the user.
+        """
+        websession = aiohttp_client.async_get_clientsession(self.hass)
+        now = datetime.now()
+        if not data.get(CONF_DEVICE_ID):
+            data[CONF_DEVICE_ID] = int(now.timestamp())
+        date = now.strftime("%Y-%m-%d")
+        device_name = "Home Assistant: Added " + date
+
+        self.controller = SubaruAPI(
+            websession,
+            username=data[CONF_USERNAME],
+            password=data[CONF_PASSWORD],
+            device_id=data[CONF_DEVICE_ID],
+            pin=None,
+            device_name=device_name,
+            country=data[CONF_COUNTRY],
+        )
+        _LOGGER.debug("Using subarulink %s", self.controller.version)
+        _LOGGER.debug(
+            "Setting up first time connection to Subuaru API.  This may take up to 20 seconds."
+        )
+        if await self.controller.connect():
+            _LOGGER.debug("Successfully authenticated and authorized with Subaru API")
+            self.config_data.update(data)
+
+    async def async_step_pin(self, user_input=None):
+        """Handle second part of config flow, if required."""
+        error = None
+        if user_input:
+            if self.controller.update_saved_pin(user_input[CONF_PIN]):
+                try:
+                    vol.Match(r"[0-9]{4}")(user_input[CONF_PIN])
+                    await self.controller.test_pin()
+                    _LOGGER.debug("PIN successfully tested")
+                    self.config_data.update(user_input)
+                except vol.Invalid:
+                    error = {"base": "bad_pin_format"}
+                except InvalidPIN:
+                    error = {"base": "incorrect_pin"}
+                else:
+                    return self.async_create_entry(
+                        title=self.config_data[CONF_USERNAME], data=self.config_data
+                    )
+        return self.async_show_form(step_id="pin", data_schema=PIN_SCHEMA, errors=error)
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
@@ -120,40 +177,3 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)
-
-
-async def validate_input(hass: core.HomeAssistant, data):
-    """Validate the user input allows us to connect.
-
-    data: contains values provided by the user.
-    """
-    websession = aiohttp_client.async_get_clientsession(hass)
-    now = datetime.now()
-    if not data.get(CONF_DEVICE_ID):
-        data[CONF_DEVICE_ID] = int(now.timestamp())
-    date = now.strftime("%Y-%m-%d")
-    device_name = "Home Assistant: Added " + date
-
-    controller = SubaruAPI(
-        websession,
-        username=data[CONF_USERNAME],
-        password=data[CONF_PASSWORD],
-        device_id=data[CONF_DEVICE_ID],
-        pin=data[CONF_PIN],
-        device_name=device_name,
-    )
-    _LOGGER.info(
-        "Setting up first time connection to Subuaru API.  This may take up to 20 seconds."
-    )
-    if await controller.connect():
-        _LOGGER.debug("Successfully authenticated and authorized with Subaru API")
-
-    _LOGGER.debug("Testing user provided PIN with Subaru remote service requests")
-    if await controller.test_pin():
-        _LOGGER.debug("User provided PIN is valid for Subaru remote service requests")
-    else:
-        _LOGGER.info(
-            "No active remote service subscription, PIN number will not be used"
-        )
-
-    return data

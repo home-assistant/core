@@ -3,18 +3,26 @@
     "step": {
       "user": {
         "title": "Subaru Starlink Configuration",
-        "description": "Please enter your MySubaru credentials. NOTE: Initial setup may take up to 30 seconds.",
+        "description": "Please enter your MySubaru credentials\nNOTE: Initial setup may take up to 30 seconds",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "pin": "PIN for Remote Services (Security+ Subcription Required)"
+          "country": "Select country"
+        }
+      },
+      "pin": {
+        "title": "Subaru Starlink Configuration",
+        "description": "Please enter your MySubaru PIN\nNOTE: All vehicles in account must have the same PIN",
+        "data": {
+          "pin": "PIN"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_pin": "Login with username/password succeeded, but PIN invalid.",
+      "incorrect_pin": "Incorrect PIN",
+      "bad_pin_format": "PIN should be 4 digits",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

@@ -19,6 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from subarulink import Controller as SubaruAPI, SubaruException
 
 from .const import (
+    CONF_COUNTRY,
     CONF_HARD_POLL_INTERVAL,
     COORDINATOR_NAME,
     DEFAULT_HARD_POLL_INTERVAL,
@@ -60,10 +61,12 @@ async def async_setup_entry(hass, entry):
             config[CONF_DEVICE_ID],
             config[CONF_PIN],
             None,
+            config[CONF_COUNTRY],
             update_interval=entry.options.get(
                 CONF_HARD_POLL_INTERVAL, DEFAULT_HARD_POLL_INTERVAL
             ),
         )
+        _LOGGER.debug("Using subarulink %s", controller.version)
         await controller.connect()
     except SubaruException as err:
         raise ConfigEntryNotReady(err) from err
