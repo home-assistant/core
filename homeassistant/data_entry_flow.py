@@ -271,7 +271,7 @@ class FlowHandler:
     hass: HomeAssistant = None  # type: ignore
     handler: str = None  # type: ignore
     # Pylint workaround: https://github.com/PyCQA/pylint/issues/3167
-    # Ensure the attribute has an subscriptable, but immutable, default value.
+    # Ensure the attribute has a subscriptable, but immutable, default value.
     context: Dict = MappingProxyType({})  # type: ignore
 
     # Set by _async_create_flow callback
