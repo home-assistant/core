@@ -6,12 +6,14 @@ from typing import Awaitable, Callable, Optional
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import web
+import pytest
 
 from homeassistant.components.camera import (
     DEFAULT_CONTENT_TYPE,
     async_get_image,
     async_get_mjpeg_stream,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
@@ -64,6 +66,52 @@ async def test_camera_image(hass: HomeAssistantType) -> None:
     assert result[0].content == TEST_IMAGE_DATA.encode()
 
 
+async def test_camera_invalid_image(hass: HomeAssistantType) -> None:
+    """Test retrieving a single invalid camera image."""
+    client = create_mock_client()
+    client.async_send_image_stream_start = AsyncMock(return_value=True)
+    client.async_send_image_stream_stop = AsyncMock(return_value=True)
+
+    await setup_test_config_entry(hass, hyperion_client=client)
+
+    get_image_coro = async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=0)  # type: ignore[no-untyped-call]
+    image_stream_update_coro = async_call_registered_callback(
+        client, "ledcolors-imagestream-update", None
+    )
+    with pytest.raises(HomeAssistantError):
+        await asyncio.gather(get_image_coro, image_stream_update_coro)
+
+    get_image_coro = async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=0)  # type: ignore[no-untyped-call]
+    image_stream_update_coro = async_call_registered_callback(
+        client, "ledcolors-imagestream-update", {"garbage": 1}
+    )
+    with pytest.raises(HomeAssistantError):
+        await asyncio.gather(get_image_coro, image_stream_update_coro)
+
+    get_image_coro = async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=0)  # type: ignore[no-untyped-call]
+    image_stream_update_coro = async_call_registered_callback(
+        client,
+        "ledcolors-imagestream-update",
+        {"result": {"image": "data:image/jpg;base64,FOO"}},
+    )
+    with pytest.raises(HomeAssistantError):
+        await asyncio.gather(get_image_coro, image_stream_update_coro)
+
+
+async def test_camera_image_failed_start_stream_call(hass: HomeAssistantType) -> None:
+    """Test retrieving a single camera image with failed start stream call."""
+    client = create_mock_client()
+    client.async_send_image_stream_start = AsyncMock(return_value=False)
+
+    await setup_test_config_entry(hass, hyperion_client=client)
+
+    with pytest.raises(HomeAssistantError):
+        await async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=None)  # type: ignore[no-untyped-call]
+
+    assert client.async_send_image_stream_start.called
+    assert not client.async_send_image_stream_stop.called
+
+
 async def test_camera_stream(hass: HomeAssistantType) -> None:
     """Test retrieving a camera stream."""
     client = create_mock_client()
@@ -99,3 +147,17 @@ async def test_camera_stream(hass: HomeAssistantType) -> None:
     assert client.async_send_image_stream_start.called
     assert client.async_send_image_stream_stop.called
     assert result[0] == TEST_IMAGE_DATA.encode()
+
+
+async def test_camera_stream_failed_start_stream_call(hass: HomeAssistantType) -> None:
+    """Test retrieving a camera stream with failed start stream call."""
+    client = create_mock_client()
+    client.async_send_image_stream_start = AsyncMock(return_value=False)
+
+    await setup_test_config_entry(hass, hyperion_client=client)
+
+    request = Mock()
+    assert not await async_get_mjpeg_stream(hass, request, TEST_CAMERA_ENTITY_ID)  # type: ignore[no-untyped-call]
+
+    assert client.async_send_image_stream_start.called
+    assert not client.async_send_image_stream_stop.called
