@@ -726,7 +726,7 @@ class TemperatureControlTrait(_Trait):
         return response
 
     async def execute(self, command, data, params, challenge):
-        """Unsupported. """
+        """Unsupported."""
         raise SmartHomeError(ERR_NOT_SUPPORTED, "Execute is not supported by sensor")
 
 
