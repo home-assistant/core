@@ -277,7 +277,9 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
     """Load secrets and embed it into the configuration YAML."""
     if os.path.basename(loader.name) == SECRET_YAML:
         _LOGGER.error("secrets.yaml: attempt to load secret from within secrets file")
-        return ""
+        raise HomeAssistantError(
+            "secrets.yaml: attempt to load secret from within secrets file"
+        )
     secret_path = os.path.dirname(loader.name)
     while True:
         secrets = _load_secret_yaml(secret_path)
