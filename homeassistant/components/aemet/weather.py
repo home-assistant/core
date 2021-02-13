@@ -47,8 +47,7 @@ class AemetWeather(CoordinatorEntity, WeatherEntity):
         forecast_mode,
     ):
         """Initialize the sensor."""
-        CoordinatorEntity.__init__(self, coordinator)
-        WeatherEntity.__init__(self)
+        super().__init__(coordinator)
         self._name = name
         self._unique_id = unique_id
         self._forecast_mode = forecast_mode
