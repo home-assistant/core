@@ -11,6 +11,7 @@ FLOWS = [
     "acmeda",
     "adguard",
     "advantage_air",
+    "aemet",
     "agent_dvr",
     "airly",
     "airnow",
