@@ -59,13 +59,3 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
-
-
-def _filter_domain_configs(elements, domain):
-    return [elem for elem in elements if elem["platform"] == domain]
-
-
-def _get_config_value(config_entry, key):
-    if config_entry.options:
-        return config_entry.options[key]
-    return config_entry.data[key]
