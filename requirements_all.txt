@@ -2238,7 +2238,7 @@ thingspeak==1.0.0
 tikteck==0.4
 
 # homeassistant.components.tmb
-tmb==0.1.0
+tmb==0.1.1
 
 # homeassistant.components.todoist
 todoist-python==8.0.0

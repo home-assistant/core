@@ -2,7 +2,11 @@
   "domain": "tmb",
   "name": "Transports Metropolitans de Barcelona",
   "documentation": "https://www.home-assistant.io/integrations/tmb",
-  "requirements": ["tmb==0.1.0"],
-  "codeowners": ["@alemuro"],
+  "requirements": [
+    "tmb==0.1.1"
+  ],
+  "codeowners": [
+    "@alemuro"
+  ],
   "config_flow": true
 }

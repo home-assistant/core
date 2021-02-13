@@ -15,6 +15,9 @@ from .const import (
     DOMAIN,
     SERVICE_IBUS,
     SERVICE_PLANNER,
+    STEP_FEATURE_IBUS,
+    STEP_FEATURE_PLANNER,
+    STEP_SELECT,
 )
 
 
@@ -33,16 +36,18 @@ class TMBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_select(self, user_input=None):
         """Handle which service do the user wants to use for the sensor."""
+        errors = {}
         if user_input is not None:
             if user_input[CONF_SERVICE] == SERVICE_IBUS:
                 return await self.async_step_ibus()
             return await self.async_step_planner()
 
         return self.async_show_form(
-            step_id="select",
+            step_id=STEP_SELECT,
             data_schema=vol.Schema(
                 {vol.Required(CONF_SERVICE): vol.In([SERVICE_IBUS, SERVICE_PLANNER])}
             ),
+            errors=errors,
         )
 
     async def async_step_ibus(self, user_input=None):
@@ -67,7 +72,9 @@ class TMBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         return self.async_show_form(
-            step_id="ibus", data_schema=vol.Schema(data_schema), errors=errors
+            step_id=STEP_FEATURE_IBUS,
+            data_schema=vol.Schema(data_schema),
+            errors=errors,
         )
 
     async def async_step_planner(self, user_input=None):
@@ -95,5 +102,7 @@ class TMBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         return self.async_show_form(
-            step_id="planner", data_schema=vol.Schema(data_schema), errors=errors
+            step_id=STEP_FEATURE_PLANNER,
+            data_schema=vol.Schema(data_schema),
+            errors=errors,
         )
