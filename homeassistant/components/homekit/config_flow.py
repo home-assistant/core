@@ -156,7 +156,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, reauth_data=None):
         """Pairing instructions."""
-        await self.async_step_pairing(reauth_data)
+        return await self.async_step_pairing(reauth_data)
 
     async def async_step_pairing(self, reauth_data=None):
         """Pairing instructions."""
