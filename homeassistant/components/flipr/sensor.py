@@ -6,11 +6,9 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
-from .const import ATTRIBUTION, DOMAIN, CONF_FLIPR_ID
 
 from . import FliprEntity
+from .const import ATTRIBUTION, CONF_FLIPR_ID, DOMAIN
 
 SENSORS = {
     "chlorine": {

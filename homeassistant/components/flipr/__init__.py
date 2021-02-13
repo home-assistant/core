@@ -1,8 +1,10 @@
 """The Flipr integration."""
 import asyncio
-import logging
 from datetime import timedelta
-from typing import Any, Dict
+import logging
+from typing import Dict
+
+from flipr_api import FliprAPIRestClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -10,13 +12,9 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
-    UpdateFailed,
 )
-from homeassistant.helpers.entity import Entity
 
-from flipr_api import FliprAPIRestClient
-
-from .const import DOMAIN, CONF_USERNAME, CONF_PASSWORD, CONF_FLIPR_ID
+from .const import CONF_FLIPR_ID, CONF_PASSWORD, CONF_USERNAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +34,6 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flipr from a config entry."""
-
     _LOGGER.debug("async_setup_entry starting")
 
     coordinator = FliprDataUpdateCoordinator(hass, entry)
@@ -106,7 +103,7 @@ class FliprEntity(CoordinatorEntity):
     """Implements a common class elements representing the Flipr component."""
 
     def __init__(self, coordinator, flipr_id, info_type):
-        """Initialize Flipr sensor"""
+        """Initialize Flipr sensor."""
         super().__init__(coordinator)
         self._unique_id = f"{flipr_id}-{info_type}"
         self.info_type = info_type
