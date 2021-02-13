@@ -53,8 +53,8 @@ class ConnectXiaomiDevice:
         return True
 
 
-class XiaomiMiioDevice(Entity):
-    """Representation of a base Xiaomi Miio Device."""
+class XiaomiMiioEntity(Entity):
+    """Representation of a base Xiaomi Miio Entity."""
 
     def __init__(self, name, device, entry, unique_id):
         """Initialize the Xiaomi Miio Device."""

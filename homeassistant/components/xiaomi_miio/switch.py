@@ -28,7 +28,7 @@ from .const import (
     SERVICE_SET_WIFI_LED_OFF,
     SERVICE_SET_WIFI_LED_ON,
 )
-from .device import XiaomiMiioDevice
+from .device import XiaomiMiioEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         model = config_entry.data[CONF_MODEL]
         unique_id = config_entry.unique_id
 
-        _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
+        _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
         if model in ["chuangmi.plug.v1", "chuangmi.plug.v3", "chuangmi.plug.hmi208"]:
             plug = ChuangmiPlug(host, token, model=model)
@@ -186,7 +186,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, update_before_add=True)
 
 
-class XiaomiPlugGenericSwitch(XiaomiMiioDevice, SwitchEntity):
+class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
     """Representation of a Xiaomi Plug Generic."""
 
     def __init__(self, name, device, entry, unique_id):
@@ -243,7 +243,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioDevice, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the plug on."""
-        result = await self._try_command("Turning the plug on failed.", self._device.on)
+        result = await self._try_command("Turning the plug on failed", self._device.on)
 
         if result:
             self._state = True
@@ -252,7 +252,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioDevice, SwitchEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the plug off."""
         result = await self._try_command(
-            "Turning the plug off failed.", self._device.off
+            "Turning the plug off failed", self._device.off
         )
 
         if result:
@@ -285,7 +285,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioDevice, SwitchEntity):
             return
 
         await self._try_command(
-            "Turning the wifi led on failed.", self._device.set_wifi_led, True
+            "Turning the wifi led on failed", self._device.set_wifi_led, True
         )
 
     async def async_set_wifi_led_off(self):
@@ -294,7 +294,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioDevice, SwitchEntity):
             return
 
         await self._try_command(
-            "Turning the wifi led off failed.", self._device.set_wifi_led, False
+            "Turning the wifi led off failed", self._device.set_wifi_led, False
         )
 
     async def async_set_power_price(self, price: int):
@@ -303,7 +303,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioDevice, SwitchEntity):
             return
 
         await self._try_command(
-            "Setting the power price of the power strip failed.",
+            "Setting the power price of the power strip failed",
             self._device.set_power_price,
             price,
         )
@@ -372,7 +372,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
             return
 
         await self._try_command(
-            "Setting the power mode of the power strip failed.",
+            "Setting the power mode of the power strip failed",
             self._device.set_power_mode,
             PowerMode(mode),
         )
@@ -401,11 +401,11 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
         """Turn a channel on."""
         if self._channel_usb:
             result = await self._try_command(
-                "Turning the plug on failed.", self._device.usb_on
+                "Turning the plug on failed", self._device.usb_on
             )
         else:
             result = await self._try_command(
-                "Turning the plug on failed.", self._device.on
+                "Turning the plug on failed", self._device.on
             )
 
         if result:
@@ -416,11 +416,11 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
         """Turn a channel off."""
         if self._channel_usb:
             result = await self._try_command(
-                "Turning the plug on failed.", self._device.usb_off
+                "Turning the plug off failed", self._device.usb_off
             )
         else:
             result = await self._try_command(
-                "Turning the plug on failed.", self._device.off
+                "Turning the plug off failed", self._device.off
             )
 
         if result:
@@ -470,7 +470,7 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
     async def async_turn_on(self, **kwargs):
         """Turn the socket on."""
         result = await self._try_command(
-            "Turning the socket on failed.", self._device.socket_on
+            "Turning the socket on failed", self._device.socket_on
         )
 
         if result:
@@ -480,7 +480,7 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
     async def async_turn_off(self, **kwargs):
         """Turn the socket off."""
         result = await self._try_command(
-            "Turning the socket off failed.", self._device.socket_off
+            "Turning the socket off failed", self._device.socket_off
         )
 
         if result:
