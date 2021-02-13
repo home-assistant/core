@@ -186,10 +186,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             )
 
-    async def async_step_accessory(self, input):
+    async def async_step_accessory(self, accessory_input):
         """Handle creation a single accessory in accessory mode."""
-        entity_id = input[CONF_ENTITY_ID]
-        port = input[CONF_PORT]
+        entity_id = accessory_input[CONF_ENTITY_ID]
+        port = accessory_input[CONF_PORT]
 
         state = self.hass.states.get(entity_id)
         name = state.attributes.get(ATTR_FRIENDLY_NAME) or state.entity_id
