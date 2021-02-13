@@ -1,21 +1,52 @@
 """Component to embed TP-Link smart home devices."""
 import logging
 
+import voluptuous as vol
+
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .common import SmartDevices, async_discover_devices, get_static_devices
 from .const import (
     ATTR_CONFIG,
+    CONF_DIMMER,
     CONF_DISCOVERY,
     CONF_LIGHT,
     CONF_RETRY_DELAY,
     CONF_RETRY_MAX_ATTEMPTS,
+    CONF_STRIP,
     CONF_SWITCH,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+TPLINK_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_LIGHT, default=[]): vol.All(
+                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
+                ),
+                vol.Optional(CONF_SWITCH, default=[]): vol.All(
+                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
+                ),
+                vol.Optional(CONF_STRIP, default=[]): vol.All(
+                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
+                ),
+                vol.Optional(CONF_DIMMER, default=[]): vol.All(
+                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
+                ),
+                vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):

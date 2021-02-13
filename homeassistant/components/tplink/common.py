@@ -112,16 +112,19 @@ def get_static_devices(config_data) -> SmartDevices:
     for type_ in [CONF_LIGHT, CONF_SWITCH, CONF_STRIP, CONF_DIMMER]:
         entry_list = []
 
-        if config_data[type_]:
-            if isinstance(config_data[type_], list):
-                entry_list = config_data[type_]
-            else:
-                entry_list = config_data[type_].strip().split(",")
+        if type_ not in config_data:
+            continue
+
+        if isinstance(config_data[type_], list):
+            entry_list = config_data[type_]
+        else:
+            entry_list = config_data[type_].split(",")
+
         for entry in entry_list:
             if isinstance(entry, dict) and "host" in entry:
                 host = entry["host"]
             else:
-                host = entry
+                host = entry.strip()
             try:
                 if type_ == CONF_LIGHT:
                     lights.append(SmartBulb(host))
