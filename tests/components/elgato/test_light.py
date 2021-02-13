@@ -1,7 +1,8 @@
 """Tests for the Elgato Key Light light platform."""
 from unittest.mock import patch
 
-from homeassistant.components.elgato.light import ElgatoError
+from elgato import ElgatoError
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
