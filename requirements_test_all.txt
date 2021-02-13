@@ -279,7 +279,7 @@ distro==1.5.0
 doorbirdpy==2.1.0
 
 # homeassistant.components.dsmr
-dsmr_parser==0.28
+dsmr_parser==0.25
 
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
@@ -519,9 +519,6 @@ mullvad-api==1.0.0
 # homeassistant.components.tts
 mutagen==1.45.1
 
-# homeassistant.components.keenetic_ndms2
-ndms2_client==0.1.1
-
 # homeassistant.components.ness_alarm
 nessclient==0.9.15
 
@@ -738,11 +735,7 @@ pyeconet==0.1.13
 pyeverlights==0.1.0
 
 # homeassistant.components.ezviz
-pyezviz==0.1.6.1
-
-# homeassistant.components.fido
 pyfido==2.1.1
-
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.40
 

@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 from pyezviz.client import EzvizClient, PyEzvizError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -35,12 +35,11 @@ def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
     )
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class EzvizConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ezviz."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback
@@ -98,7 +97,7 @@ class EzvizConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class EzvizOptionsFlowHandler(config_entries.OptionsFlow):
+class EzvizOptionsFlowHandler(OptionsFlow):
     """Handle Canary client options."""
 
     def __init__(self, config_entry):

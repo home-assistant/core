@@ -8,7 +8,7 @@ from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 from pyezviz.constants import DeviceSwitchType
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
+from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -47,17 +47,6 @@ from .coordinator import EzvizDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_SESSION_RENEW = timedelta(seconds=90)
-
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_FFMPEG_ARGUMENTS),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(
-                CONF_FFMPEG_ARGUMENTS, default=DEFAULT_FFMPEG_ARGUMENTS
-            ): cv.string
-        }
-    ),
-)
 
 
 async def async_setup_entry(
