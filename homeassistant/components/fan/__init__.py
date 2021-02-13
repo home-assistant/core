@@ -2,6 +2,7 @@
 from datetime import timedelta
 import functools as ft
 import logging
+import math
 from typing import List, Optional
 
 import voluptuous as vol
@@ -54,6 +55,7 @@ DIRECTION_REVERSE = "reverse"
 
 ATTR_SPEED = "speed"
 ATTR_PERCENTAGE = "percentage"
+ATTR_PERCENTAGE_STEP = "percentage_step"
 ATTR_SPEED_LIST = "speed_list"
 ATTR_OSCILLATING = "oscillating"
 ATTR_DIRECTION = "direction"
@@ -129,8 +131,11 @@ async def async_setup(hass, config: dict):
                 vol.Coerce(int), vol.Range(min=0, max=100)
             ),
             vol.Optional(ATTR_PRESET_MODE): cv.string,
+            vol.Optional(ATTR_PERCENTAGE_STEP): vol.All(
+                vol.Coerce(float), vol.Range(min=0, max=100)
+            ),
         },
-        "async_turn_on_compat",
+        "async_handle_fan_on_service",
     )
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
@@ -289,22 +294,29 @@ class FanEntity(ToggleEntity):
         """Turn on the fan."""
         raise NotImplementedError()
 
-    # pylint: disable=arguments-differ
-    async def async_turn_on_compat(
+    async def async_handle_fan_on_service(
         self,
         speed: Optional[str] = None,
         percentage: Optional[int] = None,
         preset_mode: Optional[str] = None,
+        percentage_step: Optional[float] = None,
         **kwargs,
     ) -> None:
         """Turn on the fan.
 
-        This _compat version wraps async_turn_on with
-        backwards and forward compatibility.
-
-        After the transition to percentage and preset_modes concludes, it
-        should be removed.
+        This version wraps async_turn_on with
+        backwards and forward compatibility as well
+        as support for percentage_step and other
+        future alternatives.
         """
+        if percentage_step is not None:
+            percentage = self.percentage or 0
+            # A float is accepted for fans that have
+            # 7 speeds since a value of 14.29 is needed
+            # for this level of precision
+            percentage += math.ceil(10000 / percentage_step) / 100
+            percentage = max(0, min(255, percentage))
+
         if preset_mode is not None:
             self._valid_preset_mode_or_raise(preset_mode)
             speed = preset_mode
