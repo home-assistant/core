@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "invalid_response": "Respuesta no v\u00e1lida del dispositivo",
             "unknown": "Error inesperado"
         },
         "step": {
@@ -14,6 +15,7 @@
                     "host": "Host",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
+                    "rtsp_port": "Puerto RTSP",
                     "stream": "Stream",
                     "username": "Usuario"
                 }

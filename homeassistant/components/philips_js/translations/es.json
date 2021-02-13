@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "api_version": "Versi\u00f3n del API"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "Se solicita al dispositivo que se encienda"
+        }
+    }
+}

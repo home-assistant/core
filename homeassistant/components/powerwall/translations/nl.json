@@ -8,6 +8,7 @@
             "unknown": "Onverwachte fout",
             "wrong_version": "Uw powerwall gebruikt een softwareversie die niet wordt ondersteund. Overweeg om dit probleem te upgraden of te melden, zodat het kan worden opgelost."
         },
+        "flow_title": "Tesla Powerwall ({ip_adres})",
         "step": {
             "user": {
                 "data": {
