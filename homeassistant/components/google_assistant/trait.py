@@ -703,12 +703,14 @@ class TemperatureControlTrait(_Trait):
 
     def sync_attributes(self):
         return {
-            "temperatureUnitForUX":  _google_temp_unit(self.hass.config.units.temperature_unit),
+            "temperatureUnitForUX": _google_temp_unit(
+                self.hass.config.units.temperature_unit
+            ),
             "queryOnlyTemperatureSetting": True,
             "temperatureRange": {
                 "minThresholdCelsius": -100,
-                "maxThresholdCelsius": 100
-            }
+                "maxThresholdCelsius": 100,
+            },
         }
 
     def query_attributes(self):
@@ -717,18 +719,15 @@ class TemperatureControlTrait(_Trait):
         unit = self.hass.config.units.temperature_unit
         current_temp = self.state.state
         if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            temp = round(
-                temp_util.convert(float(current_temp), unit, TEMP_CELSIUS), 1
-            )
+            temp = round(temp_util.convert(float(current_temp), unit, TEMP_CELSIUS), 1)
             response["temperatureSetpointCelsius"] = temp
             response["temperatureAmbientCelsius"] = temp
 
         return response
 
     async def execute(self, command, data, params, challenge):
-        raise SmartHomeError(
-            ERR_NOT_SUPPORTED, "Execute is not supported by sensor"
-        )
+        raise SmartHomeError(ERR_NOT_SUPPORTED, "Execute is not supported by sensor")
+
 
 @register_trait
 class TemperatureSettingTrait(_Trait):
@@ -762,7 +761,7 @@ class TemperatureSettingTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return (domain == climate.DOMAIN)
+        return domain == climate.DOMAIN
 
     @property
     def climate_google_modes(self):
