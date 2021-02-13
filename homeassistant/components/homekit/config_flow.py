@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.config_entries import DEFAULT_DISCOVERY_UNIQUE_ID, SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_DOMAINS,
@@ -117,13 +117,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize config flow."""
-        self.pairing_data = {}
+        self.hk_data = {}
 
     async def async_step_user(self, user_input=None):
         """Choose specific domains in bridge mode."""
         if user_input is not None:
-            return await self._async_create(user_input[CONF_INCLUDE_DOMAINS])
+            entity_filter = _EMPTY_ENTITY_FILTER.copy()
+            entity_filter[CONF_INCLUDE_DOMAINS] = user_input[CONF_INCLUDE_DOMAINS]
+            self.hk_data[CONF_FILTER] = entity_filter
+            return await self.async_step_pairing()
 
+        self.hk_data[CONF_HOMEKIT_MODE] = HOMEKIT_MODE_BRIDGE
         default_domains = [] if self._async_current_names() else DEFAULT_DOMAINS
         return self.async_show_form(
             step_id="user",
@@ -136,63 +140,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def _async_create(self, domains):
-        """Create the entry."""
-        name = self._async_available_name(SHORT_BRIDGE_NAME)
-        port = await async_find_next_available_port(self.hass, DEFAULT_CONFIG_FLOW_PORT)
-        await self._async_add_entries_for_accessory_mode_entities(domains, port)
-
-        entity_filter = _EMPTY_ENTITY_FILTER.copy()
-        entity_filter[CONF_INCLUDE_DOMAINS] = [
-            domain for domain in domains if domain not in NEVER_BRIDGED_DOMAINS
-        ]
-
-        return self.async_create_entry(
-            title=f"{name}:{port}",
-            data={
-                CONF_HOMEKIT_MODE: HOMEKIT_MODE_BRIDGE,
-                CONF_FILTER: entity_filter,
-                CONF_NAME: name,
-                CONF_PORT: port,
-                CONF_EXCLUDE_ACCESSORY_MODE: True,
-            },
-        )
-
-    async def async_step_zeroconf(self, discovery_info):
-        """Handle a flow initialized by zeroconf discovery."""
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-        await self.async_set_unique_id(DEFAULT_DISCOVERY_UNIQUE_ID)
-        self._abort_if_unique_id_configured()
-        self.context["title_placeholders"] = {
-            "title": "Bridge",
-        }
-        return await self.async_step_user()
-
-    async def async_step_pairing(self, pairing_data):
+    async def async_step_pairing(self, user_input=None):
         """Pairing instructions."""
-        if pairing_data:
-            self.pairing_data = pairing_data
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {
-            "title": self.pairing_data["title"],
-        }
+        if user_input is not None:
+            port = await async_find_next_available_port(
+                self.hass, DEFAULT_CONFIG_FLOW_PORT
+            )
+            await self._async_add_entries_for_accessory_mode_entities(port)
+            self.hk_data[CONF_PORT] = port
+            include_domains_filter = self.hk_data[CONF_FILTER][CONF_INCLUDE_DOMAINS]
+            for domain in NEVER_BRIDGED_DOMAINS:
+                if domain in include_domains_filter:
+                    include_domains_filter.remove(domain)
+            return self.async_create_entry(
+                title=f"{self.hk_data[CONF_NAME]}:{self.hk_data[CONF_PORT]}",
+                data=self.hk_data,
+            )
+
+        self.hk_data[CONF_NAME] = self._async_available_name(SHORT_BRIDGE_NAME)
+        self.hk_data[CONF_EXCLUDE_ACCESSORY_MODE] = True
         return self.async_show_form(
             step_id="pairing",
-            description_placeholders={
-                "title": self.pairing_data["title"],
-                "entry_id": self.pairing_data["entry_id"],
-                "pin": self.pairing_data["pin"],
-                "pairing_secret": self.pairing_data["pairing_secret"],
-            },
+            description_placeholders={CONF_NAME: self.hk_data[CONF_NAME]},
         )
 
-    async def _async_add_entries_for_accessory_mode_entities(
-        self, domains, last_assigned_port
-    ):
+    async def _async_add_entries_for_accessory_mode_entities(self, last_assigned_port):
         """Generate new flows for entities that need their own instances."""
         accessory_mode_entity_ids = _async_get_entity_ids_for_accessory_mode(
-            self.hass, domains
+            self.hass, self.hk_data[CONF_FILTER][CONF_INCLUDE_DOMAINS]
         )
         exiting_entity_ids_accessory_mode = _async_entity_ids_with_accessory_mode(
             self.hass

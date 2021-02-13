@@ -72,10 +72,10 @@ from .const import (
 )
 from .util import (
     accessory_friendly_name,
-    async_abort_pairing_flow,
-    async_start_pairing_flow,
     convert_to_float,
+    dismiss_setup_message,
     format_sw_version,
+    show_setup_message,
     validate_media_player_features,
 )
 
@@ -508,7 +508,7 @@ class HomeDriver(AccessoryDriver):
         """Override super function to dismiss setup message if paired."""
         success = super().pair(client_uuid, client_public)
         if success:
-            async_abort_pairing_flow(self.hass, self._entry_id)
+            dismiss_setup_message(self.hass, self._entry_id)
         return success
 
     def unpair(self, client_uuid):
@@ -518,7 +518,7 @@ class HomeDriver(AccessoryDriver):
         if self.accessory.paired:
             return
 
-        async_start_pairing_flow(
+        show_setup_message(
             self.hass,
             self._entry_id,
             accessory_friendly_name(self._entry_title, self.accessory),

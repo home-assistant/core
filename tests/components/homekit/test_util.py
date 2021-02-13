@@ -25,14 +25,14 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.components.homekit.util import (
     accessory_friendly_name,
-    async_abort_pairing_flow,
     async_find_next_available_port,
-    async_start_pairing_flow,
     cleanup_name_for_homekit,
     convert_to_float,
     density_to_air_quality,
+    dismiss_setup_message,
     format_sw_version,
     port_is_available,
+    show_setup_message,
     temperature_to_homekit,
     temperature_to_states,
     validate_entity_config as vec,
@@ -229,12 +229,8 @@ async def test_show_setup_msg(hass, hk_driver):
         hass, PERSISTENT_NOTIFICATION_DOMAIN, "create"
     )
 
-    async_start_pairing_flow(
-        hass,
-        entry.entry_id,
-        "bridge_name",
-        pincode,
-        "X-HM://0",
+    await hass.async_add_executor_job(
+        show_setup_message, hass, entry.entry_id, "bridge_name", pincode, "X-HM://0"
     )
     await hass.async_block_till_done()
     assert hass.data[DOMAIN][entry.entry_id][HOMEKIT_PAIRING_QR_SECRET]
@@ -251,7 +247,7 @@ async def test_dismiss_setup_msg(hass):
         hass, PERSISTENT_NOTIFICATION_DOMAIN, "dismiss"
     )
 
-    async_abort_pairing_flow(hass, "entry_id")
+    await hass.async_add_executor_job(dismiss_setup_message, hass, "entry_id")
     await hass.async_block_till_done()
 
     assert call_dismiss_notification
