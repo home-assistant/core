@@ -115,6 +115,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
+    def __init__(self):
+        """Initialize config flow."""
+        self.pairing_data = {}
+
     async def async_step_user(self, user_input=None):
         """Choose specific domains in bridge mode."""
         if user_input is not None:
@@ -154,18 +158,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_pairing(self, reauth_data):
+    async def async_step_pairing(self, pairing_data):
         """Pairing instructions."""
-        _LOGGER.debug("async_step_pairing: %s", reauth_data)
+        if pairing_data:
+            self.pairing_data = pairing_data
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
-            "title": reauth_data["title"],
+            "title": self.pairing_data["title"],
         }
         return self.async_show_form(
             step_id="pairing",
             description_placeholders={
-                "entry_id": reauth_data["entry_id"],
-                "pairing_secret": reauth_data["pairing_secret"],
+                "entry_id": self.pairing_data["entry_id"],
+                "pairing_secret": self.pairing_data["pairing_secret"],
             },
         )
 
