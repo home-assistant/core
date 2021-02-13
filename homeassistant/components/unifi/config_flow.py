@@ -195,7 +195,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         """Trigger a reauthentication flow."""
         self.reauth_config_entry = config_entry
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_HOST: config_entry.data[CONF_HOST],
             CONF_SITE_ID: config_entry.title,
@@ -229,7 +228,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates=self.config)
 
-        # pylint: disable=no-member
         self.context["title_placeholders"] = {
             CONF_HOST: self.config[CONF_HOST],
             CONF_SITE_ID: DEFAULT_SITE_ID,

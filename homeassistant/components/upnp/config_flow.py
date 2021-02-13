@@ -183,7 +183,6 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._discoveries = [discovery]
 
         # Ensure user recognizable.
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             "name": discovery[DISCOVERY_NAME],
         }
