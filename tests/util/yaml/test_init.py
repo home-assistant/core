@@ -469,7 +469,9 @@ def test_no_recursive_secrets(caplog):
     with patch_yaml_files(files):
         with pytest.raises(HomeAssistantError) as e:
             load_yaml_config_file(YAML_CONFIG_FILE)
-        assert e.value.args == ("secrets.yaml: attempt to load secret from within secrets file",)
+        assert e.value.args == (
+            "secrets.yaml: attempt to load secret from within secrets file",
+        )
     assert "attempt to load secret from within secrets file" in caplog.text
 
 
