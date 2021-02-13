@@ -12,7 +12,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm_discovery": {
-                "description": "Czy chcesz skonfigurowa\u0107 {model} ({host})?\n\nPrzed skonfigurowaniem urz\u0105dzenia zasilane bateryjnie nale\u017cy, wybudzi\u0107 naciskaj\u0105c przycisk na urz\u0105dzeniu."
+                "description": "Czy chcesz skonfigurowa\u0107 {model} ({host})?\n\nUrz\u0105dzenia zasilane bateryjnie, z ustawionym has\u0142em, nale\u017cy wybudzi\u0107 przed konfiguracj\u0105.\nUrz\u0105dzenia zasilane bateryjnie, bez ustawionego has\u0142a, zostan\u0105 dodane gdy urz\u0105dzenie si\u0119 wybudzi. Mo\u017cesz r\u0119cznie wybudzi\u0107 urz\u0105dzenie jego przyciskiem lub poczeka\u0107 na aktualizacj\u0119 danych z urz\u0105dzenia."
             },
             "credentials": {
                 "data": {
@@ -26,6 +26,22 @@
                 },
                 "description": "Przed skonfigurowaniem urz\u0105dzenia zasilane bateryjnie nale\u017cy, wybudzi\u0107 naciskaj\u0105c przycisk na urz\u0105dzeniu."
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Przycisk",
+            "button1": "pierwszy",
+            "button2": "drugi",
+            "button3": "trzeci"
+        },
+        "trigger_type": {
+            "double": "przycisk \"{subtype}\" zostanie dwukrotnie naci\u015bni\u0119ty",
+            "long": "przycisk \"{subtype}\" zostanie d\u0142ugo naci\u015bni\u0119ty",
+            "long_single": "przycisk \"{subtype}\" zostanie d\u0142ugo naci\u015bni\u0119ty, a nast\u0119pnie pojedynczo naci\u015bni\u0119ty",
+            "single": "przycisk \"{subtype}\" zostanie pojedynczo naci\u015bni\u0119ty",
+            "single_long": "przycisk \"{subtype}\" pojedynczo naci\u015bni\u0119ty, a nast\u0119pnie d\u0142ugo naci\u015bni\u0119ty",
+            "triple": "przycisk \"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
         }
     }
 }

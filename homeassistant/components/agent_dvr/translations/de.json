@@ -4,8 +4,8 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "already_in_progress": "Der Konfigurationsfluss f\u00fcr das Ger\u00e4t wird bereits ausgef\u00fchrt.",
-            "cannot_connect": "Verbindungsfehler"
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "user": {

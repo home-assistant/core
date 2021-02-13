@@ -1,7 +1,7 @@
 """Representation of Z-Wave switches."""
 
 import logging
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Optional
 
 from zwave_js_server.client import Client as ZwaveClient
 
@@ -27,13 +27,15 @@ async def async_setup_entry(
     def async_add_switch(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Switch."""
         entities: List[ZWaveBaseEntity] = []
-        entities.append(ZWaveSwitch(client, info))
+        entities.append(ZWaveSwitch(config_entry, client, info))
 
         async_add_entities(entities)
 
     hass.data[DOMAIN][config_entry.entry_id][DATA_UNSUBSCRIBE].append(
         async_dispatcher_connect(
-            hass, f"{DOMAIN}_add_{SWITCH_DOMAIN}", async_add_switch
+            hass,
+            f"{DOMAIN}_{config_entry.entry_id}_add_{SWITCH_DOMAIN}",
+            async_add_switch,
         )
     )
 
@@ -42,8 +44,11 @@ class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
     """Representation of a Z-Wave switch."""
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> Optional[bool]:  # type: ignore
         """Return a boolean for the state of the switch."""
+        if self.info.primary_value.value is None:
+            # guard missing value
+            return None
         return bool(self.info.primary_value.value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:

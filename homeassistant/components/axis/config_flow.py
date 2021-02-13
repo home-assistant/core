@@ -1,6 +1,7 @@
 """Config flow to configure Axis devices."""
 
 from ipaddress import ip_address
+from urllib.parse import urlsplit
 
 import voluptuous as vol
 
@@ -22,7 +23,9 @@ from homeassistant.util.network import is_link_local
 from .const import (
     CONF_MODEL,
     CONF_STREAM_PROFILE,
+    CONF_VIDEO_SOURCE,
     DEFAULT_STREAM_PROFILE,
+    DEFAULT_VIDEO_SOURCE,
     DOMAIN as AXIS_DOMAIN,
 )
 from .device import get_device
@@ -75,6 +78,8 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
                     updates={
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_PORT: user_input[CONF_PORT],
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
                     }
                 )
 
@@ -131,6 +136,23 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         title = f"{model} - {self.serial}"
         return self.async_create_entry(title=title, data=self.device_config)
 
+    async def async_step_reauth(self, device_config: dict):
+        """Trigger a reauthentication flow."""
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {
+            CONF_NAME: device_config[CONF_NAME],
+            CONF_HOST: device_config[CONF_HOST],
+        }
+
+        self.discovery_schema = {
+            vol.Required(CONF_HOST, default=device_config[CONF_HOST]): str,
+            vol.Required(CONF_USERNAME, default=device_config[CONF_USERNAME]): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Required(CONF_PORT, default=device_config[CONF_PORT]): int,
+        }
+
+        return await self.async_step_user()
+
     async def async_step_dhcp(self, discovery_info: dict):
         """Prepare configuration for a DHCP discovered Axis device."""
         return await self._process_discovered_device(
@@ -142,8 +164,20 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             }
         )
 
+    async def async_step_ssdp(self, discovery_info: dict):
+        """Prepare configuration for a SSDP discovered Axis device."""
+        url = urlsplit(discovery_info["presentationURL"])
+        return await self._process_discovered_device(
+            {
+                CONF_HOST: url.hostname,
+                CONF_MAC: format_mac(discovery_info["serialNumber"]),
+                CONF_NAME: f"{discovery_info['friendlyName']}",
+                CONF_PORT: url.port,
+            }
+        )
+
     async def async_step_zeroconf(self, discovery_info: dict):
-        """Prepare configuration for a discovered Axis device."""
+        """Prepare configuration for a Zeroconf discovered Axis device."""
         return await self._process_discovered_device(
             {
                 CONF_HOST: discovery_info[CONF_HOST],
@@ -201,22 +235,44 @@ class AxisOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_configure_stream()
 
     async def async_step_configure_stream(self, user_input=None):
-        """Manage the Axis device options."""
+        """Manage the Axis device stream options."""
         if user_input is not None:
             self.options.update(user_input)
             return self.async_create_entry(title="", data=self.options)
 
-        profiles = [DEFAULT_STREAM_PROFILE]
-        for profile in self.device.api.vapix.streaming_profiles:
-            profiles.append(profile.name)
+        schema = {}
+
+        vapix = self.device.api.vapix
+
+        # Stream profiles
+
+        if vapix.params.stream_profiles_max_groups > 0:
+
+            stream_profiles = [DEFAULT_STREAM_PROFILE]
+            for profile in vapix.streaming_profiles:
+                stream_profiles.append(profile.name)
+
+            schema[
+                vol.Optional(
+                    CONF_STREAM_PROFILE, default=self.device.option_stream_profile
+                )
+            ] = vol.In(stream_profiles)
+
+        # Video sources
+
+        if vapix.params.image_nbrofviews > 0:
+            await vapix.params.update_image()
+
+            video_sources = {DEFAULT_VIDEO_SOURCE: DEFAULT_VIDEO_SOURCE}
+            for idx, video_source in vapix.params.image_sources.items():
+                if not video_source["Enabled"]:
+                    continue
+                video_sources[idx + 1] = video_source["Name"]
+
+            schema[
+                vol.Optional(CONF_VIDEO_SOURCE, default=self.device.option_video_source)
+            ] = vol.In(video_sources)
 
         return self.async_show_form(
-            step_id="configure_stream",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_STREAM_PROFILE, default=self.device.option_stream_profile
-                    ): vol.In(profiles)
-                }
-            ),
+            step_id="configure_stream", data_schema=vol.Schema(schema)
         )

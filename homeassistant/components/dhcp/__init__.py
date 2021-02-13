@@ -2,14 +2,17 @@
 
 from abc import abstractmethod
 import fnmatch
+from ipaddress import ip_address as make_ip_address
 import logging
 import os
 import threading
 
+from scapy.arch.common import compile_filter
+from scapy.config import conf
 from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
 from scapy.layers.l2 import Ether
-from scapy.sendrecv import sniff
+from scapy.sendrecv import AsyncSniffer
 
 from homeassistant.components.device_tracker.const import (
     ATTR_HOST_NAME,
@@ -28,6 +31,7 @@ from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.loader import async_get_dhcp
+from homeassistant.util.network import is_link_local
 
 from .const import DOMAIN
 
@@ -52,15 +56,12 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
         for cls in (DHCPWatcher, DeviceTrackerWatcher):
             watcher = cls(hass, address_data, integration_matchers)
-            watcher.async_start()
+            await watcher.async_start()
             watchers.append(watcher)
 
         async def _async_stop(*_):
             for watcher in watchers:
-                if hasattr(watcher, "async_stop"):
-                    watcher.async_stop()
-                else:
-                    await hass.async_add_executor_job(watcher.stop)
+                await watcher.async_stop()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
 
@@ -81,6 +82,10 @@ class WatcherBase:
 
     def process_client(self, ip_address, hostname, mac_address):
         """Process a client."""
+        if is_link_local(make_ip_address(ip_address)):
+            # Ignore self assigned addresses
+            return
+
         data = self._address_data.get(ip_address)
 
         if data and data[MAC_ADDRESS] == mac_address and data[HOSTNAME] == hostname:
@@ -138,15 +143,13 @@ class DeviceTrackerWatcher(WatcherBase):
         super().__init__(hass, address_data, integration_matchers)
         self._unsub = None
 
-    @callback
-    def async_stop(self):
+    async def async_stop(self):
         """Stop watching for new device trackers."""
         if self._unsub:
             self._unsub()
             self._unsub = None
 
-    @callback
-    def async_start(self):
+    async def async_start(self):
         """Stop watching for new device trackers."""
         self._unsub = async_track_state_added_domain(
             self.hass, [DEVICE_TRACKER_DOMAIN], self._async_process_device_event
@@ -184,33 +187,28 @@ class DeviceTrackerWatcher(WatcherBase):
         self.hass.async_create_task(task)
 
 
-class DHCPWatcher(WatcherBase, threading.Thread):
+class DHCPWatcher(WatcherBase):
     """Class to watch dhcp requests."""
 
     def __init__(self, hass, address_data, integration_matchers):
         """Initialize class."""
         super().__init__(hass, address_data, integration_matchers)
-        self.name = "dhcp-discovery"
-        self._stop_event = threading.Event()
+        self._sniffer = None
+        self._started = threading.Event()
 
-    def stop(self):
+    async def async_stop(self):
+        """Stop watching for new device trackers."""
+        await self.hass.async_add_executor_job(self._stop)
+
+    def _stop(self):
         """Stop the thread."""
-        self._stop_event.set()
-        self.join()
+        if self._started.is_set():
+            self._sniffer.stop()
 
-    @callback
-    def async_start(self):
-        """Start the thread."""
-        self.start()
-
-    def run(self):
+    async def async_start(self):
         """Start watching for dhcp packets."""
         try:
-            sniff(
-                filter=FILTER,
-                prn=self.handle_dhcp_packet,
-                stop_filter=lambda _: self._stop_event.is_set(),
-            )
+            _verify_l2socket_creation_permission()
         except (Scapy_Exception, OSError) as ex:
             if os.geteuid() == 0:
                 _LOGGER.error("Cannot watch for dhcp packets: %s", ex)
@@ -219,6 +217,23 @@ class DHCPWatcher(WatcherBase, threading.Thread):
                     "Cannot watch for dhcp packets without root or CAP_NET_RAW: %s", ex
                 )
             return
+
+        try:
+            await _async_verify_working_pcap(self.hass, FILTER)
+        except (Scapy_Exception, ImportError) as ex:
+            _LOGGER.error(
+                "Cannot watch for dhcp packets without a functional packet filter: %s",
+                ex,
+            )
+            return
+
+        self._sniffer = AsyncSniffer(
+            filter=FILTER,
+            started_callback=self._started.set,
+            prn=self.handle_dhcp_packet,
+            store=0,
+        )
+        self._sniffer.start()
 
     def handle_dhcp_packet(self, packet):
         """Process a dhcp packet."""
@@ -266,3 +281,26 @@ def _decode_dhcp_option(dhcp_options, key):
 def _format_mac(mac_address):
     """Format a mac address for matching."""
     return format_mac(mac_address).replace(":", "")
+
+
+def _verify_l2socket_creation_permission():
+    """Create a socket using the scapy configured l2socket.
+
+    Try to create the socket
+    to see if we have permissions
+    since AsyncSniffer will do it another
+    thread so we will not be able to capture
+    any permission or bind errors.
+    """
+    # disable scapy promiscuous mode as we do not need it
+    conf.sniff_promisc = 0
+    conf.L2socket()
+
+
+async def _async_verify_working_pcap(hass, cap_filter):
+    """Verify we can create a packet filter.
+
+    If we cannot create a filter we will be listening for
+    all traffic which is too intensive.
+    """
+    await hass.async_add_executor_job(compile_filter, cap_filter)

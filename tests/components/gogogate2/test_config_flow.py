@@ -37,7 +37,9 @@ async def test_auth_fail(
     gogogate2api_mock.return_value = api
 
     api.reset_mock()
-    api.info.side_effect = ApiError(GogoGate2ApiErrorCode.CREDENTIALS_INCORRECT, "blah")
+    api.async_info.side_effect = ApiError(
+        GogoGate2ApiErrorCode.CREDENTIALS_INCORRECT, "blah"
+    )
     result = await hass.config_entries.flow.async_init(
         "gogogate2", context={"source": SOURCE_USER}
     )
@@ -57,7 +59,7 @@ async def test_auth_fail(
     }
 
     api.reset_mock()
-    api.info.side_effect = Exception("Generic connection error.")
+    api.async_info.side_effect = Exception("Generic connection error.")
     result = await hass.config_entries.flow.async_init(
         "gogogate2", context={"source": SOURCE_USER}
     )

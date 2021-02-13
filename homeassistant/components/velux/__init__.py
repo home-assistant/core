@@ -58,10 +58,17 @@ class VeluxModule:
             _LOGGER.debug("Velux interface terminated")
             await self.pyvlx.disconnect()
 
+        async def async_reboot_gateway(service_call):
+            await self.pyvlx.reboot_gateway()
+
         self._hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
         host = self._domain_config.get(CONF_HOST)
         password = self._domain_config.get(CONF_PASSWORD)
         self.pyvlx = PyVLX(host=host, password=password)
+
+        self._hass.services.async_register(
+            DOMAIN, "reboot_gateway", async_reboot_gateway
+        )
 
     async def async_start(self):
         """Start velux component."""

@@ -426,7 +426,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
         self.config = device.config
 
-        self._brightness = None
         self._color_temp = None
         self._hs = None
         self._effect = None
@@ -487,10 +486,14 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 1..255."""
-        temp = self._get_property(self._brightness_property)
-        if temp:
-            self._brightness = temp
-        return round(255 * (int(self._brightness) / 100))
+        # Always use "bright" as property name in music mode
+        # Since music mode states are only caches in upstream library
+        # and the cache key is always "bright" for brightness
+        brightness_property = (
+            "bright" if self._bulb.music_mode else self._brightness_property
+        )
+        brightness = self._get_property(brightness_property)
+        return round(255 * (int(brightness) / 100))
 
     @property
     def min_mireds(self):

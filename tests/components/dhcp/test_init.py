@@ -280,18 +280,18 @@ async def test_setup_and_stop(hass):
     )
     await hass.async_block_till_done()
 
-    wait_event = threading.Event()
-
-    def _sniff_wait():
-        wait_event.wait()
-
-    with patch("homeassistant.components.dhcp.sniff", _sniff_wait):
+    with patch("homeassistant.components.dhcp.AsyncSniffer.start") as start_call, patch(
+        "homeassistant.components.dhcp._verify_l2socket_creation_permission",
+    ), patch(
+        "homeassistant.components.dhcp.compile_filter",
+    ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-    wait_event.set()
+
+    start_call.assert_called_once()
 
 
 async def test_setup_fails_as_root(hass, caplog):
@@ -307,7 +307,8 @@ async def test_setup_fails_as_root(hass, caplog):
     wait_event = threading.Event()
 
     with patch("os.geteuid", return_value=0), patch(
-        "homeassistant.components.dhcp.sniff", side_effect=Scapy_Exception
+        "homeassistant.components.dhcp._verify_l2socket_creation_permission",
+        side_effect=Scapy_Exception,
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
@@ -328,18 +329,47 @@ async def test_setup_fails_non_root(hass, caplog):
     )
     await hass.async_block_till_done()
 
-    wait_event = threading.Event()
-
     with patch("os.geteuid", return_value=10), patch(
-        "homeassistant.components.dhcp.sniff", side_effect=Scapy_Exception
+        "homeassistant.components.dhcp._verify_l2socket_creation_permission",
+        side_effect=Scapy_Exception,
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-    wait_event.set()
     assert "Cannot watch for dhcp packets without root or CAP_NET_RAW" in caplog.text
+
+
+async def test_setup_fails_with_broken_libpcap(hass, caplog):
+    """Test we abort if libpcap is missing or broken."""
+
+    assert await async_setup_component(
+        hass,
+        dhcp.DOMAIN,
+        {},
+    )
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.dhcp._verify_l2socket_creation_permission",
+    ), patch(
+        "homeassistant.components.dhcp.compile_filter",
+        side_effect=ImportError,
+    ) as compile_filter, patch(
+        "homeassistant.components.dhcp.AsyncSniffer",
+    ) as async_sniffer:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    assert compile_filter.called
+    assert not async_sniffer.called
+    assert (
+        "Cannot watch for dhcp packets without a functional packet filter"
+        in caplog.text
+    )
 
 
 async def test_device_tracker_hostname_and_macaddress_exists_before_start(hass):
@@ -363,9 +393,9 @@ async def test_device_tracker_hostname_and_macaddress_exists_before_start(hass):
             {},
             [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
         )
-        device_tracker_watcher.async_start()
+        await device_tracker_watcher.async_start()
         await hass.async_block_till_done()
-        device_tracker_watcher.async_stop()
+        await device_tracker_watcher.async_stop()
         await hass.async_block_till_done()
 
     assert len(mock_init.mock_calls) == 1
@@ -389,7 +419,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start(hass):
             {},
             [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
         )
-        device_tracker_watcher.async_start()
+        await device_tracker_watcher.async_start()
         await hass.async_block_till_done()
         hass.states.async_set(
             "device_tracker.august_connect",
@@ -402,7 +432,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start(hass):
             },
         )
         await hass.async_block_till_done()
-        device_tracker_watcher.async_stop()
+        await device_tracker_watcher.async_stop()
         await hass.async_block_till_done()
 
     assert len(mock_init.mock_calls) == 1
@@ -426,7 +456,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_not_home(hass)
             {},
             [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
         )
-        device_tracker_watcher.async_start()
+        await device_tracker_watcher.async_start()
         await hass.async_block_till_done()
         hass.states.async_set(
             "device_tracker.august_connect",
@@ -439,7 +469,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_not_home(hass)
             },
         )
         await hass.async_block_till_done()
-        device_tracker_watcher.async_stop()
+        await device_tracker_watcher.async_stop()
         await hass.async_block_till_done()
 
     assert len(mock_init.mock_calls) == 0
@@ -456,7 +486,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_not_router(has
             {},
             [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
         )
-        device_tracker_watcher.async_start()
+        await device_tracker_watcher.async_start()
         await hass.async_block_till_done()
         hass.states.async_set(
             "device_tracker.august_connect",
@@ -469,7 +499,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_not_router(has
             },
         )
         await hass.async_block_till_done()
-        device_tracker_watcher.async_stop()
+        await device_tracker_watcher.async_stop()
         await hass.async_block_till_done()
 
     assert len(mock_init.mock_calls) == 0
@@ -488,7 +518,7 @@ async def test_device_tracker_hostname_and_macaddress_after_start_hostname_missi
             {},
             [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
         )
-        device_tracker_watcher.async_start()
+        await device_tracker_watcher.async_start()
         await hass.async_block_till_done()
         hass.states.async_set(
             "device_tracker.august_connect",
@@ -500,7 +530,36 @@ async def test_device_tracker_hostname_and_macaddress_after_start_hostname_missi
             },
         )
         await hass.async_block_till_done()
-        device_tracker_watcher.async_stop()
+        await device_tracker_watcher.async_stop()
+        await hass.async_block_till_done()
+
+    assert len(mock_init.mock_calls) == 0
+
+
+async def test_device_tracker_ignore_self_assigned_ips_before_start(hass):
+    """Test matching ignores self assigned ip address."""
+    hass.states.async_set(
+        "device_tracker.august_connect",
+        STATE_HOME,
+        {
+            ATTR_HOST_NAME: "connect",
+            ATTR_IP: "169.254.210.56",
+            ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
+            ATTR_MAC: "B8:B7:F1:6D:B5:33",
+        },
+    )
+
+    with patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init:
+        device_tracker_watcher = dhcp.DeviceTrackerWatcher(
+            hass,
+            {},
+            [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
+        )
+        await device_tracker_watcher.async_start()
+        await hass.async_block_till_done()
+        await device_tracker_watcher.async_stop()
         await hass.async_block_till_done()
 
     assert len(mock_init.mock_calls) == 0

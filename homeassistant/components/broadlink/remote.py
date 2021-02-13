@@ -23,7 +23,10 @@ from homeassistant.components.remote import (
     ATTR_DEVICE,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
+    DOMAIN as RM_DOMAIN,
     PLATFORM_SCHEMA,
+    SERVICE_DELETE_COMMAND,
+    SUPPORT_DELETE_COMMAND,
     SUPPORT_LEARN_COMMAND,
     RemoteEntity,
 )
@@ -48,6 +51,8 @@ COMMAND_TYPES = [COMMAND_TYPE_IR, COMMAND_TYPE_RF]
 
 CODE_STORAGE_VERSION = 1
 FLAG_STORAGE_VERSION = 1
+
+CODE_SAVE_DELAY = 15
 FLAG_SAVE_DELAY = 15
 
 COMMAND_SCHEMA = vol.Schema(
@@ -72,6 +77,10 @@ SERVICE_LEARN_SCHEMA = COMMAND_SCHEMA.extend(
         vol.Optional(ATTR_COMMAND_TYPE, default=COMMAND_TYPE_IR): vol.In(COMMAND_TYPES),
         vol.Optional(ATTR_ALTERNATIVE, default=False): cv.boolean,
     }
+)
+
+SERVICE_DELETE_SCHEMA = COMMAND_SCHEMA.extend(
+    {vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1))}
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -149,7 +158,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_LEARN_COMMAND
+        return SUPPORT_LEARN_COMMAND | SUPPORT_DELETE_COMMAND
 
     @property
     def device_info(self):
@@ -195,6 +204,11 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
             return data_packet(code), is_toggle_cmd
         except ValueError as err:
             raise ValueError("Invalid code") from err
+
+    @callback
+    def get_codes(self):
+        """Return a dictionary of codes."""
+        return self._codes
 
     @callback
     def get_flags(self):
@@ -434,3 +448,52 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
             self.hass.components.persistent_notification.async_dismiss(
                 notification_id="learn_command"
             )
+
+    async def async_delete_command(self, **kwargs):
+        """Delete a list of commands from a remote."""
+        kwargs = SERVICE_DELETE_SCHEMA(kwargs)
+        commands = kwargs[ATTR_COMMAND]
+        device = kwargs[ATTR_DEVICE]
+        service = f"{RM_DOMAIN}.{SERVICE_DELETE_COMMAND}"
+
+        if not self._state:
+            _LOGGER.warning(
+                "%s canceled: %s entity is turned off",
+                service,
+                self.entity_id,
+            )
+            return
+
+        try:
+            codes = self._codes[device]
+        except KeyError as err:
+            err_msg = f"Device not found: {repr(device)}"
+            _LOGGER.error("Failed to call %s. %s", service, err_msg)
+            raise ValueError(err_msg) from err
+
+        cmds_not_found = []
+        for command in commands:
+            try:
+                del codes[command]
+            except KeyError:
+                cmds_not_found.append(command)
+
+        if cmds_not_found:
+            if len(cmds_not_found) == 1:
+                err_msg = f"Command not found: {repr(cmds_not_found[0])}"
+            else:
+                err_msg = f"Commands not found: {repr(cmds_not_found)}"
+
+            if len(cmds_not_found) == len(commands):
+                _LOGGER.error("Failed to call %s. %s", service, err_msg)
+                raise ValueError(err_msg)
+
+            _LOGGER.error("Error during %s. %s", service, err_msg)
+
+        # Clean up
+        if not codes:
+            del self._codes[device]
+            if self._flags.pop(device, None) is not None:
+                self._flag_storage.async_delay_save(self.get_flags, FLAG_SAVE_DELAY)
+
+        self._code_storage.async_delay_save(self.get_codes, CODE_SAVE_DELAY)

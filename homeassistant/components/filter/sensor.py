@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components import history
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.sensor import (
     DEVICE_CLASSES as SENSOR_DEVICE_CLASSES,
     DOMAIN as SENSOR_DOMAIN,
@@ -139,7 +140,9 @@ FILTER_TIME_THROTTLE_SCHEMA = FILTER_SCHEMA.extend(
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): vol.Any(
-            cv.entity_domain(SENSOR_DOMAIN), cv.entity_domain(BINARY_SENSOR_DOMAIN)
+            cv.entity_domain(SENSOR_DOMAIN),
+            cv.entity_domain(BINARY_SENSOR_DOMAIN),
+            cv.entity_domain(INPUT_NUMBER_DOMAIN),
         ),
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_FILTERS): vol.All(

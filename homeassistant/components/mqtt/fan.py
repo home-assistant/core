@@ -122,7 +122,6 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT fan dynamically through MQTT discovery."""
-
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -317,7 +316,20 @@ class MqttFan(MqttEntity, FanEntity):
         """Return the oscillation state."""
         return self._oscillation
 
-    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    async def async_turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
         """Turn on the entity.
 
         This method is a coroutine.
@@ -365,7 +377,7 @@ class MqttFan(MqttEntity, FanEntity):
         elif speed == SPEED_OFF:
             mqtt_payload = self._payload["SPEED_OFF"]
         else:
-            mqtt_payload = speed
+            raise ValueError(f"{speed} is not a valid fan speed")
 
         mqtt.async_publish(
             self.hass,

@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
-            "single_instance_allowed": "Es ist nur eine einzige Konfiguration von Abode erlaubt."
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",

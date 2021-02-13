@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
         "flow_title": "WiLight: {name}",
         "step": {
             "confirm": {

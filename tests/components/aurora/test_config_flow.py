@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from aiohttp import ClientError
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.aurora.const import DOMAIN
 
@@ -55,7 +57,7 @@ async def test_form_cannot_connect(hass):
 
     with patch(
         "homeassistant.components.aurora.AuroraForecast.get_forecast_data",
-        side_effect=ConnectionError,
+        side_effect=ClientError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

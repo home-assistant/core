@@ -3,6 +3,7 @@ import pytest
 
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 from homeassistant.components.vizio.const import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
@@ -41,7 +42,10 @@ async def test_tv_load_and_unload(
 
     assert await config_entry.async_unload(hass)
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
+    entities = hass.states.async_entity_ids(MP_DOMAIN)
+    assert len(entities) == 1
+    for entity in entities:
+        assert hass.states.get(entity).state == STATE_UNAVAILABLE
     assert DOMAIN not in hass.data
 
 
@@ -62,5 +66,8 @@ async def test_speaker_load_and_unload(
 
     assert await config_entry.async_unload(hass)
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
+    entities = hass.states.async_entity_ids(MP_DOMAIN)
+    assert len(entities) == 1
+    for entity in entities:
+        assert hass.states.get(entity).state == STATE_UNAVAILABLE
     assert DOMAIN not in hass.data

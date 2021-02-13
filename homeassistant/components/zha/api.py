@@ -472,6 +472,19 @@ async def websocket_reconfigure_node(hass, connection, msg):
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/topology/update",
+    }
+)
+async def websocket_update_topology(hass, connection, msg):
+    """Update the ZHA network topology."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    hass.async_create_task(zha_gateway.application_controller.topology.scan())
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
     {vol.Required(TYPE): "zha/devices/clusters", vol.Required(ATTR_IEEE): EUI64.convert}
 )
 async def websocket_device_clusters(hass, connection, msg):
@@ -1143,6 +1156,7 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_get_bindable_devices)
     websocket_api.async_register_command(hass, websocket_bind_devices)
     websocket_api.async_register_command(hass, websocket_unbind_devices)
+    websocket_api.async_register_command(hass, websocket_update_topology)
 
 
 @callback

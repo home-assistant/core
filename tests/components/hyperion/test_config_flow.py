@@ -2,7 +2,7 @@
 
 import logging
 from typing import Any, Dict, Optional
-from unittest.mock import AsyncMock, patch  # type: ignore[attr-defined]
+from unittest.mock import AsyncMock, patch
 
 from hyperion import const
 
@@ -14,12 +14,7 @@ from homeassistant.components.hyperion.const import (
     DOMAIN,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.config_entries import (
-    SOURCE_IMPORT,
-    SOURCE_REAUTH,
-    SOURCE_SSDP,
-    SOURCE_USER,
-)
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -606,56 +601,6 @@ async def test_ssdp_abort_duplicates(hass: HomeAssistantType) -> None:
     assert result_2["reason"] == "already_in_progress"
 
 
-async def test_import_success(hass: HomeAssistantType) -> None:
-    """Check an import flow from the old-style YAML."""
-
-    client = create_mock_client()
-    with patch(
-        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
-    ):
-        result = await _init_flow(
-            hass,
-            source=SOURCE_IMPORT,
-            data={
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
-            },
-        )
-        await hass.async_block_till_done()
-
-    # No human interaction should be required.
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["handler"] == DOMAIN
-    assert result["title"] == TEST_TITLE
-    assert result["data"] == {
-        CONF_HOST: TEST_HOST,
-        CONF_PORT: TEST_PORT,
-    }
-
-
-async def test_import_cannot_connect(hass: HomeAssistantType) -> None:
-    """Check an import flow that cannot connect."""
-
-    client = create_mock_client()
-    client.async_client_connect = AsyncMock(return_value=False)
-
-    with patch(
-        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
-    ):
-        result = await _init_flow(
-            hass,
-            source=SOURCE_IMPORT,
-            data={
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "cannot_connect"
-
-
 async def test_options(hass: HomeAssistantType) -> None:
     """Check an options flow."""
 
@@ -689,6 +634,7 @@ async def test_options(hass: HomeAssistantType) -> None:
             {ATTR_ENTITY_ID: TEST_ENTITY_ID_1},
             blocking=True,
         )
+        # pylint: disable=unsubscriptable-object
         assert client.async_send_set_color.call_args[1][CONF_PRIORITY] == new_priority
 
 

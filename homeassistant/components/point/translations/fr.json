@@ -5,7 +5,8 @@
             "authorize_url_fail": "Erreur inconnue lors de la g\u00e9n\u00e9ration d'une URL d'autorisation.",
             "authorize_url_timeout": "D\u00e9lai de g\u00e9n\u00e9ration de l'URL d'authentification d\u00e9pass\u00e9.",
             "external_setup": "Point correctement configur\u00e9 \u00e0 partir d\u2019un autre flux.",
-            "no_flows": "Le composant n'est pas configur\u00e9. Veuillez suivre la documentation."
+            "no_flows": "Le composant n'est pas configur\u00e9. Veuillez suivre la documentation.",
+            "unknown_authorize_url_generation": "Erreur inconnue lors de la g\u00e9n\u00e9ration d'une URL d'autorisation."
         },
         "create_entry": {
             "default": "Authentification r\u00e9ussie"

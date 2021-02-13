@@ -792,7 +792,7 @@ async def test_update_entry_options_and_trigger_listener(hass, manager):
 
 async def test_setup_raise_not_ready(hass, caplog):
     """Test a setup raising not ready."""
-    entry = MockConfigEntry(domain="test")
+    entry = MockConfigEntry(title="test_title", domain="test")
 
     mock_setup_entry = AsyncMock(side_effect=ConfigEntryNotReady)
     mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
@@ -802,7 +802,7 @@ async def test_setup_raise_not_ready(hass, caplog):
         await entry.async_setup(hass)
 
     assert len(mock_call.mock_calls) == 1
-    assert "Config entry for test not ready yet" in caplog.text
+    assert "Config entry 'test_title' for test integration not ready yet" in caplog.text
     p_hass, p_wait_time, p_setup = mock_call.mock_calls[0][1]
 
     assert p_hass is hass
@@ -1583,6 +1583,45 @@ async def test_manual_add_overrides_ignored_entry(hass, manager):
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["additional"] == "data"
     assert len(async_reload.mock_calls) == 0
+
+
+async def test_manual_add_overrides_ignored_entry_singleton(hass, manager):
+    """Test that we can ignore manually add entry, overriding ignored entry."""
+    hass.config.components.add("comp")
+    entry = MockConfigEntry(
+        domain="comp",
+        state=config_entries.ENTRY_STATE_LOADED,
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            if self._async_current_entries():
+                return self.async_abort(reason="single_instance_allowed")
+            return self.async_create_entry(title="title", data={"token": "supersecret"})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow, "beer": 5}):
+        await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    p_hass, p_entry = mock_setup_entry.mock_calls[0][1]
+
+    assert p_hass is hass
+    assert p_entry.data == {"token": "supersecret"}
 
 
 async def test_unignore_step_form(hass, manager):

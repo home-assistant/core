@@ -1,5 +1,6 @@
 """Support for esphome devices."""
 import asyncio
+import functools
 import logging
 import math
 from typing import Any, Callable, Dict, List, Optional
@@ -39,8 +40,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 # Import config flow so that it's added to the registry
-from .config_flow import EsphomeFlowHandler  # noqa: F401
-from .entry_data import DATA_KEY, RuntimeEntryData
+from .entry_data import RuntimeEntryData
 
 DOMAIN = "esphome"
 _LOGGER = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up the esphome component."""
-    hass.data.setdefault(DATA_KEY, {})
+    hass.data.setdefault(DOMAIN, {})
 
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
@@ -83,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     store = Store(
         hass, STORAGE_VERSION, f"esphome.{entry.entry_id}", encoder=JSONEncoder
     )
-    entry_data = hass.data[DATA_KEY][entry.entry_id] = RuntimeEntryData(
+    entry_data = hass.data[DOMAIN][entry.entry_id] = RuntimeEntryData(
         client=cli, entry_id=entry.entry_id, store=store
     )
 
@@ -362,7 +362,7 @@ async def _cleanup_instance(
     hass: HomeAssistantType, entry: ConfigEntry
 ) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
-    data: RuntimeEntryData = hass.data[DATA_KEY].pop(entry.entry_id)
+    data: RuntimeEntryData = hass.data[DOMAIN].pop(entry.entry_id)
     if data.reconnect_task is not None:
         data.reconnect_task.cancel()
     for disconnect_cb in data.disconnect_callbacks:
@@ -520,7 +520,7 @@ class EsphomeBaseEntity(Entity):
                     f"esphome_{self._entry_id}_remove_"
                     f"{self._component_key}_{self._key}"
                 ),
-                self.async_remove,
+                functools.partial(self.async_remove, force_remove=True),
             )
         )
 
@@ -544,7 +544,7 @@ class EsphomeBaseEntity(Entity):
 
     @property
     def _entry_data(self) -> RuntimeEntryData:
-        return self.hass.data[DATA_KEY][self._entry_id]
+        return self.hass.data[DOMAIN][self._entry_id]
 
     @property
     def _static_info(self) -> EntityInfo:

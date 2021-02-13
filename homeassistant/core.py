@@ -8,7 +8,6 @@ import asyncio
 import datetime
 import enum
 import functools
-from ipaddress import ip_address
 import logging
 import os
 import pathlib
@@ -70,8 +69,12 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from homeassistant.util import location, network
-from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
+from homeassistant.util import location
+from homeassistant.util.async_ import (
+    fire_coroutine_threadsafe,
+    run_callback_threadsafe,
+    shutdown_run_callback_threadsafe,
+)
 import homeassistant.util.dt as dt_util
 from homeassistant.util.timeout import TimeoutManager
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
@@ -205,7 +208,7 @@ class CoreState(enum.Enum):
 
     def __str__(self) -> str:  # pylint: disable=invalid-str-returned
         """Return the event."""
-        return self.value  # type: ignore
+        return self.value
 
 
 class HomeAssistant:
@@ -304,7 +307,7 @@ class HomeAssistant:
             _LOGGER.warning(
                 "Something is blocking Home Assistant from wrapping up the "
                 "start up phase. We're going to continue anyway. Please "
-                "report the following info at http://bit.ly/2ogP58T : %s",
+                "report the following info at https://github.com/home-assistant/core/issues: %s",
                 ", ".join(self.config.components),
             )
 
@@ -548,6 +551,14 @@ class HomeAssistant:
         # stage 3
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+
+        # Prevent run_callback_threadsafe from scheduling any additional
+        # callbacks in the event loop as callbacks created on the futures
+        # it returns will never run after the final `self.async_block_till_done`
+        # which will cause the futures to block forever when waiting for
+        # the `result()` which will cause a deadlock when shutting down the executor.
+        shutdown_run_callback_threadsafe(self.loop)
+
         try:
             async with self.timeout.async_timeout(30):
                 await self.async_block_till_done()
@@ -571,7 +582,7 @@ class Context:
     parent_id: Optional[str] = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> Dict[str, Optional[str]]:
         """Return a dictionary representation of the context."""
         return {"id": self.id, "parent_id": self.parent_id, "user_id": self.user_id}
 
@@ -584,7 +595,7 @@ class EventOrigin(enum.Enum):
 
     def __str__(self) -> str:  # pylint: disable=invalid-str-returned
         """Return the event."""
-        return self.value  # type: ignore
+        return self.value
 
 
 class Event:
@@ -612,7 +623,7 @@ class Event:
         # The only event type that shares context are the TIME_CHANGED
         return hash((self.event_type, self.context.id, self.time_fired))
 
-    def as_dict(self) -> Dict:
+    def as_dict(self) -> Dict[str, Any]:
         """Create a dict representation of this Event.
 
         Async friendly.
@@ -682,7 +693,7 @@ class EventBus:
     def async_fire(
         self,
         event_type: str,
-        event_data: Optional[Dict] = None,
+        event_data: Optional[Dict[str, Any]] = None,
         origin: EventOrigin = EventOrigin.local,
         context: Optional[Context] = None,
         time_fired: Optional[datetime.datetime] = None,
@@ -844,7 +855,7 @@ class State:
         self,
         entity_id: str,
         state: str,
-        attributes: Optional[Mapping] = None,
+        attributes: Optional[Mapping[str, Any]] = None,
         last_changed: Optional[datetime.datetime] = None,
         last_updated: Optional[datetime.datetime] = None,
         context: Optional[Context] = None,
@@ -1091,7 +1102,7 @@ class StateMachine:
         self,
         entity_id: str,
         new_state: str,
-        attributes: Optional[Dict] = None,
+        attributes: Optional[Mapping[str, Any]] = None,
         force_update: bool = False,
         context: Optional[Context] = None,
     ) -> None:
@@ -1140,7 +1151,7 @@ class StateMachine:
         self,
         entity_id: str,
         new_state: str,
-        attributes: Optional[Dict] = None,
+        attributes: Optional[Mapping[str, Any]] = None,
         force_update: bool = False,
         context: Optional[Context] = None,
     ) -> None:
@@ -1346,6 +1357,7 @@ class ServiceRegistry:
         blocking: bool = False,
         context: Optional[Context] = None,
         limit: Optional[float] = SERVICE_CALL_LIMIT,
+        target: Optional[Dict] = None,
     ) -> Optional[bool]:
         """
         Call a service.
@@ -1353,7 +1365,9 @@ class ServiceRegistry:
         See description of async_call for details.
         """
         return asyncio.run_coroutine_threadsafe(
-            self.async_call(domain, service, service_data, blocking, context, limit),
+            self.async_call(
+                domain, service, service_data, blocking, context, limit, target
+            ),
             self._hass.loop,
         ).result()
 
@@ -1365,6 +1379,7 @@ class ServiceRegistry:
         blocking: bool = False,
         context: Optional[Context] = None,
         limit: Optional[float] = SERVICE_CALL_LIMIT,
+        target: Optional[Dict] = None,
     ) -> Optional[bool]:
         """
         Call a service.
@@ -1391,6 +1406,9 @@ class ServiceRegistry:
             handler = self._services[domain][service]
         except KeyError:
             raise ServiceNotFound(domain, service) from None
+
+        if target:
+            service_data.update(target)
 
         if handler.schema:
             try:
@@ -1668,39 +1686,7 @@ class Config:
         )
         data = await store.async_load()
 
-        async def migrate_base_url(_: Event) -> None:
-            """Migrate base_url to internal_url/external_url."""
-            if self.hass.config.api is None:
-                return
-
-            base_url = yarl.URL(self.hass.config.api.deprecated_base_url)
-
-            # Check if this is an internal URL
-            if str(base_url.host).endswith(".local") or (
-                network.is_ip_address(str(base_url.host))
-                and network.is_private(ip_address(base_url.host))
-            ):
-                await self.async_update(
-                    internal_url=network.normalize_url(str(base_url))
-                )
-                return
-
-            # External, ensure this is not a loopback address
-            if not (
-                network.is_ip_address(str(base_url.host))
-                and network.is_loopback(ip_address(base_url.host))
-            ):
-                await self.async_update(
-                    external_url=network.normalize_url(str(base_url))
-                )
-
         if data:
-            # Try to migrate base_url to internal_url/external_url
-            if "external_url" not in data:
-                self.hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_START, migrate_base_url
-                )
-
             self._update(
                 source=SOURCE_STORAGE,
                 latitude=data.get("latitude"),
