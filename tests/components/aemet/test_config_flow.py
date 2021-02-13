@@ -6,8 +6,13 @@ import requests_mock
 
 from homeassistant import data_entry_flow
 from homeassistant.components.aemet.const import DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_LOADED, SOURCE_USER
+from homeassistant.config_entries import (
+    ENTRY_STATE_LOADED,
+    ENTRY_STATE_NOT_LOADED,
+    SOURCE_USER,
+)
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+import homeassistant.util.dt as dt_util
 
 from .util import aemet_requests_mock
 
@@ -59,13 +64,23 @@ async def test_form(hass):
         assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
 
+
+async def test_form_duplicated_id(hass):
+    """Test that the options form."""
+
+    now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
+    with patch("homeassistant.util.dt.now", return_value=now), patch(
+        "homeassistant.util.dt.utcnow", return_value=now
+    ), requests_mock.mock() as _m:
+        aemet_requests_mock(_m)
+
         entry = MockConfigEntry(domain=DOMAIN, unique_id="aemet_unique_id", data=CONFIG)
         entry.add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
-
+        
         assert result["type"] == "abort"
         assert result["reason"] == "already_configured"
 
