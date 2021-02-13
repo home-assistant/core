@@ -572,9 +572,9 @@ class HomeKit:
         # of any kind (usually in pyhap) it should not prevent
         # the rest of the accessories from being created
         try:
-            self.bridge.add_accessory(
-                get_accessory(self.hass, self.driver, state, aid, conf)
-            )
+            acc = get_accessory(self.hass, self.driver, state, aid, conf)
+            if acc is not None:
+                self.bridge.add_accessory(acc)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Failed to create a HomeKit accessory for %s", state.entity_id

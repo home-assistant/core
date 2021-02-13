@@ -350,7 +350,7 @@ async def test_homekit_add_accessory(hass, mock_zeroconf):
         state = State("light.demo", "on")
         homekit.add_bridge_accessory(state)
         mock_get_acc.assert_called_with(hass, ANY, ANY, 1403373688, {})
-        assert mock_bridge.add_accessory.called
+        assert not mock_bridge.add_accessory.called
 
         state = State("demo.test", "on")
         homekit.add_bridge_accessory(state)
@@ -368,7 +368,6 @@ async def test_homekit_warn_add_accessory_bridge(
     hass, acc_category, mock_zeroconf, caplog
 ):
     """Test we warn when adding cameras or tvs to a bridge."""
-
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
@@ -388,9 +387,10 @@ async def test_homekit_warn_add_accessory_bridge(
 
     with patch(f"{PATH_HOMEKIT}.get_accessory") as mock_get_acc:
         mock_get_acc.side_effect = [None, mock_camera_acc, None]
-        homekit.add_bridge_accessory(State("camera.test", "on"))
+        state = State("camera.test", "on")
+        homekit.add_bridge_accessory(state)
         mock_get_acc.assert_called_with(hass, ANY, ANY, 1508819236, {})
-        assert mock_bridge.add_accessory.called
+        assert not mock_bridge.add_accessory.called
 
     assert "accessory mode" in caplog.text
 
