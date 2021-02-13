@@ -7,7 +7,13 @@ from homeassistant.components.cover import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
 )
-from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
+from homeassistant.const import (
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
+    STATE_UNKNOWN,
+)
 
 WINDOW_COVER_ENTITY = "cover.zws_12"
 GDC_COVER_ENTITY = "cover.aeon_labs_garage_door_controller_gen5"
@@ -457,3 +463,26 @@ async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
 
     state = hass.states.get(GDC_COVER_ENTITY)
     assert state.state == STATE_CLOSED
+
+    # Barrier sends a stopped state
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 12,
+            "args": {
+                "commandClassName": "Barrier Operator",
+                "commandClass": 102,
+                "endpoint": 0,
+                "property": "currentState",
+                "newValue": 253,
+                "prevValue": 252,
+                "propertyName": "currentState",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(GDC_COVER_ENTITY)
+    assert state.state == STATE_UNKNOWN
