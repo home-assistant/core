@@ -1068,7 +1068,6 @@ omit =
     homeassistant/components/xbox/sensor.py
     homeassistant/components/xbox_live/sensor.py
     homeassistant/components/xeoma/camera.py
-    homeassistant/components/xfinity/device_tracker.py
     homeassistant/components/xiaomi/camera.py
     homeassistant/components/xiaomi_aqara/__init__.py
     homeassistant/components/xiaomi_aqara/binary_sensor.py
