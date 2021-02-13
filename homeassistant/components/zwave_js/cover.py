@@ -3,6 +3,7 @@ import logging
 from typing import Any, Callable, List, Optional
 
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -116,6 +117,18 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave motorized barrier device."""
 
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        client: ZwaveClient,
+        info: ZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a ZwaveMotorizedBarrier entity."""
+        super().__init__(config_entry, client, info)
+        self._target_state: ZwaveValue = self.get_zwave_value(
+            "targetState", add_to_watched_value_ids=False
+        )
+
     @property
     def supported_features(self) -> Optional[int]:
         """Flag supported features."""
@@ -156,12 +169,8 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the garage door."""
-        target_state = self.get_zwave_value("targetState")
-        if target_state is not None:
-            await self.info.node.async_set_value(target_state, BARRIER_TARGET_OPEN)
+        await self.info.node.async_set_value(self._target_state, BARRIER_TARGET_OPEN)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the garage door."""
-        target_state = self.get_zwave_value("targetState")
-        if target_state is not None:
-            await self.info.node.async_set_value(target_state, BARRIER_TARGET_CLOSE)
+        await self.info.node.async_set_value(self._target_state, BARRIER_TARGET_CLOSE)

@@ -379,15 +379,18 @@ DISCOVERY_SCHEMAS = [
     ZWaveDiscoverySchema(
         platform="cover",
         hint="motorized_barrier",
-        device_class_generic={"Entry Control"},
-        device_class_specific={
-            "Secure Barrier Add-on",
-        },
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.BARRIER_OPERATOR},
             property={"currentState"},
             type={"number"},
         ),
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.BARRIER_OPERATOR},
+                property={"targetState"},
+                type={"number"},
+            ),
+        ],
     ),
     # fan
     ZWaveDiscoverySchema(
