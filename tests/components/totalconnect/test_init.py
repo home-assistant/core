@@ -24,5 +24,6 @@ async def test_reauth_started(hass):
     ) as mock_client:
         mock_client.return_value.is_valid_credentials.return_value = False
         assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
 
     assert mock_entry.state == ENTRY_STATE_SETUP_ERROR
