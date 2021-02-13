@@ -46,6 +46,13 @@ addon_stop:
       selector:
         addon:
 
+homeassistant_update:
+  description: Update the Home Assistant docker image.
+  fields:
+    version:
+      description: Optional or it will be use the latest version.
+      example: 0.40.1
+
 host_reboot:
   name: Reboot the host system.
   description: Reboot the host system.

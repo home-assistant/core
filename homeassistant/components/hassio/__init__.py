@@ -1,24 +1,27 @@
 """Support for Hass.io."""
+import asyncio
 from datetime import timedelta
 import logging
 import os
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.homeassistant import SERVICE_CHECK_CONFIG
 import homeassistant.config as conf_util
+from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
+from homeassistant.core import DOMAIN as HASS_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
 
@@ -32,6 +35,7 @@ from .const import (
     ATTR_HOMEASSISTANT,
     ATTR_INPUT,
     ATTR_PASSWORD,
+    ATTR_SLUG,
     ATTR_SNAPSHOT,
     DOMAIN,
 )
@@ -46,6 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+PLATFORMS = ["binary_sensor", "sensor"]
 
 CONF_FRONTEND_REPO = "development_repo"
 
@@ -62,9 +67,12 @@ DATA_OS_INFO = "hassio_os_info"
 DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=55)
 
+ADDONS_COORDINATOR = "hassio_addons_coordinator"
+
 SERVICE_ADDON_START = "addon_start"
 SERVICE_ADDON_STOP = "addon_stop"
 SERVICE_ADDON_RESTART = "addon_restart"
+SERVICE_ADDON_UPDATE = "addon_update"
 SERVICE_ADDON_STDIN = "addon_stdin"
 SERVICE_HOST_SHUTDOWN = "host_shutdown"
 SERVICE_HOST_REBOOT = "host_reboot"
@@ -110,6 +118,7 @@ MAP_SERVICE_API = {
     SERVICE_ADDON_START: ("/addons/{addon}/start", SCHEMA_ADDON, 60, False),
     SERVICE_ADDON_STOP: ("/addons/{addon}/stop", SCHEMA_ADDON, 60, False),
     SERVICE_ADDON_RESTART: ("/addons/{addon}/restart", SCHEMA_ADDON, 60, False),
+    SERVICE_ADDON_UPDATE: ("/addons/{addon}/update", SCHEMA_ADDON, 60, False),
     SERVICE_ADDON_STDIN: ("/addons/{addon}/stdin", SCHEMA_ADDON_STDIN, 60, False),
     SERVICE_HOST_SHUTDOWN: ("/host/shutdown", SCHEMA_NO_DATA, 60, False),
     SERVICE_HOST_REBOOT: ("/host/reboot", SCHEMA_NO_DATA, 60, False),
@@ -455,4 +464,85 @@ async def async_setup(hass, config):
     # Init add-on ingress panels
     await async_setup_addon_panel(hass, hassio)
 
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_HASSIO})
+    )
+
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
+    if not is_hassio(hass):
+        _LOGGER.info(
+            "Home Assistant instance is no longer running Home Assistant OS. "
+            "The config entry will be removed"
+        )
+        hass.async_create_task(hass.config_entries.async_unload(config_entry.entry_id))
+        return True
+
+    coordinator = HassioAddonsDataUpdateCoordinator(hass, config_entry)
+    await coordinator.async_refresh()
+    hass.data[ADDONS_COORDINATOR] = coordinator
+
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
+        )
+
+    return True
+
+
+async def async_unload_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry
+) -> bool:
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    )
+
+    return unload_ok
+
+
+class HassioAddonsDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to retrieve Hass.io addons status."""
+
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+        """Initialize coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=HASSIO_UPDATE_INTERVAL,
+            update_method=self._async_update_data,
+        )
+        self.data = {}
+        self.config_entry = config_entry
+
+    async def _async_update_data(self) -> Dict[str, Any]:
+        """Update data via library."""
+        data = await self.hass.data[DOMAIN].get_addons_info()
+        if not data:
+            raise UpdateFailed
+
+        addons = {
+            addon[ATTR_SLUG]: addon for addon in data["addons"] if addon[ATTR_INSTALLED]
+        }
+
+        # If this is the initial refresh, just return the dict
+        if not self.data:
+            return addons
+
+        # If this is not the initial refresh, reload the config entry if the list of
+        # installed addons has changed
+        if addons.keys() != self.data.keys():
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            )
+
+        return addons
