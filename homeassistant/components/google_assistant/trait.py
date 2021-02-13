@@ -686,8 +686,7 @@ class StartStopTrait(_Trait):
 
 @register_trait
 class TemperatureControlTrait(_Trait):
-    """Trait for devices (other than thermostats) that support controlling temperature, either within or around the device.
-       Workaround for Temperature sensors
+    """Trait for devices (other than thermostats) that support controlling temperature. Workaround for Temperature sensors.
 
     https://developers.google.com/assistant/smarthome/traits/temperaturecontrol
     """
@@ -702,6 +701,7 @@ class TemperatureControlTrait(_Trait):
         )
 
     def sync_attributes(self):
+        """Return temperature attributes for a sync request."""
         return {
             "temperatureUnitForUX": _google_temp_unit(
                 self.hass.config.units.temperature_unit
@@ -714,7 +714,7 @@ class TemperatureControlTrait(_Trait):
         }
 
     def query_attributes(self):
-        """Return temperature point and modes query attributes."""
+        """Return temperature states."""
         response = {}
         unit = self.hass.config.units.temperature_unit
         current_temp = self.state.state
@@ -726,6 +726,7 @@ class TemperatureControlTrait(_Trait):
         return response
 
     async def execute(self, command, data, params, challenge):
+        """Unsupported. """
         raise SmartHomeError(ERR_NOT_SUPPORTED, "Execute is not supported by sensor")
 
 
