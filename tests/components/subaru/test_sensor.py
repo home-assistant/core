@@ -1,8 +1,11 @@
 """Test Subaru sensors."""
-
 from unittest.mock import patch
 
-from homeassistant.components.subaru.const import VEHICLE_NAME
+from homeassistant.components.subaru.const import (
+    DOMAIN,
+    ENTRY_COORDINATOR,
+    VEHICLE_NAME,
+)
 from homeassistant.components.subaru.sensor import (
     API_GEN_2_SENSORS,
     EV_SENSORS,
@@ -20,67 +23,47 @@ from .api_responses import (
     VEHICLE_DATA,
     VEHICLE_STATUS_EV,
 )
-from .test_init import setup_subaru_integration
+
+VEHICLE_NAME = VEHICLE_DATA[TEST_VIN_2_EV][VEHICLE_NAME]
 
 
-async def test_sensors_ev_imperial(hass):
+async def test_sensors_ev_imperial(hass, ev_entry):
     """Test sensors supporting imperial units."""
     with patch("homeassistant.components.subaru.config_flow.SubaruAPI.fetch"), patch(
         "homeassistant.components.subaru.config_flow.SubaruAPI.get_data",
         return_value=VEHICLE_STATUS_EV,
     ):
-        await _setup_ev(hass, unit_system=IMPERIAL_SYSTEM)
+        hass.config.units = IMPERIAL_SYSTEM
+        coordinator = hass.data[DOMAIN][ev_entry.entry_id][ENTRY_COORDINATOR]
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
 
-        sensor_list = EV_SENSORS
-        sensor_list.extend(API_GEN_2_SENSORS)
-        sensor_list.extend(SAFETY_SENSORS)
-        expected = _get_expected(
-            VEHICLE_DATA[TEST_VIN_2_EV][VEHICLE_NAME],
-            sensor_list,
-            EXPECTED_STATE_EV_IMPERIAL,
-        )
-
-        for sensor in expected:
-            actual = hass.states.get(sensor)
-            assert actual.state == expected[sensor]
+    _assert_data(hass, EXPECTED_STATE_EV_IMPERIAL)
 
 
-async def test_sensors_ev_metric(hass):
+async def test_sensors_ev_metric(hass, ev_entry):
     """Test sensors supporting metric units."""
     with patch("homeassistant.components.subaru.config_flow.SubaruAPI.fetch"), patch(
         "homeassistant.components.subaru.config_flow.SubaruAPI.get_data",
         return_value=VEHICLE_STATUS_EV,
     ):
-        await _setup_ev(hass)
-
-        sensor_list = EV_SENSORS
-        sensor_list.extend(API_GEN_2_SENSORS)
-        sensor_list.extend(SAFETY_SENSORS)
-        expected = _get_expected(
-            VEHICLE_DATA[TEST_VIN_2_EV][VEHICLE_NAME],
-            sensor_list,
-            EXPECTED_STATE_EV_METRIC,
-        )
-
-        for sensor in expected:
-            actual = hass.states.get(sensor)
-            assert actual.state == expected[sensor]
+        hass.config.units = METRIC_SYSTEM
+        coordinator = hass.data[DOMAIN][ev_entry.entry_id][ENTRY_COORDINATOR]
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+        _assert_data(hass, EXPECTED_STATE_EV_METRIC)
 
 
-def _get_expected(vehicle_name, sensor_list, expected_state):
-    expected = {}
+def _assert_data(hass, expected_state):
+    sensor_list = EV_SENSORS
+    sensor_list.extend(API_GEN_2_SENSORS)
+    sensor_list.extend(SAFETY_SENSORS)
+    expected_states = {}
     for item in sensor_list:
-        expected[
-            f"sensor.{slugify(f'{vehicle_name} {item[SENSOR_NAME]}')}"
+        expected_states[
+            f"sensor.{slugify(f'{VEHICLE_NAME} {item[SENSOR_NAME]}')}"
         ] = expected_state[item[SENSOR_FIELD]]
-    return expected
 
-
-async def _setup_ev(hass, unit_system=METRIC_SYSTEM):
-    hass.config.units = unit_system
-    return await setup_subaru_integration(
-        hass,
-        vehicle_list=[TEST_VIN_2_EV],
-        vehicle_data=VEHICLE_DATA[TEST_VIN_2_EV],
-        vehicle_status=VEHICLE_STATUS_EV,
-    )
+    for sensor in expected_states:
+        actual = hass.states.get(sensor)
+        assert actual.state == expected_states[sensor]
