@@ -349,6 +349,7 @@ def async_start_pairing_flow(hass, entry_id, title, pincode, uri):
 def async_abort_pairing_flow(hass, entry_id):
     """Dismiss persistent notification and remove QR code."""
     for flow in hass.config_entries.flow.async_progress():
+        _LOGGER.debug("Flow: %s", flow)
         if flow["domain"] != DOMAIN:
             continue
 
