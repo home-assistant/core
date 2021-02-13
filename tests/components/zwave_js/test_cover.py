@@ -3,11 +3,13 @@ from zwave_js_server.event import Event
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
+    DEVICE_CLASS_GARAGE,
     DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
@@ -302,6 +304,9 @@ async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
     node = gdc_zw062
 
     state = hass.states.get(GDC_COVER_ENTITY)
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_GARAGE
+
     assert state.state == STATE_CLOSED
 
     # Test open
