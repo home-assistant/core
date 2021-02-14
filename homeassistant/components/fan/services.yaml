@@ -85,6 +85,9 @@ increase_speed:
     entity_id:
       description: Name(s) of the entities to increase speed
       example: "fan.living_room"
+    percentage_step:
+      description: Increase speed by a percentage. Should be between 0..100.
+      example: 14.29
 
 decrease_speed:
   description: Decrease the speed of the fan.
@@ -92,3 +95,7 @@ decrease_speed:
     entity_id:
       description: Name(s) of the entities to decrease speed
       example: "fan.living_room"
+    percentage_step:
+      description: Decrease speed by a percentage. Should be between 0..100.
+      example: 14.29
+
