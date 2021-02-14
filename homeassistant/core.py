@@ -756,6 +756,10 @@ class EventBus:
         To listen to all events specify the constant ``MATCH_ALL``
         as event_type.
 
+        An optional event_filter, which must be a callable decorated with
+        @callback that returns a boolean value, determines if the
+        listener callable should run.
+
         This method must be run in the event loop.
         """
         if event_filter is not None and not is_callback(event_filter):
