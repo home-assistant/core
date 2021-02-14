@@ -56,7 +56,7 @@ def playlist_response(sequence, segments):
     response = [
         "#EXTM3U",
         "#EXT-X-VERSION:7",
-        "#EXT-X-TARGETDURATION:1000",
+        "#EXT-X-TARGETDURATION:10",
         '#EXT-X-MAP:URI="init.mp4"',
         f"#EXT-X-MEDIA-SEQUENCE:{sequence}",
     ]
