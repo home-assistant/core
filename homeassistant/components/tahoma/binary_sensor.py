@@ -102,15 +102,3 @@ class TahomaBinarySensor(TahomaEntity, BinarySensorEntity):
         return TAHOMA_BINARY_SENSOR_DEVICE_CLASSES.get(
             self.device.widget
         ) or TAHOMA_BINARY_SENSOR_DEVICE_CLASSES.get(self.device.ui_class)
-
-    @property
-    def icon(self) -> Optional[str]:
-        """Return the icon to use in the frontend, if any."""
-        if self.device_class == DEVICE_CLASS_WATER:
-            if self.is_on:
-                return ICON_WATER
-            return ICON_WATER_OFF
-
-        icons = {DEVICE_CLASS_GAS: ICON_WAVES, DEVICE_CLASS_RAIN: ICON_WEATHER_RAINY}
-
-        return icons.get(self.device_class)
