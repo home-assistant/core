@@ -20,7 +20,7 @@ from homeassistant.components.modbus.const import (
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_NAME, CONF_OFFSET, CONF_SLAVE
 
-from .conftest import base_test
+from .conftest import base_config_test, base_test
 
 
 @pytest.mark.parametrize("do_options", [False, True])
@@ -44,18 +44,14 @@ async def test_config_sensor(hass, do_options):
                 CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
             }
         )
-    await base_test(
+    await base_config_test(
         hass,
         config_sensor,
         sensor_name,
         SENSOR_DOMAIN,
         None,
         CONF_REGISTERS,
-        None,
-        None,
         method_discovery=False,
-        check_config_only=True,
-        scan_interval=5,
     )
 
 
@@ -272,7 +268,7 @@ async def test_config_sensor(hass, do_options):
 async def test_all_sensor(hass, cfg, regs, expected):
     """Run test for sensor."""
     sensor_name = "modbus_test_sensor"
-    await base_test(
+    state = await base_test(
         hass,
         {CONF_NAME: sensor_name, CONF_REGISTER: 1234, **cfg},
         sensor_name,
@@ -284,3 +280,4 @@ async def test_all_sensor(hass, cfg, regs, expected):
         method_discovery=False,
         scan_interval=5,
     )
+    assert state == expected

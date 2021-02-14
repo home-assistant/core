@@ -12,7 +12,7 @@ from homeassistant.const import (
     STATE_OPENING,
 )
 
-from .conftest import base_test
+from .conftest import base_config_test, base_test
 
 
 @pytest.mark.parametrize("do_options", [False, True])
@@ -31,17 +31,14 @@ async def test_config_cover(hass, do_options, read_type):
                 CONF_SCAN_INTERVAL: 20,
             }
         )
-    await base_test(
+    await base_config_test(
         hass,
         device_config,
         device_name,
         COVER_DOMAIN,
         CONF_COVERS,
         None,
-        None,
-        None,
         method_discovery=True,
-        check_config_only=True,
     )
 
 
@@ -73,7 +70,7 @@ async def test_config_cover(hass, do_options, read_type):
 async def test_coil_cover(hass, regs, expected):
     """Run test for given config."""
     cover_name = "modbus_test_cover"
-    await base_test(
+    state = await base_test(
         hass,
         {
             CONF_NAME: cover_name,
@@ -89,6 +86,7 @@ async def test_coil_cover(hass, regs, expected):
         method_discovery=True,
         scan_interval=5,
     )
+    assert state == expected
 
 
 @pytest.mark.parametrize(
@@ -119,7 +117,7 @@ async def test_coil_cover(hass, regs, expected):
 async def test_register_COVER(hass, regs, expected):
     """Run test for given config."""
     cover_name = "modbus_test_cover"
-    await base_test(
+    state = await base_test(
         hass,
         {
             CONF_NAME: cover_name,
@@ -135,3 +133,4 @@ async def test_register_COVER(hass, regs, expected):
         method_discovery=True,
         scan_interval=5,
     )
+    assert state == expected

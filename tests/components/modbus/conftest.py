@@ -128,5 +128,30 @@ async def base_test(
 
         # Check state
         entity_id = f"{entity_domain}.{device_name}"
-        state = hass.states.get(entity_id).state
-        assert state == expected
+        return hass.states.get(entity_id).state
+
+
+async def base_config_test(
+    hass,
+    config_device,
+    device_name,
+    entity_domain,
+    array_name_discovery,
+    array_name_old_config,
+    method_discovery=False,
+    config_modbus=None,
+):
+    """Check config of device for given config."""
+
+    await base_test(
+        hass,
+        config_device,
+        device_name,
+        entity_domain,
+        array_name_discovery,
+        array_name_old_config,
+        None,
+        None,
+        method_discovery=method_discovery,
+        check_config_only=True,
+    )

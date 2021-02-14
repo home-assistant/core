@@ -10,7 +10,7 @@ from homeassistant.components.modbus.const import (
 )
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_SLAVE, STATE_OFF, STATE_ON
 
-from .conftest import base_test
+from .conftest import base_config_test, base_test
 
 
 @pytest.mark.parametrize("do_options", [False, True])
@@ -28,18 +28,14 @@ async def test_config_binary_sensor(hass, do_options):
                 CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
             }
         )
-    await base_test(
+    await base_config_test(
         hass,
         config_sensor,
         sensor_name,
         SENSOR_DOMAIN,
         None,
         CONF_INPUTS,
-        None,
-        None,
         method_discovery=False,
-        check_config_only=True,
-        scan_interval=5,
     )
 
 
@@ -72,7 +68,7 @@ async def test_config_binary_sensor(hass, do_options):
 async def test_all_binary_sensor(hass, do_type, regs, expected):
     """Run test for given config."""
     sensor_name = "modbus_test_binary_sensor"
-    await base_test(
+    state = await base_test(
         hass,
         {CONF_NAME: sensor_name, CONF_ADDRESS: 1234, CONF_INPUT_TYPE: do_type},
         sensor_name,
@@ -84,3 +80,4 @@ async def test_all_binary_sensor(hass, do_type, regs, expected):
         method_discovery=False,
         scan_interval=5,
     )
+    assert state == expected

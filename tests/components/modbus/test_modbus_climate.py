@@ -10,7 +10,7 @@ from homeassistant.components.modbus.const import (
 )
 from homeassistant.const import CONF_NAME, CONF_SCAN_INTERVAL, CONF_SLAVE
 
-from .conftest import base_test
+from .conftest import base_config_test, base_test
 
 
 @pytest.mark.parametrize("do_options", [False, True])
@@ -30,17 +30,14 @@ async def test_config_climate(hass, do_options):
                 CONF_DATA_COUNT: 2,
             }
         )
-    await base_test(
+    await base_config_test(
         hass,
         device_config,
         device_name,
         CLIMATE_DOMAIN,
         CONF_CLIMATES,
         None,
-        None,
-        None,
         method_discovery=True,
-        check_config_only=True,
     )
 
 
@@ -57,7 +54,7 @@ async def test_temperature_climate(hass, regs, expected):
     """Run test for given config."""
     climate_name = "modbus_test_climate"
     return
-    await base_test(
+    state = await base_test(
         hass,
         {
             CONF_NAME: climate_name,
@@ -75,3 +72,4 @@ async def test_temperature_climate(hass, regs, expected):
         method_discovery=True,
         scan_interval=5,
     )
+    assert state == expected

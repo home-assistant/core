@@ -17,7 +17,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 
-from .conftest import base_test
+from .conftest import base_config_test, base_test
 
 
 @pytest.mark.parametrize("do_options", [False, True])
@@ -45,18 +45,14 @@ async def test_config_switch(hass, do_options, read_type):
     if do_options:
         device_config.update({})
 
-    await base_test(
+    await base_config_test(
         hass,
         device_config,
         device_name,
         SWITCH_DOMAIN,
         None,
         array_type,
-        None,
-        None,
         method_discovery=False,
-        check_config_only=True,
-        scan_interval=5,
     )
 
 
@@ -88,7 +84,7 @@ async def test_config_switch(hass, do_options, read_type):
 async def test_coil_switch(hass, regs, expected):
     """Run test for given config."""
     switch_name = "modbus_test_switch"
-    await base_test(
+    state = await base_test(
         hass,
         {
             CONF_NAME: switch_name,
@@ -104,6 +100,7 @@ async def test_coil_switch(hass, regs, expected):
         method_discovery=False,
         scan_interval=5,
     )
+    assert state == expected
 
 
 @pytest.mark.parametrize(
@@ -134,7 +131,7 @@ async def test_coil_switch(hass, regs, expected):
 async def test_register_switch(hass, regs, expected):
     """Run test for given config."""
     switch_name = "modbus_test_switch"
-    await base_test(
+    state = await base_test(
         hass,
         {
             CONF_NAME: switch_name,
@@ -152,6 +149,7 @@ async def test_register_switch(hass, regs, expected):
         method_discovery=False,
         scan_interval=5,
     )
+    assert state == expected
 
 
 @pytest.mark.parametrize(
@@ -174,7 +172,7 @@ async def test_register_switch(hass, regs, expected):
 async def test_register_state_switch(hass, regs, expected):
     """Run test for given config."""
     switch_name = "modbus_test_switch"
-    await base_test(
+    state = await base_test(
         hass,
         {
             CONF_NAME: switch_name,
@@ -192,3 +190,4 @@ async def test_register_state_switch(hass, regs, expected):
         method_discovery=False,
         scan_interval=5,
     )
+    assert state == expected
