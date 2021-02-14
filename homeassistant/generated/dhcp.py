@@ -17,6 +17,21 @@ DHCP = [
         "macaddress": "B8B7F1*"
     },
     {
+        "domain": "axis",
+        "hostname": "axis-00408c*",
+        "macaddress": "00408C*"
+    },
+    {
+        "domain": "axis",
+        "hostname": "axis-accc8e*",
+        "macaddress": "ACCC8E*"
+    },
+    {
+        "domain": "axis",
+        "hostname": "axis-b8a44f*",
+        "macaddress": "B8A44F*"
+    },
+    {
         "domain": "flume",
         "hostname": "flume-gw-*",
         "macaddress": "ECFABC*"
@@ -25,6 +40,21 @@ DHCP = [
         "domain": "flume",
         "hostname": "flume-gw-*",
         "macaddress": "B4E62D*"
+    },
+    {
+        "domain": "lyric",
+        "hostname": "lyric-*",
+        "macaddress": "48A2E6"
+    },
+    {
+        "domain": "lyric",
+        "hostname": "lyric-*",
+        "macaddress": "B82CA0"
+    },
+    {
+        "domain": "lyric",
+        "hostname": "lyric-*",
+        "macaddress": "00D02D"
     },
     {
         "domain": "nest",
@@ -39,6 +69,10 @@ DHCP = [
         "domain": "nuheat",
         "hostname": "nuheat",
         "macaddress": "002338*"
+    },
+    {
+        "domain": "nuki",
+        "hostname": "nuki_bridge_*"
     },
     {
         "domain": "powerwall",
@@ -91,14 +125,14 @@ DHCP = [
         "macaddress": "002702*"
     },
     {
-        "domain": "somfy",
-        "hostname": "gateway-*",
-        "macaddress": "F8811A*"
-    },
-    {
         "domain": "somfy_mylink",
         "hostname": "somfy_*",
         "macaddress": "B8B7F1*"
+    },
+    {
+        "domain": "squeezebox",
+        "hostname": "squeezebox*",
+        "macaddress": "000420*"
     },
     {
         "domain": "tesla",
@@ -114,5 +148,10 @@ DHCP = [
         "domain": "tesla",
         "hostname": "tesla_*",
         "macaddress": "98ED5C*"
+    },
+    {
+        "domain": "toon",
+        "hostname": "eneco-*",
+        "macaddress": "74C63B*"
     }
 ]

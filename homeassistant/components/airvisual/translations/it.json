@@ -7,7 +7,8 @@
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "general_error": "Errore imprevisto",
-            "invalid_api_key": "Chiave API non valida"
+            "invalid_api_key": "Chiave API non valida",
+            "location_not_found": "Posizione non trovata"
         },
         "step": {
             "geography": {
@@ -18,6 +19,25 @@
                 },
                 "description": "Utilizzare l'API di AirVisual cloud per monitorare una posizione geografica.",
                 "title": "Configurare una Geografia"
+            },
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "Chiave API",
+                    "latitude": "Latitudine",
+                    "longitude": "Logitudine"
+                },
+                "description": "Usa l'API cloud di AirVisual per monitorare una latitudine/longitudine.",
+                "title": "Configurare un'area geografica"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "Chiave API",
+                    "city": "Citt\u00e0",
+                    "country": "Nazione",
+                    "state": "Stato"
+                },
+                "description": "Usa l'API cloud di AirVisual per monitorare una citt\u00e0/stato/paese.",
+                "title": "Configurare un'area geografica"
             },
             "node_pro": {
                 "data": {

@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "place_id": "Platz-ID",
+                    "service_id": "Dienst-ID"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Recollect Waste konfigurieren"
+            }
+        }
+    }
+}

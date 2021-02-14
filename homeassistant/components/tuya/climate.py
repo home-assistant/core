@@ -1,6 +1,5 @@
 """Support for the Tuya climate devices."""
 from datetime import timedelta
-import logging
 
 from homeassistant.components.climate import (
     DOMAIN as SENSOR_DOMAIN,
@@ -23,8 +22,6 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT,
-    PRECISION_TENTHS,
-    PRECISION_WHOLE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -57,8 +54,6 @@ HA_STATE_TO_TUYA = {
 TUYA_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_TUYA.items()}
 
 FAN_MODES = {FAN_LOW, FAN_MEDIUM, FAN_HIGH}
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -153,13 +148,6 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
             if ha_mode not in self.operations:
                 self.operations.append(ha_mode)
             self._has_operation = True
-
-    @property
-    def precision(self):
-        """Return the precision of the system."""
-        if self._tuya.has_decimal():
-            return PRECISION_TENTHS
-        return PRECISION_WHOLE
 
     @property
     def temperature_unit(self):

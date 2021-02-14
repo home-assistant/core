@@ -6,7 +6,7 @@
   "dependencies": ["http"],
   "codeowners": ["@tetienne"],
   "requirements": ["pymfy==0.9.3"],
-  "dhcp": [
-     {"hostname":"gateway-*","macaddress":"F8811A*"}
+  "zeroconf": [
+    {"type": "_kizbox._tcp.local.", "name": "gateway*"}
   ]
 }

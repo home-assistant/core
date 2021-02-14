@@ -78,7 +78,6 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT binary sensor dynamically through MQTT discovery."""
-
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -214,7 +213,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity):
     @callback
     def _value_is_expired(self, *_):
         """Triggered when value is expired."""
-
         self._expiration_trigger = None
         self._expired = True
 

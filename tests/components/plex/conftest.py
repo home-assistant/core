@@ -168,6 +168,12 @@ def playqueue_created_fixture():
     return load_fixture("plex/playqueue_created.xml")
 
 
+@pytest.fixture(name="playqueue_1234", scope="session")
+def playqueue_1234_fixture():
+    """Load payload for playqueue 1234 and return it."""
+    return load_fixture("plex/playqueue_1234.xml")
+
+
 @pytest.fixture(name="plex_server_accounts", scope="session")
 def plex_server_accounts_fixture():
     """Load payload accounts on the Plex server and return it."""
@@ -252,6 +258,12 @@ def security_token_fixture():
 def show_seasons_fixture():
     """Load a show's seasons payload and return it."""
     return load_fixture("plex/show_seasons.xml")
+
+
+@pytest.fixture(name="sonos_resources", scope="session")
+def sonos_resources_fixture():
+    """Load Sonos resources payload and return it."""
+    return load_fixture("plex/sonos_resources.xml")
 
 
 @pytest.fixture(name="entry")

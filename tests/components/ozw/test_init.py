@@ -4,6 +4,7 @@ from unittest.mock import patch
 from homeassistant import config_entries
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.ozw import DOMAIN, PLATFORMS, const
+from homeassistant.const import ATTR_RESTORED, STATE_UNAVAILABLE
 
 from .common import setup_ozw
 
@@ -37,6 +38,27 @@ async def test_setup_entry_without_mqtt(hass):
     assert not await hass.config_entries.async_setup(entry.entry_id)
 
 
+async def test_publish_without_mqtt(hass, caplog):
+    """Test publish without mqtt integration setup."""
+    with patch("homeassistant.components.ozw.OZWOptions") as ozw_options:
+        await setup_ozw(hass)
+
+        send_message = ozw_options.call_args[1]["send_message"]
+
+        mqtt_entries = hass.config_entries.async_entries("mqtt")
+        mqtt_entry = mqtt_entries[0]
+        await hass.config_entries.async_remove(mqtt_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert not hass.config_entries.async_entries("mqtt")
+
+        # Sending a message should not error with the MQTT integration not set up.
+        send_message("test_topic", "test_payload")
+        await hass.async_block_till_done()
+
+    assert "MQTT integration is not set up" in caplog.text
+
+
 async def test_unload_entry(hass, generic_data, switch_msg, caplog):
     """Test unload the config entry."""
     entry = MockConfigEntry(
@@ -55,14 +77,21 @@ async def test_unload_entry(hass, generic_data, switch_msg, caplog):
     await hass.config_entries.async_unload(entry.entry_id)
 
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
-    assert len(hass.states.async_entity_ids("switch")) == 0
+    entities = hass.states.async_entity_ids("switch")
+    assert len(entities) == 1
+    for entity in entities:
+        assert hass.states.get(entity).state == STATE_UNAVAILABLE
+        assert hass.states.get(entity).attributes.get(ATTR_RESTORED)
 
     # Send a message for a switch from the broker to check that
     # all entity topic subscribers are unsubscribed.
     receive_message(switch_msg)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids("switch")) == 0
+    assert len(hass.states.async_entity_ids("switch")) == 1
+    for entity in entities:
+        assert hass.states.get(entity).state == STATE_UNAVAILABLE
+        assert hass.states.get(entity).attributes.get(ATTR_RESTORED)
 
     # Load the integration again and check that there are no errors when
     # adding the entities.
@@ -107,8 +136,8 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
 
     await hass.config_entries.async_remove(entry.entry_id)
 
-    stop_addon.call_count == 1
-    uninstall_addon.call_count == 1
+    assert stop_addon.call_count == 1
+    assert uninstall_addon.call_count == 1
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     stop_addon.reset_mock()
@@ -121,8 +150,8 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
 
     await hass.config_entries.async_remove(entry.entry_id)
 
-    stop_addon.call_count == 1
-    uninstall_addon.call_count == 0
+    assert stop_addon.call_count == 1
+    assert uninstall_addon.call_count == 0
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to stop the OpenZWave add-on" in caplog.text
@@ -137,8 +166,8 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
 
     await hass.config_entries.async_remove(entry.entry_id)
 
-    stop_addon.call_count == 1
-    uninstall_addon.call_count == 1
+    assert stop_addon.call_count == 1
+    assert uninstall_addon.call_count == 1
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to uninstall the OpenZWave add-on" in caplog.text

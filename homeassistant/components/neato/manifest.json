@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/neato",
   "requirements": [
-    "pybotvac==0.0.19"
+    "pybotvac==0.0.20"
   ],
   "codeowners": [
     "@dshokouhi",

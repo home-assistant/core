@@ -7,6 +7,7 @@ from hole.exceptions import HoleError
 from homeassistant.components import pi_hole, switch
 from homeassistant.components.pi_hole.const import (
     CONF_LOCATION,
+    CONF_STATISTICS_ONLY,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
     DEFAULT_SSL,
@@ -16,6 +17,7 @@ from homeassistant.components.pi_hole.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_API_KEY,
     CONF_HOST,
     CONF_NAME,
     CONF_SSL,
@@ -24,6 +26,8 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 from . import (
+    CONF_CONFIG_ENTRY,
+    CONF_DATA,
     SWITCH_ENTITY_ID,
     _create_mocked_hole,
     _patch_config_flow_hole,
@@ -196,6 +200,7 @@ async def test_unload(hass):
             CONF_LOCATION: DEFAULT_LOCATION,
             CONF_SSL: DEFAULT_SSL,
             CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+            CONF_STATISTICS_ONLY: True,
         },
     )
     entry.add_to_hass(hass)
@@ -208,3 +213,34 @@ async def test_unload(hass):
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.entry_id not in hass.data[pi_hole.DOMAIN]
+
+
+async def test_migrate(hass):
+    """Test migrate from old config entry."""
+    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONF_DATA)
+    entry.add_to_hass(hass)
+
+    mocked_hole = _create_mocked_hole()
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.data == CONF_CONFIG_ENTRY
+
+
+async def test_migrate_statistics_only(hass):
+    """Test migrate from old config entry with statistics only."""
+    conf_data = {**CONF_DATA}
+    conf_data[CONF_API_KEY] = ""
+    entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=conf_data)
+    entry.add_to_hass(hass)
+
+    mocked_hole = _create_mocked_hole()
+    with _patch_config_flow_hole(mocked_hole), _patch_init_hole(mocked_hole):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    config_entry_data = {**CONF_CONFIG_ENTRY}
+    config_entry_data[CONF_STATISTICS_ONLY] = True
+    config_entry_data[CONF_API_KEY] = ""
+    assert entry.data == config_entry_data

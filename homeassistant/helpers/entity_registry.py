@@ -19,6 +19,7 @@ from typing import (
     Optional,
     Tuple,
     Union,
+    cast,
 )
 
 import attr
@@ -34,11 +35,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import Event, callback, split_entity_id, valid_entity_id
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
+from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 from homeassistant.util.yaml import load_yaml
 
-from .singleton import singleton
 from .typing import UNDEFINED, HomeAssistantType, UndefinedType
 
 if TYPE_CHECKING:
@@ -114,6 +116,33 @@ class RegistryEntry:
     def disabled(self) -> bool:
         """Return if entry is disabled."""
         return self.disabled_by is not None
+
+    @callback
+    def write_unavailable_state(self, hass: HomeAssistantType) -> None:
+        """Write the unavailable state to the state machine."""
+        attrs: Dict[str, Any] = {ATTR_RESTORED: True}
+
+        if self.capabilities is not None:
+            attrs.update(self.capabilities)
+
+        if self.supported_features is not None:
+            attrs[ATTR_SUPPORTED_FEATURES] = self.supported_features
+
+        if self.device_class is not None:
+            attrs[ATTR_DEVICE_CLASS] = self.device_class
+
+        if self.unit_of_measurement is not None:
+            attrs[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
+
+        name = self.name or self.original_name
+        if name is not None:
+            attrs[ATTR_FRIENDLY_NAME] = name
+
+        icon = self.icon or self.original_icon
+        if icon is not None:
+            attrs[ATTR_ICON] = icon
+
+        hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
 
 
 class EntityRegistry:
@@ -285,7 +314,8 @@ class EntityRegistry:
         )
         self.async_schedule_save()
 
-    async def async_device_modified(self, event: Event) -> None:
+    @callback
+    def async_device_modified(self, event: Event) -> None:
         """Handle the removal or update of a device.
 
         Remove entities from the registry that are associated to a device when
@@ -305,9 +335,11 @@ class EntityRegistry:
         if event.data["action"] != "update":
             return
 
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_registry = dr.async_get(self.hass)
         device = device_registry.async_get(event.data["device_id"])
-        if not device.disabled:
+
+        # The device may be deleted already if the event handling is late
+        if not device or not device.disabled:
             entities = async_entries_for_device(
                 self, event.data["device_id"], include_disabled_entities=True
             )
@@ -388,7 +420,7 @@ class EntityRegistry:
 
         if new_entity_id is not UNDEFINED and new_entity_id != old.entity_id:
             if self.async_is_registered(new_entity_id):
-                raise ValueError("Entity is already registered")
+                raise ValueError("Entity with this ID is already registered")
 
             if not valid_entity_id(new_entity_id):
                 raise ValueError("Invalid entity ID")
@@ -539,12 +571,26 @@ class EntityRegistry:
             self._add_index(entry)
 
 
-@singleton(DATA_REGISTRY)
+@callback
+def async_get(hass: HomeAssistantType) -> EntityRegistry:
+    """Get entity registry."""
+    return cast(EntityRegistry, hass.data[DATA_REGISTRY])
+
+
+async def async_load(hass: HomeAssistantType) -> None:
+    """Load entity registry."""
+    assert DATA_REGISTRY not in hass.data
+    hass.data[DATA_REGISTRY] = EntityRegistry(hass)
+    await hass.data[DATA_REGISTRY].async_load()
+
+
+@bind_hass
 async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
-    """Create entity registry."""
-    reg = EntityRegistry(hass)
-    await reg.async_load()
-    return reg
+    """Get entity registry.
+
+    This is deprecated and will be removed in the future. Use async_get instead.
+    """
+    return async_get(hass)
 
 
 @callback
@@ -616,36 +662,13 @@ def async_setup_entity_restore(
     @callback
     def _write_unavailable_states(_: Event) -> None:
         """Make sure state machine contains entry for each registered entity."""
-        states = hass.states
-        existing = set(states.async_entity_ids())
+        existing = set(hass.states.async_entity_ids())
 
         for entry in registry.entities.values():
             if entry.entity_id in existing or entry.disabled:
                 continue
 
-            attrs: Dict[str, Any] = {ATTR_RESTORED: True}
-
-            if entry.capabilities is not None:
-                attrs.update(entry.capabilities)
-
-            if entry.supported_features is not None:
-                attrs[ATTR_SUPPORTED_FEATURES] = entry.supported_features
-
-            if entry.device_class is not None:
-                attrs[ATTR_DEVICE_CLASS] = entry.device_class
-
-            if entry.unit_of_measurement is not None:
-                attrs[ATTR_UNIT_OF_MEASUREMENT] = entry.unit_of_measurement
-
-            name = entry.name or entry.original_name
-            if name is not None:
-                attrs[ATTR_FRIENDLY_NAME] = name
-
-            icon = entry.icon or entry.original_icon
-            if icon is not None:
-                attrs[ATTR_ICON] = icon
-
-            states.async_set(entry.entity_id, STATE_UNAVAILABLE, attrs)
+            entry.write_unavailable_state(hass)
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _write_unavailable_states)
 

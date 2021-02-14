@@ -116,7 +116,9 @@ class TrackTemplateResult:
     result: Any
 
 
-def threaded_listener_factory(async_factory: Callable[..., Any]) -> CALLBACK_TYPE:
+def threaded_listener_factory(
+    async_factory: Callable[..., Any]
+) -> Callable[..., CALLBACK_TYPE]:
     """Convert an async event helper to a threaded one."""
 
     @ft.wraps(async_factory)
@@ -257,7 +259,7 @@ def async_track_state_change_event(
                     hass.async_run_hass_job(job, event)
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception(
-                        "Error while processing state changed for %s", entity_id
+                        "Error while processing state change for %s", entity_id
                     )
 
         hass.data[TRACK_STATE_CHANGE_LISTENER] = hass.bus.async_listen(
@@ -297,7 +299,6 @@ def _async_remove_indexed_listeners(
     job: HassJob,
 ) -> None:
     """Remove a listener."""
-
     callbacks = hass.data[data_key]
 
     for storage_key in storage_keys:
@@ -684,7 +685,6 @@ def async_track_template(
     Callable to unregister the listener.
 
     """
-
     job = HassJob(action)
 
     @callback
@@ -1103,7 +1103,6 @@ def async_track_point_in_time(
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in time."""
-
     job = action if isinstance(action, HassJob) else HassJob(action)
 
     @callback
@@ -1327,7 +1326,6 @@ def async_track_utc_time_change(
     local: bool = False,
 ) -> CALLBACK_TYPE:
     """Add a listener that will fire if time matches a pattern."""
-
     job = HassJob(action)
     # We do not have to wrap the function with time pattern matching logic
     # if no pattern given

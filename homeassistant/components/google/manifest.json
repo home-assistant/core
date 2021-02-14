@@ -4,7 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/google",
   "requirements": [
     "google-api-python-client==1.6.4",
-    "httplib2==0.10.3",
+    "httplib2==0.18.1",
     "oauth2client==4.0.0"
   ],
   "codeowners": []

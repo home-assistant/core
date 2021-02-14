@@ -186,6 +186,7 @@ class LightSchema:
             }
         ),
         vol.Any(
+            # either global "address" or all addresses for individual colors are required
             vol.Schema(
                 {
                     vol.Required(CONF_INDIVIDUAL_COLORS): {
@@ -427,5 +428,27 @@ class WeatherSchema:
             vol.Optional(CONF_KNX_DAY_NIGHT_ADDRESS): cv.string,
             vol.Optional(CONF_KNX_AIR_PRESSURE_ADDRESS): cv.string,
             vol.Optional(CONF_KNX_HUMIDITY_ADDRESS): cv.string,
+        }
+    )
+
+
+class FanSchema:
+    """Voluptuous schema for KNX fans."""
+
+    CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
+    CONF_OSCILLATION_ADDRESS = "oscillation_address"
+    CONF_OSCILLATION_STATE_ADDRESS = "oscillation_state_address"
+    CONF_MAX_STEP = "max_step"
+
+    DEFAULT_NAME = "KNX Fan"
+
+    SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_ADDRESS): cv.string,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_OSCILLATION_ADDRESS): cv.string,
+            vol.Optional(CONF_OSCILLATION_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_MAX_STEP): cv.byte,
         }
     )

@@ -225,7 +225,6 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
             {
                 "title_placeholders": {

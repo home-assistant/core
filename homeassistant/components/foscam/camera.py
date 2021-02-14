@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -16,7 +15,14 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv, entity_platform
 
-from .const import CONF_STREAM, DOMAIN, LOGGER, SERVICE_PTZ
+from .const import (
+    CONF_RTSP_PORT,
+    CONF_STREAM,
+    DOMAIN,
+    LOGGER,
+    SERVICE_PTZ,
+    SERVICE_PTZ_PRESET,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -25,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_NAME, default="Foscam Camera"): cv.string,
         vol.Optional(CONF_PORT, default=88): cv.port,
-        vol.Optional("rtsp_port"): cv.port,
+        vol.Optional(CONF_RTSP_PORT): cv.port,
     }
 )
 
@@ -54,26 +60,9 @@ DEFAULT_TRAVELTIME = 0.125
 
 ATTR_MOVEMENT = "movement"
 ATTR_TRAVELTIME = "travel_time"
+ATTR_PRESET_NAME = "preset_name"
 
-
-SERVICE_PTZ_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_MOVEMENT): vol.In(
-            [
-                DIR_UP,
-                DIR_DOWN,
-                DIR_LEFT,
-                DIR_RIGHT,
-                DIR_TOPLEFT,
-                DIR_TOPRIGHT,
-                DIR_BOTTOMLEFT,
-                DIR_BOTTOMRIGHT,
-            ]
-        ),
-        vol.Optional(ATTR_TRAVELTIME, default=DEFAULT_TRAVELTIME): cv.small_float,
-    }
-)
+PTZ_GOTO_PRESET_COMMAND = "ptz_goto_preset"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -89,6 +78,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         CONF_USERNAME: config[CONF_USERNAME],
         CONF_PASSWORD: config[CONF_PASSWORD],
         CONF_STREAM: "Main",
+        CONF_RTSP_PORT: config.get(CONF_RTSP_PORT, 554),
     }
 
     hass.async_create_task(
@@ -102,7 +92,31 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a Foscam IP camera from a config entry."""
     platform = entity_platform.current_platform.get()
     platform.async_register_entity_service(
-        SERVICE_PTZ, SERVICE_PTZ_SCHEMA, "async_perform_ptz"
+        SERVICE_PTZ,
+        {
+            vol.Required(ATTR_MOVEMENT): vol.In(
+                [
+                    DIR_UP,
+                    DIR_DOWN,
+                    DIR_LEFT,
+                    DIR_RIGHT,
+                    DIR_TOPLEFT,
+                    DIR_TOPRIGHT,
+                    DIR_BOTTOMLEFT,
+                    DIR_BOTTOMRIGHT,
+                ]
+            ),
+            vol.Optional(ATTR_TRAVELTIME, default=DEFAULT_TRAVELTIME): cv.small_float,
+        },
+        "async_perform_ptz",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_PTZ_PRESET,
+        {
+            vol.Required(ATTR_PRESET_NAME): cv.string,
+        },
+        "async_perform_ptz_preset",
     )
 
     camera = FoscamCamera(
@@ -128,8 +142,8 @@ class HassFoscamCamera(Camera):
         self._username = config_entry.data[CONF_USERNAME]
         self._password = config_entry.data[CONF_PASSWORD]
         self._stream = config_entry.data[CONF_STREAM]
-        self._unique_id = config_entry.unique_id
-        self._rtsp_port = None
+        self._unique_id = config_entry.entry_id
+        self._rtsp_port = config_entry.data[CONF_RTSP_PORT]
         self._motion_status = False
 
     async def async_added_to_hass(self):
@@ -139,24 +153,19 @@ class HassFoscamCamera(Camera):
             self._foscam_session.get_motion_detect_config
         )
 
-        if ret != 0:
+        if ret == -3:
+            LOGGER.info(
+                "Can't get motion detection status, camera %s configured with non-admin user",
+                self._name,
+            )
+
+        elif ret != 0:
             LOGGER.error(
                 "Error getting motion detection status of %s: %s", self._name, ret
             )
 
         else:
             self._motion_status = response == 1
-
-        # Get RTSP port
-        ret, response = await self.hass.async_add_executor_job(
-            self._foscam_session.get_port_info
-        )
-
-        if ret != 0:
-            LOGGER.error("Error getting RTSP port of %s: %s", self._name, ret)
-
-        else:
-            self._rtsp_port = response.get("rtspPort") or response.get("mediaPort")
 
     @property
     def unique_id(self):
@@ -199,6 +208,11 @@ class HassFoscamCamera(Camera):
             ret = self._foscam_session.enable_motion_detection()
 
             if ret != 0:
+                if ret == -3:
+                    LOGGER.info(
+                        "Can't set motion detection status, camera %s configured with non-admin user",
+                        self._name,
+                    )
                 return
 
             self._motion_status = True
@@ -214,6 +228,11 @@ class HassFoscamCamera(Camera):
             ret = self._foscam_session.disable_motion_detection()
 
             if ret != 0:
+                if ret == -3:
+                    LOGGER.info(
+                        "Can't set motion detection status, camera %s configured with non-admin user",
+                        self._name,
+                    )
                 return
 
             self._motion_status = False
@@ -243,6 +262,20 @@ class HassFoscamCamera(Camera):
 
         if ret != 0:
             LOGGER.error("Error stopping movement on '%s': %s", self._name, ret)
+            return
+
+    async def async_perform_ptz_preset(self, preset_name):
+        """Perform a PTZ preset action on the camera."""
+        LOGGER.debug("PTZ preset '%s' on %s", preset_name, self._name)
+
+        preset_function = getattr(self._foscam_session, PTZ_GOTO_PRESET_COMMAND)
+
+        ret, _ = await self.hass.async_add_executor_job(preset_function, preset_name)
+
+        if ret != 0:
+            LOGGER.error(
+                "Error moving to preset %s on '%s': %s", preset_name, self._name, ret
+            )
             return
 
     @property

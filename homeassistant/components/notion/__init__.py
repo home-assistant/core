@@ -171,6 +171,7 @@ class NotionEntity(CoordinatorEntity):
         return (
             self.coordinator.last_update_success
             and self.task_id in self.coordinator.data["tasks"]
+            and self._state
         )
 
     @property

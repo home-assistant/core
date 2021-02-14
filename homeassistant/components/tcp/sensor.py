@@ -78,10 +78,7 @@ class TcpSensor(Entity):
     @property
     def name(self):
         """Return the name of this sensor."""
-        name = self._config[CONF_NAME]
-        if name is not None:
-            return name
-        return super().name
+        return self._config[CONF_NAME]
 
     @property
     def state(self):

@@ -19,6 +19,7 @@ from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.const import (
     CONF_CLIENT_ID,
+    CONF_DISCOVERY,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_PORT,
@@ -28,7 +29,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.const import CONF_UNIQUE_ID  # noqa: F401
 from homeassistant.core import CoreState, Event, HassJob, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
@@ -40,7 +40,6 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
 
 # Loading the config flow file will register the flow
-from . import config_flow  # noqa: F401 pylint: disable=unused-import
 from . import debug_info, discovery
 from .const import (
     ATTR_PAYLOAD,
@@ -49,7 +48,6 @@ from .const import (
     ATTR_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
-    CONF_DISCOVERY,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
@@ -865,7 +863,7 @@ class MQTT:
             "Received message on %s%s: %s",
             msg.topic,
             " (retained)" if msg.retain else "",
-            msg.payload,
+            msg.payload[0:8192],
         )
         timestamp = dt_util.utcnow()
 
@@ -880,7 +878,7 @@ class MQTT:
                 except (AttributeError, UnicodeDecodeError):
                     _LOGGER.warning(
                         "Can't decode payload %s on %s with encoding %s (for %s)",
-                        msg.payload,
+                        msg.payload[0:8192],
                         msg.topic,
                         subscription.encoding,
                         subscription.job,
@@ -931,7 +929,9 @@ class MQTT:
         try:
             await asyncio.wait_for(self._pending_operations[mid].wait(), TIMEOUT_ACK)
         except asyncio.TimeoutError:
-            _LOGGER.error("Timed out waiting for mid %s", mid)
+            _LOGGER.warning(
+                "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
+            )
         finally:
             del self._pending_operations[mid]
 
@@ -1054,7 +1054,6 @@ async def websocket_subscribe(hass, connection, msg):
 @callback
 def async_subscribe_connection_status(hass, connection_status_callback):
     """Subscribe to MQTT connection changes."""
-
     connection_status_callback_job = HassJob(connection_status_callback)
 
     async def connected():

@@ -13,6 +13,7 @@ from axis.streammanager import SIGNAL_PLAYING, STATE_STOPPED
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.components.mqtt.models import Message
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -33,9 +34,11 @@ from .const import (
     CONF_EVENTS,
     CONF_MODEL,
     CONF_STREAM_PROFILE,
+    CONF_VIDEO_SOURCE,
     DEFAULT_EVENTS,
     DEFAULT_STREAM_PROFILE,
     DEFAULT_TRIGGER_TIME,
+    DEFAULT_VIDEO_SOURCE,
     DOMAIN as AXIS_DOMAIN,
     LOGGER,
     PLATFORMS,
@@ -60,8 +63,23 @@ class AxisNetworkDevice:
 
     @property
     def host(self):
-        """Return the host of this device."""
+        """Return the host address of this device."""
         return self.config_entry.data[CONF_HOST]
+
+    @property
+    def port(self):
+        """Return the HTTP port of this device."""
+        return self.config_entry.data[CONF_PORT]
+
+    @property
+    def username(self):
+        """Return the username of this device."""
+        return self.config_entry.data[CONF_USERNAME]
+
+    @property
+    def password(self):
+        """Return the password of this device."""
+        return self.config_entry.data[CONF_PASSWORD]
 
     @property
     def model(self):
@@ -74,8 +92,8 @@ class AxisNetworkDevice:
         return self.config_entry.data[CONF_NAME]
 
     @property
-    def serial(self):
-        """Return the serial number of this device."""
+    def unique_id(self):
+        """Return the unique ID (serial number) of this device."""
         return self.config_entry.unique_id
 
     # Options
@@ -97,22 +115,27 @@ class AxisNetworkDevice:
         """Config entry option defining minimum number of seconds to keep trigger high."""
         return self.config_entry.options.get(CONF_TRIGGER_TIME, DEFAULT_TRIGGER_TIME)
 
+    @property
+    def option_video_source(self):
+        """Config entry option defining what video source camera platform should use."""
+        return self.config_entry.options.get(CONF_VIDEO_SOURCE, DEFAULT_VIDEO_SOURCE)
+
     # Signals
 
     @property
     def signal_reachable(self):
         """Device specific event to signal a change in connection status."""
-        return f"axis_reachable_{self.serial}"
+        return f"axis_reachable_{self.unique_id}"
 
     @property
     def signal_new_event(self):
         """Device specific event to signal new device event available."""
-        return f"axis_new_event_{self.serial}"
+        return f"axis_new_event_{self.unique_id}"
 
     @property
     def signal_new_address(self):
         """Device specific event to signal a change in device address."""
-        return f"axis_new_address_{self.serial}"
+        return f"axis_new_address_{self.unique_id}"
 
     # Callbacks
 
@@ -151,8 +174,8 @@ class AxisNetworkDevice:
         device_registry = await self.hass.helpers.device_registry.async_get_registry()
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            connections={(CONNECTION_NETWORK_MAC, self.serial)},
-            identifiers={(AXIS_DOMAIN, self.serial)},
+            connections={(CONNECTION_NETWORK_MAC, self.unique_id)},
+            identifiers={(AXIS_DOMAIN, self.unique_id)},
             manufacturer=ATTR_MANUFACTURER,
             model=f"{self.model} {self.product_type}",
             name=self.name,
@@ -169,7 +192,9 @@ class AxisNetworkDevice:
 
         if status.get("data", {}).get("status", {}).get("state") == "active":
             self.listeners.append(
-                await mqtt.async_subscribe(hass, f"{self.serial}/#", self.mqtt_message)
+                await mqtt.async_subscribe(
+                    hass, f"{self.api.vapix.serial_number}/#", self.mqtt_message
+                )
             )
 
     @callback
@@ -187,18 +212,22 @@ class AxisNetworkDevice:
         try:
             self.api = await get_device(
                 self.hass,
-                host=self.config_entry.data[CONF_HOST],
-                port=self.config_entry.data[CONF_PORT],
-                username=self.config_entry.data[CONF_USERNAME],
-                password=self.config_entry.data[CONF_PASSWORD],
+                host=self.host,
+                port=self.port,
+                username=self.username,
+                password=self.password,
             )
 
         except CannotConnect as err:
             raise ConfigEntryNotReady from err
 
-        except Exception as err:  # pylint: disable=broad-except
-            LOGGER.error(
-                "Unknown error connecting with Axis device (%s): %s", self.host, err
+        except AuthenticationRequired:
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    AXIS_DOMAIN,
+                    context={"source": SOURCE_REAUTH},
+                    data=self.config_entry.data,
+                )
             )
             return False
 

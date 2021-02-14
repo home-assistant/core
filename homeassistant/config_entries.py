@@ -1,8 +1,10 @@
 """Manage config entries in Home Assistant."""
+from __future__ import annotations
+
 import asyncio
 import functools
 import logging
-from types import MappingProxyType
+from types import MappingProxyType, MethodType
 from typing import Any, Callable, Dict, List, Optional, Set, Union, cast
 import weakref
 
@@ -181,7 +183,9 @@ class ConfigEntry:
         self.supports_unload = False
 
         # Listeners to call on update
-        self.update_listeners: List[weakref.ReferenceType[UpdateListenerType]] = []
+        self.update_listeners: List[
+            Union[weakref.ReferenceType[UpdateListenerType], weakref.WeakMethod]
+        ] = []
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Optional[Callable[[], Any]] = None
@@ -246,7 +250,8 @@ class ConfigEntry:
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
             _LOGGER.warning(
-                "Config entry for %s not ready yet. Retrying in %d seconds",
+                "Config entry '%s' for %s integration not ready yet. Retrying in %d seconds",
+                self.title,
                 self.domain,
                 wait_time,
             )
@@ -413,7 +418,12 @@ class ConfigEntry:
 
         Returns function to unlisten.
         """
-        weak_listener = weakref.ref(listener)
+        weak_listener: Any
+        # weakref.ref is not applicable to a bound method, e.g. method of a class instance, as reference will die immediately
+        if hasattr(listener, "__self__"):
+            weak_listener = weakref.WeakMethod(cast(MethodType, listener))
+        else:
+            weak_listener = weakref.ref(listener)
         self.update_listeners.append(weak_listener)
 
         return lambda: self.update_listeners.remove(weak_listener)
@@ -518,7 +528,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(
         self, handler_key: Any, *, context: Optional[Dict] = None, data: Any = None
-    ) -> "ConfigFlow":
+    ) -> ConfigFlow:
         """Create a flow for specified handler.
 
         Handler key is the domain of the component that we want to set up.
@@ -882,7 +892,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> "OptionsFlow":
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         raise data_entry_flow.UnknownHandler
 
@@ -893,11 +903,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         reload_on_update: bool = True,
     ) -> None:
         """Abort if the unique ID is already configured."""
-        assert self.hass
         if self.unique_id is None:
             return
 
-        for entry in self._async_current_entries():
+        for entry in self._async_current_entries(include_ignore=True):
             if entry.unique_id == self.unique_id:
                 if updates is not None:
                     changed = self.hass.config_entries.async_update_entry(
@@ -935,28 +944,33 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self.context["unique_id"] = unique_id  # pylint: disable=no-member
 
         # Abort discoveries done using the default discovery unique id
-        assert self.hass is not None
         if unique_id != DEFAULT_DISCOVERY_UNIQUE_ID:
             for progress in self._async_in_progress():
                 if progress["context"].get("unique_id") == DEFAULT_DISCOVERY_UNIQUE_ID:
                     self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
-        for entry in self._async_current_entries():
+        for entry in self._async_current_entries(include_ignore=True):
             if entry.unique_id == unique_id:
                 return entry
 
         return None
 
     @callback
-    def _async_current_entries(self) -> List[ConfigEntry]:
-        """Return current entries."""
-        assert self.hass is not None
-        return self.hass.config_entries.async_entries(self.handler)
+    def _async_current_entries(self, include_ignore: bool = False) -> List[ConfigEntry]:
+        """Return current entries.
+
+        If the flow is user initiated, filter out ignored entries unless include_ignore is True.
+        """
+        config_entries = self.hass.config_entries.async_entries(self.handler)
+
+        if include_ignore or self.source != SOURCE_USER:
+            return config_entries
+
+        return [entry for entry in config_entries if entry.source != SOURCE_IGNORE]
 
     @callback
     def _async_current_ids(self, include_ignore: bool = True) -> Set[Optional[str]]:
         """Return current unique IDs."""
-        assert self.hass is not None
         return {
             entry.unique_id
             for entry in self.hass.config_entries.async_entries(self.handler)
@@ -966,7 +980,6 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     @callback
     def _async_in_progress(self) -> List[Dict]:
         """Return other in progress flows for current domain."""
-        assert self.hass is not None
         return [
             flw
             for flw in self.hass.config_entries.flow.async_progress()
@@ -1009,7 +1022,6 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self._abort_if_unique_id_configured()
 
         # Abort if any other flow for this handler is already in progress
-        assert self.hass is not None
         if self._async_in_progress():
             raise data_entry_flow.AbortFlow("already_in_progress")
 
@@ -1025,8 +1037,6 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self, *, reason: str, description_placeholders: Optional[Dict] = None
     ) -> Dict[str, Any]:
         """Abort the config flow."""
-        assert self.hass
-
         # Remove reauth notification if no reauth flows are in progress
         if self.source == SOURCE_REAUTH and not any(
             ent["context"]["source"] == SOURCE_REAUTH
@@ -1058,7 +1068,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         *,
         context: Optional[Dict[str, Any]] = None,
         data: Optional[Dict[str, Any]] = None,
-    ) -> "OptionsFlow":
+    ) -> OptionsFlow:
         """Create an options flow for a config entry.
 
         Entry_id and flow.handler is the same thing to map entry with flow.

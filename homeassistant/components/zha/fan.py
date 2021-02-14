@@ -95,7 +95,16 @@ class BaseFan(FanEntity):
         """Flag supported features."""
         return SUPPORT_SET_SPEED
 
-    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    async def async_turn_on(
+        self, speed=None, percentage=None, preset_mode=None, **kwargs
+    ) -> None:
         """Turn the entity on."""
         if speed is None:
             speed = SPEED_MEDIUM

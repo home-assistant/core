@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -117,4 +118,4 @@ async def test_unload_config_entry(hass, device_factory):
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
     # Assert
-    assert not hass.states.get("sensor.sensor_1_battery")
+    assert hass.states.get("sensor.sensor_1_battery").state == STATE_UNAVAILABLE
