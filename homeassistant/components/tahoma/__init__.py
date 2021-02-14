@@ -64,15 +64,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.exception(exception)
         return False
 
-    update_interval = entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
+    update_interval = timedelta(
+        seconds=entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
+    )
 
     tahoma_coordinator = TahomaDataUpdateCoordinator(
         hass,
         _LOGGER,
-        name="event fetcher",
+        name="device events",
         client=client,
         devices=devices,
         update_interval=timedelta(seconds=update_interval),
+    )
+
+    _LOGGER.debug(
+        "Initialized DataUpdateCoordinator with %s interval.", str(update_interval)
     )
 
     await tahoma_coordinator.async_refresh()

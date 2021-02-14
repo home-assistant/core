@@ -57,10 +57,6 @@ class TahomaDataUpdateCoordinator(DataUpdateCoordinator):
         self.devices: Dict[str, Device] = {d.deviceurl: d for d in devices}
         self.executions: Dict[str, Dict[str, str]] = {}
 
-        _LOGGER.debug(
-            "Initialized DataUpdateCoordinator with %s interval.", str(update_interval)
-        )
-
     async def _async_update_data(self) -> Dict[str, Device]:
         """Fetch TaHoma data via event listener."""
         try:
