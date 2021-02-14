@@ -43,12 +43,14 @@ async def test_if_fires_on_change_bool(hass, calls):
             automation.DOMAIN: {
                 "trigger": {
                     "platform": "template",
-                    "value_template": "{{ states.test.entity.state and true }}",
+                    "value_template": '{{ states.test.entity.state == "world" and true }}',
                 },
                 "action": {"service": "test.automation"},
             }
         },
     )
+
+    assert len(calls) == 0
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
@@ -75,12 +77,14 @@ async def test_if_fires_on_change_str(hass, calls):
             automation.DOMAIN: {
                 "trigger": {
                     "platform": "template",
-                    "value_template": '{{ states.test.entity.state and "true" }}',
+                    "value_template": '{{ states.test.entity.state == "world" and "true" }}',
                 },
                 "action": {"service": "test.automation"},
             }
         },
     )
+
+    assert len(calls) == 0
 
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
@@ -96,7 +100,7 @@ async def test_if_fires_on_change_str_crazy(hass, calls):
             automation.DOMAIN: {
                 "trigger": {
                     "platform": "template",
-                    "value_template": '{{ states.test.entity.state and "TrUE" }}',
+                    "value_template": '{{ states.test.entity.state == "world" and "TrUE" }}',
                 },
                 "action": {"service": "test.automation"},
             }
@@ -104,6 +108,62 @@ async def test_if_fires_on_change_str_crazy(hass, calls):
     )
 
     hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_if_not_fires_when_true_at_setup(hass, calls):
+    """Test for not firing during startup."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "template",
+                    "value_template": '{{ states.test.entity.state == "hello" }}',
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    assert len(calls) == 0
+
+    hass.states.async_set("test.entity", "hello", force_update=True)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+async def test_if_not_fires_because_fail(hass, calls):
+    """Test for not firing after TemplateError."""
+    hass.states.async_set("test.number", "1")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "template",
+                    "value_template": "{{ 84 / states.test.number.state|int == 42 }}",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    assert len(calls) == 0
+
+    hass.states.async_set("test.number", "2")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    hass.states.async_set("test.number", "0")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    hass.states.async_set("test.number", "2")
     await hass.async_block_till_done()
     assert len(calls) == 1
 
@@ -117,7 +177,7 @@ async def test_if_not_fires_on_change_bool(hass, calls):
             automation.DOMAIN: {
                 "trigger": {
                     "platform": "template",
-                    "value_template": "{{ states.test.entity.state and false }}",
+                    "value_template": '{{ states.test.entity.state == "world" and false }}',
                 },
                 "action": {"service": "test.automation"},
             }
@@ -198,7 +258,7 @@ async def test_if_fires_on_two_change(hass, calls):
             automation.DOMAIN: {
                 "trigger": {
                     "platform": "template",
-                    "value_template": "{{ states.test.entity.state and true }}",
+                    "value_template": "{{ states.test.entity.state == 'world' }}",
                 },
                 "action": {"service": "test.automation"},
             }
