@@ -235,7 +235,7 @@ buienradar==1.0.4
 caldav==0.7.1
 
 # homeassistant.scripts.check_config
-colorlog==4.8.0
+colorlog==4.7.2
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -279,7 +279,7 @@ distro==1.5.0
 doorbirdpy==2.1.0
 
 # homeassistant.components.dsmr
-dsmr_parser==0.25
+dsmr_parser==0.28
 
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
@@ -379,9 +379,6 @@ google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
 google-nest-sdm==0.2.12
-
-# homeassistant.components.google_travel_time
-googlemaps==2.5.1
 
 # homeassistant.components.gree
 greeclimate==0.10.3
@@ -518,6 +515,9 @@ mullvad-api==1.0.0
 
 # homeassistant.components.tts
 mutagen==1.45.1
+
+# homeassistant.components.keenetic_ndms2
+ndms2_client==0.1.1
 
 # homeassistant.components.ness_alarm
 nessclient==0.9.15

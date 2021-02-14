@@ -1,6 +1,9 @@
 # Home Assistant Core, full dependency set
 -r requirements.txt
 
+# homeassistant.components.aemet
+AEMET-OpenData==0.1.8
+
 # homeassistant.components.dht
 # Adafruit-DHT==1.4.0
 
@@ -14,7 +17,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==3.2.0
+HAP-python==3.3.0
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -503,7 +506,7 @@ doorbirdpy==2.1.0
 dovado==0.4.1
 
 # homeassistant.components.dsmr
-dsmr_parser==0.25
+dsmr_parser==0.28
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.3
@@ -681,7 +684,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.2.12
+google-nest-sdm==0.2.10
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -969,7 +972,7 @@ n26==0.2.7
 nad_receiver==0.0.12
 
 # homeassistant.components.keenetic_ndms2
-ndms2_client==0.0.11
+ndms2_client==0.1.1
 
 # homeassistant.components.ness_alarm
 nessclient==0.9.15
@@ -1211,9 +1214,6 @@ py-nightscout==1.2.2
 
 # homeassistant.components.schluter
 py-schluter==0.1.7
-
-# homeassistant.components.synology
-py-synology==0.2.0
 
 # homeassistant.components.zabbix
 py-zabbix==1.1.7
@@ -2339,9 +2339,6 @@ xbox-webapi==2.0.8
 
 # homeassistant.components.xbox_live
 xboxapi==2.0.1
-
-# homeassistant.components.xfinity
-xfinity-gateway==0.0.4
 
 # homeassistant.components.knx
 xknx==0.18.0
