@@ -2,7 +2,6 @@
 from datetime import timedelta
 import functools as ft
 import logging
-import math
 from typing import List, Optional
 
 import voluptuous as vol
@@ -25,6 +24,7 @@ from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     ordered_list_percentage_step_size,
     percentage_to_ordered_list_item,
+    ranged_value_to_percentage,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -276,7 +276,12 @@ class FanEntity(ToggleEntity):
         current_speed = self.percentage or 0
         if percentage_step is None:
             percentage_step = self.percentage_step
-        new_speed = current_speed + math.floor(percentage_step)
+        if current_speed + percentage_step > 99:
+            new_speed = 100
+        else:
+            new_speed = ranged_value_to_percentage(
+                (1, 100), current_speed + percentage_step
+            )
         await self.async_set_percentage(max(0, min(100, new_speed)))
 
     async def async_decrease_speed(self, percentage_step=None) -> None:
@@ -284,7 +289,12 @@ class FanEntity(ToggleEntity):
         current_speed = self.percentage or 0
         if percentage_step is None:
             percentage_step = self.percentage_step
-        new_speed = current_speed - math.ceil(percentage_step)
+        if current_speed - percentage_step < 1:
+            new_speed = 0
+        else:
+            new_speed = ranged_value_to_percentage(
+                (1, 100), current_speed - percentage_step
+            )
         await self.async_set_percentage(max(0, min(100, new_speed)))
 
     @_fan_native
