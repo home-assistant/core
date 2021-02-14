@@ -497,7 +497,7 @@ async def async_unload_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    hass.data.pop(ADDONS_COORDINATOR)
+    hass.data.pop(ADDONS_COORDINATOR, None)
 
     unload_ok = all(
         await asyncio.gather(
