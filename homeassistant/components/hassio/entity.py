@@ -17,7 +17,8 @@ class HassioAddonEntity(CoordinatorEntity):
         self,
         coordinator: HassioAddonsDataUpdateCoordinator,
         addon: Dict[str, Any],
-        sensor_name: str,
+        attribute_name: str,
+        sensor_name: str = None,
     ) -> None:
         """Initialize binary sensor."""
         self.addon_slug = addon[ATTR_SLUG]
@@ -28,7 +29,8 @@ class HassioAddonEntity(CoordinatorEntity):
         except IndexError:
             # fall back on unknown in case of Exception
             self.user_or_org = "unknown"
-        self.sensor_name = sensor_name
+        self.attribute_name = attribute_name
+        self.sensor_name = sensor_name or attribute_name
         super().__init__(coordinator)
 
     @property
