@@ -166,3 +166,17 @@ repeat_set:
     repeat:
       description: Repeat mode to set (off, all, one).
       example: "off"
+
+media_next_channel:
+  description: Send the media player the command for switching to next channel.
+  fields:
+    entity_id:
+      description: Name(s) of entities to send next channel command to.
+      example: "media_player.living_room_samsungtv"
+
+media_previous_channel:
+  description: Send the media player the command for switching to previous channel
+  fields:
+    entity_id:
+      description: Name(s) of entities to send previous channel command to.
+      example: "media_player.living_room_samsungtv"

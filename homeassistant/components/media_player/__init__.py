@@ -31,10 +31,12 @@ from homeassistant.const import (
     HTTP_NOT_FOUND,
     HTTP_OK,
     HTTP_UNAUTHORIZED,
+    SERVICE_MEDIA_NEXT_CHANNEL,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PLAY_PAUSE,
+    SERVICE_MEDIA_PREVIOUS_CHANNEL,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
@@ -100,10 +102,12 @@ from .const import (
     SERVICE_SELECT_SOURCE,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_NEXT_CHANNEL,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_CHANNEL,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_REPEAT_SET,
     SUPPORT_SEEK,
@@ -256,7 +260,19 @@ async def async_setup(hass, config):
         SERVICE_MEDIA_STOP, {}, "async_media_stop", [SUPPORT_STOP]
     )
     component.async_register_entity_service(
+        SERVICE_MEDIA_NEXT_CHANNEL,
+        {},
+        "async_media_next_channel",
+        [SUPPORT_NEXT_CHANNEL],
+    )
+    component.async_register_entity_service(
         SERVICE_MEDIA_NEXT_TRACK, {}, "async_media_next_track", [SUPPORT_NEXT_TRACK]
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_PREVIOUS_CHANNEL,
+        {},
+        "async_media_previous_channel",
+        [SUPPORT_PREVIOUS_CHANNEL],
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_PREVIOUS_TRACK,
@@ -599,6 +615,14 @@ class MediaPlayerEntity(Entity):
         """Send stop command."""
         await self.hass.async_add_executor_job(self.media_stop)
 
+    def media_previous_channel(self):
+        """Send previous channel command."""
+        raise NotImplementedError()
+
+    async def async_media_previous_channel(self):
+        """Send previous channel command."""
+        await self.hass.async_add_executor_job(self.media_previous_channel)
+
     def media_previous_track(self):
         """Send previous track command."""
         raise NotImplementedError()
@@ -606,6 +630,14 @@ class MediaPlayerEntity(Entity):
     async def async_media_previous_track(self):
         """Send previous track command."""
         await self.hass.async_add_executor_job(self.media_previous_track)
+
+    def media_next_channel(self):
+        """Send next channel command."""
+        raise NotImplementedError()
+
+    async def async_media_next_channel(self):
+        """Send next channel command."""
+        await self.hass.async_add_executor_job(self.media_next_channel)
 
     def media_next_track(self):
         """Send next track command."""
@@ -705,9 +737,19 @@ class MediaPlayerEntity(Entity):
         return bool(self.supported_features & SUPPORT_VOLUME_MUTE)
 
     @property
+    def support_previous_channel(self):
+        """Boolean if previous channel command supported."""
+        return bool(self.supported_features & SUPPORT_PREVIOUS_CHANNEL)
+
+    @property
     def support_previous_track(self):
         """Boolean if previous track command supported."""
         return bool(self.supported_features & SUPPORT_PREVIOUS_TRACK)
+
+    @property
+    def support_next_channel(self):
+        """Boolean if next channel command supported."""
+        return bool(self.supported_features & SUPPORT_NEXT_CHANNEL)
 
     @property
     def support_next_track(self):
