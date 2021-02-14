@@ -4,10 +4,30 @@ from unittest.mock import patch
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend
+<<<<<<< HEAD
 from homeassistant.components.hassio import STORAGE_KEY
+=======
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.hassio import ADDONS_COORDINATOR, DOMAIN, STORAGE_KEY
+from homeassistant.components.hassio.const import (
+    ATTR_DATA,
+    ATTR_ENDPOINT,
+    ATTR_METHOD,
+    EVENT_SUPERVISOR_EVENT,
+    WS_ID,
+    WS_TYPE,
+    WS_TYPE_API,
+    WS_TYPE_EVENT,
+)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.core import HomeAssistant
+>>>>>>> 87c3c833a6 (add entry setup and unload test and fix update coordinator)
 from homeassistant.setup import async_setup_component
 
 from . import mock_all  # noqa
+
+
+from tests.common import MockConfigEntry
 
 MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
 
@@ -305,3 +325,102 @@ async def test_service_calls_core(hassio_env, hass, aioclient_mock):
         assert mock_check_config.called
 
     assert aioclient_mock.call_count == 5
+
+
+async def test_websocket_supervisor_event(
+    hassio_env, hass: HomeAssistant, hass_ws_client
+):
+    """Test Supervisor websocket event."""
+    assert await async_setup_component(hass, "hassio", {})
+    websocket_client = await hass_ws_client(hass)
+
+    test_event = async_capture_events(hass, EVENT_SUPERVISOR_EVENT)
+
+    await websocket_client.send_json(
+        {WS_ID: 1, WS_TYPE: WS_TYPE_EVENT, ATTR_DATA: {"event": "test"}}
+    )
+
+    assert await websocket_client.receive_json()
+    await hass.async_block_till_done()
+
+    assert test_event[0].data == {"event": "test"}
+
+
+async def test_websocket_supervisor_api(
+    hassio_env, hass: HomeAssistant, hass_ws_client, aioclient_mock
+):
+    """Test Supervisor websocket api."""
+    assert await async_setup_component(hass, "hassio", {})
+    websocket_client = await hass_ws_client(hass)
+    aioclient_mock.post(
+        "http://127.0.0.1/snapshots/new/partial",
+        json={"result": "ok", "data": {"slug": "sn_slug"}},
+    )
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 1,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/snapshots/new/partial",
+            ATTR_METHOD: "post",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["result"]["slug"] == "sn_slug"
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 2,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/supervisor/info",
+            ATTR_METHOD: "get",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["result"]["version_latest"] == "1.0.0"
+
+
+async def test_entry_load_and_unload(hass, aioclient_mock):
+    """Test loading and unloading config entry."""
+    aioclient_mock.get(
+        "http://127.0.0.1/addons",
+        json={
+            "result": "ok",
+            "data": {
+                "addons": [
+                    {
+                        "name": "test",
+                        "slug": "test",
+                        "installed": True,
+                        "version": "1.0.0",
+                        "version_latest": "1.0.0",
+                        "url": "https://github.com/home-assistant/addons/test",
+                    },
+                    {
+                        "name": "test2",
+                        "slug": "test2",
+                        "installed": False,
+                        "version": "1.0.0",
+                        "version_latest": "1.0.0",
+                        "url": "https://github.com/home-assistant/addons/test2",
+                    },
+                ]
+            },
+        },
+    )
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert SENSOR_DOMAIN in hass.config.components
+    assert BINARY_SENSOR_DOMAIN in hass.config.components
+    assert ADDONS_COORDINATOR in hass.data
+
+    assert await config_entry.async_unload(hass)
+    await hass.async_block_till_done()
+    assert ADDONS_COORDINATOR not in hass.data

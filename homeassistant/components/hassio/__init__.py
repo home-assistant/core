@@ -21,7 +21,7 @@ from homeassistant.core import DOMAIN as HASS_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
 
@@ -497,6 +497,8 @@ async def async_unload_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry
 ) -> bool:
     """Unload a config entry."""
+    hass.data.pop(ADDONS_COORDINATOR)
+
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -527,11 +529,11 @@ class HassioAddonsDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> Dict[str, Any]:
         """Update data via library."""
         data = await self.hass.data[DOMAIN].get_addons_info()
-        if not data:
-            raise UpdateFailed
 
         addons = {
-            addon[ATTR_SLUG]: addon for addon in data["addons"] if addon[ATTR_INSTALLED]
+            addon[ATTR_SLUG]: addon
+            for addon in data.get("addons", [])
+            if addon[ATTR_INSTALLED]
         }
 
         # If this is the initial refresh, just return the dict
