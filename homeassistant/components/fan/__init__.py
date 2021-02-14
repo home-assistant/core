@@ -265,14 +265,14 @@ class FanEntity(ToggleEntity):
     async def async_increase_speed(self) -> None:
         """Increase the speed of the fan."""
         current_speed = self.percentage or 0
-        await self.async_set_percentage(
-            current_speed + math.floor(self.percentage_step)
-        )
+        new_speed = current_speed + math.floor(self.percentage_step)
+        await self.async_set_percentage(max(0, min(100, new_speed)))
 
     async def async_decrease_speed(self) -> None:
         """Decrease the speed of the fan."""
         current_speed = self.percentage or 0
-        await self.async_set_percentage(current_speed - math.ceil(self.percentage_step))
+        new_speed = current_speed - math.ceil(self.percentage_step)
+        await self.async_set_percentage(max(0, min(100, new_speed)))
 
     @_fan_native
     def set_preset_mode(self, preset_mode: str) -> None:
