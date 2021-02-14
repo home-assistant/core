@@ -2,6 +2,8 @@
 from unittest.mock import patch
 
 import pytest
+from subarulink import InvalidCredentials
+from subarulink.const import COUNTRY_USA
 
 from homeassistant.components.subaru.const import (
     CONF_COUNTRY,
@@ -24,8 +26,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.setup import async_setup_component
-from subarulink import InvalidCredentials
-from subarulink.const import COUNTRY_USA
 
 from .api_responses import TEST_VIN_2_EV, VEHICLE_DATA, VEHICLE_STATUS_EV
 

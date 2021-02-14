@@ -5,6 +5,7 @@ from unittest import mock
 from unittest.mock import patch
 
 import pytest
+from subarulink.exceptions import InvalidCredentials, InvalidPIN, SubaruException
 
 from homeassistant import config_entries
 from homeassistant.components.subaru import config_flow
@@ -17,7 +18,6 @@ from homeassistant.components.subaru.const import (
     MIN_SCAN_INTERVAL,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_PIN, CONF_SCAN_INTERVAL
-from subarulink.exceptions import InvalidCredentials, InvalidPIN, SubaruException
 
 from .conftest import TEST_CONFIG, TEST_CREDS, TEST_DEVICE_ID, TEST_PIN, TEST_USERNAME
 

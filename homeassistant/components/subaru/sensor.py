@@ -1,4 +1,6 @@
 """Support for Subaru sensors."""
+import subarulink.const as sc
+
 from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_MILES,
@@ -19,7 +21,6 @@ from homeassistant.util.unit_system import (
     TEMPERATURE_UNITS,
 )
 from homeassistant.util.volume import convert as vol_convert
-import subarulink.const as sc
 
 from .const import (
     API_GEN_2,

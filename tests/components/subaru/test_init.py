@@ -2,6 +2,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from subarulink import SubaruException
+
 from homeassistant.components import subaru
 from homeassistant.components.subaru.const import (
     CONF_HARD_POLL_INTERVAL,
@@ -13,7 +15,6 @@ from homeassistant.components.subaru.const import (
 )
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.setup import async_setup_component
-from subarulink import SubaruException
 
 from .api_responses import (
     TEST_VIN_1_G1,
