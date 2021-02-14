@@ -63,7 +63,7 @@ def playlist_response(sequence, segments):
     for segment in segments:
         response.extend(
             [
-                "#EXTINF:1000.0000,",
+                "#EXTINF:10.0000,",
                 f"./segment/{segment}.m4s",
             ]
         )
