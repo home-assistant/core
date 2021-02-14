@@ -87,17 +87,18 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             return await self.async_step_gateway()
-        if name in MODELS_SWITCH:
-            unique_id = format_mac(mac_address)
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured({CONF_HOST: self.host})
+        for switch_model in MODELS_SWITCH:
+            if name.startswith(switch_model.replace(".", "-")):
+                unique_id = format_mac(mac_address)
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-            self.context.update(
-                {"title_placeholders": {"name": f"Miio Device {self.host}"}}
-            )
+                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+                self.context.update(
+                    {"title_placeholders": {"name": f"Miio Device {self.host}"}}
+                )
 
-            return await self.async_step_device()
+                return await self.async_step_device()
 
         # Discovered device is not yet supported
         _LOGGER.debug(
