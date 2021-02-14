@@ -1,6 +1,5 @@
 """Support for MQTT fans."""
 import functools
-import logging
 
 import voluptuous as vol
 
@@ -47,8 +46,6 @@ from .mixins import (
     MqttEntity,
     async_setup_entry_helper,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_STATE_VALUE_TEMPLATE = "state_value_template"
 CONF_SPEED_STATE_TOPIC = "speed_state_topic"

@@ -1,5 +1,4 @@
 """Tests for the Hyperion integration."""
-import logging
 from unittest.mock import AsyncMock, call, patch
 
 from hyperion.const import (
@@ -35,7 +34,6 @@ TEST_COMPONENTS = [
     {"enabled": True, "name": "LEDDEVICE"},
 ]
 
-_LOGGER = logging.getLogger(__name__)
 TEST_SWITCH_COMPONENT_BASE_ENTITY_ID = "switch.test_instance_1_component"
 TEST_SWITCH_COMPONENT_ALL_ENTITY_ID = f"{TEST_SWITCH_COMPONENT_BASE_ENTITY_ID}_all"
 

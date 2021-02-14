@@ -1,6 +1,4 @@
 """Config flow to configure Agent devices."""
-import logging
-
 from agent import AgentConnectionError, AgentError
 from agent.a import Agent
 import voluptuous as vol
@@ -13,7 +11,6 @@ from .const import DOMAIN, SERVER_URL  # pylint:disable=unused-import
 from .helpers import generate_url
 
 DEFAULT_PORT = 8090
-_LOGGER = logging.getLogger(__name__)
 
 
 class AgentFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

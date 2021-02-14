@@ -1,6 +1,4 @@
 """Constants for Met component."""
-import logging
-
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -191,5 +189,3 @@ ATTR_MAP = {
     ATTR_WEATHER_WIND_BEARING: "wind_bearing",
     ATTR_WEATHER_WIND_SPEED: "wind_speed",
 }
-
-_LOGGER = logging.getLogger(".")

@@ -1,5 +1,4 @@
 """Provides device triggers for lutron caseta."""
-import logging
 from typing import List
 
 import voluptuous as vol
@@ -31,9 +30,6 @@ from .const import (
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
 
 SUPPORTED_INPUTS_EVENTS_TYPES = [ACTION_PRESS, ACTION_RELEASE]
 

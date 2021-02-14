@@ -1,5 +1,4 @@
 """Tests for the Hyperion integration."""
-import logging
 from typing import Optional
 from unittest.mock import AsyncMock, Mock, call, patch
 
@@ -51,8 +50,6 @@ from . import (
     create_mock_client,
     setup_test_config_entry,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 COLOR_BLACK = color_util.COLORS["black"]
 

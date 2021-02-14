@@ -1,7 +1,6 @@
 """Tests for the Hyperion component."""
 from __future__ import annotations
 
-import logging
 from types import TracebackType
 from typing import Any, Dict, Optional, Type
 from unittest.mock import AsyncMock, Mock, patch
@@ -62,8 +61,6 @@ TEST_AUTH_NOT_REQUIRED_RESP = {
     **TEST_AUTH_REQUIRED_RESP,
     "info": {"required": False},
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class AsyncContextManagerMock(Mock):

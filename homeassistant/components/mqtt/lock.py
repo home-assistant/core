@@ -1,6 +1,5 @@
 """Support for MQTT locks."""
 import functools
-import logging
 
 import voluptuous as vol
 
@@ -36,8 +35,6 @@ from .mixins import (
     MqttEntity,
     async_setup_entry_helper,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_PAYLOAD_LOCK = "payload_lock"
 CONF_PAYLOAD_UNLOCK = "payload_unlock"

@@ -1,5 +1,4 @@
 """Config flow for HomeKit integration."""
-import logging
 import random
 import string
 
@@ -100,8 +99,6 @@ _EMPTY_ENTITY_FILTER = {
     CONF_INCLUDE_ENTITIES: [],
     CONF_EXCLUDE_ENTITIES: [],
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

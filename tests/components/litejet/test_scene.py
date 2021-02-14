@@ -1,5 +1,4 @@
 """The tests for the litejet component."""
-import logging
 import unittest
 from unittest import mock
 
@@ -8,8 +7,6 @@ from homeassistant.components import litejet
 
 from tests.common import get_test_home_assistant
 from tests.components.scene import common
-
-_LOGGER = logging.getLogger(__name__)
 
 ENTITY_SCENE = "scene.mock_scene_1"
 ENTITY_SCENE_NUMBER = 1

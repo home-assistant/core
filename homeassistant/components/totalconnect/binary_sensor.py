@@ -1,6 +1,4 @@
 """Interfaces with TotalConnect sensors."""
-import logging
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_GAS,
@@ -9,8 +7,6 @@ from homeassistant.components.binary_sensor import (
 )
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:

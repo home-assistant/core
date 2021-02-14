@@ -1,5 +1,4 @@
 """Support for ASUSWRT routers."""
-import logging
 from typing import Dict
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
@@ -14,8 +13,6 @@ from .const import DATA_ASUSWRT, DOMAIN
 from .router import AsusWrtRouter
 
 DEFAULT_DEVICE_NAME = "Unknown device"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

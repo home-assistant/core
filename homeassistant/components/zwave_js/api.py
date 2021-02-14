@@ -1,6 +1,5 @@
 """Websocket API for Z-Wave JS."""
 import json
-import logging
 
 from aiohttp import hdrs, web, web_exceptions
 import voluptuous as vol
@@ -16,8 +15,6 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DATA_CLIENT, DOMAIN, EVENT_DEVICE_ADDED_TO_REGISTRY
-
-_LOGGER = logging.getLogger(__name__)
 
 ID = "id"
 ENTRY_ID = "entry_id"

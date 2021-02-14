@@ -1,6 +1,5 @@
 """Support for MQTT lights."""
 import functools
-import logging
 
 import voluptuous as vol
 
@@ -14,8 +13,6 @@ from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import PLATFORM_SCHEMA_BASIC, async_setup_entity_basic
 from .schema_json import PLATFORM_SCHEMA_JSON, async_setup_entity_json
 from .schema_template import PLATFORM_SCHEMA_TEMPLATE, async_setup_entity_template
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def validate_mqtt_light(value):
