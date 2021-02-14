@@ -87,7 +87,7 @@ increase_speed:
       example: "fan.living_room"
     percentage_step:
       description: Increase speed by a percentage. Should be between 0..100. [optional]
-      example: 15
+      example: 50
 
 decrease_speed:
   description: Decrease the speed of the fan by one speed or a percentage_step.
@@ -97,4 +97,4 @@ decrease_speed:
       example: "fan.living_room"
     percentage_step:
       description: Decrease speed by a percentage. Should be between 0..100. [optional]
-      example: 15
+      example: 50
