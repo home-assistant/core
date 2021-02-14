@@ -56,7 +56,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up Legrand Home+ Control from a config entry."""
-
     _LOGGER.debug("Configuring Legrand Home+ Control component from ConfigEntry")
 
     # Register the implementation from the config entry
@@ -79,13 +78,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     )
 
     # Continue setting up the platform
-    _LOGGER.debug("Hass config components %s", hass.config.components)
     for component in PLATFORMS:
         _LOGGER.debug("Configuring %s", component)
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
-    _LOGGER.debug("Hass config components %s", hass.config.components)
 
     return True
 
@@ -103,8 +100,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     )
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id, None)
-        # await api.close_connection() - No closing of the HA aiohttp session here
-        # _LOGGER.debug("Legrand Home+ Control API connection closed.")
 
         # Unsubscribe the config_entry update listener
         remover = hass.data[DOMAIN].pop("options_listener_remover", None)

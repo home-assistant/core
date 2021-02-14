@@ -36,10 +36,12 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
     Attributes:.
         hass (HomeAssistant): HomeAssistant core object.
         config_entry (ConfigEntry): ConfigEntry object that configures this API.
-        implementation (AbstractOAuth2Implementation): OAuth2 implementation that handles AA and token refresh.
+        implementation (AbstractOAuth2Implementation): OAuth2 implementation that handles AA and
+                                                       token refresh.
         logger (Logger): Logger of the object.
         switches (dict): Dictionary of HomePlusControl switches indexed by their unique ID.
-        switches_to_remove (dict): Dictionaty of the HomePlusControl switches that are to be removed from HomeAssistant, indexed by their unique ID.
+        switches_to_remove (dict): Dictionaty of the HomePlusControl switches that are to be
+                                   removed from HomeAssistant, indexed by their unique ID.
     """
 
     def __init__(
@@ -55,7 +57,8 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
         Args:.
             hass (HomeAssistant): HomeAssistant core object.
             config_entry (ConfigEntry): ConfigEntry object that configures this API.
-            implementation (AbstractOAuth2Implementation): OAuth2 implementation that handles AA and token refresh.
+            implementation (AbstractOAuth2Implementation): OAuth2 implementation that handles AA
+                                                           and token refresh.
         """
         self.hass = hass
         self.config_entry = config_entry
@@ -165,7 +168,8 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
         It is expected that in most cases, there will only be one plant.
 
         Returns:
-            dict: Dictionary of plants for this user - Keyed by the plant ID. Can be empty if no plants are retrieved.
+            dict: Dictionary of plants for this user - Keyed by the plant ID. Can be empty if no
+                  plants are retrieved.
         """
         # Attempt to recover the plant information from the Hass data object.
         # If it is not there, then we request it from the API and add it.
@@ -190,27 +194,26 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
 
         # Populate the dictionary of plants
         current_plant_ids = []
-        for p in plant_info["plants"]:
-            current_plant_ids.append(p["id"])
-            if p["id"] in self._plants:
+        for plant in plant_info["plants"]:
+            current_plant_ids.append(plant["id"])
+            if plant["id"] in self._plants:
                 self.logger.debug(
                     "Plant with id %s is already cached. Only updating the existing data.",
-                    p["id"],
+                    plant["id"],
                 )
-                cur_plant = self._plants.get(p["id"])
+                cur_plant = self._plants.get(plant["id"])
                 # We will update the plant info just in case and ensure it has an Api object
-                cur_plant.name = p["name"]
-                cur_plant.country = p["country"]
+                cur_plant.name = plant["name"]
+                cur_plant.country = plant["country"]
                 if cur_plant.oauth_client is None:
                     cur_plant.oauth_client = self
             else:
-                self.logger.debug("New plant with id %s detected.", p["id"])
-                self._plants[p["id"]] = HomePlusPlant(
-                    p["id"], p["name"], p["country"], self
+                self.logger.debug("New plant with id %s detected.", plant["id"])
+                self._plants[plant["id"]] = HomePlusPlant(
+                    plant["id"], plant["name"], plant["country"], self
                 )
 
         # Discard plants that may have disappeared
-        # TODO: Remove associated entities to the plant
         plants_to_pop = []
         for existing_id in self._plants:
             if existing_id in current_plant_ids:
@@ -221,8 +224,8 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
             )
             plants_to_pop.append(existing_id)
 
-        for p in plants_to_pop:
-            self._plants.pop(p, None)
+        for plant in plants_to_pop:
+            self._plants.pop(plant, None)
 
         return self._plants
 
@@ -230,11 +233,12 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
         """Recover the topology information for the plants defined in this object.
 
         By requesting the topology of the plant, the system learns about the modules that exist.
-        The topology indicates identifiers, type and other device information, but it contains no information
-        about the state of the module.
+        The topology indicates identifiers, type and other device information, but it contains no
+        information about the state of the module.
 
-        This method returns the list of switch entities that will be registered in HomeAssistant. At this time
-        the switches that are discovered through this API call are flattened into a single data structure.
+        This method returns the list of switch entities that will be registered in HomeAssistant.
+        At this time the switches that are discovered through this API call are flattened into a
+        single data structure.
 
         Returns:
             dict: Dictionary of switch entities across all of the plants.
@@ -250,7 +254,7 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
                 )
                 try:
                     await plant.update_topology()  # Call the API
-                except Exception as err:
+                except Exception as err:  # pylint: disable=broad-except
                     self.logger.error(
                         "Error encountered when updating plant topology for plant %s: %s [%s]",
                         plant.id,
@@ -270,7 +274,7 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
                 self.logger.debug("API update of module status for plant %s.", plant.id)
                 try:
                     await plant.update_module_status()  # Call the API
-                except Exception as err:
+                except Exception as err:  # pylint: disable=broad-except
                     self.logger.error(
                         "Error encountered when updating plant module status for plant %s: %s [%s]",
                         plant.id,
@@ -286,16 +290,19 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
         return self._update_entities()
 
     def _should_check(self, check_type, period):
-        """Return True if the current monotonic time is greater than the last check time plus a fixed period.
+        """Return True if the current monotonic time is > the last check time plus a fixed period.
 
         Args:
             check_type (str): Type that identifies the timer that has to be used
             period (float): Number of fractional seconds to add to the last check time
         """
         current_time = time.monotonic()
-        if current_time > self._last_check[check_type] + period:
+        if (
+            self._last_check[check_type] == -1
+            or current_time > self._last_check[check_type] + period
+        ):
             self.logger.debug(
-                "Last check time (%.2f) has been exceeded by more than %.2f seconds [current monotonic time is %.2f]",
+                "Last check time (%.2f) exceeded by more than %.2f sec - monotonic time %.2f",
                 self._last_check[check_type],
                 period,
                 current_time,
@@ -311,8 +318,8 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
         """
         for plant in self._plants.values():
             # Loop through the modules in the plant and we only keep the ones that are "interactive"
-            # and can be represented by a switch, i.e. power outlets, micromodules and light switches.
-            # All other modules are discarded/ignored.
+            # and can be represented by a switch, i.e. power outlets, micromodules
+            # and light switches. All other modules are discarded/ignored.
             current_module_ids = []
             for module in list(plant.modules.values()):
                 if isinstance(module, HomePlusInteractiveModule):
@@ -335,7 +342,7 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
                 )
                 switches_to_pop.append(existing_id)
 
-            for s in switches_to_pop:
-                self.switches_to_remove[s] = self.switches.pop(s, None)
+            for switch in switches_to_pop:
+                self.switches_to_remove[switch] = self.switches.pop(switch, None)
 
         return self.switches

@@ -61,7 +61,7 @@ class HomePlusControlFlowHandler(
                 )
                 return await super().async_step_user(user_input)
 
-        DOMAIN_SCHEMA = vol.Schema(
+        domain_schema = vol.Schema(
             {
                 vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Required(CONF_CLIENT_SECRET): cv.string,
@@ -75,7 +75,7 @@ class HomePlusControlFlowHandler(
         )
 
         return self.async_show_form(
-            step_id="user", data_schema=DOMAIN_SCHEMA, errors=errors
+            step_id="user", data_schema=domain_schema, errors=errors
         )
 
     async def async_step_creation(
@@ -83,7 +83,8 @@ class HomePlusControlFlowHandler(
     ) -> Dict[str, Any]:
         """Create the config entry for the flow from the external authentication data.
 
-        Overrides the base class method to handle general exceptions and to add additional config information for the entry.
+        Overrides the base class method to handle general exceptions and to add additional config
+        information for the entry.
 
         Args:.
             data (dict): Dictionary containing the additional configuration data to be stored.
@@ -96,7 +97,7 @@ class HomePlusControlFlowHandler(
         except ValueError as err:
             self.logger.warning("Error converting expires_in to int: %s", err)
             return self.async_abort(reason="oauth_error")
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-except
             self.logger.warning("Error retrieving authentication token: %s", err)
             return self.async_abort(reason="oauth_error")
 
@@ -171,7 +172,7 @@ class HomePlusControlOptionsFlowHandler(config_entries.OptionsFlow):
             if valid:
                 return self.async_create_entry(title="Home+ Control", data=user_input)
 
-        OPTIONS_SCHEMA = vol.Schema(
+        options_schema = vol.Schema(
             {
                 vol.Optional(
                     CONF_PLANT_UPDATE_INTERVAL,
@@ -189,7 +190,7 @@ class HomePlusControlOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         return self.async_show_form(
-            step_id="init", data_schema=OPTIONS_SCHEMA, errors=errors
+            step_id="init", data_schema=options_schema, errors=errors
         )
 
     async def _is_valid(self, user_input, errors):
@@ -202,7 +203,7 @@ class HomePlusControlOptionsFlowHandler(config_entries.OptionsFlow):
             if compiled.match(input_value):
                 try:
                     int_input_value = int(input_value)
-                    if int_input_value > 0 and int_input_value <= 86400:
+                    if 0 < int_input_value <= 86400:
                         continue
                 except ValueError:
                     pass

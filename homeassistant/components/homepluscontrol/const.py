@@ -26,15 +26,16 @@ OAUTH2_AUTHORIZE = "https://partners-login.eliotbylegrand.com/authorize"
 OAUTH2_TOKEN = "https://partners-login.eliotbylegrand.com/token"
 PLANT_URL = "https://api.developer.legrand.com/hc/api/v1.0/plants"
 
-# The Legrand Home+ Control API has very limited request quotas - at the time of writing, it is limited
-# to 500 calls per day (resets at 00:00) - so we want to keep updates to a minimum.
+# The Legrand Home+ Control API has very limited request quotas - at the time of writing, it is
+# limited to 500 calls per day (resets at 00:00) - so we want to keep updates to a minimum.
 DEFAULT_UPDATE_INTERVALS = {
-    # Seconds between API checks for plant information updates. This is expected to change very little over time
-    # because a user's plants (homes) should rarely change.
+    # Seconds between API checks for plant information updates. This is expected to change very
+    # little over time because a user's plants (homes) should rarely change.
     CONF_PLANT_UPDATE_INTERVAL: 7200,  # 120 minutes
-    # Seconds between API checks for plant topology updates. This is expected to change  little over time
-    # because the modules in the user's plant should be relatively stable.
+    # Seconds between API checks for plant topology updates. This is expected to change  little
+    # over time because the modules in the user's plant should be relatively stable.
     CONF_PLANT_TOPOLOGY_UPDATE_INTERVAL: 3600,  # 60 minutes
-    # Seconds between API checks for module status updates. This can change frequently so we check often
+    # Seconds between API checks for module status updates. This can change frequently so we
+    # check often
     CONF_MODULE_STATUS_UPDATE_INTERVAL: 300,  # 5 minutes
 }

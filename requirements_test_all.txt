@@ -424,7 +424,7 @@ homeconnect==0.6.3
 homematicip==0.13.1
 
 # homeassistant.components.homepluscontrol
-homepluscontrol==0.0.2
+homepluscontrol==0.0.3
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk

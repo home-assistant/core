@@ -49,13 +49,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             async with async_timeout.timeout(10):
                 switch_data = await api.fetch_data()
         except Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err} [{type(err)}]")
+            raise UpdateFailed(
+                f"Error communicating with API: {err} [{type(err)}]"
+            ) from err
 
         # Remove obsolete entities from the Entity and Device Registries
-        if coordinator.data and len(coordinator.data.keys()) > 0:
-            for id, ent in coordinator.data.items():
-                _LOGGER.debug("Coordinator item: " + str(id) + ": " + str(ent))
-
         device_reg = await hass.helpers.device_registry.async_get_registry()
 
         for ent_id, ent in api.switches_to_remove.items():
@@ -79,7 +77,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         # Add entities to HomeAssistant domain and registries
         new_entities = []
-        for idx, switch in switch_data.items():
+        for idx in switch_data:
             if idx not in hass.data[DOMAIN]["entities"]:
                 hass.data[DOMAIN]["entities"][idx] = HomeControlSwitchEntity(
                     coordinator, idx
@@ -106,9 +104,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
 
-    _LOGGER.debug("hass.data[%s]: %s", DOMAIN, hass.data[DOMAIN])
-    await view_data(hass)
-
 
 async def view_data(hass):
     """Debug relevant Hass objects."""
@@ -130,8 +125,8 @@ class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
       async_update
       async_added_to_hass
 
-    The SwitchEntity class provides the functionality of a ToggleEntity and additional power consumption
-    methods and state attributes.
+    The SwitchEntity class provides the functionality of a ToggleEntity and additional power
+    consumption methods and state attributes.
     """
 
     def __init__(self, coordinator, idx):
@@ -193,10 +188,9 @@ class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
     def is_on(self):
         """Return entity state."""
         self.logger.debug(
-            "Status of "
-            + str(self.name)
-            + ":"
-            + str(self.coordinator.data[self.idx].status)
+            "Status of %s : %s",
+            str(self.name),
+            str(self.coordinator.data[self.idx].status),
         )
         return self.coordinator.data[self.idx].status == "on"
 

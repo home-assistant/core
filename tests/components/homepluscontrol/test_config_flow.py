@@ -50,7 +50,7 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock, current_request):
             result["flow_id"], user_input=valid_configuration
         )
 
-    state = config_entry_oauth2_flow._encode_jwt(
+    state = config_entry_oauth2_flow._encode_jwt(  # pylint: disable=protected-access
         hass, {"flow_id": result["flow_id"], "redirect_uri": REDIRECT_URI}
     )
 
@@ -215,7 +215,7 @@ async def test_flow_timeout(hass, aiohttp_client, aioclient_mock, current_reques
             result["flow_id"], user_input=valid_configuration
         )
 
-    state = config_entry_oauth2_flow._encode_jwt(
+    state = config_entry_oauth2_flow._encode_jwt(  # pylint: disable=protected-access
         hass, {"flow_id": result["flow_id"], "redirect_uri": REDIRECT_URI}
     )
 

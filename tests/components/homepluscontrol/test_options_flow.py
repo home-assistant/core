@@ -39,8 +39,8 @@ async def test_config_options_flow(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    for k, v in expected_result.items():
-        assert config_entry.options[k] == v
+    for key, value in expected_result.items():
+        assert config_entry.options[key] == value
 
 
 async def test_invalid_options_flow(hass):

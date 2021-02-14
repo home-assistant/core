@@ -17,7 +17,8 @@ class HomePlusControlOAuth2Implementation(
 ):
     """OAuth2 implementation that extends the HomeAssistant local implementation.
 
-    The immediate purpose of this is to override the redirect URL. It also provides the name of the integration.
+    The immediate purpose of this is to override the redirect URL. It also provides
+    the name of the integration.
 
     Attributes:
         hass (HomeAssistant): HomeAssistant core object.
@@ -40,7 +41,8 @@ class HomePlusControlOAuth2Implementation(
 
         Args:
             hass (HomeAssistant): HomeAssistant core object.
-            config_data (dict): Configuration data that complies with the config Schema of this component.
+            config_data (dict): Configuration data that complies with the config Schema
+                                of this component.
         """
         self.hass = hass
         self._domain = DOMAIN
@@ -51,11 +53,26 @@ class HomePlusControlOAuth2Implementation(
         self.redirect_uri = config_data[CONF_REDIRECT_URI]
         self.subscription_key = config_data[CONF_SUBSCRIPTION_KEY]
 
+        super().__init__(
+            hass=self.hass,
+            domain=self._domain,
+            client_id=self.client_id,
+            client_secret=self.client_secret,
+            authorize_url=self.authorize_url,
+            token_url=self.token_url,
+        )
+
     @property
     def name(self) -> str:
         """Name of the implementation."""
         return "Home+ Control"
 
+    @property
     def redirect_uri(self) -> str:
         """Return the redirect uri."""
-        return self.redirect_uri
+        return self._redirect_uri
+
+    @redirect_uri.setter
+    def redirect_uri(self, value):
+        """Set the redirect uri."""
+        self._redirect_uri = value
