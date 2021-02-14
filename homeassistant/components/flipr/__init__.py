@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import CONF_FLIPR_ID, CONF_PASSWORD, CONF_USERNAME, DOMAIN
+from .crypt_util import decrypt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,10 +76,13 @@ class FliprDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass, entry):
         """Initialize."""
         username = entry.data[CONF_USERNAME]
-        password = entry.data[CONF_PASSWORD]
+        crypted_password = entry.data[CONF_PASSWORD]
         self.flipr_id = entry.data[CONF_FLIPR_ID]
 
         _LOGGER.debug("Config entry values : %s, %s", username, self.flipr_id)
+
+        # Decrypt stored password in config.
+        password = decrypt_data(crypted_password, self.flipr_id)
 
         # Establishes the connection.
         self.client = FliprAPIRestClient(username, password)
