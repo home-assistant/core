@@ -15,6 +15,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
+    CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
@@ -40,7 +41,6 @@ ATTR_INVERT = "invert"
 ATTR_SAMPLE_DURATION = "sample_duration"
 ATTR_SAMPLE_COUNT = "sample_count"
 
-CONF_ATTRIBUTE = "attribute"
 CONF_INVERT = "invert"
 CONF_MAX_SAMPLES = "max_samples"
 CONF_MIN_GRADIENT = "min_gradient"
@@ -66,7 +66,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the trend sensors."""
-
     setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     sensors = []
