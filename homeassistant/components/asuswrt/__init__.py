@@ -1,6 +1,5 @@
 """Support for ASUSWRT devices."""
 import asyncio
-import logging
 
 import voluptuous as vol
 
@@ -40,8 +39,6 @@ PLATFORMS = ["device_tracker", "sensor"]
 
 CONF_PUB_KEY = "pub_key"
 SECRET_GROUP = "Password or SSH Key"
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(

@@ -1,5 +1,4 @@
 """Support for Z-Wave fans."""
-import logging
 import math
 
 from homeassistant.components.fan import (
@@ -16,8 +15,6 @@ from homeassistant.util.percentage import (
 
 from .const import DATA_UNSUBSCRIBE, DOMAIN
 from .entity import ZWaveDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_FEATURES = SUPPORT_SET_SPEED
 SPEED_RANGE = (1, 99)  # off is not included

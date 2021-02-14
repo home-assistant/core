@@ -1,7 +1,6 @@
 """Support for MQTT sensors."""
 from datetime import timedelta
 import functools
-import logging
 from typing import Optional
 
 import voluptuous as vol
@@ -37,8 +36,6 @@ from .mixins import (
     MqttEntity,
     async_setup_entry_helper,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_EXPIRE_AFTER = "expire_after"
 
