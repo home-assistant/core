@@ -11,7 +11,8 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import TEMP_CELSIUS
 
-from . import DATA_HIVE, DOMAIN, HiveEntity, refresh_system
+from . import HiveEntity, refresh_system
+from .const import DOMAIN
 
 SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
 HOTWATER_NAME = "Hot Water"
@@ -33,11 +34,16 @@ SUPPORT_WATER_HEATER = [STATE_ECO, STATE_ON, STATE_OFF]
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Hive Hotwater."""
-    if discovery_info is None:
-        return
+    """Set up the Hive thermostat.
 
-    hive = hass.data[DOMAIN].get(DATA_HIVE)
+    No longer in use.
+    """
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Hive thermostat based on a config entry."""
+
+    hive = hass.data[DOMAIN][entry.entry_id]
     devices = hive.devices.get("water_heater")
     entities = []
     if devices:
@@ -57,7 +63,14 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     @property
     def device_info(self):
         """Return device information."""
-        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
+        return {
+            "identifiers": {(DOMAIN, self.device["device_id"])},
+            "name": self.device["device_name"],
+            "model": self.device["deviceData"]["model"],
+            "manufacturer": self.device["deviceData"]["manufacturer"],
+            "sw_version": self.device["deviceData"]["version"],
+            "via_device": (DOMAIN, self.device["parentDevice"]),
+        }
 
     @property
     def supported_features(self):

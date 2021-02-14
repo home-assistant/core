@@ -5,7 +5,8 @@ from datetime import timedelta
 from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
 from homeassistant.helpers.entity import Entity
 
-from . import ATTR_AVAILABLE, DATA_HIVE, DOMAIN, HiveEntity
+from . import HiveEntity
+from .const import ATTR_AVAILABLE, DOMAIN
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -15,17 +16,21 @@ DEVICETYPE = {
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Hive Sensor."""
-    if discovery_info is None:
-        return
+    """Set up the Hive thermostat.
 
-    hive = hass.data[DOMAIN].get(DATA_HIVE)
+    No longer in use.
+    """
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Hive thermostat based on a config entry."""
+
+    hive = hass.data[DOMAIN][entry.entry_id]
     devices = hive.devices.get("sensor")
     entities = []
     if devices:
         for dev in devices:
-            if dev["hiveType"] in DEVICETYPE:
-                entities.append(HiveSensorEntity(hive, dev))
+            entities.append(HiveSensorEntity(hive, dev))
     async_add_entities(entities, True)
 
 
@@ -40,7 +45,14 @@ class HiveSensorEntity(HiveEntity, Entity):
     @property
     def device_info(self):
         """Return device information."""
-        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
+        return {
+            "identifiers": {(DOMAIN, self.device["device_id"])},
+            "name": self.device["device_name"],
+            "model": self.device["deviceData"]["model"],
+            "manufacturer": self.device["deviceData"]["manufacturer"],
+            "sw_version": self.device["deviceData"]["version"],
+            "via_device": (DOMAIN, self.device["parentDevice"]),
+        }
 
     @property
     def available(self):

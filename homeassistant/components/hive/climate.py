@@ -16,7 +16,8 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
-from . import ATTR_AVAILABLE, DATA_HIVE, DOMAIN, HiveEntity, refresh_system
+from . import HiveEntity, refresh_system
+from .const import ATTR_AVAILABLE, DOMAIN
 
 HIVE_TO_HASS_STATE = {
     "SCHEDULE": HVAC_MODE_AUTO,
@@ -46,11 +47,16 @@ SCAN_INTERVAL = timedelta(seconds=15)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Hive thermostat."""
-    if discovery_info is None:
-        return
+    """Set up the Hive thermostat.
 
-    hive = hass.data[DOMAIN].get(DATA_HIVE)
+    No longer in use.
+    """
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Hive thermostat based on a config entry."""
+
+    hive = hass.data[DOMAIN][entry.entry_id]
     devices = hive.devices.get("climate")
     entities = []
     if devices:
@@ -76,7 +82,14 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
     @property
     def device_info(self):
         """Return device information."""
-        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
+        return {
+            "identifiers": {(DOMAIN, self.device["device_id"])},
+            "name": self.device["device_name"],
+            "model": self.device["deviceData"]["model"],
+            "manufacturer": self.device["deviceData"]["manufacturer"],
+            "sw_version": self.device["deviceData"]["version"],
+            "via_device": (DOMAIN, self.device["parentDevice"]),
+        }
 
     @property
     def supported_features(self):
