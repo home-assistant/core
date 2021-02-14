@@ -264,7 +264,10 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     def media_play_pause(self):
         """Send pause command to media player."""
-        self._tv.sendKey("PlayPause")
+        if self._tv.quirk_playpause_spacebar:
+            self._tv.sendUnicode(" ")
+        else:
+            self._tv.sendKey("PlayPause")
         self._update_soon()
 
     def media_play(self):
