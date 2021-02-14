@@ -1,11 +1,8 @@
 """The tests for the Modbus switch component."""
-from datetime import timedelta
-
 import pytest
 
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
-    CALL_TYPE_REGISTER_HOLDING,
     CONF_COILS,
     CONF_REGISTER,
     CONF_REGISTERS,
@@ -20,7 +17,43 @@ from homeassistant.const import (
     STATE_ON,
 )
 
-from .conftest import run_base_read_test, setup_base_test
+from .conftest import base_config_test, base_test
+
+
+@pytest.mark.parametrize("do_options", [False, True])
+@pytest.mark.parametrize("read_type", [CALL_TYPE_COIL, CONF_REGISTER])
+async def test_config_switch(hass, do_options, read_type):
+    """Run test for switch."""
+    device_name = "test_switch"
+
+    if read_type == CONF_REGISTER:
+        device_config = {
+            CONF_NAME: device_name,
+            CONF_REGISTER: 1234,
+            CONF_SLAVE: 1,
+            CONF_COMMAND_OFF: 0x00,
+            CONF_COMMAND_ON: 0x01,
+        }
+        array_type = CONF_REGISTERS
+    else:
+        device_config = {
+            CONF_NAME: device_name,
+            read_type: 1234,
+            CONF_SLAVE: 10,
+        }
+        array_type = CONF_COILS
+    if do_options:
+        device_config.update({})
+
+    await base_config_test(
+        hass,
+        device_config,
+        device_name,
+        SWITCH_DOMAIN,
+        None,
+        array_type,
+        method_discovery=False,
+    )
 
 
 @pytest.mark.parametrize(
@@ -48,32 +81,26 @@ from .conftest import run_base_read_test, setup_base_test
         ),
     ],
 )
-async def test_coil_switch(hass, mock_hub, regs, expected):
+async def test_coil_switch(hass, regs, expected):
     """Run test for given config."""
     switch_name = "modbus_test_switch"
-    scan_interval = 5
-    entity_id, now, device = await setup_base_test(
-        switch_name,
+    state = await base_test(
         hass,
-        mock_hub,
         {
-            CONF_COILS: [
-                {CONF_NAME: switch_name, CALL_TYPE_COIL: 1234, CONF_SLAVE: 1},
-            ]
+            CONF_NAME: switch_name,
+            CALL_TYPE_COIL: 1234,
+            CONF_SLAVE: 1,
         },
+        switch_name,
         SWITCH_DOMAIN,
-        scan_interval,
-    )
-
-    await run_base_read_test(
-        entity_id,
-        hass,
-        mock_hub,
-        CALL_TYPE_COIL,
+        None,
+        CONF_COILS,
         regs,
         expected,
-        now + timedelta(seconds=scan_interval + 1),
+        method_discovery=False,
+        scan_interval=5,
     )
+    assert state == expected
 
 
 @pytest.mark.parametrize(
@@ -101,38 +128,28 @@ async def test_coil_switch(hass, mock_hub, regs, expected):
         ),
     ],
 )
-async def test_register_switch(hass, mock_hub, regs, expected):
+async def test_register_switch(hass, regs, expected):
     """Run test for given config."""
     switch_name = "modbus_test_switch"
-    scan_interval = 5
-    entity_id, now, device = await setup_base_test(
-        switch_name,
+    state = await base_test(
         hass,
-        mock_hub,
         {
-            CONF_REGISTERS: [
-                {
-                    CONF_NAME: switch_name,
-                    CONF_REGISTER: 1234,
-                    CONF_SLAVE: 1,
-                    CONF_COMMAND_OFF: 0x00,
-                    CONF_COMMAND_ON: 0x01,
-                },
-            ]
+            CONF_NAME: switch_name,
+            CONF_REGISTER: 1234,
+            CONF_SLAVE: 1,
+            CONF_COMMAND_OFF: 0x00,
+            CONF_COMMAND_ON: 0x01,
         },
+        switch_name,
         SWITCH_DOMAIN,
-        scan_interval,
-    )
-
-    await run_base_read_test(
-        entity_id,
-        hass,
-        mock_hub,
-        CALL_TYPE_REGISTER_HOLDING,
+        None,
+        CONF_REGISTERS,
         regs,
         expected,
-        now + timedelta(seconds=scan_interval + 1),
+        method_discovery=False,
+        scan_interval=5,
     )
+    assert state == expected
 
 
 @pytest.mark.parametrize(
@@ -152,35 +169,25 @@ async def test_register_switch(hass, mock_hub, regs, expected):
         ),
     ],
 )
-async def test_register_state_switch(hass, mock_hub, regs, expected):
+async def test_register_state_switch(hass, regs, expected):
     """Run test for given config."""
     switch_name = "modbus_test_switch"
-    scan_interval = 5
-    entity_id, now, device = await setup_base_test(
-        switch_name,
+    state = await base_test(
         hass,
-        mock_hub,
         {
-            CONF_REGISTERS: [
-                {
-                    CONF_NAME: switch_name,
-                    CONF_REGISTER: 1234,
-                    CONF_SLAVE: 1,
-                    CONF_COMMAND_OFF: 0x04,
-                    CONF_COMMAND_ON: 0x40,
-                },
-            ]
+            CONF_NAME: switch_name,
+            CONF_REGISTER: 1234,
+            CONF_SLAVE: 1,
+            CONF_COMMAND_OFF: 0x04,
+            CONF_COMMAND_ON: 0x40,
         },
+        switch_name,
         SWITCH_DOMAIN,
-        scan_interval,
-    )
-
-    await run_base_read_test(
-        entity_id,
-        hass,
-        mock_hub,
-        CALL_TYPE_REGISTER_HOLDING,
+        None,
+        CONF_REGISTERS,
         regs,
         expected,
-        now + timedelta(seconds=scan_interval + 1),
+        method_discovery=False,
+        scan_interval=5,
     )
+    assert state == expected
