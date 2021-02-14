@@ -27,6 +27,32 @@ CONFIG_THEMES = {
         CONF_THEMES: {
             "happy": {"primary-color": "red"},
             "dark": {"primary-color": "black"},
+            "light_only": {
+                "styles": {
+                    "light": {"primary-color": "red"},
+                }
+            },
+            "dark_only": {
+                "styles": {
+                    "dark": {"primary-color": "black"},
+                }
+            },
+            "light_and_dark": {
+                "styles": {
+                    "light": {"primary-color": "red"},
+                    "dark": {"primary-color": "black"},
+                }
+            },
+            "with_defaults": {
+                "defaults": {
+                    "light": {"primary-color": "red", "accent-color": "green"},
+                    "dark": {"primary-color": "black", "accent-color": "orange"},
+                },
+                "styles": {
+                    "light": {"state-icon-active-color": "red"},
+                    "dark": {"state-icon-active-color": "black"},
+                },
+            },
         }
     }
 }
@@ -151,6 +177,32 @@ async def test_themes_api(hass, themes_ws_client):
     assert msg["result"]["themes"] == {
         "happy": {"primary-color": "red"},
         "dark": {"primary-color": "black"},
+        "light_only": {
+            "styles": {
+                "light": {"primary-color": "red"},
+            }
+        },
+        "dark_only": {
+            "styles": {
+                "dark": {"primary-color": "black"},
+            }
+        },
+        "light_and_dark": {
+            "styles": {
+                "light": {"primary-color": "red"},
+                "dark": {"primary-color": "black"},
+            }
+        },
+        "with_defaults": {
+            "defaults": {
+                "light": {"primary-color": "red", "accent-color": "green"},
+                "dark": {"primary-color": "black", "accent-color": "orange"},
+            },
+            "styles": {
+                "light": {"state-icon-active-color": "red"},
+                "dark": {"state-icon-active-color": "black"},
+            },
+        },
     }
 
     # safe mode
@@ -282,6 +334,15 @@ async def test_themes_set_dark_theme(hass, themes_ws_client):
     msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["default_dark_theme"] is None
+
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "light_and_dark", "mode": "dark"}, blocking=True
+    )
+
+    await themes_ws_client.send_json({"id": 8, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
+
+    assert msg["result"]["default_dark_theme"] == "light_and_dark"
 
 
 async def test_themes_set_dark_theme_wrong_name(hass, frontend, themes_ws_client):

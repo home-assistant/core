@@ -37,6 +37,8 @@ CONF_THEMES_DEFAULTS = "defaults"
 CONF_THEMES_STYLES = "styles"
 CONF_THEMES_LIGHT = "light"
 CONF_THEMES_DARK = "dark"
+CONF_THEMES_PRIMARY_COLOR = "primary-color"
+CONF_THEMES_ACCENT_COLOR = "accent-color"
 CONF_EXTRA_HTML_URL = "extra_html_url"
 CONF_EXTRA_HTML_URL_ES5 = "extra_html_url_es5"
 CONF_EXTRA_MODULE_URL = "extra_module_url"
@@ -91,12 +93,19 @@ PRIMARY_COLOR = "primary-color"
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULTS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_THEMES_PRIMARY_COLOR): cv.string,
+        vol.Required(CONF_THEMES_ACCENT_COLOR): cv.string,
+    }
+)
+
 EXTENDED_THEME_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_THEMES_DEFAULTS): vol.Schema(
             {
-                vol.Optional(CONF_THEMES_LIGHT): vol.Schema({cv.string: cv.string}),
-                vol.Optional(CONF_THEMES_DARK): vol.Schema({cv.string: cv.string}),
+                vol.Optional(CONF_THEMES_LIGHT): DEFAULTS_SCHEMA,
+                vol.Optional(CONF_THEMES_DARK): DEFAULTS_SCHEMA,
             }
         ),
         vol.Optional(CONF_THEMES_STYLES): vol.Schema(
