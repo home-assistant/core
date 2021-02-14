@@ -33,8 +33,10 @@ mimetypes.add_type("application/javascript", ".js")
 
 DOMAIN = "frontend"
 CONF_THEMES = "themes"
-CONF_THEMES_LIGHT_STYLES = "light"
-CONF_THEMES_DARK_STYLES = "dark"
+CONF_THEMES_DEFAULTS = "defaults"
+CONF_THEMES_STYLES = "styles"
+CONF_THEMES_LIGHT = "light"
+CONF_THEMES_DARK = "dark"
 CONF_EXTRA_HTML_URL = "extra_html_url"
 CONF_EXTRA_HTML_URL_ES5 = "extra_html_url_es5"
 CONF_EXTRA_MODULE_URL = "extra_module_url"
@@ -89,23 +91,31 @@ PRIMARY_COLOR = "primary-color"
 
 _LOGGER = logging.getLogger(__name__)
 
+EXTENDED_THEME_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_THEMES_DEFAULTS): vol.Schema(
+            {
+                vol.Optional(CONF_THEMES_LIGHT): vol.Schema({cv.string: cv.string}),
+                vol.Optional(CONF_THEMES_DARK): vol.Schema({cv.string: cv.string}),
+            }
+        ),
+        vol.Optional(CONF_THEMES_STYLES): vol.Schema(
+            {
+                vol.Optional(CONF_THEMES_LIGHT): vol.Schema({cv.string: cv.string}),
+                vol.Optional(CONF_THEMES_DARK): vol.Schema({cv.string: cv.string}),
+            }
+        ),
+    }
+)
+
 THEME_SCHEMA = vol.Schema(
     {
         cv.string: (
             vol.Any(
                 # Legacy theme scheme
                 {cv.string: cv.string},
-                # New sub scheme with "dark styles" support
-                vol.Schema(
-                    {
-                        vol.Optional(CONF_THEMES_LIGHT_STYLES): vol.Schema(
-                            {cv.string: cv.string}
-                        ),
-                        vol.Optional(CONF_THEMES_DARK_STYLES): vol.Schema(
-                            {cv.string: cv.string}
-                        ),
-                    }
-                ),
+                # New extended schema with "dark styles" and "defaults" support
+                EXTENDED_THEME_SCHEMA,
             )
         )
     }
