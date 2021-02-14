@@ -1,6 +1,5 @@
 """Percentage util functions."""
 
-import math
 from typing import List, Tuple
 
 
@@ -54,14 +53,6 @@ def percentage_to_ordered_list_item(ordered_list: List[str], percentage: int) ->
     return ordered_list[-1]
 
 
-def ordered_list_percentage_step_size(ordered_list: List[str]) -> float:
-    """Determine the percentage step size from an ordered list.
-
-    When using this utility for fan speeds, do not include "off"
-    """
-    return math.ceil(10000 / len(ordered_list)) / 100
-
-
 def ranged_value_to_percentage(
     low_high_range: Tuple[float, float], value: float
 ) -> int:
@@ -94,11 +85,3 @@ def percentage_to_ranged_value(
     (1,255), 4: 10.2
     """
     return (low_high_range[1] - low_high_range[0] + 1) * percentage / 100
-
-
-def range_percentage_step_size(low_high_range: Tuple[float, float]) -> float:
-    """Determine the percentage step size from a range.
-
-    When using this utility for fan speeds, do not include 0 if it is off
-    """
-    return math.ceil(10000 / (low_high_range[1] - low_high_range[0] + 1)) / 100

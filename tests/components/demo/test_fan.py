@@ -402,7 +402,7 @@ async def test_increase_decrease_speed(hass, fan_entity_id):
     """Test increasing and decreasing the percentage speed of the device."""
     state = hass.states.get(fan_entity_id)
     assert state.state == STATE_OFF
-    assert state.attributes[fan.ATTR_PERCENTAGE_STEP] == 33.34
+    assert state.attributes[fan.ATTR_PERCENTAGE_STEP] == 100 / 3
 
     await hass.services.async_call(
         fan.DOMAIN,
@@ -462,7 +462,7 @@ async def test_increase_decrease_speed(hass, fan_entity_id):
     )
     state = hass.states.get(fan_entity_id)
     assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_LOW
-    assert 32 <= state.attributes[fan.ATTR_PERCENTAGE] <= 33
+    assert state.attributes[fan.ATTR_PERCENTAGE] == 33
 
     await hass.services.async_call(
         fan.DOMAIN,
