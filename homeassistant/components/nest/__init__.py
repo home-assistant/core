@@ -211,7 +211,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if DATA_SDM not in entry.data:
         # Legacy API
         return True
-
+    _LOGGER.debug("Stopping nest subscriber")
     subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     subscriber.stop_async()
     unload_ok = all(
