@@ -5,6 +5,8 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_SMOKE,
+    DEVICE_CLASS_SOUND,
     BinarySensorEntity,
 )
 
@@ -14,6 +16,9 @@ DEVICETYPE = {
     "contactsensor": DEVICE_CLASS_OPENING,
     "motionsensor": DEVICE_CLASS_MOTION,
     "Connectivity": DEVICE_CLASS_CONNECTIVITY,
+    "SMOKE_CO": DEVICE_CLASS_SMOKE,
+    "DOG_BARK": DEVICE_CLASS_SOUND,
+    "GLASS_BREAK": DEVICE_CLASS_SOUND,
 }
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
