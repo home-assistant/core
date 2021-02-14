@@ -152,6 +152,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     def _update_soon(self):
         """Reschedule update task."""
+        self.schedule_update_ha_state()
         self.hass.add_job(self.coordinator.async_request_refresh)
 
     @property
