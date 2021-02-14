@@ -9,7 +9,7 @@ from uvcclient import camera as uvc_camera, nvr
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
-from homeassistant.const import CONF_PORT, CONF_SSL
+from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
@@ -17,7 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_NVR = "nvr"
 CONF_KEY = "key"
-CONF_PASSWORD = "password"
 
 DEFAULT_PASSWORD = "ubnt"
 DEFAULT_PORT = 7080
@@ -197,7 +196,6 @@ class UnifiVideoCamera(Camera):
 
     def camera_image(self):
         """Return the image of this camera."""
-
         if not self._camera:
             if not self._login():
                 return
