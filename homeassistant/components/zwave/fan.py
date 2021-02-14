@@ -5,6 +5,7 @@ from homeassistant.components.fan import DOMAIN, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.percentage import (
+    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
@@ -71,7 +72,7 @@ class ZwaveFan(ZWaveDeviceEntity, FanEntity):
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return SPEED_RANGE[1] - SPEED_RANGE[0] + 1
+        return int_states_in_range(SPEED_RANGE)
 
     @property
     def supported_features(self):

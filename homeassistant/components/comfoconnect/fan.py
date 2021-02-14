@@ -13,6 +13,7 @@ from pycomfoconnect import (
 from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.percentage import (
+    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
@@ -104,7 +105,7 @@ class ComfoConnectFan(FanEntity):
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return SPEED_RANGE[1] - SPEED_RANGE[0] + 1
+        return int_states_in_range(SPEED_RANGE)
 
     def turn_on(
         self, speed: str = None, percentage=None, preset_mode=None, **kwargs

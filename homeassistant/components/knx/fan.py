@@ -7,6 +7,7 @@ from xknx.devices.fan import FanSpeedMode
 
 from homeassistant.components.fan import SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.util.percentage import (
+    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
@@ -71,7 +72,7 @@ class KNXFan(KnxEntity, FanEntity):
     @property
     def speed_count(self) -> Optional[int]:
         """Return the number of speeds the fan supports."""
-        return self._step_range[1] - self._step_range[0] + 1
+        return int_states_in_range(self._step_range)
 
     async def async_turn_on(
         self,

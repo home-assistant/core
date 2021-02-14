@@ -8,6 +8,7 @@ from homeassistant.components.fan import DOMAIN as FAN, SUPPORT_SET_SPEED, FanEn
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.percentage import (
+    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
@@ -53,7 +54,7 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         """Return the number of speeds the fan supports."""
         if self._node.protocol == PROTO_INSTEON:
             return 3
-        return SPEED_RANGE[1] - SPEED_RANGE[0] + 1
+        return int_states_in_range(SPEED_RANGE)
 
     @property
     def is_on(self) -> bool:
@@ -107,7 +108,7 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
         """Return the number of speeds the fan supports."""
         if self._node.protocol == PROTO_INSTEON:
             return 3
-        return SPEED_RANGE[1] - SPEED_RANGE[0] + 1
+        return int_states_in_range(SPEED_RANGE)
 
     @property
     def is_on(self) -> bool:
