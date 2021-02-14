@@ -376,7 +376,7 @@ class Camera(HomeAccessory, PyhapCamera):
             cmd=[],
             input_source=input_source,
             output=output,
-            extra_cmd="-nostats",
+            extra_cmd="-hide_banner -nostats",
             stderr_pipe=True,
             stdout_pipe=False,
         )
