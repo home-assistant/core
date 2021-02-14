@@ -2,6 +2,7 @@
 from datetime import timedelta
 import functools as ft
 import logging
+import math
 from typing import List, Optional
 
 import voluptuous as vol
@@ -22,6 +23,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
+    ordered_list_percentage_step_size,
     percentage_to_ordered_list_item,
 )
 
@@ -39,6 +41,8 @@ SUPPORT_DIRECTION = 4
 SUPPORT_PRESET_MODE = 8
 
 SERVICE_SET_SPEED = "set_speed"
+SERVICE_INCREASE_SPEED = "increase_speed"
+SERVICE_DECREASE_SPEED = "decrease_speed"
 SERVICE_OSCILLATE = "oscillate"
 SERVICE_SET_DIRECTION = "set_direction"
 SERVICE_SET_PERCENTAGE = "set_percentage"
@@ -54,6 +58,7 @@ DIRECTION_REVERSE = "reverse"
 
 ATTR_SPEED = "speed"
 ATTR_PERCENTAGE = "percentage"
+ATTR_PERCENTAGE_STEP = "percentage_step"
 ATTR_SPEED_LIST = "speed_list"
 ATTR_OSCILLATING = "oscillating"
 ATTR_DIRECTION = "direction"
@@ -140,6 +145,26 @@ async def async_setup(hass, config: dict):
         SERVICE_SET_SPEED,
         {vol.Required(ATTR_SPEED): cv.string},
         "async_set_speed_deprecated",
+        [SUPPORT_SET_SPEED],
+    )
+    component.async_register_entity_service(
+        SERVICE_INCREASE_SPEED,
+        {
+            vol.Optional(ATTR_PERCENTAGE_STEP): vol.All(
+                vol.Coerce(float), vol.Range(min=0, max=100)
+            )
+        },
+        "async_increase_speed",
+        [SUPPORT_SET_SPEED],
+    )
+    component.async_register_entity_service(
+        SERVICE_DECREASE_SPEED,
+        {
+            vol.Optional(ATTR_PERCENTAGE_STEP): vol.All(
+                vol.Coerce(float), vol.Range(min=0, max=100)
+            )
+        },
+        "async_decrease_speed",
         [SUPPORT_SET_SPEED],
     )
     component.async_register_entity_service(
@@ -245,6 +270,22 @@ class FanEntity(ToggleEntity):
             await self.hass.async_add_executor_job(self.set_percentage, percentage)
         else:
             await self.async_set_speed(self.percentage_to_speed(percentage))
+
+    async def async_increase_speed(self, percentage_step=None) -> None:
+        """Increase the speed of the fan."""
+        current_speed = self.percentage or 0
+        if percentage_step is None:
+            percentage_step = self.percentage_step
+        new_speed = current_speed + math.floor(percentage_step)
+        await self.async_set_percentage(max(0, min(100, new_speed)))
+
+    async def async_decrease_speed(self, percentage_step=None) -> None:
+        """Decrease the speed of the fan."""
+        current_speed = self.percentage or 0
+        if percentage_step is None:
+            percentage_step = self.percentage_step
+        new_speed = current_speed - math.ceil(percentage_step)
+        await self.async_set_percentage(max(0, min(100, new_speed)))
 
     @_fan_native
     def set_preset_mode(self, preset_mode: str) -> None:
@@ -409,6 +450,14 @@ class FanEntity(ToggleEntity):
         return 0
 
     @property
+    def percentage_step(self) -> Optional[float]:
+        """Return the step size for percentage."""
+        speed_list = speed_list_without_preset_modes(self.speed_list)
+        if speed_list:
+            return ordered_list_percentage_step_size(speed_list)
+        return 1
+
+    @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
         speeds = []
@@ -531,6 +580,7 @@ class FanEntity(ToggleEntity):
         if supported_features & SUPPORT_SET_SPEED:
             data[ATTR_SPEED] = self.speed
             data[ATTR_PERCENTAGE] = self.percentage
+            data[ATTR_PERCENTAGE_STEP] = self.percentage_step
 
         if (
             supported_features & SUPPORT_PRESET_MODE
