@@ -6,7 +6,6 @@
   "requirements": [
     "pyhoma==0.5.1"
   ],
-  "dependencies": [],
   "codeowners": [
     "@imicknl",
     "@vlebourl",
