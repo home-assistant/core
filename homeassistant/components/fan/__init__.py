@@ -23,6 +23,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
+    ordered_list_percentage_step_size,
     percentage_to_ordered_list_item,
 )
 
@@ -148,13 +149,21 @@ async def async_setup(hass, config: dict):
     )
     component.async_register_entity_service(
         SERVICE_INCREASE_SPEED,
-        {},
+        {
+            vol.Optional(ATTR_PERCENTAGE_STEP): vol.All(
+                vol.Coerce(float), vol.Range(min=0, max=100)
+            )
+        },
         "async_increase_speed",
         [SUPPORT_SET_SPEED],
     )
     component.async_register_entity_service(
         SERVICE_DECREASE_SPEED,
-        {},
+        {
+            vol.Optional(ATTR_PERCENTAGE_STEP): vol.All(
+                vol.Coerce(float), vol.Range(min=0, max=100)
+            )
+        },
         "async_decrease_speed",
         [SUPPORT_SET_SPEED],
     )
@@ -262,16 +271,20 @@ class FanEntity(ToggleEntity):
         else:
             await self.async_set_speed(self.percentage_to_speed(percentage))
 
-    async def async_increase_speed(self) -> None:
+    async def async_increase_speed(self, percentage_step) -> None:
         """Increase the speed of the fan."""
         current_speed = self.percentage or 0
-        new_speed = current_speed + math.floor(self.percentage_step)
+        if percentage_step is None:
+            percentage_step = self.percentage_step
+        new_speed = current_speed + math.floor(percentage_step)
         await self.async_set_percentage(max(0, min(100, new_speed)))
 
-    async def async_decrease_speed(self) -> None:
+    async def async_decrease_speed(self, percentage_step) -> None:
         """Decrease the speed of the fan."""
         current_speed = self.percentage or 0
-        new_speed = current_speed - math.ceil(self.percentage_step)
+        if percentage_step is None:
+            percentage_step = self.percentage_step
+        new_speed = current_speed - math.ceil(percentage_step)
         await self.async_set_percentage(max(0, min(100, new_speed)))
 
     @_fan_native
@@ -441,7 +454,7 @@ class FanEntity(ToggleEntity):
         """Return the step size for percentage."""
         speed_list = speed_list_without_preset_modes(self.speed_list)
         if speed_list:
-            return math.ceil(10000 / len(speed_list)) / 100
+            return ordered_list_percentage_step_size(speed_list)
         return 1
 
     @property

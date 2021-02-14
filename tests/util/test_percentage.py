@@ -6,8 +6,10 @@ import pytest
 
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
+    ordered_list_percentage_step_size,
     percentage_to_ordered_list_item,
     percentage_to_ranged_value,
+    range_percentage_step_size,
     ranged_value_to_percentage,
 )
 
@@ -169,3 +171,27 @@ async def test_percentage_seven_steps():
     assert math.ceil(percentage_to_ranged_value(range, 70)) == 5
     assert math.ceil(percentage_to_ranged_value(range, 84)) == 6
     assert math.ceil(percentage_to_ranged_value(range, 98)) == 7
+
+
+async def test_range_percentage_step_size():
+    """Test getting the step size for a range."""
+
+    assert range_percentage_step_size((1, 7)) == 14.29
+    assert range_percentage_step_size((1, 6)) == 16.67
+    assert range_percentage_step_size((1, 5)) == 20
+    assert range_percentage_step_size((1, 4)) == 25.0
+    assert range_percentage_step_size((1, 3)) == 33.34
+    assert range_percentage_step_size((1, 2)) == 50
+    assert range_percentage_step_size((1, 1)) == 100
+
+
+async def test_ordered_list_percentage_step_size():
+    """Test getting the step size for an ordered list."""
+
+    assert ordered_list_percentage_step_size([1, 2, 3, 4, 5, 6, 7]) == 14.29
+    assert ordered_list_percentage_step_size([1, 2, 3, 4, 5, 6]) == 16.67
+    assert ordered_list_percentage_step_size([1, 2, 3, 4, 5]) == 20
+    assert ordered_list_percentage_step_size([1, 2, 3, 4]) == 25.0
+    assert ordered_list_percentage_step_size([1, 2, 3]) == 33.34
+    assert ordered_list_percentage_step_size([1, 2]) == 50
+    assert ordered_list_percentage_step_size([1]) == 100
