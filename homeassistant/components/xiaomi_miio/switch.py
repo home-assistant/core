@@ -9,12 +9,7 @@ from miio.powerstrip import PowerMode  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_MODE,
-    CONF_HOST,
-    CONF_TOKEN,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_HOST, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
