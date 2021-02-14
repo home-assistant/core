@@ -411,13 +411,13 @@ class Camera(HomeAccessory, PyhapCamera):
 
     async def _async_log_stderr_stream(self, stderr_reader):
         """Log output from ffmpeg."""
-        _LOGGER.debug("%s: ffmpeg: started", self._name)
+        _LOGGER.debug("%s: ffmpeg: started", self.display_name)
         while True:
             line = await stderr_reader.readline()
             if line == b"":
                 return
 
-            _LOGGER.debug("%s: ffmpeg: %s", self._name, line.rstrip())
+            _LOGGER.debug("%s: ffmpeg: %s", self.display_name, line.rstrip())
 
     async def _async_ffmpeg_watch(self, session_id):
         """Check to make sure ffmpeg is still running and cleanup if not."""
