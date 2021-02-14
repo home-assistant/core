@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TYPE,
 )
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -75,7 +74,7 @@ async def base_test(
         mock_sync.read_input_registers.return_value = read_result
         mock_sync.read_holding_registers.return_value = read_result
 
-        # mock timer and add modbus platform with devices (new config)
+        # mock timer and add old/new config
         now = dt_util.utcnow()
         with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
             if method_discovery:
@@ -84,9 +83,7 @@ async def base_test(
                     config_modbus[DOMAIN].update(
                         {array_name_discovery: [{**config_device}]}
                     )
-                await async_load_platform(
-                    hass, DOMAIN, DOMAIN, config_modbus[DOMAIN], config_modbus
-                )
+                assert await async_setup_component(hass, DOMAIN, config_modbus)
             else:
                 # first add modbus platform using old config
                 assert await async_setup_component(hass, DOMAIN, config_modbus)
