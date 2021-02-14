@@ -8,13 +8,17 @@ from sqlalchemy.exc import OperationalError
 from homeassistant.components.recorder import (
     CONF_DB_URL,
     CONFIG_SCHEMA,
+    DATA_INSTANCE,
     DOMAIN,
     Recorder,
     run_information,
     run_information_from_instance,
     run_information_with_session,
+    SERVICE_DISABLE,
+    SERVICE_ENABLE,
+    SERVICE_PURGE,
+    SQLITE_URL_PREFIX,
 )
-from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
@@ -516,6 +520,113 @@ def test_run_information(hass_recorder):
     run_info = run_information(hass, dt_util.utcnow())
     assert isinstance(run_info, RecorderRuns)
     assert run_info.closed_incorrect is False
+
+
+def test_has_services(hass_recorder):
+    """Test the services exist."""
+    hass = hass_recorder()
+
+    assert hass.services.has_service(DOMAIN, SERVICE_DISABLE)
+    assert hass.services.has_service(DOMAIN, SERVICE_ENABLE)
+    assert hass.services.has_service(DOMAIN, SERVICE_PURGE)
+
+
+def test_service_disable_events_not_recording(hass, hass_recorder):
+    """Test that events are not recorded when recorder is disabled using service."""
+    hass = hass_recorder()
+
+    assert hass.services.call(
+        DOMAIN,
+        SERVICE_DISABLE,
+        {},
+        blocking=True,
+    )
+
+    event_type = "EVENT_TEST"
+
+    events = []
+
+    @callback
+    def event_listener(event):
+        """Record events from eventbus."""
+        if event.event_type == event_type:
+            events.append(event)
+
+    hass.bus.listen(MATCH_ALL, event_listener)
+
+    event_data1 = {"test_attr": 5, "test_attr_10": "nice"}
+    hass.bus.fire(event_type, event_data1)
+    wait_recording_done(hass)
+
+    assert len(events) == 1
+    event = events[0]
+
+    with session_scope(hass=hass) as session:
+        db_events = list(session.query(Events).filter_by(event_type=event_type))
+        assert len(db_events) == 0
+
+    assert hass.services.call(
+        DOMAIN,
+        SERVICE_ENABLE,
+        {},
+        blocking=True,
+    )
+
+    event_data2 = {"attr_one": 5, "attr_two": "nice"}
+    hass.bus.fire(event_type, event_data2)
+    wait_recording_done(hass)
+
+    assert len(events) == 2
+    assert events[0] != events[1]
+    assert events[0].data != events[1].data
+
+    with session_scope(hass=hass) as session:
+        db_events = list(session.query(Events).filter_by(event_type=event_type))
+        assert len(db_events) == 1
+        db_event = db_events[0].to_native()
+
+    event = events[1]
+
+    assert event.event_type == db_event.event_type
+    assert event.data == db_event.data
+    assert event.origin == db_event.origin
+    assert event.time_fired.replace(microsecond=0) == db_event.time_fired.replace(
+        microsecond=0
+    )
+
+
+def test_service_disable_states_not_recording(hass, hass_recorder):
+    """Test that state changes are not recorded when recorder is disabled using service."""
+    hass = hass_recorder()
+
+    assert hass.services.call(
+        DOMAIN,
+        SERVICE_DISABLE,
+        {},
+        blocking=True,
+    )
+
+    hass.states.set("test.one", "on", {})
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        assert len(list(session.query(States))) == 0
+
+    assert hass.services.call(
+        DOMAIN,
+        SERVICE_ENABLE,
+        {},
+        blocking=True,
+    )
+
+    hass.states.set("test.two", "off", {})
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        db_states = list(session.query(States))
+        assert len(db_states) == 1
+        assert db_states[0].event_id > 0
+        assert db_states[0].to_native() == _state_empty_context(hass, "test.two")
 
 
 class CannotSerializeMe:
