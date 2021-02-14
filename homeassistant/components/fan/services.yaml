@@ -41,6 +41,9 @@ turn_on:
     percentage:
       description: Percentage speed setting
       example: 75
+    percentage_step:
+      description: Change speed by a percentage. Should be between -100..100.
+      example: 14.29
     preset_mode:
       description: Preset mode setting
       example: "auto"
