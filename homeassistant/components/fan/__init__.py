@@ -310,6 +310,7 @@ class FanEntity(ToggleEntity):
         future alternatives.
         """
         if percentage_step is not None:
+            _LOGGER.debug("Percentage step: %s", percentage_step)
             percentage = max(0, min(100, (self.percentage or 0) + percentage_step))
 
         if preset_mode is not None:
