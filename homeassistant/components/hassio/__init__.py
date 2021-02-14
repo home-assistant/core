@@ -546,5 +546,6 @@ class HassioAddonsDataUpdateCoordinator(DataUpdateCoordinator):
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self.config_entry.entry_id)
             )
+            return {}
 
         return addons
