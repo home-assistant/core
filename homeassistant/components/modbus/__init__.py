@@ -1,6 +1,4 @@
 """Support for Modbus."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -68,8 +66,6 @@ from .const import (
     MODBUS_DOMAIN as DOMAIN,
 )
 from .modbus import modbus_setup
-
-_LOGGER = logging.getLogger(__name__)
 
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
 
