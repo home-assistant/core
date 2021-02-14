@@ -4,7 +4,6 @@ from typing import Any, Dict, Optional
 
 from pyhoma.models import Command, Device
 
-from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -14,19 +13,10 @@ from .coordinator import TahomaDataUpdateCoordinator
 ATTR_RSSI_LEVEL = "rssi_level"
 
 CORE_AVAILABILITY_STATE = "core:AvailabilityState"
-CORE_BATTERY_STATE = "core:BatteryState"
 CORE_MANUFACTURER_NAME_STATE = "core:ManufacturerNameState"
 CORE_MODEL_STATE = "core:ModelState"
-CORE_RSSI_LEVEL_STATE = "core:RSSILevelState"
-CORE_SENSOR_DEFECT_STATE = "core:SensorDefectState"
 CORE_STATUS_STATE = "core:StatusState"
 
-STATE_AVAILABLE = "available"
-STATE_BATTERY_FULL = "full"
-STATE_BATTERY_NORMAL = "normal"
-STATE_BATTERY_LOW = "low"
-STATE_BATTERY_VERY_LOW = "verylow"
-STATE_DEAD = "dead"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,33 +53,6 @@ class TahomaEntity(CoordinatorEntity, Entity):
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         return self.device.states is None or len(self.device.states) == 0
-
-    @property
-    def device_state_attributes(self) -> Dict[str, Any]:
-        """Return the state attributes of the device."""
-        attr = {}
-
-        if self.has_state(CORE_RSSI_LEVEL_STATE):
-            attr[ATTR_RSSI_LEVEL] = self.select_state(CORE_RSSI_LEVEL_STATE)
-
-        if self.has_state(CORE_BATTERY_STATE):
-            battery_state = self.select_state(CORE_BATTERY_STATE)
-
-            if battery_state == STATE_BATTERY_FULL:
-                battery_state = 100
-            elif battery_state == STATE_BATTERY_NORMAL:
-                battery_state = 75
-            elif battery_state == STATE_BATTERY_LOW:
-                battery_state = 25
-            elif battery_state == STATE_BATTERY_VERY_LOW:
-                battery_state = 10
-
-            attr[ATTR_BATTERY_LEVEL] = battery_state
-
-        if self.select_state(CORE_SENSOR_DEFECT_STATE) == STATE_DEAD:
-            attr[ATTR_BATTERY_LEVEL] = 0
-
-        return attr
 
     @property
     def device_info(self) -> Dict[str, Any]:
