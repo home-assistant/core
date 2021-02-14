@@ -31,7 +31,8 @@
             },
             "user": {
                 "data": {
-                    "gateway": "Connect to a Xiaomi Gateway"
+                    "gateway": "Connect to a Xiaomi Gateway",
+                    "device": "Connect to a other Xiaomi Miio device"
                 },
                 "description": "Select to which device you want to connect.",
                 "title": "Xiaomi Miio"
