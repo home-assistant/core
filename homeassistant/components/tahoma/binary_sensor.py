@@ -1,6 +1,4 @@
 """Support for Somfy TaHoma binary sensors."""
-from typing import Optional
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OCCUPANCY,
