@@ -272,7 +272,7 @@ async def test_hls_playlist_view(hass, hls_stream, stream_worker_sync):
 
 
 async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
-    """Test rendering the hls playlist with more segments than in the stream."""
+    """Test rendering the hls playlist with more segments than the segment deque can hold."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
     stream = create_stream(hass, STREAM_SOURCE)
