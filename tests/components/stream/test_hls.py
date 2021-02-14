@@ -245,7 +245,7 @@ async def test_hls_playlist_view_no_output(hass, hass_client, hls_stream):
 
 
 async def test_hls_playlist_view(hass, hls_stream, stream_worker_sync):
-    """Test rendering the hls playlist."""
+    """Test rendering the hls playlist with 1 and 2 output segments."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
     stream = create_stream(hass, STREAM_SOURCE)
