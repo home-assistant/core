@@ -277,8 +277,6 @@ async def test_config_flow_step_unknown_device(hass):
     with patch(
         "homeassistant.components.xiaomi_miio.device.Device.info",
         return_value=mock_info,
-    ), patch(
-        "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
