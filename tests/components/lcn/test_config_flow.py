@@ -47,17 +47,20 @@ async def test_step_import(hass):
 async def test_step_import_existing_host(hass):
     """Test for update of config_entry if imported host already exists."""
     await setup.async_setup_component(hass, "persistent_notification", {})
-    # Created config entry and add it to hass
-    mock_entry = MockConfigEntry(domain=DOMAIN, data=IMPORT_DATA.copy())
+    # Create config entry and add it to hass
+    mock_data = IMPORT_DATA.copy()
+    mock_data.update({CONF_SK_NUM_TRIES: 3, CONF_DIM_MODE: 50})
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=mock_data)
     mock_entry.add_to_hass(hass)
-    # Try to inititalize a config flow with same host data as previously created
+    # Inititalize a config flow with different data but same host address
     with patch("pypck.connection.PchkConnectionManager.async_connect"):
-        data = IMPORT_DATA.copy()
+        imported_data = IMPORT_DATA.copy()
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=imported_data
         )
         await hass.async_block_till_done()
 
+        # Check if config entry was updated
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "existing_configuration_updated"
         assert mock_entry.source == config_entries.SOURCE_IMPORT
