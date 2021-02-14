@@ -9,6 +9,13 @@
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "flipr_id": {
+        "title": "Enter or choose your Flipr",
+        "description": "Flipr ID not determined. Enter or choose your Flipr ID.",
+        "data": {
+          "flipr_id": "Flipr ID"
+        }
       }
     },
     "error": {

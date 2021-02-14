@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "This Flipr is already configured"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -13,7 +13,16 @@
                 "data": {
                     "email": "Email",
                     "password": "Password"
-                }
+                },
+                "description": "Connect to your flipr account",
+                "title": "Flipr device"
+            },
+            "flipr_id": {
+                "data": {
+                    "flipr_id": "Flipr ID"
+                },
+                "description": "Enter or choose your flipr ID (6 chars)",
+                "title": "Flipr device"
             }
         }
     },
