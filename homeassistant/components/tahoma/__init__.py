@@ -83,10 +83,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await tahoma_coordinator.async_refresh()
 
-    devices = defaultdict(list)
+    platforms = defaultdict(list)
 
     hass.data[DOMAIN][entry.entry_id] = {
-        "devices": devices,
+        "platforms": platforms,
         "coordinator": tahoma_coordinator,
         "update_listener": entry.add_update_listener(update_listener),
     }
@@ -94,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     for device in tahoma_coordinator.data.values():
         platform = TAHOMA_TYPES.get(device.widget) or TAHOMA_TYPES.get(device.ui_class)
         if platform:
-            devices[platform].append(device)
+            platforms[platform].append(device)
         elif (
             device.widget not in IGNORED_TAHOMA_TYPES
             and device.ui_class not in IGNORED_TAHOMA_TYPES
@@ -106,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 device.widget,
             )
 
-    for platform in devices:
+    for platform in platforms:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
@@ -116,7 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    devices_per_platform = hass.data[DOMAIN][entry.entry_id]["devices"]
+    devices_per_platform = hass.data[DOMAIN][entry.entry_id]["platforms"]
 
     unload_ok = all(
         await asyncio.gather(
