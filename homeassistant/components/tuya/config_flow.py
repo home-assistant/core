@@ -67,6 +67,7 @@ ERROR_DEV_NOT_FOUND = "dev_not_found"
 
 RESULT_AUTH_FAILED = "invalid_auth"
 RESULT_CONN_ERROR = "cannot_connect"
+RESULT_SINGLE_INSTANCE = "single_instance_allowed"
 RESULT_SUCCESS = "success"
 
 RESULT_LOG_MESSAGE = {
@@ -124,7 +125,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(reason=RESULT_SINGLE_INSTANCE)
 
         errors = {}
 
@@ -258,7 +259,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         if self.config_entry.state != config_entries.ENTRY_STATE_LOADED:
             _LOGGER.error("Tuya integration not yet loaded")
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason=RESULT_CONN_ERROR)
 
         if user_input is not None:
             dev_ids = user_input.get(CONF_LIST_DEVICES)

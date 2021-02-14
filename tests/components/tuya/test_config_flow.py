@@ -10,6 +10,9 @@ from homeassistant.components.tuya.config_flow import (
     CONF_LIST_DEVICES,
     ERROR_DEV_MULTI_TYPE,
     ERROR_DEV_NOT_FOUND,
+    RESULT_AUTH_FAILED,
+    RESULT_CONN_ERROR,
+    RESULT_SINGLE_INSTANCE,
 )
 from homeassistant.components.tuya.const import (
     CONF_BRIGHTNESS_RANGE_MODE,
@@ -133,7 +136,7 @@ async def test_abort_if_already_setup(hass, tuya):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == RESULT_SINGLE_INSTANCE
 
     # Should fail, config exist (flow)
     result = await hass.config_entries.flow.async_init(
@@ -141,7 +144,7 @@ async def test_abort_if_already_setup(hass, tuya):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == RESULT_SINGLE_INSTANCE
 
 
 async def test_abort_on_invalid_credentials(hass, tuya):
@@ -153,14 +156,14 @@ async def test_abort_on_invalid_credentials(hass, tuya):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": RESULT_AUTH_FAILED}
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TUYA_USER_DATA
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "invalid_auth"
+    assert result["reason"] == RESULT_AUTH_FAILED
 
 
 async def test_abort_on_connection_error(hass, tuya):
@@ -172,14 +175,14 @@ async def test_abort_on_connection_error(hass, tuya):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == RESULT_CONN_ERROR
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TUYA_USER_DATA
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == RESULT_CONN_ERROR
 
 
 async def test_options_flow(hass):
@@ -195,7 +198,7 @@ async def test_options_flow(hass):
         # Test check for integration not loaded
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "cannot_connect"
+        assert result["reason"] == RESULT_CONN_ERROR
 
         # Load integration and enter options
         await hass.config_entries.async_setup(config_entry.entry_id)
