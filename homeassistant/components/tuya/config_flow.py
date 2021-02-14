@@ -23,7 +23,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-# pylint:disable=unused-import
 from .const import (
     CONF_BRIGHTNESS_RANGE_MODE,
     CONF_COUNTRYCODE,
@@ -43,11 +42,11 @@ from .const import (
     DEFAULT_DISCOVERY_INTERVAL,
     DEFAULT_QUERY_INTERVAL,
     DEFAULT_TUYA_MAX_COLTEMP,
-    DOMAIN,
     TUYA_DATA,
     TUYA_PLATFORMS,
     TUYA_TYPE_NOT_QUERY,
 )
+from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
