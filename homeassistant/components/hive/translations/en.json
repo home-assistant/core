@@ -6,7 +6,6 @@
         "description": "Enter your Hive login information and configuration.",
         "data": {
           "username": "Username",
-          "password": "Password",
           "scan_interval": "Scan Interval (seconds)"
         }
       },
