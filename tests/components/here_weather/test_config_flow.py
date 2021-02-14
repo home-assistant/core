@@ -3,16 +3,11 @@ from unittest.mock import patch
 
 import herepy
 
-from homeassistant.components.here_weather.const import (
-    DEFAULT_MODE,
-    DOMAIN,
-    HERE_API_KEYS,
-)
+from homeassistant.components.here_weather.const import DOMAIN, HERE_API_KEYS
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_MODE,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
@@ -89,7 +84,6 @@ async def test_unauthorized(hass):
         config = {
             CONF_API_KEY: "test",
             CONF_NAME: DOMAIN,
-            CONF_MODE: DEFAULT_MODE,
             CONF_LATITUDE: "40.79962",
             CONF_LONGITUDE: "-73.970314",
         }
