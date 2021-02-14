@@ -242,8 +242,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def mute_volume(self, mute):
         """Send mute command."""
         if self._tv.muted != mute:
-            # android tv is buggy and will always unmute
-            self._tv.setVolume(self._tv.volume, mute)
+            self._tv.sendKey("Mute")
             self._update_soon()
         else:
             _LOGGER.debug("Ignoring request when already in expected state")
