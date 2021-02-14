@@ -132,7 +132,7 @@ async def async_setup(hass, config: dict):
             ),
             vol.Optional(ATTR_PRESET_MODE): cv.string,
             vol.Optional(ATTR_PERCENTAGE_STEP): vol.All(
-                vol.Coerce(float), vol.Range(min=0, max=100)
+                vol.Coerce(float), vol.Range(min=-100, max=100)
             ),
         },
         "async_handle_fan_on_service",
