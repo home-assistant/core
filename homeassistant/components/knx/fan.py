@@ -68,6 +68,11 @@ class KNXFan(KnxEntity, FanEntity):
             )
         return self._device.current_speed
 
+    @property
+    def speed_count(self) -> Optional[int]:
+        """Return the number of speeds the fan supports."""
+        return self._step_range[1] - self._step_range[0] + 1
+
     async def async_turn_on(
         self,
         speed: Optional[str] = None,
