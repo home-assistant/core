@@ -1636,14 +1636,14 @@ async def test_water_heater(hass, hk_driver, events):
 
     await hass.async_add_executor_job(acc.char_target_heat_cool.client_update_value, 0)
     await hass.async_block_till_done()
-    assert acc.char_target_heat_cool.value == 1
-
-    await hass.async_add_executor_job(acc.char_target_heat_cool.client_update_value, 2)
-    await hass.async_block_till_done()
-    assert acc.char_target_heat_cool.value == 1
+    assert acc.char_target_heat_cool.value == 0
 
     with pytest.raises(ValueError):
         await hass.async_add_executor_job(acc.char_target_heat_cool.set_value, 3)
+    await hass.async_block_till_done()
+    assert acc.char_target_heat_cool.value == 0
+
+    await hass.async_add_executor_job(acc.char_target_heat_cool.client_update_value, 1)
     await hass.async_block_till_done()
     assert acc.char_target_heat_cool.value == 1
 
@@ -1682,6 +1682,24 @@ async def test_water_heater_fahrenheit(hass, hk_driver, events):
     assert acc.char_target_temp.value == 60.0
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "140.0°F"
+
+    # Set from HomeKit
+    call_turn_on = async_mock_service(hass, DOMAIN_WATER_HEATER, "turn_on")
+
+    await hass.async_add_executor_job(acc.char_target_heat_cool.client_update_value, 1)
+    await hass.async_block_till_done()
+    assert call_turn_on
+    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 2
+
+    # Set from HomeKit
+    call_turn_on = async_mock_service(hass, DOMAIN_WATER_HEATER, "turn_off")
+
+    await hass.async_add_executor_job(acc.char_target_heat_cool.client_update_value, 0)
+    await hass.async_block_till_done()
+    assert call_turn_on
+    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 3
 
 
 async def test_water_heater_get_temperature_range(hass, hk_driver):
@@ -1728,11 +1746,10 @@ async def test_water_heater_restore(hass, hk_driver, events):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
     await hass.async_block_till_done()
 
-    acc = Thermostat(hass, hk_driver, "WaterHeater", "water_heater.simple", 2, None)
+    acc = WaterHeater(hass, hk_driver, "WaterHeater", "water_heater.simple", 2, None)
     assert acc.category == 9
-    assert acc.get_temperature_range() == (7, 35)
+    assert acc.get_temperature_range() == (40, 60)
     assert set(acc.char_current_heat_cool.properties["ValidValues"].keys()) == {
-        "Cool",
         "Heat",
         "Off",
     }
@@ -1743,7 +1760,6 @@ async def test_water_heater_restore(hass, hk_driver, events):
     assert acc.category == 9
     assert acc.get_temperature_range() == (60.0, 70.0)
     assert set(acc.char_current_heat_cool.properties["ValidValues"].keys()) == {
-        "Cool",
         "Heat",
         "Off",
     }

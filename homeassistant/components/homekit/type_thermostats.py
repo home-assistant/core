@@ -42,6 +42,8 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.water_heater import (
     DOMAIN as DOMAIN_WATER_HEATER,
     SERVICE_SET_TEMPERATURE as SERVICE_SET_TEMPERATURE_WATER_HEATER,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -534,7 +536,9 @@ class WaterHeater(HomeAccessory):
         serv_thermostat = self.add_preload_service(SERV_THERMOSTAT)
 
         self.char_current_heat_cool = serv_thermostat.configure_char(
-            CHAR_CURRENT_HEATING_COOLING, value=1
+            CHAR_CURRENT_HEATING_COOLING,
+            value=1,
+            valid_values=HC_HOMEKIT_VALID_MODES_WATER_HEATER,
         )
         self.char_target_heat_cool = serv_thermostat.configure_char(
             CHAR_TARGET_HEATING_COOLING,
@@ -575,10 +579,12 @@ class WaterHeater(HomeAccessory):
     def set_heat_cool(self, value):
         """Change operation mode to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set heat-cool to %d", self.entity_id, value)
-        hass_value = HC_HOMEKIT_TO_HASS[value]
-        if hass_value != HVAC_MODE_HEAT:
-            if self.char_target_heat_cool.value != 1:
-                self.char_target_heat_cool.set_value(1)  # Heat
+        params = {ATTR_ENTITY_ID: self.entity_id}
+        self.call_service(
+            DOMAIN_WATER_HEATER,
+            SERVICE_TURN_ON if value else SERVICE_TURN_OFF,
+            params,
+        )
 
     def set_target_temperature(self, value):
         """Set target temperature to value if call came from HomeKit."""
@@ -616,6 +622,17 @@ class WaterHeater(HomeAccessory):
         target = int(new_state.state not in (None, STATE_OFF))
         if self.char_target_heat_cool.value != target:
             self.char_target_heat_cool.set_value(target)
+
+        current = 0
+        if (
+            target
+            and target_temperature is None
+            or current_temperature is None
+            or target_temperature > current_temperature
+        ):
+            current = 1
+        if self.char_current_heat_cool.value != current:
+            self.char_current_heat_cool.set_value(current)
 
 
 def _get_temperature_range_from_state(state, unit, default_min, default_max):
