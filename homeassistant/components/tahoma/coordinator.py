@@ -66,11 +66,11 @@ class TahomaDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             events = await self.client.fetch_events()
         except BadCredentialsException as exception:
-            raise UpdateFailed("invalid_auth") from exception
+            raise UpdateFailed("Invalid authentication.") from exception
         except TooManyRequestsException as exception:
-            raise UpdateFailed("too_many_requests") from exception
+            raise UpdateFailed("Too many requests, try again later.") from exception
         except MaintenanceException as exception:
-            raise UpdateFailed("server_in_maintenance") from exception
+            raise UpdateFailed("Server is down for maintenance.") from exception
         except (ServerDisconnectedError, NotAuthenticatedException) as exception:
             _LOGGER.debug(exception)
             self.executions = {}
