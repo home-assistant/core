@@ -423,10 +423,9 @@ class FanEntity(ToggleEntity):
     @property
     def percentage_step(self) -> Optional[int]:
         """Return the step size for percentage."""
-        if not self._implemented_percentage:
-            speed_list = speed_list_without_preset_modes(self.speed_list)
-            if speed_list:
-                return round(math.ceil(10000 / len(speed_list)) / 100)
+        speed_list = speed_list_without_preset_modes(self.speed_list)
+        if speed_list:
+            return round(math.ceil(10000 / len(speed_list)) / 100)
         return 1
 
     @property
