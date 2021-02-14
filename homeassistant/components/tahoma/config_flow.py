@@ -79,10 +79,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize options flow."""
         self.config_entry = config_entry
-        self.options = dict(config_entry.options)
-
-        if self.options.get(CONF_UPDATE_INTERVAL) is None:
-            self.options[CONF_UPDATE_INTERVAL] = DEFAULT_UPDATE_INTERVAL
 
     async def async_step_init(self, user_input=None):
         """Manage the Somfy TaHoma options."""
@@ -99,7 +95,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_UPDATE_INTERVAL,
-                        default=self.options.get(CONF_UPDATE_INTERVAL),
+                        default=self.config_entry.options.get(
+                            CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
+                        ),
                     ): vol.All(cv.positive_int, vol.Clamp(min=MIN_UPDATE_INTERVAL))
                 }
             ),
