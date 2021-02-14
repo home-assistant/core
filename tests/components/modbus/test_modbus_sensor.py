@@ -1,6 +1,4 @@
 """The tests for the Modbus sensor component."""
-from datetime import timedelta
-
 import pytest
 
 from homeassistant.components.modbus.const import (
@@ -20,9 +18,41 @@ from homeassistant.components.modbus.const import (
     DATA_TYPE_UINT,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_NAME, CONF_OFFSET
+from homeassistant.const import CONF_NAME, CONF_OFFSET, CONF_SLAVE
 
-from .conftest import run_base_read_test, setup_base_test
+from .conftest import base_config_test, base_test
+
+
+@pytest.mark.parametrize("do_options", [False, True])
+async def test_config_sensor(hass, do_options):
+    """Run test for sensor."""
+    sensor_name = "test_sensor"
+    config_sensor = {
+        CONF_NAME: sensor_name,
+        CONF_REGISTER: 51,
+    }
+    if do_options:
+        config_sensor.update(
+            {
+                CONF_SLAVE: 10,
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: "int",
+                CONF_PRECISION: 0,
+                CONF_SCALE: 1,
+                CONF_REVERSE_ORDER: False,
+                CONF_OFFSET: 0,
+                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+            }
+        )
+    await base_config_test(
+        hass,
+        config_sensor,
+        sensor_name,
+        SENSOR_DOMAIN,
+        None,
+        CONF_REGISTERS,
+        method_discovery=False,
+    )
 
 
 @pytest.mark.parametrize(
@@ -235,28 +265,19 @@ from .conftest import run_base_read_test, setup_base_test
         ),
     ],
 )
-async def test_all_sensor(hass, mock_hub, cfg, regs, expected):
+async def test_all_sensor(hass, cfg, regs, expected):
     """Run test for sensor."""
     sensor_name = "modbus_test_sensor"
-    scan_interval = 5
-    entity_id, now, device = await setup_base_test(
+    state = await base_test(
+        hass,
+        {CONF_NAME: sensor_name, CONF_REGISTER: 1234, **cfg},
         sensor_name,
-        hass,
-        mock_hub,
-        {
-            CONF_REGISTERS: [
-                dict(**{CONF_NAME: sensor_name, CONF_REGISTER: 1234}, **cfg)
-            ]
-        },
         SENSOR_DOMAIN,
-        scan_interval,
-    )
-    await run_base_read_test(
-        entity_id,
-        hass,
-        mock_hub,
-        cfg.get(CONF_REGISTER_TYPE),
+        None,
+        CONF_REGISTERS,
         regs,
         expected,
-        now + timedelta(seconds=scan_interval + 1),
+        method_discovery=False,
+        scan_interval=5,
     )
+    assert state == expected
