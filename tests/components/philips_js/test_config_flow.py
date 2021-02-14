@@ -1,6 +1,7 @@
 """Test the Philips TV config flow."""
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
+from haphilipsjs import PairingFailure
 from pytest import fixture
 
 from homeassistant import config_entries
@@ -33,6 +34,20 @@ def mock_setup_entry():
         "homeassistant.components.philips_js.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@fixture
+async def mock_tv_pairable(mock_tv):
+    """Return a mock tv that is pariable."""
+    mock_tv.system = MOCK_SYSTEM_UNPAIRED
+    mock_tv.pairing_type = "digest_auth_pairing"
+    mock_tv.api_version = 6
+    mock_tv.api_version_detected = 6
+    mock_tv.secured_transport = True
+
+    mock_tv.pairRequest.return_value = {}
+    mock_tv.pairGrant.return_value = MOCK_USERNAME, MOCK_PASSWORD
+    return mock_tv
 
 
 async def test_import(hass, mock_setup, mock_setup_entry):
@@ -113,17 +128,9 @@ async def test_form_unexpected_error(hass, mock_tv):
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_pairing(hass, mock_tv, mock_setup, mock_setup_entry):
+async def test_pairing(hass, mock_tv_pairable, mock_setup, mock_setup_entry):
     """Test we get the form."""
-
-    mock_tv.system = MOCK_SYSTEM_UNPAIRED
-    mock_tv.pairing_type = "digest_auth_pairing"
-    mock_tv.api_version = 6
-    mock_tv.api_version_detected = 6
-    mock_tv.secured_transport = True
-
-    mock_tv.pairRequest.return_value = {}
-    mock_tv.pairGrant.return_value = MOCK_USERNAME, MOCK_PASSWORD
+    mock_tv = mock_tv_pairable
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -135,7 +142,6 @@ async def test_pairing(hass, mock_tv, mock_setup, mock_setup_entry):
         result["flow_id"],
         MOCK_USERINPUT,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] == "form"
     assert result["errors"] == {}
@@ -146,11 +152,90 @@ async def test_pairing(hass, mock_tv, mock_setup, mock_setup_entry):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": "1234"}
     )
+
+    assert result == {
+        "flow_id": ANY,
+        "type": "create_entry",
+        "description": None,
+        "description_placeholders": None,
+        "handler": "philips_js",
+        "result": ANY,
+        "title": "55PUS7181/12 (None)",
+        "data": MOCK_CONFIG_PAIRED,
+        "version": 1,
+    }
+
     await hass.async_block_till_done()
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "55PUS7181/12 (None)"
-    assert result["data"] == MOCK_CONFIG_PAIRED
-
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_pair_request_failed(
+    hass, mock_tv_pairable, mock_setup, mock_setup_entry
+):
+    """Test we get the form."""
+    mock_tv = mock_tv_pairable
+    mock_tv.pairRequest.side_effect = PairingFailure({})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_USERINPUT,
+    )
+
+    assert result == {
+        "flow_id": ANY,
+        "description_placeholders": {"error_id": None},
+        "handler": "philips_js",
+        "reason": "pairing_failure",
+        "type": "abort",
+    }
+
+
+async def test_pair_grant_failed(hass, mock_tv_pairable, mock_setup, mock_setup_entry):
+    """Test we get the form."""
+    mock_tv = mock_tv_pairable
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_USERINPUT,
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    mock_tv.setTransport.assert_called_with(True)
+    mock_tv.pairRequest.assert_called()
+
+    # Test with invalid pin
+    mock_tv.pairGrant.side_effect = PairingFailure({"error_id": "INVALID_PIN"})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"pin": "1234"}
+    )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"pin": "invalid_pin"}
+
+    # Test with unexpected failure
+    mock_tv.pairGrant.side_effect = PairingFailure({})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"pin": "1234"}
+    )
+
+    assert result == {
+        "flow_id": ANY,
+        "description_placeholders": {"error_id": None},
+        "handler": "philips_js",
+        "reason": "pairing_failure",
+        "type": "abort",
+    }
