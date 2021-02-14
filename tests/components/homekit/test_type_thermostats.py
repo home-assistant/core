@@ -57,6 +57,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_TEMPERATURE_UNIT,
     EVENT_HOMEASSISTANT_START,
+    STATE_OFF,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -1645,6 +1646,10 @@ async def test_water_heater(hass, hk_driver, events):
         await hass.async_add_executor_job(acc.char_target_heat_cool.set_value, 3)
     await hass.async_block_till_done()
     assert acc.char_target_heat_cool.value == 1
+
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert acc.char_target_heat_cool.value == 0
 
 
 async def test_water_heater_fahrenheit(hass, hk_driver, events):
