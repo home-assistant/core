@@ -1,4 +1,5 @@
 """The tests for the hassio component."""
+from datetime import timedelta
 import os
 from unittest.mock import patch
 
@@ -19,11 +20,9 @@ from homeassistant.components.hassio.const import (
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
-from . import mock_all  # noqa
-
-
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 
 MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
 
@@ -473,3 +472,61 @@ async def test_migration_off_hassio(hass):
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert hass.config_entries.async_entries(DOMAIN) == []
+
+
+async def test_device_registry(hass):
+    """Test device registry entries for hassio."""
+    mock_data = {
+        "addons": [
+            {
+                "name": "test",
+                "slug": "test",
+                "installed": True,
+                "version": "1.0.0",
+                "version_latest": "1.0.0",
+                "url": "https://github.com/home-assistant/addons/test",
+            },
+            {
+                "name": "test2",
+                "slug": "test2",
+                "installed": True,
+                "version": "1.0.0",
+                "version_latest": "1.0.0",
+                "url": "https://github.com",
+            },
+        ]
+    }
+
+    with patch.dict(os.environ, MOCK_ENVIRON), patch(
+        "homeassistant.components.hassio.HassIO.get_addons_info", return_value=mock_data
+    ), patch("homeassistant.components.hassio.register_addons_in_dev_reg") as func_mock:
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert len(func_mock.mock_calls) == 1
+
+    mock_data = {
+        "addons": [
+            {
+                "name": "test2",
+                "slug": "test2",
+                "installed": True,
+                "version": "1.0.0",
+                "version_latest": "1.0.0",
+                "url": "https://github.com",
+            },
+        ]
+    }
+
+    # Test that when addon is removed, next update will remove the add-on and subsequent updates won't
+    with patch(
+        "homeassistant.components.hassio.HassIO.get_addons_info", return_value=mock_data
+    ), patch("homeassistant.components.hassio.remove_addons_from_dev_reg") as func_mock:
+        async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
+        await hass.async_block_till_done()
+        assert len(func_mock.mock_calls) == 1
+
+        async_fire_time_changed(hass, dt_util.now() + timedelta(hours=2))
+        await hass.async_block_till_done()
+        assert len(func_mock.mock_calls) == 1

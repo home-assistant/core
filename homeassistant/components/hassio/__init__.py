@@ -3,7 +3,8 @@ import asyncio
 from datetime import timedelta
 import logging
 import os
-from typing import Any, Dict, Optional
+import re
+from typing import Any, Dict, List, Optional
 
 import voluptuous as vol
 
@@ -13,6 +14,7 @@ import homeassistant.config as conf_util
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
+    ATTR_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
@@ -20,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HASS_DOMAIN, Config, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceRegistry, async_get_registry
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.loader import bind_hass
@@ -37,6 +40,8 @@ from .const import (
     ATTR_PASSWORD,
     ATTR_SLUG,
     ATTR_SNAPSHOT,
+    ATTR_URL,
+    ATTR_VERSION,
     DOMAIN,
 )
 from .discovery import async_setup_discovery_view
@@ -68,6 +73,7 @@ DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=55)
 
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
+ADDONS_COORDINATOR_UNSUB_LISTENER = "hassio_addons_coordinator_unsub_listener"
 
 SERVICE_ADDON_START = "addon_start"
 SERVICE_ADDON_STOP = "addon_stop"
@@ -478,9 +484,19 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    coordinator = HassioAddonsDataUpdateCoordinator(hass, config_entry)
-    await coordinator.async_refresh()
+    dev_reg = await async_get_registry(hass)
+    coordinator = HassioAddonsDataUpdateCoordinator(hass, config_entry, dev_reg)
     hass.data[ADDONS_COORDINATOR] = coordinator
+    await coordinator.async_refresh()
+
+    def noop_listener():
+        """Noop listener to force coordinator to refresh."""
+        pass
+
+    # add a noop listener to force coordinator to refresh since entities are disabled by default
+    hass.data[ADDONS_COORDINATOR_UNSUB_LISTENER] = coordinator.async_add_listener(
+        noop_listener
+    )
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -494,6 +510,12 @@ async def async_unload_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry
 ) -> bool:
     """Unload a config entry."""
+    # Unsubscribe from coordinator listener
+    if hass.data[ADDONS_COORDINATOR_UNSUB_LISTENER]:
+        hass.data[ADDONS_COORDINATOR_UNSUB_LISTENER]()
+        hass.data.pop(ADDONS_COORDINATOR_UNSUB_LISTENER)
+
+    # Pop add-on data
     hass.data.pop(ADDONS_COORDINATOR, None)
 
     unload_ok = all(
@@ -508,10 +530,45 @@ async def async_unload_entry(
     return unload_ok
 
 
+@callback
+def register_addons_in_dev_reg(
+    entry_id: str, dev_reg: DeviceRegistry, addons: List[Dict[str, Any]]
+) -> None:
+    """Register addons in the device registry."""
+    for addon in addons:
+        try:
+            # Get github username or organization
+            user_or_org = re.sub("^https?://", "", addon[ATTR_URL]).split("/")[1]
+        except IndexError:
+            # fall back on unknown in case of Exception
+            user_or_org = "unknown"
+        dev_reg.async_get_or_create(
+            config_entry_id=entry_id,
+            identifiers={(DOMAIN, addon[ATTR_SLUG])},
+            manufacturer=user_or_org,
+            model="Hass.io Add-On",
+            sw_version=addon[ATTR_VERSION],
+            name=addon[ATTR_NAME],
+            entry_type=ATTR_SERVICE,
+        )
+
+
+@callback
+def remove_addons_from_dev_reg(
+    dev_reg: DeviceRegistry, addons: List[Dict[str, Any]]
+) -> None:
+    """Remove addons from the device registry."""
+    for addon_slug in addons:
+        if dev := dev_reg.async_get_device({(DOMAIN, addon_slug)}):
+            dev_reg.async_remove_device(dev.id)
+
+
 class HassioAddonsDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to retrieve Hass.io addons status."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, dev_reg: DeviceRegistry
+    ) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
@@ -522,6 +579,7 @@ class HassioAddonsDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.data = {}
         self.entry_id = config_entry.entry_id
+        self.dev_reg = dev_reg
 
     async def _async_update_data(self) -> Dict[str, Any]:
         """Update data via library."""
@@ -533,13 +591,18 @@ class HassioAddonsDataUpdateCoordinator(DataUpdateCoordinator):
             if addon[ATTR_INSTALLED]
         }
 
-        # If this is the initial refresh, just return the dict
+        # If this is the initial refresh, register all addons and return the dict
         if not self.data:
+            register_addons_in_dev_reg(self.entry_id, self.dev_reg, addons.values())
             return addons
 
         # If this is not the initial refresh, reload the config entry if the list of
         # installed addons has changed
         if addons.keys() != self.data.keys():
+            # Remove add-ons that are no longer installed from device registry
+            if removed_addons := list(set(self.data.keys()) - set(addons.keys())):
+                remove_addons_from_dev_reg(self.dev_reg, removed_addons)
+
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self.entry_id)
             )

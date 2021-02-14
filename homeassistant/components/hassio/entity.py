@@ -1,13 +1,11 @@
 """Base for Hass.io entities."""
-import re
 from typing import Any, Dict
 
-from homeassistant.const import ATTR_SERVICE
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from . import DOMAIN, HassioAddonsDataUpdateCoordinator
-from .const import ATTR_NAME, ATTR_SLUG, ATTR_URL, ATTR_VERSION
+from .const import ATTR_NAME, ATTR_SLUG
 
 
 class HassioAddonEntity(CoordinatorEntity):
@@ -23,12 +21,6 @@ class HassioAddonEntity(CoordinatorEntity):
         """Initialize binary sensor."""
         self.addon_slug = addon[ATTR_SLUG]
         self.addon_name = addon[ATTR_NAME]
-        try:
-            # Get github username or organization
-            self.user_or_org = re.sub("^https?://", "", addon[ATTR_URL]).split("/")[1]
-        except IndexError:
-            # fall back on unknown in case of Exception
-            self.user_or_org = "unknown"
         self.attribute_name = attribute_name
         self.sensor_name = sensor_name or attribute_name
         super().__init__(coordinator)
@@ -56,11 +48,4 @@ class HassioAddonEntity(CoordinatorEntity):
     @property
     def device_info(self) -> Dict[str, Any]:
         """Return device specific attributes."""
-        return {
-            "name": self.addon_name,
-            "identifiers": {(DOMAIN, self.addon_slug)},
-            "manufacturer": self.user_or_org,
-            "model": "Hass.io Add-On",
-            "sw_version": self.addon_info[ATTR_VERSION],
-            "entry_type": ATTR_SERVICE,
-        }
+        return {"identifiers": {(DOMAIN, self.addon_slug)}}
