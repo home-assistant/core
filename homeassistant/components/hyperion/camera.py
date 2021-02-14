@@ -85,6 +85,15 @@ async def async_setup_entry(
     return True
 
 
+# A note on Hyperion streaming semantics:
+#
+# Different Hyperion priorities behave different with regards to streaming. Colors will
+# not stream (as there is nothing to stream). External grabbers (e.g. USB Capture) will
+# stream what is being captured. Some effects (based on GIFs) will stream, others will
+# not. In cases when streaming is not supported from a selected priority, there is no
+# notification beyond the failure of new frames to arrive.
+
+
 class HyperionCamera(Camera):
     """ComponentBinarySwitch switch class."""
 
@@ -102,6 +111,8 @@ class HyperionCamera(Camera):
 
         self._image_cond = asyncio.Condition()
         self._image: Optional[bytes] = None
+
+        # The number of open streams, when zero the stream is stopped.
         self._image_stream_clients = 0
 
         self._client_callbacks = {
@@ -154,20 +165,24 @@ class HyperionCamera(Camera):
     async def _start_image_streaming_for_client(self) -> bool:
         """Start streaming for a client."""
         if (
-            not self.is_streaming
+            not self._image_stream_clients
             and not await self._client.async_send_image_stream_start()
         ):
             return False
-        self.is_streaming = True
+
         self._image_stream_clients += 1
+        self.is_streaming = True
+        self.async_write_ha_state()
         return True
 
     async def _stop_image_streaming_for_client(self) -> None:
         """Stop streaming for a client."""
         self._image_stream_clients -= 1
-        if self._image_stream_clients == 0:
+
+        if not self._image_stream_clients:
             await self._client.async_send_image_stream_stop()
             self.is_streaming = False
+            self.async_write_ha_state()
 
     async def async_camera_image(self) -> Optional[bytes]:
         """Return single camera image bytes."""
