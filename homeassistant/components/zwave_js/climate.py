@@ -1,5 +1,4 @@
 """Representation of Z-Wave thermostats."""
-import logging
 from typing import Any, Callable, Dict, List, Optional
 
 from zwave_js_server.client import Client as ZwaveClient
@@ -46,8 +45,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 # Map Z-Wave HVAC Mode to Home Assistant value
 # Note: We treat "auto" as "heat_cool" as most Z-Wave devices

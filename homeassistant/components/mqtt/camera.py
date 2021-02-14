@@ -1,6 +1,5 @@
 """Camera that loads a picture from an MQTT topic."""
 import functools
-import logging
 
 import voluptuous as vol
 
@@ -22,8 +21,6 @@ from .mixins import (
     MqttEntity,
     async_setup_entry_helper,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_TOPIC = "topic"
 DEFAULT_NAME = "MQTT Camera"

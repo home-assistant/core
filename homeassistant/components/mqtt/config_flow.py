@@ -1,6 +1,5 @@
 """Config flow for MQTT."""
 from collections import OrderedDict
-import logging
 import queue
 
 import voluptuous as vol
@@ -30,8 +29,6 @@ from .const import (
     DEFAULT_WILL,
 )
 from .util import MQTT_WILL_BIRTH_SCHEMA
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @config_entries.HANDLERS.register("mqtt")
