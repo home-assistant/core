@@ -5,11 +5,9 @@
         "title": "Hive Login",
         "description": "Enter your Hive login information and configuration.",
         "data": {
-          "username": "Email Address",
-          "password": "Password",
-          "scan_interval": "Scan Interval (Seconds)",
-          "debug": "Select categories to debug",
-          "add_sensors": "Add additional sensors"
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "scan_interval": "Scan Interval (seconds)"
         }
       },
       "2fa": {
@@ -35,10 +33,9 @@
     "step": {
       "user": {
         "title": "Options for Hive",
-        "description": "Update the scan interval to poll for data more often. This configuration cannot be set lower than 30 seconds",
+        "description": "Update the scan interval to poll for data more often.",
         "data": {
-          "scan_interval": "Scan Interval (Seconds)",
-          "debug": "Select categories to debug"
+          "scan_interval": "Scan Interval (seconds)"
         }
       }
     }
