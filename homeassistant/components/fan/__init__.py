@@ -131,11 +131,8 @@ async def async_setup(hass, config: dict):
                 vol.Coerce(int), vol.Range(min=0, max=100)
             ),
             vol.Optional(ATTR_PRESET_MODE): cv.string,
-            vol.Optional(ATTR_PERCENTAGE_STEP): vol.All(
-                vol.Coerce(int), vol.Clamp(min=-100, max=100)
-            ),
         },
-        "async_handle_fan_on_service",
+        "async_turn_on_compat",
     )
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
@@ -294,29 +291,22 @@ class FanEntity(ToggleEntity):
         """Turn on the fan."""
         raise NotImplementedError()
 
-    async def async_handle_fan_on_service(
+    # pylint: disable=arguments-differ
+    async def async_turn_on_compat(
         self,
         speed: Optional[str] = None,
         percentage: Optional[int] = None,
         preset_mode: Optional[str] = None,
-        percentage_step: Optional[int] = None,
         **kwargs,
     ) -> None:
         """Turn on the fan.
 
-        This version wraps async_turn_on with
-        backwards and forward compatibility as well
-        as support for percentage_step and other
-        future alternatives.
+        This _compat version wraps async_turn_on with
+        backwards and forward compatibility.
+
+        After the transition to percentage and preset_modes concludes, it
+        should be removed.
         """
-        if percentage_step is not None:
-            current_percentage = self.percentage or 0
-            _LOGGER.debug("Percentage step: %s", percentage_step)
-            _LOGGER.debug("Percentage current: %s", current_percentage)
-
-            percentage = max(0, min(100, current_percentage + percentage_step))
-            _LOGGER.debug("Percentage new: %s", percentage)
-
         if preset_mode is not None:
             self._valid_preset_mode_or_raise(preset_mode)
             speed = preset_mode
