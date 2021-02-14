@@ -1139,17 +1139,13 @@ class EntityRegistryDisabledHandler:
     def async_setup(self) -> None:
         """Set up the disable handler."""
         self.hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, self._handle_entry_updated
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            self._handle_entry_updated,
+            event_filter=_handle_entry_updated_filter,
         )
 
     async def _handle_entry_updated(self, event: Event) -> None:
         """Handle entity registry entry update."""
-        if (
-            event.data["action"] != "update"
-            or "disabled_by" not in event.data["changes"]
-        ):
-            return
-
         if self.registry is None:
             self.registry = await entity_registry.async_get_registry(self.hass)
 
@@ -1201,6 +1197,14 @@ class EntityRegistryDisabledHandler:
         await asyncio.gather(
             *[self.hass.config_entries.async_reload(entry_id) for entry_id in to_reload]
         )
+
+
+@callback
+def _handle_entry_updated_filter(event: Event) -> bool:
+    """Handle entity registry entry update filter."""
+    if event.data["action"] != "update" or "disabled_by" not in event.data["changes"]:
+        return False
+    return True
 
 
 async def support_entry_unload(hass: HomeAssistant, domain: str) -> bool:

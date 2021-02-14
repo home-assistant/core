@@ -62,7 +62,7 @@ async def fire_events(hass):
     """Fire a million events."""
     count = 0
     event_name = "benchmark_event"
-    event = asyncio.Event()
+    events_to_fire = 10 ** 6
 
     @core.callback
     def listener(_):
@@ -70,17 +70,48 @@ async def fire_events(hass):
         nonlocal count
         count += 1
 
-        if count == 10 ** 6:
-            event.set()
-
     hass.bus.async_listen(event_name, listener)
 
-    for _ in range(10 ** 6):
+    for _ in range(events_to_fire):
         hass.bus.async_fire(event_name)
 
     start = timer()
 
-    await event.wait()
+    await hass.async_block_till_done()
+
+    assert count == events_to_fire
+
+    return timer() - start
+
+
+@benchmark
+async def fire_events_with_filter(hass):
+    """Fire a million events with a filter that rejects them."""
+    count = 0
+    event_name = "benchmark_event"
+    events_to_fire = 10 ** 6
+
+    @core.callback
+    def event_filter(event):
+        """Filter event."""
+        return False
+
+    @core.callback
+    def listener(_):
+        """Handle event."""
+        nonlocal count
+        count += 1
+
+    hass.bus.async_listen(event_name, listener, event_filter=event_filter)
+
+    for _ in range(events_to_fire):
+        hass.bus.async_fire(event_name)
+
+    start = timer()
+
+    await hass.async_block_till_done()
+
+    assert count == 0
 
     return timer() - start
 
@@ -154,16 +185,13 @@ async def state_changed_event_helper(hass):
     """Run a million events through state changed event helper with 1000 entities."""
     count = 0
     entity_id = "light.kitchen"
-    event = asyncio.Event()
+    events_to_fire = 10 ** 6
 
     @core.callback
     def listener(*args):
         """Handle event."""
         nonlocal count
         count += 1
-
-        if count == 10 ** 6:
-            event.set()
 
     hass.helpers.event.async_track_state_change_event(
         [f"{entity_id}{idx}" for idx in range(1000)], listener
@@ -175,12 +203,49 @@ async def state_changed_event_helper(hass):
         "new_state": core.State(entity_id, "on"),
     }
 
-    for _ in range(10 ** 6):
+    for _ in range(events_to_fire):
         hass.bus.async_fire(EVENT_STATE_CHANGED, event_data)
 
     start = timer()
 
-    await event.wait()
+    await hass.async_block_till_done()
+
+    assert count == events_to_fire
+
+    return timer() - start
+
+
+@benchmark
+async def state_changed_event_filter_helper(hass):
+    """Run a million events through state changed event helper with 1000 entities that all get filtered."""
+    count = 0
+    entity_id = "light.kitchen"
+    events_to_fire = 10 ** 6
+
+    @core.callback
+    def listener(*args):
+        """Handle event."""
+        nonlocal count
+        count += 1
+
+    hass.helpers.event.async_track_state_change_event(
+        [f"{entity_id}{idx}" for idx in range(1000)], listener
+    )
+
+    event_data = {
+        "entity_id": "switch.no_listeners",
+        "old_state": core.State(entity_id, "off"),
+        "new_state": core.State(entity_id, "on"),
+    }
+
+    for _ in range(events_to_fire):
+        hass.bus.async_fire(EVENT_STATE_CHANGED, event_data)
+
+    start = timer()
+
+    await hass.async_block_till_done()
+
+    assert count == 0
 
     return timer() - start
 
