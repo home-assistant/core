@@ -14,10 +14,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
-    async def async_step_user(self, user_input=None):
-        """Handle user init step."""
-        return self.async_abort(reason="automatically_configured")
-
     async def async_step_hassio(self, user_input=None):
         """Handle the initial step."""
         # We only need one Hass.io config entry
