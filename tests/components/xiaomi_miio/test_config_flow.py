@@ -134,8 +134,8 @@ async def test_config_flow_gateway_success(hass):
         const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        "model": TEST_MODEL,
-        "mac": TEST_MAC,
+        const.CONF_MODEL: TEST_MODEL,
+        const.CONF_MAC: TEST_MAC,
     }
 
 
@@ -177,8 +177,8 @@ async def test_zeroconf_gateway_success(hass):
         const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        "model": TEST_MODEL,
-        "mac": TEST_MAC,
+        const.CONF_MODEL: TEST_MODEL,
+        const.CONF_MAC: TEST_MAC,
     }
 
 
@@ -288,6 +288,33 @@ async def test_config_flow_step_unknown_device(hass):
     assert result["errors"] == {"base": "unknown_device"}
 
 
+async def test_import_flow_success(hass):
+    """Test a successful import form yaml for a device."""
+    mock_info = get_mock_info(model=const.MODELS_SWITCH[0])
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        return_value=mock_info,
+    ), patch(
+        "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN, CONF_NAME: TEST_NAME},
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TEST_NAME
+    assert result["data"] == {
+        const.CONF_FLOW_TYPE: const.CONF_DEVICE,
+        CONF_HOST: TEST_HOST,
+        CONF_TOKEN: TEST_TOKEN,
+        const.CONF_MODEL: const.MODELS_SWITCH[0],
+        const.CONF_MAC: TEST_MAC,
+    }
+
+
 async def config_flow_device_success(hass, model_to_test):
     """Test a successful config flow for a base device."""
     result = await hass.config_entries.flow.async_init(
@@ -326,8 +353,8 @@ async def config_flow_device_success(hass, model_to_test):
         const.CONF_FLOW_TYPE: const.CONF_DEVICE,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        "model": model_to_test,
-        "mac": TEST_MAC,
+        const.CONF_MODEL: model_to_test,
+        const.CONF_MAC: TEST_MAC,
     }
 
 
@@ -366,8 +393,8 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
         const.CONF_FLOW_TYPE: const.CONF_DEVICE,
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
-        "model": model_to_test,
-        "mac": TEST_MAC,
+        const.CONF_MODEL: model_to_test,
+        const.CONF_MAC: TEST_MAC,
     }
 
 
@@ -380,5 +407,5 @@ async def test_config_flow_plug_success(hass):
 async def test_zeroconf_plug_success(hass):
     """Test a successful zeroconf discovery of a plug."""
     test_plug_model = const.MODELS_SWITCH[0]
-    test_zeroconf_name = const.MODELS_SWITCH[0]
+    test_zeroconf_name = const.MODELS_SWITCH[0].replace(".", "-")
     await zeroconf_device_success(hass, test_zeroconf_name, test_plug_model)
