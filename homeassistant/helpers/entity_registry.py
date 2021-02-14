@@ -642,11 +642,13 @@ def async_setup_entity_restore(
     """Set up the entity restore mechanism."""
 
     @callback
+    def cleanup_restored_states_filter(event: Event) -> bool:
+        """Clean up restored states filter."""
+        return bool(event.data["action"] == "remove")
+
+    @callback
     def cleanup_restored_states(event: Event) -> None:
         """Clean up restored states."""
-        if event.data["action"] != "remove":
-            return
-
         state = hass.states.get(event.data["entity_id"])
 
         if state is None or not state.attributes.get(ATTR_RESTORED):
@@ -654,7 +656,11 @@ def async_setup_entity_restore(
 
         hass.states.async_remove(event.data["entity_id"], context=event.context)
 
-    hass.bus.async_listen(EVENT_ENTITY_REGISTRY_UPDATED, cleanup_restored_states)
+    hass.bus.async_listen(
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        cleanup_restored_states,
+        event_filter=cleanup_restored_states_filter,
+    )
 
     if hass.is_running:
         return

@@ -252,7 +252,22 @@ class Recorder(threading.Thread):
     @callback
     def async_initialize(self):
         """Initialize the recorder."""
-        self.hass.bus.async_listen(MATCH_ALL, self.event_listener)
+        self.hass.bus.async_listen(
+            MATCH_ALL, self.event_listener, event_filter=self._async_event_filter
+        )
+
+    @callback
+    def _async_event_filter(self, event):
+        """Filter events."""
+        if event.event_type in self.exclude_t:
+            return False
+
+        entity_id = event.data.get(ATTR_ENTITY_ID)
+        if entity_id is not None:
+            if not self.entity_filter(entity_id):
+                return False
+
+        return True
 
     def do_adhoc_purge(self, **kwargs):
         """Trigger an adhoc purge retaining keep_days worth of data."""
@@ -378,13 +393,6 @@ class Recorder(threading.Thread):
                         self._timechanges_seen = 0
                         self._commit_event_session_or_retry()
                 continue
-            if event.event_type in self.exclude_t:
-                continue
-
-            entity_id = event.data.get(ATTR_ENTITY_ID)
-            if entity_id is not None:
-                if not self.entity_filter(entity_id):
-                    continue
 
             try:
                 if event.event_type == EVENT_STATE_CHANGED:
