@@ -13,7 +13,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
     CONF_HOST,
-    CONF_NAME,
     CONF_TOKEN,
 )
 import homeassistant.helpers.config_validation as cv
@@ -97,7 +96,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         host = config_entry.data[CONF_HOST]
         token = config_entry.data[CONF_TOKEN]
-        name = config_entry.data[CONF_NAME]
+        name = config_entry.title
         model = config_entry.data[CONF_MODEL]
         unique_id = config_entry.unique_id
 
