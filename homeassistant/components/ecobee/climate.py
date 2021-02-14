@@ -860,14 +860,14 @@ class Thermostat(ClimateEntity):
 
     def set_humidifier_mode(self, humidifier_mode):
         """Set humidifier mode (auto, off, manual)."""
-        if humidifier_mode.lower() not in (self.humidifier_modes):
-            raise ValueError(
-                f"Invalid humidifier_mode value: {humidifier_mode}  Valid values are 'auto', 'off', or 'manual'"
-            )
-
         if not self.thermostat["settings"]["hasHumidifier"]:
             raise Exception(
                 "Cannot set humidifier mode since no humidifier is installed."
+            )
+
+        if humidifier_mode.lower() not in (self.humidifier_modes):
+            raise ValueError(
+                f"Invalid humidifier_mode value: {humidifier_mode}  Valid values are 'auto', 'off', or 'manual'"
             )
 
         self.data.ecobee.set_humidifier_mode(self.thermostat_index, humidifier_mode)
