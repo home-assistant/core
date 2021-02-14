@@ -580,7 +580,7 @@ class WaterHeater(HomeAccessory):
         """Change operation mode to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set heat-cool to %d", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.call_service(
+        self.async_call_service(
             DOMAIN_WATER_HEATER,
             SERVICE_TURN_ON if value else SERVICE_TURN_OFF,
             params,
