@@ -393,7 +393,7 @@ class Camera(HomeAccessory, PyhapCamera):
         session_info["stream"] = stream
         session_info[FFMPEG_PID] = stream.process.pid
 
-        stderr_reader = stream.get_reader(source=FFMPEG_STDERR)
+        stderr_reader = await stream.get_reader(source=FFMPEG_STDERR)
 
         async def watch_session(_):
             await self._async_ffmpeg_watch(session_info["id"])
