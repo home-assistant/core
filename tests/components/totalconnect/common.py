@@ -108,7 +108,7 @@ RESPONSE_DISARM_FAILURE = {
     "ResultData": "Command Failed",
 }
 RESPONSE_USER_CODE_INVALID = {
-    "ResultCode": "-4106",
+    "ResultCode": TotalConnectClient.TotalConnectClient.USER_CODE_INVALID,
     "ResultData": "testing user code invalid",
 }
 RESPONSE_SUCCESS = {"ResultCode": TotalConnectClient.TotalConnectClient.SUCCESS}

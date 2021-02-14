@@ -2,11 +2,19 @@
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow
-from homeassistant.components.totalconnect.const import DOMAIN
+from homeassistant.components.totalconnect.const import CONF_LOCATION, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD
 
-from .common import CONFIG_DATA, CONFIG_DATA_NO_USERCODES, USERNAME
+from .common import (
+    CONFIG_DATA,
+    CONFIG_DATA_NO_USERCODES,
+    RESPONSE_AUTHENTICATE,
+    RESPONSE_DISARMED,
+    RESPONSE_SUCCESS,
+    RESPONSE_USER_CODE_INVALID,
+    USERNAME,
+)
 
 from tests.common import MockConfigEntry
 
@@ -27,18 +35,51 @@ async def test_user(hass):
 async def test_user_show_locations(hass):
     """Test user locations form."""
     # user/pass provided, so check if valid then ask for usercodes on locations form
-    with patch(
-        "homeassistant.components.totalconnect.config_flow.TotalConnectClient.TotalConnectClient"
-    ) as client_mock:
-        client_mock.return_value.is_valid_credentials.return_value = True
+    responses = [
+        RESPONSE_AUTHENTICATE,
+        RESPONSE_DISARMED,
+        RESPONSE_USER_CODE_INVALID,
+        RESPONSE_SUCCESS,
+    ]
+
+    with patch("zeep.Client", autospec=True), patch(
+        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        side_effect=responses,
+    ) as mock_request, patch(
+        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.get_zone_details",
+        return_value=True,
+    ):
+
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
             data=CONFIG_DATA_NO_USERCODES,
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "locations"
+        # first it should show the locations form
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "locations"
+        # client should have sent two requests, authenticate and get status
+        assert mock_request.call_count == 2
+
+        # user enters an invalid usercode
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_LOCATION: "bad"},
+        )
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result2["step_id"] == "locations"
+        # client should have sent 3rd request to validate usercode
+        assert mock_request.call_count == 3
+
+        # user enters a valid usercode
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={CONF_LOCATION: "7890"},
+        )
+        assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        # client should have sent another request to validate usercode
+        assert mock_request.call_count == 4
 
 
 async def test_abort_if_already_setup(hass):
