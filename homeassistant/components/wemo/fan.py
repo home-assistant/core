@@ -132,6 +132,11 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         return ranged_value_to_percentage(SPEED_RANGE, self._fan_mode)
 
     @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return SPEED_RANGE[1] - SPEED_RANGE[0] + 1
+
+    @property
     def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORTED_FEATURES

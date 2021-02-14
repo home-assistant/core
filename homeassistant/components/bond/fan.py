@@ -87,6 +87,11 @@ class BondFan(BondEntity, FanEntity):
         return ranged_value_to_percentage(self._speed_range, self._speed)
 
     @property
+    def speed_count(self) -> Optional[int]:
+        """Return the number of speeds the fan supports."""
+        return self._speed_range[1] - self._speed_range[0] + 1
+
+    @property
     def current_direction(self) -> Optional[str]:
         """Return fan rotation direction."""
         direction = None

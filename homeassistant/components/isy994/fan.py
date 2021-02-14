@@ -49,6 +49,11 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         return ranged_value_to_percentage(SPEED_RANGE, self._node.status)
 
     @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return SPEED_RANGE[1] - SPEED_RANGE[0] + 1
+
+    @property
     def is_on(self) -> bool:
         """Get if the fan is on."""
         if self._node.status == ISY_VALUE_UNKNOWN:
@@ -94,6 +99,11 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None
         return ranged_value_to_percentage(SPEED_RANGE, self._node.status)
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return SPEED_RANGE[1] - SPEED_RANGE[0] + 1
 
     @property
     def is_on(self) -> bool:

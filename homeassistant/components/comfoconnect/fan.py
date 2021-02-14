@@ -101,6 +101,11 @@ class ComfoConnectFan(FanEntity):
             return None
         return ranged_value_to_percentage(SPEED_RANGE, speed)
 
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return SPEED_RANGE[1] - SPEED_RANGE[0] + 1
+
     def turn_on(
         self, speed: str = None, percentage=None, preset_mode=None, **kwargs
     ) -> None:

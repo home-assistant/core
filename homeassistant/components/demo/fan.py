@@ -216,9 +216,9 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
         return self._percentage
 
     @property
-    def percentage_step(self) -> Optional[float]:
-        """Return the step size for percentage."""
-        return 33.34
+    def speed_count(self) -> Optional[float]:
+        """Return the number of speeds the fan supports."""
+        return 3
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
@@ -276,9 +276,9 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
         return self._percentage
 
     @property
-    def percentage_step(self) -> Optional[float]:
-        """Return the step size for percentage."""
-        return 33.34
+    def speed_count(self) -> Optional[float]:
+        """Return the number of speeds the fan supports."""
+        return 3
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""

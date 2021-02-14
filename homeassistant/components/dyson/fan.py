@@ -155,6 +155,11 @@ class DysonFanEntity(DysonEntity, FanEntity):
         return ranged_value_to_percentage(SPEED_RANGE, int(self._device.state.speed))
 
     @property
+    def speed_count(self) -> Optional[int]:
+        """Return the number of speeds the fan supports."""
+        return SPEED_RANGE[1] - SPEED_RANGE[0] + 1
+
+    @property
     def preset_modes(self):
         """Return the available preset modes."""
         return PRESET_MODES

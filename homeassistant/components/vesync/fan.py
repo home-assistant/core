@@ -78,6 +78,11 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         return None
 
     @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return SPEED_RANGE[1] - SPEED_RANGE[0] + 1
+
+    @property
     def preset_modes(self):
         """Get the list of available preset modes."""
         return PRESET_MODES
