@@ -8,7 +8,6 @@
                 "data": {
                     "api_key": "[%key:common::config_flow::data::api_key%]",
                     "name": "[%key:common::config_flow::data::name%]",
-                    "mode": "The Weather Mode to use",
                     "latitude": "[%key:common::config_flow::data::latitude%]",
                     "longitude": "[%key:common::config_flow::data::longitude%]"
                 }
@@ -24,7 +23,6 @@
             "init": {
                 "description": "Configure options for HERE Destination Weather",
                 "data": {
-                    "unit_system": "The Unit System to use",
                     "scan_interval": "Update interval."
                 }
             }

@@ -11,20 +11,13 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_MODE,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import (
-    CONF_MODES,
-    DEFAULT_MODE,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    HERE_API_KEYS,
-)
+from .const import DEFAULT_MODE, DEFAULT_SCAN_INTERVAL, DOMAIN, HERE_API_KEYS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +29,7 @@ async def async_validate_user_input(hass: HomeAssistant, user_input: dict) -> No
         here_client.weather_for_coordinates,
         user_input[CONF_LATITUDE],
         user_input[CONF_LONGITUDE],
-        herepy.WeatherProductType[user_input[CONF_MODE]],
+        herepy.WeatherProductType[DEFAULT_MODE],
     )
 
 
@@ -80,9 +73,6 @@ class HereWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_API_KEY, default=user_input[CONF_API_KEY]): str,
                     vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
-                    vol.Required(CONF_MODE, default=user_input[CONF_MODE]): vol.In(
-                        CONF_MODES
-                    ),
                     vol.Required(
                         CONF_LATITUDE, default=user_input[CONF_LATITUDE]
                     ): cv.latitude,
@@ -95,7 +85,6 @@ class HereWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_API_KEY, default=known_api_key): str,
                 vol.Required(CONF_NAME, default=DOMAIN): str,
-                vol.Required(CONF_MODE, default=DEFAULT_MODE): vol.In(CONF_MODES),
                 vol.Required(
                     CONF_LATITUDE, default=self.hass.config.latitude
                 ): cv.latitude,
