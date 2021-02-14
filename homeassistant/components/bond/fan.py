@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
-    range_percentage_step_size,
     ranged_value_to_percentage,
 )
 
@@ -150,8 +149,3 @@ class BondFan(BondEntity, FanEntity):
         await self._hub.bond.action(
             self._device.device_id, Action.set_direction(bond_direction)
         )
-
-    @property
-    def percentage_step(self) -> Optional[float]:
-        """Return the step size for percentage."""
-        return range_percentage_step_size(self._speed_range)
