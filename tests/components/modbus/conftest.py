@@ -77,36 +77,31 @@ async def base_test(
         # mock timer and add old/new config
         now = dt_util.utcnow()
         with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
-            if method_discovery:
+            if method_discovery and config_device is not None:
                 # setup modbus which in turn does setup for the devices
-                if config_device is not None:
-                    config_modbus[DOMAIN].update(
-                        {array_name_discovery: [{**config_device}]}
-                    )
-                assert await async_setup_component(hass, DOMAIN, config_modbus)
-            else:
-                # first add modbus platform using old config
-                assert await async_setup_component(hass, DOMAIN, config_modbus)
-
-                # setup component old style
-                if config_device is not None:
-                    config_device = {
-                        entity_domain: {
-                            CONF_PLATFORM: DOMAIN,
-                            array_name_old_config: [
-                                {
-                                    **config_device,
-                                }
-                            ],
-                        }
-                    }
-                    if scan_interval is not None:
-                        config_device[entity_domain][CONF_SCAN_INTERVAL] = scan_interval
-                    await hass.async_block_till_done()
-                    assert await async_setup_component(
-                        hass, entity_domain, config_device
-                    )
+                config_modbus[DOMAIN].update(
+                    {array_name_discovery: [{**config_device}]}
+                )
+                config_device = None
+            assert await async_setup_component(hass, DOMAIN, config_modbus)
             await hass.async_block_till_done()
+
+            # setup platform old style
+            if config_device is not None:
+                config_device = {
+                    entity_domain: {
+                        CONF_PLATFORM: DOMAIN,
+                        array_name_old_config: [
+                            {
+                                **config_device,
+                            }
+                        ],
+                    }
+                }
+                if scan_interval is not None:
+                    config_device[entity_domain][CONF_SCAN_INTERVAL] = scan_interval
+                assert await async_setup_component(hass, entity_domain, config_device)
+                await hass.async_block_till_done()
 
         assert DOMAIN in hass.data
         if config_device is not None:
