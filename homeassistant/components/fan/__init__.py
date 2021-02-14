@@ -40,6 +40,8 @@ SUPPORT_DIRECTION = 4
 SUPPORT_PRESET_MODE = 8
 
 SERVICE_SET_SPEED = "set_speed"
+SERVICE_INCREASE_SPEED = "increase_speed"
+SERVICE_DECREASE_SPEED = "decrease_speed"
 SERVICE_OSCILLATE = "oscillate"
 SERVICE_SET_DIRECTION = "set_direction"
 SERVICE_SET_PERCENTAGE = "set_percentage"
@@ -145,6 +147,18 @@ async def async_setup(hass, config: dict):
         [SUPPORT_SET_SPEED],
     )
     component.async_register_entity_service(
+        SERVICE_INCREASE_SPEED,
+        {},
+        "async_increase_speed",
+        [SUPPORT_SET_SPEED],
+    )
+    component.async_register_entity_service(
+        SERVICE_INCREASE_SPEED,
+        {},
+        "async_decrease_speed",
+        [SUPPORT_SET_SPEED],
+    )
+    component.async_register_entity_service(
         SERVICE_OSCILLATE,
         {vol.Required(ATTR_OSCILLATING): cv.boolean},
         "async_oscillate",
@@ -247,6 +261,18 @@ class FanEntity(ToggleEntity):
             await self.hass.async_add_executor_job(self.set_percentage, percentage)
         else:
             await self.async_set_speed(self.percentage_to_speed(percentage))
+
+    async def async_increase_speed(self) -> None:
+        """Increase the speed of the fan."""
+        current_speed = self.percentage or 0
+        await self.async_set_percentage(
+            current_speed + math.floor(self.percentage_step)
+        )
+
+    async def async_decrease_speed(self) -> None:
+        """Decrease the speed of the fan."""
+        current_speed = self.percentage or 0
+        await self.async_set_percentage(current_speed - math.ceil(self.percentage_step))
 
     @_fan_native
     def set_preset_mode(self, preset_mode: str) -> None:
