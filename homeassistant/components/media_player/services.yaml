@@ -94,9 +94,23 @@ media_stop:
     entity:
       domain: media_player
 
+media_next_channel:
+  name: Next Channel
+  description: Send the media player the command for switching to next channel.
+  target:
+    entity:
+      domain: media_player
+
 media_next_track:
   name: Next
   description: Send the media player the command for next track.
+  target:
+    entity:
+      domain: media_player
+
+media_previous_channel:
+  name: Previous Channel
+  description: Send the media player the command for switching to previous channel.
   target:
     entity:
       domain: media_player
