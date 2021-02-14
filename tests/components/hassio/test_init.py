@@ -4,9 +4,6 @@ from unittest.mock import patch
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend
-<<<<<<< HEAD
-from homeassistant.components.hassio import STORAGE_KEY
-=======
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.hassio import ADDONS_COORDINATOR, DOMAIN, STORAGE_KEY
 from homeassistant.components.hassio.const import (
@@ -21,7 +18,6 @@ from homeassistant.components.hassio.const import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
->>>>>>> 87c3c833a6 (add entry setup and unload test and fix update coordinator)
 from homeassistant.setup import async_setup_component
 
 from . import mock_all  # noqa
@@ -30,6 +26,50 @@ from . import mock_all  # noqa
 from tests.common import MockConfigEntry
 
 MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
+
+
+@pytest.fixture(autouse=True)
+def mock_all(aioclient_mock, request):
+    """Mock all setup requests."""
+    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
+    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
+    aioclient_mock.get(
+        "http://127.0.0.1/info",
+        json={
+            "result": "ok",
+            "data": {"supervisor": "222", "homeassistant": "0.110.0", "hassos": None},
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/host/info",
+        json={
+            "result": "ok",
+            "data": {
+                "result": "ok",
+                "data": {
+                    "chassis": "vm",
+                    "operating_system": "Debian GNU/Linux 10 (buster)",
+                    "kernel": "4.19.0-6-amd64",
+                },
+            },
+        },
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/core/info",
+        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/os/info",
+        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/info",
+        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
+    )
+    aioclient_mock.get(
+        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
+    )
 
 
 async def test_setup_api_ping(hass, aioclient_mock):
@@ -424,3 +464,12 @@ async def test_entry_load_and_unload(hass, aioclient_mock):
     assert await config_entry.async_unload(hass)
     await hass.async_block_till_done()
     assert ADDONS_COORDINATOR not in hass.data
+
+
+async def test_migration_off_hassio(hass):
+    """Test that when a user moves instance off Hass.io, config entry gets cleaned up."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.config_entries.async_entries(DOMAIN) == []

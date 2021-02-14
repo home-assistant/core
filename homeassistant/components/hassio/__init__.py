@@ -17,7 +17,7 @@ from homeassistant.const import (
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import DOMAIN as HASS_DOMAIN, HomeAssistant, callback
+from homeassistant.core import DOMAIN as HASS_DOMAIN, Config, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
@@ -295,13 +295,18 @@ def get_supervisor_ip():
     return os.environ["SUPERVISOR"].partition(":")[0]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     """Set up the Hass.io component."""
     # Check local setup
     for env in ("HASSIO", "HASSIO_TOKEN"):
         if os.environ.get(env):
             continue
         _LOGGER.error("Missing %s environment variable", env)
+        config_entries = hass.config_entries.async_entries(DOMAIN)
+        if config_entries:
+            hass.async_create_task(
+                hass.config_entries.async_remove(config_entries[0].entry_id)
+            )
         return False
 
     async_load_websocket_api(hass)
@@ -473,14 +478,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    if not os.environ.get("HASSIO"):
-        _LOGGER.info(
-            "Home Assistant instance is no longer running Home Assistant OS. "
-            "The config entry will be removed"
-        )
-        hass.async_create_task(hass.config_entries.async_unload(config_entry.entry_id))
-        return True
-
     coordinator = HassioAddonsDataUpdateCoordinator(hass, config_entry)
     await coordinator.async_refresh()
     hass.data[ADDONS_COORDINATOR] = coordinator
@@ -524,7 +521,7 @@ class HassioAddonsDataUpdateCoordinator(DataUpdateCoordinator):
             update_method=self._async_update_data,
         )
         self.data = {}
-        self.config_entry = config_entry
+        self.entry_id = config_entry.entry_id
 
     async def _async_update_data(self) -> Dict[str, Any]:
         """Update data via library."""
@@ -544,7 +541,7 @@ class HassioAddonsDataUpdateCoordinator(DataUpdateCoordinator):
         # installed addons has changed
         if addons.keys() != self.data.keys():
             self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self.config_entry.entry_id)
+                self.hass.config_entries.async_reload(self.entry_id)
             )
             return {}
 
