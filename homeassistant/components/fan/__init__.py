@@ -132,7 +132,7 @@ async def async_setup(hass, config: dict):
             ),
             vol.Optional(ATTR_PRESET_MODE): cv.string,
             vol.Optional(ATTR_PERCENTAGE_STEP): vol.All(
-                vol.Coerce(float), vol.Clamp(min=-100, max=100)
+                vol.Coerce(int), vol.Clamp(min=-100, max=100)
             ),
         },
         "async_handle_fan_on_service",
@@ -299,7 +299,7 @@ class FanEntity(ToggleEntity):
         speed: Optional[str] = None,
         percentage: Optional[int] = None,
         preset_mode: Optional[str] = None,
-        percentage_step: Optional[float] = None,
+        percentage_step: Optional[int] = None,
         **kwargs,
     ) -> None:
         """Turn on the fan.
@@ -416,12 +416,12 @@ class FanEntity(ToggleEntity):
         return 0
 
     @property
-    def percentage_step(self) -> Optional[float]:
+    def percentage_step(self) -> Optional[int]:
         """Return the step size for percentage."""
         if not self._implemented_percentage:
             speed_list = speed_list_without_preset_modes(self.speed_list)
             if speed_list:
-                return math.ceil(10000 / len(speed_list)) / 100
+                return round(math.ceil(10000 / len(speed_list)) / 100)
         return 1
 
     @property
