@@ -166,7 +166,7 @@ async def test_unload_entry(hass):
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
-        assert len(hass.states.async_all()) == 1
+        assert hass.data[DOMAIN]
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
-        assert len(hass.states.async_all()) == 0
+        assert not hass.data[DOMAIN]
