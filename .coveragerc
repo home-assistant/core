@@ -386,7 +386,13 @@ omit =
     homeassistant/components/hikvisioncam/switch.py
     homeassistant/components/hisense_aehw4a1/*
     homeassistant/components/hitron_coda/device_tracker.py
-    homeassistant/components/hive/*
+    homeassistant/components/hive/__init__.py
+    homeassistant/components/hive/climate.py
+    homeassistant/components/hive/binary_sensor.py
+    homeassistant/components/hive/light.py
+    homeassistant/components/hive/sensor.py
+    homeassistant/components/hive/switch.py
+    homeassistant/components/hive/water_heater.py
     homeassistant/components/hlk_sw16/__init__.py
     homeassistant/components/hlk_sw16/switch.py
     homeassistant/components/home_connect/*
