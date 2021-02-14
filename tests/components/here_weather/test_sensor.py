@@ -4,18 +4,11 @@ from unittest.mock import patch
 
 import herepy
 
-from homeassistant.components.here_weather.const import (
-    ASTRONOMY_ATTRIBUTES,
-    DEFAULT_MODE,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    MODE_ASTRONOMY,
-)
+from homeassistant.components.here_weather.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_MODE,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
@@ -23,7 +16,7 @@ from homeassistant.const import (
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
-from .const import astronomy_response, daily_simple_forecasts_response
+from . import mock_weather_for_coordinates
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -35,19 +28,29 @@ async def test_sensor_invalid_request(hass):
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
         with patch(
             "herepy.DestinationWeatherApi.weather_for_coordinates",
-            return_value=daily_simple_forecasts_response,
+            side_effect=mock_weather_for_coordinates,
         ):
             entry = MockConfigEntry(
                 domain=DOMAIN,
                 data={
                     CONF_API_KEY: "test",
                     CONF_NAME: DOMAIN,
-                    CONF_MODE: DEFAULT_MODE,
                     CONF_LATITUDE: "40.79962",
                     CONF_LONGITUDE: "-73.970314",
                 },
             )
             entry.add_to_hass(hass)
+
+            registry = await hass.helpers.entity_registry.async_get_registry()
+
+            # Pre-create registry entries for disabled by default sensors
+            registry.async_get_or_create(
+                "sensor",
+                DOMAIN,
+                "here_weather_forecast_7days_simple_windspeed_0",
+                suggested_object_id="here_weather_forecast_7days_simple_windspeed_0",
+                disabled_by=None,
+            )
 
             await hass.config_entries.async_setup(entry.entry_id)
 
@@ -56,15 +59,19 @@ async def test_sensor_invalid_request(hass):
             hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
             await hass.async_block_till_done()
 
-            sensor = hass.states.get("sensor.here_weather_low_temperature")
-            assert sensor.state == "-1.80"
+            sensor = hass.states.get(
+                "sensor.here_weather_forecast_7days_simple_windspeed_0"
+            )
+            assert sensor.state == "12.03"
         with patch(
             "herepy.DestinationWeatherApi.weather_for_coordinates",
             side_effect=herepy.InvalidRequestError("Invalid"),
         ):
             async_fire_time_changed(hass, utcnow + timedelta(DEFAULT_SCAN_INTERVAL * 2))
             await hass.async_block_till_done()
-            sensor = hass.states.get("sensor.here_weather_low_temperature")
+            sensor = hass.states.get(
+                "sensor.here_weather_forecast_7days_simple_windspeed_0"
+            )
             assert sensor.state == "unavailable"
 
 
@@ -73,19 +80,29 @@ async def test_forecast_astronomy(hass):
     # Patching 'utcnow' to gain more control over the timed update.
     with patch(
         "herepy.DestinationWeatherApi.weather_for_coordinates",
-        return_value=astronomy_response,
+        side_effect=mock_weather_for_coordinates,
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
                 CONF_API_KEY: "test",
                 CONF_NAME: DOMAIN,
-                CONF_MODE: MODE_ASTRONOMY,
                 CONF_LATITUDE: "40.79962",
                 CONF_LONGITUDE: "-73.970314",
             },
         )
         entry.add_to_hass(hass)
+
+        registry = await hass.helpers.entity_registry.async_get_registry()
+
+        # Pre-create registry entries for disabled by default sensors
+        registry.async_get_or_create(
+            "sensor",
+            DOMAIN,
+            "here_weather_forecast_astronomy_sunrise_0",
+            suggested_object_id="here_weather_forecast_astronomy_sunrise_0",
+            disabled_by=None,
+        )
 
         await hass.config_entries.async_setup(entry.entry_id)
 
@@ -94,16 +111,15 @@ async def test_forecast_astronomy(hass):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get("sensor.here_weather_sunrise")
+        sensor = hass.states.get("sensor.here_weather_forecast_astronomy_sunrise_0")
         assert sensor.state == "6:55AM"
-        assert len(hass.states.async_all()) == len(ASTRONOMY_ATTRIBUTES)
 
 
 async def test_imperial(hass):
     """Test that imperial mode works."""
     with patch(
         "herepy.DestinationWeatherApi.weather_for_coordinates",
-        return_value=daily_simple_forecasts_response,
+        side_effect=mock_weather_for_coordinates,
     ):
         hass.config.units = IMPERIAL_SYSTEM
         entry = MockConfigEntry(
@@ -111,7 +127,6 @@ async def test_imperial(hass):
             data={
                 CONF_API_KEY: "test",
                 CONF_NAME: DOMAIN,
-                CONF_MODE: DEFAULT_MODE,
                 CONF_LATITUDE: "40.79962",
                 CONF_LONGITUDE: "-73.970314",
             },
@@ -121,6 +136,17 @@ async def test_imperial(hass):
         )
         entry.add_to_hass(hass)
 
+        registry = await hass.helpers.entity_registry.async_get_registry()
+
+        # Pre-create registry entries for disabled by default sensors
+        registry.async_get_or_create(
+            "sensor",
+            DOMAIN,
+            "here_weather_forecast_7days_simple_windspeed_0",
+            suggested_object_id="here_weather_forecast_7days_simple_windspeed_0",
+            disabled_by=None,
+        )
+
         await hass.config_entries.async_setup(entry.entry_id)
 
         await hass.async_block_till_done()
@@ -128,5 +154,7 @@ async def test_imperial(hass):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get("sensor.here_weather_wind_speed")
+        sensor = hass.states.get(
+            "sensor.here_weather_forecast_7days_simple_windspeed_0"
+        )
         assert sensor.attributes.get("unit_of_measurement") == "mph"

@@ -4,9 +4,9 @@ from unittest.mock import patch
 import herepy
 
 from homeassistant.components.here_weather.const import (
-    DAILY_SIMPLE_ATTRIBUTES,
     DEFAULT_MODE,
     DOMAIN,
+    HERE_API_KEYS,
 )
 from homeassistant.const import (
     CONF_API_KEY,
@@ -18,7 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
 )
 
-from .const import daily_simple_forecasts_response
+from . import mock_weather_for_coordinates
 
 from tests.common import MockConfigEntry
 
@@ -27,7 +27,7 @@ async def test_config_flow(hass):
     """Test we can finish a config flow."""
     with patch(
         "herepy.DestinationWeatherApi.weather_for_coordinates",
-        return_value=daily_simple_forecasts_response,
+        side_effect=mock_weather_for_coordinates,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}
@@ -36,7 +36,6 @@ async def test_config_flow(hass):
         config = {
             CONF_API_KEY: "test",
             CONF_NAME: DOMAIN,
-            CONF_MODE: DEFAULT_MODE,
             CONF_LATITUDE: "40.79962",
             CONF_LONGITUDE: "-73.970314",
         }
@@ -46,7 +45,34 @@ async def test_config_flow(hass):
         assert result["type"] == "create_entry"
 
         await hass.async_block_till_done()
-        state = hass.states.get("sensor.here_weather_low_temperature")
+        state = hass.states.get("weather.here_weather_forecast_7days_simple")
+        assert state
+
+
+async def test_config_flow_known_api_key(hass):
+    """Test we can finish a config flow."""
+    with patch(
+        "herepy.DestinationWeatherApi.weather_for_coordinates",
+        side_effect=mock_weather_for_coordinates,
+    ):
+        hass.data.setdefault(HERE_API_KEYS, []).append("test")
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+        assert result["type"] == "form"
+        config = {
+            CONF_API_KEY: "test",
+            CONF_NAME: DOMAIN,
+            CONF_LATITUDE: "40.79962",
+            CONF_LONGITUDE: "-73.970314",
+        }
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], config
+        )
+        assert result["type"] == "create_entry"
+
+        await hass.async_block_till_done()
+        state = hass.states.get("weather.here_weather_forecast_7days_simple")
         assert state
 
 
@@ -87,7 +113,6 @@ async def test_invalid_request(hass):
         config = {
             CONF_API_KEY: "test",
             CONF_NAME: DOMAIN,
-            CONF_MODE: DEFAULT_MODE,
             CONF_LATITUDE: "40.79962",
             CONF_LONGITUDE: "-73.970314",
         }
@@ -102,14 +127,13 @@ async def test_options(hass):
     """Test the options flow."""
     with patch(
         "herepy.DestinationWeatherApi.weather_for_coordinates",
-        return_value=daily_simple_forecasts_response,
+        side_effect=mock_weather_for_coordinates,
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
                 CONF_API_KEY: "test",
                 CONF_NAME: DOMAIN,
-                CONF_MODE: DEFAULT_MODE,
                 CONF_LATITUDE: "40.79962",
                 CONF_LONGITUDE: "-73.970314",
             },
@@ -132,14 +156,13 @@ async def test_unload_entry(hass):
     """Test unloading a config entry removes all entities."""
     with patch(
         "herepy.DestinationWeatherApi.weather_for_coordinates",
-        return_value=daily_simple_forecasts_response,
+        side_effect=mock_weather_for_coordinates,
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={
                 CONF_API_KEY: "test",
                 CONF_NAME: DOMAIN,
-                CONF_MODE: DEFAULT_MODE,
                 CONF_LATITUDE: "40.79962",
                 CONF_LONGITUDE: "-73.970314",
             },
@@ -149,7 +172,7 @@ async def test_unload_entry(hass):
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
-        assert len(hass.states.async_all()) == (len(DAILY_SIMPLE_ATTRIBUTES))
+        assert len(hass.states.async_all()) == 1
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
         assert len(hass.states.async_all()) == 0

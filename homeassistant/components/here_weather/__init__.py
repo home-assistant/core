@@ -11,18 +11,17 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_MODE,
     CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM_METRIC,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, HERE_API_KEYS
+from .const import CONF_MODES, DEFAULT_SCAN_INTERVAL, DOMAIN, HERE_API_KEYS
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["sensor", "weather"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -32,9 +31,12 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up here_weather from a config entry."""
-    here_weather_data = HEREWeatherData(hass, config_entry)
-    await here_weather_data.async_setup()
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = here_weather_data
+    here_weather_data_dict = {}
+    for mode in CONF_MODES:
+        here_weather_data = HEREWeatherData(hass, config_entry, mode)
+        await here_weather_data.async_setup()
+        here_weather_data_dict[mode] = here_weather_data
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = here_weather_data_dict
 
     known_api_keys = hass.data.setdefault(HERE_API_KEYS, [])
     if config_entry.data[CONF_API_KEY] not in known_api_keys:
@@ -59,7 +61,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         )
     )
     if unload_ok:
-        hass.data[DOMAIN][config_entry.entry_id].unsub_handler()
+        for mode in CONF_MODES:
+            hass.data[DOMAIN][config_entry.entry_id][mode].unsub_handler()
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
@@ -68,16 +71,16 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class HEREWeatherData:
     """Get the latest data from HERE."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, mode: str
+    ) -> None:
         """Initialize the data object."""
         self.hass = hass
         self.config_entry = config_entry
         self.here_client = herepy.DestinationWeatherApi(config_entry.data[CONF_API_KEY])
         self.latitude = config_entry.data[CONF_LATITUDE]
         self.longitude = config_entry.data[CONF_LONGITUDE]
-        self.weather_product_type = herepy.WeatherProductType[
-            config_entry.data[CONF_MODE]
-        ]
+        self.weather_product_type = herepy.WeatherProductType[mode]
         self.coordinator = None
         self.unsub_handler = None
 
@@ -136,9 +139,10 @@ class HEREWeatherData:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> None:
         """Triggered by config entry options updates."""
-        hass.data[DOMAIN][config_entry.entry_id].set_update_interval(
-            config_entry.options[CONF_SCAN_INTERVAL]
-        )
+        for mode in CONF_MODES:
+            hass.data[DOMAIN][config_entry.entry_id][mode].set_update_interval(
+                config_entry.options[CONF_SCAN_INTERVAL]
+            )
 
     def set_update_interval(self, update_interval: int) -> None:
         """Set the coordinator update_interval to the supplied update_interval."""
