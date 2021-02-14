@@ -47,11 +47,11 @@ async def test_step_import(hass):
 async def test_step_import_existing_host(hass):
     """Test for update of config_entry if imported host already exists."""
     await setup.async_setup_component(hass, "persistent_notification", {})
-    mock_entry = MockConfigEntry()
-    with patch("pypck.connection.PchkConnectionManager.async_connect"), patch(
-        "homeassistant.components.lcn.config_flow.get_config_entry",
-        return_value=mock_entry,
-    ):
+    # Created config entry and add it to hass
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=IMPORT_DATA.copy())
+    mock_entry.add_to_hass(hass)
+    # Try to inititalize a config flow with same host data as previously created
+    with patch("pypck.connection.PchkConnectionManager.async_connect"):
         data = IMPORT_DATA.copy()
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
