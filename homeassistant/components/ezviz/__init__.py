@@ -48,7 +48,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
-PLATFORMS = "camera"
+PLATFORMS = ["camera", "sensor", "binary_sensor"]
 
 
 async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
@@ -107,10 +107,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         DATA_COORDINATOR: coordinator,
         DATA_UNDO_UPDATE_LISTENER: undo_listener,
     }
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, PLATFORMS)
-    )
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
     return True
 
@@ -119,7 +119,10 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
-            *[hass.config_entries.async_forward_entry_unload(entry, PLATFORMS)]
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
         )
     )
 

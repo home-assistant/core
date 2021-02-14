@@ -432,7 +432,7 @@ co2signal==0.4.2
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
-colorlog==4.5.0
+colorlog==4.7.2
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -1385,7 +1385,7 @@ pyephember==0.3.1
 pyeverlights==0.1.0
 
 # homeassistant.components.ezviz
-pyezviz==0.1.6.6
+pyezviz==0.1.7.0
 
 # homeassistant.components.fido
 pyfido==2.1.1
