@@ -153,7 +153,7 @@ async def async_setup(hass, config: dict):
         [SUPPORT_SET_SPEED],
     )
     component.async_register_entity_service(
-        SERVICE_INCREASE_SPEED,
+        SERVICE_DECREASE_SPEED,
         {},
         "async_decrease_speed",
         [SUPPORT_SET_SPEED],
