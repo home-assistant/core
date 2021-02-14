@@ -19,7 +19,7 @@ from tests.components.stream.common import generate_h264_video
 
 STREAM_SOURCE = "some-stream-source"
 SEQUENCE_BYTES = io.BytesIO(b"some-bytes")
-DURATION = 1000
+DURATION = 10
 
 
 class HlsClient:
