@@ -91,8 +91,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_update_interval(self, user_input=None):
         """Manage the options regarding interval updates."""
         if user_input is not None:
-            self.options[CONF_UPDATE_INTERVAL] = user_input[CONF_UPDATE_INTERVAL]
-            return self.async_create_entry(title="", data=self.options)
+            return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
             step_id="update_interval",
