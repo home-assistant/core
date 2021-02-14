@@ -158,6 +158,12 @@ def in_wall_smart_fan_control_state_fixture():
     return json.loads(load_fixture("zwave_js/in_wall_smart_fan_control_state.json"))
 
 
+@pytest.fixture(name="gdc_zw062_state", scope="session")
+def motorized_barrier_cover_state_fixture():
+    """Load the motorized barrier cover node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_zw062_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state):
     """Mock a client."""
@@ -345,3 +351,11 @@ def multiple_devices_fixture(
     node = Node(client, lock_schlage_be469_state)
     client.driver.controller.nodes[node.node_id] = node
     return client.driver.controller.nodes
+
+
+@pytest.fixture(name="gdc_zw062")
+def motorized_barrier_cover_fixture(client, gdc_zw062_state):
+    """Mock a motorized barrier node."""
+    node = Node(client, gdc_zw062_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node

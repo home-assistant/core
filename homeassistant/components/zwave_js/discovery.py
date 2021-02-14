@@ -1,7 +1,7 @@
 """Map Z-Wave nodes and values to Home Assistant entities."""
 
 from dataclasses import dataclass
-from typing import Generator, Optional, Set, Union
+from typing import Generator, List, Optional, Set, Union
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -78,7 +78,7 @@ class ZWaveDiscoverySchema:
     # [optional] the node's specific device class must match ANY of these values
     device_class_specific: Optional[Set[str]] = None
     # [optional] additional values that ALL need to be present on the node for this scheme to pass
-    required_values: Optional[Set[ZWaveValueDiscoverySchema]] = None
+    required_values: Optional[List[ZWaveValueDiscoverySchema]] = None
     # [optional] bool to specify if this primary value may be discovered by multiple platforms
     allow_multi: bool = False
 
@@ -345,10 +345,22 @@ DISCOVERY_SCHEMAS = [
             command_class={CommandClass.SWITCH_BINARY}, property={"currentValue"}
         ),
     ),
+    # binary switch
+    # barrier operator signaling states
+    ZWaveDiscoverySchema(
+        platform="switch",
+        hint="barrier_event_signaling_state",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BARRIER_OPERATOR},
+            property={"signalingState"},
+            type={"number"},
+        ),
+    ),
     # cover
+    # window coverings
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="cover",
+        hint="window_cover",
         device_class_generic={"Multilevel Switch"},
         device_class_specific={
             "Motor Control Class A",
@@ -361,6 +373,24 @@ DISCOVERY_SCHEMAS = [
             property={"currentValue"},
             type={"number"},
         ),
+    ),
+    # cover
+    # motorized barriers
+    ZWaveDiscoverySchema(
+        platform="cover",
+        hint="motorized_barrier",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BARRIER_OPERATOR},
+            property={"currentState"},
+            type={"number"},
+        ),
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.BARRIER_OPERATOR},
+                property={"targetState"},
+                type={"number"},
+            ),
+        ],
     ),
     # fan
     ZWaveDiscoverySchema(
@@ -430,13 +460,10 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
                 continue
             # check additional required values
             if schema.required_values is not None:
-                required_values_present = True
-                for val_scheme in schema.required_values:
-                    for val in node.values.values():
-                        if not check_value(val, val_scheme):
-                            required_values_present = False
-                            break
-                if not required_values_present:
+                if not all(
+                    any(check_value(val, val_scheme) for val in node.values.values())
+                    for val_scheme in schema.required_values
+                ):
                     continue
             # all checks passed, this value belongs to an entity
             yield ZwaveDiscoveryInfo(
