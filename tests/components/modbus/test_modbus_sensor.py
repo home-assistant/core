@@ -6,6 +6,7 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_INPUT,
     CONF_COUNT,
     CONF_DATA_TYPE,
+    CONF_INPUT_TYPE,
     CONF_PRECISION,
     CONF_REGISTER,
     CONF_REGISTER_TYPE,
@@ -19,19 +20,28 @@ from homeassistant.components.modbus.const import (
     DATA_TYPE_UINT,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_NAME, CONF_OFFSET, CONF_SLAVE
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_OFFSET,
+    CONF_SLAVE,
+)
 
 from .conftest import base_config_test, base_test
 
 
 @pytest.mark.parametrize("do_discovery", [False, True])
 @pytest.mark.parametrize("do_options", [False, True])
-async def test_config_sensor(hass, do_discovery, do_options):
+@pytest.mark.parametrize(
+    "do_type", [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
+)
+async def test_config_sensor(hass, do_discovery, do_options, do_type):
     """Run test for sensor."""
     sensor_name = "test_sensor"
     config_sensor = {
         CONF_NAME: sensor_name,
-        CONF_REGISTER: 51,
+        CONF_ADDRESS: 51,
     }
     if do_options:
         config_sensor.update(
@@ -43,9 +53,17 @@ async def test_config_sensor(hass, do_discovery, do_options):
                 CONF_SCALE: 1,
                 CONF_REVERSE_ORDER: False,
                 CONF_OFFSET: 0,
-                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_INPUT_TYPE: do_type,
+                CONF_DEVICE_CLASS: "battery",
             }
         )
+    if not do_discovery:
+        # bridge difference in configuration
+        config_sensor[CONF_REGISTER] = config_sensor[CONF_ADDRESS]
+        del config_sensor[CONF_ADDRESS]
+        if do_options:
+            config_sensor[CONF_REGISTER_TYPE] = config_sensor[CONF_INPUT_TYPE]
+            del config_sensor[CONF_INPUT_TYPE]
     await base_config_test(
         hass,
         config_sensor,
@@ -220,7 +238,7 @@ async def test_config_sensor(hass, do_discovery, do_options):
         (
             {
                 CONF_COUNT: 2,
-                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_INPUT,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
                 CONF_DATA_TYPE: DATA_TYPE_UINT,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
@@ -232,7 +250,7 @@ async def test_config_sensor(hass, do_discovery, do_options):
         (
             {
                 CONF_COUNT: 2,
-                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                 CONF_DATA_TYPE: DATA_TYPE_UINT,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
@@ -244,7 +262,7 @@ async def test_config_sensor(hass, do_discovery, do_options):
         (
             {
                 CONF_COUNT: 2,
-                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                 CONF_DATA_TYPE: DATA_TYPE_FLOAT,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
@@ -256,7 +274,7 @@ async def test_config_sensor(hass, do_discovery, do_options):
         (
             {
                 CONF_COUNT: 8,
-                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                 CONF_DATA_TYPE: DATA_TYPE_STRING,
                 CONF_SCALE: 1,
                 CONF_OFFSET: 0,
@@ -272,7 +290,7 @@ async def test_all_sensor(hass, cfg, regs, expected):
     sensor_name = "modbus_test_sensor"
     state = await base_test(
         hass,
-        {CONF_NAME: sensor_name, CONF_REGISTER: 1234, **cfg},
+        {CONF_NAME: sensor_name, CONF_ADDRESS: 1234, **cfg},
         sensor_name,
         SENSOR_DOMAIN,
         CONF_SENSORS,

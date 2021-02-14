@@ -9,12 +9,17 @@ binary_sensor:
 	modbus:
 		binary_sensors: []
 
-	parameters:
-		CONF_NAME, required
-		CONF_ADDRESS, required
-		CONF_INPUT_TYPE, optional (CALL_TYPE_COIL) CALL_TYPE_DISCRETE or CALL_TYPE_COIL
-		CONF_SLAVE, optional (DEFAULT_SLAVE)
-		CONF_SCAN_INTERVAL, optional (DEFAULT_SCAN_INTERVAL)
-		CONF_DEVICE_CLASS, optional
-
 	--> NO CHANGES.
+
+
+sensor:
+	modbus:
+		sensors: []
+
+	new parameters:
+		CONF_INPUT_TYPE, optional (CALL_TYPE_COIL) CALL_TYPE_DISCRETE or CALL_TYPE_COIL
+		CONF_ADDRESS, required
+
+	update route:
+		CONF_REGISTER --> CONF_ADDRESS
+		CONF_REGISTER_TYPE --> CONF_INPUT_TYPE

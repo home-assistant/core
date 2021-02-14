@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OFFSET,
@@ -36,6 +37,7 @@ from .const import (
     CONF_COUNT,
     CONF_DATA_TYPE,
     CONF_HUB,
+    CONF_INPUT_TYPE,
     CONF_PRECISION,
     CONF_REGISTER,
     CONF_REGISTER_TYPE,
@@ -128,6 +130,11 @@ async def async_setup_platform(
             CONF_NAME: "noName",
             CONF_SENSORS: config[CONF_REGISTERS],
         }
+        for entry in discovery_info[CONF_SENSORS]:
+            entry[CONF_ADDRESS] = entry[CONF_REGISTER]
+            entry[CONF_INPUT_TYPE] = entry[CONF_REGISTER_TYPE]
+            del entry[CONF_REGISTER]
+            del entry[CONF_REGISTER_TYPE]
         config = None
 
     for entry in discovery_info[CONF_SENSORS]:
@@ -168,8 +175,8 @@ async def async_setup_platform(
                 hub,
                 entry[CONF_NAME],
                 entry.get(CONF_SLAVE),
-                entry[CONF_REGISTER],
-                entry[CONF_REGISTER_TYPE],
+                entry[CONF_ADDRESS],
+                entry[CONF_INPUT_TYPE],
                 entry.get(CONF_UNIT_OF_MEASUREMENT),
                 entry[CONF_COUNT],
                 entry[CONF_REVERSE_ORDER],

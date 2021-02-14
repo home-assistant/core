@@ -189,7 +189,7 @@ SWITCH_SCHEMA = vol.Any(SWITCH_COILS_SCHEMA, SWITCH_REGISTERS_SCHEMA)
 
 SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
-        vol.Required(CONF_REGISTER): cv.positive_int,
+        vol.Required(CONF_ADDRESS): cv.positive_int,
         vol.Optional(CONF_COUNT, default=1): cv.positive_int,
         vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT): vol.In(
             [
@@ -203,7 +203,7 @@ SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_OFFSET, default=0): number,
         vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
-        vol.Optional(CONF_REGISTER_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
             [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
         ),
         vol.Optional(CONF_REVERSE_ORDER, default=False): cv.boolean,
