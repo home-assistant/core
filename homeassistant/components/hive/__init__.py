@@ -71,17 +71,12 @@ async def async_setup_entry(hass, entry):
     )
     hass.data[DOMAIN]["entries"][entry.entry_id] = hive
 
-        devices = await hive.session.startSession(hive_config)
+
+    try:
+        hive.devices = await hive.session.startSession(hive_config)
     except HTTPException as error:
         _LOGGER.error("Could not connect to the internet: %s", error)
         raise ConfigEntryNotReady() from error
-
-    if devices == "INVALID_REAUTH":
-        return hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
-            )
-        )
 
     for ha_type, hive_type in PLATFORM_LOOKUP.items():
         devicelist = devices.get(hive_type)
