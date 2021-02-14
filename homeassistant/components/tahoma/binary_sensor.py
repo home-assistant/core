@@ -29,11 +29,6 @@ DEVICE_CLASS_GAS = "gas"
 DEVICE_CLASS_RAIN = "rain"
 DEVICE_CLASS_WATER = "water"
 
-ICON_WATER = "mdi:water"
-ICON_WATER_OFF = "mdi:water-off"
-ICON_WAVES = "mdi:waves"
-ICON_WEATHER_RAINY = "mdi:weather-rainy"
-
 IO_VIBRATION_DETECTED_STATE = "io:VibrationDetectedState"
 
 STATE_OPEN = "open"
