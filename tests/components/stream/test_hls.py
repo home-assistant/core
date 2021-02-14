@@ -281,7 +281,7 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
 
     hls_client = await hls_stream(stream)
 
-    # Produce many segments to fill the output buffer
+    # Produce enough segments to overfill the output buffer by one
     for sequence in range(1, MAX_SEGMENTS + 2):
         hls.put(Segment(sequence, SEQUENCE_BYTES, DURATION))
         await hass.async_block_till_done()
