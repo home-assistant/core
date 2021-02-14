@@ -52,7 +52,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, conf: dict):
         """Import a configuration from config.yaml."""
-        return await async_step_device(user_input=conf)
+        return await self.async_step_device(user_input=conf)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
