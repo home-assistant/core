@@ -156,3 +156,16 @@ async def test_percentage_to_ranged_value_small():
     assert math.ceil(percentage_to_ranged_value(range, 66)) == 4
     assert math.ceil(percentage_to_ranged_value(range, 83)) == 5
     assert math.ceil(percentage_to_ranged_value(range, 100)) == 6
+
+
+async def test_percentage_seven_steps():
+    """Test a small range of low and high with 7 steps."""
+    range = (1, 7)
+
+    assert math.ceil(percentage_to_ranged_value(range, 14)) == 1
+    assert math.ceil(percentage_to_ranged_value(range, 28)) == 2
+    assert math.ceil(percentage_to_ranged_value(range, 42)) == 3
+    assert math.ceil(percentage_to_ranged_value(range, 56)) == 4
+    assert math.ceil(percentage_to_ranged_value(range, 70)) == 5
+    assert math.ceil(percentage_to_ranged_value(range, 84)) == 6
+    assert math.ceil(percentage_to_ranged_value(range, 98)) == 7

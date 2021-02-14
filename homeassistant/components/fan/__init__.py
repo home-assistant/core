@@ -310,13 +310,7 @@ class FanEntity(ToggleEntity):
         future alternatives.
         """
         if percentage_step is not None:
-            percentage = self.percentage or 0
-            # A float is accepted for fans that have
-            # 7 speeds since a value of 14.29 is needed
-            # for this level of precision
-            modifier = -1 if percentage_step < 0 else 1
-            percentage += math.ceil(10000 / abs(percentage_step)) / 100
-            percentage = max(0, min(255, percentage)) * modifier
+            percentage = max(0, min(100, (self.percentage or 0) + percentage_step))
 
         if preset_mode is not None:
             self._valid_preset_mode_or_raise(preset_mode)
@@ -427,7 +421,7 @@ class FanEntity(ToggleEntity):
         if not self._implemented_percentage:
             speed_list = speed_list_without_preset_modes(self.speed_list)
             if speed_list:
-                return round(math.ceil(10000 / len(speed_list)) / 100)
+                return math.ceil(10000 / len(speed_list)) / 100
         return 1
 
     @property
