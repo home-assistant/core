@@ -44,6 +44,7 @@ from homeassistant.const import (
     CONF_REPEAT,
     CONF_SCENE,
     CONF_SEQUENCE,
+    CONF_SERVICE,
     CONF_TARGET,
     CONF_TIMEOUT,
     CONF_UNTIL,
@@ -438,9 +439,9 @@ class _ScriptRun:
         )
 
         running_script = (
-            params["domain"] == "automation"
-            and params["service_name"] == "trigger"
-            or params["domain"] in ("python_script", "script")
+            params[CONF_DOMAIN] == "automation"
+            and params[CONF_SERVICE] == "trigger"
+            or params[CONF_DOMAIN] in ("python_script", "script")
         )
         # If this might start a script then disable the call timeout.
         # Otherwise use the normal service call limit.
