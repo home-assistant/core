@@ -20,7 +20,7 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import HiveEntity, refresh_system
-from .const import ATTR_AVAILABLE, ATTR_TIME_PERIOD, DOMAIN, SERVICE_BOOST_HEATING
+from .const import ATTR_AVAILABLE, DOMAIN
 
 HIVE_TO_HASS_STATE = {
     "SCHEDULE": HVAC_MODE_AUTO,
@@ -49,11 +49,17 @@ PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 
 
+    """Set up the Hive thermostat.
+
+    No longer in use.
+    """
+
+
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
 
-    hive = hass.data[DOMAIN]["entries"][entry.entry_id]
-    devices = hive.session.deviceList.get("climate")
+    hive = hass.data[DOMAIN][entry.entry_id]
+    devices = hive.devices.get("climate")
     entities = []
     if devices:
         for dev in devices:

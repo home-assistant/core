@@ -15,7 +15,7 @@ from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import HiveEntity, refresh_system
-from .const import ATTR_ONOFF, ATTR_TIME_PERIOD, DOMAIN, SERVICE_BOOST_HOT_WATER
+from .const import DOMAIN
 
 SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
 HOTWATER_NAME = "Hot Water"
@@ -36,11 +36,17 @@ HASS_TO_HIVE_STATE = {
 SUPPORT_WATER_HEATER = [STATE_ECO, STATE_ON, STATE_OFF]
 
 
+    """Set up the Hive thermostat.
+
+    No longer in use.
+    """
+
+
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
 
-    hive = hass.data[DOMAIN]["entries"][entry.entry_id]
-    devices = hive.session.deviceList.get("water_heater")
+    hive = hass.data[DOMAIN][entry.entry_id]
+    devices = hive.devices.get("water_heater")
     entities = []
     if devices:
         for dev in devices:
