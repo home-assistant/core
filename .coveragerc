@@ -466,7 +466,11 @@ omit =
     homeassistant/components/kaiterra/*
     homeassistant/components/kankun/switch.py
     homeassistant/components/keba/*
+    homeassistant/components/keenetic_ndms2/__init__.py
+    homeassistant/components/keenetic_ndms2/binary_sensor.py
+    homeassistant/components/keenetic_ndms2/const.py
     homeassistant/components/keenetic_ndms2/device_tracker.py
+    homeassistant/components/keenetic_ndms2/router.py
     homeassistant/components/kef/*
     homeassistant/components/keyboard/*
     homeassistant/components/keyboard_remote/*

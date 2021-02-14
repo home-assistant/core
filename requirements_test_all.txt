@@ -502,6 +502,9 @@ motionblinds==0.4.8
 # homeassistant.components.tts
 mutagen==1.45.1
 
+# homeassistant.components.keenetic_ndms2
+ndms2_client==0.1.1
+
 # homeassistant.components.ness_alarm
 nessclient==0.9.15
 
