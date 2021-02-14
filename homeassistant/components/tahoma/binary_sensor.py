@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 )
 
 from .const import DOMAIN
-from .tahoma_device import TahomaDevice
+from .tahoma_entity import TahomaEntity
 
 CORE_ASSEMBLY_STATE = "core:AssemblyState"
 CORE_BUTTON_STATE = "core:ButtonState"
@@ -70,7 +70,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class TahomaBinarySensor(TahomaDevice, BinarySensorEntity):
+class TahomaBinarySensor(TahomaEntity, BinarySensorEntity):
     """Representation of a TaHoma Binary Sensor."""
 
     @property

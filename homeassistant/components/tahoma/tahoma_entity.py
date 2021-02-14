@@ -31,7 +31,7 @@ STATE_DEAD = "dead"
 _LOGGER = logging.getLogger(__name__)
 
 
-class TahomaDevice(CoordinatorEntity, Entity):
+class TahomaEntity(CoordinatorEntity, Entity):
     """Representation of a TaHoma device entity."""
 
     def __init__(self, device_url: str, coordinator: TahomaDataUpdateCoordinator):
