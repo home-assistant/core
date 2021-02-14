@@ -241,8 +241,12 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     def mute_volume(self, mute):
         """Send mute command."""
-        self._tv.setVolume(None, mute)
-        self._update_soon()
+        if self._tv.muted != mute:
+            """Verify current state, android tv is buggy and will always unmute"""
+            self._tv.setVolume(self._tv.volume, mute)
+            self._update_soon()
+        else:
+            _LOGGER.debug("Ignoring request when already in expected state")
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
