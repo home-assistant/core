@@ -99,6 +99,7 @@ def _get_exits_after_startup_mock_ffmpeg():
     ffmpeg.open = AsyncMock(return_value=True)
     ffmpeg.close = AsyncMock(return_value=True)
     ffmpeg.kill = AsyncMock(return_value=True)
+    ffmpeg.get_reader = AsyncMock()
     return ffmpeg
 
 
@@ -108,6 +109,7 @@ def _get_working_mock_ffmpeg():
     ffmpeg.open = AsyncMock(return_value=True)
     ffmpeg.close = AsyncMock(return_value=True)
     ffmpeg.kill = AsyncMock(return_value=True)
+    ffmpeg.get_reader = AsyncMock()
     return ffmpeg
 
 
@@ -118,6 +120,7 @@ def _get_failing_mock_ffmpeg():
     ffmpeg.open = AsyncMock(return_value=False)
     ffmpeg.close = AsyncMock(side_effect=OSError)
     ffmpeg.kill = AsyncMock(side_effect=OSError)
+    ffmpeg.get_reader = AsyncMock()
     return ffmpeg
 
 
@@ -189,6 +192,8 @@ async def test_camera_stream_source_configured(hass, run_driver, events):
         input_source="-i /dev/null",
         output=expected_output.format(**session_info),
         stdout_pipe=False,
+        extra_cmd="-hide_banner -nostats",
+        stderr_pipe=True,
     )
 
     await _async_setup_endpoints(hass, acc)
@@ -472,6 +477,8 @@ async def test_camera_stream_source_configured_and_copy_codec(hass, run_driver, 
         input_source="-i /dev/null",
         output=expected_output.format(**session_info),
         stdout_pipe=False,
+        extra_cmd="-hide_banner -nostats",
+        stderr_pipe=True,
     )
 
 
@@ -542,6 +549,8 @@ async def test_camera_streaming_fails_after_starting_ffmpeg(hass, run_driver, ev
         input_source="-i /dev/null",
         output=expected_output.format(**session_info),
         stdout_pipe=False,
+        extra_cmd="-hide_banner -nostats",
+        stderr_pipe=True,
     )
 
 
