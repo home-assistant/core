@@ -596,13 +596,14 @@ class HassioAddonsDataUpdateCoordinator(DataUpdateCoordinator):
             register_addons_in_dev_reg(self.entry_id, self.dev_reg, addons.values())
             return addons
 
-        # If this is not the initial refresh, reload the config entry if the list of
-        # installed addons has changed
-        if addons.keys() != self.data.keys():
-            # Remove add-ons that are no longer installed from device registry
-            if removed_addons := list(set(self.data.keys()) - set(addons.keys())):
-                remove_addons_from_dev_reg(self.dev_reg, removed_addons)
+        # Remove add-ons that are no longer installed from device registry
+        if removed_addons := list(set(self.data.keys()) - set(addons.keys())):
+            remove_addons_from_dev_reg(self.dev_reg, removed_addons)
 
+        # If there are new add-ons, we should reload the config entry so we can
+        # create new entities. We can return an empty dict because coordinator
+        # will be recreated.
+        if list(set(addons.keys()) - set(self.data.keys())):
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self.entry_id)
             )
