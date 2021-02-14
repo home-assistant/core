@@ -473,7 +473,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    if os.environ.get("HASSIO"):
+    if not os.environ.get("HASSIO"):
         _LOGGER.info(
             "Home Assistant instance is no longer running Home Assistant OS. "
             "The config entry will be removed"
