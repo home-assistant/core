@@ -511,7 +511,7 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     # Unsubscribe from coordinator listener
-    if hass.data[ADDONS_COORDINATOR_UNSUB_LISTENER]:
+    if ADDONS_COORDINATOR_UNSUB_LISTENER in hass.data:
         hass.data[ADDONS_COORDINATOR_UNSUB_LISTENER]()
         hass.data.pop(ADDONS_COORDINATOR_UNSUB_LISTENER)
 
