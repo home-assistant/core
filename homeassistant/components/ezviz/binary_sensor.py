@@ -37,16 +37,15 @@ async def async_setup_entry(
                 )
 
             if name == "switches":
-                for switch in camera.get(name):
-                    if switch in DeviceSwitchType.__members__:
-                        switch_name = str(DeviceSwitchType(switch))
-                        _LOGGER.info(str(DeviceSwitchType(switch)))
-                        sensor_type_name = "None"
-                        sensors.append(
-                            EzvizBinaryensor(
-                                coordinator, idx, switch_name, sensor_type_name
+                if camera.get(name):
+                    for switch in camera.get(name):
+                        if switch in DeviceSwitchType._value2member_map_:
+                            sensor_type_name = "None"
+                            sensors.append(
+                                EzvizBinaryensor(
+                                    coordinator, idx, switch, sensor_type_name
+                                )
                             )
-                        )
 
     async_add_entities(sensors)
 
@@ -67,11 +66,17 @@ class EzvizBinaryensor(CoordinatorEntity, Entity):
     @property
     def name(self):
         """Return the name of the Ezviz sensor."""
+        if self._name in DeviceSwitchType._value2member_map_:
+            return f"{self._camera_name}.{str(DeviceSwitchType(self._name))}"
+
         return self._sensor_name
 
     @property
     def state(self):
         """Return the state of the sensor."""
+        if self._name in DeviceSwitchType._value2member_map_:
+            return self.coordinator.data[self._idx]["switches"][self._name]
+
         return self.coordinator.data[self._idx][self._name]
 
     @property
