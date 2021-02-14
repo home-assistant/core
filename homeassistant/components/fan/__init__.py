@@ -314,8 +314,9 @@ class FanEntity(ToggleEntity):
             # A float is accepted for fans that have
             # 7 speeds since a value of 14.29 is needed
             # for this level of precision
-            percentage += math.ceil(10000 / percentage_step) / 100
-            percentage = max(0, min(255, percentage))
+            modifier = -1 if percentage_step < 0 else 1
+            percentage += math.ceil(10000 / abs(percentage_step)) / 100
+            percentage = max(0, min(255, percentage)) * modifier
 
         if preset_mode is not None:
             self._valid_preset_mode_or_raise(preset_mode)
