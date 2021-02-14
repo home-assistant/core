@@ -73,6 +73,11 @@ class EsphomeSensor(EsphomeEntity):
         """Return the unit the value is expressed in."""
         return self._static_info.unit_of_measurement
 
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return self._static_info.device_class
+
 
 class EsphomeTextSensor(EsphomeEntity):
     """A text sensor implementation for ESPHome."""
