@@ -193,6 +193,7 @@ async def test_service_register(hassio_env, hass):
     assert hass.services.has_service("hassio", "addon_start")
     assert hass.services.has_service("hassio", "addon_stop")
     assert hass.services.has_service("hassio", "addon_restart")
+    assert hass.services.has_service("hassio", "addon_update")
     assert hass.services.has_service("hassio", "addon_stdin")
     assert hass.services.has_service("hassio", "host_shutdown")
     assert hass.services.has_service("hassio", "host_reboot")
@@ -210,6 +211,7 @@ async def test_service_calls(hassio_env, hass, aioclient_mock):
     aioclient_mock.post("http://127.0.0.1/addons/test/start", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/addons/test/stop", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/addons/test/restart", json={"result": "ok"})
+    aioclient_mock.post("http://127.0.0.1/addons/test/update", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/addons/test/stdin", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/host/shutdown", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/host/reboot", json={"result": "ok"})
@@ -225,19 +227,20 @@ async def test_service_calls(hassio_env, hass, aioclient_mock):
     await hass.services.async_call("hassio", "addon_start", {"addon": "test"})
     await hass.services.async_call("hassio", "addon_stop", {"addon": "test"})
     await hass.services.async_call("hassio", "addon_restart", {"addon": "test"})
+    await hass.services.async_call("hassio", "addon_update", {"addon": "test"})
     await hass.services.async_call(
         "hassio", "addon_stdin", {"addon": "test", "input": "test"}
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 7
+    assert aioclient_mock.call_count == 8
     assert aioclient_mock.mock_calls[-1][2] == "test"
 
     await hass.services.async_call("hassio", "host_shutdown", {})
     await hass.services.async_call("hassio", "host_reboot", {})
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 9
+    assert aioclient_mock.call_count == 10
 
     await hass.services.async_call("hassio", "snapshot_full", {})
     await hass.services.async_call(
@@ -247,7 +250,7 @@ async def test_service_calls(hassio_env, hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 11
+    assert aioclient_mock.call_count == 12
     assert aioclient_mock.mock_calls[-1][2] == {
         "addons": ["test"],
         "folders": ["ssl"],
@@ -268,7 +271,7 @@ async def test_service_calls(hassio_env, hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 13
+    assert aioclient_mock.call_count == 14
     assert aioclient_mock.mock_calls[-1][2] == {
         "addons": ["test"],
         "folders": ["ssl"],
