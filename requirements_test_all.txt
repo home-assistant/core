@@ -831,6 +831,9 @@ pynx584==0.5
 # homeassistant.components.nzbget
 pynzbgetapi==0.2.0
 
+# homeassistant.components.octoprint
+pyoctoprintapi==0.1.1
+
 # homeassistant.components.openuv
 pyopenuv==1.0.9
 
