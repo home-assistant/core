@@ -2,6 +2,7 @@
 import copy
 from datetime import timedelta
 import logging
+from typing import Dict
 
 from pyfronius import Fronius
 import voluptuous as vol
@@ -153,7 +154,6 @@ class FroniusAdapter:
 
     async def async_update(self):
         """Retrieve and update latest state."""
-        values = {}
         try:
             values = await self._update()
         except ConnectionError:
@@ -195,7 +195,7 @@ class FroniusAdapter:
         for sensor in self._registered_sensors:
             sensor.async_schedule_update_ha_state(True)
 
-    async def _update(self):
+    async def _update(self) -> Dict:
         """Return values of interest."""
 
     async def register(self, sensor):
