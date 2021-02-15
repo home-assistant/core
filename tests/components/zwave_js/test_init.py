@@ -3,10 +3,17 @@ from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
+import voluptuous as vol
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.components.zwave_js.const import DOMAIN
+from homeassistant.components.zwave_js import SERVICE_UPDATE_LOG_CONFIG
+from homeassistant.components.zwave_js.const import (
+    CONF_FILENAME,
+    CONF_LEVEL,
+    CONF_LOG_TO_FILE,
+    DOMAIN,
+)
 from homeassistant.components.zwave_js.entity import get_device_id
 from homeassistant.config_entries import (
     CONN_CLASS_LOCAL_PUSH,
@@ -293,3 +300,67 @@ async def test_removed_device(hass, client, multiple_devices, integration):
     )
     assert len(entity_entries) == 15
     assert dev_reg.async_get_device({get_device_id(client, old_node)}) is None
+
+
+async def test_update_log_config_service_and_schema(hass, client, integration):
+    """Test that the update_log_config service works and that schema validation works."""
+    # Test we can set log level
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_LOG_CONFIG,
+        {
+            CONF_LEVEL: "Error",
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "update_log_config"
+    assert args["config"] == {"level": 0}
+
+    client.async_send_command.reset_mock()
+
+    # Test we can set logToFile to True
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_LOG_CONFIG,
+        {CONF_LOG_TO_FILE: True, CONF_FILENAME: "/test"},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "update_log_config"
+    assert args["config"] == {"logToFile": True, "filename": "/test"}
+
+    client.async_send_command.reset_mock()
+
+    # Test error when setting unrecognized log level
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_LOG_CONFIG,
+            {
+                CONF_LEVEL: "bad_log_level",
+            },
+            blocking=True,
+        )
+
+    # Test error without service data
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_LOG_CONFIG,
+            {},
+            blocking=True,
+        )
+
+    # Test error if we set logToFile to True without providing filename
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_LOG_CONFIG,
+            {CONF_LOG_TO_FILE: True},
+            blocking=True,
+        )

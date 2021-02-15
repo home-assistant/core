@@ -22,3 +22,16 @@ set_lock_usercode:
     usercode:
       description: Code to set.
       example: 1234
+
+update_log_config:
+  description: Update the logging configuration for Z-Wave JS server. All keys are optional but at least one must be provided.
+  fields:
+    level:
+      description: Log level name. Must be one of `error`, `warn`, `warning`, `info`, `http`, `verbose`, `debug`, `silly`
+      example: debug
+    log_to_file:
+      description: Boolean to enable or disable logging to a file. If set to `true`, a filename must be provided.
+      example: true
+    filename:
+      description: File path to write logs to. Must be provided if setting `log_to_file` to `true`.
+      example: /share/zwave_js.log
