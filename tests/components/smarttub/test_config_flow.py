@@ -36,6 +36,16 @@ async def test_form(hass, smarttub_api):
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"email": "test-email2", "password": "test-password2"}
+    )
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"
+
 
 async def test_form_invalid_auth(hass, smarttub_api):
     """Test we handle invalid auth."""
