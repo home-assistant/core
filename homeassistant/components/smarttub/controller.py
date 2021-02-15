@@ -27,7 +27,6 @@ class SmartTubController:
     def __init__(self, hass):
         """Initialize an interface to SmartTub."""
         self._hass = hass
-        self._api = SmartTub(async_get_clientsession(hass))
         self._account = None
         self.spas = set()
         self._spa_devices = {}
@@ -105,5 +104,7 @@ class SmartTubController:
         Returns None if the credentials are invalid.
         """
 
-        await self._api.login(email, password)
-        return await self._api.get_account()
+        api = SmartTub(async_get_clientsession(self._hass))
+
+        await api.login(email, password)
+        return await api.get_account()
