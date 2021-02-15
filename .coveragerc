@@ -1028,7 +1028,15 @@ omit =
     homeassistant/components/route53/*
     homeassistant/components/rova/sensor.py
     homeassistant/components/rpi_camera/*
+<<<<<<< HEAD
     homeassistant/components/rrd_recorder/*
+=======
+    homeassistant/components/rpi_gpio/*
+    homeassistant/components/rpi_gpio_pwm/light.py
+    homeassistant/components/rpi_pfio/*
+    homeassistant/components/rpi_rf/switch.py
+    homeassistant/components/rrd/*
+>>>>>>> beaa0154ec (sync with custom compoenent repository)
     homeassistant/components/rtorrent/sensor.py
     homeassistant/components/russound_rio/media_player.py
     homeassistant/components/russound_rnet/media_player.py

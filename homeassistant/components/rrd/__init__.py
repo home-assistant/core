@@ -1,59 +1,37 @@
 """Support for sending data to an RRD database."""
-from datetime import datetime
 import logging
 import os.path
-import statistics
+import time
 
 import rrdtool
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_PATH, EVENT_STATE_CHANGED
-from homeassistant.helpers import state as state_helper
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PATH,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+)
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
-
-CONF_TOLERANCE = "tolerance"
-CONF_DBS = "databases"
-
-CONF_DS = "data_sources"
-CONF_SENSOR = "sensor"
-CONF_STEP = "step"
-CONF_CF = "cf"
-CONF_HEARTBEAT = "heartbeat"
-CONF_MIN = "min"
-CONF_MAX = "max"
-
-CONF_RRA = "round_robin_archives"
-CONF_XFF = "xff"
-CONF_STEPS = "steps"
-CONF_ROWS = "rows"
-
-DEFAULT_STEP = "5m"
-
-RRD_DIR = "rrd"
-
-
-def rrd_scaled_duration(duration):
-    """Validate according to https://oss.oetiker.ch/rrdtool/doc/librrd.en.html#rrd_scaled_duration_(const_char_*_token,_unsigned_long_divisor,_unsigned_long_*_valuep)."""
-
-    if isinstance(duration, int):
-        # We assume duration is in seconds (RRD original behaviour)
-        return duration
-
-    scaling_factor = duration[-1]
-    if scaling_factor not in ["s", "m", "h", "d", "w", "M", "y"]:
-        raise vol.Invalid("Must use a scaling factor with your number")
-
-    try:
-        number = int(duration[0:-1])
-        if number <= 0:
-            raise vol.Invalid("Duration must be positive")
-    except Exception:
-        raise vol.Invalid("Duration must be a number.")
-
-    return duration
-
+from .const import (
+    CONF_CF,
+    CONF_DBS,
+    CONF_DS,
+    CONF_HEARTBEAT,
+    CONF_MAX,
+    CONF_MIN,
+    CONF_ROWS,
+    CONF_RRA,
+    CONF_SENSOR,
+    CONF_STEP,
+    CONF_STEPS,
+    CONF_XFF,
+    DEFAULT_STEP,
+    DOMAIN,
+    RRD_DIR,
+)
+from .utils import convert_to_seconds, rrd_scaled_duration
 
 DS_SCHEMA = vol.Schema(
     {
@@ -94,7 +72,6 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_PATH, default=RRD_DIR): cv.string,
-                vol.Optional(CONF_TOLERANCE, default=1): vol.Range(min=0),
                 vol.Required(CONF_DBS): vol.All(cv.ensure_list, [DB_SCHEMA]),
             }
         )
@@ -107,19 +84,28 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """Set up the RRD Recorder component."""
+    _LOGGER.debug("Setup started")
     conf = config[DOMAIN]
     entities = {}  # Mapping and caching of entities <-> data sources
 
+    # Create RRD files, if not exist yet.
     for database in conf[CONF_DBS]:
         datasources = []
         rras = []
-        for ds in database[CONF_DS]:  # pylint: disable=C0103
+        for ds in database[CONF_DS]:
             ds_string = f"DS:{ds[CONF_NAME]}:{ds[CONF_CF]}:{ds[CONF_HEARTBEAT]}:{ds.get(CONF_MIN, 'U')}:{ds.get(CONF_MAX, 'U')}"
             datasources.append(ds_string)
-            _LOGGER.debug(ds_string)
             entities[ds[CONF_SENSOR]] = ds[CONF_NAME], 0, None
 
         for rra in database[CONF_RRA]:
+            # CONF_CF:
+            # - AVERAGE: Average value for the step period.
+            # - MIN: Min value for the step period.
+            # - MAX: Max value for the step period.
+            # - LAST: Last value for the step period which got inserted by the update script.
+            # CONF_XFF: What percentage of UNKNOWN data is allowed so that the consolidated value
+            #           is still regarded as known: 0% - 99%. Typical is 50%. Value in range 0-1
+            # CONF_STEPS: How many step values will be used to build a single archive entry.
             rras.append(
                 f"RRA:{rra[CONF_CF]}:{rra[CONF_XFF]}:{rra[CONF_STEPS]}:{rra[CONF_ROWS]}"
             )
@@ -148,50 +134,110 @@ def setup(hass, config):
             _LOGGER.error(exc)
             return False
 
-    def rrd_update(event):
-        state = event.data.get("new_state")
-        if state is None:
-            return
+    # List of scheduled updates. Used for cancellation during the HASS shutting down.
+    cancel_callbacks = {}
 
-        if state.entity_id not in entities:
-            return
+    def schedule_next_update(database):
+        # Scheduling
+        step = convert_to_seconds(database[CONF_STEP])
 
-        _last_changed_ts = int(datetime.timestamp(state.last_changed))
-        _state = int(state_helper.state_as_number(state))
+        now = time.time()
+        next_update_timestamp = ((now // step) + 1) * step
+        update_after = next_update_timestamp - now
+        cancel_callback = hass.loop.call_at(
+            hass.loop.time() + update_after, update, database
+        )
 
-        ds_name, _, _ = entities[state.entity_id]
-        entities[state.entity_id] = ds_name, _last_changed_ts, _state
+        # Add cancel callback for cancellation during HASS shutting down.
+        database_name = database[CONF_NAME]
+        cancel_callbacks[database_name] = cancel_callback
 
-        entities_last_changed = [
-            last_changed for _, last_changed, _ in entities.values()
-        ]
+    def update(database):
+        rrd_filename = hass.config.path(rrd_dir, database[CONF_NAME]) + ".rrd"
 
-        if (
-            statistics.stdev(entities_last_changed) <= conf[CONF_TOLERANCE]
-        ):  # all entities recently updated so lets store
+        # RRD data source names for store.
+        ds_names = []
+        # RRD data source values for store. Corresponding with `ds_names` variable.
+        ds_values = []
+
+        # Prepare parameters with all sensor values for `rrdtool` command
+        for data_source in database[CONF_DS]:
+            sensor_id = data_source[CONF_SENSOR]
+            ds_name = data_source[CONF_NAME]
+
+            # Get data value
+            sensor_state = hass.states.get(sensor_id)
             try:
-                ds_names, values = zip(
-                    *[(ds_name, value) for ds_name, _, value in entities.values()]
-                )
-                template = ":".join(ds_names)
-                timestamp = int(max(entities_last_changed))
-                values_string = ":".join([str(v) for v in values])
+                if sensor_state is None:
+                    _LOGGER.debug(
+                        "[%s] Skipping sensor %s, because value is unknown.",
+                        rrd_filename,
+                        sensor_id,
+                    )
+                    raise Exception("Sensor has no value or not exists.")
 
-                rrdtool.update(
-                    rrd_filename, f"-t{template}", f"{timestamp}:{values_string}"
-                )
-                _LOGGER.debug(
-                    "[%s] %s %s:%s",
+                sensor_value = sensor_state.state
+                # Convert value to integer, when type is COUNTER or DERIVE.
+                if data_source[CONF_CF] in ["COUNTER", "DERIVE"]:
+                    sensor_value = round(float(sensor_value))
+            except Exception:
+                _LOGGER.info(
+                    "[%s] sensor %s value will be stored as NaN.",
                     rrd_filename,
-                    template,
-                    timestamp,
-                    values_string,
+                    sensor_id,
                 )
-            except rrdtool.OperationalError as exc:
-                _LOGGER.error(exc)
-        else:
-            _LOGGER.debug("skipping <%s> until other DS update", ds_name)
+                sensor_value = "NaN"
 
-    hass.bus.listen(EVENT_STATE_CHANGED, rrd_update)
+            # Add pairs of name, value. Will be used as parameters for data save to rrd file.
+            ds_names.append(ds_name)
+            ds_values.append(str(sensor_value))
+
+        # Save to RRD file
+        try:
+            template = ":".join(ds_names)
+            timestamp = int(time.time())
+            values_string = ":".join(ds_values)
+
+            rrdtool.update(
+                rrd_filename, f"-t{template}", f"{timestamp}:{values_string}"
+            )
+            _LOGGER.debug(
+                "%s data added. ds=%s, values=%s:%s",
+                rrd_filename,
+                template,
+                timestamp,
+                values_string,
+            )
+        except rrdtool.OperationalError as exc:
+            _LOGGER.error(exc)
+
+        # Schedule next update
+        schedule_next_update(database)
+
+    # Executed on Home assistant start
+    def start(_):
+        try:
+            for database in conf[CONF_DBS]:
+                # Run each database updating in own thread.
+                schedule_next_update(database)
+
+        except Exception as exc:
+            _LOGGER.error(exc)
+
+    # Stop updating all RRD files, because HASS is shutting down
+    def stop(_):
+        _LOGGER.debug("Stopping data updating")
+
+        # Cancel all already scheduled updates
+        for cancel_callback in cancel_callbacks.values():
+            cancel_callback.cancel()
+
+    # Start to store data after app start
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start)
+
+    # Stop updating in all threads in case of Home Assistant shutting down
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop)
+
+    _LOGGER.debug("Setup finished")
 
     return True
