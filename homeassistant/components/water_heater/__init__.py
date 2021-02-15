@@ -2,9 +2,11 @@
 from datetime import timedelta
 import functools as ft
 import logging
+from typing import Optional
 
 import voluptuous as vol
 
+from homeassistant.components.climate.const import ATTR_TARGET_TEMP_STEP
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -160,6 +162,9 @@ class WaterHeaterEntity(Entity):
         if supported_features & SUPPORT_OPERATION_MODE:
             data[ATTR_OPERATION_LIST] = self.operation_list
 
+        if self.target_temperature_step:
+            data[ATTR_TARGET_TEMP_STEP] = self.target_temperature_step
+
         return data
 
     @property
@@ -226,6 +231,11 @@ class WaterHeaterEntity(Entity):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
+        return None
+
+    @property
+    def target_temperature_step(self) -> Optional[float]:
+        """Return the supported step of target temperature."""
         return None
 
     @property
