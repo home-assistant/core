@@ -468,9 +468,6 @@ class LightEntity(ToggleEntity):
     @property
     def state_attributes(self):
         """Return state attributes."""
-        if not self.is_on:
-            return None
-
         data = {}
         supported_features = self.supported_features
 
