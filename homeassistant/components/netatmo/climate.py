@@ -304,15 +304,15 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                     if self._target_temperature == DEFAULT_MAX_TEMP:
                         self._hvac_mode = HVAC_MODE_HEAT
                 self.async_write_ha_state()
-                break
+                return
 
-            elif (
+            if (
                 data["event_type"] == EVENT_TYPE_CANCEL_SET_POINT
                 and self._id == room["id"]
             ):
                 self.async_update_callback()
                 self.async_write_ha_state()
-                break
+                return
 
     @property
     def supported_features(self):
