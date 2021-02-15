@@ -4,8 +4,8 @@ apt update
 
 apt upgrade  -y 
 
-curl -o "/data/data/pl.sviete.dom/files/home/.bash_profile" -L  https://raw.githubusercontent.com/sviete/AIS-utils/master/patches/scripts/.bash_profile 
+curl -k -o "/data/data/pl.sviete.dom/files/home/.bash_profile" -L  https://raw.githubusercontent.com/sviete/AIS-utils/master/patches/scripts/.bash_profile 
 
-curl -o "/sdcard/AisClient.apk" -L https://powiedz.co/ota/android/AisPanelApp-gate-release.apk && su -c "pm install -r /sdcard/AisClient.apk" 
+curl -k -o "/sdcard/AisClient.apk" -L https://powiedz.co/ota/android/AisPanelApp-gate-release.apk && su -c "pm install -r /sdcard/AisClient.apk" 
 
 echo "21.02.03" > /data/data/pl.sviete.dom/files/home/AIS/.ais_aptecho "21.02.03" > /data/data/pl.sviete.dom/files/home/AIS/.ais_apt

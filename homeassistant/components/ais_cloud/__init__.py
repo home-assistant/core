@@ -2144,7 +2144,7 @@ async def async_handle_restore_from_backup(hass, message):
     ws_url = "https://powiedz.co/ords/dom/dom/"
     cloud_ws_token = gate_id
     cloud_ws_header = {"Authorization": f"{cloud_ws_token}"}
-    web_session = aiohttp_client.async_get_clientsession(hass)
+    log = ""
     try:
         import subprocess
 
@@ -2159,10 +2159,10 @@ async def async_handle_restore_from_backup(hass, message):
                     f.write(chunk)
         except Exception as e:
             _LOGGER.error("Couldn't fetch gate backup: " + str(e))
-            return {"error": str(e)}
+            return {"error": "Couldn't fetch gate backup: " + str(e)}
         # 2. extract
         try:
-            subprocess.check_output(
+            process_output = subprocess.check_output(
                 "7z x -mmt=2 "
                 + backup_password
                 + " -o"
@@ -2173,26 +2173,36 @@ async def async_handle_restore_from_backup(hass, message):
                 + "-y",
                 shell=True,  # nosec
             )
-        except Exception as e:
-            _LOGGER.error("Couldn't unzip gate backup: " + str(e))
-            return {"error": str(e)}
+            log = process_output.decode("utf-8")
+        except subprocess.CalledProcessError as e:
+            _LOGGER.error("Couldn't unzip gate backup")
+            return {
+                "error": "Couldn't unzip gate backup: " + str(e),
+                "log": e.output.decode("utf-8"),
+            }
 
         # 3. copy files to AIS
         try:
-            subprocess.check_output(
+            process_output = subprocess.check_output(
                 "cp -fa " + home_dir + "AIS_BACKUP/. " + home_dir + "AIS",
                 shell=True,  # nosec
             )
-            subprocess.check_output(
+            log = log + "\n" + process_output.decode("utf-8")
+            process_output = subprocess.check_output(
                 "rm " + home_dir + "backup.zip", shell=True  # nosec
             )
-            subprocess.check_output(
+            log = log + "\n" + process_output.decode("utf-8")
+            process_output = subprocess.check_output(
                 "rm -rf " + home_dir + "AIS_BACKUP", shell=True  # nosec
             )
+            log = log + "\n" + process_output.decode("utf-8")
 
-        except Exception as e:
+        except subprocess.CalledProcessError as e:
             _LOGGER.error("Couldn't replace files from gate backup: " + str(e))
-            return {"error": str(e)}
+            return {
+                "error": "Couldn't replace files from gate backup: " + str(e),
+                "log": e.output.decode("utf-8"),
+            }
 
         # Zigbee backup we need to use password even if it's empty - to prevent the prompt
         backup_password = "-p" + backup_password
@@ -2205,11 +2215,11 @@ async def async_handle_restore_from_backup(hass, message):
                     f.write(chunk)
         except Exception as e:
             _LOGGER.error("Couldn't fetch zigbee gate backup: " + str(e))
-            return {"error": str(e)}
+            return {"error": "Couldn't fetch zigbee gate backup: " + str(e)}
 
         # 2. extract
         try:
-            subprocess.check_output(
+            process_output = subprocess.check_output(
                 "7z x -mmt=2 "
                 + backup_password
                 + " -o"
@@ -2220,12 +2230,16 @@ async def async_handle_restore_from_backup(hass, message):
                 + "-y",
                 shell=True,  # nosec
             )
-        except Exception as e:
+            log = log + "\n" + process_output.decode("utf-8")
+        except subprocess.CalledProcessError as e:
             _LOGGER.error("Couldn't unzip zigbee backup: " + str(e))
-            return {"error": str(e)}
+            return {
+                "error": "Couldn't unzip zigbee backup: " + str(e),
+                "log": e.output.decode("utf-8"),
+            }
         # 3. copy files to AIS
         try:
-            subprocess.check_output(
+            process_output = subprocess.check_output(
                 "cp -fa "
                 + home_dir
                 + "AIS_ZIGBEE_BACKUP/. "
@@ -2233,32 +2247,42 @@ async def async_handle_restore_from_backup(hass, message):
                 + "zigbee2mqtt/data",
                 shell=True,  # nosec
             )
-            subprocess.check_output(
+            log = log + "\n" + process_output.decode("utf-8")
+            process_output = subprocess.check_output(
                 "rm " + home_dir + "zigbee_backup.zip", shell=True  # nosec
             )
-            subprocess.check_output(
+            log = log + "\n" + process_output.decode("utf-8")
+            process_output = subprocess.check_output(
                 "rm -rf " + home_dir + "AIS_ZIGBEE_BACKUP", shell=True  # nosec
             )
+            log = log + "\n" + process_output.decode("utf-8")
 
-        except Exception as e:
+        except subprocess.CalledProcessError as e:
             _LOGGER.error("Couldn't replace files from zigbee backup: " + str(e))
-            return {"error": str(e)}
+            return {
+                "error": "Couldn't replace files from zigbee backup: " + str(e),
+                "log": e.output.decode("utf-8"),
+            }
 
         # 4. rm gate id
         try:
-            subprocess.check_output(
+            process_output = subprocess.check_output(
                 "rm " + home_dir + "AIS/.dom/.ais_secure_android_id_dom",
                 shell=True,  # nosec
             )
-        except Exception as e:
+            log = log + "\n" + process_output.decode("utf-8")
+        except subprocess.CalledProcessError as e:
             _LOGGER.error("Couldn't delete ais_secure_android_id_dom: " + str(e))
-            return {"error": str(e)}
+            return {
+                "error": "Couldn't delete ais_secure_android_id_dom: " + str(e),
+                "log": e.output.decode("utf-8"),
+            }
 
     except Exception as e:
         _LOGGER.error("Couldn't restore from backup: " + str(e))
-        return {"error": str(e)}
+        return {"error": "Couldn't restore from backup: " + str(e)}
     # ok
-    return {}
+    return {"log": log}
 
 
 class RestoreAisBackupView(HomeAssistantView):
@@ -2291,7 +2315,8 @@ class RestoreAisBackupView(HomeAssistantView):
                 "message": response.get(
                     "error",
                     "OK. Przywrócono konfiguracje z kopii, poczekaj na restart Asystenta "
-                    "domowego i zaloguj się na konto z poprzedniej konfiguracji.",
+                    "domowego i zaloguj się na konto z przywróconej konfiguracji.",
                 ),
+                "log": response.get("log", ""),
             }
         )
