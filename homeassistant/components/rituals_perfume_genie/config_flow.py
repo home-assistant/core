@@ -34,11 +34,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
+        session = async_get_clientsession(self.hass)
+        account = Account(user_input[CONF_EMAIL], user_input[CONF_PASSWORD], session)
+
         try:
-            session = async_get_clientsession(self.hass)
-            account = Account(
-                user_input[CONF_EMAIL], user_input[CONF_PASSWORD], session
-            )
             await account.authenticate()
         except ClientResponseError:
             errors["base"] = "cannot_connect"
