@@ -12,6 +12,7 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import get_local_ip
 
 from .const import (
+    CONF_IGNORE_DISCOVERIES,
     CONF_LOCAL_IP,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
@@ -22,6 +23,7 @@ from .const import (
     DOMAIN_CONFIG,
     DOMAIN_COORDINATORS,
     DOMAIN_DEVICES,
+    DOMAIN_IGNORE_DISCOVERIES,
     DOMAIN_LOCAL_IP,
     LOGGER as _LOGGER,
 )
@@ -31,7 +33,14 @@ NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string)})},
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
+                vol.Optional(CONF_IGNORE_DISCOVERIES, default=False): cv.boolean,
+            },
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -66,15 +75,17 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     conf_default = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
     conf = config.get(DOMAIN, conf_default)
     local_ip = await hass.async_add_executor_job(get_local_ip)
+    ignore_discoveries = conf.get(CONF_IGNORE_DISCOVERIES)
     hass.data[DOMAIN] = {
         DOMAIN_CONFIG: conf,
         DOMAIN_COORDINATORS: {},
         DOMAIN_DEVICES: {},
         DOMAIN_LOCAL_IP: conf.get(CONF_LOCAL_IP, local_ip),
+        DOMAIN_IGNORE_DISCOVERIES: ignore_discoveries,
     }
 
     # Only start if set up via configuration.yaml.
-    if DOMAIN in config:
+    if DOMAIN in config and not ignore_discoveries:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_IMPORT}

@@ -22,6 +22,7 @@ from .const import (
     DISCOVERY_USN,
     DOMAIN,
     DOMAIN_COORDINATORS,
+    DOMAIN_IGNORE_DISCOVERIES,
     LOGGER as _LOGGER,
 )
 from .device import Device
@@ -159,6 +160,10 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host is already configured and delegate to the import step if not.
         """
         _LOGGER.debug("async_step_ssdp: discovery_info: %s", discovery_info)
+
+        if self.hass.data.get(DOMAIN, {}).get(DOMAIN_IGNORE_DISCOVERIES, False):
+            _LOGGER.debug("Discovery ignored")
+            return self.async_abort(reason="discovery_ignored")
 
         # Ensure complete discovery.
         if (

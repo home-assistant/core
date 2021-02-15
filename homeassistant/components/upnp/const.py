@@ -7,10 +7,12 @@ from homeassistant.const import TIME_SECONDS
 LOGGER = logging.getLogger(__package__)
 
 CONF_LOCAL_IP = "local_ip"
+CONF_IGNORE_DISCOVERIES = "ignore_discoveries"
 DOMAIN = "upnp"
 DOMAIN_CONFIG = "config"
 DOMAIN_COORDINATORS = "coordinators"
 DOMAIN_DEVICES = "devices"
+DOMAIN_IGNORE_DISCOVERIES = "ignore_discoveries"
 DOMAIN_LOCAL_IP = "local_ip"
 BYTES_RECEIVED = "bytes_received"
 BYTES_SENT = "bytes_sent"

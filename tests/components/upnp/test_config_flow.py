@@ -78,7 +78,7 @@ async def test_flow_ssdp_discovery(hass: HomeAssistantType):
         }
 
 
-async def test_flow_ssdp_discovery_incomplete(hass: HomeAssistantType):
+async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistantType):
     """Test config flow: incomplete discovery through ssdp."""
     udn = "uuid:device_1"
     location = "dummy"
@@ -89,13 +89,40 @@ async def test_flow_ssdp_discovery_incomplete(hass: HomeAssistantType):
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
         data={
-            ssdp.ATTR_SSDP_ST: mock_device.device_type,
-            # ssdp.ATTR_UPNP_UDN: mock_device.udn,  # Not provided.
             ssdp.ATTR_SSDP_LOCATION: location,
+            ssdp.ATTR_SSDP_ST: mock_device.device_type,
+            ssdp.ATTR_SSDP_USN: mock_device.usn,
+            # ssdp.ATTR_UPNP_UDN: mock_device.udn,  # Not provided.
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "incomplete_discovery"
+
+
+async def test_flow_ssdp_discovery_ignored(hass: HomeAssistantType):
+    """Test config flow: discovery through ssdp, but ignored."""
+    udn = "uuid:device_1"
+    location = "dummy"
+    mock_device = MockDevice(udn)
+
+    # Configured, with disabled option.
+    config = {"upnp": {"ignore_discoveries": True}}
+    await async_setup_component(hass, "upnp", config)
+    await hass.async_block_till_done()
+
+    # Discovered via step ssdp.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data={
+            ssdp.ATTR_SSDP_LOCATION: location,
+            ssdp.ATTR_SSDP_ST: mock_device.device_type,
+            ssdp.ATTR_SSDP_USN: mock_device.usn,
+            ssdp.ATTR_UPNP_UDN: mock_device.udn,
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "discovery_ignored"
 
 
 async def test_flow_user(hass: HomeAssistantType):
