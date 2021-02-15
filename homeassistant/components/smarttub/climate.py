@@ -57,7 +57,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
             return CURRENT_HVAC_HEAT
         if heater_status == "OFF":
             return CURRENT_HVAC_IDLE
-        raise NotImplementedError(f"unknown heater status: {heater_status}")
+        return None
 
     @property
     def hvac_modes(self):
