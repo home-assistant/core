@@ -124,7 +124,7 @@ class TuyaFanDevice(TuyaDevice, FanEntity):
         return self._tuya.state()
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> Optional[int]:
         """Return the current speed."""
         if not self.is_on:
             return 0
