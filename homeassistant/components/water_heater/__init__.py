@@ -45,7 +45,7 @@ SERVICE_SET_AWAY_MODE = "set_away_mode"
 SERVICE_SET_TEMPERATURE = "set_temperature"
 SERVICE_SET_OPERATION_MODE = "set_operation_mode"
 
-STATE_ECO = "eco"
+STATE_ECO = "eco"  # TODO rename to OPERATION_MODE_ECO
 STATE_ELECTRIC = "electric"
 STATE_PERFORMANCE = "performance"
 STATE_HIGH_DEMAND = "high_demand"
@@ -100,10 +100,16 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_SET_AWAY_MODE, SET_AWAY_MODE_SCHEMA, async_service_away_mode
+        SERVICE_SET_AWAY_MODE,
+        SET_AWAY_MODE_SCHEMA,
+        async_service_away_mode,
+        [SUPPORT_AWAY_MODE],
     )
     component.async_register_entity_service(
-        SERVICE_SET_TEMPERATURE, SET_TEMPERATURE_SCHEMA, async_service_temperature_set
+        SERVICE_SET_TEMPERATURE,
+        SET_TEMPERATURE_SCHEMA,
+        async_service_temperature_set,
+        [SUPPORT_TARGET_TEMPERATURE],
     )
     component.async_register_entity_service(
         SERVICE_SET_OPERATION_MODE,
@@ -196,7 +202,9 @@ class WaterHeaterEntity(Entity):
 
         supported_features = self.supported_features
 
-        if supported_features & SUPPORT_OPERATION_MODE:
+        if (
+            supported_features & SUPPORT_OPERATION_MODE
+        ):  # TODO make operation mode (on/off) required
             data[ATTR_OPERATION_MODE] = self.current_operation
 
         if supported_features & SUPPORT_AWAY_MODE:
@@ -216,7 +224,7 @@ class WaterHeaterEntity(Entity):
         return None
 
     @property
-    def operation_list(self) -> Optional[List[str]]:
+    def operation_list(self) -> Optional[List[str]]:  # TODO Rename to operation_modes
         """Return the list of available operation modes."""
         return None
 
@@ -283,6 +291,37 @@ class WaterHeaterEntity(Entity):
     async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         await self.hass.async_add_executor_job(self.turn_away_mode_off)
+
+    async def async_turn_on(self) -> None:
+        """Turn the entity on."""
+        if hasattr(self, "turn_on"):
+            # pylint: disable=no-member
+            await self.hass.async_add_executor_job(self.turn_on)
+            return
+
+        # Fake turn on
+        for mode in (
+            STATE_ECO,
+            STATE_HEAT_PUMP,
+            STATE_GAS,
+            STATE_PERFORMANCE,
+            STATE_HIGH_DEMAND,
+        ):
+            if mode not in self.operation_list:
+                continue
+            await self.async_set_operation_mode(mode)
+            break
+
+    async def async_turn_off(self) -> None:
+        """Turn the entity off."""
+        if hasattr(self, "turn_off"):
+            # pylint: disable=no-member
+            await self.hass.async_add_executor_job(self.turn_off)
+            return
+
+        # Fake turn off
+        if STATE_OFF in self.operation_list:
+            await self.async_set_operation_mode(STATE_OFF)
 
     @property
     def supported_features(self) -> int:
