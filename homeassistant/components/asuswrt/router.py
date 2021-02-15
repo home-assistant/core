@@ -1,5 +1,6 @@
 """Represent the AsusWrt router."""
 from datetime import datetime, timedelta
+import enum
 import logging
 from typing import Any, Dict, Optional
 
@@ -37,12 +38,49 @@ from .const import (
     DEFAULT_TRACK_UNKNOWN,
     DOMAIN,
     PROTOCOL_TELNET,
+    SENSOR_CONNECTED_DEVICE,
+    SENSOR_RX_BYTES,
+    SENSOR_RX_RATES,
+    SENSOR_TX_BYTES,
+    SENSOR_TX_RATES,
 )
 
 CONF_REQ_RELOAD = [CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP]
 SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class AsusWrtSensorType(enum.IntEnum):
+    """Enun possible AsusWrt sensor types."""
+
+    TypeNone = 0
+    TypeCount = 1
+    TypeBytes = 2
+    TypeRates = 3
+
+
+class AsusWrtSensorData:
+    """Representation of AsusWrt sensor data."""
+
+    def __init__(self, sensor_type: AsusWrtSensorType, value=None):
+        """Initialize a AsusWrt sensor data."""
+        self.type = sensor_type
+        self.value = value
+        self._enabled = False
+
+    def enable(self):
+        """Set sensor enabled."""
+        self._enabled = True
+
+    def disable(self):
+        """Set sensor disabled."""
+        self._enabled = False
+
+    @property
+    def enabled(self):
+        """Return sensor state."""
+        return self._enabled
 
 
 class AsusWrtDevInfo:
@@ -113,6 +151,10 @@ class AsusWrtRouter:
         self._devices: Dict[str, Any] = {}
         self._connect_error = False
 
+        self._connected_devices = 0
+        self._sensors: Dict[str, AsusWrtSensorData] = {}
+        self._api_error: Dict[str, bool] = {}
+
         self._on_close = []
 
         self._options = {
@@ -147,8 +189,17 @@ class AsusWrtRouter:
                     entry.unique_id, entry.original_name
                 )
 
-        # Update devices
-        await self.update_devices()
+        # Init Sensors
+        self._sensors = {
+            SENSOR_CONNECTED_DEVICE: AsusWrtSensorData(AsusWrtSensorType.TypeCount),
+            SENSOR_RX_BYTES: AsusWrtSensorData(AsusWrtSensorType.TypeBytes),
+            SENSOR_TX_BYTES: AsusWrtSensorData(AsusWrtSensorType.TypeBytes),
+            SENSOR_RX_RATES: AsusWrtSensorData(AsusWrtSensorType.TypeRates),
+            SENSOR_TX_RATES: AsusWrtSensorData(AsusWrtSensorType.TypeRates),
+        }
+
+        # Update all
+        await self.update_all()
 
         self.async_on_close(
             async_track_time_interval(self.hass, self.update_all, SCAN_INTERVAL)
@@ -157,6 +208,7 @@ class AsusWrtRouter:
     async def update_all(self, now: Optional[datetime] = None) -> None:
         """Update all AsusWrt platforms."""
         await self.update_devices()
+        await self.update_sensors()
 
     async def update_devices(self) -> None:
         """Update AsusWrt devices tracker."""
@@ -178,6 +230,7 @@ class AsusWrtRouter:
             self._connect_error = False
             _LOGGER.info("Reconnected to ASUS router %s", self._host)
 
+        self._connected_devices = len(wrt_devices)
         consider_home = self._options.get(
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
         )
@@ -200,6 +253,52 @@ class AsusWrtRouter:
         async_dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
             async_dispatcher_send(self.hass, self.signal_device_new)
+
+    async def update_sensors(self) -> None:
+        """Update AsusWrt sensors."""
+        self._sensors[SENSOR_CONNECTED_DEVICE].value = self._connected_devices
+
+        if self.has_sensor_type(AsusWrtSensorType.TypeBytes):
+            try:
+                datas = await self._api.async_get_bytes_total()
+            except OSError:
+                self._log_api_method("async_get_bytes_total", True)
+            else:
+                self._log_api_method("async_get_bytes_total", False)
+                self._sensors[SENSOR_RX_BYTES].value = datas[0]
+                self._sensors[SENSOR_TX_BYTES].value = datas[1]
+
+        if self.has_sensor_type(AsusWrtSensorType.TypeRates):
+            try:
+                rates = await self._api.async_get_current_transfer_rates()
+            except OSError:
+                self._log_api_method("async_get_current_transfer_rates", True)
+            else:
+                self._log_api_method("async_get_current_transfer_rates", False)
+                self._sensors[SENSOR_RX_RATES].value = rates[0]
+                self._sensors[SENSOR_TX_RATES].value = rates[1]
+
+        async_dispatcher_send(self.hass, self.signal_sensor_update)
+
+    def has_sensor_type(self, sensor_type: AsusWrtSensorType):
+        """Return if an AsusWrt sensor type is enabled."""
+        for sensor in (x for x in self._sensors.values() if x.type == sensor_type):
+            if sensor.enabled:
+                return True
+        return False
+
+    def _log_api_method(self, method, error):
+        """Log call result to AsusWrt api method."""
+        prev_error = self._api_error.get(method, False)
+        if not error or prev_error:
+            return
+
+        if error:
+            _LOGGER.error("Error executing method %s", method)
+            self._api_error[method] = True
+        elif prev_error:
+            _LOGGER.info("Method %s successfully executed", method)
+            self._api_error[method] = False
 
     async def close(self) -> None:
         """Close the connection."""
@@ -231,6 +330,16 @@ class AsusWrtRouter:
         return req_reload
 
     @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return the device information."""
+        return {
+            "identifiers": {(DOMAIN, "AsusWRT")},
+            "name": self._host,
+            "model": "Asus Router",
+            "manufacturer": "Asus",
+        }
+
+    @property
     def signal_device_new(self) -> str:
         """Event specific per AsusWrt entry to signal new device."""
         return f"{DOMAIN}-device-new"
@@ -241,6 +350,11 @@ class AsusWrtRouter:
         return f"{DOMAIN}-device-update"
 
     @property
+    def signal_sensor_update(self) -> str:
+        """Event specific per AsusWrt entry to signal updates in sensors."""
+        return f"{DOMAIN}-sensor-update"
+
+    @property
     def host(self) -> str:
         """Return router hostname."""
         return self._host
@@ -249,6 +363,11 @@ class AsusWrtRouter:
     def devices(self) -> Dict[str, Any]:
         """Return devices."""
         return self._devices
+
+    @property
+    def sensors(self) -> Dict[str, AsusWrtSensorData]:
+        """Return sensors."""
+        return self._sensors
 
     @property
     def api(self) -> AsusWrt:
