@@ -53,6 +53,10 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
+    async def async_step_reauth(self, user_input=None):
+        """Handle a flow initiated by failed auth."""
+        return await self.async_step_user(user_input)
+
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options."""
