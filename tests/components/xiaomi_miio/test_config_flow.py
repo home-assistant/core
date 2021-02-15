@@ -320,7 +320,7 @@ async def test_import_flow_success(hass):
 
 
 async def config_flow_device_success(hass, model_to_test):
-    """Test a successful config flow for a base device."""
+    """Test a successful config flow for a device (base class)."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -363,7 +363,7 @@ async def config_flow_device_success(hass, model_to_test):
 
 
 async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
-    """Test a successful zeroconf discovery of a base device."""
+    """Test a successful zeroconf discovery of a device  (base class)."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
