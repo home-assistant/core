@@ -15,8 +15,8 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
+# Data for the mocked object returned via flipr_api client.
 MOCK_DATE_TIME = datetime(2021, 2, 15, 9, 10, 32, tzinfo=dt_util.UTC)
-
 MOCK_FLIPR_MEASURE = {
     "temperature": 10.5,
     "ph": 7.03,
@@ -44,11 +44,11 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
     registry = await hass.helpers.entity_registry.async_get_registry()
 
-    # Pre-create registry entries for disabled by default sensors
+    # Pre-create registry entries for sensors
     registry.async_get_or_create(
         SENSOR_DOMAIN,
         DOMAIN,
-        "cfe92100-67c4-11d4-a45f-f8d027761251_uptime",
+        "my_random_entity_id",
         suggested_object_id="sensor.flipr_myfliprid_chlorine",
         disabled_by=None,
     )
