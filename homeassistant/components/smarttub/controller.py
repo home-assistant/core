@@ -8,12 +8,12 @@ from smarttub import APIError, LoginFailed, SmartTub
 from smarttub.api import Account
 
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, POLLING_TIMEOUT
+from .const import DOMAIN, POLLING_TIMEOUT, SCAN_INTERVAL
 from .helpers import get_spa_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,9 +61,7 @@ class SmartTubController:
             _LOGGER,
             name=DOMAIN,
             update_method=self.async_update_data,
-            update_interval=timedelta(
-                seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-            ),
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
         await self.coordinator.async_refresh()
