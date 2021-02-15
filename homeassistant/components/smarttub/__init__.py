@@ -22,7 +22,7 @@ async def async_setup_entry(hass, entry):
     """Set up a smarttub config entry."""
 
     controller = SmartTubController(hass)
-    hass.data[DOMAIN][entry.unique_id] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         SMARTTUB_CONTROLLER: controller,
     }
 
@@ -49,6 +49,6 @@ async def async_unload_entry(hass, entry):
     ):
         return False
 
-    hass.data[DOMAIN].pop(entry.unique_id)
+    hass.data[DOMAIN].pop(entry.entry_id)
 
     return True
