@@ -14,6 +14,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -96,7 +97,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     password = entry_data[CONF_PASSWORD]
     timeout = entry_data[CONF_TIMEOUT]
 
-    gateway = ASyncSenseable(api_timeout=timeout, wss_timeout=timeout)
+    client_session = async_get_clientsession(hass)
+
+    gateway = ASyncSenseable(
+        api_timeout=timeout, wss_timeout=timeout, client_session=client_session
+    )
     gateway.rate_limit = ACTIVE_UPDATE_RATE
 
     try:

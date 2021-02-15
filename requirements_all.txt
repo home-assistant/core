@@ -2013,7 +2013,7 @@ sense-hat==2.2.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense_energy==0.8.1
+sense_energy==0.9.0
 
 # homeassistant.components.sentry
 sentry-sdk==0.20.1
