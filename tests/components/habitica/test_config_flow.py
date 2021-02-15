@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.habitica.config_flow import InvalidAuth
-from homeassistant.components.habitica.const import CONF_API_USER, DEFAULT_URL, DOMAIN
+from homeassistant.components.habitica.const import DEFAULT_URL, DOMAIN
 from homeassistant.const import HTTP_OK
 
 from tests.common import MockConfigEntry
@@ -113,9 +113,13 @@ async def test_manual_flow_config_exist(hass, aioclient_mock):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
 
+    mock_obj = MagicMock()
+    mock_obj.user.get.return_value = Future()
+    mock_obj.user.get.return_value.set_result({"api_user": "test-api-user"})
+
     with patch(
         "homeassistant.components.habitica.config_flow.HabitipyAsync",
-        return_value={CONF_API_USER: "test-api-user"},
+        return_value=mock_obj,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
