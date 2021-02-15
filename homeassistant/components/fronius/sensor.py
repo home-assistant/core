@@ -281,6 +281,12 @@ class FroniusTemplateSensor(Entity):
         """Device should not be polled, returns False."""
         return False
 
+    @property
+    def available(self):
+        """Whether the fronius device is active."""
+        return self.parent.available
+
+
     async def async_update(self):
         """Update the internal state."""
         state = self.parent.data.get(self._name)
