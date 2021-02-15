@@ -167,7 +167,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if device_info is not None:
                 name = user_input.get(CONF_NAME, DEFAULT_DEVICE_NAME)
-                
+
                 if device_info.model in MODELS_SWITCH:
                     mac = format_mac(device_info.mac_address)
                     unique_id = mac
