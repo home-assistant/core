@@ -6,6 +6,7 @@ from miio import DeviceException
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_miio import const
+from homeassistant.components.xiaomi_miio.config_flow import DEFAULT_DEVICE_NAME, DEFAULT_GATEWAY_NAME
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 
 ZEROCONF_NAME = "name"
@@ -85,7 +86,7 @@ async def test_config_flow_step_gateway_connect_error(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: TEST_HOST, CONF_NAME: TEST_NAME, CONF_TOKEN: TEST_TOKEN},
+            {CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
         )
 
     assert result["type"] == "form"
@@ -125,11 +126,11 @@ async def test_config_flow_gateway_success(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: TEST_HOST, CONF_NAME: TEST_NAME, CONF_TOKEN: TEST_TOKEN},
+            {CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == TEST_NAME
+    assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
         const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
         CONF_HOST: TEST_HOST,
@@ -168,11 +169,11 @@ async def test_zeroconf_gateway_success(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_NAME: TEST_NAME, CONF_TOKEN: TEST_TOKEN},
+            {CONF_TOKEN: TEST_TOKEN},
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == TEST_NAME
+    assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
         const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
         CONF_HOST: TEST_HOST,
@@ -245,7 +246,7 @@ async def test_config_flow_step_device_connect_error(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: TEST_HOST, CONF_NAME: TEST_NAME, CONF_TOKEN: TEST_TOKEN},
+            {CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
         )
 
     assert result["type"] == "form"
@@ -280,7 +281,7 @@ async def test_config_flow_step_unknown_device(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: TEST_HOST, CONF_NAME: TEST_NAME, CONF_TOKEN: TEST_TOKEN},
+            {CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
         )
 
     assert result["type"] == "form"
@@ -301,7 +302,7 @@ async def test_import_flow_success(hass):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN, CONF_NAME: TEST_NAME},
+            data={CONF_NAME: TEST_NAME, CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
         )
 
     assert result["type"] == "create_entry"
@@ -344,11 +345,11 @@ async def config_flow_device_success(hass, model_to_test):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: TEST_HOST, CONF_NAME: TEST_NAME, CONF_TOKEN: TEST_TOKEN},
+            {CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == TEST_NAME
+    assert result["title"] == DEFAULT_DEVICE_NAME
     assert result["data"] == {
         const.CONF_FLOW_TYPE: const.CONF_DEVICE,
         CONF_HOST: TEST_HOST,
@@ -384,11 +385,11 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_NAME: TEST_NAME, CONF_TOKEN: TEST_TOKEN},
+            {CONF_TOKEN: TEST_TOKEN},
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == TEST_NAME
+    assert result["title"] == DEFAULT_DEVICE_NAME
     assert result["data"] == {
         const.CONF_FLOW_TYPE: const.CONF_DEVICE,
         CONF_HOST: TEST_HOST,

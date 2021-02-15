@@ -23,12 +23,12 @@ from .gateway import ConnectXiaomiGateway
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_GATEWAY_NAME = "Xiaomi Gateway"
+DEFAULT_DEVICE_NAME = "Xiaomi Device"
 ZEROCONF_GATEWAY = "lumi-gateway"
 ZEROCONF_ACPARTNER = "lumi-acpartner"
 
 DEVICE_SETTINGS = {
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
-    vol.Optional(CONF_NAME, default=DEFAULT_GATEWAY_NAME): str,
 }
 DEVICE_CONFIG = vol.Schema({vol.Required(CONF_HOST): str}).extend(DEVICE_SETTINGS)
 
@@ -131,7 +131,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME],
+                    title=DEFAULT_GATEWAY_NAME,
                     data={
                         CONF_FLOW_TYPE: CONF_GATEWAY,
                         CONF_HOST: self.host,
@@ -166,13 +166,15 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             device_info = connect_device_class.device_info
 
             if device_info is not None:
+                name = user_input.get(CONF_NAME, DEFAULT_DEVICE_NAME)
+                
                 if device_info.model in MODELS_SWITCH:
                     mac = format_mac(device_info.mac_address)
                     unique_id = mac
                     await self.async_set_unique_id(unique_id)
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
-                        title=user_input[CONF_NAME],
+                        title=name,
                         data={
                             CONF_FLOW_TYPE: CONF_DEVICE,
                             CONF_HOST: self.host,
