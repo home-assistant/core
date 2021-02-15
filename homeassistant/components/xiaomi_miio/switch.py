@@ -10,7 +10,13 @@ import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_HOST, CONF_TOKEN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TOKEN,
+)
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -32,6 +38,29 @@ DATA_KEY = "switch.xiaomi_miio"
 
 MODEL_POWER_STRIP_V2 = "zimi.powerstrip.v2"
 MODEL_PLUG_V3 = "chuangmi.plug.v3"
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_MODEL): vol.In(
+            [
+                "chuangmi.plug.v1",
+                "qmi.powerstrip.v1",
+                "zimi.powerstrip.v2",
+                "chuangmi.plug.m1",
+                "chuangmi.plug.m3",
+                "chuangmi.plug.v2",
+                "chuangmi.plug.v3",
+                "chuangmi.plug.hmi205",
+                "chuangmi.plug.hmi206",
+                "chuangmi.plug.hmi208",
+                "lumi.acpartner.v3",
+            ]
+        ),
+    }
+)
 
 ATTR_POWER = "power"
 ATTR_TEMPERATURE = "temperature"
