@@ -1,7 +1,6 @@
 """Config flow for Shelly integration."""
 import asyncio
 import logging
-from socket import gethostbyname
 
 import aiohttp
 import aioshelly
@@ -33,10 +32,9 @@ async def validate_input(hass: core.HomeAssistant, host, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    ip_address = await hass.async_add_executor_job(gethostbyname, host)
 
     options = aioshelly.ConnectionOptions(
-        ip_address, data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
+        host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
     )
     coap_context = await get_coap_context(hass)
 
@@ -65,6 +63,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
     host = None
     info = None
+    device_info = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -160,7 +159,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(info["mac"])
         self._abort_if_unique_id_configured({CONF_HOST: zeroconf_info["host"]})
         self.host = zeroconf_info["host"]
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+
+        if not info["auth"] and info.get("sleep_mode", False):
+            try:
+                self.device_info = await validate_input(self.hass, self.host, {})
+            except HTTP_CONNECT_ERRORS:
+                return self.async_abort(reason="cannot_connect")
+
         self.context["title_placeholders"] = {
             "name": zeroconf_info.get("name", "").split(".")[0]
         }
@@ -172,6 +177,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if self.info["auth"]:
                 return await self.async_step_credentials()
+
+            if self.device_info:
+                return self.async_create_entry(
+                    title=self.device_info["title"] or self.device_info["hostname"],
+                    data={
+                        "host": self.host,
+                        "sleep_period": self.device_info["sleep_period"],
+                        "model": self.device_info["model"],
+                    },
+                )
 
             try:
                 device_info = await validate_input(self.hass, self.host, {})

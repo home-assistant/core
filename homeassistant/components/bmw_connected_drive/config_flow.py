@@ -1,6 +1,4 @@
 """Config flow for BMW ConnectedDrive integration."""
-import logging
-
 from bimmer_connected.account import ConnectedDriveAccount
 from bimmer_connected.country_selector import get_region_from_name
 import voluptuous as vol
@@ -11,9 +9,6 @@ from homeassistant.core import callback
 
 from . import DOMAIN  # pylint: disable=unused-import
 from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY, CONF_USE_LOCATION
-
-_LOGGER = logging.getLogger(__name__)
-
 
 DATA_SCHEMA = vol.Schema(
     {

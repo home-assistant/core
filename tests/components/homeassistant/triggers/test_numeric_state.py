@@ -1,5 +1,6 @@
 """The tests for numeric state automation."""
 from datetime import timedelta
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -570,6 +571,34 @@ async def test_if_not_fires_if_entity_not_match(hass, calls, below):
     hass.states.async_set("test.entity", 11)
     await hass.async_block_till_done()
     assert len(calls) == 0
+
+
+async def test_if_not_fires_and_warns_if_below_entity_unknown(hass, caplog, calls):
+    """Test if warns with unknown below entity."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "numeric_state",
+                    "entity_id": "test.entity",
+                    "below": "input_number.unknown",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    hass.states.async_set("test.entity", 1)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    assert len(caplog.record_tuples) == 1
+    assert caplog.record_tuples[0][1] == logging.WARNING
 
 
 @pytest.mark.parametrize("below", (10, "input_number.value_10"))
@@ -1177,7 +1206,7 @@ async def test_wait_template_with_trigger(hass, calls, above):
     hass.states.async_set("test.entity", "8")
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert "numeric_state - test.entity - 12" == calls[0].data["some"]
+    assert calls[0].data["some"] == "numeric_state - test.entity - 12"
 
 
 @pytest.mark.parametrize(
@@ -1621,3 +1650,93 @@ async def test_attribute_if_not_fires_on_entities_change_with_for_after_stop(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+
+@pytest.mark.parametrize(
+    "above, below",
+    ((8, 12),),
+)
+async def test_variables_priority(hass, calls, above, below):
+    """Test an externally defined trigger variable is overridden."""
+    hass.states.async_set("test.entity_1", 0)
+    hass.states.async_set("test.entity_2", 0)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger_variables": {"trigger": "illegal"},
+                "trigger": {
+                    "platform": "numeric_state",
+                    "entity_id": ["test.entity_1", "test.entity_2"],
+                    "above": above,
+                    "below": below,
+                    "for": '{{ 5 if trigger.entity_id == "test.entity_1"'
+                    "   else 10 }}",
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "some": "{{ trigger.entity_id }} - {{ trigger.for }}"
+                    },
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    utcnow = dt_util.utcnow()
+    with patch("homeassistant.util.dt.utcnow") as mock_utcnow:
+        mock_utcnow.return_value = utcnow
+        hass.states.async_set("test.entity_1", 9)
+        await hass.async_block_till_done()
+        mock_utcnow.return_value += timedelta(seconds=1)
+        async_fire_time_changed(hass, mock_utcnow.return_value)
+        hass.states.async_set("test.entity_2", 9)
+        await hass.async_block_till_done()
+        mock_utcnow.return_value += timedelta(seconds=1)
+        async_fire_time_changed(hass, mock_utcnow.return_value)
+        hass.states.async_set("test.entity_2", 15)
+        await hass.async_block_till_done()
+        mock_utcnow.return_value += timedelta(seconds=1)
+        async_fire_time_changed(hass, mock_utcnow.return_value)
+        hass.states.async_set("test.entity_2", 9)
+        await hass.async_block_till_done()
+        assert len(calls) == 0
+        mock_utcnow.return_value += timedelta(seconds=3)
+        async_fire_time_changed(hass, mock_utcnow.return_value)
+        await hass.async_block_till_done()
+        assert len(calls) == 1
+        assert calls[0].data["some"] == "test.entity_1 - 0:00:05"
+
+
+@pytest.mark.parametrize("multiplier", (1, 5))
+async def test_template_variable(hass, calls, multiplier):
+    """Test template variable."""
+    hass.states.async_set("test.entity", "entity", {"test_attribute": [11, 15, 11]})
+    await hass.async_block_till_done()
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger_variables": {"multiplier": multiplier},
+                "trigger": {
+                    "platform": "numeric_state",
+                    "entity_id": "test.entity",
+                    "value_template": "{{ state.attributes.test_attribute[2] * multiplier}}",
+                    "below": 10,
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    # 3 is below 10
+    hass.states.async_set("test.entity", "entity", {"test_attribute": [11, 15, 3]})
+    await hass.async_block_till_done()
+    if multiplier * 3 < 10:
+        assert len(calls) == 1
+    else:
+        assert len(calls) == 0

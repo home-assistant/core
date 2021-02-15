@@ -97,7 +97,6 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        assert self.hass
         persistent_notification.async_dismiss(self.hass, "cloudflare_setup")
 
         errors = {}
