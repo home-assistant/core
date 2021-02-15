@@ -8,6 +8,10 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend
 from homeassistant.components.hassio import STORAGE_KEY
 from homeassistant.components.hassio.const import (
+    EVENT_SUPERVISOR_EVENT,
+    WS_DATA,
+    WS_ID,
+    WS_TYPE,
     WS_TYPE_EVENT,
     WS_TYPE_SNAPSHOT_NEW_FULL,
     WS_TYPE_SNAPSHOT_NEW_PARTIAL,
@@ -366,10 +370,10 @@ async def test_websocket_supervisor_event(
     def listener(ev):
         events.append(ev.data)
 
-    assert hass.bus.async_listen("supervisor_event", listener)
+    assert hass.bus.async_listen(EVENT_SUPERVISOR_EVENT, listener)
 
     await websocket_client.send_json(
-        {"id": 1, "type": WS_TYPE_EVENT, "data": {"event": "test"}}
+        {WS_ID: 1, WS_TYPE: WS_TYPE_EVENT, WS_DATA: {"event": "test"}}
     )
 
     assert await websocket_client.receive_json()
@@ -390,7 +394,7 @@ async def test_websocket_supervisor_snapshot_new_full(
     )
 
     await websocket_client.send_json(
-        {"id": 1, "type": WS_TYPE_SNAPSHOT_NEW_FULL, "data": {}}
+        {WS_ID: 1, WS_TYPE: WS_TYPE_SNAPSHOT_NEW_FULL, WS_DATA: {}}
     )
 
     msg = await websocket_client.receive_json()
@@ -409,7 +413,7 @@ async def test_websocket_supervisor_snapshot_new_partial(
     )
 
     await websocket_client.send_json(
-        {"id": 1, "type": WS_TYPE_SNAPSHOT_NEW_PARTIAL, "data": {}}
+        {WS_ID: 1, WS_TYPE: WS_TYPE_SNAPSHOT_NEW_PARTIAL, WS_DATA: {}}
     )
 
     msg = await websocket_client.receive_json()

@@ -31,6 +31,7 @@ X_HASS_IS_ADMIN = "X-Hass-Is-Admin"
 WS_TYPE = "type"
 WS_DATA = "data"
 WS_ID = "id"
+
 WS_TYPE_EVENT = "supervisor/event"
 WS_TYPE_SNAPSHOT_NEW_FULL = "supervisor/snapshots/new/full"
 WS_TYPE_SNAPSHOT_NEW_PARTIAL = "supervisor/snapshots/new/partial"
