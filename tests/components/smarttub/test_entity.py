@@ -10,7 +10,6 @@ async def test_entity(coordinator, spa):
 
     assert entity.device_info
     assert entity.name
-    assert entity.unique_id
 
     coordinator.data[spa.id] = {}
     assert entity.get_spa_status("foo") is None

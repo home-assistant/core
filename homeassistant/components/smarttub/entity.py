@@ -7,7 +7,6 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .helpers import get_spa_name
@@ -43,11 +42,6 @@ class SmartTubEntity(CoordinatorEntity):
         """Return the name of the entity."""
         spa_name = get_spa_name(self.spa)
         return f"{spa_name} {self._entity_name}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id for the entity."""
-        return f"{self.spa.id}-{slugify(self._entity_name)}"
 
     def get_spa_status(self, path):
         """Retrieve a value from the data returned by Spa.get_status().
