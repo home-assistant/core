@@ -28,7 +28,7 @@ set_schedule:
       description: Schedule name
       example: Standard
       selector:
-        object:
+        text:
 
 set_persons_home:
   description: Set a list of persons as at home. Person's name must match a name known by the Welcome Camera.
