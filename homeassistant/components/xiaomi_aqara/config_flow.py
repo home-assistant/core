@@ -6,7 +6,7 @@ import voluptuous as vol
 from xiaomi_gateway import MULTICAST_PORT, XiaomiGateway, XiaomiGatewayDiscovery
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 
@@ -14,7 +14,6 @@ from homeassistant.helpers.device_registry import format_mac
 from .const import (
     CONF_INTERFACE,
     CONF_KEY,
-    CONF_PROTOCOL,
     CONF_SID,
     DEFAULT_DISCOVERY_RETRY,
     DOMAIN,
