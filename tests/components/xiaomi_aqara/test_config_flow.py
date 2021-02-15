@@ -12,7 +12,6 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_
 ZEROCONF_NAME = "name"
 ZEROCONF_PROP = "properties"
 ZEROCONF_MAC = "mac"
-const.CONF_PROTOCOL = CONF_PROTOCOL
 
 TEST_HOST = "1.2.3.4"
 TEST_HOST_2 = "5.6.7.8"
@@ -108,7 +107,7 @@ async def test_config_flow_user_success(hass):
         CONF_PORT: TEST_PORT,
         CONF_MAC: TEST_MAC,
         const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
-        const.CONF_PROTOCOL: TEST_PROTOCOL,
+        CONF_PROTOCOL: TEST_PROTOCOL,
         const.CONF_KEY: TEST_KEY,
         const.CONF_SID: TEST_SID,
     }
@@ -160,7 +159,7 @@ async def test_config_flow_user_multiple_success(hass):
         CONF_PORT: TEST_PORT,
         CONF_MAC: TEST_MAC,
         const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
-        const.CONF_PROTOCOL: TEST_PROTOCOL,
+        CONF_PROTOCOL: TEST_PROTOCOL,
         const.CONF_KEY: TEST_KEY,
         const.CONF_SID: TEST_SID,
     }
@@ -197,7 +196,7 @@ async def test_config_flow_user_no_key_success(hass):
         CONF_PORT: TEST_PORT,
         CONF_MAC: TEST_MAC,
         const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
-        const.CONF_PROTOCOL: TEST_PROTOCOL,
+        CONF_PROTOCOL: TEST_PROTOCOL,
         const.CONF_KEY: None,
         const.CONF_SID: TEST_SID,
     }
@@ -244,7 +243,7 @@ async def test_config_flow_user_host_mac_success(hass):
         CONF_PORT: TEST_PORT,
         CONF_MAC: TEST_MAC,
         const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
-        const.CONF_PROTOCOL: TEST_PROTOCOL,
+        CONF_PROTOCOL: TEST_PROTOCOL,
         const.CONF_KEY: None,
         const.CONF_SID: TEST_SID,
     }
@@ -434,7 +433,7 @@ async def test_zeroconf_success(hass):
         CONF_PORT: TEST_PORT,
         CONF_MAC: TEST_MAC,
         const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
-        const.CONF_PROTOCOL: TEST_PROTOCOL,
+        CONF_PROTOCOL: TEST_PROTOCOL,
         const.CONF_KEY: TEST_KEY,
         const.CONF_SID: TEST_SID,
     }
