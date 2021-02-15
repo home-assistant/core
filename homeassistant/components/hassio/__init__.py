@@ -10,7 +10,6 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.homeassistant import SERVICE_CHECK_CONFIG
 import homeassistant.config as conf_util
 from homeassistant.const import (
-    ATTR_NAME,
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
@@ -24,15 +23,25 @@ from homeassistant.util.dt import utcnow
 
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
-from .const import ATTR_DISCOVERY
+from .const import ATTR_ADDON, ATTR_DISCOVERY, ATTR_INPUT, ATTR_SNAPSHOT, DOMAIN
 from .discovery import async_setup_discovery_view
 from .handler import HassIO, HassioAPIError, api_data
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
+from .schema import (
+    SCHEMA_ADDON,
+    SCHEMA_ADDON_STDIN,
+    SCHEMA_NO_DATA,
+    SCHEMA_RESTORE_FULL,
+    SCHEMA_RESTORE_PARTIAL,
+    SCHEMA_SNAPSHOT_FULL,
+    SCHEMA_SNAPSHOT_PARTIAL,
+)
+from .websocket_api import async_load_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "hassio"
+
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
@@ -62,44 +71,6 @@ SERVICE_SNAPSHOT_PARTIAL = "snapshot_partial"
 SERVICE_RESTORE_FULL = "restore_full"
 SERVICE_RESTORE_PARTIAL = "restore_partial"
 
-ATTR_ADDON = "addon"
-ATTR_INPUT = "input"
-ATTR_SNAPSHOT = "snapshot"
-ATTR_ADDONS = "addons"
-ATTR_FOLDERS = "folders"
-ATTR_HOMEASSISTANT = "homeassistant"
-ATTR_PASSWORD = "password"
-
-SCHEMA_NO_DATA = vol.Schema({})
-
-SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): cv.slug})
-
-SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
-    {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
-)
-
-SCHEMA_SNAPSHOT_FULL = vol.Schema(
-    {vol.Optional(ATTR_NAME): cv.string, vol.Optional(ATTR_PASSWORD): cv.string}
-)
-
-SCHEMA_SNAPSHOT_PARTIAL = SCHEMA_SNAPSHOT_FULL.extend(
-    {
-        vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
-
-SCHEMA_RESTORE_FULL = vol.Schema(
-    {vol.Required(ATTR_SNAPSHOT): cv.slug, vol.Optional(ATTR_PASSWORD): cv.string}
-)
-
-SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
-    {
-        vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
-        vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
 
 MAP_SERVICE_API = {
     SERVICE_ADDON_START: ("/addons/{addon}/start", SCHEMA_ADDON, 60, False),
@@ -203,6 +174,30 @@ async def async_set_addon_options(
 
 
 @bind_hass
+@api_data
+async def async_snapshot_new_full(hass: HomeAssistantType, options: dict) -> dict:
+    """Create new full snapshot.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = "/snapshots/new/full"
+    return await hassio.send_command(command, payload=options, timeout=None)
+
+
+@bind_hass
+@api_data
+async def async_snapshot_new_partial(hass: HomeAssistantType, options: dict) -> dict:
+    """Create new partial snapshot.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = "/snapshots/new/partial"
+    return await hassio.send_command(command, payload=options, timeout=None)
+
+
+@bind_hass
 async def async_get_addon_discovery_info(
     hass: HomeAssistantType, slug: str
 ) -> Optional[dict]:
@@ -289,6 +284,8 @@ async def async_setup(hass, config):
             continue
         _LOGGER.error("Missing %s environment variable", env)
         return False
+
+    async_load_websocket_api(hass)
 
     host = os.environ["HASSIO"]
     websession = hass.helpers.aiohttp_client.async_get_clientsession()

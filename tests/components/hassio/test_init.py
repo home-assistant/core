@@ -7,6 +7,12 @@ import pytest
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend
 from homeassistant.components.hassio import STORAGE_KEY
+from homeassistant.components.hassio.const import (
+    WS_TYPE_EVENT,
+    WS_TYPE_SNAPSHOT_NEW_FULL,
+    WS_TYPE_SNAPSHOT_NEW_PARTIAL,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
@@ -346,3 +352,65 @@ async def test_service_calls_core(hassio_env, hass, aioclient_mock):
         assert mock_check_config.called
 
     assert aioclient_mock.call_count == 5
+
+
+async def test_websocket_supervisor_event(
+    hassio_env, hass: HomeAssistant, hass_ws_client
+):
+    """Test Supervisor websocket event."""
+    assert await async_setup_component(hass, "hassio", {})
+    websocket_client = await hass_ws_client(hass)
+
+    events = []
+
+    def listener(ev):
+        events.append(ev.data)
+
+    assert hass.bus.async_listen("supervisor_event", listener)
+
+    await websocket_client.send_json(
+        {"id": 1, "type": WS_TYPE_EVENT, "data": {"event": "test"}}
+    )
+
+    assert await websocket_client.receive_json()
+    await hass.async_block_till_done()
+
+    assert events[0] == {"event": "test"}
+
+
+async def test_websocket_supervisor_snapshot_new_full(
+    hassio_env, hass: HomeAssistant, hass_ws_client, aioclient_mock
+):
+    """Test Supervisor websocket new full snapshot."""
+    assert await async_setup_component(hass, "hassio", {})
+    websocket_client = await hass_ws_client(hass)
+    aioclient_mock.post(
+        "http://127.0.0.1/snapshots/new/full",
+        json={"result": "ok", "data": {"slug": "sn_slug"}},
+    )
+
+    await websocket_client.send_json(
+        {"id": 1, "type": WS_TYPE_SNAPSHOT_NEW_FULL, "data": {}}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["result"]["slug"] == "sn_slug"
+
+
+async def test_websocket_supervisor_snapshot_new_partial(
+    hassio_env, hass: HomeAssistant, hass_ws_client, aioclient_mock
+):
+    """Test Supervisor websocket new partial snapshot."""
+    assert await async_setup_component(hass, "hassio", {})
+    websocket_client = await hass_ws_client(hass)
+    aioclient_mock.post(
+        "http://127.0.0.1/snapshots/new/partial",
+        json={"result": "ok", "data": {"slug": "sn_slug"}},
+    )
+
+    await websocket_client.send_json(
+        {"id": 1, "type": WS_TYPE_SNAPSHOT_NEW_PARTIAL, "data": {}}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["result"]["slug"] == "sn_slug"
