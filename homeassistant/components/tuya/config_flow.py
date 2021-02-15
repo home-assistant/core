@@ -325,11 +325,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     def _get_device_schema(self, device_type, curr_conf, device):
         """Return option schema for device."""
+        if device_type != device.device_type():
+            return None
+        schema = None
         if device_type == "light":
-            return self._get_light_schema(curr_conf, device)
-        if device_type == "climate":
-            return self._get_climate_schema(curr_conf, device)
-        return None
+            schema = self._get_light_schema(curr_conf, device)
+        elif device_type == "climate":
+            schema = self._get_climate_schema(curr_conf, device)
+        return schema
 
     @staticmethod
     def _get_light_schema(curr_conf, device):

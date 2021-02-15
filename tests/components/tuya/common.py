@@ -20,15 +20,6 @@ LIGHT_DATA = {
     "dev_type": "light",
 }
 
-LIGHT_ID_FAKE = "9999"
-LIGHT_DATA_FAKE = {
-    "data": {"state": "true"},
-    "id": LIGHT_ID_FAKE,
-    "ha_type": "light",
-    "name": "TestLightFake",
-    "dev_type": "light",
-}
-
 SWITCH_ID = "3"
 SWITCH_DATA = {
     "data": {"state": True},
@@ -38,11 +29,30 @@ SWITCH_DATA = {
     "dev_type": "switch",
 }
 
+LIGHT_ID_FAKE1 = "9998"
+LIGHT_DATA_FAKE1 = {
+    "data": {"state": "true"},
+    "id": LIGHT_ID_FAKE1,
+    "ha_type": "light",
+    "name": "TestLightFake1",
+    "dev_type": "light",
+}
+
+LIGHT_ID_FAKE2 = "9999"
+LIGHT_DATA_FAKE2 = {
+    "data": {"state": "true"},
+    "id": LIGHT_ID_FAKE2,
+    "ha_type": "light",
+    "name": "TestLightFake2",
+    "dev_type": "light",
+}
+
 TUYA_DEVICES = [
     climate.TuyaClimate(CLIMATE_DATA, None),
     light.TuyaLight(LIGHT_DATA, None),
-    light.TuyaLight(LIGHT_DATA_FAKE, None),
     switch.TuyaSwitch(SWITCH_DATA, None),
+    light.TuyaLight(LIGHT_DATA_FAKE1, None),
+    light.TuyaLight(LIGHT_DATA_FAKE2, None),
 ]
 
 
@@ -55,9 +65,11 @@ class MockTuya:
 
     def get_device_by_id(self, dev_id):
         """Return configured device with dev id."""
+        if dev_id == LIGHT_ID_FAKE1:
+            return None
+        if dev_id == LIGHT_ID_FAKE2:
+            return switch.TuyaSwitch(SWITCH_DATA, None)
         for device in TUYA_DEVICES:
             if device.object_id() == dev_id:
-                if dev_id == LIGHT_ID_FAKE:
-                    return None
                 return device
         return None

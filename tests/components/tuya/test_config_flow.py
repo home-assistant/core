@@ -9,6 +9,7 @@ from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.tuya.config_flow import (
     CONF_LIST_DEVICES,
     ERROR_DEV_MULTI_TYPE,
+    ERROR_DEV_NOT_CONFIG,
     ERROR_DEV_NOT_FOUND,
     RESULT_AUTH_FAILED,
     RESULT_CONN_ERROR,
@@ -41,7 +42,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
-from .common import CLIMATE_ID, LIGHT_ID, LIGHT_ID_FAKE, MockTuya
+from .common import CLIMATE_ID, LIGHT_ID, LIGHT_ID_FAKE1, LIGHT_ID_FAKE2, MockTuya
 
 from tests.common import MockConfigEntry
 
@@ -212,12 +213,22 @@ async def test_options_flow(hass):
         # Test dev not found error
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={CONF_LIST_DEVICES: [f"light-{LIGHT_ID_FAKE}"]},
+            user_input={CONF_LIST_DEVICES: [f"light-{LIGHT_ID_FAKE1}"]},
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "init"
         assert result["errors"] == {"base": ERROR_DEV_NOT_FOUND}
+
+        # Test dev type error
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_LIST_DEVICES: [f"light-{LIGHT_ID_FAKE2}"]},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+        assert result["errors"] == {"base": ERROR_DEV_NOT_CONFIG}
 
         # Test multi dev error
         result = await hass.config_entries.options.async_configure(
