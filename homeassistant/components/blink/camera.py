@@ -8,7 +8,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 
-from .const import DEFAULT_BRAND, DOMAIN, SERVICE_TRIGGER
+from .const import DEFAULT_BRAND, DOMAIN, SERVICE_RECORD, SERVICE_TRIGGER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,6 +16,7 @@ ATTR_VIDEO_CLIP = "video"
 ATTR_IMAGE = "image"
 
 SERVICE_TRIGGER_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
+SERVICE_RECORD_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids})
 
 
 async def async_setup_entry(hass, config, async_add_entities):
@@ -31,6 +32,9 @@ async def async_setup_entry(hass, config, async_add_entities):
 
     platform.async_register_entity_service(
         SERVICE_TRIGGER, SERVICE_TRIGGER_SCHEMA, "trigger_camera"
+    )
+    platform.async_register_entity_service(
+        SERVICE_RECORD, SERVICE_RECORD_SCHEMA, "record"
     )
 
 
@@ -86,6 +90,10 @@ class BlinkCamera(Camera):
         """Trigger camera to take a snapshot."""
         self._camera.snap_picture()
         self.data.refresh()
+
+    def record(self):
+        """Send record command to camera."""
+        self._camera.record()
 
     def camera_image(self):
         """Return a still image response from the camera."""

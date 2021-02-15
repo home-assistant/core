@@ -26,3 +26,11 @@ send_pin:
     pin:
       description: Pin received from blink. Leave empty if you only received a verification email.
       example: "abc123"
+
+record:
+  description: Request a camera to record a new video.
+  fields:
+    entity_id:
+      description: Name of camera entity to record a new video. Only one camera can respond to a command at a time.
+      example: "camera.living_room_camera"
+
