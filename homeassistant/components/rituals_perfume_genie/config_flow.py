@@ -34,9 +34,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        await self.async_set_unique_id(user_input[CONF_EMAIL])
-        self._abort_if_unique_id_configured()
-
         try:
             session = async_get_clientsession(self.hass)
             account = Account(
@@ -51,6 +48,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            await self.async_set_unique_id(account.data[CONF_EMAIL])
+            self._abort_if_unique_id_configured()
+
             return self.async_create_entry(
                 title=account.data[CONF_EMAIL],
                 data={ACCOUNT_HASH: account.data[ACCOUNT_HASH]},
