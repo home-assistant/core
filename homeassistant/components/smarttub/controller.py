@@ -100,7 +100,6 @@ class SmartTubController:
         for spa in self.spas:
             device = device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
-                connections={(DOMAIN, self._account.id)},
                 identifiers={(DOMAIN, spa.id)},
                 manufacturer=spa.brand,
                 name=get_spa_name(spa),
