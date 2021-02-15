@@ -295,7 +295,7 @@ async def test_get_log_config(hass, client, integration, hass_ws_client):
     entry = integration
     ws_client = await hass_ws_client(hass)
 
-    # Test we can set log level
+    # Test we can get log configuration
     client.async_send_command.return_value = {
         "success": True,
         "config": {
@@ -315,7 +315,6 @@ async def test_get_log_config(hass, client, integration, hass_ws_client):
         }
     )
     msg = await ws_client.receive_json()
-    # _LOGGER.error(msg)
     assert msg["result"]
     assert msg["success"]
 
