@@ -2,10 +2,7 @@
 import asyncio
 import logging
 
-import aiohttp
-import async_timeout
-import requests
-from requests.auth import HTTPDigestAuth
+import httpx
 import voluptuous as vol
 
 from homeassistant.components.camera import (
@@ -25,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.reload import async_setup_reload_service
 
 from . import DOMAIN, PLATFORMS
@@ -39,6 +36,7 @@ CONF_STREAM_SOURCE = "stream_source"
 CONF_FRAMERATE = "framerate"
 
 DEFAULT_NAME = "Generic Camera"
+GET_IMAGE_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -93,9 +91,9 @@ class GenericCamera(Camera):
 
         if username and password:
             if self._authentication == HTTP_DIGEST_AUTHENTICATION:
-                self._auth = HTTPDigestAuth(username, password)
+                self._auth = httpx.DigestAuth(username, password)
             else:
-                self._auth = aiohttp.BasicAuth(username, password=password)
+                self._auth = httpx.BasicAuth(username, password=password)
         else:
             self._auth = None
 
@@ -129,40 +127,19 @@ class GenericCamera(Camera):
         if url == self._last_url and self._limit_refetch:
             return self._last_image
 
-        # aiohttp don't support DigestAuth yet
-        if self._authentication == HTTP_DIGEST_AUTHENTICATION:
-
-            def fetch():
-                """Read image from a URL."""
-                try:
-                    response = requests.get(
-                        url, timeout=10, auth=self._auth, verify=self.verify_ssl
-                    )
-                    return response.content
-                except requests.exceptions.RequestException as error:
-                    _LOGGER.error(
-                        "Error getting new camera image from %s: %s", self._name, error
-                    )
-                    return self._last_image
-
-            self._last_image = await self.hass.async_add_executor_job(fetch)
-        # async
-        else:
-            try:
-                websession = async_get_clientsession(
-                    self.hass, verify_ssl=self.verify_ssl
-                )
-                with async_timeout.timeout(10):
-                    response = await websession.get(url, auth=self._auth)
-                self._last_image = await response.read()
-            except asyncio.TimeoutError:
-                _LOGGER.error("Timeout getting camera image from %s", self._name)
-                return self._last_image
-            except aiohttp.ClientError as err:
-                _LOGGER.error(
-                    "Error getting new camera image from %s: %s", self._name, err
-                )
-                return self._last_image
+        try:
+            async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
+            response = await async_client.get(
+                url, auth=self._auth, timeout=GET_IMAGE_TIMEOUT
+            )
+            response.raise_for_status()
+            self._last_image = response.content
+        except httpx.TimeoutException:
+            _LOGGER.error("Timeout getting camera image from %s", self._name)
+            return self._last_image
+        except (httpx.RequestError, httpx.HTTPStatusError) as err:
+            _LOGGER.error("Error getting new camera image from %s: %s", self._name, err)
+            return self._last_image
 
         self._last_url = url
         return self._last_image
