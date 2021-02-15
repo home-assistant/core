@@ -286,7 +286,7 @@ homeassistant/components/monoprice/* @etsinko @OnFreund
 homeassistant/components/moon/* @fabaff
 homeassistant/components/motion_blinds/* @starkillerOG
 homeassistant/components/mpd/* @fabaff
-homeassistant/components/mqtt/* @home-assistant/core @emontnemery
+homeassistant/components/mqtt/* @emontnemery
 homeassistant/components/msteams/* @peroyvind
 homeassistant/components/my/* @home-assistant/core
 homeassistant/components/myq/* @bdraco
