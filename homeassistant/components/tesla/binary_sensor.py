@@ -2,7 +2,8 @@
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorEntity
 
-from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
+from . import DOMAIN as TESLA_DOMAIN
+from .tesla_device import TeslaDevice
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

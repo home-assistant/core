@@ -3,7 +3,6 @@ import asyncio
 from collections import defaultdict
 from datetime import timedelta
 import logging
-from typing import Optional, Text
 
 import async_timeout
 from teslajsonpy import Controller as TeslaAPI
@@ -11,8 +10,6 @@ from teslajsonpy.exceptions import IncompleteCredentials, TeslaException
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    ATTR_BATTERY_CHARGING,
-    ATTR_BATTERY_LEVEL,
     CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -23,13 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity_registry import async_get_registry
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
-from homeassistant.util import slugify
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .config_flow import CannotConnect, InvalidAuth, validate_input
 from .const import (
@@ -39,7 +30,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_WAKE_ON_START,
     DOMAIN,
-    ICONS,
     MIN_SCAN_INTERVAL,
     PLATFORMS,
 )
@@ -270,70 +260,3 @@ class TeslaDataUpdateCoordinator(DataUpdateCoordinator):
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
         except TeslaException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
-
-
-class TeslaDevice(CoordinatorEntity):
-    """Representation of a Tesla device."""
-
-    def __init__(self, tesla_device, coordinator):
-        """Initialise the Tesla device."""
-        super().__init__(coordinator)
-        self.tesla_device = tesla_device
-        self._name: Text = self.tesla_device.name
-        self._unique_id: Text = slugify(self.tesla_device.uniq_name)
-        self._attributes: Text = self.tesla_device.attrs.copy()
-        self._config_entry_id: Optional[Text] = None
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        if self.device_class:
-            return None
-
-        return ICONS.get(self.tesla_device.type)
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the device."""
-        attr = self._attributes
-        if self.tesla_device.has_battery():
-            attr[ATTR_BATTERY_LEVEL] = self.tesla_device.battery_level()
-            attr[ATTR_BATTERY_CHARGING] = self.tesla_device.battery_charging()
-        return attr
-
-    @property
-    def device_info(self):
-        """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self.tesla_device.id())},
-            "name": self.tesla_device.car_name(),
-            "manufacturer": "Tesla",
-            "model": self.tesla_device.car_type,
-            "sw_version": self.tesla_device.car_version,
-        }
-
-    async def async_added_to_hass(self):
-        """Register state update callback."""
-        self.async_on_remove(self.coordinator.async_add_listener(self.refresh))
-        registry = await async_get_registry(self.hass)
-        self._config_entry_id = registry.entities.get(self.entity_id).config_entry_id
-
-    @callback
-    def refresh(self) -> None:
-        """Refresh the state of the device.
-
-        This assumes the coordinator has updated the controller.
-        """
-        self.tesla_device.refresh()
-        self._attributes = self.tesla_device.attrs.copy()
-        self.async_write_ha_state()

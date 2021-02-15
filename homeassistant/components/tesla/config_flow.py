@@ -53,6 +53,7 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     data: Dict[Text, Any] = None
     warning_shown: bool = False
     callback_url: Optional[URL] = None
+    controller: Optional[TeslaAPI] = None
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""

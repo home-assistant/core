@@ -10,7 +10,8 @@ from homeassistant.const import (
 )
 from homeassistant.util.distance import convert
 
-from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
+from . import DOMAIN as TESLA_DOMAIN
+from .tesla_device import TeslaDevice
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
