@@ -70,10 +70,6 @@ class SmartTubController:
 
         return True
 
-    async def async_unload_entry(self, entry):
-        """Tear down."""
-        return True
-
     async def async_update_data(self):
         """Query the API and return the new state."""
 

@@ -1,5 +1,7 @@
 """Test smarttub setup process."""
 
+from unittest.mock import patch
+
 import pytest
 from smarttub import LoginFailed
 
@@ -34,10 +36,16 @@ async def test_config_passed_to_config_entry(hass, config_entry, config_data):
     assert ret is True
 
 
-async def test_unload_entry(hass, config_entry):
+async def test_unload_entry(hass, config_entry, smarttub_api):
     """Test being able to unload an entry."""
     config_entry.add_to_hass(hass)
 
     assert await async_setup_component(hass, smarttub.DOMAIN, {}) is True
 
     assert await smarttub.async_unload_entry(hass, config_entry)
+
+    # test failure of platform unload
+    assert await async_setup_component(hass, smarttub.DOMAIN, {}) is True
+    with patch.object(hass.config_entries, "async_forward_entry_unload") as mock:
+        mock.return_value = False
+        assert await smarttub.async_unload_entry(hass, config_entry) is False

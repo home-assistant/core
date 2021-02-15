@@ -7,12 +7,6 @@ from homeassistant.components.smarttub.controller import SmartTubController
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
-async def test_unload(controller, config_entry):
-    """Test async_unload_entry."""
-    ret = await controller.async_unload_entry(config_entry)
-    assert ret is True
-
-
 async def test_invalid_credentials(hass, controller, smarttub_api, config_entry):
     """Check that we start a new config flow if the configured credentials are invalid.
 

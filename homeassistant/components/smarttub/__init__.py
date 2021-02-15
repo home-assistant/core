@@ -1,4 +1,5 @@
 """SmartTub integration."""
+import asyncio
 import logging
 
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -40,13 +41,16 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Remove a smarttub config entry."""
-    for platform in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(entry, platform)
+    if not all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    ):
+        return False
 
-    data = hass.data[DOMAIN][entry.unique_id]
-
-    controller = data[SMARTTUB_CONTROLLER]
-    await controller.async_unload_entry(entry)
     hass.data[DOMAIN].pop(entry.unique_id)
 
     return True
