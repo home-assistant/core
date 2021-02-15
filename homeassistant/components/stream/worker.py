@@ -54,7 +54,7 @@ class SegmentBuffer:
         # tuple of StreamOutput, StreamBuffer
         self._outputs = []
         self._sequence = 0
-self._segment_start_pts = None
+        self._segment_start_pts = None
 
     def reset(self, video_pts):
         """Initialize a new stream segment."""
@@ -64,15 +64,14 @@ self._segment_start_pts = None
 
         # Fetch the latest StreamOutputs, which may have changed since the
         # worker started.
-        outputs = []
+        self._outputs = []
         for stream_output in self._outputs_callback().values():
             if self._video_stream.name not in stream_output.video_codecs:
                 continue
             buffer = create_stream_buffer(
                 stream_output, self._video_stream, self._audio_stream, self._sequence
             )
-            outputs.append((buffer, stream_output))
-        self._outputs = outputs
+            self._outputs.append((buffer, stream_output))
 
     def mux_packet(self, packet):
         """Mux a packet to the appropriate StreamBuffers."""
