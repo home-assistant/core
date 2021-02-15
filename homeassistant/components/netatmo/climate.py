@@ -258,11 +258,12 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         if self._home_id != data["home_id"]:
             return
 
-        if data["event_type"] == EVENT_TYPE_SCHEDULE:
+        if data["event_type"] == EVENT_TYPE_SCHEDULE and "schedule_id" in data:
             self._selected_schedule = self.hass.data[DOMAIN][DATA_SCHEDULES][
                 self._home_id
             ].get(data["schedule_id"])
             self.async_write_ha_state()
+            await self.data_handler.async_force_update(self._home_status_class)
             return
 
         if not data.get("home"):
