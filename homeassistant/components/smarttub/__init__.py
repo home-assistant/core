@@ -2,8 +2,6 @@
 import asyncio
 import logging
 
-from homeassistant.exceptions import ConfigEntryNotReady
-
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .controller import SmartTubController
 
@@ -29,7 +27,7 @@ async def async_setup_entry(hass, entry):
     }
 
     if not await controller.async_setup_entry(entry):
-        raise ConfigEntryNotReady
+        return False
 
     for platform in PLATFORMS:
         hass.async_create_task(

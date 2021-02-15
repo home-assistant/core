@@ -1,14 +1,17 @@
 """Interface to the SmartTub API."""
 
+import asyncio
 from datetime import timedelta
 import logging
 
+from aiohttp import client_exceptions
 import async_timeout
 from smarttub import APIError, LoginFailed, SmartTub
 from smarttub.api import Account
 
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -39,9 +42,18 @@ class SmartTubController:
         ready for normal operations .
         """
 
-        self._account = await self.login(
-            entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD]
-        )
+        try:
+            self._account = await self.login(
+                entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD]
+            )
+        except (
+            asyncio.TimeoutError,
+            client_exceptions.ClientOSError,
+            client_exceptions.ServerDisconnectedError,
+            client_exceptions.ContentTypeError,
+        ) as err:
+            raise ConfigEntryNotReady from err
+
         if self._account is None:
             # credentials were changed or invalidated, we need new ones
             self._hass.async_create_task(

@@ -1,5 +1,6 @@
 """Test smarttub setup process."""
 
+import asyncio
 from unittest.mock import patch
 
 import pytest
@@ -23,10 +24,18 @@ async def test_setup_with_no_config(hass):
 async def test_setup_entry_not_ready(hass, config_entry, smarttub_api):
     """Test setup when the entry is not ready."""
     assert await async_setup_component(hass, smarttub.DOMAIN, {}) is True
-    smarttub_api.login.side_effect = LoginFailed
+    smarttub_api.login.side_effect = asyncio.TimeoutError
 
     with pytest.raises(ConfigEntryNotReady):
         await smarttub.async_setup_entry(hass, config_entry)
+
+
+async def test_setup_auth_failed(hass, config_entry, smarttub_api):
+    """Test setup when the credentials are invalid."""
+    assert await async_setup_component(hass, smarttub.DOMAIN, {}) is True
+    smarttub_api.login.side_effect = LoginFailed
+
+    assert await smarttub.async_setup_entry(hass, config_entry) is False
 
 
 async def test_config_passed_to_config_entry(hass, config_entry, config_data):
