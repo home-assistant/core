@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_NAME,
@@ -29,6 +30,7 @@ from .const import (
     CALL_TYPE_REGISTER_INPUT,
     CONF_COILS,
     CONF_HUB,
+    CONF_INPUT_TYPE,
     CONF_REGISTER,
     CONF_REGISTER_TYPE,
     CONF_REGISTERS,
@@ -101,6 +103,17 @@ async def async_setup_platform(
             discovery_info[CONF_SWITCHES].extend(config[CONF_COILS])
         if CONF_REGISTERS in config:
             discovery_info[CONF_SWITCHES].extend(config[CONF_REGISTERS])
+        for entry in discovery_info[CONF_SWITCHES]:
+            if CALL_TYPE_COIL in entry:
+                entry[CONF_ADDRESS] = entry[CALL_TYPE_COIL]
+                entry[CONF_INPUT_TYPE] = CALL_TYPE_COIL
+                del entry[CALL_TYPE_COIL]
+            if CONF_REGISTER in entry:
+                entry[CONF_ADDRESS] = entry[CONF_REGISTER]
+                del entry[CONF_REGISTER]
+                if CONF_REGISTER_TYPE in entry:
+                    entry[CONF_INPUT_TYPE] = entry[CONF_REGISTER_TYPE]
+                    del entry[CONF_REGISTER_TYPE]
         config = None
 
     for entry in discovery_info[CONF_SWITCHES]:
@@ -108,10 +121,10 @@ async def async_setup_platform(
             # from old config!
             discovery_info[CONF_NAME] = entry[CONF_HUB]
         hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
-        if CONF_REGISTER in entry:
-            switches.append(ModbusRegisterSwitch(hub, entry))
-        else:
+        if entry[CONF_INPUT_TYPE] == CALL_TYPE_COIL:
             switches.append(ModbusCoilSwitch(hub, entry))
+        else:
+            switches.append(ModbusRegisterSwitch(hub, entry))
     async_add_entities(switches)
 
 
@@ -155,7 +168,7 @@ class ModbusCoilSwitch(ModbusBaseSwitch, SwitchEntity):
     def __init__(self, hub: ModbusHub, config: dict[str, Any]):
         """Initialize the coil switch."""
         super().__init__(hub, config)
-        self._coil = config[CALL_TYPE_COIL]
+        self._coil = config[CONF_ADDRESS]
 
     def turn_on(self, **kwargs):
         """Set switch on."""
@@ -206,14 +219,14 @@ class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
     def __init__(self, hub: ModbusHub, config: dict[str, Any]):
         """Initialize the register switch."""
         super().__init__(hub, config)
-        self._register = config[CONF_REGISTER]
+        self._register = config[CONF_ADDRESS]
         self._command_on = config[CONF_COMMAND_ON]
         self._command_off = config[CONF_COMMAND_OFF]
         self._state_on = config.get(CONF_STATE_ON, self._command_on)
         self._state_off = config.get(CONF_STATE_OFF, self._command_off)
         self._verify_state = config[CONF_VERIFY_STATE]
         self._verify_register = config.get(CONF_VERIFY_REGISTER, self._register)
-        self._register_type = config[CONF_REGISTER_TYPE]
+        self._register_type = config[CONF_INPUT_TYPE]
         self._available = True
         self._is_on = None
 

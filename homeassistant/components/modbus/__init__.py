@@ -12,6 +12,9 @@ from homeassistant.components.cover import (
 from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
 )
+from homeassistant.components.switch import (
+    DEVICE_CLASSES_SCHEMA as SWITCH_DEVICE_CLASSES_SCHEMA,
+)
 from homeassistant.const import (
     ATTR_STATE,
     CONF_ADDRESS,
@@ -58,7 +61,6 @@ from .const import (
     CONF_PARITY,
     CONF_PRECISION,
     CONF_REGISTER,
-    CONF_REGISTER_TYPE,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
     CONF_SENSORS,
@@ -76,7 +78,6 @@ from .const import (
     CONF_TARGET_TEMP,
     CONF_UNIT,
     CONF_VERIFY_REGISTER,
-    CONF_VERIFY_STATE,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
@@ -165,27 +166,20 @@ COVERS_SCHEMA = vol.All(
     ),
 )
 
-SWITCH_REGISTERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
+SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
-        vol.Required(CONF_COMMAND_OFF): cv.positive_int,
-        vol.Required(CONF_COMMAND_ON): cv.positive_int,
-        vol.Required(CONF_REGISTER): cv.positive_int,
-        vol.Optional(CONF_REGISTER_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
-            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
+        vol.Required(CONF_ADDRESS): cv.positive_int,
+        vol.Optional(CONF_DEVICE_CLASS): SWITCH_DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT, CALL_TYPE_COIL]
         ),
+        vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
+        vol.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
         vol.Optional(CONF_STATE_OFF): cv.positive_int,
         vol.Optional(CONF_STATE_ON): cv.positive_int,
         vol.Optional(CONF_VERIFY_REGISTER): cv.positive_int,
-        vol.Optional(CONF_VERIFY_STATE, default=True): cv.boolean,
     }
 )
-
-SWITCH_COILS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
-    {
-        vol.Required(CALL_TYPE_COIL): cv.positive_int,
-    }
-)
-SWITCH_SCHEMA = vol.Any(SWITCH_COILS_SCHEMA, SWITCH_REGISTERS_SCHEMA)
 
 SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
