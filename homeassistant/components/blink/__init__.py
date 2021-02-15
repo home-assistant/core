@@ -12,11 +12,18 @@ from homeassistant.components.blink.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     PLATFORMS,
+    SERVICE_BULK_DOWNLOAD,
     SERVICE_REFRESH,
     SERVICE_SAVE_VIDEO,
     SERVICE_SEND_PIN,
 )
-from homeassistant.const import CONF_FILENAME, CONF_NAME, CONF_PIN, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    CONF_FILENAME,
+    CONF_NAME,
+    CONF_PATH,
+    CONF_PIN,
+    CONF_SCAN_INTERVAL,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -27,6 +34,13 @@ SERVICE_SAVE_VIDEO_SCHEMA = vol.Schema(
     {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_FILENAME): cv.string}
 )
 SERVICE_SEND_PIN_SCHEMA = vol.Schema({vol.Optional(CONF_PIN): cv.string})
+SERVICE_BULK_DOWNLOAD_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PATH): cv.string,
+        vol.Required("since"): cv.string,
+        vol.Optional(CONF_NAME): cv.ensure_list,
+    }
+)
 
 
 def _blink_startup_wrapper(hass, entry):
@@ -99,6 +113,10 @@ async def async_setup_entry(hass, entry):
         """Call save video service handler."""
         await async_handle_save_video_service(hass, entry, call)
 
+    async def async_bulk_download(call):
+        """Call bulk download service handler."""
+        await async_bulk_download_service(hass, entry, call)
+
     def send_pin(call):
         """Call blink to send new pin."""
         pin = call.data[CONF_PIN]
@@ -113,6 +131,12 @@ async def async_setup_entry(hass, entry):
     )
     hass.services.async_register(
         DOMAIN, SERVICE_SEND_PIN, send_pin, schema=SERVICE_SEND_PIN_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_BULK_DOWNLOAD,
+        async_bulk_download,
+        schema=SERVICE_BULK_DOWNLOAD_SCHEMA,
     )
 
     return True
@@ -150,8 +174,30 @@ async def async_unload_entry(hass, entry):
     hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
     hass.services.async_remove(DOMAIN, SERVICE_SAVE_VIDEO_SCHEMA)
     hass.services.async_remove(DOMAIN, SERVICE_SEND_PIN)
+    hass.services.async_remove(DOMAIN, SERVICE_BULK_DOWNLOAD)
 
     return True
+
+
+async def async_bulk_download_service(hass, entry, call):
+    """Handle call to bulk downloader."""
+    since = call.data["since"]
+    camera_list = call.data.get(CONF_NAME, "all")
+    video_path = call.data[CONF_PATH]
+    if not hass.config.is_allowed_path(video_path):
+        _LOGGER.error("Can't write %s, no access to path!", video_path)
+        return
+
+    def _dl_videos(camera_list, video_path, since):
+        """Call download video method."""
+        hass.data[DOMAIN][entry.entry_id].download_videos(
+            video_path, since=since, camera=camera_list
+        )
+
+    try:
+        await hass.async_add_executor_job(_dl_videos, camera_list, video_path, since)
+    except OSError as err:
+        _LOGGER.error("Can't write video to file: %s", err)
 
 
 async def async_handle_save_video_service(hass, entry, call):

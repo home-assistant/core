@@ -26,3 +26,16 @@ send_pin:
     pin:
       description: Pin received from blink. Leave empty if you only received a verification email.
       example: "abc123"
+
+bulk_download:
+  description: Bulk download videos for one or more cameras.
+  fields:
+    path:
+      description: Filepath to save videos in (directory may need to be included in whitelist_dirs in config)
+      example: "/tmp/blink/videos"
+    since:
+      description: Simple YYYY/MM/DD date format to download all videos from that date to today.
+      example: "2020/12/30"
+    name:
+      description: Optional camera name (as named in your Blink app) or list of camera names. Omitting this results in downloading videos from all cameras.
+      example: "[Camera1, Living Room]"
