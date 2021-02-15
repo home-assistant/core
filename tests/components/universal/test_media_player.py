@@ -872,6 +872,25 @@ async def test_state_template(hass):
     assert hass.states.get("media_player.tv").state == STATE_OFF
 
 
+async def test_device_class(hass):
+    """Test device_class property."""
+    hass.states.async_set("sensor.test_sensor", "on")
+
+    await async_setup_component(
+        hass,
+        "media_player",
+        {
+            "media_player": {
+                "platform": "universal",
+                "name": "tv",
+                "device_class": "tv",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.tv").attributes["device_class"] == "tv"
+
+
 async def test_invalid_state_template(hass):
     """Test invalid state template sets state to None."""
     hass.states.async_set("sensor.test_sensor", "on")
@@ -1001,6 +1020,9 @@ async def test_reload(hass):
     assert hass.states.get("media_player.tv") is None
     assert hass.states.get("media_player.master_bed_tv").state == "on"
     assert hass.states.get("media_player.master_bed_tv").attributes["source"] == "act2"
+    assert (
+        "device_class" not in hass.states.get("media_player.master_bed_tv").attributes
+    )
 
 
 def _get_fixtures_base_path():
