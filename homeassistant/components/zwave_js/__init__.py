@@ -295,7 +295,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             """Handle service call to update log config."""
             await client.driver.async_update_log_config(LogConfig(**call.data))
 
-        # Register update_log_config service and pass service d
+        # Register update_log_config service
         hass.services.async_register(
             DOMAIN,
             SERVICE_UPDATE_LOG_CONFIG,
