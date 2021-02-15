@@ -19,7 +19,6 @@ from .const import (
     MODELS_SWITCH,
 )
 from .device import ConnectXiaomiDevice
-from .gateway import ConnectXiaomiGateway
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,7 +121,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                                 CONF_MAC: mac,
                             },
                         )
-                
+
                 # Setup all other Miio Devices
                 name = user_input.get(CONF_NAME, DEFAULT_DEVICE_NAME)
 
