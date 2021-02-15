@@ -8,13 +8,14 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend
 from homeassistant.components.hassio import STORAGE_KEY
 from homeassistant.components.hassio.const import (
+    ATTR_DATA,
+    ATTR_ENDPOINT,
+    ATTR_METHOD,
     EVENT_SUPERVISOR_EVENT,
-    WS_DATA,
     WS_ID,
     WS_TYPE,
+    WS_TYPE_API,
     WS_TYPE_EVENT,
-    WS_TYPE_SNAPSHOT_NEW_FULL,
-    WS_TYPE_SNAPSHOT_NEW_PARTIAL,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -373,7 +374,7 @@ async def test_websocket_supervisor_event(
     assert hass.bus.async_listen(EVENT_SUPERVISOR_EVENT, listener)
 
     await websocket_client.send_json(
-        {WS_ID: 1, WS_TYPE: WS_TYPE_EVENT, WS_DATA: {"event": "test"}}
+        {WS_ID: 1, WS_TYPE: WS_TYPE_EVENT, ATTR_DATA: {"event": "test"}}
     )
 
     assert await websocket_client.receive_json()
@@ -382,29 +383,10 @@ async def test_websocket_supervisor_event(
     assert events[0] == {"event": "test"}
 
 
-async def test_websocket_supervisor_snapshot_new_full(
+async def test_websocket_supervisor_api(
     hassio_env, hass: HomeAssistant, hass_ws_client, aioclient_mock
 ):
-    """Test Supervisor websocket new full snapshot."""
-    assert await async_setup_component(hass, "hassio", {})
-    websocket_client = await hass_ws_client(hass)
-    aioclient_mock.post(
-        "http://127.0.0.1/snapshots/new/full",
-        json={"result": "ok", "data": {"slug": "sn_slug"}},
-    )
-
-    await websocket_client.send_json(
-        {WS_ID: 1, WS_TYPE: WS_TYPE_SNAPSHOT_NEW_FULL, WS_DATA: {}}
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["result"]["slug"] == "sn_slug"
-
-
-async def test_websocket_supervisor_snapshot_new_partial(
-    hassio_env, hass: HomeAssistant, hass_ws_client, aioclient_mock
-):
-    """Test Supervisor websocket new partial snapshot."""
+    """Test Supervisor websocket api."""
     assert await async_setup_component(hass, "hassio", {})
     websocket_client = await hass_ws_client(hass)
     aioclient_mock.post(
@@ -413,8 +395,25 @@ async def test_websocket_supervisor_snapshot_new_partial(
     )
 
     await websocket_client.send_json(
-        {WS_ID: 1, WS_TYPE: WS_TYPE_SNAPSHOT_NEW_PARTIAL, WS_DATA: {}}
+        {
+            WS_ID: 1,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/snapshots/new/partial",
+            ATTR_METHOD: "post",
+        }
     )
 
     msg = await websocket_client.receive_json()
     assert msg["result"]["slug"] == "sn_slug"
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 2,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/supervisor/info",
+            ATTR_METHOD: "get",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["result"]["version_latest"] == "1.0.0"
