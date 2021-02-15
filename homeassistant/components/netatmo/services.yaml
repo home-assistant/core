@@ -41,7 +41,7 @@ set_persons_home:
       description: List of names
       example: Bob
       selector:
-        object:
+        text:
 
 set_person_away:
   description: Set a person away. If no person is set the home will be marked as empty. Person's name must match a name known by the Welcome Camera.
