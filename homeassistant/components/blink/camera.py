@@ -23,6 +23,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     DEFAULT_BRAND,
     DOMAIN,
+    SERVICE_RECORD,
     SERVICE_SAVE_RECENT_CLIPS,
     SERVICE_SAVE_VIDEO,
     SERVICE_TRIGGER,
@@ -50,6 +51,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
     platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(SERVICE_RECORD, {}, "record")
     platform.async_register_entity_service(SERVICE_TRIGGER, {}, "trigger_camera")
     platform.async_register_entity_service(
         SERVICE_SAVE_RECENT_CLIPS,
@@ -120,6 +122,12 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
     def brand(self) -> str | None:
         """Return the camera brand."""
         return DEFAULT_BRAND
+
+    async def record(self) -> None:
+        """Send record command to camera."""
+        with contextlib.suppress(TimeoutError):
+            await self._camera.record()
+        self.async_write_ha_state()
 
     async def trigger_camera(self) -> None:
         """Trigger camera to take a snapshot."""
