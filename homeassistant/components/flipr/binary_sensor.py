@@ -5,7 +5,7 @@ from homeassistant.components.binary_sensor import (
 )
 
 from . import FliprEntity
-from .const import DOMAIN, CONF_FLIPR_ID
+from .const import CONF_FLIPR_ID, DOMAIN
 
 BINARY_SENSORS = {
     "ph_status": {
