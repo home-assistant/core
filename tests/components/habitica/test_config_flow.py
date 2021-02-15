@@ -82,7 +82,7 @@ async def test_form_unexpected_exception(hass):
     )
 
     with patch(
-        "homeassistant.components.habitica.config_flow.validate_input",
+        "homeassistant.components.habitica.config_flow.HabitipyAsync",
         side_effect=Exception,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -114,7 +114,7 @@ async def test_manual_flow_config_exist(hass, aioclient_mock):
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.habitica.config_flow.validate_input",
+        "homeassistant.components.habitica.config_flow.HabitipyAsync",
         return_value={CONF_API_USER: "test-api-user"},
     ):
         result = await hass.config_entries.flow.async_configure(

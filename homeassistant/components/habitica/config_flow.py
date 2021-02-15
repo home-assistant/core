@@ -24,7 +24,9 @@ DATA_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: core.HomeAssistant, data: Dict[str, str]) -> Dict[str, str]:
+async def validate_input(
+    hass: core.HomeAssistant, data: Dict[str, str]
+) -> Dict[str, str]:
     """Validate the user input allows us to connect."""
 
     websession = async_get_clientsession(hass)
