@@ -20,6 +20,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_PLAYLIST,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
+    ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SEASON,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SERIES_TITLE,
@@ -28,13 +29,23 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_SOUND_MODE,
+    ATTR_SOUND_MODE_LIST,
     DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
+    SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_REPEAT_SET,
+    SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
+    SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
@@ -55,7 +66,9 @@ from homeassistant.const import (
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
+    SERVICE_REPEAT_SET,
     SERVICE_SHUFFLE_SET,
+    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
@@ -383,6 +396,16 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         return self._child_attr(ATTR_APP_NAME)
 
     @property
+    def sound_mode(self):
+        """Return the current sound mode of the device."""
+        return self._override_or_child_attr(ATTR_SOUND_MODE)
+
+    @property
+    def sound_mode_list(self):
+        """List of available sound modes."""
+        return self._override_or_child_attr(ATTR_SOUND_MODE_LIST)
+
+    @property
     def source(self):
         """Return the current input source of the device."""
         return self._override_or_child_attr(ATTR_INPUT_SOURCE)
@@ -391,6 +414,11 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     def source_list(self):
         """List of available input sources."""
         return self._override_or_child_attr(ATTR_INPUT_SOURCE_LIST)
+
+    @property
+    def repeat(self):
+        """Boolean if repeating is enabled."""
+        return self._override_or_child_attr(ATTR_MEDIA_REPEAT)
 
     @property
     def shuffle(self):
@@ -407,6 +435,22 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         if SERVICE_TURN_OFF in self._cmds:
             flags |= SUPPORT_TURN_OFF
 
+        if SERVICE_MEDIA_PLAY_PAUSE in self._cmds:
+            flags |= SUPPORT_PLAY | SUPPORT_PAUSE
+        else:
+            if SERVICE_MEDIA_PLAY in self._cmds:
+                flags |= SUPPORT_PLAY
+            if SERVICE_MEDIA_PAUSE in self._cmds:
+                flags |= SUPPORT_PAUSE
+
+        if SERVICE_MEDIA_STOP in self._cmds:
+            flags |= SUPPORT_STOP
+
+        if SERVICE_MEDIA_NEXT_TRACK in self._cmds:
+            flags |= SUPPORT_NEXT_TRACK
+        if SERVICE_MEDIA_PREVIOUS_TRACK in self._cmds:
+            flags |= SUPPORT_PREVIOUS_TRACK
+
         if any([cmd in self._cmds for cmd in [SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN]]):
             flags |= SUPPORT_VOLUME_STEP
         if SERVICE_VOLUME_SET in self._cmds:
@@ -415,7 +459,10 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         if SERVICE_VOLUME_MUTE in self._cmds and ATTR_MEDIA_VOLUME_MUTED in self._attrs:
             flags |= SUPPORT_VOLUME_MUTE
 
-        if SERVICE_SELECT_SOURCE in self._cmds:
+        if (
+            SERVICE_SELECT_SOURCE in self._cmds
+            and ATTR_INPUT_SOURCE_LIST in self._attrs
+        ):
             flags |= SUPPORT_SELECT_SOURCE
 
         if SERVICE_CLEAR_PLAYLIST in self._cmds:
@@ -423,6 +470,15 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
         if SERVICE_SHUFFLE_SET in self._cmds and ATTR_MEDIA_SHUFFLE in self._attrs:
             flags |= SUPPORT_SHUFFLE_SET
+
+        if SERVICE_REPEAT_SET in self._cmds and ATTR_MEDIA_REPEAT in self._attrs:
+            flags |= SUPPORT_REPEAT_SET
+
+        if (
+            SERVICE_SELECT_SOUND_MODE in self._cmds
+            and ATTR_SOUND_MODE_LIST in self._attrs
+        ):
+            flags |= SUPPORT_SELECT_SOUND_MODE
 
         return flags
 
@@ -502,6 +558,13 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         """Play or pause the media player."""
         await self._async_call_service(SERVICE_MEDIA_PLAY_PAUSE)
 
+    async def async_select_sound_mode(self, sound_mode):
+        """Select sound mode."""
+        data = {ATTR_SOUND_MODE: sound_mode}
+        await self._async_call_service(
+            SERVICE_SELECT_SOUND_MODE, data, allow_override=True
+        )
+
     async def async_select_source(self, source):
         """Set the input source."""
         data = {ATTR_INPUT_SOURCE: source}
@@ -515,6 +578,15 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         """Enable/disable shuffling."""
         data = {ATTR_MEDIA_SHUFFLE: shuffle}
         await self._async_call_service(SERVICE_SHUFFLE_SET, data, allow_override=True)
+
+    async def async_set_repeat(self, repeat):
+        """Set repeat mode."""
+        data = {ATTR_MEDIA_REPEAT: repeat}
+        await self._async_call_service(SERVICE_REPEAT_SET, data, allow_override=True)
+
+    async def async_toggle(self):
+        """Toggle the power on the media player."""
+        await self._async_call_service(SERVICE_TOGGLE)
 
     async def async_update(self):
         """Update state in HA."""
