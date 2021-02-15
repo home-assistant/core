@@ -18,13 +18,4 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-            "scan_interval": "Scan interval (seconds)"
-        }
-      }
-    }
-  }
 }
