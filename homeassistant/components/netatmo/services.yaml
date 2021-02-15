@@ -54,7 +54,7 @@ set_person_away:
       description: Person's name (optional)
       example: Bob
       selector:
-        object:
+        text:
 
 register_webhook:
   description: Register webhook
