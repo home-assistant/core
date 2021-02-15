@@ -101,13 +101,6 @@ class SmartTubController:
             )
             self._spa_devices[spa.id] = device
 
-    async def async_unregister_devices(self):
-        """Unregister all spa devices with the device registry."""
-        device_registry = await dr.async_get_registry(self._hass)
-        for device in self._spa_devices.values():
-            device_registry.async_remove_device(device.id)
-        self._spa_devices = {}
-
     async def login(self, email, password) -> Account:
         """Retrieve the account corresponding to the specified email and password.
 
