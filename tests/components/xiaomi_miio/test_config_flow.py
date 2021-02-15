@@ -6,7 +6,10 @@ from miio import DeviceException
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_miio import const
-from homeassistant.components.xiaomi_miio.config_flow import DEFAULT_DEVICE_NAME, DEFAULT_GATEWAY_NAME
+from homeassistant.components.xiaomi_miio.config_flow import (
+    DEFAULT_DEVICE_NAME,
+    DEFAULT_GATEWAY_NAME,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 
 ZEROCONF_NAME = "name"
