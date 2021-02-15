@@ -2,6 +2,7 @@
 import json
 from unittest.mock import patch
 
+from zwave_js_server.const import LogLevel
 from zwave_js_server.event import Event
 
 from homeassistant.components.zwave_js.api import ENTRY_ID, ID, NODE_ID, TYPE
@@ -287,3 +288,41 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
         "error" in msg
         and "must be provided if logging to file" in msg["error"]["message"]
     )
+
+
+async def test_get_log_config(hass, client, integration, hass_ws_client):
+    """Test that the get_log_config WS API call works."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    # Test we can set log level
+    client.async_send_command.return_value = {
+        "success": True,
+        "config": {
+            "enabled": True,
+            "level": 0,
+            "logToFile": False,
+            "filename": "/test.txt",
+            "forceConsole": False,
+            "transports": ["test"],
+        },
+    }
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/get_log_config",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+    # _LOGGER.error(msg)
+    assert msg["result"]
+    assert msg["success"]
+
+    log_config = msg["result"]
+    assert log_config["enabled"]
+    assert log_config["level"] == LogLevel.ERROR
+    assert log_config["log_to_file"] is False
+    assert log_config["filename"] == "/test.txt"
+    assert log_config["force_console"] is False
+    assert log_config["transports"] == ["test"]

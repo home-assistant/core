@@ -1,4 +1,5 @@
 """Websocket API for Z-Wave JS."""
+import dataclasses
 import json
 from typing import Dict
 
@@ -45,6 +46,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
     websocket_api.async_register_command(hass, websocket_get_config_parameters)
     websocket_api.async_register_command(hass, websocket_update_log_config)
+    websocket_api.async_register_command(hass, websocket_get_log_config)
     hass.http.register_view(DumpView)  # type: ignore
 
 
@@ -361,6 +363,27 @@ async def websocket_update_log_config(
     connection.send_result(
         msg[ID],
         result,
+    )
+
+
+@websocket_api.require_admin  # type: ignore
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/get_log_config",
+        vol.Required(ENTRY_ID): str,
+    },
+)
+async def websocket_get_log_config(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
+    """Cancel removing a node from the Z-Wave network."""
+    entry_id = msg[ENTRY_ID]
+    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    result = await client.driver.async_get_log_config()
+    connection.send_result(
+        msg[ID],
+        dataclasses.asdict(result),
     )
 
 
