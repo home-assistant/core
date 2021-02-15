@@ -8,7 +8,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
 async def test_invalid_credentials(hass, controller, smarttub_api, config_entry):
-    """Check that we start a new config flow if the configured credentials are invalid.
+    """Check that we return False if the configured credentials are invalid.
 
     This should mean that the user changed their SmartTub password.
     """
@@ -35,7 +35,3 @@ async def test_login(controller, smarttub_api, account):
     account = await controller.login("test-email1", "test-password1")
     smarttub_api.login.assert_called()
     assert account == account
-
-    smarttub_api.login.side_effect = smarttub.LoginFailed
-    account = await controller.login("test-email1", "test-password1")
-    assert account is None

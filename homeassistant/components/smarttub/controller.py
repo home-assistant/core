@@ -9,7 +9,6 @@ import async_timeout
 from smarttub import APIError, LoginFailed, SmartTub
 from smarttub.api import Account
 
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -46,6 +45,18 @@ class SmartTubController:
             self._account = await self.login(
                 entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD]
             )
+        except LoginFailed:
+            # credentials were changed or invalidated, we need new ones
+            # TODO: implement reauth
+            # self._hass.async_create_task(
+            #     self._hass.config_entries.flow.async_init(
+            #         DOMAIN,
+            #         context={"source": SOURCE_REAUTH},
+            #         data=None,
+            #     )
+            # )
+
+            return False
         except (
             asyncio.TimeoutError,
             client_exceptions.ClientOSError,
@@ -53,18 +64,6 @@ class SmartTubController:
             client_exceptions.ContentTypeError,
         ) as err:
             raise ConfigEntryNotReady from err
-
-        if self._account is None:
-            # credentials were changed or invalidated, we need new ones
-            self._hass.async_create_task(
-                self._hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_REAUTH},
-                    data=None,
-                )
-            )
-
-            return False
 
         self.spas = await self._account.get_spas()
 
@@ -115,9 +114,5 @@ class SmartTubController:
         Returns None if the credentials are invalid.
         """
 
-        try:
-            await self._api.login(email, password)
-        except LoginFailed:
-            return None
-        account = await self._api.get_account()
-        return account
+        await self._api.login(email, password)
+        return await self._api.get_account()

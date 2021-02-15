@@ -1,6 +1,7 @@
 """Config flow to configure the SmartTub integration."""
 import logging
 
+from smarttub import LoginFailed
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -27,25 +28,23 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors = {}
 
-        if user_input is not None:
-            controller = SmartTubController(self.hass)
+        if user_input is None:
+            return self.async_show_form(
+                step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            )
+
+        controller = SmartTubController(self.hass)
+        try:
             account = await controller.login(
                 user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
             )
-            if account is not None:
-                await self.async_set_unique_id(account.id)
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=user_input[CONF_EMAIL], data=user_input
-                )
-
+        except LoginFailed:
             errors["base"] = "invalid_auth"
+            return self.async_show_form(
+                step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            )
 
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
-        )
+        await self.async_set_unique_id(account.id)
+        self._abort_if_unique_id_configured()
 
-    async def async_step_reauth(self, user_input=None):
-        """Handle a flow initiated by failed auth."""
-        return await self.async_step_user(user_input)
+        return self.async_create_entry(title=user_input[CONF_EMAIL], data=user_input)
