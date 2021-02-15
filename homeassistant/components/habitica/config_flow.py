@@ -1,5 +1,6 @@
 """Config flow for habitica integration."""
 import logging
+from typing import Dict
 
 from aiohttp import ClientResponseError
 from habitipy.aio import HabitipyAsync
@@ -23,7 +24,7 @@ DATA_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: core.HomeAssistant, data) -> Dict:
     """Validate the user input allows us to connect."""
 
     websession = async_get_clientsession(hass)
@@ -40,7 +41,7 @@ async def validate_input(hass: core.HomeAssistant, data):
             "title": f"{data.get('name', 'Default username')}",
             CONF_API_USER: data[CONF_API_USER],
         }
-    except ClientResponseError as ex:  # pylint: disable=broad-except
+    except ClientResponseError as ex:
         raise InvalidAuth() from ex
 
 

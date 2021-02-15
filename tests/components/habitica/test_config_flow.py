@@ -59,7 +59,7 @@ async def test_form_invalid_credentials(hass):
     )
 
     with patch(
-        "homeassistant.components.habitica.config_flow.validate_input",
+        "habitipy.aio.HabitipyAsync",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(

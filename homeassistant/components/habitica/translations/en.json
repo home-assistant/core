@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "connection_error": "Connection error",
             "invalid_credentials": "Invalid credentials",
             "unknown": "Unknown error"
         },
