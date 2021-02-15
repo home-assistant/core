@@ -44,7 +44,10 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=DATA_SCHEMA, errors=errors
             )
 
-        await self.async_set_unique_id(account.id)
-        self._abort_if_unique_id_configured()
+        existing_entry = await self.async_set_unique_id(account.id)
+        if existing_entry:
+            self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
+            await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
 
         return self.async_create_entry(title=user_input[CONF_EMAIL], data=user_input)
