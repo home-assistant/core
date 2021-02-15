@@ -186,18 +186,6 @@ class WaterHeaterEntity(Entity):
                 self.temperature_unit,
                 self.precision,
             ),
-            ATTR_TARGET_TEMP_HIGH: show_temp(
-                self.hass,
-                self.target_temperature_high,
-                self.temperature_unit,
-                self.precision,
-            ),
-            ATTR_TARGET_TEMP_LOW: show_temp(
-                self.hass,
-                self.target_temperature_low,
-                self.temperature_unit,
-                self.precision,
-            ),
         }
 
         supported_features = self.supported_features
@@ -241,16 +229,6 @@ class WaterHeaterEntity(Entity):
     @property
     def target_temperature_step(self) -> Optional[float]:
         """Return the supported step of target temperature."""
-        return None
-
-    @property
-    def target_temperature_high(self) -> Optional[float]:
-        """Return the highbound target temperature we try to reach."""
-        return None
-
-    @property
-    def target_temperature_low(self) -> Optional[float]:
-        """Return the lowbound target temperature we try to reach."""
         return None
 
     @property
