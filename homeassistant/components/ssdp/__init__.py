@@ -1,14 +1,16 @@
 """The SSDP integration."""
 import asyncio
 from datetime import timedelta
-import itertools
 import logging
+from typing import Any, Mapping
 
 import aiohttp
+from async_upnp_client.search import async_search
 from defusedxml import ElementTree
 from netdisco import ssdp, util
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.loader import async_get_ssdp
 
@@ -51,12 +53,6 @@ async def async_setup(hass, config):
     return True
 
 
-def _run_ssdp_scans():
-    _LOGGER.debug("Scanning")
-    # Run 3 times as packets can get lost
-    return itertools.chain.from_iterable([ssdp.scan() for _ in range(3)])
-
-
 class Scanner:
     """Class to manage SSDP scanning."""
 
@@ -64,25 +60,38 @@ class Scanner:
         """Initialize class."""
         self.hass = hass
         self.seen = set()
+        self._entries = []
         self._integration_matchers = integration_matchers
         self._description_cache = {}
 
+    async def _on_ssdp_response(self, data: Mapping[str, Any]) -> None:
+        """Process an ssdp response."""
+        self.async_store_entry(
+            ssdp.UPNPEntry({key.lower(): item for key, item in data.items()})
+        )
+
+    @callback
+    def async_store_entry(self, entry):
+        """Save an entry for later processing."""
+        self._entries.append(entry)
+
     async def async_scan(self, _):
         """Scan for new entries."""
-        entries = await self.hass.async_add_executor_job(_run_ssdp_scans)
 
-        await self._process_entries(entries)
+        await async_search(async_callback=self._on_ssdp_response)
+        await self._process_entries()
 
         # We clear the cache after each run. We track discovered entries
         # so will never need a description twice.
         self._description_cache.clear()
+        self._entries.clear()
 
-    async def _process_entries(self, entries):
+    async def _process_entries(self):
         """Process SSDP entries."""
         entries_to_process = []
         unseen_locations = set()
 
-        for entry in entries:
+        for entry in self._entries:
             key = (entry.st, entry.location)
 
             if key in self.seen:

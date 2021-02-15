@@ -284,6 +284,7 @@ asmog==0.0.6
 asterisk_mbox==0.5.0
 
 # homeassistant.components.dlna_dmr
+# homeassistant.components.ssdp
 # homeassistant.components.upnp
 async-upnp-client==0.14.13
 
@@ -383,7 +384,7 @@ bravia-tv==1.0.8
 broadlink==0.16.0
 
 # homeassistant.components.brother
-brother==0.2.0
+brother==0.2.1
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -1943,7 +1944,7 @@ restrictedpython==5.1
 rfk101py==0.0.1
 
 # homeassistant.components.rflink
-rflink==0.0.55
+rflink==0.0.58
 
 # homeassistant.components.ring
 ring_doorbell==0.6.2
@@ -2009,13 +2010,11 @@ sendgrid==6.5.0
 sense-hat==2.2.0
 
 # homeassistant.components.emulated_kasa
-sense_energy==0.8.1
-
 # homeassistant.components.sense
 sense_energy==0.9.0
 
 # homeassistant.components.sentry
-sentry-sdk==0.19.5
+sentry-sdk==0.20.1
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8

@@ -176,6 +176,7 @@ aprslib==0.6.46
 arcam-fmj==0.5.3
 
 # homeassistant.components.dlna_dmr
+# homeassistant.components.ssdp
 # homeassistant.components.upnp
 async-upnp-client==0.14.13
 
@@ -216,7 +217,7 @@ bravia-tv==1.0.8
 broadlink==0.16.0
 
 # homeassistant.components.brother
-brother==0.2.0
+brother==0.2.1
 
 # homeassistant.components.bsblan
 bsblan==0.4.0
@@ -998,7 +999,7 @@ regenmaschine==3.0.0
 restrictedpython==5.1
 
 # homeassistant.components.rflink
-rflink==0.0.55
+rflink==0.0.58
 
 # homeassistant.components.ring
 ring_doorbell==0.6.2
@@ -1028,13 +1029,11 @@ samsungtvws==1.4.0
 scapy==2.4.4
 
 # homeassistant.components.emulated_kasa
-sense_energy==0.8.1
-
 # homeassistant.components.sense
 sense_energy==0.9.0
 
 # homeassistant.components.sentry
-sentry-sdk==0.19.5
+sentry-sdk==0.20.1
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
