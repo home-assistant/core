@@ -96,6 +96,7 @@ class VeluxCover(CoverEntity):
         """Return the current position of the cover."""
         if isinstance(self.node, Blind):
             return 100 - self.node.orientation.position_percent
+        return None
 
     @property
     def device_class(self):
@@ -154,9 +155,8 @@ class VeluxCover(CoverEntity):
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move cover tilt to a specific position."""
-        if ATTR_TILT_POSITION in kwargs:
-            position_percent = 100 - kwargs[ATTR_TILT_POSITION]
-            orientation = Position(position_percent=position_percent)
-            await self.node.set_orientation(
-                orientation=orientation, wait_for_completion=False
-            )
+        position_percent = 100 - kwargs[ATTR_TILT_POSITION]
+        orientation = Position(position_percent=position_percent)
+        await self.node.set_orientation(
+            orientation=orientation, wait_for_completion=False
+        )

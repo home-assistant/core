@@ -1,4 +1,6 @@
 """Helpers for sun events."""
+from __future__ import annotations
+
 import datetime
 from typing import TYPE_CHECKING, Optional, Union
 
@@ -17,9 +19,8 @@ DATA_LOCATION_CACHE = "astral_location_cache"
 
 @callback
 @bind_hass
-def get_astral_location(hass: HomeAssistantType) -> "astral.Location":
+def get_astral_location(hass: HomeAssistantType) -> astral.Location:
     """Get an astral location for the current Home Assistant configuration."""
-
     from astral import Location  # pylint: disable=import-outside-toplevel
 
     latitude = hass.config.latitude

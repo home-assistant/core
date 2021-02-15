@@ -3,11 +3,11 @@
   "name": "Tesla",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tesla",
-  "requirements": ["teslajsonpy==0.10.4"],
+  "requirements": ["teslajsonpy==0.11.5"],
   "codeowners": ["@zabuldon", "@alandtse"],
   "dhcp": [
-     {"hostname":"tesla_*","macaddress":"4CFCAA*"},
-     {"hostname":"tesla_*","macaddress":"044EAF*"},
-     {"hostname":"tesla_*","macaddress":"98ED5C*"}
+    { "hostname": "tesla_*", "macaddress": "4CFCAA*" },
+    { "hostname": "tesla_*", "macaddress": "044EAF*" },
+    { "hostname": "tesla_*", "macaddress": "98ED5C*" }
   ]
 }

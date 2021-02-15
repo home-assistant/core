@@ -1,13 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Controller site is al geconfigureerd"
+            "already_configured": "Controller site is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
             "faulty_credentials": "Foutieve gebruikersgegevens",
             "service_unavailable": "Geen service beschikbaar",
             "unknown_client_mac": "Geen client beschikbaar op dat MAC-adres"
         },
+        "flow_title": "UniFi Netwerk {site} ({host})",
         "step": {
             "user": {
                 "data": {

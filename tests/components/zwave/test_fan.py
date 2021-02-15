@@ -39,7 +39,7 @@ def test_fan_turn_on(mock_openzwave):
 
     node.reset_mock()
 
-    device.turn_on(speed=SPEED_OFF)
+    device.turn_on(percentage=0)
 
     assert node.set_dimmer.called
     value_id, brightness = node.set_dimmer.mock_calls[0][1]
@@ -49,7 +49,7 @@ def test_fan_turn_on(mock_openzwave):
 
     node.reset_mock()
 
-    device.turn_on(speed=SPEED_LOW)
+    device.turn_on(percentage=1)
 
     assert node.set_dimmer.called
     value_id, brightness = node.set_dimmer.mock_calls[0][1]
@@ -59,7 +59,7 @@ def test_fan_turn_on(mock_openzwave):
 
     node.reset_mock()
 
-    device.turn_on(speed=SPEED_MEDIUM)
+    device.turn_on(percentage=50)
 
     assert node.set_dimmer.called
     value_id, brightness = node.set_dimmer.mock_calls[0][1]
@@ -69,7 +69,7 @@ def test_fan_turn_on(mock_openzwave):
 
     node.reset_mock()
 
-    device.turn_on(speed=SPEED_HIGH)
+    device.turn_on(percentage=100)
 
     assert node.set_dimmer.called
     value_id, brightness = node.set_dimmer.mock_calls[0][1]

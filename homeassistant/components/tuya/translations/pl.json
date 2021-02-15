@@ -53,7 +53,7 @@
                     "discovery_interval": "Cz\u0119stotliwo\u015b\u0107 skanowania nowych urz\u0105dze\u0144 (w sekundach)",
                     "list_devices": "Wybierz urz\u0105dzenia do skonfigurowania lub pozostaw puste, aby zapisa\u0107 konfiguracj\u0119",
                     "query_device": "Wybierz urz\u0105dzenie, kt\u00f3re b\u0119dzie u\u017cywa\u0107 metody odpytywania w celu szybszej aktualizacji statusu",
-                    "query_interval": "Cz\u0119stotliwo\u015b\u0107 skanowania odpytywanego urz\u0105dzenia (w sekundach)"
+                    "query_interval": "Cz\u0119stotliwo\u015b\u0107 skanowania odpytywanego urz\u0105dzenia w sekundach"
                 },
                 "description": "Nie ustawiaj zbyt niskich warto\u015bci skanowania, bo zako\u0144cz\u0105 si\u0119 niepowodzeniem, generuj\u0105c komunikat o b\u0142\u0119dzie w logu",
                 "title": "Konfiguracja opcji Tuya"

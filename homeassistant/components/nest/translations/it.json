@@ -5,7 +5,7 @@
             "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
             "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
             "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})",
-            "reauth_successful": "Riautenticato con successo",
+            "reauth_successful": "La riautenticazione ha avuto successo",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
             "unknown_authorize_url_generation": "Errore sconosciuto durante la generazione di un URL di autorizzazione."
         },
@@ -38,7 +38,7 @@
             },
             "reauth_confirm": {
                 "description": "L'integrazione di Nest deve autenticare nuovamente il tuo account",
-                "title": "Autentica nuovamente l'integrazione"
+                "title": "Reautenticare l'integrazione"
             }
         }
     },

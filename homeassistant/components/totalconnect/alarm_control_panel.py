@@ -21,8 +21,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up TotalConnect alarm panels based on a config entry."""

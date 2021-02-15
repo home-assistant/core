@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
@@ -79,7 +80,9 @@ async def async_initialize_triggers(
     removes = []
 
     for result in attach_results:
-        if isinstance(result, Exception):
+        if isinstance(result, HomeAssistantError):
+            log_cb(logging.ERROR, f"Got error '{result}' when setting up triggers for")
+        elif isinstance(result, Exception):
             log_cb(logging.ERROR, "Error setting up trigger", exc_info=result)
         elif result is None:
             log_cb(

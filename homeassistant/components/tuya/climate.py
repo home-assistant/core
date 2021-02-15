@@ -1,6 +1,5 @@
 """Support for the Tuya climate devices."""
 from datetime import timedelta
-import logging
 
 from homeassistant.components.climate import (
     DOMAIN as SENSOR_DOMAIN,
@@ -55,8 +54,6 @@ HA_STATE_TO_TUYA = {
 TUYA_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_TUYA.items()}
 
 FAN_MODES = {FAN_LOW, FAN_MEDIUM, FAN_HIGH}
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

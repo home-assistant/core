@@ -1,6 +1,5 @@
 """Module to help with parsing and generating configuration files."""
 from collections import OrderedDict
-from distutils.version import LooseVersion  # pylint: disable=import-error
 import logging
 import os
 import re
@@ -8,6 +7,7 @@ import shutil
 from types import ModuleType
 from typing import Any, Callable, Dict, Optional, Sequence, Set, Tuple, Union
 
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -51,6 +51,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, extract_domain_configs
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, IntegrationNotFound
 from homeassistant.requirements import (
     RequirementsNotFound,
@@ -363,15 +364,15 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
         "Upgrading configuration directory from %s to %s", conf_version, __version__
     )
 
-    version_obj = LooseVersion(conf_version)
+    version_obj = AwesomeVersion(conf_version)
 
-    if version_obj < LooseVersion("0.50"):
+    if version_obj < AwesomeVersion("0.50"):
         # 0.50 introduced persistent deps dir.
         lib_path = hass.config.path("deps")
         if os.path.isdir(lib_path):
             shutil.rmtree(lib_path)
 
-    if version_obj < LooseVersion("0.92"):
+    if version_obj < AwesomeVersion("0.92"):
         # 0.92 moved google/tts.py to google_translate/tts.py
         config_path = hass.config.path(YAML_CONFIG_FILE)
 
@@ -387,7 +388,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
             except OSError:
                 _LOGGER.exception("Migrating to google_translate tts failed")
 
-    if version_obj < LooseVersion("0.94") and is_docker_env():
+    if version_obj < AwesomeVersion("0.94") and is_docker_env():
         # In 0.94 we no longer install packages inside the deps folder when
         # running inside a Docker container.
         lib_path = hass.config.path("deps")
@@ -734,8 +735,8 @@ async def merge_packages_config(
 
 
 async def async_process_component_config(
-    hass: HomeAssistant, config: Dict, integration: Integration
-) -> Optional[Dict]:
+    hass: HomeAssistant, config: ConfigType, integration: Integration
+) -> Optional[ConfigType]:
     """Check component configuration and return processed configuration.
 
     Returns None on error.

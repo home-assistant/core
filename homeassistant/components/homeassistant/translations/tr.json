@@ -2,9 +2,11 @@
     "system_health": {
         "info": {
             "arch": "CPU Mimarisi",
+            "chassis": "Ana G\u00f6vde",
             "dev": "Geli\u015ftirme",
             "docker": "Konteyner",
             "docker_version": "Konteyner",
+            "hassio": "S\u00fcperviz\u00f6r",
             "host_os": "Home Assistant OS",
             "installation_type": "Kurulum T\u00fcr\u00fc",
             "os_name": "\u0130\u015fletim Sistemi Ailesi",

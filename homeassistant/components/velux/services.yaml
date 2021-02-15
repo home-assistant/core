@@ -1,0 +1,4 @@
+# Velux Integration services
+
+reboot_gateway:
+  description: Reboots the KLF200 Gateway.

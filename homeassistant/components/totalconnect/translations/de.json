@@ -1,7 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto bereits konfiguriert"
+            "already_configured": "Konto wurde bereits konfiguriert"
+        },
+        "error": {
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "step": {
             "user": {
