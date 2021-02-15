@@ -47,14 +47,6 @@ class SmartTubController:
             )
         except LoginFailed:
             # credentials were changed or invalidated, we need new ones
-            # TODO: implement reauth
-            # self._hass.async_create_task(
-            #     self._hass.config_entries.flow.async_init(
-            #         DOMAIN,
-            #         context={"source": SOURCE_REAUTH},
-            #         data=None,
-            #     )
-            # )
 
             return False
         except (
