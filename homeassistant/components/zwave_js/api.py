@@ -315,7 +315,7 @@ def filename_is_present_if_logging_to_file(obj: Dict) -> Dict:
 async def websocket_update_log_config(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ) -> None:
-    """Cancel removing a node from the Z-Wave network."""
+    """Update the driver log config."""
     entry_id = msg[ENTRY_ID]
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     result = await client.driver.async_update_log_config(LogConfig(**msg[CONF_CONFIG]))
