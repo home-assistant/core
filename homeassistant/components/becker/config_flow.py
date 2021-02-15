@@ -49,6 +49,15 @@ class BeckerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema({vol.Required(CONF_DEVICE_PATH): vol.In(list_of_ports)})
         return self.async_show_form(step_id="user", data_schema=schema)
 
+    async def async_step_import(self, info):
+        """Import existing configuration from Becker Cover."""
+        if self._async_current_entries():
+            return self.async_abort(reason="already_configured")
+        return self.async_create_entry(
+            title="Becker Cover (import from configuration.yaml)",
+            data={CONF_DEVICE_PATH: info.get(CONF_DEVICE_PATH)},
+        )
+
     async def async_step_port_config(self, user_input=None):
         """Enter port settings specific for this type of radio."""
         errors = {}
