@@ -1,0 +1,10 @@
+# Describes the format for available services for subaru
+fetch:
+  description: >
+    Refreshes data (does not request update from vehicle). The vehicle is identified via the vin
+    (see below).
+  fields:
+    vin:
+      description: >
+        The vehicle identification number (VIN) of the vehicle, 17 characters
+      example: JF2ABCDE6L0000001
