@@ -33,7 +33,8 @@ ATTR_PROPERTY_NAME = "property_name"
 ATTR_PROPERTY_KEY_NAME = "property_key_name"
 ATTR_PARAMETERS = "parameters"
 
-# constants for update_log_config service schema
+# constants for update_log_config websocket API schema
+CONF_CONFIG = "config"
 CONF_LEVEL = "level"
 CONF_LOG_TO_FILE = "log_to_file"
 CONF_FILENAME = "filename"
