@@ -3,6 +3,7 @@
 from homeassistant.components.homekit.const import (
     ATTR_KEY_NAME,
     ATTR_VALUE,
+    CHAR_NAME,
     CHAR_REMOTE_KEY,
     CONF_FEATURE_LIST,
     EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
@@ -11,6 +12,7 @@ from homeassistant.components.homekit.const import (
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     KEY_ARROW_RIGHT,
+    SERV_INPUT_SOURCE,
 )
 from homeassistant.components.homekit.type_media_players import (
     MediaPlayer,
@@ -198,13 +200,20 @@ async def test_media_player_television(hass, hk_driver, events, caplog):
             ATTR_DEVICE_CLASS: DEVICE_CLASS_TV,
             ATTR_SUPPORTED_FEATURES: 3469,
             ATTR_MEDIA_VOLUME_MUTED: False,
-            ATTR_INPUT_SOURCE_LIST: ["HDMI 1", "HDMI 2", "HDMI 3", "HDMI 4"],
+            ATTR_INPUT_SOURCE_LIST: ["HDMI 4", "HDMI 3", "HDMI 2", "HDMI 1"],
         },
     )
     await hass.async_block_till_done()
     acc = TelevisionMediaPlayer(hass, hk_driver, "MediaPlayer", entity_id, 2, None)
     await acc.run()
     await hass.async_block_till_done()
+
+    assert acc.sources == ["HDMI 1", "HDMI 2", "HDMI 3", "HDMI 4"]
+
+    assert (
+        acc.get_service(SERV_INPUT_SOURCE).get_characteristic(CHAR_NAME).value
+        == "HDMI 1"
+    )
 
     assert acc.aid == 2
     assert acc.category == 31  # Television

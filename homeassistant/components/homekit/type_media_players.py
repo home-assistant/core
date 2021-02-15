@@ -319,7 +319,13 @@ class TelevisionMediaPlayer(HomeAccessory):
                 )
 
         if self.support_select_source:
-            self.sources = source_list
+            # Source Names are not always stable identifiers:
+            #
+            # HomeKit will remember the order the sources
+            # are in, and some integrations return them in a different
+            # order each time. Sorting them reduces the chance
+            # HomeKit is mapping to the wrong one.
+            self.sources = sorted(source_list)
             self.char_input_source = serv_tv.configure_char(
                 CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_input_source
             )
