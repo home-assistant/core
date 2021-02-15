@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, SMARTTUB_CONTROLLER, UNSUB_UPDATE_LISTENER
+from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .controller import SmartTubController
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,6 @@ async def async_setup_entry(hass, entry):
     controller = SmartTubController(hass)
     hass.data[DOMAIN][entry.unique_id] = {
         SMARTTUB_CONTROLLER: controller,
-        UNSUB_UPDATE_LISTENER: entry.add_update_listener(async_update_options),
     }
 
     if not await controller.async_setup_entry(entry):
@@ -45,15 +44,9 @@ async def async_unload_entry(hass, entry):
         await hass.config_entries.async_forward_entry_unload(entry, platform)
 
     data = hass.data[DOMAIN][entry.unique_id]
-    data[UNSUB_UPDATE_LISTENER]()
 
     controller = data[SMARTTUB_CONTROLLER]
     await controller.async_unload_entry(entry)
     hass.data[DOMAIN].pop(entry.unique_id)
 
     return True
-
-
-async def async_update_options(hass, config_entry):
-    """Update options."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
