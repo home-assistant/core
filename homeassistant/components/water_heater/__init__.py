@@ -2,11 +2,12 @@
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 import voluptuous as vol
 
 from homeassistant.components.climate.const import ATTR_TARGET_TEMP_STEP
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -27,6 +28,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
 from homeassistant.util.temperature import convert as convert_temperature
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -67,8 +69,6 @@ CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE]
 
 _LOGGER = logging.getLogger(__name__)
 
-ON_OFF_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
-
 SET_AWAY_MODE_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
@@ -92,8 +92,8 @@ SET_OPERATION_MODE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
-    """Set up water_heater devices."""
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+    """Set up water_heater entities."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
@@ -109,23 +109,20 @@ async def async_setup(hass, config):
         SERVICE_SET_OPERATION_MODE,
         SET_OPERATION_MODE_SCHEMA,
         "async_set_operation_mode",
+        [SUPPORT_OPERATION_MODE],
     )
-    component.async_register_entity_service(
-        SERVICE_TURN_OFF, ON_OFF_SERVICE_SCHEMA, "async_turn_off"
-    )
-    component.async_register_entity_service(
-        SERVICE_TURN_ON, ON_OFF_SERVICE_SCHEMA, "async_turn_on"
-    )
+    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
 
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> Any:
     """Set up a config entry."""
     return await hass.data[DOMAIN].async_setup_entry(entry)
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> Any:
     """Unload a config entry."""
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
@@ -134,19 +131,19 @@ class WaterHeaterEntity(Entity):
     """Representation of a water_heater device."""
 
     @property
-    def state(self):
+    def state(self) -> Optional[str]:
         """Return the current state."""
         return self.current_operation
 
     @property
-    def precision(self):
+    def precision(self) -> float:
         """Return the precision of the system."""
         if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
             return PRECISION_TENTHS
         return PRECISION_WHOLE
 
     @property
-    def capability_attributes(self):
+    def capability_attributes(self) -> Optional[Dict[str, Any]]:
         """Return capability attributes."""
         supported_features = self.supported_features or 0
 
@@ -168,7 +165,7 @@ class WaterHeaterEntity(Entity):
         return data
 
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> Dict[str, Any]:
         """Return the optional state attributes."""
         data = {
             ATTR_CURRENT_TEMPERATURE: show_temp(
@@ -209,27 +206,27 @@ class WaterHeaterEntity(Entity):
         return data
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
         raise NotImplementedError
 
     @property
-    def current_operation(self):
+    def current_operation(self) -> Optional[str]:
         """Return current operation ie. eco, electric, performance, ..."""
         return None
 
     @property
-    def operation_list(self):
+    def operation_list(self) -> Optional[List[str]]:
         """Return the list of available operation modes."""
         return None
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
         return None
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
         return None
 
@@ -239,75 +236,77 @@ class WaterHeaterEntity(Entity):
         return None
 
     @property
-    def target_temperature_high(self):
+    def target_temperature_high(self) -> Optional[float]:
         """Return the highbound target temperature we try to reach."""
         return None
 
     @property
-    def target_temperature_low(self):
+    def target_temperature_low(self) -> Optional[float]:
         """Return the lowbound target temperature we try to reach."""
         return None
 
     @property
-    def is_away_mode_on(self):
+    def is_away_mode_on(self) -> Optional[bool]:
         """Return true if away mode is on."""
         return None
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         raise NotImplementedError()
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         await self.hass.async_add_executor_job(
             ft.partial(self.set_temperature, **kwargs)
         )
 
-    def set_operation_mode(self, operation_mode):
+    def set_operation_mode(self, operation_mode) -> None:
         """Set new target operation mode."""
         raise NotImplementedError()
 
-    async def async_set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode) -> None:
         """Set new target operation mode."""
         await self.hass.async_add_executor_job(self.set_operation_mode, operation_mode)
 
-    def turn_away_mode_on(self):
+    def turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         raise NotImplementedError()
 
-    async def async_turn_away_mode_on(self):
+    async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         await self.hass.async_add_executor_job(self.turn_away_mode_on)
 
-    def turn_away_mode_off(self):
+    def turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         raise NotImplementedError()
 
-    async def async_turn_away_mode_off(self):
+    async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         await self.hass.async_add_executor_job(self.turn_away_mode_off)
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list of supported features."""
         raise NotImplementedError()
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return convert_temperature(
             DEFAULT_MIN_TEMP, TEMP_FAHRENHEIT, self.temperature_unit
         )
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return convert_temperature(
             DEFAULT_MAX_TEMP, TEMP_FAHRENHEIT, self.temperature_unit
         )
 
 
-async def async_service_away_mode(entity, service):
+async def async_service_away_mode(
+    entity: WaterHeaterEntity, service: ServiceDataType
+) -> None:
     """Handle away mode service."""
     if service.data[ATTR_AWAY_MODE]:
         await entity.async_turn_away_mode_on()
@@ -315,7 +314,9 @@ async def async_service_away_mode(entity, service):
         await entity.async_turn_away_mode_off()
 
 
-async def async_service_temperature_set(entity, service):
+async def async_service_temperature_set(
+    entity: WaterHeaterEntity, service: ServiceDataType
+) -> None:
     """Handle set temperature service."""
     hass = entity.hass
     kwargs = {}
