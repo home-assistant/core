@@ -5,6 +5,7 @@ from pyrituals import Account
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import ACCOUNT_HASH, DOMAIN
 
@@ -20,7 +21,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Rituals Perfume Genie from a config entry."""
-    account = Account(EMPTY_CREDENTIALS, EMPTY_CREDENTIALS)
+    session = async_get_clientsession(hass)
+    account = Account(EMPTY_CREDENTIALS, EMPTY_CREDENTIALS, session)
     account.data = {ACCOUNT_HASH: entry.data.get(ACCOUNT_HASH)}
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = account
 

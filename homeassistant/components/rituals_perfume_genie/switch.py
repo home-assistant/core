@@ -2,7 +2,6 @@
 from datetime import timedelta
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -18,13 +17,12 @@ ICON = "mdi:fan"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the diffuser switch."""
-    session = async_get_clientsession(hass)
     account = hass.data[DOMAIN][config_entry.entry_id]
-    diffusers = await account.get_devices(session)
+    diffusers = await account.get_devices()
 
     entities = []
     for diffuser in diffusers:
-        entities.append(DiffuserSwitch(diffuser, session))
+        entities.append(DiffuserSwitch(diffuser))
 
     async_add_entities(entities, True)
 
@@ -32,10 +30,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DiffuserSwitch(SwitchEntity):
     """Representation of a diffuser switch."""
 
-    def __init__(self, diffuser, session):
+    def __init__(self, diffuser):
         """Initialize the switch."""
         self._diffuser = diffuser
-        self._session = session
 
     @property
     def device_info(self):
@@ -84,12 +81,12 @@ class DiffuserSwitch(SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        await self._diffuser.turn_on(self._session)
+        await self._diffuser.turn_on()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        await self._diffuser.turn_off(self._session)
+        await self._diffuser.turn_off()
 
     async def async_update(self):
         """Update the data of the device."""
-        await self._diffuser.update_data(self._session)
+        await self._diffuser.update_data()
