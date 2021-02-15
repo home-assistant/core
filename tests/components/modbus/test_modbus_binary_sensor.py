@@ -9,7 +9,14 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_INPUTS,
 )
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_SLAVE, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_SLAVE,
+    STATE_OFF,
+    STATE_ON,
+)
 
 from .conftest import base_config_test, base_test
 
@@ -28,6 +35,7 @@ async def test_config_binary_sensor(hass, do_discovery, do_options):
             {
                 CONF_SLAVE: 10,
                 CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
+                CONF_DEVICE_CLASS: "door",
             }
         )
     await base_config_test(

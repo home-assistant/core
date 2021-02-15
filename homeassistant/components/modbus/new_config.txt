@@ -1,0 +1,20 @@
+This PR contains the new configuration for all devices.
+
+In order to keep track of the changes, this document contains a chapter
+for each device type, indicating the new configuration and how to convert
+from old configuration.
+
+binary_sensor:
+
+	modbus:
+		binary_sensors: []
+
+	parameters:
+		CONF_NAME, required
+		CONF_ADDRESS, required
+		CONF_INPUT_TYPE, optional (CALL_TYPE_COIL) CALL_TYPE_DISCRETE or CALL_TYPE_COIL
+		CONF_SLAVE, optional (DEFAULT_SLAVE)
+		CONF_SCAN_INTERVAL, optional (DEFAULT_SCAN_INTERVAL)
+		CONF_DEVICE_CLASS, optional
+
+	--> NO CHANGES.
