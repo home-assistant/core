@@ -283,13 +283,11 @@ def websocket_get_configuration_values(
     node = client.driver.controller.nodes[node_id]
     values = node.get_configuration_values()
     result = {}
-    for value in values:
-        metadata = values[value].metadata
-        result[value] = {
-            "property": values[value].property_,
-            "property_name": values[value].property_name,
-            "property_key": values[value].property_key,
-            "type": values[value].type.value,
+    for value_id, zwave_value in values.items():
+        metadata = zwave_value.metadata
+        result[value_id] = {
+            "property": zwave_value.property_,
+            "configuration_value_type": zwave_value.configuration_value_type.value,
             "metadata": {
                 "description": metadata.description,
                 "label": metadata.label,
@@ -299,7 +297,7 @@ def websocket_get_configuration_values(
                 "unit": metadata.unit,
                 "writeable": metadata.writeable,
             },
-            "value": values[value].value,
+            "value": zwave_value.value,
         }
     connection.send_result(
         msg[ID],
