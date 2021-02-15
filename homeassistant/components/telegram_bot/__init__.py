@@ -26,8 +26,8 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_PLATFORM,
     CONF_URL,
-    HTTP_DIGEST_AUTHENTICATION,
     HTTP_BEARER_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
