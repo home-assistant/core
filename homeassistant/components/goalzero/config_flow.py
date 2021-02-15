@@ -1,6 +1,4 @@
 """Config flow for Goal Zero Yeti integration."""
-import logging
-
 from goalzero import Yeti, exceptions
 import voluptuous as vol
 
@@ -8,9 +6,9 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_NAME, DOMAIN  # pylint:disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
+from . import _LOGGER
+from .const import DEFAULT_NAME
+from .const import DOMAIN  # pylint:disable=unused-import
 
 DATA_SCHEMA = vol.Schema({"host": str, "name": str})
 

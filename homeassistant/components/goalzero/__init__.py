@@ -1,6 +1,6 @@
 """The Goal Zero Yeti integration."""
 import asyncio
-import logging
+from logging import getLogger
 
 from goalzero import Yeti, exceptions
 
@@ -17,10 +17,10 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN, MIN_TIME_BETWEEN_UPDATES
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = getLogger(__name__)
 
 
-PLATFORMS = ["binary_sensor", "switch"]
+PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
 
 async def async_setup(hass: HomeAssistant, config):
@@ -103,6 +103,7 @@ class YetiEntity(CoordinatorEntity):
             "identifiers": {(DOMAIN, self._server_unique_id)},
             "name": self._name,
             "manufacturer": "Goal Zero",
+            "sw_version": self.api.data["firmwareVersion"],
         }
 
     @property
