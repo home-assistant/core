@@ -1,24 +1,21 @@
 """The Z-Wave JS integration."""
 import asyncio
 import logging
-from typing import Callable, Dict, List
+from typing import Callable, List
 
 from async_timeout import timeout
-import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import LogLevel
 from zwave_js_server.exceptions import BaseZwaveJSServerError
-from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import Notification
 from zwave_js_server.model.value import ValueNotification
 
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_FILENAME, CONF_URL, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -38,8 +35,6 @@ from .const import (
     ATTR_TYPE,
     ATTR_VALUE,
     CONF_INTEGRATION_CREATED_ADDON,
-    CONF_LEVEL,
-    CONF_LOG_TO_FILE,
     DATA_CLIENT,
     DATA_UNSUBSCRIBE,
     DOMAIN,
@@ -54,37 +49,6 @@ LOGGER = logging.getLogger(__package__)
 CONNECT_TIMEOUT = 10
 DATA_CLIENT_LISTEN_TASK = "client_listen_task"
 DATA_START_PLATFORM_TASK = "start_platform_task"
-
-
-def convert_log_level_to_enum(value: str) -> LogLevel:
-    """Convert log level string to LogLevel enum."""
-    return LogLevel[value.upper()]
-
-
-def filename_is_present_if_logging_to_file(obj: Dict) -> Dict:
-    """Validate that filename is provided if log_to_file is True."""
-    if obj.get(CONF_LOG_TO_FILE, False) and CONF_FILENAME not in obj:
-        raise vol.Invalid("`filename` must be provided if logging to file")
-    return obj
-
-
-SERVICE_UPDATE_LOG_CONFIG = "update_log_config"
-SERVICE_UPDATE_LOG_CONFIG_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Optional(CONF_LEVEL): vol.All(
-                cv.string,
-                vol.Lower,
-                vol.In([log_level.name.lower() for log_level in LogLevel]),
-                convert_log_level_to_enum,
-            ),
-            vol.Optional(CONF_LOG_TO_FILE): cv.boolean,
-            vol.Optional(CONF_FILENAME): cv.string,
-        }
-    ),
-    cv.has_at_least_one_key(CONF_LEVEL, CONF_LOG_TO_FILE, CONF_FILENAME),
-    filename_is_present_if_logging_to_file,
-)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -284,18 +248,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # NOTE: This will not remove nodes that were removed when HA was not running
         client.driver.controller.on(
             "node removed", lambda event: async_on_node_removed(event["node"])
-        )
-
-        async def async_update_log_config(call: ServiceCall) -> None:
-            """Handle service call to update log config."""
-            await client.driver.async_update_log_config(LogConfig(**call.data))
-
-        # Register update_log_config service
-        hass.services.async_register(
-            DOMAIN,
-            SERVICE_UPDATE_LOG_CONFIG,
-            async_update_log_config,
-            schema=SERVICE_UPDATE_LOG_CONFIG_SCHEMA,
         )
 
     platform_task = hass.async_create_task(start_platforms())
