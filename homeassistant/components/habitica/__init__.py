@@ -78,7 +78,7 @@ SERVICE_API_CALL_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Habitica service."""
     configs = config.get(DOMAIN, [])
 
@@ -95,7 +95,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up habitica from a config entry."""
 
     class HAHabitipyAsync(HabitipyAsync):
