@@ -20,6 +20,8 @@ from homeassistant.components.hassio.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import async_capture_events
+
 MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
 
 
@@ -366,12 +368,7 @@ async def test_websocket_supervisor_event(
     assert await async_setup_component(hass, "hassio", {})
     websocket_client = await hass_ws_client(hass)
 
-    events = []
-
-    def listener(ev):
-        events.append(ev.data)
-
-    assert hass.bus.async_listen(EVENT_SUPERVISOR_EVENT, listener)
+    test_event = async_capture_events(hass, EVENT_SUPERVISOR_EVENT)
 
     await websocket_client.send_json(
         {WS_ID: 1, WS_TYPE: WS_TYPE_EVENT, ATTR_DATA: {"event": "test"}}
@@ -380,7 +377,7 @@ async def test_websocket_supervisor_event(
     assert await websocket_client.receive_json()
     await hass.async_block_till_done()
 
-    assert events[0] == {"event": "test"}
+    assert test_event[0].data == {"event": "test"}
 
 
 async def test_websocket_supervisor_api(

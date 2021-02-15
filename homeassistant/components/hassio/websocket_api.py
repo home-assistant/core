@@ -77,7 +77,8 @@ async def websocket_supervisor_api(
             timeout=msg.get(ATTR_TIMEOUT, 10),
             payload=msg.get(ATTR_DATA, {}),
         )
-        connection.send_result(msg[WS_ID], result[ATTR_DATA])
     except hass.components.hassio.HassioAPIError as err:
         _LOGGER.error("Failed to to call %s - %s", msg[ATTR_ENDPOINT], err)
         connection.send_error(msg[WS_ID], err)
+    else:
+        connection.send_result(msg[WS_ID], result[ATTR_DATA])
