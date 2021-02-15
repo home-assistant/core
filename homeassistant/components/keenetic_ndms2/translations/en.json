@@ -1,36 +1,36 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "title": "Set up Keenetic NDMS2 Router",
-        "data": {
-          "name": "Name",
-          "host": "Host",
-          "username": "Username",
-          "password": "Password",
-          "port": "Port"
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "title": "Set up Keenetic NDMS2 Router"
+            }
         }
-      }
     },
-    "error": {
-      "cannot_connect": "Connection Unsuccessful"
-    },
-    "abort": {
-      "already_configured": "This router is already configured"
-    }
-  },
-  "options": {
-    "step": {
-      "user": {
-        "data": {
-          "scan_interval": "Scan interval",
-          "consider_home": "Consider home interval",
-          "interfaces": "Choose interfaces to scan",
-          "try_hotspot": "Use 'ip hotspot' data (most accurate)",
-          "include_arp": "Use ARP data (if hotspot disabled/unavailable)",
-          "include_associated": "Use WiFi AP associations data (if hotspot disabled/unavailable)"
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "consider_home": "Consider home interval",
+                    "include_arp": "Use ARP data (ignored if hotspot data used)",
+                    "include_associated": "Use WiFi AP associations data (ignored if hotspot data used)",
+                    "interfaces": "Choose interfaces to scan",
+                    "scan_interval": "Scan interval",
+                    "try_hotspot": "Use 'ip hotspot' data (most accurate)"
+                }
+            }
         }
-      }
     }
-  }
 }

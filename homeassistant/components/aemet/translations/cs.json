@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Um\u00edst\u011bn\u00ed je ji\u017e nastaveno"
+        },
+        "error": {
+            "invalid_api_key": "Neplatn\u00fd kl\u00ed\u010d API"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kl\u00ed\u010d API",
+                    "latitude": "Zem\u011bpisn\u00e1 \u0161\u00ed\u0159ka",
+                    "longitude": "Zem\u011bpisn\u00e1 d\u00e9lka"
+                }
+            }
+        }
+    }
+}
