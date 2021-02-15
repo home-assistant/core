@@ -346,8 +346,15 @@ class Recorder(threading.Thread):
         self.hass.add_job(register)
         result = hass_started.result()
 
+        self.event_session = self.get_session()
+        self.event_session.expire_on_commit = False
+
         # If shutdown happened before Home Assistant finished starting
         if result is shutdown_task:
+            # Make sure we cleanly close the run if
+            # we restart before startup finishes
+            self._close_run()
+            self._close_connection()
             return
 
         # Start periodic purge
@@ -363,8 +370,6 @@ class Recorder(threading.Thread):
                 async_purge, hour=4, minute=12, second=0
             )
 
-        self.event_session = self.get_session()
-        self.event_session.expire_on_commit = False
         # Use a session for the event read loop
         # with a commit every time the event time
         # has changed. This reduces the disk io.
