@@ -82,6 +82,17 @@ SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
     {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
 )
 
+SCHEMA_SNAPSHOT_FULL = vol.Schema(
+    {vol.Optional(ATTR_NAME): cv.string, vol.Optional(ATTR_PASSWORD): cv.string}
+)
+
+SCHEMA_SNAPSHOT_PARTIAL = SCHEMA_SNAPSHOT_FULL.extend(
+    {
+        vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
+
 SCHEMA_RESTORE_FULL = vol.Schema(
     {vol.Required(ATTR_SNAPSHOT): cv.slug, vol.Optional(ATTR_PASSWORD): cv.string}
 )
@@ -89,17 +100,6 @@ SCHEMA_RESTORE_FULL = vol.Schema(
 SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
-        vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
-
-SCHEMA_SNAPSHOT_FULL = vol.Schema(
-    {vol.Optional(ATTR_NAME): cv.string, vol.Optional(ATTR_PASSWORD): cv.string}
-)
-
-SCHEMA_SNAPSHOT_PARTIAL = SCHEMA_SNAPSHOT_FULL.extend(
-    {
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
     }
