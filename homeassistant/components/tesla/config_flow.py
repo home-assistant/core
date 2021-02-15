@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Text
 from aiohttp import web, web_response
 from aiohttp.web_exceptions import HTTPBadRequest
 from teslajsonpy import Controller as TeslaAPI
-from teslajsonpy.exceptions import IncompleteCredentials, TeslaException
+from teslajsonpy.exceptions import TeslaException
 from teslajsonpy.teslaproxy import TeslaProxy
 import voluptuous as vol
 from yarl import URL
