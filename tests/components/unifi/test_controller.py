@@ -299,31 +299,10 @@ async def test_config_entry_updated(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert controller.option_track_clients is False
-    assert controller.option_track_devices is False
+    assert config_entry.options[CONF_TRACK_CLIENTS] is False
+    assert config_entry.options[CONF_TRACK_DEVICES] is False
 
     event_call.assert_called_once()
-
-    unsub()
-
-
-async def test_config_entry_updated_no_matching_entry(hass, aioclient_mock):
-    """Verify options aren't updated if config entry not available."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    controller = hass.data[UNIFI_DOMAIN].pop(config_entry.entry_id)
-
-    event_call = Mock()
-    unsub = async_dispatcher_connect(hass, controller.signal_options_update, event_call)
-
-    hass.config_entries.async_update_entry(
-        config_entry, options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False}
-    )
-    await hass.async_block_till_done()
-
-    assert controller.option_track_clients is True
-    assert controller.option_track_devices is True
-
-    assert len(event_call.mock_calls) == 0
 
     unsub()
 
