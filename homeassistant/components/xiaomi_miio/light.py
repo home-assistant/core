@@ -6,14 +6,8 @@ from functools import partial
 import logging
 from math import ceil
 
-from miio import (  # pylint: disable=import-error
-    Ceil,
-    Device,
-    DeviceException,
-    PhilipsBulb,
-    PhilipsEyecare,
-    PhilipsMoonlight,
-)
+from miio import Ceil, DeviceException, PhilipsBulb, PhilipsEyecare, PhilipsMoonlight
+from miio import Device  # pylint: disable=import-error
 from miio.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
@@ -37,8 +31,9 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import color, dt
 
-from .config_flow import CONF_FLOW_TYPE, CONF_GATEWAY
 from .const import (
+    CONF_FLOW_TYPE,
+    CONF_GATEWAY,
     DOMAIN,
     SERVICE_EYECARE_MODE_OFF,
     SERVICE_EYECARE_MODE_ON,

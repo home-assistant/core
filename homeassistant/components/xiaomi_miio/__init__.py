@@ -3,11 +3,18 @@ from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers import device_registry as dr
 
-from .config_flow import CONF_FLOW_TYPE, CONF_GATEWAY
-from .const import DOMAIN
+from .const import (
+    CONF_DEVICE,
+    CONF_FLOW_TYPE,
+    CONF_GATEWAY,
+    CONF_MODEL,
+    DOMAIN,
+    MODELS_SWITCH,
+)
 from .gateway import ConnectXiaomiGateway
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor", "light"]
+SWITCH_PLATFORMS = ["switch"]
 
 
 async def async_setup(hass: core.HomeAssistant, config: dict):
@@ -19,9 +26,12 @@ async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up the Xiaomi Miio components from a config entry."""
-    hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
     if entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         if not await async_setup_gateway_entry(hass, entry):
+            return False
+    if entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+        if not await async_setup_device_entry(hass, entry):
             return False
 
     return True
@@ -62,6 +72,26 @@ async def async_setup_gateway_entry(
     )
 
     for component in GATEWAY_PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+
+    return True
+
+
+async def async_setup_device_entry(
+    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
+):
+    """Set up the Xiaomi Miio device component from a config entry."""
+    model = entry.data[CONF_MODEL]
+
+    # Identify platforms to setup
+    if model in MODELS_SWITCH:
+        platforms = SWITCH_PLATFORMS
+    else:
+        return False
+
+    for component in platforms:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )

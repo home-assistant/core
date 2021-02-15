@@ -1,6 +1,27 @@
 """Constants for the Xiaomi Miio component."""
 DOMAIN = "xiaomi_miio"
 
+CONF_FLOW_TYPE = "config_flow_device"
+CONF_GATEWAY = "gateway"
+CONF_DEVICE = "device"
+CONF_MODEL = "model"
+CONF_MAC = "mac"
+
+MODELS_GATEWAY = ["lumi.gateway", "lumi.acpartner"]
+MODELS_SWITCH = [
+    "chuangmi.plug.v1",
+    "chuangmi.plug.v3",
+    "chuangmi.plug.hmi208",
+    "qmi.powerstrip.v1",
+    "zimi.powerstrip.v2",
+    "chuangmi.plug.m1",
+    "chuangmi.plug.m3",
+    "chuangmi.plug.v2",
+    "chuangmi.plug.hmi205",
+    "chuangmi.plug.hmi206",
+    "lumi.acpartner.v3",
+]
+
 # Fan Services
 SERVICE_SET_BUZZER_ON = "fan_set_buzzer_on"
 SERVICE_SET_BUZZER_OFF = "fan_set_buzzer_off"
