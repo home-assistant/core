@@ -16,8 +16,28 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the Demo water_heater devices."""
     async_add_entities(
         [
-            DemoWaterHeater("Demo Water Heater", 119, TEMP_FAHRENHEIT, False, "eco"),
-            DemoWaterHeater("Demo Water Heater Celsius", 45, TEMP_CELSIUS, True, "eco"),
+            DemoWaterHeater(
+                name="Demo Water Heater",
+                target_temperature=119,
+                unit_of_measurement=TEMP_FAHRENHEIT,
+                away=False,
+                current_operation="eco",
+            ),
+            DemoWaterHeater(
+                name="Demo Water Heater Celsius",
+                target_temperature=45,
+                unit_of_measurement=TEMP_CELSIUS,
+                away=True,
+                current_operation="eco",
+            ),
+            DemoWaterHeater(
+                name="Demo Water Heater (1 step)",
+                target_temperature=35,
+                unit_of_measurement=TEMP_CELSIUS,
+                away=True,
+                current_operation="eco",
+                target_temperature_step=1.0,
+            ),
         ]
     )
 
@@ -31,7 +51,13 @@ class DemoWaterHeater(WaterHeaterEntity):
     """Representation of a demo water_heater device."""
 
     def __init__(
-        self, name, target_temperature, unit_of_measurement, away, current_operation
+        self,
+        name,
+        target_temperature,
+        unit_of_measurement,
+        away,
+        current_operation,
+        target_temperature_step=None,
     ):
         """Initialize the water_heater device."""
         self._name = name
@@ -55,6 +81,7 @@ class DemoWaterHeater(WaterHeaterEntity):
             "gas",
             "off",
         ]
+        self._target_temperature_step = target_temperature_step
 
     @property
     def supported_features(self):
@@ -80,6 +107,11 @@ class DemoWaterHeater(WaterHeaterEntity):
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._target_temperature
+
+    @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
+        return self._target_temperature_step
 
     @property
     def current_operation(self):
