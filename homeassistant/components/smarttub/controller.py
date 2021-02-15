@@ -74,7 +74,6 @@ class SmartTubController:
 
     async def async_unload_entry(self, entry):
         """Tear down."""
-        await self.async_unregister_devices()
         return True
 
     async def async_update_data(self):
