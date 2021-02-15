@@ -61,16 +61,11 @@ def convert_log_level_to_enum(value: str) -> LogLevel:
     return LogLevel[value.upper()]
 
 
-def filename_present_if_logging_to_file() -> Callable:
+def filename_is_present_if_logging_to_file(obj: Dict) -> Dict:
     """Validate that filename is provided if log_to_file is True."""
-
-    def validate(obj: Dict) -> Dict:
-        """Validate that filename is in dict when log_to_file is True."""
-        if obj.get(CONF_LOG_TO_FILE, False) and CONF_FILENAME not in obj:
-            raise vol.Invalid("`filename` must be provided if logging to file")
-        return obj
-
-    return validate
+    if obj.get(CONF_LOG_TO_FILE, False) and CONF_FILENAME not in obj:
+        raise vol.Invalid("`filename` must be provided if logging to file")
+    return obj
 
 
 SERVICE_UPDATE_LOG_CONFIG = "update_log_config"
@@ -88,7 +83,7 @@ SERVICE_UPDATE_LOG_CONFIG_SCHEMA = vol.All(
         }
     ),
     cv.has_at_least_one_key(CONF_LEVEL, CONF_LOG_TO_FILE, CONF_FILENAME),
-    filename_present_if_logging_to_file(),
+    filename_is_present_if_logging_to_file,
 )
 
 
