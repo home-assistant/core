@@ -61,7 +61,7 @@ async def websocket_supervisor_event(
         vol.Required(ATTR_ENDPOINT): cv.string,
         vol.Required(ATTR_METHOD): cv.string,
         vol.Optional(ATTR_DATA): dict,
-        vol.Optional(ATTR_TIMEOUT): cv.string,
+        vol.Optional(ATTR_TIMEOUT): vol.Any(cv.Number, None),
     }
 )
 async def websocket_supervisor_api(
@@ -79,6 +79,8 @@ async def websocket_supervisor_api(
         )
     except hass.components.hassio.HassioAPIError as err:
         _LOGGER.error("Failed to to call %s - %s", msg[ATTR_ENDPOINT], err)
-        connection.send_error(msg[WS_ID], err)
+        connection.send_error(
+            msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)
+        )
     else:
-        connection.send_result(msg[WS_ID], result[ATTR_DATA])
+        connection.send_result(msg[WS_ID], result.get(ATTR_DATA, {}))
