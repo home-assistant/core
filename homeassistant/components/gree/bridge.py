@@ -88,7 +88,7 @@ class DeviceHelper:
     @staticmethod
     async def find_devices() -> List[DeviceInfo]:
         """Gather a list of device infos from the local network."""
-        return await Discovery.search_devices()
+        return await Discovery().scan(2)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
