@@ -1,5 +1,4 @@
 """Test the SmartTub climate platform."""
-from unittest.mock import Mock
 
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
@@ -16,39 +15,12 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.components.smarttub.climate import async_setup_entry
-from homeassistant.components.smarttub.const import (
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
-    DOMAIN,
-    SMARTTUB_CONTROLLER,
-    UNSUB_UPDATE_LISTENER,
-)
+from homeassistant.components.smarttub.const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
 )
-
-from tests.common import MockConfigEntry
-
-
-async def test_async_setup_entry(hass, controller):
-    """Test async_setup_entry."""
-
-    entry = MockConfigEntry(unique_id="ceid1")
-    async_add_entities = Mock()
-    hass.data[DOMAIN] = {
-        entry.unique_id: {
-            SMARTTUB_CONTROLLER: controller,
-            UNSUB_UPDATE_LISTENER: lambda: None,
-        },
-    }
-
-    ret = await async_setup_entry(hass, entry, async_add_entities)
-
-    assert ret is True
-    async_add_entities.assert_called()
 
 
 async def test_thermostat(coordinator, spa, hass, config_entry):
