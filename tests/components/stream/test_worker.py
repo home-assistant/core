@@ -198,7 +198,7 @@ async def async_decode_stream(hass, packets, py_av=None):
         "homeassistant.components.stream.core.StreamOutput.put",
         side_effect=py_av.capture_buffer.capture_output_segment,
     ):
-        stream_worker(hass, stream, threading.Event())
+        stream_worker(STREAM_SOURCE, {}, stream.outputs, threading.Event())
         await hass.async_block_till_done()
 
     return py_av.capture_buffer
@@ -210,7 +210,7 @@ async def test_stream_open_fails(hass):
     stream.add_provider(STREAM_OUTPUT_FORMAT)
     with patch("av.open") as av_open:
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
-        stream_worker(hass, stream, threading.Event())
+        stream_worker(STREAM_SOURCE, {}, stream.outputs, threading.Event())
         await hass.async_block_till_done()
         av_open.assert_called_once()
 
