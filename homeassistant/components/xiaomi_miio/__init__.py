@@ -20,7 +20,6 @@ from .const import (
 )
 from .gateway import ConnectXiaomiGateway
 
-
 _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor", "light"]
