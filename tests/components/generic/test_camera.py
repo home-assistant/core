@@ -133,21 +133,18 @@ async def test_limit_refetch(hass, hass_client):
 
     with patch("async_timeout.timeout", side_effect=asyncio.TimeoutError()):
         resp = await client.get("/api/camera_proxy/camera.config_test")
-        # assert aioclient_mock.call_count == 0
         assert respx.calls.call_count == 0
         assert resp.status == HTTP_INTERNAL_SERVER_ERROR
 
     hass.states.async_set("sensor.temp", "10")
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
-    # assert aioclient_mock.call_count == 1
     assert respx.calls.call_count == 1
     assert resp.status == 200
     body = await resp.text()
     assert body == "hello world"
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
-    # assert aioclient_mock.call_count == 1
     assert respx.calls.call_count == 1
     assert resp.status == 200
     body = await resp.text()
@@ -157,7 +154,6 @@ async def test_limit_refetch(hass, hass_client):
 
     # Url change = fetch new image
     resp = await client.get("/api/camera_proxy/camera.config_test")
-    # assert aioclient_mock.call_count == 2
     assert respx.calls.call_count == 2
     assert resp.status == 200
     body = await resp.text()
@@ -166,7 +162,6 @@ async def test_limit_refetch(hass, hass_client):
     # Cause a template render error
     hass.states.async_remove("sensor.temp")
     resp = await client.get("/api/camera_proxy/camera.config_test")
-    # assert aioclient_mock.call_count == 2
     assert respx.calls.call_count == 2
     assert resp.status == 200
     body = await resp.text()
