@@ -148,7 +148,7 @@ class FroniusAdapter:
 
     @property
     def available(self):
-        """Is the fronius device active?"""
+        """Whether the fronius device is active."""
         return self._available
 
     async def async_update(self):
@@ -163,16 +163,16 @@ class FroniusAdapter:
             if self._available:
                 self._available = False
                 _LOGGER.error("Failed to update: connection error")
+            return
         except ValueError:
             _LOGGER.error(
                 "Failed to update: invalid response returned."
                 "Maybe the configured device is not supported"
             )
-        else:
-            self._available = True  # reset connection failure
-
-        if not values:
             return
+
+        self._available = True  # reset connection failure
+
         attributes = self._fetched
         # Copy data of current fronius device
         for key, entry in values.items():
