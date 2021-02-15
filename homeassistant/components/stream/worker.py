@@ -54,6 +54,7 @@ class SegmentBuffer:
         # tuple of StreamOutput, StreamBuffer
         self._outputs = []
         self._sequence = 0
+self._segment_start_pts = None
 
     def reset(self, video_pts):
         """Initialize a new stream segment."""
