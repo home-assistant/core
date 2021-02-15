@@ -135,13 +135,13 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 try:
                     vol.Match(r"[0-9]{4}")(user_input[CONF_PIN])
                     await self.controller.test_pin()
-                    _LOGGER.debug("PIN successfully tested")
-                    self.config_data.update(user_input)
                 except vol.Invalid:
                     error = {"base": "bad_pin_format"}
                 except InvalidPIN:
                     error = {"base": "incorrect_pin"}
                 else:
+                    _LOGGER.debug("PIN successfully tested")
+                    self.config_data.update(user_input)
                     return self.async_create_entry(
                         title=self.config_data[CONF_USERNAME], data=self.config_data
                     )

@@ -19,7 +19,17 @@ from homeassistant.components.subaru.const import (
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_PIN, CONF_SCAN_INTERVAL
 
-from .conftest import TEST_CONFIG, TEST_CREDS, TEST_DEVICE_ID, TEST_PIN, TEST_USERNAME
+from .conftest import (
+    MOCK_API_CONNECT,
+    MOCK_API_IS_PIN_REQUIRED,
+    MOCK_API_TEST_PIN,
+    MOCK_API_UPDATE_SAVED_PIN,
+    TEST_CONFIG,
+    TEST_CREDS,
+    TEST_DEVICE_ID,
+    TEST_PIN,
+    TEST_USERNAME,
+)
 
 from tests.common import MockConfigEntry
 
@@ -46,7 +56,7 @@ async def test_user_form_repeat_identifier(hass, user_form):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.subaru.config_flow.SubaruAPI.connect",
+        MOCK_API_CONNECT,
         return_value=True,
     ) as mock_connect:
         result = await hass.config_entries.flow.async_configure(
@@ -61,7 +71,7 @@ async def test_user_form_repeat_identifier(hass, user_form):
 async def test_user_form_cannot_connect(hass, user_form):
     """Test we handle cannot connect error."""
     with patch(
-        "homeassistant.components.subaru.config_flow.SubaruAPI.connect",
+        MOCK_API_CONNECT,
         side_effect=SubaruException(None),
     ) as mock_connect:
         result = await hass.config_entries.flow.async_configure(
@@ -76,7 +86,7 @@ async def test_user_form_cannot_connect(hass, user_form):
 async def test_user_form_invalid_auth(hass, user_form):
     """Test we handle invalid auth."""
     with patch(
-        "homeassistant.components.subaru.config_flow.SubaruAPI.connect",
+        MOCK_API_CONNECT,
         side_effect=InvalidCredentials("invalidAccount"),
     ) as mock_connect:
         result = await hass.config_entries.flow.async_configure(
@@ -90,11 +100,8 @@ async def test_user_form_invalid_auth(hass, user_form):
 
 async def test_user_form_pin_not_required(hass, user_form):
     """Test successful login when no PIN is required."""
-    with patch(
-        "homeassistant.components.subaru.config_flow.SubaruAPI.connect",
-        return_value=True,
-    ) as mock_connect, patch(
-        "homeassistant.components.subaru.config_flow.SubaruAPI.is_pin_required",
+    with patch(MOCK_API_CONNECT, return_value=True,) as mock_connect, patch(
+        MOCK_API_IS_PIN_REQUIRED,
         return_value=False,
     ) as mock_is_pin_required:
         result = await hass.config_entries.flow.async_configure(
@@ -136,10 +143,8 @@ async def test_pin_form_init(pin_form):
 
 async def test_pin_form_bad_pin_format(hass, pin_form):
     """Test we handle invalid pin."""
-    with patch(
-        "homeassistant.components.subaru.config_flow.SubaruAPI.test_pin",
-    ) as mock_test_pin, patch(
-        "homeassistant.components.subaru.config_flow.SubaruAPI.update_saved_pin",
+    with patch(MOCK_API_TEST_PIN,) as mock_test_pin, patch(
+        MOCK_API_UPDATE_SAVED_PIN,
         return_value=True,
     ) as mock_update_saved_pin:
         result = await hass.config_entries.flow.async_configure(
@@ -153,11 +158,8 @@ async def test_pin_form_bad_pin_format(hass, pin_form):
 
 async def test_pin_form_success(hass, pin_form):
     """Test successful PIN entry."""
-    with patch(
-        "homeassistant.components.subaru.config_flow.SubaruAPI.test_pin",
-        return_value=True,
-    ) as mock_test_pin, patch(
-        "homeassistant.components.subaru.config_flow.SubaruAPI.update_saved_pin",
+    with patch(MOCK_API_TEST_PIN, return_value=True,) as mock_test_pin, patch(
+        MOCK_API_UPDATE_SAVED_PIN,
         return_value=True,
     ) as mock_update_saved_pin:
         result = await hass.config_entries.flow.async_configure(
@@ -184,10 +186,10 @@ async def test_pin_form_success(hass, pin_form):
 async def test_pin_form_incorrect_pin(hass, pin_form):
     """Test we handle invalid pin."""
     with patch(
-        "homeassistant.components.subaru.config_flow.SubaruAPI.test_pin",
+        MOCK_API_TEST_PIN,
         side_effect=InvalidPIN("invalidPin"),
     ) as mock_test_pin, patch(
-        "homeassistant.components.subaru.config_flow.SubaruAPI.update_saved_pin",
+        MOCK_API_UPDATE_SAVED_PIN,
         return_value=True,
     ) as mock_update_saved_pin:
         result = await hass.config_entries.flow.async_configure(
@@ -272,11 +274,8 @@ async def user_form(hass):
 @pytest.fixture
 async def pin_form(hass, user_form):
     """Return second form (PIN input) for Subaru config flow."""
-    with patch(
-        "homeassistant.components.subaru.config_flow.SubaruAPI.connect",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.subaru.config_flow.SubaruAPI.is_pin_required",
+    with patch(MOCK_API_CONNECT, return_value=True,), patch(
+        MOCK_API_IS_PIN_REQUIRED,
         return_value=True,
     ):
         return await hass.config_entries.flow.async_configure(

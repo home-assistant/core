@@ -18,6 +18,7 @@ from homeassistant.components.subaru.const import (
     VEHICLE_HAS_SAFETY_SERVICE,
     VEHICLE_NAME,
 )
+from homeassistant.config_entries import ENTRY_STATE_LOADED
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_PASSWORD,
@@ -27,9 +28,25 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from .api_responses import TEST_VIN_2_EV, VEHICLE_DATA, VEHICLE_STATUS_EV
+from .api_responses import TEST_VIN_2_EV, TEST_VIN_3_G2, VEHICLE_DATA, VEHICLE_STATUS_EV
 
 from tests.common import MockConfigEntry
+
+MOCK_API = "homeassistant.components.subaru.SubaruAPI."
+MOCK_API_CONNECT = f"{MOCK_API}connect"
+MOCK_API_IS_PIN_REQUIRED = f"{MOCK_API}is_pin_required"
+MOCK_API_TEST_PIN = f"{MOCK_API}test_pin"
+MOCK_API_UPDATE_SAVED_PIN = f"{MOCK_API}update_saved_pin"
+MOCK_API_GET_VEHICLES = f"{MOCK_API}get_vehicles"
+MOCK_API_VIN_TO_NAME = f"{MOCK_API}vin_to_name"
+MOCK_API_GET_API_GEN = f"{MOCK_API}get_api_gen"
+MOCK_API_GET_EV_STATUS = f"{MOCK_API}get_ev_status"
+MOCK_API_GET_RES_STATUS = f"{MOCK_API}get_res_status"
+MOCK_API_GET_REMOTE_STATUS = f"{MOCK_API}get_remote_status"
+MOCK_API_GET_SAFETY_STATUS = f"{MOCK_API}get_safety_status"
+MOCK_API_GET_GET_DATA = f"{MOCK_API}get_data"
+MOCK_API_UPDATE = f"{MOCK_API}update"
+MOCK_API_FETCH = f"{MOCK_API}fetch"
 
 TEST_USERNAME = "user@email.com"
 TEST_PASSWORD = "password"
@@ -76,46 +93,41 @@ async def setup_subaru_integration(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.subaru.SubaruAPI.connect",
+        MOCK_API_CONNECT,
         return_value=connect_success,
         side_effect=None
         if connect_success
         else InvalidCredentials("Invalid Credentials"),
-    ), patch(
-        "homeassistant.components.subaru.SubaruAPI.get_vehicles",
-        return_value=vehicle_list,
-    ), patch(
-        "homeassistant.components.subaru.SubaruAPI.vin_to_name",
+    ), patch(MOCK_API_GET_VEHICLES, return_value=vehicle_list,), patch(
+        MOCK_API_VIN_TO_NAME,
         return_value=vehicle_data[VEHICLE_NAME],
     ), patch(
-        "homeassistant.components.subaru.SubaruAPI.get_api_gen",
+        MOCK_API_GET_API_GEN,
         return_value=vehicle_data[VEHICLE_API_GEN],
     ), patch(
-        "homeassistant.components.subaru.SubaruAPI.get_ev_status",
+        MOCK_API_GET_EV_STATUS,
         return_value=vehicle_data[VEHICLE_HAS_EV],
     ), patch(
-        "homeassistant.components.subaru.SubaruAPI.get_res_status",
+        MOCK_API_GET_RES_STATUS,
         return_value=vehicle_data[VEHICLE_HAS_REMOTE_START],
     ), patch(
-        "homeassistant.components.subaru.SubaruAPI.get_remote_status",
+        MOCK_API_GET_REMOTE_STATUS,
         return_value=vehicle_data[VEHICLE_HAS_REMOTE_SERVICE],
     ), patch(
-        "homeassistant.components.subaru.SubaruAPI.get_safety_status",
+        MOCK_API_GET_SAFETY_STATUS,
         return_value=vehicle_data[VEHICLE_HAS_SAFETY_SERVICE],
     ), patch(
-        "homeassistant.components.subaru.SubaruAPI.get_data",
+        MOCK_API_GET_GET_DATA,
         return_value=vehicle_status,
     ), patch(
-        "homeassistant.components.subaru.SubaruAPI.update",
+        MOCK_API_UPDATE,
     ), patch(
-        "homeassistant.components.subaru.SubaruAPI.fetch",
+        MOCK_API_FETCH,
     ):
-        success = await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    if success:
-        return config_entry
-    return None
+    return config_entry
 
 
 @pytest.fixture
@@ -123,9 +135,12 @@ async def ev_entry(hass):
     """Create a Subaru entry representing an EV vehicle with full STARLINK subscription."""
     entry = await setup_subaru_integration(
         hass,
-        vehicle_list=[TEST_VIN_2_EV],
+        vehicle_list=[TEST_VIN_2_EV, TEST_VIN_3_G2],
         vehicle_data=VEHICLE_DATA[TEST_VIN_2_EV],
         vehicle_status=VEHICLE_STATUS_EV,
     )
-    assert hass.data[DOMAIN][entry.entry_id]
+    assert DOMAIN in hass.config_entries.async_domains()
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert hass.config_entries.async_get_entry(entry.entry_id)
+    assert entry.state == ENTRY_STATE_LOADED
     return entry

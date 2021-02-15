@@ -5,6 +5,7 @@ import logging
 import time
 
 from subarulink import Controller as SubaruAPI, SubaruException
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -16,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -30,6 +31,7 @@ from .const import (
     ENTRY_COORDINATOR,
     ENTRY_LISTENER,
     ENTRY_VEHICLES,
+    REMOTE_SERVICE_FETCH,
     SUPPORTED_PLATFORMS,
     VEHICLE_API_GEN,
     VEHICLE_HAS_EV,
@@ -42,6 +44,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+REMOTE_SERVICE_SCHEMA = vol.Schema({vol.Required(VEHICLE_VIN): cv.string})
 
 
 async def async_setup(hass, base_config):
@@ -70,7 +74,7 @@ async def async_setup_entry(hass, entry):
         _LOGGER.debug("Using subarulink %s", controller.version)
         await controller.connect()
     except SubaruException as err:
-        raise ConfigEntryNotReady(err) from err
+        raise ConfigEntryNotReady(err.message) from err
 
     vehicle_info = {}
     for vin in controller.get_vehicles():
@@ -95,7 +99,7 @@ async def async_setup_entry(hass, entry):
 
     await coordinator.async_refresh()
 
-    hass.data.get(DOMAIN)[entry.entry_id] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         ENTRY_CONTROLLER: controller,
         ENTRY_COORDINATOR: coordinator,
         ENTRY_VEHICLES: vehicle_info,
@@ -106,6 +110,21 @@ async def async_setup_entry(hass, entry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
+
+    async def async_fetch_service(call):
+        """Force refresh of data from Subaru."""
+        vin = call.data[VEHICLE_VIN].upper()
+        if vin not in vehicle_info.keys():
+            hass.components.persistent_notification.create(
+                f"ERROR - Invalid VIN provided while calling {call.service}", "Subaru"
+            )
+        else:
+            if call.service == REMOTE_SERVICE_FETCH:
+                await coordinator.async_refresh()
+
+    hass.services.async_register(
+        DOMAIN, REMOTE_SERVICE_FETCH, async_fetch_service, schema=REMOTE_SERVICE_SCHEMA
+    )
 
     return True
 
@@ -123,7 +142,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if unload_ok:
         hass.data[DOMAIN][entry.entry_id][ENTRY_LISTENER]()
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok
 
 
@@ -183,7 +201,9 @@ async def subaru_update(vehicle_info, controller):
         await controller.fetch(vin, force=True)
 
         # Update our local data that will go to entity states
-        data[vin] = await controller.get_data(vin)
+        received_data = await controller.get_data(vin)
+        if received_data:
+            data[vin] = received_data
 
     return data
 
