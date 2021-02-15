@@ -35,13 +35,13 @@ async def test_update(controller, spa):
         data = await controller.async_update_data()
 
 
-async def test_get_account_id(controller, smarttub_api):
-    """Test SmartTubController.validate_credentials."""
+async def test_login(controller, smarttub_api, account):
+    """Test SmartTubController.login."""
     smarttub_api.get_account.return_value.id = "account-id1"
-    account_id = await controller.get_account_id("test-email1", "test-password1")
+    account = await controller.login("test-email1", "test-password1")
     smarttub_api.login.assert_called()
-    assert account_id == "account-id1"
+    assert account == account
 
     smarttub_api.login.side_effect = smarttub.LoginFailed
-    account_id = await controller.get_account_id("test-email1", "test-password1")
-    assert account_id is None
+    account = await controller.login("test-email1", "test-password1")
+    assert account is None

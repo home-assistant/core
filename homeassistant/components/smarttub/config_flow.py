@@ -36,11 +36,11 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             controller = SmartTubController(self.hass)
-            account_id = await controller.get_account_id(
+            account = await controller.login(
                 user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
             )
-            if account_id is not None:
-                await self.async_set_unique_id(account_id)
+            if account is not None:
+                await self.async_set_unique_id(account.id)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(

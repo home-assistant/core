@@ -5,6 +5,7 @@ import logging
 
 import async_timeout
 from smarttub import APIError, LoginFailed, SmartTub
+from smarttub.api import Account
 
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_SCAN_INTERVAL
@@ -38,9 +39,10 @@ class SmartTubController:
         ready for normal operations .
         """
 
-        try:
-            await self._api.login(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
-        except LoginFailed:
+        self._account = await self.login(
+            entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD]
+        )
+        if self._account is None:
             # credentials were changed or invalidated, we need new ones
             self._hass.async_create_task(
                 self._hass.config_entries.flow.async_init(
@@ -51,8 +53,6 @@ class SmartTubController:
             )
 
             return False
-
-        self._account = await self._api.get_account()
 
         self.spas = await self._account.get_spas()
 
@@ -111,16 +111,15 @@ class SmartTubController:
             device_registry.async_remove_device(device.id)
         self._spa_devices = {}
 
-    async def get_account_id(self, email, password):
-        """Retrieve the account ID corresponding to the specified email and password.
+    async def login(self, email, password) -> Account:
+        """Retrieve the account corresponding to the specified email and password.
 
         Returns None if the credentials are invalid.
         """
 
-        api = SmartTub(async_get_clientsession(self._hass))
         try:
-            await api.login(email, password)
+            await self._api.login(email, password)
         except LoginFailed:
             return None
-        account = await api.get_account()
-        return account.id
+        account = await self._api.get_account()
+        return account
