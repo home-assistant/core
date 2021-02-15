@@ -9,8 +9,6 @@ from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from miio.gateway import GatewayException
-
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
