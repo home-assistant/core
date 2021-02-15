@@ -19,7 +19,7 @@ ZEROCONF_MAC = "mac"
 TEST_HOST = "1.2.3.4"
 TEST_TOKEN = "12345678901234567890123456789012"
 TEST_NAME = "Test_Gateway"
-TEST_MODEL = "model5"
+TEST_MODEL = const.MODELS_GATEWAY[0]
 TEST_MAC = "ab:cd:ef:gh:ij:kl"
 TEST_GATEWAY_ID = TEST_MAC
 TEST_HARDWARE_VERSION = "AB123"
@@ -44,26 +44,6 @@ def get_mock_info(
     return gateway_info
 
 
-async def test_config_flow_step_user_no_device(hass):
-    """Test config flow, user step with no device selected."""
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "no_device_selected"}
-
-
 async def test_config_flow_step_gateway_connect_error(hass):
     """Test config flow, gateway connection error."""
     result = await hass.config_entries.flow.async_init(
@@ -71,20 +51,11 @@ async def test_config_flow_step_gateway_connect_error(hass):
     )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {const.CONF_GATEWAY: True},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "gateway"
+    assert result["step_id"] == "device"
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.xiaomi_miio.gateway.gateway.Gateway.info",
+        "homeassistant.components.xiaomi_miio.device.Device.info",
         side_effect=DeviceException({}),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -93,7 +64,7 @@ async def test_config_flow_step_gateway_connect_error(hass):
         )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "gateway"
+    assert result["step_id"] == "device"
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -104,26 +75,14 @@ async def test_config_flow_gateway_success(hass):
     )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {const.CONF_GATEWAY: True},
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "gateway"
+    assert result["step_id"] == "device"
     assert result["errors"] == {}
 
     mock_info = get_mock_info()
 
     with patch(
-        "homeassistant.components.xiaomi_miio.gateway.gateway.Gateway.info",
+        "homeassistant.components.xiaomi_miio.device.Device.info",
         return_value=mock_info,
-    ), patch(
-        "homeassistant.components.xiaomi_miio.gateway.gateway.Gateway.discover_devices",
-        return_value=TEST_SUB_DEVICE_LIST,
     ), patch(
         "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
     ):
@@ -156,17 +115,14 @@ async def test_zeroconf_gateway_success(hass):
     )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "gateway"
+    assert result["step_id"] == "device"
     assert result["errors"] == {}
 
     mock_info = get_mock_info()
 
     with patch(
-        "homeassistant.components.xiaomi_miio.gateway.gateway.Gateway.info",
+        "homeassistant.components.xiaomi_miio.device.Device.info",
         return_value=mock_info,
-    ), patch(
-        "homeassistant.components.xiaomi_miio.gateway.gateway.Gateway.discover_devices",
-        return_value=TEST_SUB_DEVICE_LIST,
     ), patch(
         "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
     ):
@@ -231,15 +187,6 @@ async def test_config_flow_step_device_connect_error(hass):
     )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {const.CONF_DEVICE: True},
-    )
-
-    assert result["type"] == "form"
     assert result["step_id"] == "device"
     assert result["errors"] == {}
 
@@ -261,15 +208,6 @@ async def test_config_flow_step_unknown_device(hass):
     """Test config flow, unknown device error."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {const.CONF_DEVICE: True},
     )
 
     assert result["type"] == "form"
@@ -323,15 +261,6 @@ async def config_flow_device_success(hass, model_to_test):
     """Test a successful config flow for a device (base class)."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {const.CONF_DEVICE: True},
     )
 
     assert result["type"] == "form"
