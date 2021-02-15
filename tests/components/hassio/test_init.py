@@ -7,7 +7,20 @@ import pytest
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend
 from homeassistant.components.hassio import STORAGE_KEY
+from homeassistant.components.hassio.const import (
+    ATTR_DATA,
+    ATTR_ENDPOINT,
+    ATTR_METHOD,
+    EVENT_SUPERVISOR_EVENT,
+    WS_ID,
+    WS_TYPE,
+    WS_TYPE_API,
+    WS_TYPE_EVENT,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.common import async_capture_events
 
 MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
 
@@ -346,3 +359,58 @@ async def test_service_calls_core(hassio_env, hass, aioclient_mock):
         assert mock_check_config.called
 
     assert aioclient_mock.call_count == 5
+
+
+async def test_websocket_supervisor_event(
+    hassio_env, hass: HomeAssistant, hass_ws_client
+):
+    """Test Supervisor websocket event."""
+    assert await async_setup_component(hass, "hassio", {})
+    websocket_client = await hass_ws_client(hass)
+
+    test_event = async_capture_events(hass, EVENT_SUPERVISOR_EVENT)
+
+    await websocket_client.send_json(
+        {WS_ID: 1, WS_TYPE: WS_TYPE_EVENT, ATTR_DATA: {"event": "test"}}
+    )
+
+    assert await websocket_client.receive_json()
+    await hass.async_block_till_done()
+
+    assert test_event[0].data == {"event": "test"}
+
+
+async def test_websocket_supervisor_api(
+    hassio_env, hass: HomeAssistant, hass_ws_client, aioclient_mock
+):
+    """Test Supervisor websocket api."""
+    assert await async_setup_component(hass, "hassio", {})
+    websocket_client = await hass_ws_client(hass)
+    aioclient_mock.post(
+        "http://127.0.0.1/snapshots/new/partial",
+        json={"result": "ok", "data": {"slug": "sn_slug"}},
+    )
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 1,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/snapshots/new/partial",
+            ATTR_METHOD: "post",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["result"]["slug"] == "sn_slug"
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 2,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/supervisor/info",
+            ATTR_METHOD: "get",
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["result"]["version_latest"] == "1.0.0"
