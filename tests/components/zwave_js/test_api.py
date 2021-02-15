@@ -56,8 +56,8 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     assert len(result) == 44
     key = "52-112-00-2-00"
     assert result[key]["property"] == 2
-    assert result[key]["property_name"] == "Stay Awake in Battery Mode"
     assert result[key]["metadata"]["type"] == "number"
+    assert result[key]["configuration_value_type"] == "enumerated"
 
 
 async def test_add_node(
