@@ -130,7 +130,7 @@ class FroniusAdapter:
         self._name = name
         self._device = device
         self._fetched = {}
-        self._connection_failure = False
+        self._available = True
 
         self.sensors = set()
         self._registered_sensors = set()
@@ -146,24 +146,30 @@ class FroniusAdapter:
         """Return the state attributes."""
         return self._fetched
 
+    @property
+    def available(self):
+        """Is the fronius device active?"""
+        return self._available
+
     async def async_update(self):
         """Retrieve and update latest state."""
         values = {}
         try:
             values = await self._update()
-            self._connection_failure = False  # reset connection failure
         except ConnectionError:
             # fronius devices are often powered by self-produced solar energy
             # and henced turned off at night.
             # Therefore we will not print multiple errors when connection fails
-            if not self._connection_failure:
-                self._connection_failure = True
+            if self._available:
+                self._available = False
                 _LOGGER.error("Failed to update: connection error")
         except ValueError:
             _LOGGER.error(
                 "Failed to update: invalid response returned."
                 "Maybe the configured device is not supported"
             )
+        else:
+            self._available = True  # reset connection failure
 
         if not values:
             return
