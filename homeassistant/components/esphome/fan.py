@@ -62,6 +62,11 @@ class EsphomeFan(EsphomeEntity, FanEntity):
     def _state(self) -> Optional[FanState]:
         return super()._state
 
+    @property
+    def _supports_percentage(self) -> bool:
+        api_version = self._client.api_version
+        return api_version.major == 1 and api_version.minor > 3
+
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if percentage == 0:
@@ -70,10 +75,13 @@ class EsphomeFan(EsphomeEntity, FanEntity):
 
         data = {"key": self._static_info.key, "state": True}
         if percentage is not None:
-            named_speed = percentage_to_ordered_list_item(
-                ORDERED_NAMED_FAN_SPEEDS, percentage
-            )
-            data["speed"] = named_speed
+            if self._supports_percentage:
+                data["speed_percentage"] = percentage / 100
+            else:
+                named_speed = percentage_to_ordered_list_item(
+                    ORDERED_NAMED_FAN_SPEEDS, percentage
+                )
+                data["speed"] = named_speed
         await self._client.fan_command(**data)
 
     async def async_turn_on(
@@ -111,13 +119,17 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         return self._state.state
 
     @esphome_state_property
-    def percentage(self) -> Optional[str]:
+    def percentage(self) -> Optional[int]:
         """Return the current speed percentage."""
         if not self._static_info.supports_speed:
             return None
-        return ordered_list_item_to_percentage(
-            ORDERED_NAMED_FAN_SPEEDS, self._state.speed
-        )
+
+        if self._supports_percentage:
+            return int(self._state.speed_percentage * 100)
+        else:
+            return ordered_list_item_to_percentage(
+                ORDERED_NAMED_FAN_SPEEDS, self._state.speed
+            )
 
     @esphome_state_property
     def oscillating(self) -> None:
