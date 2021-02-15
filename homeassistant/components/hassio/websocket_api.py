@@ -53,6 +53,7 @@ async def websocket_supervisor_event(
     connection.send_result(msg[WS_ID])
 
 
+@websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {
