@@ -304,7 +304,6 @@ async def test_get_log_config(hass, client, integration, hass_ws_client):
             "logToFile": False,
             "filename": "/test.txt",
             "forceConsole": False,
-            "transports": ["test"],
         },
     }
     await ws_client.send_json(
@@ -324,4 +323,3 @@ async def test_get_log_config(hass, client, integration, hass_ws_client):
     assert log_config["log_to_file"] is False
     assert log_config["filename"] == "/test.txt"
     assert log_config["force_console"] is False
-    assert log_config["transports"] == ["test"]
