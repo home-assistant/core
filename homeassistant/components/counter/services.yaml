@@ -3,26 +3,18 @@
 decrement:
   description: Decrement a counter
   target:
-    entity:
-      domain: counter
 
 increment:
   description: Increment a counter
   target:
-    entity:
-      domain: counter
 
 reset:
   description: Reset a counter
   target:
-    entity:
-      domain: counter
 
 configure:
   description: Change counter parameters
   target:
-    entity:
-      domain: counter
   fields:
     minimum:
       name: Minimum
