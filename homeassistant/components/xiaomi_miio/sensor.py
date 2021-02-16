@@ -106,10 +106,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sub_devices = gateway.devices
         coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
         for sub_device in sub_devices.values():
-            sensor_variables = []
-            for variable in sub_device.status.keys():
-                if variable in GATEWAY_SENSOR_TYPES.keys():
-                    sensor_variables.append(variable)
+            sensor_variables = set(sub_device.status) & set(GATEWAY_SENSOR_TYPES)
             if sensor_variables:
                 entities.extend(
                     [
