@@ -96,7 +96,7 @@ class ComfoConnectFan(FanEntity):
     @property
     def percentage(self) -> str:
         """Return the current speed percentage."""
-        speed = self._ccb.data[SENSOR_FAN_SPEED_MODE]
+        speed = self._ccb.data.get(SENSOR_FAN_SPEED_MODE)
         if speed is None:
             return None
         return ranged_value_to_percentage(SPEED_RANGE, speed)
