@@ -13,7 +13,6 @@ from miio.gateway import (
     GATEWAY_MODEL_AC_V2,
     GATEWAY_MODEL_AC_V3,
     GatewayException,
-    XiaomiGatewayDevice,
 )
 import voluptuous as vol
 
@@ -46,6 +45,7 @@ from .const import (
     SERVICE_SET_DELAYED_TURN_OFF,
     SERVICE_SET_SCENE,
 )
+from .gateway import XiaomiGatewayDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -147,7 +147,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
         for sub_device in sub_devices.values():
             if sub_device.device_type == "LightBulb":
-                entities.append(XiaomiGatewayBulb(coordinator, sub_device, config_entry))
+                entities.append(
+                    XiaomiGatewayBulb(coordinator, sub_device, config_entry)
+                )
 
     async_add_entities(entities, update_before_add=True)
 
@@ -1084,10 +1086,6 @@ class XiaomiGatewayLight(LightEntity):
 class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
     """Representation of Xiaomi Gateway Bulb."""
 
-    def __init__(self, coordinator, sub_device, entry):
-        """Initialize the Xiaomi Gateway Bulb."""
-        super().__init__(coordinator, sub_device, entry)
-
     @property
     def brightness(self):
         """Return the brightness of the light."""
@@ -1121,9 +1119,7 @@ class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
     async def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         if not self.is_on:
-            await self.hass.async_add_executor_job(
-                self._sub_device.on
-            )
+            await self.hass.async_add_executor_job(self._sub_device.on)
 
         if ATTR_COLOR_TEMP in kwargs:
             color_temp = kwargs[ATTR_COLOR_TEMP]
@@ -1139,6 +1135,4 @@ class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
 
     async def async_turn_off(self, **kwargsf):
         """Instruct the light to turn off."""
-        await self.hass.async_add_executor_job(
-            self._sub_device.off
-        )
+        await self.hass.async_add_executor_job(self._sub_device.off)
