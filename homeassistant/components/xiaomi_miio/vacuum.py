@@ -26,6 +26,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.util.dt import as_utc
@@ -33,6 +34,7 @@ from homeassistant.util.dt import as_utc
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
+    DOMAIN,
     SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
     SERVICE_GOTO,
@@ -130,6 +132,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             data=config,
         )
     )
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Xiaomi vacuum cleaner robot from a config entry."""
