@@ -1151,6 +1151,7 @@ _SCRIPT_CHOOSE_SCHEMA = vol.Schema(
             ensure_list,
             [
                 {
+                    vol.Optional(CONF_ALIAS): string,
                     vol.Required(CONF_CONDITIONS): vol.All(
                         ensure_list, [CONDITION_SCHEMA]
                     ),

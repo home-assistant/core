@@ -1098,10 +1098,11 @@ class Script:
                 await self._async_get_condition(config)
                 for config in choice.get(CONF_CONDITIONS, [])
             ]
+            choice_name = choice.get(CONF_ALIAS, f"choice {idx}")
             sub_script = Script(
                 self._hass,
                 choice[CONF_SEQUENCE],
-                f"{self.name}: {step_name}: choice {idx}",
+                f"{self.name}: {step_name}: {choice_name}",
                 self.domain,
                 running_description=self.running_description,
                 script_mode=SCRIPT_MODE_PARALLEL,
