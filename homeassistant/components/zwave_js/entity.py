@@ -30,7 +30,7 @@ def get_home_and_node_id_from_device_id(device_id: Tuple[str, str]) -> List[str]
     """
     Get home ID and node ID for Z-Wave device registry entry.
 
-    Returns [home_id, node_id]
+    Returns (home_id, node_id)
     """
     return device_id[1].split("-")
 

@@ -192,7 +192,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_UNSUBSCRIBE: unsubscribe_callbacks,
     }
 
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = await entity_registry.async_get_registry(hass)
     services = ZWaveServices(hass, dev_reg, ent_reg)
     services.async_register()
 
