@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DOMAIN, CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -43,6 +43,7 @@ from .const import (
 )
 from .discovery import async_discover_values
 from .entity import get_device_id
+from .services import ZWaveServices
 
 LOGGER = logging.getLogger(__package__)
 CONNECT_TIMEOUT = 10
@@ -190,6 +191,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_CLIENT: client,
         DATA_UNSUBSCRIBE: unsubscribe_callbacks,
     }
+
+    ent_reg = await entity_registry.async_get_registry(hass)
+    services = ZWaveServices(hass, dev_reg, ent_reg)
+    services.async_register()
 
     # Set up websocket API
     async_register_api(hass)

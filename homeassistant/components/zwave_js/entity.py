@@ -25,6 +25,16 @@ def get_device_id(client: ZwaveClient, node: ZwaveNode) -> Tuple[str, str]:
     return (DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")
 
 
+@callback
+def get_home_and_node_id_from_device_id(device_id: Tuple[str, str]) -> List[str]:
+    """
+    Get home ID and node ID for Z-Wave device registry entry.
+
+    Returns (home_id, node_id)
+    """
+    return device_id[1].split("-")
+
+
 class ZWaveBaseEntity(Entity):
     """Generic Entity Class for a Z-Wave Device."""
 
