@@ -84,7 +84,7 @@ record:
         number:
           min: 1
           max: 3600
-          steps: 1
+          step: 1
           unit_of_measurement: seconds
           mode: slider
     lookback:
@@ -98,6 +98,6 @@ record:
         number:
           min: 0
           max: 300
-          steps: 1
+          step: 1
           unit_of_measurement: seconds
           mode: slider
