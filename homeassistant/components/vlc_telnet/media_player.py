@@ -137,8 +137,8 @@ class VlcDevice(MediaPlayerEntity):
             _LOGGER.debug("Info: %s", info)
 
             if info:
-                self._media_artist = info[0].get("artist")
-                self._media_title = info[0].get("title")
+                self._media_artist = info.get(0, {}).get("artist")
+                self._media_title = info.get(0, {}).get("title")
 
         except (ConnErr, EOFError):
             self._available = False
