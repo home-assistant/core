@@ -372,7 +372,21 @@ class Template:
         if self.hass.config.legacy_templates or not parse_result:
             return render_result
 
-        return self._parse_result(render_result)
+        parsed_result = self._parse_result(render_result)
+
+        # Objects serialized with `to_json` use double quotes in the string while
+        # objects serialized by jinja use single quotes. If we detect that to_json
+        # was used as a filter, there are double quotes in the string, and literal_eval
+        # returns a valid deserialized JSON type, we should return the rendered result
+        # as is
+        if (
+            isinstance(parsed_result, (dict, list))
+            and '"' in render_result
+            and "to_json" in self.template
+        ):
+            return render_result
+
+        return parsed_result
 
     def _parse_result(self, render_result: str) -> Any:  # pylint: disable=no-self-use
         """Parse the result."""
