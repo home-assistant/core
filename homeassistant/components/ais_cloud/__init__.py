@@ -2140,6 +2140,8 @@ async def async_handle_restore_from_backup(hass, message):
     """Handle a AIS get gates info message."""
     gate_id = message.get("gate_id", "")
     backup_password = message.get("backup_password", "")
+    # we need to use password even if it's empty - to prevent the prompt
+    backup_password = "-p" + backup_password
     home_dir = "/data/data/pl.sviete.dom/files/home/"
     ws_url = "https://powiedz.co/ords/dom/dom/"
     cloud_ws_token = gate_id
@@ -2148,8 +2150,6 @@ async def async_handle_restore_from_backup(hass, message):
     try:
         import subprocess
 
-        # HA backup - we need to use password even if it's empty - to prevent the prompt
-        backup_password = "-p" + backup_password
         # 1. download
         try:
             rest_url = ws_url + "backup"
@@ -2172,6 +2172,7 @@ async def async_handle_restore_from_backup(hass, message):
                 + "backup.zip "
                 + "-y",
                 shell=True,  # nosec
+                stderr=subprocess.STDOUT,
             )
             log = process_output.decode("utf-8")
         except subprocess.CalledProcessError as e:
@@ -2186,14 +2187,19 @@ async def async_handle_restore_from_backup(hass, message):
             process_output = subprocess.check_output(
                 "cp -fa " + home_dir + "AIS_BACKUP/. " + home_dir + "AIS",
                 shell=True,  # nosec
+                stderr=subprocess.STDOUT,
             )
             log = log + "\n" + process_output.decode("utf-8")
             process_output = subprocess.check_output(
-                "rm " + home_dir + "backup.zip", shell=True  # nosec
+                "rm " + home_dir + "backup.zip",
+                stderr=subprocess.STDOUT,
+                shell=True,  # nosec
             )
             log = log + "\n" + process_output.decode("utf-8")
             process_output = subprocess.check_output(
-                "rm -rf " + home_dir + "AIS_BACKUP", shell=True  # nosec
+                "rm -rf " + home_dir + "AIS_BACKUP",
+                stderr=subprocess.STDOUT,
+                shell=True,  # nosec
             )
             log = log + "\n" + process_output.decode("utf-8")
 
@@ -2204,8 +2210,7 @@ async def async_handle_restore_from_backup(hass, message):
                 "log": e.output.decode("utf-8"),
             }
 
-        # Zigbee backup we need to use password even if it's empty - to prevent the prompt
-        backup_password = "-p" + backup_password
+        # Zigbee backup
         # 1. download
         try:
             rest_url = ws_url + "backup_zigbee"
@@ -2229,6 +2234,7 @@ async def async_handle_restore_from_backup(hass, message):
                 + "zigbee_backup.zip "
                 + "-y",
                 shell=True,  # nosec
+                stderr=subprocess.STDOUT,
             )
             log = log + "\n" + process_output.decode("utf-8")
         except subprocess.CalledProcessError as e:
@@ -2246,14 +2252,19 @@ async def async_handle_restore_from_backup(hass, message):
                 + home_dir
                 + "zigbee2mqtt/data",
                 shell=True,  # nosec
+                stderr=subprocess.STDOUT,
             )
             log = log + "\n" + process_output.decode("utf-8")
             process_output = subprocess.check_output(
-                "rm " + home_dir + "zigbee_backup.zip", shell=True  # nosec
+                "rm " + home_dir + "zigbee_backup.zip",
+                stderr=subprocess.STDOUT,
+                shell=True,  # nosec
             )
             log = log + "\n" + process_output.decode("utf-8")
             process_output = subprocess.check_output(
-                "rm -rf " + home_dir + "AIS_ZIGBEE_BACKUP", shell=True  # nosec
+                "rm -rf " + home_dir + "AIS_ZIGBEE_BACKUP",
+                stderr=subprocess.STDOUT,
+                shell=True,  # nosec
             )
             log = log + "\n" + process_output.decode("utf-8")
 
@@ -2269,6 +2280,7 @@ async def async_handle_restore_from_backup(hass, message):
             process_output = subprocess.check_output(
                 "rm " + home_dir + "AIS/.dom/.ais_secure_android_id_dom",
                 shell=True,  # nosec
+                stderr=subprocess.STDOUT,
             )
             log = log + "\n" + process_output.decode("utf-8")
         except subprocess.CalledProcessError as e:
