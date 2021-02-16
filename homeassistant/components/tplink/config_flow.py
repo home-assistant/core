@@ -19,15 +19,17 @@ from .const import (
     DOMAIN,
 )
 
-DATA_SCHEMA = {
-    vol.Optional(CONF_LIGHT, default=""): str,
-    vol.Optional(CONF_SWITCH, default=""): str,
-    vol.Optional(CONF_STRIP, default=""): str,
-    vol.Optional(CONF_DIMMER, default=""): str,
-    vol.Optional(CONF_DISCOVERY, default=True): bool,
-    vol.Optional(CONF_RETRY_DELAY, default=DEFAULT_RETRY_DELAY): int,
-    vol.Optional(CONF_RETRY_MAX_ATTEMPTS, default=DEFAULT_MAX_ATTEMPTS): int,
-}
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_LIGHT, default=""): str,
+        vol.Optional(CONF_SWITCH, default=""): str,
+        vol.Optional(CONF_STRIP, default=""): str,
+        vol.Optional(CONF_DIMMER, default=""): str,
+        vol.Optional(CONF_DISCOVERY, default=True): bool,
+        vol.Optional(CONF_RETRY_DELAY, default=DEFAULT_RETRY_DELAY): int,
+        vol.Optional(CONF_RETRY_MAX_ATTEMPTS, default=DEFAULT_MAX_ATTEMPTS): int,
+    }
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,14 +48,12 @@ class TplinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Step when user initializes a integration."""
-
         await self.async_set_unique_id(DOMAIN)
         self._abort_if_unique_id_configured()
 
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(step_id="user", data_schema=vol.Schema(DATA_SCHEMA))
+        if not user_input:
+            return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
+        return self.async_create_entry(title="", data=user_input)
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""

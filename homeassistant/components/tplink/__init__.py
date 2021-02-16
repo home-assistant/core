@@ -10,7 +10,6 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .common import SmartDevices, async_discover_devices, get_static_devices
 from .const import (
-    ATTR_CONFIG,
     CONF_DIMMER,
     CONF_DISCOVERY,
     CONF_LIGHT,
@@ -18,6 +17,8 @@ from .const import (
     CONF_RETRY_MAX_ATTEMPTS,
     CONF_STRIP,
     CONF_SWITCH,
+    DEFAULT_MAX_ATTEMPTS,
+    DEFAULT_RETRY_DELAY,
     DOMAIN,
 )
 
@@ -51,17 +52,26 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the TP-Link component."""
-    conf = config.get(DOMAIN)
+    if DOMAIN not in config:
+        return True
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][ATTR_CONFIG] = conf
+    conf = config[DOMAIN]
 
-    if conf is not None:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-            )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_DIMMER: conf[CONF_DIMMER],
+                CONF_DISCOVERY: conf[CONF_DISCOVERY],
+                CONF_LIGHT: conf[CONF_LIGHT],
+                CONF_STRIP: conf[CONF_STRIP],
+                CONF_SWITCH: conf[CONF_SWITCH],
+                CONF_RETRY_DELAY: DEFAULT_RETRY_DELAY,
+                CONF_RETRY_MAX_ATTEMPTS: DEFAULT_MAX_ATTEMPTS,
+            },
         )
+    )
 
     return True
 
@@ -69,8 +79,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigType):
     """Set up TPLink from a config entry."""
     config_data = config_entry.data
-
-    # These will contain the initialized devices
+    hass.data.setdefault(DOMAIN, {})
     lights = hass.data[DOMAIN][CONF_LIGHT] = []
     switches = hass.data[DOMAIN][CONF_SWITCH] = []
 
@@ -81,11 +90,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigType):
 
         lights.extend(static_devices.lights)
         switches.extend(static_devices.switches)
-
-        hass.data[DOMAIN][CONF_RETRY_DELAY] = config_data[CONF_RETRY_DELAY]
-        hass.data[DOMAIN][CONF_RETRY_MAX_ATTEMPTS] = config_data[
-            CONF_RETRY_MAX_ATTEMPTS
-        ]
 
     # Add discovered devices
     if config_data is None or config_data[CONF_DISCOVERY]:
