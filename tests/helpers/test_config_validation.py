@@ -10,7 +10,6 @@ import pytest
 import voluptuous as vol
 
 import homeassistant
-from homeassistant.const import CONF_ALIAS
 from homeassistant.helpers import config_validation as cv, template
 
 
@@ -329,31 +328,6 @@ def test_service():
         schema("invalid_turn_on")
 
     schema("homeassistant.turn_on")
-
-
-def test_action_type_schemas_support_alias():
-    """Test that all action type schemas allow alias field."""
-
-    def find_root_schema(node):
-        """Traverse schema to find the root validation dictionary."""
-        if isinstance(node, dict):
-            return vol.Schema(node)
-
-        if isinstance(node, vol.Schema):
-            return find_root_schema(node.schema)
-
-        if isinstance(node, vol.All):
-            return find_root_schema(node.validators[0])
-
-        return None
-
-    for action_type, action_schema in cv.ACTION_TYPE_SCHEMAS.items():
-        # Condition schema is tricky to find a root dictionary for
-        if action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
-            continue
-        root_schema = find_root_schema(action_schema)
-        schema_keys = root_schema.schema.keys()
-        assert CONF_ALIAS in schema_keys
 
 
 def test_service_schema():
