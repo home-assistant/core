@@ -1,17 +1,11 @@
 toggle:
   description: Toggle alert's notifications
   target:
-    entity:
-      domain: alert
 
 turn_off:
   description: Silence alert's notifications
   target:
-    entity:
-      domain: alert
 
 turn_on:
   description: Reset alert's notifications
   target:
-    entity:
-      domain: alert
