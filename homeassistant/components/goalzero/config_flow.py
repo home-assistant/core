@@ -3,7 +3,7 @@ from goalzero import Yeti, exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SCAN_INTERVAL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import _LOGGER
@@ -26,6 +26,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             name = user_input[CONF_NAME]
+            scan_interval = user_input[CONF_SCAN_INTERVAL]
 
             if await self._async_endpoint_existed(host):
                 return self.async_abort(reason="already_configured")
@@ -44,7 +45,11 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(
                     title=name,
-                    data={CONF_HOST: host, CONF_NAME: name},
+                    data={
+                        CONF_HOST: host,
+                        CONF_NAME: name,
+                        CONF_SCAN_INTERVAL: scan_interval,
+                    },
                 )
 
         user_input = user_input or {}
@@ -58,6 +63,9 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional(
                         CONF_NAME, default=user_input.get(CONF_NAME) or DEFAULT_NAME
                     ): str,
+                    vol.Optional(CONF_SCAN_INTERVAL, default=30): vol.All(
+                        vol.Coerce(int), vol.Clamp(min=5, max=600)
+                    ),
                 }
             ),
             errors=errors,

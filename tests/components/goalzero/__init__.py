@@ -2,19 +2,16 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.components.goalzero.const import DEFAULT_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SCAN_INTERVAL
 
 HOST = "1.2.3.4"
-NAME = "Yeti"
+SCAN_INTERVAL = 30
 
 CONF_DATA = {
     CONF_HOST: HOST,
-    CONF_NAME: NAME,
-}
-
-CONF_CONFIG_FLOW = {
-    CONF_HOST: HOST,
-    CONF_NAME: NAME,
+    CONF_NAME: DEFAULT_NAME,
+    CONF_SCAN_INTERVAL: SCAN_INTERVAL,
 }
 
 

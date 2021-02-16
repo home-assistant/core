@@ -3,23 +3,16 @@ from unittest.mock import patch
 
 from goalzero import exceptions
 
-from homeassistant.components.goalzero.const import DOMAIN
+from homeassistant.components.goalzero.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SCAN_INTERVAL
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
 
-from . import (
-    CONF_CONFIG_FLOW,
-    CONF_DATA,
-    CONF_HOST,
-    CONF_NAME,
-    NAME,
-    _create_mocked_yeti,
-    _patch_config_flow_yeti,
-)
+from . import CONF_DATA, _create_mocked_yeti, _patch_config_flow_yeti
 
 from tests.common import MockConfigEntry
 
@@ -49,10 +42,10 @@ async def test_flow_user(hass):
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=CONF_CONFIG_FLOW,
+            user_input=CONF_DATA,
         )
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == NAME
+        assert result["title"] == DEFAULT_NAME
         assert result["data"] == CONF_DATA
 
 
@@ -60,7 +53,7 @@ async def test_flow_user_already_configured(hass):
     """Test user initialized flow with duplicate server."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4", CONF_NAME: "Yeti"},
+        data={CONF_HOST: "1.2.3.4", CONF_NAME: "Yeti", CONF_SCAN_INTERVAL: 30},
     )
 
     entry.add_to_hass(hass)
@@ -68,6 +61,7 @@ async def test_flow_user_already_configured(hass):
     service_info = {
         "host": "1.2.3.4",
         "name": "Yeti",
+        "scan_interval": 30,
     }
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=service_info
@@ -83,7 +77,7 @@ async def test_flow_user_cannot_connect(hass):
     with _patch_config_flow_yeti(mocked_yeti) as yetimock:
         yetimock.side_effect = exceptions.ConnectError
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
@@ -96,7 +90,7 @@ async def test_flow_user_invalid_host(hass):
     with _patch_config_flow_yeti(mocked_yeti) as yetimock:
         yetimock.side_effect = exceptions.InvalidHost
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
@@ -109,7 +103,7 @@ async def test_flow_user_unknown_error(hass):
     with _patch_config_flow_yeti(mocked_yeti) as yetimock:
         yetimock.side_effect = Exception
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"

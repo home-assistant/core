@@ -1,11 +1,12 @@
 """The Goal Zero Yeti integration."""
 import asyncio
+from datetime import timedelta
 from logging import getLogger
 
 from goalzero import Yeti, exceptions
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -15,7 +16,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN, MIN_TIME_BETWEEN_UPDATES
+from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
 
 _LOGGER = getLogger(__name__)
 
@@ -34,6 +35,7 @@ async def async_setup_entry(hass, entry):
     """Set up Goal Zero Yeti from a config entry."""
     name = entry.data[CONF_NAME]
     host = entry.data[CONF_HOST]
+    scan_interval = entry.data[CONF_SCAN_INTERVAL]
 
     session = async_get_clientsession(hass)
     api = Yeti(host, hass.loop, session)
@@ -55,7 +57,7 @@ async def async_setup_entry(hass, entry):
         _LOGGER,
         name=name,
         update_method=async_update_data,
-        update_interval=MIN_TIME_BETWEEN_UPDATES,
+        update_interval=timedelta(seconds=scan_interval),
     )
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_KEY_API: api,
