@@ -81,9 +81,6 @@ GATEWAY_SENSOR_TYPES = {
     "pressure": SensorType(
         unit=PRESSURE_HPA, icon=None, device_class=DEVICE_CLASS_PRESSURE
     ),
-    "load_power": SensorType(
-        unit=POWER_WATT, icon=None, device_class=DEVICE_CLASS_POWER
-    ),
 }
 
 
