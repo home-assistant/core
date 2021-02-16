@@ -321,8 +321,6 @@ class Recorder(threading.Thread):
         self.hass.add_job(register)
         result = hass_started.result()
 
-        self._open_event_session()
-
         # If shutdown happened before Home Assistant finished starting
         if result is shutdown_task:
             # Make sure we cleanly close the run if
@@ -364,14 +362,16 @@ class Recorder(threading.Thread):
                 self._setup_connection()
                 migration.migrate_schema(self)
                 self._setup_run()
-                _LOGGER.debug("Connected to recorder database")
-                return True
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.error(
                     "Error during connection setup: %s (retrying in %s seconds)",
                     err,
                     self.db_retry_wait,
                 )
+            else:
+                _LOGGER.debug("Connected to recorder database")
+                self._open_event_session()
+                return True
 
             tries += 1
             time.sleep(self.db_retry_wait)
@@ -524,7 +524,6 @@ class Recorder(threading.Thread):
         self._close_connection()
         move_away_broken_database(dburl_to_path(self.db_url))
         self._setup_recorder()
-        self._open_event_session()
 
     def _reopen_event_session(self):
         """Rollback the event session and reopen it after a failure."""
