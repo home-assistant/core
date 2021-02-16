@@ -1750,7 +1750,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.8
+python-ecobee-api==0.2.10
 
 # homeassistant.components.eq3btsmart
 # python-eq3bt==0.1.11
