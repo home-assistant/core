@@ -130,7 +130,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
-        gateway = hass.data[DOMAIN][config_entry.entry_id]
+        gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
         # Gateway light
         if gateway.model not in [
             GATEWAY_MODEL_AC_V1,

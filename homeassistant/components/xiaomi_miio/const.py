@@ -7,6 +7,8 @@ CONF_DEVICE = "device"
 CONF_MODEL = "model"
 CONF_MAC = "mac"
 
+KEY_COORDINATOR = "coordinator"
+
 MODELS_GATEWAY = ["lumi.gateway", "lumi.acpartner"]
 MODELS_SWITCH = [
     "chuangmi.plug.v1",
