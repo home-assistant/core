@@ -75,12 +75,10 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
 
 ATTR_ACTIVE_CHILD = "active_child"
-ATTR_DATA = "data"
 
 CONF_ATTRS = "attributes"
 CONF_CHILDREN = "children"
 CONF_COMMANDS = "commands"
-CONF_SERVICE_DATA = "service_data"
 
 OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE]
 
