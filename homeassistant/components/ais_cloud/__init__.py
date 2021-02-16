@@ -2087,7 +2087,7 @@ class AisColudData:
 
 async def async_handle_get_gates_info(hass, message):
     """Handle a AIS get gates info message."""
-    login = message.get("username", "")
+    login = message.get("username", "").lower()
     password = message.get("password", "")
     web_session = aiohttp_client.async_get_clientsession(hass)
     rest_url = "https://powiedz.co/ords/dom/dom/gates_info"
