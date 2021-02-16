@@ -1,11 +1,6 @@
 """Binary sensor to read Proxmox VE data."""
-<<<<<<< HEAD
-from homeassistant.const import STATE_OFF, STATE_ON
-=======
-import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
->>>>>>> Add changes requested from previous PR
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import COORDINATORS, DOMAIN, ProxmoxEntity
@@ -20,10 +15,6 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
     for host_config in discovery_info["config"][DOMAIN]:
         host_name = host_config["host"]
-
-        # Skip invalid hosts
-        if not hass.data[DOMAIN][COORDINATORS][host_name]:
-            continue
 
         for node_config in host_config["nodes"]:
             node_name = node_config["node"]
