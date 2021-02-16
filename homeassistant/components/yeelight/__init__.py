@@ -42,7 +42,6 @@ CONF_FLOW_PARAMS = "flow_params"
 CONF_CUSTOM_EFFECTS = "custom_effects"
 CONF_NIGHTLIGHT_SWITCH_TYPE = "nightlight_switch_type"
 CONF_NIGHTLIGHT_SWITCH = "nightlight_switch"
-CONF_DEVICE = "device"
 
 DATA_CONFIG_ENTRIES = "config_entries"
 DATA_CUSTOM_EFFECTS = "custom_effects"
@@ -423,7 +422,6 @@ class YeelightDevice:
 
         Uses brightness as it appears to be supported in both ceiling and other lights.
         """
-
         return self._nightlight_brightness is not None
 
     @property
