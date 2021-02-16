@@ -342,3 +342,16 @@ async def test_zeroconf_plug_success(hass):
     test_plug_model = const.MODELS_SWITCH[0]
     test_zeroconf_name = const.MODELS_SWITCH[0].replace(".", "-")
     await zeroconf_device_success(hass, test_zeroconf_name, test_plug_model)
+
+
+async def test_config_flow_vacuum_success(hass):
+    """Test a successful config flow for a vacuum."""
+    test_vacuum_model = const.MODELS_VACUUM[0]
+    await config_flow_device_success(hass, test_vacuum_model)
+
+
+async def test_zeroconf_vacuum_success(hass):
+    """Test a successful zeroconf discovery of a vacuum."""
+    test_vacuum_model = const.MODELS_VACUUM[0]
+    test_zeroconf_name = const.MODELS_VACUUM[0].replace(".", "-")
+    await zeroconf_device_success(hass, test_zeroconf_name, test_vacuum_model)
