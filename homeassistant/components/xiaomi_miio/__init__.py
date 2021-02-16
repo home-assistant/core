@@ -1,7 +1,13 @@
 """Support for Xiaomi Miio."""
+from datetime import timedelta
+import logging
+
+from miio.gateway import GatewayException
+
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_DEVICE,
@@ -9,9 +15,12 @@ from .const import (
     CONF_GATEWAY,
     CONF_MODEL,
     DOMAIN,
+    KEY_COORDINATOR,
     MODELS_SWITCH,
 )
 from .gateway import ConnectXiaomiGateway
+
+_LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor", "light"]
 SWITCH_PLATFORMS = ["switch"]
@@ -56,8 +65,6 @@ async def async_setup_gateway_entry(
         return False
     gateway_info = gateway.gateway_info
 
-    hass.data[DOMAIN][entry.entry_id] = gateway.gateway_device
-
     gateway_model = f"{gateway_info.model}-{gateway_info.hardware_version}"
 
     device_registry = await dr.async_get_registry(hass)
@@ -70,6 +77,30 @@ async def async_setup_gateway_entry(
         model=gateway_model,
         sw_version=gateway_info.firmware_version,
     )
+
+    async def async_update_data():
+        """Fetch data from the subdevice."""
+        try:
+            for sub_device in gateway.gateway_device.devices.values():
+                await hass.async_add_executor_job(sub_device.update)
+        except GatewayException as ex:
+            raise UpdateFailed("Got exception while fetching the state") from ex
+
+    # Create update coordinator
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        # Name of the data. For logging purposes.
+        name=name,
+        update_method=async_update_data,
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=timedelta(seconds=10),
+    )
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        CONF_GATEWAY: gateway.gateway_device,
+        KEY_COORDINATOR: coordinator,
+    }
 
     for component in GATEWAY_PLATFORMS:
         hass.async_create_task(
