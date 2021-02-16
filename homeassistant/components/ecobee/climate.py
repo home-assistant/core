@@ -743,7 +743,7 @@ class Thermostat(ClimateEntity):
             "useEndTime2hour": 2,
             "useEndTime4hour": 4,
         }
-        return hold_hours_map.get(device_preference, 0)
+        return hold_hours_map.get(device_preference)
 
     def create_vacation(self, service_data):
         """Create a vacation with user-specified parameters."""
