@@ -80,7 +80,7 @@ PLATFORM_LOAD_EXCEPTIONS = (ImportError, FileNotFoundError)
 INTEGRATION_LOAD_EXCEPTIONS = (
     IntegrationNotFound,
     RequirementsNotFound,
-    *PLATFORM_LOAD_EXCEPTIONS,
+    *LOAD_EXCEPTIONS,
 )
 
 DEFAULT_CONFIG = f"""
