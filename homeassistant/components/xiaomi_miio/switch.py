@@ -7,7 +7,11 @@ from miio import AirConditioningCompanionV3, ChuangmiPlug, DeviceException, Powe
 from miio.powerstrip import PowerMode
 import voluptuous as vol
 
-from homeassistant.components.switch import DEVICE_CLASS_SWITCH, PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    DEVICE_CLASS_SWITCH,
+    PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -25,6 +29,7 @@ from .const import (
     CONF_GATEWAY,
     CONF_MODEL,
     DOMAIN,
+    KEY_COORDINATOR,
     SERVICE_SET_POWER_MODE,
     SERVICE_SET_POWER_PRICE,
     SERVICE_SET_WIFI_LED_OFF,
@@ -144,11 +149,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for sub_device in sub_devices.values():
             if sub_device.device_type == "Switch":
                 if "status_ch0" in sub_device.status.keys():
-                    entities.append(XiaomiGatewaySwitch(coordinator, sub_device, config_entry, 0))
+                    entities.append(
+                        XiaomiGatewaySwitch(coordinator, sub_device, config_entry, 0)
+                    )
                 if "status_ch1" in sub_device.status.keys():
-                    entities.append(XiaomiGatewaySwitch(coordinator, sub_device, config_entry, 1))
+                    entities.append(
+                        XiaomiGatewaySwitch(coordinator, sub_device, config_entry, 1)
+                    )
                 if "status_ch2" in sub_device.status.keys():
-                    entities.append(XiaomiGatewaySwitch(coordinator, sub_device, config_entry, 2))
+                    entities.append(
+                        XiaomiGatewaySwitch(coordinator, sub_device, config_entry, 2)
+                    )
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE or (
         config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY
@@ -248,6 +259,7 @@ class XiaomiGatewaySwitch(XiaomiGatewayDevice, SwitchEntity):
     def __init__(self, coordinator, sub_device, entry, channel):
         """Initialize the XiaomiSensor."""
         super().__init__(coordinator, sub_device, entry)
+        self._channel = channel
         self._data_key = f"status_ch{channel}"
         self._unique_id = f"{sub_device.sid}-ch{channel}"
         self._name = f"{sub_device.name} ch{channel} ({sub_device.sid})"
@@ -260,25 +272,25 @@ class XiaomiGatewaySwitch(XiaomiGatewayDevice, SwitchEntity):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self._sub_device.status[self._data_key] == 'on'
+        return self._sub_device.status[self._data_key] == "on"
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
         await self.hass.async_add_executor_job(
-                partial(self._sub_device.on, channel)
-            )
+            partial(self._sub_device.on, self._channel)
+        )
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
         await self.hass.async_add_executor_job(
-                partial(self._sub_device.off, channel)
-            )
+            partial(self._sub_device.off, self._channel)
+        )
 
     async def async_toggle(self, **kwargs):
         """Toggle the switch."""
         await self.hass.async_add_executor_job(
-                partial(self._sub_device.toggle, channel)
-            )
+            partial(self._sub_device.toggle, self._channel)
+        )
 
 
 class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
