@@ -508,6 +508,11 @@ class LIFXLight(LightEntity):
         return math.ceil(color_util.color_temperature_kelvin_to_mired(kelvin))
 
     @property
+    def state_attributes(self):
+        """Return state attributes of light, bypassing power state check."""
+        return self._state_attributes
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         support = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION | SUPPORT_EFFECT
