@@ -150,7 +150,7 @@ def test_last_run_was_recently_clean(hass_recorder):
 
     assert util.last_run_was_recently_clean(cursor) is False
 
-    hass.data[DATA_INSTANCE]._close_run()
+    hass.data[DATA_INSTANCE]._shutdown()
     wait_recording_done(hass)
 
     assert util.last_run_was_recently_clean(cursor) is True
