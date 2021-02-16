@@ -52,6 +52,11 @@ class MockDevice(Device):
         """Get the device type."""
         return "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
 
+    @property
+    def hostname(self) -> str:
+        """Get the hostname."""
+        return "mock-hostname"
+
     async def async_get_traffic_data(self) -> Mapping[str, any]:
         """Get traffic data."""
         return {

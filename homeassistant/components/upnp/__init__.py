@@ -12,8 +12,8 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import get_local_ip
 
 from .const import (
-    CONF_IGNORE_DISCOVERIES,
     CONF_LOCAL_IP,
+    CONFIG_ENTRY_HOSTNAME,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
     DISCOVERY_LOCATION,
@@ -23,7 +23,6 @@ from .const import (
     DOMAIN_CONFIG,
     DOMAIN_COORDINATORS,
     DOMAIN_DEVICES,
-    DOMAIN_IGNORE_DISCOVERIES,
     DOMAIN_LOCAL_IP,
     LOGGER as _LOGGER,
 )
@@ -37,7 +36,6 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
-                vol.Optional(CONF_IGNORE_DISCOVERIES, default=False): cv.boolean,
             },
         )
     },
@@ -75,17 +73,15 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     conf_default = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
     conf = config.get(DOMAIN, conf_default)
     local_ip = await hass.async_add_executor_job(get_local_ip)
-    ignore_discoveries = conf.get(CONF_IGNORE_DISCOVERIES)
     hass.data[DOMAIN] = {
         DOMAIN_CONFIG: conf,
         DOMAIN_COORDINATORS: {},
         DOMAIN_DEVICES: {},
         DOMAIN_LOCAL_IP: conf.get(CONF_LOCAL_IP, local_ip),
-        DOMAIN_IGNORE_DISCOVERIES: ignore_discoveries,
     }
 
     # Only start if set up via configuration.yaml.
-    if DOMAIN in config and not ignore_discoveries:
+    if DOMAIN in config:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
@@ -124,6 +120,13 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         hass.config_entries.async_update_entry(
             entry=config_entry,
             unique_id=device.unique_id,
+        )
+
+    # Ensure entry has a hostname, for older entries.
+    if CONFIG_ENTRY_HOSTNAME not in config_entry.data:
+        hass.config_entries.async_update_entry(
+            entry=config_entry,
+            data={CONFIG_ENTRY_HOSTNAME: device.hostname, **config_entry.data},
         )
 
     # Create device registry entry.
