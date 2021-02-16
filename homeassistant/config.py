@@ -753,7 +753,7 @@ async def async_process_component_config(
     domain = integration.domain
     try:
         component = integration.get_component()
-    except INTEGRATION_LOAD_EXCEPTIONS as ex:
+    except LOAD_EXCEPTIONS as ex:
         _LOGGER.error("Unable to import %s: %s", domain, ex)
         return None
 
