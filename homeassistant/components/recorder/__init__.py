@@ -462,7 +462,7 @@ class Recorder(threading.Thread):
             self._commit_event_session_or_retry()
             return
         except exc.DatabaseError as err:
-            if isinstance(exc.DatabaseError.__cause__, sqlite3.DatabaseError):
+            if isinstance(err.__cause__, sqlite3.DatabaseError):
                 _LOGGER.exception(
                     "Unrecoverable sqlite3 database corruption detected: %s", err
                 )
