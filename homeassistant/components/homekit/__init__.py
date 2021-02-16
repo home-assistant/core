@@ -99,7 +99,6 @@ from .const import (
 from .util import (
     dismiss_setup_message,
     get_persist_fullpath_for_entry_id,
-    migrate_filesystem_state_data_for_primary_imported_entry_id,
     port_is_available,
     remove_state_files_for_entry_id,
     show_setup_message,
@@ -237,14 +236,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     name = conf[CONF_NAME]
     port = conf[CONF_PORT]
     _LOGGER.debug("Begin setup HomeKit for %s", name)
-
-    if CONF_ENTRY_INDEX in conf and conf[CONF_ENTRY_INDEX] == 0:
-        _LOGGER.debug("Migrating legacy HomeKit data for %s", name)
-        await hass.async_add_executor_job(
-            migrate_filesystem_state_data_for_primary_imported_entry_id,
-            hass,
-            entry.entry_id,
-        )
 
     aid_storage = AccessoryAidStorage(hass, entry.entry_id)
 
