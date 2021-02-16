@@ -9,7 +9,6 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.util import slugify
 from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, SMARTTUB_CONTROLLER
@@ -40,7 +39,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique id for the entity."""
-        return f"{self.spa.id}-{slugify(self._entity_type)}"
+        return f"{self.spa.id}-{self._entity_type}"
 
     @property
     def temperature_unit(self):
