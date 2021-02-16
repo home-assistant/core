@@ -36,7 +36,6 @@ from .const import (
     PROTOCOL_SSH,
     PROTOCOL_TELNET,
 )
-
 from .const import DOMAIN  # pylint:disable=unused-import
 from .router import get_api
 
