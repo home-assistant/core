@@ -22,7 +22,14 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import HuaweiLteBaseEntity, Router
-from .const import DOMAIN, KEY_LAN_HOST_INFO, KEY_WLAN_HOST_LIST, UPDATE_SIGNAL
+from .const import (
+    CONF_TRACK_WIRED_CLIENTS,
+    DEFAULT_TRACK_WIRED_CLIENTS,
+    DOMAIN,
+    KEY_LAN_HOST_INFO,
+    KEY_WLAN_HOST_LIST,
+    UPDATE_SIGNAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,22 +62,32 @@ async def async_setup_entry(
     # us, i.e. if wlan host list is supported. Only set up a subscription and proceed
     # with adding and tracking entities if it is.
     router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
-    if _get_hosts(router, True) is None:
+    if (hosts := _get_hosts(router, True)) is None:
         return
 
     # Initialize already tracked entities
     tracked: set[str] = set()
     registry = await entity_registry.async_get_registry(hass)
     known_entities: list[Entity] = []
+    track_wired_clients = router.config_entry.options.get(
+        CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
+    )
     for entity in registry.entities.values():
         if (
             entity.domain == DEVICE_TRACKER_DOMAIN
             and entity.config_entry_id == config_entry.entry_id
         ):
-            tracked.add(entity.unique_id)
-            known_entities.append(
-                HuaweiLteScannerEntity(router, entity.unique_id.partition("-")[2])
-            )
+            mac = entity.unique_id.partition("-")[2]
+            # Do not add known wired clients if not tracking them (any more)
+            skip = False
+            if not track_wired_clients:
+                for host in hosts:
+                    if host.get("MacAddress") == mac:
+                        skip = not _is_wireless(host)
+                        break
+            if not skip:
+                tracked.add(entity.unique_id)
+                known_entities.append(HuaweiLteScannerEntity(router, mac))
     async_add_entities(known_entities, True)
 
     # Tell parent router to poll hosts list to gather new devices
@@ -123,14 +140,18 @@ def async_add_new_entities(
     if not hosts:
         return
 
+    track_wired_clients = router.config_entry.options.get(
+        CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
+    )
+
     new_entities: list[Entity] = []
     for host in (
         x
         for x in hosts
         if not _is_us(x)
         and _is_connected(x)
-        and _is_wireless(x)
         and x.get("MacAddress")
+        and (track_wired_clients or _is_wireless(x))
     ):
         entity = HuaweiLteScannerEntity(router, host["MacAddress"])
         if entity.unique_id in tracked:

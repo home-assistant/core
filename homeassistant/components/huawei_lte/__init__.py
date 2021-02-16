@@ -131,6 +131,7 @@ CONFIG_ENTRY_PLATFORMS = (
 class Router:
     """Class for router state."""
 
+    config_entry: ConfigEntry = attr.ib()
     connection: Connection = attr.ib()
     url: str = attr.ib()
     mac: str = attr.ib()
@@ -387,7 +388,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         raise ConfigEntryNotReady from ex
 
     # Set up router and store reference to it
-    router = Router(connection, url, mac, signal_update)
+    router = Router(config_entry, connection, url, mac, signal_update)
     hass.data[DOMAIN].routers[url] = router
 
     # Do initial data update
