@@ -29,6 +29,9 @@ async def async_setup_entry(
 
     for idx, camera in enumerate(coordinator.data):
         for name in camera:
+            if name == "battery_level" and not camera.get(name):
+                continue
+
             if name in SensorType.__members__:
                 sensor_type_name = getattr(SensorType, name).value
                 sensors.append(EzvizSensor(coordinator, idx, name, sensor_type_name))
@@ -72,6 +75,7 @@ class EzvizSensor(CoordinatorEntity, Entity):
             "name": self.coordinator.data[self._idx]["name"],
             "model": self.coordinator.data[self._idx]["device_sub_category"],
             "manufacturer": MANUFACTURER,
+            "sw_version": self.coordinator.data[self._idx]["version"],
         }
 
     @property

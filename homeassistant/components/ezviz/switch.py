@@ -1,10 +1,10 @@
-"""Support for Ezviz binary sensors."""
+"""Support for Ezviz Switch sensors."""
 import logging
 from typing import Callable, List
 
-from pyezviz.constants import BinarySensorType
+from pyezviz.constants import DeviceSwitchType
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -21,52 +21,63 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
-    """Set up Ezviz sensors based on a config entry."""
+    """Set up Ezviz switch based on a config entry."""
     coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         DATA_COORDINATOR
     ]
-    sensors = []
-    sensor_type_name = "None"
+    switch_entities = []
 
     for idx, camera in enumerate(coordinator.data):
         for name in camera:
+            if name == "switches":
+                if camera.get(name):
+                    for switch in camera.get(name):
+                        if switch in DeviceSwitchType._value2member_map_:
+                            switch_entities.append(
+                                EzvizSwitch(coordinator, idx, switch)
+                            )
 
-            if name in BinarySensorType.__members__:
-                sensor_type_name = getattr(BinarySensorType, name).value
-                sensors.append(
-                    EzvizBinarySensor(coordinator, idx, name, sensor_type_name)
-                )
-
-    async_add_entities(sensors)
+    async_add_entities(switch_entities)
 
 
-class EzvizBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class EzvizSwitch(CoordinatorEntity, SwitchEntity):
     """Representation of a Ezviz sensor."""
 
-    def __init__(self, coordinator, idx, name, sensor_type_name):
-        """Initialize the sensor."""
+    def __init__(self, coordinator, idx, switch):
+        """Initialize the switch."""
         super().__init__(coordinator)
         self._idx = idx
         self._camera_name = self.coordinator.data[self._idx]["name"]
-        self._name = name
-        self._sensor_name = f"{self._camera_name}.{self._name}"
-        self.sensor_type_name = sensor_type_name
+        self._name = switch
+        self._sensor_name = f"{self._camera_name}.{DeviceSwitchType(self._name).name}"
         self._serial = self.coordinator.data[self._idx]["serial"]
 
     @property
     def name(self):
-        """Return the name of the Ezviz sensor."""
-        return self._sensor_name
+        """Return the name of the Ezviz switch."""
+        return f"{self._camera_name}.{DeviceSwitchType(self._name).name}"
 
     @property
     def is_on(self):
-        """Return the state of the sensor."""
-        return self.coordinator.data[self._idx][self._name]
+        """Return the state of the switch."""
+        return self.coordinator.data[self._idx]["switches"][self._name]
 
     @property
     def unique_id(self):
-        """Return the unique ID of this sensor."""
+        """Return the unique ID of this switch."""
         return f"{self._serial}_{self._sensor_name}"
+
+    def turn_on(self):
+        """Change a device switch on the camera."""
+        _LOGGER.debug("Set EZVIZ Switch '%s' to %s", self._name, 1)
+
+        self.coordinator.ezviz_client.switch_status(self._serial, self._name, 1)
+
+    def turn_off(self):
+        """Change a device switch on the camera."""
+        _LOGGER.debug("Set EZVIZ Switch '%s' to %s", self._name, 0)
+
+        self.coordinator.ezviz_client.switch_status(self._serial, self._name, 0)
 
     @property
     def device_info(self):
@@ -82,4 +93,4 @@ class EzvizBinarySensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Device class for the sensor."""
-        return self.sensor_type_name
+        return "switch"

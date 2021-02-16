@@ -5,7 +5,6 @@ import logging
 from typing import Callable, List
 
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
-from pyezviz.constants import DeviceSwitchType
 import voluptuous as vol
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
@@ -19,16 +18,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     ATTR_CAMERAS,
     ATTR_DIRECTION,
-    ATTR_ENABLE,
-    ATTR_INFRARED_LIGHT,
     ATTR_LEVEL,
-    ATTR_LIGHT,
-    ATTR_MOBILE_TRACKING,
-    ATTR_PRIVACY,
-    ATTR_SLEEP,
-    ATTR_SOUND,
     ATTR_SPEED,
-    ATTR_SWITCH,
     ATTR_TYPE,
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
@@ -73,24 +64,6 @@ async def async_setup_entry(
             vol.Required(ATTR_SPEED): cv.positive_int,
         },
         "perform_ezviz_ptz",
-    )
-
-    platform.async_register_entity_service(
-        "ezviz_switch_set",
-        {
-            vol.Required(ATTR_SWITCH): vol.In(
-                [
-                    ATTR_LIGHT,
-                    ATTR_SOUND,
-                    ATTR_INFRARED_LIGHT,
-                    ATTR_PRIVACY,
-                    ATTR_SLEEP,
-                    ATTR_MOBILE_TRACKING,
-                ]
-            ),
-            vol.Required(ATTR_ENABLE): cv.positive_int,
-        },
-        "perform_ezviz_switch_set",
     )
 
     platform.async_register_entity_service(
@@ -185,50 +158,10 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
     def extra_state_attributes(self):
         """Return the Ezviz-specific camera state attributes."""
         return {
-            # Camera firmware version
-            "sw_version": self.coordinator.data[self._idx]["version"],
             # Camera firmware version update available?
             "upgrade_available": self.coordinator.data[self._idx]["upgrade_available"],
-            # if privacy == true, the device closed the lid or did a 180� tilt
-            "privacy": self.coordinator.data[self._idx]["privacy"],
-            # if sleep == true, the device is sleeping?
-            "sleep": self.coordinator.data[self._idx]["sleep"],
-            # is the camera listening ?
-            "audio": self.coordinator.data[self._idx]["audio"],
-            # infrared led on ?
-            "ir_led": self.coordinator.data[self._idx]["ir_led"],
-            # state led on  ?
-            "state_led": self.coordinator.data[self._idx]["state_led"],
-            # if true, the camera will move automatically to follow movements
-            "follow_move": self.coordinator.data[self._idx]["follow_move"],
-            # if true, notification schedule(s) are configured
-            "alarm_schedules_enabled": self.coordinator.data[self._idx][
-                "alarm_schedules_enabled"
-            ],
-            # if true, if some movement is detected, the camera makes some sound
-            "alarm_sound_mod": self.coordinator.data[self._idx]["alarm_sound_mod"],
-            # are the camera's stored videos/images encrypted?
-            "encrypted": self.coordinator.data[self._idx]["encrypted"],
             # camera's local ip on local network
             "local_ip": self.coordinator.data[self._idx]["local_ip"],
-            # camera's battery level if battery camera
-            "battery_level": self.coordinator.data[self._idx]["battery_level"],
-            # PIR sensor of camera. 0=open ir, and 1=closed ir
-            "PIR_Status": self.coordinator.data[self._idx]["PIR_Status"],
-            # from 1 to 6 or 1-100, the higher is the sensibility, the more it will detect small movements
-            "detection_sensibility": self.coordinator.data[self._idx][
-                "detection_sensibility"
-            ],
-            # last alarm trigger date and time
-            "Last alarm triggered": self.coordinator.data[self._idx]["last_alarm_time"],
-            # Seconds from alarm last trigger
-            "Seconds_last_trigger": self.coordinator.data[self._idx][
-                "Seconds_Last_Trigger"
-            ],
-            # Calculated motion trigger from alarm last trigger
-            "motion_sensor": self.coordinator.data[self._idx]["Motion_Trigger"],
-            # image of last event that triggered alarm
-            "Last alarm image url": self.coordinator.data[self._idx]["last_alarm_pic"],
             # RTSP Stream
             "RTSP stream": self._rtsp_stream,
         }
@@ -309,6 +242,17 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
         )
         return image
 
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self._serial)},
+            "name": self.coordinator.data[self._idx]["name"],
+            "model": self.coordinator.data[self._idx]["device_sub_category"],
+            "manufacturer": MANUFACTURER,
+            "sw_version": self.coordinator.data[self._idx]["version"],
+        }
+
     async def stream_source(self):
         """Return the stream source."""
         local_ip = self.coordinator.data[self._idx]["local_ip"]
@@ -333,15 +277,6 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
         )
         self.coordinator.ezviz_client.ptz_control(
             str(direction).upper(), self._serial, "STOP", speed
-        )
-
-    def perform_ezviz_switch_set(self, switch, enable):
-        """Change a device switch on the camera."""
-        _LOGGER.debug("Set EZVIZ Switch '%s' to %s", switch, enable)
-        service_switch = getattr(DeviceSwitchType, switch)
-
-        self.coordinator.ezviz_client.switch_status(
-            self._serial, service_switch.value, enable
         )
 
     def perform_ezviz_wake_device(self):

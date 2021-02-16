@@ -32,19 +32,6 @@ ezviz_set_alarm_detection_sensibility:
     type_value:
       description: 'Type of detection. Options : 0 - Device or 3 - Camera'
       example: '3'
-ezviz_switch_set:
-  description: 'Switches camera options or device switches.'
-  fields:
-    enable:
-      description: 'Enter 1 or 0 (0=disable, 1=enable).'
-      example: '0'
-    entity_id:
-      description: 'Name(s) of entities to move.'
-      example: 'camera.living_room_camera'
-    switch:
-      description: 'Switch to set. Choices are : SOUND, INFRARED_LIGHT,
-       LIGHT, PRIVACY, SLEEP , MOBILE_TRACKING.'
-      example: 'LIGHT'
 ezviz_wake_device:
   description: 'This can also be used to wake device from hibernation.'
   fields:
