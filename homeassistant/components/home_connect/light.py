@@ -11,9 +11,11 @@ from homeassistant.components.light import (
     SUPPORT_COLOR,
     LightEntity,
 )
+from homeassistant.const import CONF_ENTITIES
 import homeassistant.util.color as color_util
 
 from .const import (
+    ATTR_VALUE,
     BSH_AMBIENT_LIGHT_BRIGHTNESS,
     BSH_AMBIENT_LIGHT_COLOR,
     BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR,
@@ -36,7 +38,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities = []
         hc_api = hass.data[DOMAIN][config_entry.entry_id]
         for device_dict in hc_api.devices:
-            entity_dicts = device_dict.get("entities", {}).get("light", [])
+            entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("light", [])
             entity_list = [HomeConnectLight(**d) for d in entity_dicts]
             entities += entity_list
         return entities
@@ -169,9 +171,9 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
 
     async def async_update(self):
         """Update the light's status."""
-        if self.device.appliance.status.get(self._key, {}).get("value") is True:
+        if self.device.appliance.status.get(self._key, {}).get(ATTR_VALUE) is True:
             self._state = True
-        elif self.device.appliance.status.get(self._key, {}).get("value") is False:
+        elif self.device.appliance.status.get(self._key, {}).get(ATTR_VALUE) is False:
             self._state = False
         else:
             self._state = None
@@ -185,7 +187,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 self._hs_color = None
                 self._brightness = None
             else:
-                colorvalue = color.get("value")[1:]
+                colorvalue = color.get(ATTR_VALUE)[1:]
                 rgb = color_util.rgb_hex_to_rgb_list(colorvalue)
                 hsv = color_util.color_RGB_to_hsv(rgb[0], rgb[1], rgb[2])
                 self._hs_color = [hsv[0], hsv[1]]
@@ -197,5 +199,5 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             if brightness is None:
                 self._brightness = None
             else:
-                self._brightness = ceil((brightness.get("value") - 10) * 255 / 90)
+                self._brightness = ceil((brightness.get(ATTR_VALUE) - 10) * 255 / 90)
             _LOGGER.debug("Updated, new brightness: %s", self._brightness)
