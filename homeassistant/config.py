@@ -832,7 +832,7 @@ async def async_process_component_config(
 
         try:
             platform = p_integration.get_platform(domain)
-        except PLATFORM_LOAD_EXCEPTIONS:
+        except LOAD_EXCEPTIONS:
             _LOGGER.exception("Platform error: %s", domain)
             continue
 
