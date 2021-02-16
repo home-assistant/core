@@ -1,7 +1,13 @@
 """Provide functionality to interact with the vlc telnet interface."""
 import logging
 
-from python_telnet_vlc import ConnectionError as ConnErr, VLCTelnet
+from python_telnet_vlc import (
+    CommandError,
+    ConnectionError as ConnErr,
+    LuaError,
+    ParseError,
+    VLCTelnet,
+)
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
@@ -93,7 +99,7 @@ class VlcDevice(MediaPlayerEntity):
         self._port = port
         self._password = passwd
         self._vlc = None
-        self._available = False
+        self._available = True
         self._volume_bkp = 0
         self._media_artist = ""
         self._media_title = ""
@@ -103,12 +109,15 @@ class VlcDevice(MediaPlayerEntity):
         if self._vlc is None:
             try:
                 self._vlc = VLCTelnet(self._host, self._password, self._port)
-                self._state = STATE_IDLE
-                self._available = True
-            except (ConnErr, EOFError):
-                self._available = False
+            except (ConnErr, EOFError) as err:
+                if self._available:
+                    _LOGGER.error("Connection error: %s", err)
+                    self._available = False
                 self._vlc = None
                 return
+
+            self._state = STATE_IDLE
+            self._available = True
 
         try:
             status = self._vlc.status()
@@ -140,8 +149,12 @@ class VlcDevice(MediaPlayerEntity):
                 self._media_artist = info.get(0, {}).get("artist")
                 self._media_title = info.get(0, {}).get("title")
 
-        except (ConnErr, EOFError):
-            self._available = False
+        except (CommandError, LuaError, ParseError) as err:
+            _LOGGER.error("Command error: %s", err)
+        except (ConnErr, EOFError) as err:
+            if self._available:
+                _LOGGER.error("Connection error: %s", err)
+                self._available = False
             self._vlc = None
 
     @property
