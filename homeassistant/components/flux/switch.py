@@ -159,6 +159,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
     async_add_entities([flux])
 
+    async def async_set_time(call=None):
+        time = call.data.get("datetime")
+        await flux.async_flux_update(utcnow=time)
+
+    service_name = slugify(f"{name} set time")
+    hass.services.async_register(
+        DOMAIN,
+        service_name,
+        async_set_time,
+        vol.Schema({vol.Required("datetime"): cv.datetime}),
+    )
+
     async def async_update(call=None):
         """Update lights."""
         await flux.async_flux_update()
