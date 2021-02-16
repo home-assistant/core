@@ -1,4 +1,4 @@
-"""Constant for MCP23017 integration."""
+"""Constants for MCP23017 integration."""
 DOMAIN = "mcp23017"
 
 MODE_UP = "UP"
@@ -14,8 +14,9 @@ CONF_FLOW_PLATFORM = "platform"
 CONF_FLOW_PIN_NUMBER = "pin_number"
 CONF_FLOW_PIN_NAME = "pin_name"
 
+DEFAULT_SCAN_RATE = 0.1  # seconds
+DEFAULT_I2C_BUS = 1
 DEFAULT_I2C_ADDRESS = 0x20
 
 DEFAULT_INVERT_LOGIC = False
 DEFAULT_PULL_MODE = MODE_UP
-DEFAULT_PUSH_SLOWDOWN = 10

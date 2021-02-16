@@ -1,17 +1,22 @@
 """Support for I2C MCP23017 chip."""
 
+import asyncio
 import functools
 import logging
 import threading
+import time
 
-from homeassistant.components.i2c.const import DOMAIN as DOMAIN_I2C
+import smbus2
+
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import device_registry
 
 from .const import (
     CONF_FLOW_PIN_NUMBER,
     CONF_FLOW_PLATFORM,
     CONF_I2C_ADDRESS,
-    DEFAULT_PUSH_SLOWDOWN,
+    DEFAULT_I2C_BUS,
+    DEFAULT_SCAN_RATE,
     DOMAIN,
 )
 
@@ -43,12 +48,29 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["binary_sensor", "switch"]
 
+MCP23017_DATA_LOCK = asyncio.Lock()
+
 
 async def async_setup(hass, config):
     """Set up the component."""
 
-    # hass.data[DOMAIN] store one entry for each MCP23017 instance using i2c address as a key
+    # hass.data[DOMAIN] stores one entry for each MCP23017 instance using i2c address as a key
     hass.data.setdefault(DOMAIN, {})
+
+    # Callback function to start polling when HA starts
+    def start_polling(event):
+        for component in hass.data[DOMAIN].values():
+            if not component.is_alive():
+                component.start_polling()
+
+    # Callback function to stop polling when HA stops
+    def stop_polling(event):
+        for component in hass.data[DOMAIN].values():
+            if component.is_alive():
+                component.stop_polling()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_polling)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_polling)
 
     return True
 
@@ -56,41 +78,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up the MCP23017 from a config entry."""
 
-    i2c_address = config_entry.data[CONF_I2C_ADDRESS]
-    if i2c_address not in hass.data[DOMAIN]:
-        try:
-            bus = hass.data[DOMAIN_I2C]
-            hass.data[DOMAIN][i2c_address] = await hass.async_add_executor_job(
-                functools.partial(MCP23017, bus, i2c_address)
-            )
-
-        except (OSError, ValueError, KeyError) as error:
-            await hass.config_entries.async_remove(config_entry.entry_id)
-            hass.components.persistent_notification.create(
-                f"Error: {error}<br /> Unable to create MCP23017 device at address 0x{i2c_address:02x}",
-                title=f"{DOMAIN} Configuration",
-                notification_id=f"{DOMAIN} notification",
-            )
-
-            _LOGGER.error(
-                "Unable to create %s device at address 0x%02x (%s)",
-                DOMAIN,
-                i2c_address,
-                error,
-            )
-
-            return False
-
-        # Register a device combining all related platforms
-        devices = await device_registry.async_get_registry(hass)
-        devices.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
-            identifiers={(DOMAIN, i2c_address)},
-            manufacturer="MicroChip",
-            model=DOMAIN,
-            name=f"{DOMAIN} @0x{i2c_address:02x}",
-        )
-
+    # Forward entry setup to configured platform
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(
             config_entry, config_entry.data[CONF_FLOW_PLATFORM]
@@ -101,40 +89,103 @@ async def async_setup_entry(hass, config_entry):
 
 
 async def async_unload_entry(hass, config_entry):
-    """Unload MCP23017 platform corresponding to a config_entry."""
+    """Unload entity from MCP23017 component and platform."""
 
+    # Unload related platform
     await hass.config_entries.async_forward_entry_unload(
         config_entry, config_entry.data[CONF_FLOW_PLATFORM]
     )
 
-    # Remove related platform from component
     i2c_address = config_entry.data[CONF_I2C_ADDRESS]
-    device = hass.data[DOMAIN][i2c_address]
 
-    await hass.async_add_executor_job(
-        functools.partial(
-            device.unregister_entity, config_entry.data[CONF_FLOW_PIN_NUMBER]
+    # DOMAIN data async mutex
+    async with MCP23017_DATA_LOCK:
+        component = hass.data[DOMAIN][i2c_address]
+
+        # Unlink entity from component
+        await hass.async_add_executor_job(
+            functools.partial(
+                component.unregister_entity, config_entry.data[CONF_FLOW_PIN_NUMBER]
+            )
         )
-    )
 
-    if device.has_no_entities:
-        await hass.async_add_executor_job(device.destroy)
-        del hass.data[DOMAIN][i2c_address]
+        # Free component if not linked to any entities
+        if component.has_no_entities:
+            await hass.async_add_executor_job(component.stop_polling)
+            hass.data[DOMAIN].pop(i2c_address)
 
-        _LOGGER.info("%s@0x%02x device destroyed", type(device).__name__, i2c_address)
+            _LOGGER.info(
+                "%s@0x%02x component destroyed", type(component).__name__, i2c_address
+            )
 
     return True
 
 
-class MCP23017:
+async def async_get_or_create(hass, config_entry, entity):
+    """Get or create a MCP23017 component from entity i2c address."""
+
+    i2c_address = entity.address
+
+    # DOMAIN data async mutex
+    async with MCP23017_DATA_LOCK:
+        # Get or create component if it doesn't exist yet
+        if i2c_address in hass.data[DOMAIN]:
+            component = hass.data[DOMAIN][i2c_address]
+        else:
+            try:
+                hass.data[DOMAIN][i2c_address] = await hass.async_add_executor_job(
+                    functools.partial(MCP23017, DEFAULT_I2C_BUS, i2c_address)
+                )
+
+            except (FileNotFoundError, OSError) as error:
+                await hass.config_entries.async_remove(config_entry.entry_id)
+
+                _LOGGER.error(
+                    f"Unable to create {DOMAIN} component at address 0x{i2c_address:02x} ({error})"
+                )
+
+                hass.components.persistent_notification.create(
+                    f"Error: {error}<br /> Unable to create {DOMAIN} component at address 0x{i2c_address:02x}",
+                    title=f"{DOMAIN} Configuration",
+                    notification_id=f"{DOMAIN} notification",
+                )
+
+                return None
+
+            component = hass.data[DOMAIN][i2c_address]
+
+            # Register a device combining all related entities
+            devices = await device_registry.async_get_registry(hass)
+            devices.async_get_or_create(
+                config_entry_id=config_entry.entry_id,
+                identifiers={(DOMAIN, i2c_address)},
+                manufacturer="MicroChip",
+                model=DOMAIN,
+                name=f"{DOMAIN}@0x{i2c_address:02x}",
+            )
+
+            # Start polling thread if hass is already running
+            if hass.is_running:
+                component.start_polling()
+
+        # Link entity to component
+        await hass.async_add_executor_job(
+            functools.partial(component.register_entity, entity)
+        )
+
+        return component
+
+
+class MCP23017(threading.Thread):
     """MCP23017 device driver."""
 
     def __init__(self, bus, address):
         """Create a MCP23017 instance at {address} on I2C {bus}."""
-        self._bus = bus
+        self._bus = smbus2.SMBus(bus)
         self._address = address
 
         self._device_lock = threading.Lock()
+        self._run = False
         self._cache = {
             "IODIR": (self[IODIRB] << 8) + self[IODIRA],
             "GPPU": (self[GPPUB] << 8) + self[GPPUA],
@@ -142,13 +193,11 @@ class MCP23017:
             "OLAT": (self[OLATB] << 8) + self[OLATA],
         }
         self._entities = [None for i in range(16)]
-        self._push_slowdown = DEFAULT_PUSH_SLOWDOWN
-        self._push_slowdown_counter = 0
         self._update_bitmap = 0
 
-        self._bus.register_device(self)
+        threading.Thread.__init__(self, name=self.unique_id)
 
-        _LOGGER.info("%s@0x%02x device created", type(self).__name__, address)
+        _LOGGER.info("%s device created", self.unique_id)
 
     def __enter__(self):
         """Lock access to device (with statement)."""
@@ -203,7 +252,7 @@ class MCP23017:
     @property
     def unique_id(self):
         """Return component unique id."""
-        return f"{DOMAIN}-{self.address}"
+        return f"{DOMAIN}-0x{self.address:02x}"
 
     @property
     def has_no_entities(self):
@@ -241,12 +290,11 @@ class MCP23017:
             self._update_bitmap |= (1 << entity.pin) & 0xFFFF
 
             _LOGGER.info(
-                "%s(pin %d:'%s') attached to %s@0x%02x",
+                "%s(pin %d:'%s') attached to %s",
                 type(entity).__name__,
                 entity.pin,
                 entity.name,
-                type(self).__name__,
-                self.address,
+                self.unique_id,
             )
 
         return True
@@ -259,28 +307,30 @@ class MCP23017:
             self._entities[pin_number] = None
 
             _LOGGER.info(
-                "%s(pin %d:'%s') removed from MCP23017@0x%02x",
+                "%s(pin %d:'%s') removed from %s",
                 type(entity).__name__,
                 entity.pin,
                 entity.name,
-                self._address,
+                self.unique_id,
             )
 
-    def destroy(self):
-        """Handle steps required before object destruction."""
-        # Free up i2c bus at component's address
-        self._bus.unregister_device(self)
+    # -- Threading components
 
-    # -- Called from bus manager thread
+    def start_polling(self):
+        """Start polling thread."""
+        self._run = True
+        self.start()
+
+    def stop_polling(self):
+        """Stop polling thread."""
+        self._run = False
+        self.join()
 
     def run(self):
         """Poll all ports once and call corresponding callback if a change is detected."""
-        with self:
-            self._push_slowdown_counter -= 1
-            if self._push_slowdown_counter <= 0:
-                self._push_slowdown_counter = self._push_slowdown
-
-                # Read pin values for bank A and B from device if there are associated callbacks (minimize # of I2C  transactions)
+        while self._run:
+            with self:
+                # Read pin values for bank A and B from device only if there are associated callbacks (minimize # of I2C  transactions)
                 input_state = self._cache["GPIO"]
                 if any(
                     [hasattr(entity, "push_update") for entity in self._entities[0:8]]
@@ -305,3 +355,7 @@ class MCP23017:
                         self._update_bitmap &= ~(1 << pin) & 0xFFFF
                     input_state >>= 1
                     self._update_bitmap >>= 1
+
+            time.sleep(DEFAULT_SCAN_RATE)
+
+        _LOGGER.info("%s exiting", self.unique_id)

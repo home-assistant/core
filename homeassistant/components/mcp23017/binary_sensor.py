@@ -7,6 +7,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+import homeassistant.components.mcp23017 as mcp23017
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -67,9 +68,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a MCP23017 binary_sensor entry."""
 
     binary_sensor_entity = MCP23017BinarySensor(hass, config_entry)
+    binary_sensor_entity.device = await mcp23017.async_get_or_create(
+        hass, config_entry, binary_sensor_entity
+    )
 
     if await hass.async_add_executor_job(binary_sensor_entity.configure_device):
         async_add_entities([binary_sensor_entity])
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload MCP23017 switch entry corresponding to config_entry."""
+    print("FIXME ?")
 
 
 class MCP23017BinarySensor(BinarySensorEntity):
@@ -77,7 +86,9 @@ class MCP23017BinarySensor(BinarySensorEntity):
 
     def __init__(self, hass, config_entry):
         """Initialize the MCP23017 binary sensor."""
-        self._hass = hass
+        self._state = None
+        self._device = None
+
         self._i2c_address = config_entry.data[CONF_I2C_ADDRESS]
         self._pin_name = config_entry.data[CONF_FLOW_PIN_NAME]
         self._pin_number = config_entry.data[CONF_FLOW_PIN_NUMBER]
@@ -88,7 +99,7 @@ class MCP23017BinarySensor(BinarySensorEntity):
         self._pull_mode = config_entry.data.get(CONF_PULL_MODE, DEFAULT_PULL_MODE)
 
         # Create or update option values for binary_sensor platform
-        self._hass.config_entries.async_update_entry(
+        hass.config_entries.async_update_entry(
             config_entry,
             options={
                 CONF_INVERT_LOGIC: self._invert_logic,
@@ -100,10 +111,6 @@ class MCP23017BinarySensor(BinarySensorEntity):
         self._unsubscribe_update_listener = config_entry.add_update_listener(
             self.async_config_update
         )
-
-        # Retrieve associated device
-        self._device = self._hass.data[DOMAIN][config_entry.data[CONF_I2C_ADDRESS]]
-        self._state = None
 
         _LOGGER.info(
             "%s(pin %d:'%s') created",
@@ -120,7 +127,7 @@ class MCP23017BinarySensor(BinarySensorEntity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return f"{self._device.unique_id}-{self._pin_number}"
+        return f"{self._device.unique_id}-0x{self._pin_number:02x}"
 
     @property
     def should_poll(self):
@@ -143,6 +150,11 @@ class MCP23017BinarySensor(BinarySensorEntity):
         return self._pin_number
 
     @property
+    def address(self):
+        """Return the i2c address of the entity."""
+        return self._i2c_address
+
+    @property
     def device_info(self):
         """Device info."""
         return {
@@ -151,6 +163,16 @@ class MCP23017BinarySensor(BinarySensorEntity):
             "model": "MCP23017",
             "entry_type": "service",
         }
+
+    @property
+    def device(self):
+        """Get device property."""
+        return self._device
+
+    @device.setter
+    def device(self, value):
+        """Set device property."""
+        self._device = value
 
     @callback
     async def async_push_update(self, state):
@@ -191,14 +213,10 @@ class MCP23017BinarySensor(BinarySensorEntity):
         Return True when successful.
         """
         if self._device:
-            # Register entity
-            if self._device.register_entity(self):
-                # Configure entity as input for a binary sensor
-                self._device.set_input(self._pin_number, True)
-                self._device.set_pullup(
-                    self._pin_number, bool(self._pull_mode == MODE_UP)
-                )
+            # Configure entity as input for a binary sensor
+            self._device.set_input(self._pin_number, True)
+            self._device.set_pullup(self._pin_number, bool(self._pull_mode == MODE_UP))
 
-                return True
+            return True
 
         return False

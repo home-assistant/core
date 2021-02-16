@@ -5,6 +5,7 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.components.mcp23017 as mcp23017
 from homeassistant.components.switch import PLATFORM_SCHEMA, ToggleEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import callback
@@ -58,13 +59,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a MCP23017 switch entry."""
 
     switch_entity = MCP23017Switch(hass, config_entry)
+    switch_entity.device = await mcp23017.async_get_or_create(
+        hass, config_entry, switch_entity
+    )
 
     if await hass.async_add_executor_job(switch_entity.configure_device):
         async_add_entities([switch_entity])
 
 
-# async def async_unload_entry(hass, config_entry):
-#    """Unload MCP23017 switch entry corresponding to config_entry."""
+async def async_unload_entry(hass, config_entry):
+    """Unload MCP23017 switch entry corresponding to config_entry."""
+    print("FIXME ?")
 
 
 class MCP23017Switch(ToggleEntity):
@@ -72,7 +77,9 @@ class MCP23017Switch(ToggleEntity):
 
     def __init__(self, hass, config_entry):
         """Initialize the MCP23017 switch."""
-        self._hass = hass
+        self._device = None
+        self._state = None
+
         self._i2c_address = config_entry.data[CONF_I2C_ADDRESS]
         self._pin_name = config_entry.data[CONF_FLOW_PIN_NAME]
         self._pin_number = config_entry.data[CONF_FLOW_PIN_NUMBER]
@@ -82,7 +89,7 @@ class MCP23017Switch(ToggleEntity):
         )
 
         # Create or update option values for switch platform
-        self._hass.config_entries.async_update_entry(
+        hass.config_entries.async_update_entry(
             config_entry,
             options={
                 CONF_INVERT_LOGIC: self._invert_logic,
@@ -93,10 +100,6 @@ class MCP23017Switch(ToggleEntity):
         self._unsubscribe_update_listener = config_entry.add_update_listener(
             self.async_config_update
         )
-
-        # Retrieve associated device
-        self._device = self._hass.data[DOMAIN][config_entry.data[CONF_I2C_ADDRESS]]
-        self._state = None
 
         _LOGGER.info(
             "%s(pin %d:'%s') created",
@@ -113,7 +116,7 @@ class MCP23017Switch(ToggleEntity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return f"{self._device.unique_id}-{self._pin_number}"
+        return f"{self._device.unique_id}-0x{self._pin_number:02x}"
 
     @property
     def name(self):
@@ -131,6 +134,11 @@ class MCP23017Switch(ToggleEntity):
         return self._pin_number
 
     @property
+    def address(self):
+        """Return the i2c address of the entity."""
+        return self._i2c_address
+
+    @property
     def device_info(self):
         """Device info."""
         return {
@@ -139,6 +147,16 @@ class MCP23017Switch(ToggleEntity):
             "model": "MCP23017",
             "entry_type": "service",
         }
+
+    @property
+    def device(self):
+        """Get device property."""
+        return self._device
+
+    @device.setter
+    def device(self, value):
+        """Set device property."""
+        self._device = value
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
@@ -187,12 +205,10 @@ class MCP23017Switch(ToggleEntity):
         Return True when successful.
         """
         if self._device:
-            # Register entity
-            if self._device.register_entity(self):
-                # Configure entity as output for a switch
-                self._device.set_input(self._pin_number, False)
-                self._state = self._device.get_pin_value(self._pin_number)
+            # Configure entity as output for a switch
+            self._device.set_input(self._pin_number, False)
+            self._state = self._device.get_pin_value(self._pin_number)
 
-                return True
+            return True
 
         return False
