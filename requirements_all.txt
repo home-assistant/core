@@ -428,9 +428,6 @@ co2signal==0.4.2
 # homeassistant.components.coinbase
 coinbase==2.1.0
 
-# homeassistant.components.coinmarketcap
-coinmarketcap==5.0.3
-
 # homeassistant.scripts.check_config
 colorlog==4.7.2
 
@@ -1751,7 +1748,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.8
+python-ecobee-api==0.2.10
 
 # homeassistant.components.eq3btsmart
 # python-eq3bt==0.1.11
@@ -1826,7 +1823,7 @@ python-tado==0.10.0
 python-telegram-bot==13.1
 
 # homeassistant.components.vlc_telnet
-python-telnet-vlc==1.0.4
+python-telnet-vlc==2.0.1
 
 # homeassistant.components.twitch
 python-twitch-client==0.6.0

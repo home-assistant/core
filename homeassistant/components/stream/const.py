@@ -1,10 +1,14 @@
 """Constants for Stream component."""
 DOMAIN = "stream"
 
-ATTR_ENDPOINTS = "endpoints"
+ATTR_HLS_ENDPOINT = "hls_endpoint"
 ATTR_STREAMS = "streams"
 
-OUTPUT_FORMATS = ["hls"]
+HLS_OUTPUT = "hls"
+OUTPUT_FORMATS = [HLS_OUTPUT]
+OUTPUT_CONTAINER_FORMAT = "mp4"
+OUTPUT_VIDEO_CODECS = {"hevc", "h264"}
+OUTPUT_AUDIO_CODECS = {"aac", "mp3"}
 
 FORMAT_CONTENT_TYPE = {"hls": "application/vnd.apple.mpegurl"}
 

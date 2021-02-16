@@ -228,9 +228,6 @@ buienradar==1.0.4
 # homeassistant.components.caldav
 caldav==0.7.1
 
-# homeassistant.components.coinmarketcap
-coinmarketcap==5.0.3
-
 # homeassistant.scripts.check_config
 colorlog==4.7.2
 
@@ -921,7 +918,7 @@ pysqueezebox==0.5.5
 pysyncthru==0.7.0
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.2.8
+python-ecobee-api==0.2.10
 
 # homeassistant.components.darksky
 python-forecastio==1.4.0
