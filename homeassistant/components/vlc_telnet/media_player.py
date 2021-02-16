@@ -37,6 +37,7 @@ DOMAIN = "vlc_telnet"
 
 DEFAULT_NAME = "VLC-TELNET"
 DEFAULT_PORT = 4212
+MAX_VOLUME = 500
 
 SUPPORT_VLC = (
     SUPPORT_PAUSE
@@ -210,17 +211,15 @@ class VlcDevice(MediaPlayerEntity):
         """Mute the volume."""
         if mute:
             self._volume_bkp = self._volume
-            self._volume = 0
-            self._vlc.set_volume("0")
+            self.set_volume_level(0)
         else:
-            self._vlc.set_volume(str(self._volume_bkp))
-            self._volume = self._volume_bkp
+            self.set_volume_level(self._volume_bkp)
 
         self._muted = mute
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self._vlc.set_volume(str(volume * 500))
+        self._vlc.set_volume(volume * MAX_VOLUME)
         self._volume = volume
 
     def media_play(self):

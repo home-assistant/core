@@ -1825,7 +1825,7 @@ python-tado==0.10.0
 python-telegram-bot==13.1
 
 # homeassistant.components.vlc_telnet
-python-telnet-vlc==1.0.4
+python-telnet-vlc==2.0.1
 
 # homeassistant.components.twitch
 python-twitch-client==0.6.0
