@@ -492,7 +492,7 @@ class Recorder(threading.Thread):
                 else:
                     message = "Error in database connectivity during commit"
                 _LOGGER.error(
-                    "%s: %s. (retrying in %s seconds)",
+                    "%s: Error executing query: %s. (retrying in %s seconds)",
                     message,
                     err,
                     self.db_retry_wait,
@@ -684,7 +684,6 @@ class Recorder(threading.Thread):
                 self._commit_event_session_or_retry()
                 self.event_session.close()
             except Exception as err:  # pylint: disable=broad-except
-                # Must catch the exception to prevent the loop from collapsing
                 _LOGGER.exception(
                     "Error saving the event session during shutdown: %s", err
                 )
