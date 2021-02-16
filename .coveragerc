@@ -993,7 +993,14 @@ omit =
     homeassistant/components/transmission/const.py
     homeassistant/components/transmission/errors.py
     homeassistant/components/travisci/sensor.py
-    homeassistant/components/tuya/*
+    homeassistant/components/tuya/__init__.py
+    homeassistant/components/tuya/climate.py
+    homeassistant/components/tuya/const.py
+    homeassistant/components/tuya/cover.py
+    homeassistant/components/tuya/fan.py
+    homeassistant/components/tuya/light.py
+    homeassistant/components/tuya/scene.py
+    homeassistant/components/tuya/switch.py
     homeassistant/components/twentemilieu/const.py
     homeassistant/components/twentemilieu/sensor.py
     homeassistant/components/twilio_call/notify.py
@@ -1085,6 +1092,7 @@ omit =
     homeassistant/components/xiaomi_miio/__init__.py
     homeassistant/components/xiaomi_miio/air_quality.py
     homeassistant/components/xiaomi_miio/alarm_control_panel.py
+    homeassistant/components/xiaomi_miio/device.py
     homeassistant/components/xiaomi_miio/device_tracker.py
     homeassistant/components/xiaomi_miio/fan.py
     homeassistant/components/xiaomi_miio/gateway.py

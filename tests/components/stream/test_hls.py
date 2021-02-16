@@ -45,7 +45,7 @@ def hls_stream(hass, hass_client):
 
     async def create_client_for_stream(stream):
         http_client = await hass_client()
-        parsed_url = urlparse(stream.endpoint_url("hls"))
+        parsed_url = urlparse(stream.endpoint_url())
         return HlsClient(http_client, parsed_url)
 
     return create_client_for_stream
@@ -87,7 +87,7 @@ async def test_hls_stream(hass, hls_stream, stream_worker_sync):
     stream = create_stream(hass, source)
 
     # Request stream
-    stream.add_provider("hls")
+    stream.hls_output()
     stream.start()
 
     hls_client = await hls_stream(stream)
@@ -128,9 +128,9 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync):
     stream = create_stream(hass, source)
 
     # Request stream
-    stream.add_provider("hls")
+    stream.hls_output()
     stream.start()
-    url = stream.endpoint_url("hls")
+    url = stream.endpoint_url()
 
     http_client = await hass_client()
 
@@ -159,6 +159,38 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync):
     assert fail_response.status == HTTP_NOT_FOUND
 
 
+async def test_stream_timeout_after_stop(hass, hass_client, stream_worker_sync):
+    """Test hls stream timeout after the stream has been stopped already."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    stream_worker_sync.pause()
+
+    # Setup demo HLS track
+    source = generate_h264_video()
+    stream = create_stream(hass, source)
+
+    # Request stream
+    stream.hls_output()
+    stream.start()
+    url = stream.endpoint_url()
+
+    http_client = await hass_client()
+
+    # Fetch playlist
+    parsed_url = urlparse(url)
+    playlist_response = await http_client.get(parsed_url.path)
+    assert playlist_response.status == 200
+
+    stream_worker_sync.resume()
+    stream.stop()
+
+    # Wait 5 minutes and fire callback.  Stream should already have been
+    # stopped so this is a no-op.
+    future = dt_util.utcnow() + timedelta(minutes=5)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+
 async def test_stream_ended(hass, stream_worker_sync):
     """Test hls stream packets ended."""
     await async_setup_component(hass, "stream", {"stream": {}})
@@ -168,12 +200,10 @@ async def test_stream_ended(hass, stream_worker_sync):
     # Setup demo HLS track
     source = generate_h264_video()
     stream = create_stream(hass, source)
-    track = stream.add_provider("hls")
 
     # Request stream
-    stream.add_provider("hls")
+    track = stream.hls_output()
     stream.start()
-    stream.endpoint_url("hls")
 
     # Run it dead
     while True:
@@ -199,7 +229,7 @@ async def test_stream_keepalive(hass):
     # Setup demo HLS track
     source = "test_stream_keepalive_source"
     stream = create_stream(hass, source)
-    track = stream.add_provider("hls")
+    track = stream.hls_output()
     track.num_segments = 2
     stream.start()
 
@@ -230,12 +260,12 @@ async def test_stream_keepalive(hass):
     stream.stop()
 
 
-async def test_hls_playlist_view_no_output(hass, hass_client, hls_stream):
+async def test_hls_playlist_view_no_output(hass, hls_stream):
     """Test rendering the hls playlist with no output segments."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
     stream = create_stream(hass, STREAM_SOURCE)
-    stream.add_provider("hls")
+    stream.hls_output()
 
     hls_client = await hls_stream(stream)
 
@@ -250,7 +280,7 @@ async def test_hls_playlist_view(hass, hls_stream, stream_worker_sync):
 
     stream = create_stream(hass, STREAM_SOURCE)
     stream_worker_sync.pause()
-    hls = stream.add_provider("hls")
+    hls = stream.hls_output()
 
     hls.put(Segment(1, SEQUENCE_BYTES, DURATION))
     await hass.async_block_till_done()
@@ -277,7 +307,7 @@ async def test_hls_max_segments(hass, hls_stream, stream_worker_sync):
 
     stream = create_stream(hass, STREAM_SOURCE)
     stream_worker_sync.pause()
-    hls = stream.add_provider("hls")
+    hls = stream.hls_output()
 
     hls_client = await hls_stream(stream)
 
