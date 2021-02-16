@@ -10,6 +10,7 @@ set_camera_light:
       name: Camera light mode
       description: Outdoor camera light mode (on/off/auto)
       example: auto
+      required: true
       selector:
         select:
           options:
@@ -27,6 +28,7 @@ set_schedule:
     schedule_name:
       description: Schedule name
       example: Standard
+      required: true
       selector:
         text:
 
@@ -40,6 +42,7 @@ set_persons_home:
     persons:
       description: List of names
       example: Bob
+      required: true
       selector:
         text:
 
