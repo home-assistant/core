@@ -58,7 +58,7 @@ class WemoEntity(Entity):
             return
 
         try:
-            with async_timeout.timeout(5):
+            with async_timeout.timeout(9.9):
                 await asyncio.shield(self._async_locked_update(True))
         except asyncio.TimeoutError:
             _LOGGER.warning("Lost connection to %s", self.name)
