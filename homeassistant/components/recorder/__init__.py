@@ -461,15 +461,20 @@ class Recorder(threading.Thread):
         try:
             self._commit_event_session_or_retry()
             return
-        except sqlite3.DatabaseError:
-            _LOGGER.exception("Unrecoverable sqlite3 database corruption detected")
-            self._handle_sqlite_corruption()
-            return
+        except exc.DatabaseError as err:
+            if isinstance(exc.DatabaseError.__cause__, sqlite3.DatabaseError):
+                _LOGGER.exception(
+                    "Unrecoverable sqlite3 database corruption detected: %s", err
+                )
+                self._handle_sqlite_corruption()
+                return
+            _LOGGER.exception("Unexpected error saving events: %s", err)
         except Exception as err:  # pylint: disable=broad-except
             # Must catch the exception to prevent the loop from collapsing
             _LOGGER.exception("Unexpected error saving events: %s", err)
-            self._reopen_event_session()
-            return
+
+        self._reopen_event_session()
+        return
 
     def _commit_event_session_or_retry(self):
         tries = 1
