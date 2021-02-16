@@ -65,7 +65,7 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.warning_shown = True
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema({}),
+                data_schema=vol.Schema({}, extra=vol.ALLOW_EXTRA),
                 errors={},
                 description_placeholders={},
             )
@@ -129,11 +129,12 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         # convert from teslajsonpy to HA keys
-        info = {
-            CONF_TOKEN: info["refresh_token"],
-            CONF_ACCESS_TOKEN: info[CONF_ACCESS_TOKEN],
-            CONF_EXPIRATION: info[CONF_EXPIRATION],
-        }
+        if info:
+            info = {
+                CONF_TOKEN: info["refresh_token"],
+                CONF_ACCESS_TOKEN: info[CONF_ACCESS_TOKEN],
+                CONF_EXPIRATION: info[CONF_EXPIRATION],
+            }
         if info and not errors:
             existing_entry = self._async_entry_for_username(self.data[CONF_USERNAME])
             if existing_entry and existing_entry.data == info:
