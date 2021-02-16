@@ -7,6 +7,10 @@ from miio import DeviceException
 import pytest
 from pytz import utc
 
+from homeassistant import config_entries
+from homeassistant.components.xiaomi_miio.config_flow import (
+    DEFAULT_DEVICE_NAME,
+)
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
     ATTR_FAN_SPEED,
@@ -22,6 +26,7 @@ from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_ERROR,
 )
+from homeassistant.components.xiaomi_miio import const
 from homeassistant.components.xiaomi_miio.const import DOMAIN as XIAOMI_DOMAIN
 from homeassistant.components.xiaomi_miio.vacuum import (
     ATTR_CLEANED_AREA,
@@ -57,6 +62,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.setup import async_setup_component
+
+from .test_config_flow import get_mock_info, TEST_MAC
 
 PLATFORM = "xiaomi_miio"
 
@@ -519,19 +526,36 @@ async def test_xiaomi_vacuum_clean_segment_service_single_segment(
 
 async def setup_component(hass, entity_name):
     """Set up vacuum component."""
-    entity_id = f"{DOMAIN}.{entity_name}"
+    entity_id = f"{DOMAIN}.xiaomi_device"
 
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {
-                CONF_PLATFORM: PLATFORM,
-                CONF_HOST: "192.168.1.100",
-                CONF_NAME: entity_name,
-                CONF_TOKEN: "12345678901234567890123456789012",
-            }
-        },
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "device"
+    assert result["errors"] == {}
+
+    mock_info = get_mock_info(model=const.MODELS_VACUUM[0])
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        return_value=mock_info,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "192.168.1.100", CONF_TOKEN: "12345678901234567890123456789012"},
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == DEFAULT_DEVICE_NAME
+    assert result["data"] == {
+        const.CONF_FLOW_TYPE: const.CONF_DEVICE,
+        CONF_HOST: "192.168.1.100",
+        CONF_TOKEN: "12345678901234567890123456789012",
+        const.CONF_MODEL: const.MODELS_VACUUM[0],
+        const.CONF_MAC: TEST_MAC,
+    }
+
     await hass.async_block_till_done()
     return entity_id
