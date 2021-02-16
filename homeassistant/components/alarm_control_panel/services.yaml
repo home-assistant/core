@@ -3,8 +3,6 @@
 alarm_disarm:
   description: Send the alarm the command for disarm
   target:
-    entity:
-      domain: alarm_control_panel
   fields:
     code:
       name: Code
@@ -16,8 +14,6 @@ alarm_disarm:
 alarm_arm_custom_bypass:
   description: Send arm custom bypass command
   target:
-    entity:
-      domain: alarm_control_panel
   fields:
     code:
       name: Code
@@ -30,8 +26,6 @@ alarm_arm_custom_bypass:
 alarm_arm_home:
   description: Send the alarm the command for arm home
   target:
-    entity:
-      domain: alarm_control_panel
   fields:
     code:
       name: Code
@@ -43,8 +37,6 @@ alarm_arm_home:
 alarm_arm_away:
   description: Send the alarm the command for arm away
   target:
-    entity:
-      domain: alarm_control_panel
   fields:
     code:
       name: Code
@@ -56,8 +48,6 @@ alarm_arm_away:
 alarm_arm_night:
   description: Send the alarm the command for arm night
   target:
-    entity:
-      domain: alarm_control_panel
   fields:
     code:
       name: Code
@@ -69,8 +59,6 @@ alarm_arm_night:
 alarm_trigger:
   description: Send the alarm the command for trigger
   target:
-    entity:
-      domain: alarm_control_panel
   fields:
     code:
       name: Code
