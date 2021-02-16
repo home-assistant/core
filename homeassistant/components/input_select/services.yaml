@@ -19,7 +19,7 @@ select_option:
       description: Option to be selected.
       required: true
       example: '"Item A"'
-      select:
+      selector:
         text:
 
 select_previous:
