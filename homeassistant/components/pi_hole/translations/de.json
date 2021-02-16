@@ -7,6 +7,11 @@
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel"
+                }
+            },
             "user": {
                 "data": {
                     "api_key": "API-Schl\u00fcssel",
@@ -15,6 +20,7 @@
                     "name": "Name",
                     "port": "Port",
                     "ssl": "Nutzt ein SSL-Zertifikat",
+                    "statistics_only": "Nur Statistiken",
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 }
             }
