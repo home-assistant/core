@@ -5,6 +5,7 @@ import concurrent.futures
 from datetime import datetime
 import logging
 import queue
+import sqlite3
 import threading
 import time
 from typing import Any, Callable, List, Optional
@@ -35,13 +36,7 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from . import migration, purge
-from .const import (
-    CONF_DB_INTEGRITY_CHECK,
-    DATA_INSTANCE,
-    DOMAIN,
-    SQLITE3_MALFORMED,
-    SQLITE_URL_PREFIX,
-)
+from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
 from .models import Base, Events, RecorderRuns, States
 from .util import (
     dburl_to_path,
@@ -466,13 +461,9 @@ class Recorder(threading.Thread):
         try:
             self._commit_event_session_or_retry()
             return
-        except exc.DatabaseError as err:
-            if self._using_file_sqlite and SQLITE3_MALFORMED in str(err).lower():
-                self._handle_sqlite_corruption()
-                return
-
-            _LOGGER.exception("Database error while saving events: %s", err)
-            self._reopen_event_session()
+        except sqlite3.DatabaseError:
+            _LOGGER.exception("Unrecoverable sqlite3 database corruption detected")
+            self._handle_sqlite_corruption()
             return
         except Exception as err:  # pylint: disable=broad-except
             # Must catch the exception to prevent the loop from collapsing
