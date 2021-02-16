@@ -159,6 +159,38 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync):
     assert fail_response.status == HTTP_NOT_FOUND
 
 
+async def test_stream_timeout_after_stop(hass, hass_client, stream_worker_sync):
+    """Test hls stream timeout after the stream has been stopped already."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    stream_worker_sync.pause()
+
+    # Setup demo HLS track
+    source = generate_h264_video()
+    stream = create_stream(hass, source)
+
+    # Request stream
+    stream.hls_output()
+    stream.start()
+    url = stream.endpoint_url()
+
+    http_client = await hass_client()
+
+    # Fetch playlist
+    parsed_url = urlparse(url)
+    playlist_response = await http_client.get(parsed_url.path)
+    assert playlist_response.status == 200
+
+    stream_worker_sync.resume()
+    stream.stop()
+
+    # Wait 5 minutes and fire callback.  Stream should already have been
+    # stopped so this is a no-op.
+    future = dt_util.utcnow() + timedelta(minutes=5)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+
 async def test_stream_ended(hass, stream_worker_sync):
     """Test hls stream packets ended."""
     await async_setup_component(hass, "stream", {"stream": {}})

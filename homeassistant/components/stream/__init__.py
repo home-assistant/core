@@ -212,6 +212,9 @@ class Stream:
     def stop(self):
         """Remove outputs and access token."""
         self.access_token = None
+        if self._hls_timer:
+            self._hls_timer.clear()
+            self._hls_timer = None
         if self._hls:
             self._hls.cleanup()
             self._hls = None

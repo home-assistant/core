@@ -63,7 +63,7 @@ class IdleTimer:
         self._unsub = async_call_later(self._hass, self._timeout, self.fire)
 
     def clear(self):
-        """Clear and disable the timer."""
+        """Clear and disable the timer if it has not already fired."""
         if self._unsub is not None:
             self._unsub()
 
