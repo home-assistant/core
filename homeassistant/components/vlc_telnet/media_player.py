@@ -1,7 +1,13 @@
 """Provide functionality to interact with the vlc telnet interface."""
 import logging
 
-from python_telnet_vlc import ConnectionError as ConnErr, VLCTelnet
+from python_telnet_vlc import (
+    CommandError,
+    ConnectionError as ConnErr,
+    LuaError,
+    ParseError,
+    VLCTelnet,
+)
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
@@ -82,7 +88,6 @@ class VlcDevice(MediaPlayerEntity):
 
     def __init__(self, name, host, port, passwd):
         """Initialize the vlc device."""
-        self._instance = None
         self._name = name
         self._volume = None
         self._muted = None
@@ -94,7 +99,7 @@ class VlcDevice(MediaPlayerEntity):
         self._port = port
         self._password = passwd
         self._vlc = None
-        self._available = False
+        self._available = True
         self._volume_bkp = 0
         self._media_artist = ""
         self._media_title = ""
@@ -104,43 +109,54 @@ class VlcDevice(MediaPlayerEntity):
         if self._vlc is None:
             try:
                 self._vlc = VLCTelnet(self._host, self._password, self._port)
-                self._state = STATE_IDLE
-                self._available = True
-            except (ConnErr, EOFError):
-                self._available = False
+            except (ConnErr, EOFError) as err:
+                if self._available:
+                    _LOGGER.error("Connection error: %s", err)
+                    self._available = False
                 self._vlc = None
-        else:
-            try:
-                status = self._vlc.status()
-                if status:
-                    if "volume" in status:
-                        self._volume = int(status["volume"]) / 500.0
-                    else:
-                        self._volume = None
-                    if "state" in status:
-                        state = status["state"]
-                        if state == "playing":
-                            self._state = STATE_PLAYING
-                        elif state == "paused":
-                            self._state = STATE_PAUSED
-                        else:
-                            self._state = STATE_IDLE
+                return
+
+            self._state = STATE_IDLE
+            self._available = True
+
+        try:
+            status = self._vlc.status()
+            _LOGGER.debug("Status: %s", status)
+
+            if status:
+                if "volume" in status:
+                    self._volume = int(status["volume"]) / 500.0
+                else:
+                    self._volume = None
+                if "state" in status:
+                    state = status["state"]
+                    if state == "playing":
+                        self._state = STATE_PLAYING
+                    elif state == "paused":
+                        self._state = STATE_PAUSED
                     else:
                         self._state = STATE_IDLE
+                else:
+                    self._state = STATE_IDLE
 
+            if self._state != STATE_IDLE:
                 self._media_duration = self._vlc.get_length()
                 self._media_position = self._vlc.get_time()
 
-                info = self._vlc.info()
-                if info:
-                    self._media_artist = info[0].get("artist")
-                    self._media_title = info[0].get("title")
+            info = self._vlc.info()
+            _LOGGER.debug("Info: %s", info)
 
-            except (ConnErr, EOFError):
+            if info:
+                self._media_artist = info.get(0, {}).get("artist")
+                self._media_title = info.get(0, {}).get("title")
+
+        except (CommandError, LuaError, ParseError) as err:
+            _LOGGER.error("Command error: %s", err)
+        except (ConnErr, EOFError) as err:
+            if self._available:
+                _LOGGER.error("Connection error: %s", err)
                 self._available = False
-                self._vlc = None
-
-        return True
+            self._vlc = None
 
     @property
     def name(self):
