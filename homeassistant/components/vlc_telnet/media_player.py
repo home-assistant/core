@@ -82,7 +82,6 @@ class VlcDevice(MediaPlayerEntity):
 
     def __init__(self, name, host, port, passwd):
         """Initialize the vlc device."""
-        self._instance = None
         self._name = name
         self._volume = None
         self._muted = None
@@ -109,38 +108,37 @@ class VlcDevice(MediaPlayerEntity):
             except (ConnErr, EOFError):
                 self._available = False
                 self._vlc = None
-        else:
-            try:
-                status = self._vlc.status()
-                if status:
-                    if "volume" in status:
-                        self._volume = int(status["volume"]) / 500.0
-                    else:
-                        self._volume = None
-                    if "state" in status:
-                        state = status["state"]
-                        if state == "playing":
-                            self._state = STATE_PLAYING
-                        elif state == "paused":
-                            self._state = STATE_PAUSED
-                        else:
-                            self._state = STATE_IDLE
+                return
+
+        try:
+            status = self._vlc.status()
+            if status:
+                if "volume" in status:
+                    self._volume = int(status["volume"]) / 500.0
+                else:
+                    self._volume = None
+                if "state" in status:
+                    state = status["state"]
+                    if state == "playing":
+                        self._state = STATE_PLAYING
+                    elif state == "paused":
+                        self._state = STATE_PAUSED
                     else:
                         self._state = STATE_IDLE
+                else:
+                    self._state = STATE_IDLE
 
-                self._media_duration = self._vlc.get_length()
-                self._media_position = self._vlc.get_time()
+            self._media_duration = self._vlc.get_length()
+            self._media_position = self._vlc.get_time()
 
-                info = self._vlc.info()
-                if info:
-                    self._media_artist = info[0].get("artist")
-                    self._media_title = info[0].get("title")
+            info = self._vlc.info()
+            if info:
+                self._media_artist = info[0].get("artist")
+                self._media_title = info[0].get("title")
 
-            except (ConnErr, EOFError):
-                self._available = False
-                self._vlc = None
-
-        return True
+        except (ConnErr, EOFError):
+            self._available = False
+            self._vlc = None
 
     @property
     def name(self):
