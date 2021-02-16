@@ -1,4 +1,5 @@
 """Component to embed TP-Link smart home devices."""
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -23,6 +24,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+PLATFORMS = [CONF_LIGHT, CONF_SWITCH]
 
 TPLINK_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
 
@@ -67,8 +69,6 @@ async def async_setup(hass, config):
                 CONF_LIGHT: conf[CONF_LIGHT],
                 CONF_STRIP: conf[CONF_STRIP],
                 CONF_SWITCH: conf[CONF_SWITCH],
-                CONF_RETRY_DELAY: DEFAULT_RETRY_DELAY,
-                CONF_RETRY_MAX_ATTEMPTS: DEFAULT_MAX_ATTEMPTS,
             },
         )
     )
@@ -82,7 +82,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigType):
     hass.data.setdefault(DOMAIN, {})
     lights = hass.data[DOMAIN][CONF_LIGHT] = []
     switches = hass.data[DOMAIN][CONF_SWITCH] = []
-
+    run_discovery = config_data.get(CONF_DISCOVERY, False)
+    hass.data[DOMAIN][CONF_RETRY_DELAY] = config_data.get(
+        CONF_RETRY_DELAY, DEFAULT_RETRY_DELAY
+    )
+    hass.data[DOMAIN][CONF_RETRY_MAX_ATTEMPTS] = config_data.get(
+        CONF_RETRY_MAX_ATTEMPTS, DEFAULT_MAX_ATTEMPTS
+    )
     # Add static devices
     static_devices = SmartDevices()
     if config_data is not None:
@@ -92,23 +98,25 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigType):
         switches.extend(static_devices.switches)
 
     # Add discovered devices
-    if config_data is None or config_data[CONF_DISCOVERY]:
+    if config_data is None or run_discovery:
         discovered_devices = await async_discover_devices(hass, static_devices)
 
         lights.extend(discovered_devices.lights)
         switches.extend(discovered_devices.switches)
 
-    forward_setup = hass.config_entries.async_forward_entry_setup
-    if lights:
-        _LOGGER.debug(
-            "Got %s lights: %s", len(lights), ", ".join([d.host for d in lights])
-        )
-        hass.async_create_task(forward_setup(config_entry, "light"))
-    if switches:
-        _LOGGER.debug(
-            "Got %s switches: %s", len(switches), ", ".join([d.host for d in switches])
-        )
-        hass.async_create_task(forward_setup(config_entry, "switch"))
+    entities = {CONF_LIGHT: lights, CONF_SWITCH: switches}
+    for platform in PLATFORMS:
+        dev_count = len(entities[platform])
+        if dev_count > 0:
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(config_entry, platform)
+            )
+            _LOGGER.debug(
+                "%s count: %s | %s",
+                platform,
+                dev_count,
+                ", ".join([d.host for d in entities[platform]]),
+            )
 
     return True
 
