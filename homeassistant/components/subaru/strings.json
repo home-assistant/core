@@ -34,9 +34,10 @@
   "options": {
     "step": {
       "init": {
+        "title": "Subaru Starlink Options",
+        "description": "When enabled, vehicle polling will send a remote command to your vehicle every 2 hours to obtain new sensor data. Without vehicle polling, new sensor data is only received when the vehicle automatically pushes data (normally after engine shutdown).",
         "data": {
-          "scan_interval": "Seconds between API polling",
-          "hard_poll_interval": "Seconds between vehicle polling"
+          "update_enabled": "Enable vehicle polling"
         }
       }
     }

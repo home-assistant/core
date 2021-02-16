@@ -9,15 +9,8 @@ from subarulink.exceptions import InvalidCredentials, InvalidPIN, SubaruExceptio
 
 from homeassistant import config_entries
 from homeassistant.components.subaru import config_flow
-from homeassistant.components.subaru.const import (
-    CONF_HARD_POLL_INTERVAL,
-    DEFAULT_HARD_POLL_INTERVAL,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    MIN_HARD_POLL_INTERVAL,
-    MIN_SCAN_INTERVAL,
-)
-from homeassistant.const import CONF_DEVICE_ID, CONF_PIN, CONF_SCAN_INTERVAL
+from homeassistant.components.subaru.const import CONF_UPDATE_ENABLED, DOMAIN
+from homeassistant.const import CONF_DEVICE_ID, CONF_PIN
 
 from .conftest import (
     MOCK_API_CONNECT,
@@ -220,46 +213,12 @@ async def test_option_flow(hass, options_form):
     result = await hass.config_entries.options.async_configure(
         options_form["flow_id"],
         user_input={
-            CONF_SCAN_INTERVAL: 350,
-            CONF_HARD_POLL_INTERVAL: 3600,
+            CONF_UPDATE_ENABLED: False,
         },
     )
     assert result["type"] == "create_entry"
     assert result["data"] == {
-        CONF_SCAN_INTERVAL: 350,
-        CONF_HARD_POLL_INTERVAL: 3600,
-    }
-
-
-async def test_option_flow_defaults(hass, options_form):
-    """Test config flow options."""
-    result = await hass.config_entries.options.async_configure(
-        options_form["flow_id"],
-        user_input={
-            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-            CONF_HARD_POLL_INTERVAL: DEFAULT_HARD_POLL_INTERVAL,
-        },
-    )
-    assert result["type"] == "create_entry"
-    assert result["data"] == {
-        CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-        CONF_HARD_POLL_INTERVAL: DEFAULT_HARD_POLL_INTERVAL,
-    }
-
-
-async def test_option_flow_input_floor(hass, options_form):
-    """Test config flow options."""
-    result = await hass.config_entries.options.async_configure(
-        options_form["flow_id"],
-        user_input={
-            CONF_SCAN_INTERVAL: 1,
-            CONF_HARD_POLL_INTERVAL: 1,
-        },
-    )
-    assert result["type"] == "create_entry"
-    assert result["data"] == {
-        CONF_SCAN_INTERVAL: MIN_SCAN_INTERVAL,
-        CONF_HARD_POLL_INTERVAL: MIN_HARD_POLL_INTERVAL,
+        CONF_UPDATE_ENABLED: False,
     }
 
 

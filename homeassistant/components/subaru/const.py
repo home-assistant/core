@@ -1,18 +1,15 @@
 """Constants for the Subaru integration."""
 
 DOMAIN = "subaru"
-DEFAULT_SCAN_INTERVAL = 300
-MIN_SCAN_INTERVAL = 60
-DEFAULT_HARD_POLL_INTERVAL = 7200
-MIN_HARD_POLL_INTERVAL = 300
-CONF_HARD_POLL_INTERVAL = "hard_poll_interval"
+FETCH_INTERVAL = 300
+UPDATE_INTERVAL = 7200
+CONF_UPDATE_ENABLED = "update_enabled"
 CONF_COUNTRY = "country"
 
 # entry fields
 ENTRY_CONTROLLER = "controller"
 ENTRY_COORDINATOR = "coordinator"
 ENTRY_VEHICLES = "vehicles"
-ENTRY_LISTENER = "listener"
 
 # update coordinator name
 COORDINATOR_NAME = "subaru_data"

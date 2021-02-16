@@ -7,9 +7,7 @@ from subarulink.const import COUNTRY_USA
 
 from homeassistant.components.subaru.const import (
     CONF_COUNTRY,
-    CONF_HARD_POLL_INTERVAL,
-    DEFAULT_HARD_POLL_INTERVAL,
-    DEFAULT_SCAN_INTERVAL,
+    CONF_UPDATE_ENABLED,
     DOMAIN,
     VEHICLE_API_GEN,
     VEHICLE_HAS_EV,
@@ -19,16 +17,10 @@ from homeassistant.components.subaru.const import (
     VEHICLE_NAME,
 )
 from homeassistant.config_entries import ENTRY_STATE_LOADED
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_PASSWORD,
-    CONF_PIN,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
-from .api_responses import TEST_VIN_2_EV, TEST_VIN_3_G2, VEHICLE_DATA, VEHICLE_STATUS_EV
+from .api_responses import TEST_VIN_2_EV, VEHICLE_DATA, VEHICLE_STATUS_EV
 
 from tests.common import MockConfigEntry
 
@@ -69,8 +61,7 @@ TEST_CONFIG = {
 }
 
 TEST_OPTIONS = {
-    CONF_HARD_POLL_INTERVAL: DEFAULT_HARD_POLL_INTERVAL,
-    CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+    CONF_UPDATE_ENABLED: True,
 }
 
 
@@ -135,7 +126,7 @@ async def ev_entry(hass):
     """Create a Subaru entry representing an EV vehicle with full STARLINK subscription."""
     entry = await setup_subaru_integration(
         hass,
-        vehicle_list=[TEST_VIN_2_EV, TEST_VIN_3_G2],
+        vehicle_list=[TEST_VIN_2_EV],
         vehicle_data=VEHICLE_DATA[TEST_VIN_2_EV],
         vehicle_status=VEHICLE_STATUS_EV,
     )

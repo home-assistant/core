@@ -8,13 +8,7 @@ from subarulink import Controller as SubaruAPI, SubaruException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_PASSWORD,
-    CONF_PIN,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -22,17 +16,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     CONF_COUNTRY,
-    CONF_HARD_POLL_INTERVAL,
+    CONF_UPDATE_ENABLED,
     COORDINATOR_NAME,
-    DEFAULT_HARD_POLL_INTERVAL,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     ENTRY_CONTROLLER,
     ENTRY_COORDINATOR,
-    ENTRY_LISTENER,
     ENTRY_VEHICLES,
+    FETCH_INTERVAL,
     REMOTE_SERVICE_FETCH,
     SUPPORTED_PLATFORMS,
+    UPDATE_INTERVAL,
     VEHICLE_API_GEN,
     VEHICLE_HAS_EV,
     VEHICLE_HAS_REMOTE_SERVICE,
@@ -67,9 +60,8 @@ async def async_setup_entry(hass, entry):
             config[CONF_PIN],
             None,
             config[CONF_COUNTRY],
-            update_interval=entry.options.get(
-                CONF_HARD_POLL_INTERVAL, DEFAULT_HARD_POLL_INTERVAL
-            ),
+            update_interval=UPDATE_INTERVAL,
+            fetch_interval=FETCH_INTERVAL,
         )
         _LOGGER.debug("Using subarulink %s", controller.version)
         await controller.connect()
@@ -83,7 +75,7 @@ async def async_setup_entry(hass, entry):
     async def async_update_data():
         """Fetch data from API endpoint."""
         try:
-            return await subaru_update(vehicle_info, controller)
+            return await refresh_subaru_data(entry, vehicle_info, controller)
         except SubaruException as err:
             raise UpdateFailed(err.message) from err
 
@@ -92,9 +84,7 @@ async def async_setup_entry(hass, entry):
         _LOGGER,
         name=COORDINATOR_NAME,
         update_method=async_update_data,
-        update_interval=timedelta(
-            seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        ),
+        update_interval=timedelta(seconds=FETCH_INTERVAL),
     )
 
     await coordinator.async_refresh()
@@ -103,7 +93,6 @@ async def async_setup_entry(hass, entry):
         ENTRY_CONTROLLER: controller,
         ENTRY_COORDINATOR: coordinator,
         ENTRY_VEHICLES: vehicle_info,
-        ENTRY_LISTENER: entry.add_update_listener(update_listener),
     }
 
     for component in SUPPORTED_PLATFORMS:
@@ -140,47 +129,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN][entry.entry_id][ENTRY_LISTENER]()
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
 
 
-async def update_listener(hass, config_entry):
-    """Update when config_entry options update."""
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    controller = data[ENTRY_CONTROLLER]
-    coordinator = data[ENTRY_COORDINATOR]
-
-    old_update_interval = controller.get_update_interval()
-    old_fetch_interval = coordinator.update_interval
-
-    new_update_interval = config_entry.options.get(
-        CONF_HARD_POLL_INTERVAL, DEFAULT_HARD_POLL_INTERVAL
-    )
-    new_fetch_interval = config_entry.options.get(
-        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-    )
-
-    if old_update_interval != new_update_interval:
-        _LOGGER.debug(
-            "Changing update_interval from %s to %s",
-            old_update_interval,
-            new_update_interval,
-        )
-        controller.set_update_interval(new_update_interval)
-
-    if old_fetch_interval != new_fetch_interval:
-        _LOGGER.debug(
-            "Changing fetch_interval from %s to %s",
-            old_fetch_interval,
-            new_fetch_interval,
-        )
-        coordinator.update_interval = timedelta(seconds=new_fetch_interval)
-
-
-async def subaru_update(vehicle_info, controller):
+async def refresh_subaru_data(config_entry, vehicle_info, controller):
     """
-    Update local data from Subaru API.
+    Refresh local data with data fetched via Subaru API.
 
     Subaru API calls assume a server side vehicle context
     Data fetch/update must be done for each vehicle
@@ -194,8 +149,9 @@ async def subaru_update(vehicle_info, controller):
         if not vehicle[VEHICLE_HAS_SAFETY_SERVICE]:
             continue
 
-        # Poll vehicle (throttled with update_interval)
-        await refresh_subaru_data(vehicle, controller)
+        # Optionally send an "update" remote command to vehicle (throttled with update_interval)
+        if config_entry.options.get(CONF_UPDATE_ENABLED, False):
+            await update_subaru(vehicle, controller)
 
         # Fetch data from Subaru servers
         await controller.fetch(vin, force=True)
@@ -208,7 +164,7 @@ async def subaru_update(vehicle_info, controller):
     return data
 
 
-async def refresh_subaru_data(vehicle, controller):
+async def update_subaru(vehicle, controller):
     """Commands remote vehicle update (polls the vehicle to update subaru API cache)."""
     cur_time = time.time()
     last_update = vehicle[VEHICLE_LAST_UPDATE]
