@@ -114,8 +114,7 @@ async def test_manual_flow_config_exist(hass, aioclient_mock):
     assert result["step_id"] == "user"
 
     mock_obj = MagicMock()
-    mock_obj.user.get.return_value = Future()
-    mock_obj.user.get.return_value.set_result({"api_user": "test-api-user"})
+    mock_obj.user.get.side_effect = AsyncMock(return_value={"api_user": "test-api-user"})
 
     with patch(
         "homeassistant.components.habitica.config_flow.HabitipyAsync",
