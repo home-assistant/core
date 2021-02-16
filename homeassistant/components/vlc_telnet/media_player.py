@@ -139,8 +139,9 @@ class VlcDevice(MediaPlayerEntity):
                 else:
                     self._state = STATE_IDLE
 
-            self._media_duration = self._vlc.get_length()
-            self._media_position = self._vlc.get_time()
+            if self._state != STATE_IDLE:
+                self._media_duration = self._vlc.get_length()
+                self._media_position = self._vlc.get_time()
 
             info = self._vlc.info()
             _LOGGER.debug("Info: %s", info)
