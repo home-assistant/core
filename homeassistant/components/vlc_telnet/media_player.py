@@ -112,6 +112,8 @@ class VlcDevice(MediaPlayerEntity):
 
         try:
             status = self._vlc.status()
+            _LOGGER.debug("Status: %s", status)
+
             if status:
                 if "volume" in status:
                     self._volume = int(status["volume"]) / 500.0
@@ -132,6 +134,8 @@ class VlcDevice(MediaPlayerEntity):
             self._media_position = self._vlc.get_time()
 
             info = self._vlc.info()
+            _LOGGER.debug("Info: %s", info)
+
             if info:
                 self._media_artist = info[0].get("artist")
                 self._media_title = info[0].get("title")
