@@ -48,6 +48,8 @@ async def test_user_show_locations(hass):
     ) as mock_request, patch(
         "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.get_zone_details",
         return_value=True,
+    ), patch(
+        "homeassistant.components.totalconnect.async_setup_entry", return_value=True
     ):
 
         result = await hass.config_entries.flow.async_init(
