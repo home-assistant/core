@@ -88,7 +88,9 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
             else:
                 _LOGGER.warning("Appliance type %s not implemented", app.type)
                 continue
-            devices.append({CONF_DEVICE: device, CONF_ENTITIES: device.get_entity_info()})
+            devices.append(
+                {CONF_DEVICE: device, CONF_ENTITIES: device.get_entity_info()}
+            )
         self.devices = devices
         return devices
 
@@ -121,7 +123,9 @@ class HomeConnectDevice:
             _LOGGER.debug("Unable to fetch active programs. Probably offline")
             program_active = None
         if program_active and ATTR_KEY in program_active:
-            self.appliance.status[BSH_ACTIVE_PROGRAM] = {ATTR_VALUE: program_active[ATTR_KEY]}
+            self.appliance.status[BSH_ACTIVE_PROGRAM] = {
+                ATTR_VALUE: program_active[ATTR_KEY]
+            }
         self.appliance.listen_events(callback=self.event_callback)
 
     def event_callback(self, appliance):
@@ -238,7 +242,11 @@ class DeviceWithRemoteStart(HomeConnectDevice):
 
     def get_remote_start(self):
         """Get a dictionary with info about the remote start sensor."""
-        return {ATTR_DEVICE: self, ATTR_DESC: "Remote Start", ATTR_SENSOR_TYPE: "remote_start"}
+        return {
+            ATTR_DEVICE: self,
+            ATTR_DESC: "Remote Start",
+            ATTR_SENSOR_TYPE: "remote_start",
+        }
 
 
 class Dryer(

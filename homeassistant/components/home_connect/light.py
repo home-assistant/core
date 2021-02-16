@@ -95,9 +95,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             _LOGGER.debug("Switching ambient light on for: %s", self.name)
             try:
                 await self.hass.async_add_executor_job(
-                    self.device.appliance.set_setting,
-                    self._key,
-                    True,
+                    self.device.appliance.set_setting, self._key, True
                 )
             except HomeConnectError as err:
                 _LOGGER.error("Error while trying to turn on ambient light: %s", err)
@@ -137,9 +135,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             brightness = 10 + ceil(kwargs[ATTR_BRIGHTNESS] / 255 * 90)
             try:
                 await self.hass.async_add_executor_job(
-                    self.device.appliance.set_setting,
-                    self._brightness_key,
-                    brightness,
+                    self.device.appliance.set_setting, self._brightness_key, brightness
                 )
             except HomeConnectError as err:
                 _LOGGER.error("Error while trying set the brightness: %s", err)
@@ -147,9 +143,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             _LOGGER.debug("Switching light on for: %s", self.name)
             try:
                 await self.hass.async_add_executor_job(
-                    self.device.appliance.set_setting,
-                    self._key,
-                    True,
+                    self.device.appliance.set_setting, self._key, True
                 )
             except HomeConnectError as err:
                 _LOGGER.error("Error while trying to turn on light: %s", err)
@@ -161,9 +155,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
         _LOGGER.debug("Switching light off for: %s", self.name)
         try:
             await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting,
-                self._key,
-                False,
+                self.device.appliance.set_setting, self._key, False
             )
         except HomeConnectError as err:
             _LOGGER.error("Error while trying to turn off light: %s", err)
