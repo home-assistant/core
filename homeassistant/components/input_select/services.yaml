@@ -31,7 +31,8 @@ select_previous:
       description: If the option should cycle from the first to the last.
       default: true
       example: true
-      selector: boolean
+      selector:
+        boolean:
 
 select_first:
   description: Select the first option of an input select entity

@@ -19,7 +19,7 @@ set_value:
         number:
           min: 0
           max: 9223372036854775807
-          step: 0.000001
+          step: 0.001
           mode: box
 reload:
   description: Reload the input_number configuration.
