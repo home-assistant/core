@@ -543,7 +543,7 @@ def test_to_json(hass):
 
     # Note that we're not testing the actual json.loads and json.dumps methods,
     # only the filters, so we don't need to be exhaustive with our sample JSON.
-    expected_result = {"Foo": "Bar"}
+    expected_result = '{"Foo": "Bar"}'
     actual_result = template.Template(
         "{{ {'Foo': 'Bar'} | to_json }}", hass
     ).async_render()
