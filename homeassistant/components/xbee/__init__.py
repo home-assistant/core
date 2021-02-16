@@ -21,18 +21,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
-DOMAIN = "xbee"
+_LOGGER = logging.getLogger(__name__)
 
 SIGNAL_XBEE_FRAME_RECEIVED = "xbee_frame_received"
 
 CONF_BAUD = "baud"
-
-CONF_ON_STATE = "on_state"
-
-DEFAULT_ON_STATE = "high"
-STATES = ["high", "low"]
 
 DEFAULT_DEVICE = "/dev/ttyUSB0"
 DEFAULT_BAUD = 9600
