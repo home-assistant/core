@@ -427,16 +427,16 @@ async def test_switches(hass, aioclient_mock):
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 4
 
 
-async def test_remove_switches(hass, aioclient_mock):
+async def test_remove_switches(hass, aioclient_mock, mock_unifi_websocket):
     """Test the update_items function with some clients."""
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
         aioclient_mock,
         options={CONF_BLOCK_CLIENT: [UNBLOCKED["mac"]]},
         clients_response=[CLIENT_1, UNBLOCKED],
         devices_response=[DEVICE_1],
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
 
     poe_switch = hass.states.get("switch.poe_client_1")
@@ -445,11 +445,11 @@ async def test_remove_switches(hass, aioclient_mock):
     block_switch = hass.states.get("switch.block_client_2")
     assert block_switch is not None
 
-    controller.api.websocket._data = {
+    mock_unifi_websocket.return_value.data = {
         "meta": {"message": MESSAGE_CLIENT_REMOVED},
         "data": [CLIENT_1, UNBLOCKED],
     }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
@@ -461,7 +461,7 @@ async def test_remove_switches(hass, aioclient_mock):
     assert block_switch is None
 
 
-async def test_block_switches(hass, aioclient_mock):
+async def test_block_switches(hass, aioclient_mock, mock_unifi_websocket):
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
         hass,
@@ -486,11 +486,11 @@ async def test_block_switches(hass, aioclient_mock):
     assert unblocked is not None
     assert unblocked.state == "on"
 
-    controller.api.websocket._data = {
+    mock_unifi_websocket.return_value.data = {
         "meta": {"message": MESSAGE_EVENT},
         "data": [EVENT_BLOCKED_CLIENT_UNBLOCKED],
     }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
@@ -498,11 +498,11 @@ async def test_block_switches(hass, aioclient_mock):
     assert blocked is not None
     assert blocked.state == "on"
 
-    controller.api.websocket._data = {
+    mock_unifi_websocket.return_value.data = {
         "meta": {"message": MESSAGE_EVENT},
         "data": [EVENT_BLOCKED_CLIENT_BLOCKED],
     }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
@@ -533,9 +533,11 @@ async def test_block_switches(hass, aioclient_mock):
     }
 
 
-async def test_new_client_discovered_on_block_control(hass, aioclient_mock):
+async def test_new_client_discovered_on_block_control(
+    hass, aioclient_mock, mock_unifi_websocket
+):
     """Test if 2nd update has a new client."""
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
         aioclient_mock,
         options={
@@ -545,27 +547,26 @@ async def test_new_client_discovered_on_block_control(hass, aioclient_mock):
             CONF_DPI_RESTRICTIONS: False,
         },
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
     blocked = hass.states.get("switch.block_client_1")
     assert blocked is None
 
-    controller.api.websocket._data = {
+    mock_unifi_websocket.return_value.data = {
         "meta": {"message": "sta:sync"},
         "data": [BLOCKED],
     }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
-    controller.api.websocket._data = {
+    mock_unifi_websocket.return_value.data = {
         "meta": {"message": MESSAGE_EVENT},
         "data": [EVENT_BLOCKED_CLIENT_CONNECTED],
     }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
@@ -641,7 +642,9 @@ async def test_option_remove_switches(hass, aioclient_mock):
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_new_client_discovered_on_poe_control(hass, aioclient_mock):
+async def test_new_client_discovered_on_poe_control(
+    hass, aioclient_mock, mock_unifi_websocket
+):
     """Test if 2nd update has a new client."""
     config_entry = await setup_unifi_integration(
         hass,
@@ -654,20 +657,20 @@ async def test_new_client_discovered_on_poe_control(hass, aioclient_mock):
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    controller.api.websocket._data = {
+    mock_unifi_websocket.return_value.data = {
         "meta": {"message": "sta:sync"},
         "data": [CLIENT_2],
     }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    controller.api.websocket._data = {
+    mock_unifi_websocket.return_value.data = {
         "meta": {"message": MESSAGE_EVENT},
         "data": [EVENT_CLIENT_2_CONNECTED],
     }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2

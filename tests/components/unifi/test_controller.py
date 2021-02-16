@@ -198,8 +198,7 @@ async def setup_unifi_integration(
             wlans_response=wlans_response,
         )
 
-    with patch.object(aiounifi.websocket.WSClient, "start", return_value=True):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     if config_entry.entry_id not in hass.data[UNIFI_DOMAIN]:
@@ -336,7 +335,7 @@ async def test_reset_fails(hass, aioclient_mock):
     assert result is False
 
 
-async def test_connection_state_signalling(hass, aioclient_mock):
+async def test_connection_state_signalling(hass, aioclient_mock, mock_unifi_websocket):
     """Verify signalling and connection state are properly represented."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
@@ -347,18 +346,18 @@ async def test_connection_state_signalling(hass, aioclient_mock):
     assert controller.available is True
     assert len(event_call.mock_calls) == 0
 
-    controller.async_unifi_signalling_callback(
-        signal=aiounifi.controller.SIGNAL_CONNECTION_STATE,
-        data=aiounifi.websocket.STATE_DISCONNECTED,
+    mock_unifi_websocket.return_value.state = aiounifi.websocket.STATE_DISCONNECTED
+    mock_unifi_websocket.call_args[1]["callback"](
+        aiounifi.controller.SIGNAL_CONNECTION_STATE
     )
     await hass.async_block_till_done()
 
     assert controller.available is False
     assert len(event_call.mock_calls) == 1
 
-    controller.async_unifi_signalling_callback(
-        signal=aiounifi.controller.SIGNAL_CONNECTION_STATE,
-        data=aiounifi.websocket.STATE_RUNNING,
+    mock_unifi_websocket.return_value.state = aiounifi.websocket.STATE_RUNNING
+    mock_unifi_websocket.call_args[1]["callback"](
+        aiounifi.controller.SIGNAL_CONNECTION_STATE
     )
     await hass.async_block_till_done()
 
@@ -369,17 +368,16 @@ async def test_connection_state_signalling(hass, aioclient_mock):
 
 
 async def test_wireless_client_event_calls_update_wireless_devices(
-    hass, aioclient_mock
+    hass, aioclient_mock, mock_unifi_websocket
 ):
     """Call update_wireless_devices method when receiving wireless client event."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    await setup_unifi_integration(hass, aioclient_mock)
 
     with patch(
         "homeassistant.components.unifi.controller.UniFiController.update_wireless_clients",
         return_value=None,
     ) as wireless_clients_mock:
-        controller.api.websocket._data = {
+        mock_unifi_websocket.return_value.data = {
             "meta": {"rc": "ok", "message": "events"},
             "data": [
                 {
@@ -390,7 +388,7 @@ async def test_wireless_client_event_calls_update_wireless_devices(
                 }
             ],
         }
-        controller.api.session_handler("data")
+        mock_unifi_websocket.call_args[1]["callback"]("data")
 
         assert wireless_clients_mock.assert_called_once
 

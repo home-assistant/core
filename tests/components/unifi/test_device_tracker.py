@@ -157,7 +157,7 @@ async def test_no_clients(hass, aioclient_mock):
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 0
 
 
-async def test_tracked_wireless_clients(hass, aioclient_mock):
+async def test_tracked_wireless_clients(hass, aioclient_mock, mock_unifi_websocket):
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_response=[CLIENT_1]
@@ -171,11 +171,11 @@ async def test_tracked_wireless_clients(hass, aioclient_mock):
 
     # State change signalling works without events
     client_1_copy = copy(CLIENT_1)
-    controller.api.websocket._data = {
+    mock_unifi_websocket.return_value.data = {
         "meta": {"message": MESSAGE_CLIENT},
         "data": [client_1_copy],
     }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
     await hass.async_block_till_done()
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -333,12 +333,12 @@ async def test_tracked_devices(hass, aioclient_mock):
     assert device.sw_version == EVENT_DEVICE_2_UPGRADED["version_to"]
 
 
-async def test_remove_clients(hass, aioclient_mock):
+async def test_remove_clients(hass, aioclient_mock, mock_unifi_websocket):
     """Test the remove_items function with some clients."""
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass, aioclient_mock, clients_response=[CLIENT_1, CLIENT_2]
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -347,11 +347,11 @@ async def test_remove_clients(hass, aioclient_mock):
     wired_client = hass.states.get("device_tracker.wired_client")
     assert wired_client is not None
 
-    controller.api.websocket._data = {
+    mock_unifi_websocket.return_value.data = {
         "meta": {"message": MESSAGE_CLIENT_REMOVED},
         "data": [CLIENT_1],
     }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 

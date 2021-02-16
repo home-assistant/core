@@ -178,9 +178,9 @@ async def test_sensors(hass, aioclient_mock):
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
 
 
-async def test_remove_sensors(hass, aioclient_mock):
+async def test_remove_sensors(hass, aioclient_mock, mock_unifi_websocket):
     """Test the remove_items function with some clients."""
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
         aioclient_mock,
         options={
@@ -189,7 +189,7 @@ async def test_remove_sensors(hass, aioclient_mock):
         },
         clients_response=CLIENTS,
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
 
@@ -209,11 +209,11 @@ async def test_remove_sensors(hass, aioclient_mock):
     wireless_client_uptime = hass.states.get("sensor.wireless_client_name_uptime")
     assert wireless_client_uptime is not None
 
-    controller.api.websocket._data = {
+    mock_unifi_websocket.return_value.data = {
         "meta": {"message": MESSAGE_CLIENT_REMOVED},
         "data": [CLIENTS[0]],
     }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
