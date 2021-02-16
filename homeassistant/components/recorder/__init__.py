@@ -290,7 +290,9 @@ class Recorder(threading.Thread):
     def run(self):
         """Start processing events to save."""
 
-        self._setup_recorder()
+        if not self._setup_recorder():
+            return
+
         shutdown_task = object()
         hass_started = concurrent.futures.Future()
 
