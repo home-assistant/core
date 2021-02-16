@@ -1,21 +1,22 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "title": "Login",
-        "description": "Enter your SmartTub email address and password to login",
-        "data": {
-          "email": "Email",
-          "password": "Password"
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                },
+                "description": "Enter your SmartTub email address and password to login",
+                "title": "Login"
+            }
         }
-      }
-    },
-    "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
-  }
 }
