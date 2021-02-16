@@ -2,7 +2,7 @@
   "domain": "tuya",
   "name": "Tuya",
   "documentation": "https://www.home-assistant.io/integrations/tuya",
-  "requirements": ["tuyaha==0.0.9"],
+  "requirements": ["tuyaha==0.0.10"],
   "codeowners": ["@ollo69"],
   "config_flow": true
 }
