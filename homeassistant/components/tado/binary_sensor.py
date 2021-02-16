@@ -257,11 +257,10 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
 
         elif self.zone_variable == "overlay":
             self._state = self._tado_zone_data.overlay_active
-            self._state_attributes = (
-                {"termination": self._tado_zone_data.overlay_termination_type}
-                if self._tado_zone_data.overlay_active
-                else {}
-            )
+            if self._tado_zone_data.overlay_active:
+                self._state_attributes = {
+                    "termination": self._tado_zone_data.overlay_termination_type
+                }
 
         elif self.zone_variable == "early start":
             self._state = self._tado_zone_data.preparation
