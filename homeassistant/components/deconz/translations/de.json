@@ -66,6 +66,7 @@
             "remote_button_quadruple_press": "\"{subtype}\" Taste vierfach geklickt",
             "remote_button_quintuple_press": "\"{subtype}\" Taste f\u00fcnffach geklickt",
             "remote_button_rotated": "Button gedreht \"{subtype}\".",
+            "remote_button_rotated_fast": "Button schnell gedreht \"{subtype}\"",
             "remote_button_rotation_stopped": "Die Tastendrehung \"{subtype}\" wurde gestoppt",
             "remote_button_short_press": "\"{subtype}\" Taste gedr\u00fcckt",
             "remote_button_short_release": "\"{subtype}\" Taste losgelassen",

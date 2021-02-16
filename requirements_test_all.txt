@@ -1033,7 +1033,7 @@ scapy==2.4.4
 sense_energy==0.9.0
 
 # homeassistant.components.sentry
-sentry-sdk==0.20.1
+sentry-sdk==0.20.2
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -1130,7 +1130,7 @@ total_connect_client==0.55
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuyaha==0.0.9
+tuyaha==0.0.10
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0

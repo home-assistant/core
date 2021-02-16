@@ -2014,7 +2014,7 @@ sense-hat==2.2.0
 sense_energy==0.9.0
 
 # homeassistant.components.sentry
-sentry-sdk==0.20.1
+sentry-sdk==0.20.2
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -2218,7 +2218,7 @@ tp-connected==0.0.4
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuyaha==0.0.9
+tuyaha==0.0.10
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.3.0
