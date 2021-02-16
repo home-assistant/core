@@ -76,11 +76,11 @@ AUTOMATION_CONFIG_PATH = "automations.yaml"
 SCRIPT_CONFIG_PATH = "scripts.yaml"
 SCENE_CONFIG_PATH = "scenes.yaml"
 
-PLATFORM_LOAD_EXCEPTIONS = (ImportError, FileNotFoundError)
+LOAD_EXCEPTIONS = (ImportError, FileNotFoundError)
 INTEGRATION_LOAD_EXCEPTIONS = (
     IntegrationNotFound,
     RequirementsNotFound,
-    *PLATFORM_LOAD_EXCEPTIONS,
+    *LOAD_EXCEPTIONS,
 )
 
 DEFAULT_CONFIG = f"""
@@ -753,7 +753,7 @@ async def async_process_component_config(
     domain = integration.domain
     try:
         component = integration.get_component()
-    except INTEGRATION_LOAD_EXCEPTIONS as ex:
+    except LOAD_EXCEPTIONS as ex:
         _LOGGER.error("Unable to import %s: %s", domain, ex)
         return None
 
@@ -832,7 +832,7 @@ async def async_process_component_config(
 
         try:
             platform = p_integration.get_platform(domain)
-        except PLATFORM_LOAD_EXCEPTIONS:
+        except LOAD_EXCEPTIONS:
             _LOGGER.exception("Platform error: %s", domain)
             continue
 
