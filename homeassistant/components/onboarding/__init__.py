@@ -55,6 +55,10 @@ async def async_setup(hass, config):
     if data is None:
         data = {"done": []}
 
+    # ais remove old onboarding step
+    if "ais_restore_backup" in data["done"]:
+        data["done"].remove("ais_restore_backup")
+
     if STEP_USER not in data["done"]:
         # Users can already have created an owner account via the command line
         # If so, mark the user step as done.
