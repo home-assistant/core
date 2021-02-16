@@ -91,7 +91,7 @@ aiodns==2.0.0
 aioeafm==0.1.2
 
 # homeassistant.components.esphome
-aioesphomeapi==2.6.4
+aioesphomeapi==2.6.5
 
 # homeassistant.components.flo
 aioflo==0.4.1
