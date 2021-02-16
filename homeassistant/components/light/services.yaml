@@ -11,7 +11,7 @@ turn_on:
       selector:
         number:
           min: 0
-          max: 60
+          max: 300
           step: 1
           unit_of_measurement: seconds
           mode: slider
