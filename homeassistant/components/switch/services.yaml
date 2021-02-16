@@ -3,17 +3,11 @@
 turn_on:
   description: Turn a switch on
   target:
-    entity:
-      domain: switch
 
 turn_off:
   description: Turn a switch off
   target:
-    entity:
-      domain: switch
 
 toggle:
   description: Toggles a switch state
   target:
-    entity:
-      domain: switch
