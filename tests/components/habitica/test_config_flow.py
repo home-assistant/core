@@ -1,6 +1,6 @@
 """Test the habitica config flow."""
 from asyncio import Future
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.habitica.config_flow import InvalidAuth
@@ -114,7 +114,9 @@ async def test_manual_flow_config_exist(hass, aioclient_mock):
     assert result["step_id"] == "user"
 
     mock_obj = MagicMock()
-    mock_obj.user.get.side_effect = AsyncMock(return_value={"api_user": "test-api-user"})
+    mock_obj.user.get.side_effect = AsyncMock(
+        return_value={"api_user": "test-api-user"}
+    )
 
     with patch(
         "homeassistant.components.habitica.config_flow.HabitipyAsync",
