@@ -141,7 +141,10 @@ async def async_get_or_create(hass, config_entry, entity):
                 await hass.config_entries.async_remove(config_entry.entry_id)
 
                 _LOGGER.error(
-                    f"Unable to create {DOMAIN} component at address 0x{i2c_address:02x} ({error})"
+                    "Unable to create %s component at address 0x%02x (%s)",
+                    DOMAIN,
+                    i2c_address,
+                    error,
                 )
 
                 hass.components.persistent_notification.create(

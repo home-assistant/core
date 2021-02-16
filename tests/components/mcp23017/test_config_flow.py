@@ -1,6 +1,7 @@
 """Tests for mcp23017 config flow."""
 
 import copy
+from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 import homeassistant.components.mcp23017.binary_sensor as binary_sensor
@@ -20,17 +21,15 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
 async def test_show_config_form(hass):
     """Test Config Flow form."""
 
-    with patch("homeassistant.components.i2c.async_setup", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
 
     default_config = result["data_schema"]({})
 
@@ -57,7 +56,7 @@ async def test_create_entry(hass):
     }
 
     # Patch async_setup_entry to avoid effective component creation
-    with patch("homeassistant.components.i2c.async_setup", return_value=True), patch(
+    with patch(
         "homeassistant.components.mcp23017.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_init(
@@ -85,7 +84,7 @@ async def test_import_entry(hass):
     config[CONF_FLOW_PIN_NAME] = "in_0"
 
     # Patch async_setup_entry to avoid effective component creation
-    with patch("homeassistant.components.i2c.async_setup", return_value=True), patch(
+    with patch(
         "homeassistant.components.mcp23017.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_init(
@@ -114,7 +113,7 @@ async def test_unique_entry(hass):
     initial_entry.add_to_hass(hass)
 
     # Patch async_setup_entry to avoid effective component creation
-    with patch("homeassistant.components.i2c.async_setup", return_value=True), patch(
+    with patch(
         "homeassistant.components.mcp23017.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_init(
