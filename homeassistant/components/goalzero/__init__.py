@@ -5,6 +5,9 @@ from logging import getLogger
 
 from goalzero import Yeti, exceptions
 
+from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSOR
+from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
+from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -21,7 +24,7 @@ from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
 _LOGGER = getLogger(__name__)
 
 
-PLATFORMS = ["binary_sensor", "sensor", "switch"]
+PLATFORMS = [DOMAIN_BINARY_SENSOR, DOMAIN_SENSOR, DOMAIN_SWITCH]
 
 
 async def async_setup(hass: HomeAssistant, config):
@@ -41,6 +44,9 @@ async def async_setup_entry(hass, entry):
     api = Yeti(host, hass.loop, session)
     try:
         await api.get_state()
+        # Send request again if response is empty
+        if "firmwareVersion" not in api.data.keys():
+            await api.get_state()
     except exceptions.ConnectError as ex:
         _LOGGER.warning("Failed to connect: %s", ex)
         raise ConfigEntryNotReady from ex
@@ -77,8 +83,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
