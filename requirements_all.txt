@@ -427,9 +427,6 @@ co2signal==0.4.2
 # homeassistant.components.coinbase
 coinbase==2.1.0
 
-# homeassistant.components.coinmarketcap
-coinmarketcap==5.0.3
-
 # homeassistant.scripts.check_config
 colorlog==4.7.2
 
