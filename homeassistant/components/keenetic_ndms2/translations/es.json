@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya est\u00e1 configurada"
+        },
+        "error": {
+            "cannot_connect": "Fallo de conexi\u00f3n"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nombre",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "username": "Usuario"
+                }
+            }
+        }
+    }
+}

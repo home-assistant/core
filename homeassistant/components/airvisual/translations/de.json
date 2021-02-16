@@ -7,7 +7,8 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "general_error": "Unerwarteter Fehler",
-            "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel"
+            "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel",
+            "location_not_found": "Standort nicht gefunden"
         },
         "step": {
             "geography": {
@@ -16,7 +17,27 @@
                     "latitude": "Breitengrad",
                     "longitude": "L\u00e4ngengrad"
                 },
+                "description": "Verwende die AirVisual Cloud API, um einen geografischen Standort zu \u00fcberwachen.",
                 "title": "Konfigurieren Sie eine Geografie"
+            },
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "latitude": "Breitengrad",
+                    "longitude": "L\u00e4ngengrad"
+                },
+                "description": "Verwende die AirVisual Cloud API, um einen L\u00e4ngengrad/Breitengrad zu \u00fcberwachen.",
+                "title": "Konfiguriere einen Standort"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "city": "Stadt",
+                    "country": "Land",
+                    "state": "Bundesland"
+                },
+                "description": "Verwende die AirVisual Cloud API, um ein(e) Stadt/Bundesland/Land zu \u00fcberwachen.",
+                "title": "Konfiguriere einen Standort"
             },
             "node_pro": {
                 "data": {
@@ -29,7 +50,8 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API-Key"
-                }
+                },
+                "title": "AirVisual erneut authentifizieren"
             },
             "user": {
                 "data": {
