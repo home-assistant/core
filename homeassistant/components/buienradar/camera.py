@@ -16,11 +16,16 @@ from homeassistant.util import dt as dt_util
 CONF_DIMENSION = "dimension"
 CONF_DELTA = "delta"
 CONF_COUNTRY = "country_code"
+CONF_HISTORY = "history"
+CONF_FORECAST = "forecast"
 
 _LOGGER = logging.getLogger(__name__)
 
 # Maximum range according to docs
 DIM_RANGE = vol.All(vol.Coerce(int), vol.Range(min=120, max=700))
+
+# Min-max range found by simply trying a bunch of different values
+TIME_RANGE = vol.All(vol.Coerce(int), vol.Range(min=0, max=18))
 
 # Multiple choice for available Radar Map URL
 SUPPORTED_COUNTRY_CODES = ["NL", "BE"]
@@ -34,6 +39,8 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_COUNTRY, default="NL"): vol.All(
                 vol.Coerce(str), vol.In(SUPPORTED_COUNTRY_CODES)
             ),
+            vol.Optional(CONF_HISTORY, default=6): TIME_RANGE,
+            vol.Optional(CONF_FORECAST, default=6): TIME_RANGE,
         }
     )
 )
@@ -45,8 +52,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     delta = config[CONF_DELTA]
     name = config[CONF_NAME]
     country = config[CONF_COUNTRY]
+    history = config[CONF_HISTORY]
+    forecast = config[CONF_FORECAST]
 
-    async_add_entities([BuienradarCam(name, dimension, delta, country)])
+    async_add_entities(
+        [BuienradarCam(name, dimension, delta, country, history, forecast)]
+    )
 
 
 class BuienradarCam(Camera):
@@ -58,7 +69,15 @@ class BuienradarCam(Camera):
     [0]: https://www.buienradar.nl/overbuienradar/gratis-weerdata
     """
 
-    def __init__(self, name: str, dimension: int, delta: float, country: str):
+    def __init__(
+        self,
+        name: str,
+        dimension: int,
+        delta: float,
+        country: str,
+        history: int,
+        forecast: int,
+    ):
         """
         Initialize the component.
 
@@ -76,6 +95,12 @@ class BuienradarCam(Camera):
 
         # country location
         self._country = country
+
+        # time before now
+        self._history = history
+
+        # time after now
+        self._forecast = forecast
 
         # Condition that guards the loading indicator.
         #
@@ -110,9 +135,11 @@ class BuienradarCam(Camera):
         """Retrieve new radar image and return whether this succeeded."""
         session = async_get_clientsession(self.hass)
 
+        # The for the history and forcase the range is 0-18, but sending 18 to the Buienradar API results in using the value 9.
+        # So we multiply times 2 to get the desired offset
         url = (
             f"https://api.buienradar.nl/image/1.0/RadarMap{self._country}"
-            f"?w={self._dimension}&h={self._dimension}"
+            f"?w={self._dimension}&h={self._dimension}&history={self._history * 2}&forecast={self._forecast * 2}"
         )
 
         if self._last_modified:
