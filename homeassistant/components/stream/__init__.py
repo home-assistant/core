@@ -169,7 +169,7 @@ class Stream:
 
     def update_source(self, new_source):
         """Restart the stream with a new stream source."""
-        _LOGGER.debug("Updating stream source %s", self.source)
+        _LOGGER.debug("Updating stream source %s", new_source)
         self.source = new_source
         self._fast_restart_once = True
         self._thread_quit.set()
@@ -185,10 +185,10 @@ class Stream:
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()
             stream_worker(self.source, self.options, segment_buffer, self._thread_quit)
+            segment_buffer.discontinuity()
             if not self.keepalive or self._thread_quit.is_set():
                 if self._fast_restart_once:
                     # The stream source is updated, restart without any delay.
-                    segment_buffer.discontinuity()
                     self._fast_restart_once = False
                     self._thread_quit.clear()
                     continue
