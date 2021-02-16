@@ -6,9 +6,10 @@ from typing import List
 
 import av
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 
-from .core import PROVIDERS, IdleTimer, Segment, StreamOutput
+from .const import OUTPUT_CONTAINER_FORMAT
+from .core import Segment, StreamOutput
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ def async_setup_recorder(hass):
     """Only here so Provider Registry works."""
 
 
-def recorder_save_worker(file_out: str, segments: List[Segment], container_format: str):
+def recorder_save_worker(file_out: str, segments: List[Segment], container_format):
     """Handle saving stream."""
     if not os.path.exists(os.path.dirname(file_out)):
         os.makedirs(os.path.dirname(file_out), exist_ok=True)
@@ -68,51 +69,31 @@ def recorder_save_worker(file_out: str, segments: List[Segment], container_forma
     output.close()
 
 
-@PROVIDERS.register("recorder")
 class RecorderOutput(StreamOutput):
     """Represents HLS Output formats."""
 
-    def __init__(self, hass: HomeAssistant, idle_timer: IdleTimer) -> None:
+    def __init__(self, hass) -> None:
         """Initialize recorder output."""
-        super().__init__(hass, idle_timer)
+        super().__init__(hass)
         self.video_path = None
         self._segments = []
 
-    @property
-    def name(self) -> str:
-        """Return provider name."""
-        return "recorder"
-
-    @property
-    def format(self) -> str:
-        """Return container format."""
-        return "mp4"
-
-    @property
-    def audio_codecs(self) -> str:
-        """Return desired audio codec."""
-        return {"aac", "mp3"}
-
-    @property
-    def video_codecs(self) -> tuple:
-        """Return desired video codecs."""
-        return {"hevc", "h264"}
+    def _async_put(self, segment: Segment) -> None:
+        """Store output."""
+        self._segments.append(segment)
 
     def prepend(self, segments: List[Segment]) -> None:
         """Prepend segments to existing list."""
-        own_segments = self.segments
-        segments = [s for s in segments if s.sequence not in own_segments]
+        segments = [s for s in segments if s.sequence not in self._segments]
         self._segments = segments + self._segments
 
-    def cleanup(self):
+    def save(self):
         """Write recording and clean up."""
         _LOGGER.debug("Starting recorder worker thread")
         thread = threading.Thread(
             name="recorder_save_worker",
             target=recorder_save_worker,
-            args=(self.video_path, self._segments, self.format),
+            args=(self.video_path, self._segments, OUTPUT_CONTAINER_FORMAT),
         )
         thread.start()
-
-        super().cleanup()
         self._segments = []

@@ -24,7 +24,11 @@ from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.components.stream import Stream, create_stream
-from homeassistant.components.stream.const import FORMAT_CONTENT_TYPE, OUTPUT_FORMATS
+from homeassistant.components.stream.const import (
+    FORMAT_CONTENT_TYPE,
+    HLS_OUTPUT,
+    OUTPUT_FORMATS,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_FILENAME,
@@ -254,7 +258,7 @@ async def async_setup(hass, config):
             stream = await camera.create_stream()
             if not stream:
                 continue
-            stream.add_provider("hls")
+            stream.hls_output()
             stream.start()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, preload_stream)
@@ -702,6 +706,8 @@ async def async_handle_play_stream_service(camera, service_call):
 
 
 async def _async_stream_endpoint_url(hass, camera, fmt):
+    if fmt != HLS_OUTPUT:
+        raise ValueError("Only format {HLS_OUTPUT} is supported")
     stream = await camera.create_stream()
     if not stream:
         raise HomeAssistantError(
@@ -712,9 +718,9 @@ async def _async_stream_endpoint_url(hass, camera, fmt):
     camera_prefs = hass.data[DATA_CAMERA_PREFS].get(camera.entity_id)
     stream.keepalive = camera_prefs.preload_stream
 
-    stream.add_provider(fmt)
+    stream.hls_output()
     stream.start()
-    return stream.endpoint_url(fmt)
+    return stream.endpoint_url()
 
 
 async def async_handle_record_service(camera, call):

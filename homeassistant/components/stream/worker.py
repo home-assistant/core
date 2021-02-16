@@ -9,6 +9,9 @@ from .const import (
     MAX_MISSING_DTS,
     MAX_TIMESTAMP_GAP,
     MIN_SEGMENT_DURATION,
+    OUTPUT_AUDIO_CODECS,
+    OUTPUT_CONTAINER_FORMAT,
+    OUTPUT_VIDEO_CODECS,
     PACKETS_TO_WAIT_FOR_AUDIO,
     STREAM_TIMEOUT,
 )
@@ -29,7 +32,7 @@ def create_stream_buffer(stream_output, video_stream, audio_stream, sequence):
     output = av.open(
         segment,
         mode="w",
-        format=stream_output.format,
+        format=OUTPUT_CONTAINER_FORMAT,
         container_options={
             "video_track_timescale": str(int(1 / video_stream.time_base)),
             **container_options,
@@ -38,7 +41,7 @@ def create_stream_buffer(stream_output, video_stream, audio_stream, sequence):
     vstream = output.add_stream(template=video_stream)
     # Check if audio is requested
     astream = None
-    if audio_stream and audio_stream.name in stream_output.audio_codecs:
+    if audio_stream and audio_stream.name in OUTPUT_AUDIO_CODECS:
         astream = output.add_stream(template=audio_stream)
     return StreamBuffer(segment, output, vstream, astream)
 
@@ -65,8 +68,8 @@ class SegmentBuffer:
         # Fetch the latest StreamOutputs, which may have changed since the
         # worker started.
         self._outputs = []
-        for stream_output in self._outputs_callback().values():
-            if self._video_stream.name not in stream_output.video_codecs:
+        for stream_output in self._outputs_callback():
+            if self._video_stream.name not in OUTPUT_VIDEO_CODECS:
                 continue
             buffer = create_stream_buffer(
                 stream_output, self._video_stream, self._audio_stream, self._sequence
