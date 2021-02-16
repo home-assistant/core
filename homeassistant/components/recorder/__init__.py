@@ -253,7 +253,7 @@ class Recorder(threading.Thread):
         self._pending_expunge = []
         self.event_session = None
         self.get_session = None
-        self._completed_database_setup = False
+        self._completed_database_setup = None
 
     @callback
     def async_initialize(self):
@@ -321,8 +321,6 @@ class Recorder(threading.Thread):
         self.hass.add_job(register)
         result = hass_started.result()
 
-        self._open_event_session()
-
         # If shutdown happened before Home Assistant finished starting
         if result is shutdown_task:
             # Make sure we cleanly close the run if
@@ -343,6 +341,7 @@ class Recorder(threading.Thread):
                 async_purge, hour=4, minute=12, second=0
             )
 
+        _LOGGER.debug("Recorder processing the queue")
         # Use a session for the event read loop
         # with a commit every time the event time
         # has changed. This reduces the disk io.
@@ -364,14 +363,17 @@ class Recorder(threading.Thread):
                 self._setup_connection()
                 migration.migrate_schema(self)
                 self._setup_run()
-                _LOGGER.debug("Connected to recorder database")
-                return True
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.error(
-                    "Error during connection setup: %s (retrying in %s seconds)",
+                    "Error during connection setup to %s: %s (retrying in %s seconds)",
+                    self.db_url,
                     err,
                     self.db_retry_wait,
                 )
+            else:
+                _LOGGER.debug("Connected to recorder database")
+                self._open_event_session()
+                return True
 
             tries += 1
             time.sleep(self.db_retry_wait)
@@ -524,7 +526,6 @@ class Recorder(threading.Thread):
         self._close_connection()
         move_away_broken_database(dburl_to_path(self.db_url))
         self._setup_recorder()
-        self._open_event_session()
 
     def _reopen_event_session(self):
         """Rollback the event session and reopen it after a failure."""
@@ -585,6 +586,7 @@ class Recorder(threading.Thread):
     def _setup_connection(self):
         """Ensure database is ready to fly."""
         kwargs = {}
+        self._completed_database_setup = False
 
         def setup_recorder_connection(dbapi_connection, connection_record):
             """Dbapi specific connection settings."""
