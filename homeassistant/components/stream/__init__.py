@@ -140,7 +140,7 @@ class Stream:
     def _hls_idle(self):
         """Reset access token and cleanup stream due to inactivity."""
         self.access_token = None
-        if not self.keepalive and self._hls:
+        if not self.keepalive:
             self._hls.cleanup()
             self._hls = None
             self._hls_timer = None
@@ -212,12 +212,12 @@ class Stream:
     def stop(self):
         """Remove outputs and access token."""
         self.access_token = None
-        if self._hls:
-            self._hls.cleanup()
-            self._hls = None
         if self._hls_timer:
             self._hls_timer.clear()
             self._hls_timer = None
+        if self._hls:
+            self._hls.cleanup()
+            self._hls = None
         if self._recorder:
             self._recorder.save()
             self._recorder = None
