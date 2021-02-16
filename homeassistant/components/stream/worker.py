@@ -115,9 +115,9 @@ class SegmentBuffer:
 
     def discontinuity(self):
         """Mark the stream as having been restarted."""
-        # Note: Sequence numbers are preserved to keep existing HLS view logic
-        # simple. The cursor logic expects unique sequence numbers though
-        # that is not required by the HLS protocol given a discontinuity.
+        # Preserving sequence and stream_id here keep the HLS playlist logic
+        # simple to check for discontinuity at output time, and to determine
+        # the discontinuity sequence number.
         self._stream_id += 1
 
     def close(self):
