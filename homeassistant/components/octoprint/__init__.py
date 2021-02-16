@@ -1,10 +1,15 @@
 """Support for monitoring OctoPrint 3D printers."""
+import asyncio
 from datetime import timedelta
 import logging
 
 from pyoctoprintapi import OctoprintClient, PrinterOffline
 import voluptuous as vol
 
+<<<<<<< HEAD
+=======
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+>>>>>>> 80d7f71a87... Add config flow for octoprint
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
@@ -19,18 +24,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
+from .const import CONF_BED, CONF_NUMBER_OF_TOOLS, DEFAULT_NAME, DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_BED = "bed"
-CONF_NUMBER_OF_TOOLS = "number_of_tools"
-
-DEFAULT_NAME = "OctoPrint"
-DOMAIN = "octoprint"
 
 
 def has_all_unique_names(value):
@@ -49,6 +49,8 @@ def ensure_valid_path(value):
         value += "/"
     return value
 
+
+PLATFORMS = ["binary_sensor", "sensor"]
 
 BINARY_SENSOR_TYPES = [
     "Printing",
@@ -110,66 +112,85 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the OctoPrint component."""
-    printers = hass.data[DOMAIN] = {}
-    success = False
-
     if DOMAIN not in config:
-        # Skip the setup if there is no configuration present
         return True
 
-    for printer in config[DOMAIN]:
-        name = printer[CONF_NAME]
-        protocol = "https" if printer[CONF_SSL] else "http"
-        base_url = (
-            f"{protocol}://{printer[CONF_HOST]}:{printer[CONF_PORT]}"
-            f"{printer[CONF_PATH]}"
-        )
+    domain_config = config[DOMAIN]
 
-        session = async_get_clientsession(hass)
-        octoprint = OctoprintClient(
-            printer[CONF_HOST],
-            session,
-            printer[CONF_PORT],
-            printer[CONF_SSL],
-            printer[CONF_PATH],
-        )
-        octoprint.set_api_key(printer[CONF_API_KEY])
-        coordinator = OctoprintDataUpdateCoordinator(hass, octoprint, base_url, 30)
-        await coordinator.async_refresh()
-
-        printers[base_url] = coordinator
-
-        sensors = printer[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
+    for conf in domain_config:
         hass.async_create_task(
-            async_load_platform(
-                hass,
-                "sensor",
+            hass.config_entries.flow.async_init(
                 DOMAIN,
-                {
-                    "name": name,
-                    "base_url": base_url,
-                    "sensors": sensors,
-                    CONF_NUMBER_OF_TOOLS: printer[CONF_NUMBER_OF_TOOLS],
-                    CONF_BED: printer[CONF_BED],
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_API_KEY: conf[CONF_API_KEY],
+                    CONF_HOST: conf[CONF_HOST],
+                    CONF_NAME: conf[CONF_NAME],
+                    CONF_PATH: conf[CONF_PATH],
+                    CONF_PORT: conf[CONF_PORT],
+                    CONF_SSL: conf[CONF_SSL],
                 },
-                config,
             )
         )
-        b_sensors = printer[CONF_BINARY_SENSORS][CONF_MONITORED_CONDITIONS]
-        hass.async_create_task(
-            async_load_platform(
-                hass,
-                "binary_sensor",
-                DOMAIN,
-                {"name": name, "base_url": base_url, "sensors": b_sensors},
-                config,
-            )
-        )
-        success = True
 
-    return success
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up OctoPrint from a config entry."""
+
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
+    websession = async_get_clientsession(hass)
+    client = OctoprintClient(
+        entry.data[CONF_HOST],
+        websession,
+        entry.data[CONF_PORT],
+        entry.data[CONF_SSL],
+        entry.data[CONF_PATH],
+    )
+
+    client.set_api_key(entry.data[CONF_API_KEY])
+
+    tracking_info = await client.get_tracking_info()
+
+    coordinator = OctoprintDataUpdateCoordinator(
+        hass, client, tracking_info.unique_id, 30
+    )
+
+    await coordinator.async_refresh()
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        "coordinator": coordinator,
+        "client": client,
+        "device_id": tracking_info.unique_id,
+    }
+
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
 
 
 class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):

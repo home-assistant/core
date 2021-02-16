@@ -2,66 +2,60 @@
 from datetime import timedelta
 import logging
 
-from pyoctoprintapi import OctoprintJobInfo, OctoprintPrinterInfo
+from pyoctoprintapi import OctoprintClient, OctoprintJobInfo, OctoprintPrinterInfo
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_NAME,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from . import CONF_BED, CONF_NUMBER_OF_TOOLS, DOMAIN as COMPONENT_DOMAIN
+from . import DOMAIN as COMPONENT_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the available OctoPrint sensors."""
-    if discovery_info is None:
-        return
-
-    name = discovery_info["name"]
-    base_url = discovery_info["base_url"]
-    monitored_conditions = discovery_info["sensors"]
-    number_of_tools = discovery_info[CONF_NUMBER_OF_TOOLS]
-    bed = discovery_info[CONF_BED]
-    coordinator: DataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][base_url]
-    tools = []
-    if coordinator.data["printer"]:
-        tools = [tool.name for tool in coordinator.data["printer"].temperatures]
-    else:
-        if number_of_tools > 0:
-            for tool_number in range(number_of_tools):
-                tools.append(f"tool{tool_number!s}")
-        if bed:
-            tools.append("bed")
-
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+):
+    """Set up the available OctoPrint binary sensors."""
+    client: OctoprintClient = hass.data[COMPONENT_DOMAIN][config_entry.entry_id][
+        "client"
+    ]
+    coordinator: DataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][
+        config_entry.entry_id
+    ]["coordinator"]
     entities = []
-    types = ["actual", "target"]
-
-    if "Temperatures" in monitored_conditions and tools:
-        for tool in tools:
+    sensor_name = config_entry.data[CONF_NAME]
+    try:
+        printer_info = await client.get_printer_info()
+        types = ["actual", "target"]
+        for tool in printer_info.temperatures:
             for temp_type in types:
                 entities.append(
-                    OctoPrintTemperatureSensor(coordinator, name, tool, temp_type)
+                    OctoPrintTemperatureSensor(
+                        coordinator, sensor_name, tool.name, temp_type
+                    )
                 )
+    except BaseException as ex:  # pylint: disable=broad-except
+        _LOGGER.error("Error getting printering information %s", ex)
 
-    if "Current State" in monitored_conditions:
-        entities.append(OctoPrintStatusSensor(coordinator, name))
-    if "Job Percentage" in monitored_conditions:
-        entities.append(OctoPrintJobPercentageSensor(coordinator, name))
-    if "Time Remaining" in monitored_conditions:
-        entities.append(OctoPrintEstimatedFinishTimeSensor(coordinator, name))
-    if "Time Elapsed" in monitored_conditions:
-        entities.append(OctoPrintStartTimeSensor(coordinator, name))
+    entities.append(OctoPrintStatusSensor(coordinator, sensor_name))
+    entities.append(OctoPrintJobPercentageSensor(coordinator, sensor_name))
+    entities.append(OctoPrintEstimatedFinishTimeSensor(coordinator, sensor_name))
+    entities.append(OctoPrintStartTimeSensor(coordinator, sensor_name))
 
     async_add_entities(entities, True)
+    return True
 
 
 class OctoPrintSensorBase(CoordinatorEntity, Entity):

@@ -1,7 +1,6 @@
 """The tests for Octoptint binary sensor module."""
 
 from homeassistant.const import STATE_OFF, STATE_ON
-
 from . import init_integration
 
 

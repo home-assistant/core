@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "OctoPrint API Key",
+                    "bed": "Printer has a heated bed",
+                    "host": "Host",
+                    "name": "Server Name",
+                    "password": "Password",
+                    "path": "Application Path",
+                    "port": "Port Number",
+                    "username": "Username",
+                    "ssl": "Use SSL"
+                }
+            }
+        }
+    },
+    "title": "OctoPrint"
+}

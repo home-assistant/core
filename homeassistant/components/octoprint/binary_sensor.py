@@ -6,35 +6,32 @@ from typing import Optional
 from pyoctoprintapi import OctoprintPrinterInfo
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from . import DOMAIN as COMPONENT_DOMAIN
+from .const import DOMAIN as COMPONENT_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+):
     """Set up the available OctoPrint binary sensors."""
+    coordinator = hass.data[COMPONENT_DOMAIN][config_entry.entry_id]["coordinator"]
 
-    if discovery_info is None:
-        return
-
-    name = discovery_info["name"]
-    base_url = discovery_info["base_url"]
-    monitored_conditions = discovery_info["sensors"]
-    coordinator: DataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][base_url]
-
-    entities = []
-    if "Printing" in monitored_conditions:
-        entities.append(OctoPrintPrintingBinarySensor(coordinator, name))
-
-    if "Printing Error" in monitored_conditions:
-        entities.append(OctoPrintPrintingErrorBinarySensor(coordinator, name))
+    entities = [
+        OctoPrintPrintingBinarySensor(coordinator, config_entry.data[CONF_NAME]),
+        OctoPrintPrintingErrorBinarySensor(coordinator, config_entry.data[CONF_NAME]),
+    ]
 
     async_add_entities(entities, True)
+    return True
 
 
 class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
