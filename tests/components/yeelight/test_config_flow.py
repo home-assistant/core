@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.yeelight import (
-    CONF_DEVICE,
     CONF_MODE_MUSIC,
     CONF_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
@@ -18,7 +17,7 @@ from homeassistant.components.yeelight import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
-from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from . import (
