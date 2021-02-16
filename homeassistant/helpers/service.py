@@ -448,11 +448,15 @@ async def async_get_all_descriptions(
                 # Don't warn for missing services, because it triggers false
                 # positives for things like scripts, that register as a service
 
-                description = descriptions_cache[cache_key] = {
+                description = {
                     "description": yaml_description.get("description", ""),
-                    "target": yaml_description.get("target"),
                     "fields": yaml_description.get("fields", {}),
                 }
+
+                if "target" in yaml_description:
+                    description["target"] = yaml_description["target"]
+
+                descriptions_cache[cache_key] = description
 
             descriptions[domain][service] = description
 

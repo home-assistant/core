@@ -24,6 +24,7 @@ def exists(value):
 FIELD_SCHEMA = vol.Schema(
     {
         vol.Required("description"): str,
+        vol.Optional("name"): str,
         vol.Optional("example"): exists,
         vol.Optional("default"): exists,
         vol.Optional("values"): exists,
@@ -35,6 +36,9 @@ FIELD_SCHEMA = vol.Schema(
 SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required("description"): str,
+        vol.Optional("target"): vol.Any(
+            selector.TargetSelector.CONFIG_SCHEMA, None  # pylint: disable=no-member
+        ),
         vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
     }
 )
@@ -60,7 +64,9 @@ def validate_services(integration: Integration):
     """Validate services."""
     # Find if integration uses services
     has_services = grep_dir(
-        integration.path, "**/*.py", r"hass\.services\.(register|async_register)"
+        integration.path,
+        "**/*.py",
+        r"(hass\.services\.(register|async_register))|async_register_entity_service",
     )
 
     if not has_services:

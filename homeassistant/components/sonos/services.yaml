@@ -4,6 +4,10 @@ join:
     master:
       description: Entity ID of the player that should become the coordinator of the group.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
     entity_id:
       description: Name(s) of entities that will join the master.
       example: "media_player.living_room_sonos"
@@ -64,7 +68,13 @@ set_sleep_timer:
     sleep_time:
       description: Number of seconds to set the timer.
       example: "900"
-
+      selector:
+        number:
+          min: 0
+          max: 3600
+          step: 1
+          unit_of_measurement: seconds
+          mode: slider
 clear_sleep_timer:
   description: Clear a Sonos timer.
   fields:
@@ -89,12 +99,18 @@ set_option:
     night_sound:
       description: Enable Night Sound mode
       example: "true"
+      selector:
+        boolean:
     speech_enhance:
       description: Enable Speech Enhancement mode
       example: "true"
+      selector:
+        boolean:
     status_light:
       description: Enable Status (LED) Light
       example: "true"
+      selector:
+        boolean:
 
 play_queue:
   description: Starts playing the queue from the first item.
@@ -109,6 +125,11 @@ play_queue:
     queue_position:
       description: Position of the song in the queue to start playing from.
       example: "0"
+      selector:
+        number:
+          min: 0
+          max: 100000000
+          mode: box
 
 remove_from_queue:
   description: Removes an item from the queue.
@@ -123,6 +144,11 @@ remove_from_queue:
     queue_position:
       description: Position in the queue to remove.
       example: "0"
+      selector:
+        number:
+          min: 0
+          max: 100000000
+          mode: box
 
 update_alarm:
   description: Updates an alarm with new time and volume settings.

@@ -2,13 +2,19 @@
 
 turn_on:
   description: Turn a light on.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to turn on
-      example: "light.kitchen"
     transition:
+      name: Transition
       description: Duration in seconds it takes to get to next state
       example: 60
+      selector:
+        number:
+          min: 0
+          max: 300
+          step: 1
+          unit_of_measurement: seconds
+          mode: slider
     rgb_color:
       description: Color for the light in RGB-format.
       example: "[255, 100, 100]"
@@ -34,8 +40,16 @@ turn_on:
       description: Number between 0..255 indicating brightness, where 0 turns the light off, 1 is the minimum brightness and 255 is the maximum brightness supported by the light.
       example: 120
     brightness_pct:
+      name: Brightness
       description: Number between 0..100 indicating percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness and 100 is the maximum brightness supported by the light.
       example: 47
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider
     brightness_step:
       description: Change brightness by an amount. Should be between -255..255.
       example: -25.5
