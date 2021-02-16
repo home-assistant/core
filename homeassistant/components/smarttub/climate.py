@@ -42,7 +42,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique id for the entity."""
-        return f"{self.spa.id}-{slugify(self._entity_name)}"
+        return f"{self.spa.id}-{slugify(self._entity_type)}"
 
     @property
     def temperature_unit(self):

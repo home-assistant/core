@@ -20,7 +20,7 @@ class SmartTubEntity(CoordinatorEntity):
     """Base class for SmartTub entities."""
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, spa: smarttub.Spa, entity_name
+        self, coordinator: DataUpdateCoordinator, spa: smarttub.Spa, entity_type
     ):
         """Initialize the entity.
 
@@ -30,7 +30,7 @@ class SmartTubEntity(CoordinatorEntity):
 
         super().__init__(coordinator)
         self.spa = spa
-        self._entity_name = entity_name
+        self._entity_type = entity_type
 
     @property
     def device_info(self) -> str:
@@ -45,7 +45,7 @@ class SmartTubEntity(CoordinatorEntity):
     def name(self) -> str:
         """Return the name of the entity."""
         spa_name = get_spa_name(self.spa)
-        return f"{spa_name} {self._entity_name}"
+        return f"{spa_name} {self._entity_type}"
 
     def get_spa_status(self, path):
         """Retrieve a value from the data returned by Spa.get_status().
