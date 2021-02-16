@@ -1,0 +1,37 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Connect to Binance",
+                "description": "This integration requires an API Key from Binance with 'Read Only' permissions.",
+                "data": {
+                    "api_key": "[%key:common::config_flow::data::api_key%]",
+                    "api_secret": "API Secret"
+                }
+            },
+            "markets": {
+                "title": "Select the cryptocurrency markets",
+                "description": "Select the markets that you would like to track.",
+                "data": {
+                    "markets": "markets"
+                }
+            },
+            "balances": {
+                "title": "Select the cryptocurrency balances",
+                "description": "Optional: select the balances that you would like to track.",
+                "data": {
+                    "balances": "balances"
+                }
+            }
+        },
+        "error": {
+            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+            "invalid_market": "Invalid market(s)",
+            "invalid_balance": "Invalid balance(s)"
+        },
+        "abort": {
+            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
+        }
+    }
+}

@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration is allowed.",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "invalid_market": "Invalid market(s)",
+            "invalid_balance": "Invalid balance(s)"
+        },
+        "flow_title": "Binance",
+        "step": {
+            "markets": {
+                "data": {
+                    "markets": "Markets"
+                },
+                "title": "Select the cryptocurrency markets",
+                "description": "Select the markets that you would like to track."
+            },
+            "balances": {
+                "data": {
+                    "balances": "Balances"
+                },
+                "title": "Select the cryptocurrency balances",
+                "description": "Optional: select the balances that you would like to track."
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "api_secret": "API Secret"
+                },
+                "description": "This integration requires an API Key from Binance with 'Read Info' permissions.",
+                "title": "Connect to Binance"
+            }
+        }
+    }
+}
