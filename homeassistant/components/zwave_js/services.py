@@ -117,7 +117,7 @@ class ZWaveServices:
         return self.async_get_node_from_device_id(entity_entry.device_id)
 
     async def async_set_config_value(self, service: ServiceCall) -> None:
-        """Set a config parameter on a node."""
+        """Set a config value on a node."""
         node: ZwaveNode = self.async_get_node_from_entity_id(
             service.data.get(ATTR_ENTITY_ID)
         ) or self.async_get_node_from_device_id(service.data.get(ATTR_DEVICE_ID))
