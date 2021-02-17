@@ -41,7 +41,7 @@ class WemoBinarySensor(WemoSubscriptionEntity, BinarySensorEntity):
             if not self._available:
                 _LOGGER.info("Reconnected to %s", self.name)
                 self._available = True
-        except (AttributeError, ActionException) as err:
+        except ActionException as err:
             _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
             self._available = False
             self.wemo.reconnect_with_device()
