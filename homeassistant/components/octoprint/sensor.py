@@ -37,7 +37,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         tools = [tool.name for tool in coordinator.data["printer"].temperatures]
     else:
         if number_of_tools > 0:
-            for tool_number in range(0, number_of_tools):
+            for tool_number in range(number_of_tools):
                 tools.append(f"tool{tool_number!s}")
         if bed:
             tools.append("bed")
@@ -161,11 +161,6 @@ class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
         """Return the device class of the sensor."""
         return DEVICE_CLASS_TIMESTAMP
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return "mdi:clock-end"
-
 
 class OctoPrintStartTimeSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
@@ -192,11 +187,6 @@ class OctoPrintStartTimeSensor(OctoPrintSensorBase):
     def device_class(self):
         """Return the device class of the sensor."""
         return DEVICE_CLASS_TIMESTAMP
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return "mdi:clock-start"
 
 
 class OctoPrintTemperatureSensor(OctoPrintSensorBase):

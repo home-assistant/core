@@ -42,5 +42,4 @@ async def init_integration(
         return_value=OctoprintJobInfo(job),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
-        assert await async_setup_component(hass, platform, config)
         await hass.async_block_till_done()

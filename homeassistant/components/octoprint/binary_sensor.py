@@ -59,11 +59,6 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
         return self._name
 
     @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return None
-
-    @property
     def is_on(self):
         """Return true if binary sensor is on."""
         printer = self.coordinator.data["printer"]

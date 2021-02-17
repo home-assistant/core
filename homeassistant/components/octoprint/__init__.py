@@ -150,26 +150,30 @@ async def async_setup(hass, config):
         printers[base_url] = coordinator
 
         sensors = printer[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
-        await async_load_platform(
-            hass,
-            "sensor",
-            DOMAIN,
-            {
-                "name": name,
-                "base_url": base_url,
-                "sensors": sensors,
-                CONF_NUMBER_OF_TOOLS: printer[CONF_NUMBER_OF_TOOLS],
-                CONF_BED: printer[CONF_BED],
-            },
-            config,
+        hass.async_create_task(
+            async_load_platform(
+                hass,
+                "sensor",
+                DOMAIN,
+                {
+                    "name": name,
+                    "base_url": base_url,
+                    "sensors": sensors,
+                    CONF_NUMBER_OF_TOOLS: printer[CONF_NUMBER_OF_TOOLS],
+                    CONF_BED: printer[CONF_BED],
+                },
+                config,
+            )
         )
         b_sensors = printer[CONF_BINARY_SENSORS][CONF_MONITORED_CONDITIONS]
-        await async_load_platform(
-            hass,
-            "binary_sensor",
-            DOMAIN,
-            {"name": name, "base_url": base_url, "sensors": b_sensors},
-            config,
+        hass.async_create_task(
+            async_load_platform(
+                hass,
+                "binary_sensor",
+                DOMAIN,
+                {"name": name, "base_url": base_url, "sensors": b_sensors},
+                config,
+            )
         )
         success = True
 
