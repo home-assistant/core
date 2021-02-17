@@ -1,5 +1,5 @@
 """Support for monitoring OctoPrint 3D printers."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 from pyoctoprintapi import OctoprintClient
@@ -24,6 +24,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import slugify as util_slugify
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -215,4 +216,4 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
             if self.data and "printer" in self.data:
                 printer = self.data["printer"]
 
-        return {"job": job, "printer": printer, "last_read_time": datetime.utcnow()}
+        return {"job": job, "printer": printer, "last_read_time": dt_util.utcnow()}
