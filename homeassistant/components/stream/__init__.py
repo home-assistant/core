@@ -141,8 +141,9 @@ class Stream:
         """Reset access token and cleanup stream due to inactivity."""
         self.access_token = None
         if not self.keepalive:
-            self._hls.cleanup()
-            self._hls = None
+            if self._hls:
+                self._hls.cleanup()
+                self._hls = None
             self._hls_timer = None
         self._check_idle()
 
