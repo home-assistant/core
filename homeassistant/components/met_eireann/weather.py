@@ -137,3 +137,14 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
             if "condition" in item:
                 item["condition"] = format_condition(item["condition"])
         return self.coordinator.data.daily_forecast
+
+    @property
+    def device_info(self):
+        """Device info."""
+        return {
+            "identifiers": {(DOMAIN,)},
+            "manufacturer": "Met Éireann",
+            "model": "Forecast",
+            "default_name": "Forecast",
+            "entry_type": "service",
+        }
