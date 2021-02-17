@@ -3,6 +3,7 @@ import asyncio
 
 import aiohttp
 
+from homeassistant.components.rest import DOMAIN
 import homeassistant.components.rest.switch as rest
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -34,14 +35,14 @@ PARAMS = None
 
 async def test_setup_missing_config(hass):
     """Test setup with configuration missing required entries."""
-    assert not await rest.async_setup_platform(hass, {CONF_PLATFORM: rest.DOMAIN}, None)
+    assert not await rest.async_setup_platform(hass, {CONF_PLATFORM: DOMAIN}, None)
 
 
 async def test_setup_missing_schema(hass):
     """Test setup with resource missing schema."""
     assert not await rest.async_setup_platform(
         hass,
-        {CONF_PLATFORM: rest.DOMAIN, CONF_RESOURCE: "localhost"},
+        {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "localhost"},
         None,
     )
 
@@ -51,7 +52,7 @@ async def test_setup_failed_connect(hass, aioclient_mock):
     aioclient_mock.get("http://localhost", exc=aiohttp.ClientError)
     assert not await rest.async_setup_platform(
         hass,
-        {CONF_PLATFORM: rest.DOMAIN, CONF_RESOURCE: "http://localhost"},
+        {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "http://localhost"},
         None,
     )
 
@@ -61,7 +62,7 @@ async def test_setup_timeout(hass, aioclient_mock):
     aioclient_mock.get("http://localhost", exc=asyncio.TimeoutError())
     assert not await rest.async_setup_platform(
         hass,
-        {CONF_PLATFORM: rest.DOMAIN, CONF_RESOURCE: "http://localhost"},
+        {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: "http://localhost"},
         None,
     )
 
@@ -75,7 +76,7 @@ async def test_setup_minimum(hass, aioclient_mock):
             SWITCH_DOMAIN,
             {
                 SWITCH_DOMAIN: {
-                    CONF_PLATFORM: rest.DOMAIN,
+                    CONF_PLATFORM: DOMAIN,
                     CONF_RESOURCE: "http://localhost",
                 }
             },
@@ -93,7 +94,7 @@ async def test_setup_query_params(hass, aioclient_mock):
             SWITCH_DOMAIN,
             {
                 SWITCH_DOMAIN: {
-                    CONF_PLATFORM: rest.DOMAIN,
+                    CONF_PLATFORM: DOMAIN,
                     CONF_RESOURCE: "http://localhost",
                     CONF_PARAMS: {"search": "something"},
                 }
@@ -113,7 +114,7 @@ async def test_setup(hass, aioclient_mock):
         SWITCH_DOMAIN,
         {
             SWITCH_DOMAIN: {
-                CONF_PLATFORM: rest.DOMAIN,
+                CONF_PLATFORM: DOMAIN,
                 CONF_NAME: "foo",
                 CONF_RESOURCE: "http://localhost",
                 CONF_HEADERS: {"Content-type": CONTENT_TYPE_JSON},
@@ -136,7 +137,7 @@ async def test_setup_with_state_resource(hass, aioclient_mock):
         SWITCH_DOMAIN,
         {
             SWITCH_DOMAIN: {
-                CONF_PLATFORM: rest.DOMAIN,
+                CONF_PLATFORM: DOMAIN,
                 CONF_NAME: "foo",
                 CONF_RESOURCE: "http://localhost",
                 rest.CONF_STATE_RESOURCE: "http://localhost/state",

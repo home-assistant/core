@@ -24,7 +24,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-
 CONF_BODY_OFF = "body_off"
 CONF_BODY_ON = "body_on"
 CONF_IS_ON_TEMPLATE = "is_on_template"
