@@ -197,6 +197,7 @@ FLOWS = [
     "smart_meter_texas",
     "smarthab",
     "smartthings",
+    "smarttub",
     "smhi",
     "sms",
     "solaredge",
