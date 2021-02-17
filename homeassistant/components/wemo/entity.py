@@ -89,16 +89,28 @@ class WemoEntity(Entity):
             return
 
         try:
-            with async_timeout.timeout(self.platform.scan_interval.seconds - 0.1):
-                await asyncio.shield(self._async_locked_update(True))
+            async with async_timeout.timeout(
+                self.platform.scan_interval.seconds - 0.1
+            ) as timeout:
+                await asyncio.shield(self._async_locked_update(True, timeout))
         except asyncio.TimeoutError:
             _LOGGER.warning("Lost connection to %s", self.name)
             self._available = False
 
-    async def _async_locked_update(self, force_update: bool) -> None:
+    async def _async_locked_update(
+        self, force_update: bool, timeout: Optional[async_timeout.timeout] = None
+    ) -> None:
         """Try updating within an async lock."""
         async with self._update_lock:
             await self.hass.async_add_executor_job(self._update, force_update)
+            # When the timeout expires HomeAssistant is no longer waiting for an
+            # update from the device. Instead, the state needs to be updated
+            # asynchronously. This also handles the case where an update came
+            # directly from the device (device push). In that case no polling
+            # update was involved and the state also needs to be updated
+            # asynchronously.
+            if not timeout or timeout.expired:
+                self.async_write_ha_state()
 
 
 class WemoSubscriptionEntity(WemoEntity):
@@ -152,4 +164,3 @@ class WemoSubscriptionEntity(WemoEntity):
             return
 
         await self._async_locked_update(force_update)
-        self.async_write_ha_state()
