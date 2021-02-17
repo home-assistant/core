@@ -139,7 +139,6 @@ async def test_async_locked_update_with_exception(
     )
 
     assert hass.states.get(wemo_entity.entity_id).state == STATE_UNAVAILABLE
-    pywemo_device.reconnect_with_device.assert_called_with()
 
 
 async def test_async_update_with_timeout_and_recovery(hass, wemo_entity, pywemo_device):
