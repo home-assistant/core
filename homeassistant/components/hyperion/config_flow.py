@@ -270,7 +270,6 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
                 auth_resp = await hyperion_client.async_request_token(
                     comment=DEFAULT_ORIGIN, id=auth_id
                 )
-            assert self.hass
             await self.hass.config_entries.flow.async_configure(
                 flow_id=self.flow_id, user_input=auth_resp
             )
@@ -344,7 +343,6 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         # Start a task in the background requesting a new token. The next step will
         # wait on the response (which includes the user needing to visit the Hyperion
         # UI to approve the request for a new token).
-        assert self.hass
         assert self._auth_id is not None
         self._request_token_task = self.hass.async_create_task(
             self._request_token_task_func(self._auth_id)
@@ -414,9 +412,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         entry = await self.async_set_unique_id(hyperion_id, raise_on_progress=False)
 
-        # pylint: disable=no-member
         if self.context.get(CONF_SOURCE) == SOURCE_REAUTH and entry is not None:
-            assert self.hass
             self.hass.config_entries.async_update_entry(entry, data=self._data)
             # Need to manually reload, as the listener won't have been installed because
             # the initial load did not succeed (the reauth flow will not be initiated if
@@ -426,7 +422,6 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._abort_if_unique_id_configured()
 
-        # pylint: disable=no-member  # https://github.com/PyCQA/pylint/issues/3167
         return self.async_create_entry(
             title=f"{self._data[CONF_HOST]}:{self._data[CONF_PORT]}", data=self._data
         )

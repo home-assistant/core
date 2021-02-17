@@ -545,6 +545,49 @@ async def test_wait_basic(hass, action_type):
         assert script_obj.last_action is None
 
 
+async def test_wait_for_trigger_variables(hass):
+    """Test variables are passed to wait_for_trigger action."""
+    context = Context()
+    wait_alias = "wait step"
+    actions = [
+        {
+            "alias": "variables",
+            "variables": {"seconds": 5},
+        },
+        {
+            "alias": wait_alias,
+            "wait_for_trigger": {
+                "platform": "state",
+                "entity_id": "switch.test",
+                "to": "off",
+                "for": {"seconds": "{{ seconds }}"},
+            },
+        },
+    ]
+    sequence = cv.SCRIPT_SCHEMA(actions)
+    sequence = await script.async_validate_actions_config(hass, sequence)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, wait_alias)
+
+    try:
+        hass.states.async_set("switch.test", "on")
+        hass.async_create_task(script_obj.async_run(context=context))
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+        assert script_obj.is_running
+        assert script_obj.last_action == wait_alias
+        hass.states.async_set("switch.test", "off")
+        # the script task +  2 tasks created by wait_for_trigger script step
+        await hass.async_wait_for_task_count(3)
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+        await hass.async_block_till_done()
+    except (AssertionError, asyncio.TimeoutError):
+        await script_obj.async_stop()
+        raise
+    else:
+        assert not script_obj.is_running
+        assert script_obj.last_action is None
+
+
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
 async def test_wait_basic_times_out(hass, action_type):
     """Test wait actions times out when the action does not happen."""
@@ -990,6 +1033,36 @@ async def test_wait_for_trigger_generated_exception(hass, caplog):
     assert "something bad" in caplog.text
 
 
+async def test_condition_warning(hass, caplog):
+    """Test warning on condition."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event},
+            {
+                "condition": "numeric_state",
+                "entity_id": "test.entity",
+                "above": 0,
+            },
+            {"event": event},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    hass.states.async_set("test.entity", "string")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(caplog.record_tuples) == 1
+    assert caplog.record_tuples[0][1] == logging.WARNING
+
+    assert len(events) == 1
+
+
 async def test_condition_basic(hass):
     """Test if we can use conditions in a script."""
     event = "test_event"
@@ -1098,6 +1171,48 @@ async def test_repeat_count(hass):
         assert event.data.get("first") == (index == 0)
         assert event.data.get("index") == index + 1
         assert event.data.get("last") == (index == count - 1)
+
+
+@pytest.mark.parametrize("condition", ["while", "until"])
+async def test_repeat_condition_warning(hass, caplog, condition):
+    """Test warning on repeat conditions."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    count = 0 if condition == "while" else 1
+
+    sequence = {
+        "repeat": {
+            "sequence": [
+                {
+                    "event": event,
+                },
+            ],
+        }
+    }
+    sequence["repeat"][condition] = {
+        "condition": "numeric_state",
+        "entity_id": "sensor.test",
+        "value_template": "{{ unassigned_variable }}",
+        "above": "0",
+    }
+
+    script_obj = script.Script(
+        hass, cv.SCRIPT_SCHEMA(sequence), f"Test {condition}", "test_domain"
+    )
+
+    # wait_started = async_watch_for_action(script_obj, "wait")
+    hass.states.async_set("sensor.test", "1")
+
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    hass.async_create_task(script_obj.async_run(context=Context()))
+    await asyncio.wait_for(hass.async_block_till_done(), 1)
+
+    assert len(caplog.record_tuples) == 1
+    assert caplog.record_tuples[0][1] == logging.WARNING
+
+    assert len(events) == count
 
 
 @pytest.mark.parametrize("condition", ["while", "until"])
@@ -1303,6 +1418,55 @@ async def test_repeat_nested(hass, variables, first_last, inside_x):
             "last": result[2],
             "x": result[3],
         }
+
+
+async def test_choose_warning(hass, caplog):
+    """Test warning on choose."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "choose": [
+                {
+                    "conditions": {
+                        "condition": "numeric_state",
+                        "entity_id": "test.entity",
+                        "value_template": "{{ undefined_a + undefined_b }}",
+                        "above": 1,
+                    },
+                    "sequence": {"event": event, "event_data": {"choice": "first"}},
+                },
+                {
+                    "conditions": {
+                        "condition": "numeric_state",
+                        "entity_id": "test.entity",
+                        "value_template": "{{ 'string' }}",
+                        "above": 2,
+                    },
+                    "sequence": {"event": event, "event_data": {"choice": "second"}},
+                },
+            ],
+            "default": {"event": event, "event_data": {"choice": "default"}},
+        }
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "9")
+    await hass.async_block_till_done()
+
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(caplog.record_tuples) == 2
+    assert caplog.record_tuples[0][1] == logging.WARNING
+    assert caplog.record_tuples[1][1] == logging.WARNING
+
+    assert len(events) == 1
+    assert events[0].data["choice"] == "default"
 
 
 @pytest.mark.parametrize("var,result", [(1, "first"), (2, "second"), (3, "default")])

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mode": "Modo",
+                    "name": "Nombre",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto"
+                }
+            }
+        }
+    }
+}

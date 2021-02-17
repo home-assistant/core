@@ -4,7 +4,7 @@ start:
   description: Starts the HomeKit driver.
 
 reload:
-  description: Reload homekit and re-process yaml configuration.
+  description: Reload homekit and re-process YAML configuration.
 
 reset_accessory:
   description: Reset a HomeKit accessory. This can be useful when changing a media_player’s device class to tv, linking a battery, or whenever Home Assistant adds support for new HomeKit features to existing entities.

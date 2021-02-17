@@ -1,13 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+            "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
             "invalid_location": "No results found for that location",
-            "unknown": "[%key:common::config_flow::error::unknown%]"
+            "unknown": "Unexpected error"
         },
         "step": {
             "user": {
@@ -15,7 +15,6 @@
                     "api_key": "API Key",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
-                    "name": "Name of the Entity",
                     "radius": "Station Radius (miles; optional)"
                 },
                 "description": "Set up AirNow air quality integration. To generate API key go to https://docs.airnowapi.org/account/request/",

@@ -6,8 +6,9 @@ from typing import List, Optional, Tuple
 
 import aioshelly
 
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import singleton
 from homeassistant.util.dt import parse_datetime, utcnow
 
 from .const import (
@@ -182,3 +183,30 @@ def get_device_wrapper(hass: HomeAssistant, device_id: str):
             return wrapper
 
     return None
+
+
+@singleton.singleton("shelly_coap")
+async def get_coap_context(hass):
+    """Get CoAP context to be used in all Shelly devices."""
+    context = aioshelly.COAP()
+    await context.initialize()
+
+    @callback
+    def shutdown_listener(ev):
+        context.close()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_listener)
+
+    return context
+
+
+def get_device_sleep_period(settings: dict) -> int:
+    """Return the device sleep period in seconds or 0 for non sleeping devices."""
+    sleep_period = 0
+
+    if settings.get("sleep_mode", False):
+        sleep_period = settings["sleep_mode"]["period"]
+        if settings["sleep_mode"]["unit"] == "h":
+            sleep_period *= 60  # hours to minutes
+
+    return sleep_period * 60  # minutes to seconds

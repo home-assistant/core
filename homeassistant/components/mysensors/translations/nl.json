@@ -1,0 +1,66 @@
+{
+    "config": {
+        "abort": {
+            "not_a_number": "Voer een nummer in",
+            "port_out_of_range": "Poortnummer moet minimaal 1 en maximaal 65535 zijn",
+            "same_topic": "De topics abonneren en publiceren zijn hetzelfde",
+            "unknown": "Onverwachte fout"
+        },
+        "error": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken",
+            "duplicate_persistence_file": "Persistentiebestand al in gebruik",
+            "duplicate_topic": "Topic is al in gebruik",
+            "invalid_auth": "Ongeldige authenticatie",
+            "invalid_device": "Ongeldig apparaat",
+            "invalid_ip": "Ongeldig IP-adres",
+            "invalid_persistence_file": "Ongeldig persistentiebestand",
+            "invalid_port": "Ongeldig poortnummer",
+            "invalid_publish_topic": "ongeldig publiceer topic",
+            "invalid_serial": "Ongeldige seri\u00eble poort",
+            "invalid_subscribe_topic": "Ongeldig abonneer topic",
+            "invalid_version": "Ongeldige MySensors-versie",
+            "not_a_number": "Voer een nummer in",
+            "port_out_of_range": "Poortnummer moet minimaal 1 en maximaal 65535 zijn",
+            "same_topic": "De topics abonneren en publiceren zijn hetzelfde",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "gw_mqtt": {
+                "data": {
+                    "persistence_file": "persistentiebestand (leeg laten om automatisch te genereren)",
+                    "retain": "mqtt behouden",
+                    "topic_in_prefix": "prefix voor inkomende topics (topic_in_prefix)",
+                    "topic_out_prefix": "prefix voor uitgaande topics (topic_out_prefix)",
+                    "version": "MySensors-versie"
+                },
+                "description": "MQTT-gateway instellen"
+            },
+            "gw_serial": {
+                "data": {
+                    "baud_rate": "baudrate",
+                    "device": "Seri\u00eble poort",
+                    "persistence_file": "persistentiebestand (leeg laten om automatisch te genereren)",
+                    "version": "MySensors-versie"
+                },
+                "description": "Seri\u00eble gateway setup"
+            },
+            "gw_tcp": {
+                "data": {
+                    "device": "IP-adres van de gateway",
+                    "persistence_file": "persistentiebestand (leeg laten om automatisch te genereren)",
+                    "tcp_port": "Poort",
+                    "version": "MySensors-versie"
+                },
+                "description": "Ethernet gateway instellen"
+            },
+            "user": {
+                "data": {
+                    "gateway_type": "Gateway type"
+                },
+                "description": "Kies de verbindingsmethode met de gateway"
+            }
+        }
+    },
+    "title": "MySensors"
+}

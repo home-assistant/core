@@ -1,4 +1,6 @@
 """Home Assistant auth provider."""
+from __future__ import annotations
+
 import asyncio
 import base64
 from collections import OrderedDict
@@ -31,7 +33,7 @@ CONFIG_SCHEMA = vol.All(AUTH_PROVIDER_SCHEMA, _disallow_id)
 
 
 @callback
-def async_get_provider(hass: HomeAssistant) -> "HassAuthProvider":
+def async_get_provider(hass: HomeAssistant) -> HassAuthProvider:
     """Get the provider."""
     for prv in hass.auth.auth_providers:
         if prv.type == "homeassistant":

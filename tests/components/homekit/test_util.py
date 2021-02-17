@@ -3,6 +3,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.homekit.const import (
+    BRIDGE_NAME,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_SENSOR,
@@ -21,11 +22,11 @@ from homeassistant.components.homekit.const import (
     TYPE_VALVE,
 )
 from homeassistant.components.homekit.util import (
+    async_find_next_available_port,
     cleanup_name_for_homekit,
     convert_to_float,
     density_to_air_quality,
     dismiss_setup_message,
-    find_next_available_port,
     format_sw_version,
     port_is_available,
     show_setup_message,
@@ -43,6 +44,7 @@ from homeassistant.const import (
     ATTR_CODE,
     ATTR_SUPPORTED_FEATURES,
     CONF_NAME,
+    CONF_PORT,
     CONF_TYPE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
@@ -52,7 +54,7 @@ from homeassistant.core import State
 
 from .util import async_init_integration
 
-from tests.common import async_mock_service
+from tests.common import MockConfigEntry, async_mock_service
 
 
 def test_validate_entity_config():
@@ -251,10 +253,26 @@ async def test_dismiss_setup_msg(hass):
 
 async def test_port_is_available(hass):
     """Test we can get an available port and it is actually available."""
-    next_port = await hass.async_add_executor_job(
-        find_next_available_port, DEFAULT_CONFIG_FLOW_PORT
-    )
+    next_port = await async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
+
     assert next_port
+
+    assert await hass.async_add_executor_job(port_is_available, next_port)
+
+
+async def test_port_is_available_skips_existing_entries(hass):
+    """Test we can get an available port and it is actually available."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_CONFIG_FLOW_PORT},
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    next_port = await async_find_next_available_port(hass, DEFAULT_CONFIG_FLOW_PORT)
+
+    assert next_port
+    assert next_port != DEFAULT_CONFIG_FLOW_PORT
 
     assert await hass.async_add_executor_job(port_is_available, next_port)
 

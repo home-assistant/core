@@ -1,11 +1,16 @@
 """Support for tracking MySensors devices."""
 from homeassistant.components import mysensors
 from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.components.mysensors import DevId, on_unload
+from homeassistant.components.mysensors.const import ATTR_GATEWAY_ID, GatewayId
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 
 
-async def async_setup_scanner(hass, config, async_see, discovery_info=None):
+async def async_setup_scanner(
+    hass: HomeAssistantType, config, async_see, discovery_info=None
+):
     """Set up the MySensors device scanner."""
     new_devices = mysensors.setup_mysensors_platform(
         hass,
@@ -18,17 +23,25 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
         return False
 
     for device in new_devices:
-        gateway_id = id(device.gateway)
-        dev_id = (gateway_id, device.node_id, device.child_id, device.value_type)
-        async_dispatcher_connect(
+        gateway_id: GatewayId = discovery_info[ATTR_GATEWAY_ID]
+        dev_id: DevId = (gateway_id, device.node_id, device.child_id, device.value_type)
+        await on_unload(
             hass,
-            mysensors.const.CHILD_CALLBACK.format(*dev_id),
-            device.async_update_callback,
+            gateway_id,
+            async_dispatcher_connect(
+                hass,
+                mysensors.const.CHILD_CALLBACK.format(*dev_id),
+                device.async_update_callback,
+            ),
         )
-        async_dispatcher_connect(
+        await on_unload(
             hass,
-            mysensors.const.NODE_CALLBACK.format(gateway_id, device.node_id),
-            device.async_update_callback,
+            gateway_id,
+            async_dispatcher_connect(
+                hass,
+                mysensors.const.NODE_CALLBACK.format(gateway_id, device.node_id),
+                device.async_update_callback,
+            ),
         )
 
     return True
@@ -37,7 +50,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
 class MySensorsDeviceScanner(mysensors.device.MySensorsDevice):
     """Represent a MySensors scanner."""
 
-    def __init__(self, hass, async_see, *args):
+    def __init__(self, hass: HomeAssistantType, async_see, *args):
         """Set up instance."""
         super().__init__(*args)
         self.async_see = async_see

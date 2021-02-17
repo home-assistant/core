@@ -44,6 +44,7 @@ from homeassistant.const import (
     CONF_REPEAT,
     CONF_SCENE,
     CONF_SEQUENCE,
+    CONF_SERVICE,
     CONF_TARGET,
     CONF_TIMEOUT,
     CONF_UNTIL,
@@ -433,14 +434,14 @@ class _ScriptRun:
         self._script.last_action = self._action.get(CONF_ALIAS, "call service")
         self._log("Executing step %s", self._script.last_action)
 
-        domain, service_name, service_data = service.async_prepare_call_from_config(
+        params = service.async_prepare_call_from_config(
             self._hass, self._action, self._variables
         )
 
         running_script = (
-            domain == "automation"
-            and service_name == "trigger"
-            or domain in ("python_script", "script")
+            params[CONF_DOMAIN] == "automation"
+            and params[CONF_SERVICE] == "trigger"
+            or params[CONF_DOMAIN] in ("python_script", "script")
         )
         # If this might start a script then disable the call timeout.
         # Otherwise use the normal service call limit.
@@ -451,9 +452,7 @@ class _ScriptRun:
 
         service_task = self._hass.async_create_task(
             self._hass.services.async_call(
-                domain,
-                service_name,
-                service_data,
+                **params,
                 blocking=True,
                 context=self._context,
                 limit=limit,
@@ -519,7 +518,12 @@ class _ScriptRun:
             CONF_ALIAS, self._action[CONF_CONDITION]
         )
         cond = await self._async_get_condition(self._action)
-        check = cond(self._hass, self._variables)
+        try:
+            check = cond(self._hass, self._variables)
+        except exceptions.ConditionError as ex:
+            _LOGGER.warning("Error in 'condition' evaluation: %s", ex)
+            check = False
+
         self._log("Test condition %s: %s", self._script.last_action, check)
         if not check:
             raise _StopScript
@@ -570,10 +574,15 @@ class _ScriptRun:
             ]
             for iteration in itertools.count(1):
                 set_repeat_var(iteration)
-                if self._stop.is_set() or not all(
-                    cond(self._hass, self._variables) for cond in conditions
-                ):
+                try:
+                    if self._stop.is_set() or not all(
+                        cond(self._hass, self._variables) for cond in conditions
+                    ):
+                        break
+                except exceptions.ConditionError as ex:
+                    _LOGGER.warning("Error in 'while' evaluation: %s", ex)
                     break
+
                 await async_run_sequence(iteration)
 
         elif CONF_UNTIL in repeat:
@@ -583,9 +592,13 @@ class _ScriptRun:
             for iteration in itertools.count(1):
                 set_repeat_var(iteration)
                 await async_run_sequence(iteration)
-                if self._stop.is_set() or all(
-                    cond(self._hass, self._variables) for cond in conditions
-                ):
+                try:
+                    if self._stop.is_set() or all(
+                        cond(self._hass, self._variables) for cond in conditions
+                    ):
+                        break
+                except exceptions.ConditionError as ex:
+                    _LOGGER.warning("Error in 'until' evaluation: %s", ex)
                     break
 
         if saved_repeat_vars:
@@ -599,9 +612,14 @@ class _ScriptRun:
         choose_data = await self._script._async_get_choose_data(self._step)
 
         for conditions, script in choose_data["choices"]:
-            if all(condition(self._hass, self._variables) for condition in conditions):
-                await self._async_run_script(script)
-                return
+            try:
+                if all(
+                    condition(self._hass, self._variables) for condition in conditions
+                ):
+                    await self._async_run_script(script)
+                    return
+            except exceptions.ConditionError as ex:
+                _LOGGER.warning("Error in 'choose' evaluation: %s", ex)
 
         if choose_data["default"]:
             await self._async_run_script(choose_data["default"])
@@ -622,6 +640,8 @@ class _ScriptRun:
 
         variables = {**self._variables}
         self._variables["wait"] = {"remaining": delay, "trigger": None}
+
+        done = asyncio.Event()
 
         async def async_done(variables, context=None):
             self._variables["wait"] = {
@@ -647,7 +667,6 @@ class _ScriptRun:
             return
 
         self._changed()
-        done = asyncio.Event()
         tasks = [
             self._hass.async_create_task(flag.wait()) for flag in (self._stop, done)
         ]
@@ -759,7 +778,7 @@ async def _async_stop_scripts_at_shutdown(hass, event):
 _VarsType = Union[Dict[str, Any], MappingProxyType]
 
 
-def _referenced_extract_ids(data: Dict, key: str, found: Set[str]) -> None:
+def _referenced_extract_ids(data: Dict[str, Any], key: str, found: Set[str]) -> None:
     """Extract referenced IDs."""
     if not data:
         return
@@ -1037,7 +1056,7 @@ class Script:
             raise
 
     async def _async_stop(self, update_state):
-        aws = [run.async_stop() for run in self._runs]
+        aws = [asyncio.create_task(run.async_stop()) for run in self._runs]
         if not aws:
             return
         await asyncio.wait(aws)

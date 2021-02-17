@@ -1,5 +1,4 @@
 """Websocket API for blueprint."""
-import logging
 from typing import Dict, Optional
 
 import async_timeout
@@ -14,8 +13,6 @@ from homeassistant.util import yaml
 from . import importer, models
 from .const import DOMAIN
 from .errors import FileAlreadyExists
-
-_LOGGER = logging.getLogger(__package__)
 
 
 @callback

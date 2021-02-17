@@ -1,16 +1,30 @@
 """Classes shared among Wemo entities."""
 import asyncio
+import contextlib
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Generator, Optional
 
 import async_timeout
 from pywemo import WeMoDevice
+from pywemo.ouimeaux_device.api.service import ActionException
 
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as WEMO_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class ExceptionHandlerStatus:
+    """Exit status from the _wemo_exception_handler context manager."""
+
+    # An exception if one was raised in the _wemo_exception_handler.
+    exception: Optional[Exception] = None
+
+    @property
+    def success(self) -> bool:
+        """Return True if the handler completed with no exception."""
+        return self.exception is None
 
 
 class WemoEntity(Entity):
@@ -36,6 +50,23 @@ class WemoEntity(Entity):
         """Return true if switch is available."""
         return self._available
 
+    @contextlib.contextmanager
+    def _wemo_exception_handler(
+        self, message: str
+    ) -> Generator[ExceptionHandlerStatus, None, None]:
+        """Wrap device calls to set `_available` when wemo exceptions happen."""
+        status = ExceptionHandlerStatus()
+        try:
+            yield status
+        except ActionException as err:
+            status.exception = err
+            _LOGGER.warning("Could not %s for %s (%s)", message, self.name, err)
+            self._available = False
+        else:
+            if not self._available:
+                _LOGGER.info("Reconnected to %s", self.name)
+                self._available = True
+
     def _update(self, force_update: Optional[bool] = True):
         """Update the device state."""
         raise NotImplementedError()
@@ -49,16 +80,16 @@ class WemoEntity(Entity):
         """Update WeMo state.
 
         Wemo has an aggressive retry logic that sometimes can take over a
-        minute to return. If we don't get a state after 5 seconds, assume the
-        Wemo switch is unreachable. If update goes through, it will be made
-        available again.
+        minute to return. If we don't get a state within the scan interval,
+        assume the Wemo switch is unreachable. If update goes through, it will
+        be made available again.
         """
         # If an update is in progress, we don't do anything
         if self._update_lock.locked():
             return
 
         try:
-            with async_timeout.timeout(5):
+            with async_timeout.timeout(self.platform.scan_interval.seconds - 0.1):
                 await asyncio.shield(self._async_locked_update(True))
         except asyncio.TimeoutError:
             _LOGGER.warning("Lost connection to %s", self.name)

@@ -17,5 +17,10 @@
                 "title": "Integratioun re-authentifiz\u00e9ieren"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Spotify API Endpunkt ereechbar"
+        }
     }
 }

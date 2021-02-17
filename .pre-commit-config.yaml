@@ -59,8 +59,8 @@ repos:
     rev: v1.24.2
     hooks:
       - id: yamllint
-  - repo: https://github.com/prettier/prettier
-    rev: 2.0.4
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v2.2.1
     hooks:
       - id: prettier
         stages: [manual]

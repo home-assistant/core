@@ -1,10 +1,10 @@
 """Representation of Z-Wave thermostats."""
-import logging
 from typing import Any, Callable, Dict, List, Optional
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
     THERMOSTAT_CURRENT_TEMP_PROPERTY,
+    THERMOSTAT_MODE_PROPERTY,
     THERMOSTAT_MODE_SETPOINT_MAP,
     THERMOSTAT_MODES,
     THERMOSTAT_OPERATING_STATE_PROPERTY,
@@ -45,8 +45,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 # Map Z-Wave HVAC Mode to Home Assistant value
 # Note: We treat "auto" as "heat_cool" as most Z-Wave devices
@@ -119,7 +117,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         self._hvac_presets: Dict[str, Optional[int]] = {}
         self._unit_value: ZwaveValue = None
 
-        self._current_mode = self.info.primary_value
+        self._current_mode = self.get_zwave_value(
+            THERMOSTAT_MODE_PROPERTY, command_class=CommandClass.THERMOSTAT_MODE
+        )
         self._setpoint_values: Dict[ThermostatSetpointType, ZwaveValue] = {}
         for enum in ThermostatSetpointType:
             self._setpoint_values[enum] = self.get_zwave_value(
@@ -142,6 +142,12 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             add_to_watched_value_ids=True,
             check_all_endpoints=True,
         )
+        self._current_humidity = self.get_zwave_value(
+            "Humidity",
+            command_class=CommandClass.SENSOR_MULTILEVEL,
+            add_to_watched_value_ids=True,
+            check_all_endpoints=True,
+        )
         self._set_modes_and_presets()
 
     def _setpoint_value(self, setpoint_type: ThermostatSetpointType) -> ZwaveValue:
@@ -159,10 +165,12 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
         # Z-Wave uses one list for both modes and presets.
         # Iterate over all Z-Wave ThermostatModes and extract the hvac modes and presets.
-        current_mode = self._current_mode
-        if not current_mode:
+        if self._current_mode is None:
+            self._hvac_modes = {
+                ZW_HVAC_MODE_MAP[ThermostatMode.HEAT]: ThermostatMode.HEAT
+            }
             return
-        for mode_id, mode_name in current_mode.metadata.states.items():
+        for mode_id, mode_name in self._current_mode.metadata.states.items():
             mode_id = int(mode_id)
             if mode_id in THERMOSTAT_MODES:
                 # treat value as hvac mode
@@ -178,6 +186,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def _current_mode_setpoint_enums(self) -> List[Optional[ThermostatSetpointType]]:
         """Return the list of enums that are relevant to the current thermostat mode."""
+        if self._current_mode is None:
+            # Thermostat(valve) with no support for setting a mode is considered heating-only
+            return [ThermostatSetpointType.HEATING]
         return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])  # type: ignore
 
     @property
@@ -193,6 +204,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if self._current_mode is None:
             # Thermostat(valve) with no support for setting a mode is considered heating-only
             return HVAC_MODE_HEAT
+        if self._current_mode.value is None:
+            # guard missing value
+            return HVAC_MODE_HEAT
         return ZW_HVAC_MODE_MAP.get(int(self._current_mode.value), HVAC_MODE_HEAT_COOL)
 
     @property
@@ -205,7 +219,15 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         """Return the current running hvac operation if supported."""
         if not self._operating_state:
             return None
+        if self._operating_state.value is None:
+            # guard missing value
+            return None
         return HVAC_CURRENT_MAP.get(int(self._operating_state.value))
+
+    @property
+    def current_humidity(self) -> Optional[int]:
+        """Return the current humidity level."""
+        return self._current_humidity.value if self._current_humidity else None
 
     @property
     def current_temperature(self) -> Optional[float]:
@@ -215,12 +237,18 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
+        if self._current_mode and self._current_mode.value is None:
+            # guard missing value
+            return None
         temp = self._setpoint_value(self._current_mode_setpoint_enums[0])
         return temp.value if temp else None
 
     @property
     def target_temperature_high(self) -> Optional[float]:
         """Return the highbound target temperature we try to reach."""
+        if self._current_mode and self._current_mode.value is None:
+            # guard missing value
+            return None
         temp = self._setpoint_value(self._current_mode_setpoint_enums[1])
         return temp.value if temp else None
 
@@ -232,6 +260,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., home, away, temp."""
+        if self._current_mode and self._current_mode.value is None:
+            # guard missing value
+            return None
         if self._current_mode and int(self._current_mode.value) not in THERMOSTAT_MODES:
             return_val: str = self._current_mode.metadata.states.get(
                 self._current_mode.value
