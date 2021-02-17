@@ -101,9 +101,8 @@ class RestSensor(RestEntity):
     ):
         """Initialize the REST sensor."""
         super().__init__(
-            coordinator, name, device_class, resource_template, force_update
+            coordinator, rest, name, device_class, resource_template, force_update
         )
-        self.rest = rest
         self._state = None
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
@@ -115,13 +114,6 @@ class RestSensor(RestEntity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
-
-    @property
-    def available(self):
-        """Return if the sensor data are available."""
-        if not super().available:
-            return False
-        return self.rest.data is not None
 
     @property
     def state(self):

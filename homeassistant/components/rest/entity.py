@@ -6,6 +6,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from .data import RestData
+
 
 class RestEntity(Entity):
     """A class for entities using DataUpdateCoordinator or rest data directly."""
@@ -13,13 +15,15 @@ class RestEntity(Entity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[Any],
+        rest: RestData,
         name,
         device_class,
         resource_template,
         force_update,
     ) -> None:
-        """Create the entity with a DataUpdateCoordinator."""
+        """Create the entity that may have a coordinator."""
         self.coordinator = coordinator
+        self.rest = rest
         self._name = name
         self._device_class = device_class
         self._resource_template = resource_template
@@ -28,7 +32,7 @@ class RestEntity(Entity):
 
     @property
     def name(self):
-        """Return the name of the binary sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
@@ -47,11 +51,11 @@ class RestEntity(Entity):
         return not self.coordinator
 
     @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        if not self.coordinator:
-            return True
-        return self.coordinator.last_update_success
+    def available(self):
+        """Return the availability of this sensor."""
+        if self.coordinator and not self.coordinator.last_update_success:
+            return False
+        return self.rest.data is not None
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""

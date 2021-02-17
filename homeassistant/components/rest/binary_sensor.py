@@ -81,20 +81,12 @@ class RestBinarySensor(RestEntity, BinarySensorEntity):
     ):
         """Initialize a REST binary sensor."""
         super().__init__(
-            coordinator, name, device_class, resource_template, force_update
+            coordinator, rest, name, device_class, resource_template, force_update
         )
-        self.rest = rest
         self._state = False
         self._previous_data = None
         self._value_template = value_template
         self._is_on = None
-
-    @property
-    def available(self):
-        """Return the availability of this sensor."""
-        if not super().available:
-            return False
-        return self.rest.data is not None
 
     @property
     def is_on(self):
