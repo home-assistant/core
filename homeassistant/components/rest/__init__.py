@@ -35,9 +35,9 @@ from homeassistant.helpers.entity_component import (
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from .const import CONF_COORDINATOR, CONF_REST
 from .data import RestData
 from .schema import CONFIG_SCHEMA  # noqa:F401 pylint: disable=unused-import
-from .schema import CONF_COORDINATOR, CONF_REST
 
 _LOGGER = logging.getLogger(__name__)
 
