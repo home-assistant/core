@@ -937,6 +937,9 @@ python-nest==4.1.0
 # homeassistant.components.ozw
 python-openzwave-mqtt[mqtt-client]==1.4.0
 
+# homeassistant.components.smarttub
+python-smarttub==0.0.6
+
 # homeassistant.components.songpal
 python-songpal==0.12
 

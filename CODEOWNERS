@@ -422,6 +422,7 @@ homeassistant/components/smappee/* @bsmappee
 homeassistant/components/smart_meter_texas/* @grahamwetzler
 homeassistant/components/smarthab/* @outadoc
 homeassistant/components/smartthings/* @andrewsayre
+homeassistant/components/smarttub/* @mdz
 homeassistant/components/smarty/* @z0mbieprocess
 homeassistant/components/sms/* @ocalvo
 homeassistant/components/smtp/* @fabaff
