@@ -1,6 +1,7 @@
 """Standard setup for tests."""
-from unittest.mock import Mock, patch
+from unittest.mock import create_autospec, patch
 
+from haphilipsjs import PhilipsTV
 from pytest import fixture
 
 from homeassistant import setup
@@ -20,7 +21,7 @@ async def setup_notification(hass):
 @fixture(autouse=True)
 def mock_tv():
     """Disable component actual use."""
-    tv = Mock(autospec="philips_js.PhilipsTV")
+    tv = create_autospec(PhilipsTV)
     tv.sources = {}
     tv.channels = {}
     tv.application = None
@@ -31,6 +32,7 @@ def mock_tv():
     tv.on = True
     tv.notify_change_supported = False
     tv.pairing_type = None
+    tv.powerstate = None
 
     with patch(
         "homeassistant.components.philips_js.config_flow.PhilipsTV", return_value=tv

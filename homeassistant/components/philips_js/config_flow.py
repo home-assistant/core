@@ -35,8 +35,8 @@ async def validate_input(
     """Validate the user input allows us to connect."""
     hub = PhilipsTV(host, api_version)
 
-    await hass.async_add_executor_job(hub.getSystem)
-    await hass.async_add_executor_job(hub.setTransport, hub.secured_transport)
+    await hub.getSystem()
+    await hub.setTransport(hub.secured_transport)
 
     if not hub.system:
         raise ConnectionFailure("System data is empty")
@@ -83,8 +83,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             try:
-                username, password = await self.hass.async_add_executor_job(
-                    self._hub.pairGrant, self._pair_state, user_input[CONF_PIN]
+                username, password = await self._hub.pairGrant(
+                    self._pair_state, user_input[CONF_PIN]
                 )
             except PairingFailure as exc:
                 LOGGER.debug(str(exc))
@@ -101,8 +101,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self._async_create_current()
         else:
             try:
-                self._pair_state = await self.hass.async_add_executor_job(
-                    self._hub.pairRequest,
+                self._pair_state = await self._hub.pairRequest(
                     CONST_APP_ID,
                     CONST_APP_NAME,
                     platform.node(),
