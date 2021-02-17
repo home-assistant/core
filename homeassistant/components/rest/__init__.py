@@ -35,12 +35,17 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
+    SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
+from homeassistant.helpers.entity_component import (
+    DEFAULT_SCAN_INTERVAL,
+    EntityComponent,
+)
+from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .data import DEFAULT_TIMEOUT, RestData
@@ -119,9 +124,26 @@ COORDINATOR_AWARE_PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the HomeKit from yaml."""
-    hass.data.setdefault(DOMAIN, {})
+    """Set up the rest platforms."""
+    component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
 
+    async def reload_service_handler(service):
+        """Remove all user-defined groups and load new ones from config."""
+        await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
+        conf = await component.async_prepare_reload()
+        if conf is None:
+            return
+        await _async_process_config(hass, conf)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
+    )
+
+    return await _async_process_config(hass, config)
+
+
+async def _async_process_config(hass, config) -> bool:
+    """Process rest configuration."""
     if DOMAIN not in config:
         return True
 

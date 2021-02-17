@@ -19,15 +19,12 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.reload import async_setup_reload_service
 
 from . import (
     CONF_COORDINATOR,
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
     CONF_REST,
-    DOMAIN,
-    PLATFORMS,
     RESOURCE_SCHEMA,
     SENSOR_SCHEMA,
     RestEntity,
@@ -45,7 +42,6 @@ PLATFORM_SCHEMA = vol.All(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the RESTful sensor."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     conf = discovery_info or config
 
     name = conf.get(CONF_NAME)
