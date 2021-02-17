@@ -8,9 +8,6 @@ import pytest
 from pytz import utc
 
 from homeassistant import config_entries
-from homeassistant.components.xiaomi_miio.config_flow import (
-    DEFAULT_DEVICE_NAME,
-)
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
     ATTR_FAN_SPEED,
@@ -43,7 +40,6 @@ from homeassistant.components.xiaomi_miio.vacuum import (
     ATTR_SIDE_BRUSH_LEFT,
     ATTR_TIMERS,
     CONF_HOST,
-    CONF_NAME,
     CONF_TOKEN,
     SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
@@ -56,14 +52,12 @@ from homeassistant.components.xiaomi_miio.vacuum import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    CONF_PLATFORM,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.setup import async_setup_component
 
-from .test_config_flow import get_mock_info, TEST_MAC
+from .test_config_flow import TEST_MAC
 
 PLATFORM = "xiaomi_miio"
 
@@ -526,36 +520,25 @@ async def test_xiaomi_vacuum_clean_segment_service_single_segment(
 
 async def setup_component(hass, entity_name):
     """Set up vacuum component."""
-    entity_id = f"{DOMAIN}.xiaomi_device"
+    entity_id = f"{DOMAIN}.{entity_name}"
 
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    hass.config.components.add(XIAOMI_DOMAIN)
+    config_entry = config_entries.ConfigEntry(
+        1,
+        XIAOMI_DOMAIN,
+        entity_name,
+        {
+            const.CONF_FLOW_TYPE: const.CONF_DEVICE,
+            CONF_HOST: "192.168.1.100",
+            CONF_TOKEN: "12345678901234567890123456789012",
+            const.CONF_MODEL: const.MODELS_VACUUM[0],
+            const.CONF_MAC: TEST_MAC,
+        },
+        "test",
+        config_entries.CONN_CLASS_LOCAL_POLL,
+        system_options={},
     )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "device"
-    assert result["errors"] == {}
-
-    mock_info = get_mock_info(model=const.MODELS_VACUUM[0])
-
-    with patch(
-        "homeassistant.components.xiaomi_miio.device.Device.info",
-        return_value=mock_info,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: "192.168.1.100", CONF_TOKEN: "12345678901234567890123456789012"},
-        )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == DEFAULT_DEVICE_NAME
-    assert result["data"] == {
-        const.CONF_FLOW_TYPE: const.CONF_DEVICE,
-        CONF_HOST: "192.168.1.100",
-        CONF_TOKEN: "12345678901234567890123456789012",
-        const.CONF_MODEL: const.MODELS_VACUUM[0],
-        const.CONF_MAC: TEST_MAC,
-    }
-
+    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+    # To flush out the service call to update the group
     await hass.async_block_till_done()
     return entity_id
