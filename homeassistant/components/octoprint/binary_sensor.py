@@ -69,7 +69,7 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
 
     @abstractmethod
     def _get_flag_state(self, printer_info: OctoprintPrinterInfo) -> Optional[bool]:
-        return None
+        """Return the value of the sensor flag."""
 
 
 class OctoPrintPrintingBinarySensor(OctoPrintBinarySensorBase):
