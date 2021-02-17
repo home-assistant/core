@@ -6,6 +6,8 @@ import asyncio
 import threading
 from unittest.mock import patch
 
+from pywemo.ouimeaux_device.api.service import ActionException
+
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -127,7 +129,7 @@ async def test_async_locked_update_with_exception(
     assert hass.states.get(wemo_entity.entity_id).state == STATE_OFF
     await async_setup_component(hass, HA_DOMAIN, {})
     update_polling_method = update_polling_method or pywemo_device.get_state
-    update_polling_method.side_effect = AttributeError
+    update_polling_method.side_effect = ActionException
 
     await hass.services.async_call(
         HA_DOMAIN,
