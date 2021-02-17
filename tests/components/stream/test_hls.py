@@ -60,7 +60,7 @@ def make_segment(segment, discontinuity=False):
     return "\n".join(response)
 
 
-def make_playlist(sequence, discontinuity_sequence=None, segments=[]):
+def make_playlist(sequence, discontinuity_sequence=0, segments=[]):
     """Create a an hls playlist response for tests to assert on."""
     response = [
         "#EXTM3U",
@@ -68,9 +68,8 @@ def make_playlist(sequence, discontinuity_sequence=None, segments=[]):
         "#EXT-X-TARGETDURATION:10",
         '#EXT-X-MAP:URI="init.mp4"',
         f"#EXT-X-MEDIA-SEQUENCE:{sequence}",
+        f"#EXT-X-DISCONTINUITY-SEQUENCE:{discontinuity_sequence}",
     ]
-    if discontinuity_sequence:
-        response.append(f"#EXT-X-DISCONTINUITY-SEQUENCE:{discontinuity_sequence}")
     response.extend(segments)
     response.append("")
     return "\n".join(response)

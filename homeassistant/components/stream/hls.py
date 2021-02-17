@@ -83,11 +83,10 @@ class HlsPlaylistView(StreamView):
         if not segments:
             return []
 
-        playlist = ["#EXT-X-MEDIA-SEQUENCE:{}".format(segments[0].sequence)]
-        if segments[0].stream_id:
-            playlist.append(
-                "#EXT-X-DISCONTINUITY-SEQUENCE:{}".format(segments[0].stream_id)
-            )
+        playlist = [
+            "#EXT-X-MEDIA-SEQUENCE:{}".format(segments[0].sequence),
+            "#EXT-X-DISCONTINUITY-SEQUENCE:{}".format(segments[0].stream_id),
+        ]
 
         last_stream_id = segments[0].stream_id
         for segment in segments:
