@@ -150,10 +150,10 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         super().__init__(coordinator)
         self._update_from_coordinator()
 
-    def _update_soon(self):
+    async def _async_update_soon(self):
         """Reschedule update task."""
-        self.schedule_update_ha_state()
-        self.hass.add_job(self.coordinator.async_request_refresh)
+        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
 
     @property
     def name(self):
@@ -188,22 +188,22 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         """List of available input sources."""
         return list(self._sources.values())
 
-    def select_source(self, source):
+    async def async_select_source(self, source):
         """Set the input source."""
         data = source.split(PREFIX_SEPARATOR, 1)
         if data[0] == PREFIX_SOURCE:  # Legacy way to set source
             source_id = _inverted(self._sources).get(data[1])
             if source_id:
-                self._tv.setSource(source_id)
+                await self._tv.setSource(source_id)
         elif data[0] == PREFIX_CHANNEL:  # Legacy way to set channel
             channel_id = _inverted(self._channels).get(data[1])
             if channel_id:
-                self._tv.setChannel(channel_id)
+                await self._tv.setChannel(channel_id)
         else:
             source_id = _inverted(self._sources).get(source)
             if source_id:
-                self._tv.setSource(source_id)
-        self._update_soon()
+                await self._tv.setSource(source_id)
+        await self._async_update_soon()
 
     @property
     def volume_level(self):
@@ -218,73 +218,73 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     async def async_turn_on(self):
         """Turn on the device."""
         if self._tv.on and self._tv.powerstate:
-            self.hass.async_add_executor_job(self._tv.setPowerState, "On")
+            await self._tv.setPowerState("On")
             self._state = STATE_ON
         else:
             await self._coordinator.turn_on.async_run(self.hass, self._context)
-        self._update_soon()
+        await self._async_update_soon()
 
-    def turn_off(self):
+    async def async_turn_off(self):
         """Turn off the device."""
-        self._tv.sendKey("Standby")
+        await self._tv.sendKey("Standby")
         self._state = STATE_OFF
-        self._update_soon()
+        await self._async_update_soon()
 
-    def volume_up(self):
+    async def async_volume_up(self):
         """Send volume up command."""
-        self._tv.sendKey("VolumeUp")
-        self._update_soon()
+        await self._tv.sendKey("VolumeUp")
+        await self._async_update_soon()
 
-    def volume_down(self):
+    async def async_volume_down(self):
         """Send volume down command."""
-        self._tv.sendKey("VolumeDown")
-        self._update_soon()
+        await self._tv.sendKey("VolumeDown")
+        await self._async_update_soon()
 
-    def mute_volume(self, mute):
+    async def async_mute_volume(self, mute):
         """Send mute command."""
         if self._tv.muted != mute:
-            self._tv.sendKey("Mute")
-            self._update_soon()
+            await self._tv.sendKey("Mute")
+            await self._async_update_soon()
         else:
             _LOGGER.debug("Ignoring request when already in expected state")
 
-    def set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self._tv.setVolume(volume, self._tv.muted)
-        self._update_soon()
+        await self._tv.setVolume(volume, self._tv.muted)
+        await self._async_update_soon()
 
-    def media_previous_track(self):
+    async def media_previous_track(self):
         """Send rewind command."""
-        self._tv.sendKey("Previous")
-        self._update_soon()
+        await self._tv.sendKey("Previous")
+        await self._async_update_soon()
 
-    def media_next_track(self):
+    async def async_media_next_track(self):
         """Send fast forward command."""
-        self._tv.sendKey("Next")
-        self._update_soon()
+        await self._tv.sendKey("Next")
+        await self._async_update_soon()
 
-    def media_play_pause(self):
+    async def async_media_play_pause(self):
         """Send pause command to media player."""
         if self._tv.quirk_playpause_spacebar:
-            self._tv.sendUnicode(" ")
+            await self._tv.sendUnicode(" ")
         else:
-            self._tv.sendKey("PlayPause")
-        self._update_soon()
+            await self._tv.sendKey("PlayPause")
+        await self._async_update_soon()
 
-    def media_play(self):
+    async def async_media_play(self):
         """Send pause command to media player."""
-        self._tv.sendKey("Play")
-        self._update_soon()
+        await self._tv.sendKey("Play")
+        await self._async_update_soon()
 
-    def media_pause(self):
+    async def async_media_pause(self):
         """Send play command to media player."""
-        self._tv.sendKey("Pause")
-        self._update_soon()
+        await self._tv.sendKey("Pause")
+        await self._async_update_soon()
 
-    def media_stop(self):
+    async def media_stop(self):
         """Send play command to media player."""
-        self._tv.sendKey("Stop")
-        self._update_soon()
+        await self._tv.sendKey("Stop")
+        await self._async_update_soon()
 
     @property
     def media_channel(self):
@@ -358,21 +358,22 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             "sw_version": self._system.get("softwareversion"),
         }
 
-    def play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         _LOGGER.debug("Call play media type <%s>, Id <%s>", media_type, media_id)
 
         if media_type == MEDIA_TYPE_CHANNEL:
             channel_id = _inverted(self._channels).get(media_id)
             if channel_id:
-                self._tv.setChannel(channel_id)
-                self._update_soon()
+                await self._tv.setChannel(channel_id)
+                await self._async_update_soon()
             else:
                 _LOGGER.error("Unable to find channel <%s>", media_id)
         elif media_type == MEDIA_TYPE_APP:
             app = self._applications.get(media_id)
             if app:
-                self._tv.setApplication(app["intent"])
+                await self._tv.setApplication(app["intent"])
+                await self._async_update_soon()
             else:
                 _LOGGER.error("Unable to find application <%s>", media_id)
         else:
@@ -472,13 +473,9 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         """Serve album art. Returns (content, content_type)."""
         try:
             if media_content_type == MEDIA_TYPE_APP and media_content_id:
-                return await self.hass.async_add_executor_job(
-                    self._tv.getApplicationIcon, media_content_id
-                )
+                return await self._tv.getApplicationIcon(media_content_id)
             if media_content_type == MEDIA_TYPE_CHANNEL and media_content_id:
-                return await self.hass.async_add_executor_job(
-                    self._tv.getChannelLogo, media_content_id
-                )
+                return await self._tv.getChannelLogo(media_content_id)
         except ConnectionFailure:
             _LOGGER.warning("Failed to fetch image")
         return None, None
@@ -489,6 +486,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             self.media_content_type, self.media_content_id, None
         )
 
+    @callback
     def _update_from_coordinator(self):
 
         if self._tv.on:
