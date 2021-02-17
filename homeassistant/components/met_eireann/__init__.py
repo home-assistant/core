@@ -13,7 +13,6 @@ from homeassistant.const import (
     LENGTH_METERS,
 )
 from homeassistant.core import Config, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.distance import convert as convert_distance
@@ -34,9 +33,6 @@ async def async_setup_entry(hass, config_entry):
     """Set up Met Éireann as config entry."""
     coordinator = MetEireannDataUpdateCoordinator(hass, config_entry)
     await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
 
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 

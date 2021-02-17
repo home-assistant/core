@@ -1,11 +1,8 @@
 """Support for Met Éireann weather service."""
 import logging
 
-import voluptuous as vol
-
-from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
+from homeassistant.components.weather import WeatherEntity
 from homeassistant.const import (
-    CONF_ELEVATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
@@ -15,7 +12,6 @@ from homeassistant.const import (
     PRESSURE_INHG,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
@@ -23,20 +19,6 @@ from homeassistant.util.pressure import convert as convert_pressure
 from .const import ATTRIBUTION, CONDITION_MAP, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Inclusive(
-            CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.latitude,
-        vol.Inclusive(
-            CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.longitude,
-        vol.Optional(CONF_ELEVATION): int,
-    }
-)
 
 
 def format_condition(condition: str):

@@ -1,5 +1,4 @@
-"""Config flow to configure Met component."""
-from typing import Any, Dict, Optional
+"""Config flow to configure Met Éireann component."""
 
 import voluptuous as vol
 
@@ -69,9 +68,3 @@ class MetEireannFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=self._errors,
         )
-
-    async def async_step_import(
-        self, user_input: Optional[Dict] = None
-    ) -> Dict[str, Any]:
-        """Handle configuration by yaml file."""
-        return await self.async_step_user(user_input)
