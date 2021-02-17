@@ -1,4 +1,4 @@
-"""The rest component."""
+"""The rest component schemas."""
 
 import voluptuous as vol
 
