@@ -1,5 +1,17 @@
-"""Constants for Met component."""
+"""Constants for Met Éireann component."""
 import logging
+
+from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+)
 
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 
@@ -16,10 +28,10 @@ ENTITY_ID_SENSOR_FORMAT_HOME = f"{WEATHER_DOMAIN}.met_eireann_{HOME_LOCATION_NAM
 _LOGGER = logging.getLogger(".")
 
 CONDITION_MAP = {
-    "clear-night": ["Dark_Sun"],
-    "cloudy": ["Cloud"],
-    "fog": ["Fog"],
-    "lightning-rainy": [
+    ATTR_CONDITION_CLEAR_NIGHT: ["Dark_Sun"],
+    ATTR_CONDITION_CLOUDY: ["Cloud"],
+    ATTR_CONDITION_FOG: ["Fog"],
+    ATTR_CONDITION_LIGHTNING_RAINY: [
         "LightRainThunderSun",
         "LightRainThunderSun",
         "RainThunder",
@@ -48,13 +60,13 @@ CONDITION_MAP = {
         "LightSnowThunder",
         "HeavySnowThunder",
     ],
-    "partlycloudy": [
+    ATTR_CONDITION_PARTLYCLOUDY: [
         "LightCloud",
         "Dark_LightCloud",
         "PartlyCloud",
         "Dark_PartlyCloud",
     ],
-    "rainy": [
+    ATTR_CONDITION_RAINY: [
         "LightRainSun",
         "Dark_LightRainSun",
         "LightRain",
@@ -65,7 +77,7 @@ CONDITION_MAP = {
         "Dark_RainSun",
         "Drizzle",
     ],
-    "snowy": [
+    ATTR_CONDITION_SNOWY: [
         "SnowSun",
         "Dark_SnowSun",
         "Snow",
@@ -76,7 +88,7 @@ CONDITION_MAP = {
         "LightSnow",
         "HeavySnow",
     ],
-    "snowy-rainy": [
+    ATTR_CONDITION_SNOWY_RAINY: [
         "SleetSun",
         "Dark_SleetSun",
         "Sleet",
@@ -87,5 +99,5 @@ CONDITION_MAP = {
         "LightSleet",
         "HeavySleet",
     ],
-    "sunny": "Sun",
+    ATTR_CONDITION_SUNNY: "Sun",
 }
