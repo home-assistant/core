@@ -23,42 +23,25 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
-    HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
 
-from . import DOMAIN, PLATFORMS
-from .data import DEFAULT_TIMEOUT, RestData
+from . import DOMAIN, PLATFORMS, RESOURCE_SCHEMA
+from .data import RestData
 
-DEFAULT_METHOD = "GET"
 DEFAULT_NAME = "REST Binary Sensor"
-DEFAULT_VERIFY_SSL = True
-DEFAULT_FORCE_UPDATE = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Exclusive(CONF_RESOURCE, CONF_RESOURCE): cv.url,
-        vol.Exclusive(CONF_RESOURCE_TEMPLATE, CONF_RESOURCE): cv.template,
-        vol.Optional(CONF_AUTHENTICATION): vol.In(
-            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
-        ),
-        vol.Optional(CONF_HEADERS): {cv.string: cv.string},
-        vol.Optional(CONF_PARAMS): {cv.string: cv.string},
-        vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(["POST", "GET"]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PAYLOAD): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-        vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    }
-)
+
+BINARY_SENSOR_SCHEMA = {
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+}
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(**RESOURCE_SCHEMA ** BINARY_SENSOR_SCHEMA)
 
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE), PLATFORM_SCHEMA
