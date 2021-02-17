@@ -115,7 +115,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
+COORDINATOR_AWARE_PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -131,7 +131,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         coordinator = _wrap_rest_in_coordinator(hass, rest, scan_interval)
         await coordinator.async_refresh()
 
-        for platform_domain in PLATFORMS:
+        for platform_domain in COORDINATOR_AWARE_PLATFORMS:
             for platform_conf in conf.get(platform_domain, []):
                 discovery.async_load_platform(
                     hass,
