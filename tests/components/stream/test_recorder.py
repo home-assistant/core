@@ -153,6 +153,8 @@ async def test_recorder_timeout(
         record_worker_sync.join()
 
         stream.stop()
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
 
 async def test_record_path_not_allowed(hass, hass_client):
