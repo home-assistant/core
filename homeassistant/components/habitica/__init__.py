@@ -1,55 +1,47 @@
-"""Support for Habitica devices."""
-from collections import namedtuple
+"""The habitica integration."""
+import asyncio
 import logging
 
 from habitipy.aio import HabitipyAsync
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_NAME,
-    CONF_PATH,
-    CONF_SENSORS,
-    CONF_URL,
-)
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_SENSORS, CONF_URL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .const import (
+    ATTR_ARGS,
+    ATTR_NAME,
+    ATTR_PATH,
+    CONF_API_USER,
+    DEFAULT_URL,
+    DOMAIN,
+    EVENT_API_CALL_SUCCESS,
+    SERVICE_API_CALL,
+)
+from .sensor import SENSORS_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_API_USER = "api_user"
-
-DEFAULT_URL = "https://habitica.com"
-DOMAIN = "habitica"
-
-ST = SensorType = namedtuple("SensorType", ["name", "icon", "unit", "path"])
-
-SENSORS_TYPES = {
-    "name": ST("Name", None, "", ["profile", "name"]),
-    "hp": ST("HP", "mdi:heart", "HP", ["stats", "hp"]),
-    "maxHealth": ST("max HP", "mdi:heart", "HP", ["stats", "maxHealth"]),
-    "mp": ST("Mana", "mdi:auto-fix", "MP", ["stats", "mp"]),
-    "maxMP": ST("max Mana", "mdi:auto-fix", "MP", ["stats", "maxMP"]),
-    "exp": ST("EXP", "mdi:star", "EXP", ["stats", "exp"]),
-    "toNextLevel": ST("Next Lvl", "mdi:star", "EXP", ["stats", "toNextLevel"]),
-    "lvl": ST("Lvl", "mdi:arrow-up-bold-circle-outline", "Lvl", ["stats", "lvl"]),
-    "gp": ST("Gold", "mdi:currency-usd-circle", "Gold", ["stats", "gp"]),
-    "class": ST("Class", "mdi:sword", "", ["stats", "class"]),
-}
-
-INSTANCE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_URL, default=DEFAULT_URL): cv.url,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_API_USER): cv.string,
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_SENSORS, default=list(SENSORS_TYPES)): vol.All(
-            cv.ensure_list, vol.Unique(), [vol.In(list(SENSORS_TYPES))]
-        ),
-    }
+INSTANCE_SCHEMA = vol.All(
+    cv.deprecated(CONF_SENSORS),
+    vol.Schema(
+        {
+            vol.Optional(CONF_URL, default=DEFAULT_URL): cv.url,
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Required(CONF_API_USER): cv.string,
+            vol.Required(CONF_API_KEY): cv.string,
+            vol.Optional(CONF_SENSORS, default=list(SENSORS_TYPES)): vol.All(
+                cv.ensure_list, vol.Unique(), [vol.In(list(SENSORS_TYPES))]
+            ),
+        }
+    ),
 )
 
-has_unique_values = vol.Schema(vol.Unique())
+has_unique_values = vol.Schema(vol.Unique())  # pylint: disable=invalid-name
 # because we want a handy alias
 
 
@@ -73,14 +65,9 @@ def has_all_unique_users_names(value):
 INSTANCE_LIST_SCHEMA = vol.All(
     cv.ensure_list, has_all_unique_users, has_all_unique_users_names, [INSTANCE_SCHEMA]
 )
-
 CONFIG_SCHEMA = vol.Schema({DOMAIN: INSTANCE_LIST_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
-SERVICE_API_CALL = "api_call"
-ATTR_NAME = CONF_NAME
-ATTR_PATH = CONF_PATH
-ATTR_ARGS = "args"
-EVENT_API_CALL_SUCCESS = f"{DOMAIN}_{SERVICE_API_CALL}_success"
+PLATFORMS = ["sensor"]
 
 SERVICE_API_CALL_SCHEMA = vol.Schema(
     {
@@ -91,40 +78,31 @@ SERVICE_API_CALL_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Habitica service."""
+    configs = config.get(DOMAIN, [])
 
-    conf = config[DOMAIN]
-    data = hass.data[DOMAIN] = {}
-    websession = async_get_clientsession(hass)
+    for conf in configs:
+        if conf.get(CONF_URL) is None:
+            conf[CONF_URL] = DEFAULT_URL
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
+            )
+        )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Set up habitica from a config entry."""
 
     class HAHabitipyAsync(HabitipyAsync):
         """Closure API class to hold session."""
 
         def __call__(self, **kwargs):
             return super().__call__(websession, **kwargs)
-
-    for instance in conf:
-        url = instance[CONF_URL]
-        username = instance[CONF_API_USER]
-        password = instance[CONF_API_KEY]
-        name = instance.get(CONF_NAME)
-        config_dict = {"url": url, "login": username, "password": password}
-        api = HAHabitipyAsync(config_dict)
-        user = await api.user.get()
-        if name is None:
-            name = user["profile"]["name"]
-        data[name] = api
-        if CONF_SENSORS in instance:
-            hass.async_create_task(
-                discovery.async_load_platform(
-                    hass,
-                    "sensor",
-                    DOMAIN,
-                    {"name": name, "sensors": instance[CONF_SENSORS]},
-                    config,
-                )
-            )
 
     async def handle_api_call(call):
         name = call.data[ATTR_NAME]
@@ -147,7 +125,50 @@ async def async_setup(hass, config):
             EVENT_API_CALL_SUCCESS, {"name": name, "path": path, "data": data}
         )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_API_CALL, handle_api_call, schema=SERVICE_API_CALL_SCHEMA
-    )
+    data = hass.data.setdefault(DOMAIN, {})
+    config = config_entry.data
+    websession = async_get_clientsession(hass)
+    url = config[CONF_URL]
+    username = config[CONF_API_USER]
+    password = config[CONF_API_KEY]
+    name = config.get(CONF_NAME)
+    config_dict = {"url": url, "login": username, "password": password}
+    api = HAHabitipyAsync(config_dict)
+    user = await api.user.get()
+    if name is None:
+        name = user["profile"]["name"]
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={**config_entry.data, CONF_NAME: name},
+        )
+    data[config_entry.entry_id] = api
+
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, component)
+        )
+
+    if not hass.services.has_service(DOMAIN, SERVICE_API_CALL):
+        hass.services.async_register(
+            DOMAIN, SERVICE_API_CALL, handle_api_call, schema=SERVICE_API_CALL_SCHEMA
+        )
+
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    if len(hass.config_entries.async_entries) == 1:
+        hass.components.webhook.async_unregister(SERVICE_API_CALL)
+    return unload_ok
