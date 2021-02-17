@@ -253,7 +253,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         await self._tv.setVolume(volume, self._tv.muted)
         await self._async_update_soon()
 
-    async def media_previous_track(self):
+    async def async_media_previous_track(self):
         """Send rewind command."""
         await self._tv.sendKey("Previous")
         await self._async_update_soon()
@@ -281,7 +281,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         await self._tv.sendKey("Pause")
         await self._async_update_soon()
 
-    async def media_stop(self):
+    async def async_media_stop(self):
         """Send play command to media player."""
         await self._tv.sendKey("Stop")
         await self._async_update_soon()
