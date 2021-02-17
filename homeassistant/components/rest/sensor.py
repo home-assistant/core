@@ -25,11 +25,10 @@ from . import (
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
     CONF_REST,
-    RESOURCE_SCHEMA,
-    SENSOR_SCHEMA,
     RestEntity,
     create_rest_data_from_config,
 )
+from .schema import RESOURCE_SCHEMA, SENSOR_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
