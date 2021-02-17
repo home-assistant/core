@@ -226,6 +226,7 @@ DISCOVERY_SCHEMAS = [
         device_class_generic={"Thermostat"},
         device_class_specific={
             "Setpoint Thermostat",
+            "Unused",
         },
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_SETPOINT},
