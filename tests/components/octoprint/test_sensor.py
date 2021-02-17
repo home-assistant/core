@@ -1,4 +1,5 @@
 """The tests for Octoptint binary sensor module."""
+from datetime import datetime
 import logging
 
 from pyoctoprintapi import OctoprintJobInfo, OctoprintPrinterInfo
@@ -56,20 +57,21 @@ def test_OctoPrintStatusSensor(hass):
     assert "Operational" == test_sensor.state
 
 
-def test_OctoPrintTimeElapsedSensor(hass):
+def test_OctoPrintStartTimeSensor(hass):
     """Test the properties."""
     coordinator = DataUpdateCoordinator(hass, _LOGGER, name="octoprint-test")
     coordinator.data = {
+        "last_read_time": datetime(2020, 2, 14, 9, 10, 0, 0),
         "job": OctoprintJobInfo(
             {
                 "job": {},
-                "progress": {"printTime": 5000},
+                "progress": {"printTime": 600},
             }
-        )
+        ),
     }
-    test_sensor = sensor.OctoPrintTimeElapsedSensor(coordinator, "OctoPrint")
-    assert "OctoPrint Time Elapsed" == test_sensor.name
-    assert 5000 == test_sensor.state
+    test_sensor = sensor.OctoPrintStartTimeSensor(coordinator, "OctoPrint")
+    assert "OctoPrint Start Time" == test_sensor.name
+    assert "2020-02-14T09:00:00" == test_sensor.state
 
     coordinator.data["job"]._raw["progress"]["printTime"] = None
     assert not test_sensor.state
@@ -96,20 +98,21 @@ def test_OctoPrintTemperatureSensor(hass):
     assert 18.83 == test_sensor.state
 
 
-def test_OctoPrintTimeRemainingSensor(hass):
+def test_OctoPrintEstimatedFinishTimeSensor(hass):
     """Test the properties."""
     coordinator = DataUpdateCoordinator(hass, _LOGGER, name="octoprint-test")
     coordinator.data = {
+        "last_read_time": datetime(2020, 2, 14, 9, 10, 0, 0),
         "job": OctoprintJobInfo(
             {
                 "job": {},
-                "progress": {"printTimeLeft": 5000},
+                "progress": {"printTimeLeft": 600},
             }
-        )
+        ),
     }
-    test_sensor = sensor.OctoPrintTimeRemainingSensor(coordinator, "OctoPrint")
-    assert "OctoPrint Time Remaining" == test_sensor.name
-    assert 5000 == test_sensor.state
+    test_sensor = sensor.OctoPrintEstimatedFinishTimeSensor(coordinator, "OctoPrint")
+    assert "OctoPrint Estimated Finish Time" == test_sensor.name
+    assert "2020-02-14T09:20:00" == test_sensor.state
 
     coordinator.data["job"]._raw["progress"]["printTimeLeft"] = None
     assert not test_sensor.state

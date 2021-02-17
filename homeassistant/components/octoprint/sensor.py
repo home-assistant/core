@@ -1,9 +1,15 @@
 """Support for monitoring OctoPrint sensors."""
+from datetime import timedelta
 import logging
 
 from pyoctoprintapi import OctoprintJobInfo, OctoprintPrinterInfo
 
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TIME_SECONDS
+from homeassistant.const import (
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -15,7 +21,7 @@ from . import CONF_BED, CONF_NUMBER_OF_TOOLS, DOMAIN as COMPONENT_DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the available OctoPrint sensors."""
     if discovery_info is None:
         return
@@ -36,26 +42,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if bed:
             tools.append("bed")
 
-    devices = []
+    entities = []
     types = ["actual", "target"]
 
     if "Temperatures" in monitored_conditions and tools:
         for tool in tools:
             for temp_type in types:
-                devices.append(
+                entities.append(
                     OctoPrintTemperatureSensor(coordinator, name, tool, temp_type)
                 )
 
     if "Current State" in monitored_conditions:
-        devices.append(OctoPrintStatusSensor(coordinator, name))
+        entities.append(OctoPrintStatusSensor(coordinator, name))
     if "Job Percentage" in monitored_conditions:
-        devices.append(OctoPrintJobPercentageSensor(coordinator, name))
+        entities.append(OctoPrintJobPercentageSensor(coordinator, name))
     if "Time Remaining" in monitored_conditions:
-        devices.append(OctoPrintTimeRemainingSensor(coordinator, name))
+        entities.append(OctoPrintEstimatedFinishTimeSensor(coordinator, name))
     if "Time Elapsed" in monitored_conditions:
-        devices.append(OctoPrintTimeRemainingSensor(coordinator, name))
+        entities.append(OctoPrintStartTimeSensor(coordinator, name))
 
-    add_entities(devices, True)
+    async_add_entities(entities, True)
 
 
 class OctoPrintSensorBase(CoordinatorEntity, Entity):
@@ -132,58 +138,65 @@ class OctoPrintJobPercentageSensor(OctoPrintSensorBase):
         return "mdi:file-percent"
 
 
-class OctoPrintTimeRemainingSensor(OctoPrintSensorBase):
+class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
 
     def __init__(self, coordinator: DataUpdateCoordinator, sensor_name: str):
         """Initialize a new OctoPrint sensor."""
-        super().__init__(coordinator, sensor_name, "Time Remaining")
+        super().__init__(coordinator, sensor_name, "Estimated Finish Time")
 
     @property
     def state(self):
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
-        if not job:
+        if not job or not job.progress.print_time_left:
             return None
 
-        return job.progress.print_time_left
+        read_time = self.coordinator.data["last_read_time"]
+
+        return (read_time + timedelta(seconds=job.progress.print_time_left)).isoformat()
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return TIME_SECONDS
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return "mdi:clock-start"
-
-
-class OctoPrintTimeElapsedSensor(OctoPrintSensorBase):
-    """Representation of an OctoPrint sensor."""
-
-    def __init__(self, coordinator: DataUpdateCoordinator, sensor_name: str):
-        """Initialize a new OctoPrint sensor."""
-        super().__init__(coordinator, sensor_name, "Time Elapsed")
-
-    @property
-    def state(self):
-        """Return sensor state."""
-        job: OctoprintJobInfo = self.coordinator.data["job"]
-        if not job:
-            return None
-
-        return job.progress.print_time
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return TIME_SECONDS
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_TIMESTAMP
 
     @property
     def icon(self):
         """Icon to use in the frontend."""
         return "mdi:clock-end"
+
+
+class OctoPrintStartTimeSensor(OctoPrintSensorBase):
+    """Representation of an OctoPrint sensor."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator, sensor_name: str):
+        """Initialize a new OctoPrint sensor."""
+        super().__init__(coordinator, sensor_name, "Start Time")
+
+    @property
+    def state(self):
+        """Return sensor state."""
+        job: OctoprintJobInfo = self.coordinator.data["job"]
+        if not job:
+            return None
+
+        if not job or not job.progress.print_time:
+            return None
+
+        read_time = self.coordinator.data["last_read_time"]
+
+        return (read_time - timedelta(seconds=job.progress.print_time)).isoformat()
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_TIMESTAMP
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return "mdi:clock-start"
 
 
 class OctoPrintTemperatureSensor(OctoPrintSensorBase):
@@ -206,6 +219,11 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return TEMP_CELSIUS
+
+    @property
+    def device_class(self):
+        """Return the device class of this entity."""
+        return DEVICE_CLASS_TEMPERATURE
 
     @property
     def state(self):

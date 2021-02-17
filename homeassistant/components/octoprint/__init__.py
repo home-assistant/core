@@ -1,5 +1,5 @@
 """Support for monitoring OctoPrint 3D printers."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from pyoctoprintapi import OctoprintClient
@@ -215,4 +215,4 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
             if self.data and "printer" in self.data:
                 printer = self.data["printer"]
 
-        return {"job": job, "printer": printer}
+        return {"job": job, "printer": printer, "last_read_time": datetime.utcnow()}

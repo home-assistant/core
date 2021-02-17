@@ -1,5 +1,7 @@
 """Support for monitoring OctoPrint binary sensors."""
+from abc import abstractmethod
 import logging
+from typing import Optional
 
 from pyoctoprintapi import OctoprintPrinterInfo
 
@@ -14,7 +16,7 @@ from . import DOMAIN as COMPONENT_DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the available OctoPrint binary sensors."""
 
     if discovery_info is None:
@@ -25,14 +27,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     monitored_conditions = discovery_info["sensors"]
     coordinator: DataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][base_url]
 
-    devices = []
+    entities = []
     if "Printing" in monitored_conditions:
-        devices.append(OctoPrintPrintingBinarySensor(coordinator, name))
+        entities.append(OctoPrintPrintingBinarySensor(coordinator, name))
 
     if "Printing Error" in monitored_conditions:
-        devices.append(OctoPrintPrintingErrorBinarySensor(coordinator, name))
+        entities.append(OctoPrintPrintingErrorBinarySensor(coordinator, name))
 
-    add_entities(devices, True)
+    async_add_entities(entities, True)
 
 
 class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
@@ -70,9 +72,8 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
 
         return bool(self._get_flag_state(printer))
 
-    def _get_flag_state(  # pylint: disable=no-self-use
-        self, printer_info: OctoprintPrinterInfo
-    ) -> bool or None:
+    @abstractmethod
+    def _get_flag_state(self, printer_info: OctoprintPrinterInfo) -> Optional[bool]:
         return None
 
 
@@ -83,7 +84,7 @@ class OctoPrintPrintingBinarySensor(OctoPrintBinarySensorBase):
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator, sensor_name, "Printing")
 
-    def _get_flag_state(self, printer_info: OctoprintPrinterInfo) -> bool or None:
+    def _get_flag_state(self, printer_info: OctoprintPrinterInfo) -> Optional[bool]:
         return bool(printer_info.state.flags.printing)
 
 
@@ -94,5 +95,5 @@ class OctoPrintPrintingErrorBinarySensor(OctoPrintBinarySensorBase):
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator, sensor_name, "Printing Error")
 
-    def _get_flag_state(self, printer_info: OctoprintPrinterInfo) -> bool or None:
+    def _get_flag_state(self, printer_info: OctoprintPrinterInfo) -> Optional[bool]:
         return bool(printer_info.state.flags.error)
