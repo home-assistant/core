@@ -13,7 +13,8 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-from . import CONF_COORDINATOR, CONF_REST, create_rest_data_from_config
+from . import create_rest_data_from_config
+from .const import CONF_COORDINATOR, CONF_REST
 from .entity import RestEntity
 from .schema import BINARY_SENSOR_SCHEMA, RESOURCE_SCHEMA
 
