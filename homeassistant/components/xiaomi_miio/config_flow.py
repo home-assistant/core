@@ -15,9 +15,8 @@ from .const import (
     CONF_MAC,
     CONF_MODEL,
     DOMAIN,
+    MODELS_ALL_DEVICES,
     MODELS_GATEWAY,
-    MODELS_SWITCH,
-    MODELS_VACUUM,
 )
 from .device import ConnectXiaomiDevice
 
@@ -71,8 +70,8 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
                 return await self.async_step_device()
-        for switch_model in MODELS_SWITCH + MODELS_VACUUM:
-            if name.startswith(switch_model.replace(".", "-")):
+        for device_model in MODELS_ALL_DEVICES:
+            if name.startswith(device_model.replace(".", "-")):
                 unique_id = format_mac(mac_address)
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured({CONF_HOST: self.host})
@@ -126,28 +125,22 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # Setup all other Miio Devices
                 name = user_input.get(CONF_NAME, DEFAULT_DEVICE_NAME)
 
-                known_device = False
-                if device_info.model in MODELS_SWITCH:
-                    known_device = True
-                for vacuum_model in MODELS_VACUUM:
-                    if device_info.model.startswith(vacuum_model):
-                        known_device = True
-
-                if known_device:
-                    mac = format_mac(device_info.mac_address)
-                    unique_id = mac
-                    await self.async_set_unique_id(unique_id)
-                    self._abort_if_unique_id_configured()
-                    return self.async_create_entry(
-                        title=name,
-                        data={
-                            CONF_FLOW_TYPE: CONF_DEVICE,
-                            CONF_HOST: self.host,
-                            CONF_TOKEN: token,
-                            CONF_MODEL: device_info.model,
-                            CONF_MAC: mac,
-                        },
-                    )
+                for device_model in MODELS_ALL_DEVICES:
+                    if device_info.model.startswith(device_model):
+                        mac = format_mac(device_info.mac_address)
+                        unique_id = mac
+                        await self.async_set_unique_id(unique_id)
+                        self._abort_if_unique_id_configured()
+                        return self.async_create_entry(
+                            title=name,
+                            data={
+                                CONF_FLOW_TYPE: CONF_DEVICE,
+                                CONF_HOST: self.host,
+                                CONF_TOKEN: token,
+                                CONF_MODEL: device_info.model,
+                                CONF_MAC: mac,
+                            },
+                        )
                 errors["base"] = "unknown_device"
             else:
                 errors["base"] = "cannot_connect"
