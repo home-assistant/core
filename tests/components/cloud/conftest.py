@@ -43,7 +43,20 @@ def mock_cloud_login(hass, mock_cloud_setup):
     hass.data[const.DOMAIN].id_token = jwt.encode(
         {
             "email": "hello@home-assistant.io",
-            "custom:sub-exp": "2018-01-03",
+            "custom:sub-exp": "2300-01-03",
+            "cognito:username": "abcdefghjkl",
+        },
+        "test",
+    )
+
+
+@pytest.fixture
+def mock_expired_cloud_login(hass, mock_cloud_setup):
+    """Mock cloud is logged in."""
+    hass.data[const.DOMAIN].id_token = jwt.encode(
+        {
+            "email": "hello@home-assistant.io",
+            "custom:sub-exp": "2018-01-01",
             "cognito:username": "abcdefghjkl",
         },
         "test",
