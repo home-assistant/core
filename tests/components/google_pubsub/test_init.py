@@ -1,6 +1,7 @@
 """The tests for the Google Pub/Sub component."""
 from dataclasses import dataclass
 from datetime import datetime
+import unittest.mock as mock
 
 import pytest
 
@@ -9,8 +10,6 @@ from homeassistant.components.google_pubsub import DateTimeJSONEncoder as victim
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import split_entity_id
 from homeassistant.setup import async_setup_component
-
-import tests.async_mock as mock
 
 GOOGLE_PUBSUB_PATH = "homeassistant.components.google_pubsub"
 

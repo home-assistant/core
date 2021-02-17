@@ -1,4 +1,5 @@
 """Support for Huawei LTE router notifications."""
+from __future__ import annotations
 
 import logging
 import time
@@ -21,7 +22,7 @@ async def async_get_service(
     hass: HomeAssistantType,
     config: Dict[str, Any],
     discovery_info: Optional[Dict[str, Any]] = None,
-) -> Optional["HuaweiLteSmsNotificationService"]:
+) -> Optional[HuaweiLteSmsNotificationService]:
     """Get the notification service."""
     if discovery_info is None:
         return None

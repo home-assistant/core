@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 import os
+from typing import Optional
 
 import voluptuous as vol
 
@@ -9,7 +10,6 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.homeassistant import SERVICE_CHECK_CONFIG
 import homeassistant.config as conf_util
 from homeassistant.const import (
-    ATTR_NAME,
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
@@ -23,14 +23,27 @@ from homeassistant.util.dt import utcnow
 
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
+from .const import (
+    ATTR_ADDON,
+    ATTR_ADDONS,
+    ATTR_DISCOVERY,
+    ATTR_FOLDERS,
+    ATTR_HOMEASSISTANT,
+    ATTR_INPUT,
+    ATTR_NAME,
+    ATTR_PASSWORD,
+    ATTR_SNAPSHOT,
+    DOMAIN,
+)
 from .discovery import async_setup_discovery_view
 from .handler import HassIO, HassioAPIError, api_data
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
+from .websocket_api import async_load_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "hassio"
+
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
@@ -60,13 +73,6 @@ SERVICE_SNAPSHOT_PARTIAL = "snapshot_partial"
 SERVICE_RESTORE_FULL = "restore_full"
 SERVICE_RESTORE_PARTIAL = "restore_partial"
 
-ATTR_ADDON = "addon"
-ATTR_INPUT = "input"
-ATTR_SNAPSHOT = "snapshot"
-ATTR_ADDONS = "addons"
-ATTR_FOLDERS = "folders"
-ATTR_HOMEASSISTANT = "homeassistant"
-ATTR_PASSWORD = "password"
 
 SCHEMA_NO_DATA = vol.Schema({})
 
@@ -98,6 +104,7 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
         vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [cv.string]),
     }
 )
+
 
 MAP_SERVICE_API = {
     SERVICE_ADDON_START: ("/addons/{addon}/start", SCHEMA_ADDON, 60, False),
@@ -159,7 +166,7 @@ async def async_uninstall_addon(hass: HomeAssistantType, slug: str) -> dict:
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/uninstall"
-    return await hassio.send_command(command)
+    return await hassio.send_command(command, timeout=60)
 
 
 @bind_hass
@@ -183,7 +190,7 @@ async def async_stop_addon(hass: HomeAssistantType, slug: str) -> dict:
     """
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/stop"
-    return await hassio.send_command(command)
+    return await hassio.send_command(command, timeout=60)
 
 
 @bind_hass
@@ -198,6 +205,17 @@ async def async_set_addon_options(
     hassio = hass.data[DOMAIN]
     command = f"/addons/{slug}/options"
     return await hassio.send_command(command, payload=options)
+
+
+@bind_hass
+async def async_get_addon_discovery_info(
+    hass: HomeAssistantType, slug: str
+) -> Optional[dict]:
+    """Return discovery data for an add-on."""
+    hassio = hass.data[DOMAIN]
+    data = await hassio.retrieve_discovery_messages()
+    discovered_addons = data[ATTR_DISCOVERY]
+    return next((addon for addon in discovered_addons if addon["addon"] == slug), None)
 
 
 @callback
@@ -276,6 +294,8 @@ async def async_setup(hass, config):
             continue
         _LOGGER.error("Missing %s environment variable", env)
         return False
+
+    async_load_websocket_api(hass)
 
     host = os.environ["HASSIO"]
     websession = hass.helpers.aiohttp_client.async_get_clientsession()

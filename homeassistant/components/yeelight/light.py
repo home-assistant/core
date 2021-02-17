@@ -49,6 +49,7 @@ from . import (
     ACTION_RECOVER,
     ATTR_ACTION,
     ATTR_COUNT,
+    ATTR_MODE_MUSIC,
     ATTR_TRANSITIONS,
     CONF_FLOW_PARAMS,
     CONF_MODE_MUSIC,
@@ -77,6 +78,7 @@ SUPPORT_YEELIGHT_RGB = SUPPORT_YEELIGHT_WHITE_TEMP | SUPPORT_COLOR
 ATTR_MINUTES = "minutes"
 
 SERVICE_SET_MODE = "set_mode"
+SERVICE_SET_MUSIC_MODE = "set_music_mode"
 SERVICE_START_FLOW = "start_flow"
 SERVICE_SET_COLOR_SCENE = "set_color_scene"
 SERVICE_SET_HSV_SCENE = "set_hsv_scene"
@@ -175,6 +177,10 @@ SERVICE_SCHEMA_SET_MODE = {
     vol.Required(ATTR_MODE): vol.In([mode.name.lower() for mode in PowerMode])
 }
 
+SERVICE_SCHEMA_SET_MUSIC_MODE = {
+    vol.Required(ATTR_MODE_MUSIC): cv.boolean,
+}
+
 SERVICE_SCHEMA_START_FLOW = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
 SERVICE_SCHEMA_SET_COLOR_SCENE = {
@@ -255,7 +261,6 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up Yeelight from a config entry."""
-
     custom_effects = _parse_custom_effects(hass.data[DOMAIN][DATA_CUSTOM_EFFECTS])
 
     device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE]
@@ -404,6 +409,11 @@ def _async_setup_services(hass: HomeAssistant):
         SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE,
         _async_set_auto_delay_off_scene,
     )
+    platform.async_register_entity_service(
+        SERVICE_SET_MUSIC_MODE,
+        SERVICE_SCHEMA_SET_MUSIC_MODE,
+        "set_music_mode",
+    )
 
 
 class YeelightGenericLight(YeelightEntity, LightEntity):
@@ -415,7 +425,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
         self.config = device.config
 
-        self._brightness = None
         self._color_temp = None
         self._hs = None
         self._effect = None
@@ -476,10 +485,14 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 1..255."""
-        temp = self._get_property(self._brightness_property)
-        if temp:
-            self._brightness = temp
-        return round(255 * (int(self._brightness) / 100))
+        # Always use "bright" as property name in music mode
+        # Since music mode states are only caches in upstream library
+        # and the cache key is always "bright" for brightness
+        brightness_property = (
+            "bright" if self._bulb.music_mode else self._brightness_property
+        )
+        brightness = self._get_property(brightness_property)
+        return round(255 * (int(brightness) / 100))
 
     @property
     def min_mireds(self):
@@ -549,8 +562,11 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
+        attributes = {
+            "flowing": self.device.is_color_flow_enabled,
+            "music_mode": self._bulb.music_mode,
+        }
 
-        attributes = {"flowing": self.device.is_color_flow_enabled}
         if self.device.is_nightlight_supported:
             attributes["night_light"] = self.device.is_nightlight_enabled
 
@@ -591,12 +607,17 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
         return color_util.color_RGB_to_hs(red, green, blue)
 
-    def set_music_mode(self, mode) -> None:
+    def set_music_mode(self, music_mode) -> None:
         """Set the music mode on or off."""
-        if mode:
-            self._bulb.start_music()
+        if music_mode:
+            try:
+                self._bulb.start_music()
+            except AssertionError as ex:
+                _LOGGER.error(ex)
         else:
             self._bulb.stop_music()
+
+        self.device.update()
 
     @_cmd
     def set_brightness(self, brightness, duration) -> None:

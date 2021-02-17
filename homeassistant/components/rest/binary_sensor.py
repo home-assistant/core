@@ -101,9 +101,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         auth = None
 
     rest = RestData(
-        method, resource, auth, headers, params, payload, verify_ssl, timeout
+        hass, method, resource, auth, headers, params, payload, verify_ssl, timeout
     )
     await rest.async_update()
+
     if rest.data is None:
         raise PlatformNotReady
 
@@ -119,7 +120,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 resource_template,
             )
         ],
-        True,
     )
 
 
@@ -186,10 +186,6 @@ class RestBinarySensor(BinarySensorEntity):
     def force_update(self):
         """Force update."""
         return self._force_update
-
-    async def async_will_remove_from_hass(self):
-        """Shutdown the session."""
-        await self.rest.async_remove()
 
     async def async_update(self):
         """Get the latest data from REST API and updates the state."""

@@ -1,0 +1,25 @@
+{
+    "device_automation": {
+        "action_type": {
+            "set_mode": "{entity_name} \u00fczerindeki mod de\u011fi\u015ftirme",
+            "turn_on": "{entity_name} a\u00e7\u0131n"
+        },
+        "condition_type": {
+            "is_mode": "{entity_name} belirli bir moda ayarland\u0131",
+            "is_off": "{entity_name} kapal\u0131",
+            "is_on": "{entity_name} a\u00e7\u0131k"
+        },
+        "trigger_type": {
+            "target_humidity_changed": "{entity_name} hedef nem de\u011fi\u015fti",
+            "turned_off": "{entity_name} kapat\u0131ld\u0131",
+            "turned_on": "{entity_name} a\u00e7\u0131ld\u0131"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "Kapal\u0131",
+            "on": "A\u00e7\u0131k"
+        }
+    },
+    "title": "Nemlendirici"
+}

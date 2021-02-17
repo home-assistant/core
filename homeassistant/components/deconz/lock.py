@@ -14,7 +14,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_lock(lights):
+    def async_add_lock(lights=gateway.api.lights.values()):
         """Add lock from deCONZ."""
         entities = []
 
@@ -32,7 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
     )
 
-    async_add_lock(gateway.api.lights.values())
+    async_add_lock()
 
 
 class DeconzLock(DeconzDevice, LockEntity):

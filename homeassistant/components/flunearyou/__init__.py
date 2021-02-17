@@ -20,7 +20,7 @@ from .const import (
 
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=30)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.119")
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = ["sensor"]
 

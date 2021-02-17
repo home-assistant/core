@@ -1,4 +1,6 @@
 """Test the August config flow."""
+from unittest.mock import patch
+
 from august.authenticator import ValidationResult
 
 from homeassistant import config_entries, setup
@@ -16,7 +18,6 @@ from homeassistant.components.august.exceptions import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

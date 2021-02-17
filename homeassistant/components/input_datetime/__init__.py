@@ -1,4 +1,6 @@
 """Support to select a date and/or a time."""
+from __future__ import annotations
+
 import datetime as py_datetime
 import logging
 import typing
@@ -32,8 +34,6 @@ CONF_HAS_DATE = "has_date"
 CONF_HAS_TIME = "has_time"
 CONF_INITIAL = "initial"
 
-DEFAULT_VALUE = "1970-01-01 00:00:00"
-DEFAULT_DATE = py_datetime.date(1970, 1, 1)
 DEFAULT_TIME = py_datetime.time(0, 0, 0)
 
 ATTR_DATETIME = "datetime"
@@ -110,8 +110,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
-    collection.attach_entity_component_collection(
-        component, yaml_collection, InputDatetime.from_yaml
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputDatetime.from_yaml
     )
 
     storage_collection = DateTimeStorageCollection(
@@ -119,8 +119,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
-    collection.attach_entity_component_collection(
-        component, storage_collection, InputDatetime
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, storage_collection, InputDatetime
     )
 
     await yaml_collection.async_load(
@@ -131,9 +131,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     collection.StorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
-
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
     async def reload_service_handler(service_call: ServiceCallType) -> None:
         """Reload yaml entities."""
@@ -218,7 +215,9 @@ class InputDatetime(RestoreEntity):
 
         else:
             time = dt_util.parse_time(initial)
-            current_datetime = py_datetime.datetime.combine(DEFAULT_DATE, time)
+            current_datetime = py_datetime.datetime.combine(
+                py_datetime.date.today(), time
+            )
 
         # If the user passed in an initial value with a timezone, convert it to right tz
         if current_datetime.tzinfo is not None:
@@ -231,7 +230,7 @@ class InputDatetime(RestoreEntity):
             )
 
     @classmethod
-    def from_yaml(cls, config: typing.Dict) -> "InputDatetime":
+    def from_yaml(cls, config: typing.Dict) -> InputDatetime:
         """Return entity instance initialized from yaml storage."""
         input_dt = cls(config)
         input_dt.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
@@ -246,32 +245,36 @@ class InputDatetime(RestoreEntity):
         if self.state is not None:
             return
 
+        default_value = py_datetime.datetime.today().strftime("%Y-%m-%d 00:00:00")
+
         # Priority 2: Old state
         old_state = await self.async_get_last_state()
         if old_state is None:
-            self._current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
+            self._current_datetime = dt_util.parse_datetime(default_value)
             return
 
         if self.has_date and self.has_time:
             date_time = dt_util.parse_datetime(old_state.state)
             if date_time is None:
-                current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
+                current_datetime = dt_util.parse_datetime(default_value)
             else:
                 current_datetime = date_time
 
         elif self.has_date:
             date = dt_util.parse_date(old_state.state)
             if date is None:
-                current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
+                current_datetime = dt_util.parse_datetime(default_value)
             else:
                 current_datetime = py_datetime.datetime.combine(date, DEFAULT_TIME)
 
         else:
             time = dt_util.parse_time(old_state.state)
             if time is None:
-                current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
+                current_datetime = dt_util.parse_datetime(default_value)
             else:
-                current_datetime = py_datetime.datetime.combine(DEFAULT_DATE, time)
+                current_datetime = py_datetime.datetime.combine(
+                    py_datetime.date.today(), time
+                )
 
         self._current_datetime = current_datetime.replace(
             tzinfo=dt_util.DEFAULT_TIME_ZONE
@@ -365,9 +368,7 @@ class InputDatetime(RestoreEntity):
     def async_set_datetime(self, date=None, time=None, datetime=None, timestamp=None):
         """Set a new date / time."""
         if timestamp:
-            datetime = dt_util.as_local(dt_util.utc_from_timestamp(timestamp)).replace(
-                tzinfo=None
-            )
+            datetime = dt_util.as_local(dt_util.utc_from_timestamp(timestamp))
 
         if datetime:
             date = datetime.date()
@@ -388,8 +389,8 @@ class InputDatetime(RestoreEntity):
         if not time:
             time = self._current_datetime.time()
 
-        self._current_datetime = py_datetime.datetime.combine(date, time).replace(
-            tzinfo=dt_util.DEFAULT_TIME_ZONE
+        self._current_datetime = dt_util.DEFAULT_TIME_ZONE.localize(
+            py_datetime.datetime.combine(date, time)
         )
         self.async_write_ha_state()
 

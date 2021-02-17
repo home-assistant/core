@@ -4,5 +4,5 @@ blueprint:
   input:
     trigger:
     action:
-trigger: !placeholder trigger
-action: !placeholder action
+trigger: !input trigger
+action: !input action

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "unsupported_model": "\u4e0d\u652f\u63f4\u6b64\u6b3e\u5370\u8868\u6a5f\u3002"
         },
         "error": {

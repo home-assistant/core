@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -85,7 +86,7 @@ async def test_entity_and_device_attributes(hass, device_factory):
     entry = entity_registry.async_get("sensor.sensor_1_battery")
     assert entry
     assert entry.unique_id == f"{device.device_id}.{Attribute.battery}"
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)}, [])
+    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
     assert entry.name == device.label
     assert entry.model == device.device_type_name
@@ -117,4 +118,4 @@ async def test_unload_config_entry(hass, device_factory):
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
     # Assert
-    assert not hass.states.get("sensor.sensor_1_battery")
+    assert hass.states.get("sensor.sensor_1_battery").state == STATE_UNAVAILABLE

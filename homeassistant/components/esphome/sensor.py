@@ -52,6 +52,8 @@ class EsphomeSensor(EsphomeEntity):
     @property
     def icon(self) -> str:
         """Return the icon."""
+        if not self._static_info.icon or self._static_info.device_class:
+            return None
         return self._static_info.icon
 
     @property
@@ -71,18 +73,27 @@ class EsphomeSensor(EsphomeEntity):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit the value is expressed in."""
+        if not self._static_info.unit_of_measurement:
+            return None
         return self._static_info.unit_of_measurement
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        if not self._static_info.device_class:
+            return None
+        return self._static_info.device_class
 
 
 class EsphomeTextSensor(EsphomeEntity):
     """A text sensor implementation for ESPHome."""
 
     @property
-    def _static_info(self) -> "TextSensorInfo":
+    def _static_info(self) -> TextSensorInfo:
         return super()._static_info
 
     @property
-    def _state(self) -> Optional["TextSensorState"]:
+    def _state(self) -> Optional[TextSensorState]:
         return super()._state
 
     @property

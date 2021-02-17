@@ -1,17 +1,32 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Une seule configuration d'Abode est autoris\u00e9e."
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi",
+            "single_instance_allowed": "D\u00e9ja configur\u00e9. Une seule configuration possible."
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide"
+            "invalid_auth": "Authentification invalide",
+            "invalid_mfa_code": "Code MFA non valide"
         },
         "step": {
+            "mfa": {
+                "data": {
+                    "mfa_code": "Code MFA (6 chiffres)"
+                },
+                "title": "Entrez votre code MFA pour Abode"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Email"
+                },
+                "title": "Remplissez vos informations de connexion Abode"
+            },
             "user": {
                 "data": {
                     "password": "Mot de passe",
-                    "username": "Adresse e-mail"
+                    "username": "Email"
                 },
                 "title": "Remplissez vos informations de connexion Abode"
             }

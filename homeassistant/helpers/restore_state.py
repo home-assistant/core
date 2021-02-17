@@ -1,4 +1,6 @@
 """Support for restoring entity states on startup."""
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime, timedelta
 import logging
@@ -48,7 +50,7 @@ class StoredState:
         return {"state": self.state.as_dict(), "last_seen": self.last_seen}
 
     @classmethod
-    def from_dict(cls, json_dict: Dict) -> "StoredState":
+    def from_dict(cls, json_dict: Dict) -> StoredState:
         """Initialize a stored state from a dict."""
         last_seen = json_dict["last_seen"]
 
@@ -62,11 +64,11 @@ class RestoreStateData:
     """Helper class for managing the helper saved data."""
 
     @classmethod
-    async def async_get_instance(cls, hass: HomeAssistant) -> "RestoreStateData":
+    async def async_get_instance(cls, hass: HomeAssistant) -> RestoreStateData:
         """Get the singleton instance of this data helper."""
 
         @singleton(DATA_RESTORE_STATE_TASK)
-        async def load_instance(hass: HomeAssistant) -> "RestoreStateData":
+        async def load_instance(hass: HomeAssistant) -> RestoreStateData:
             """Get the singleton instance of this data helper."""
             data = cls(hass)
 

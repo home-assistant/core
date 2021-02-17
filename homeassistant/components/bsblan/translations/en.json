@@ -12,7 +12,9 @@
                 "data": {
                     "host": "Host",
                     "passkey": "Passkey string",
-                    "port": "Port"
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
                 },
                 "description": "Set up you BSB-Lan device to integrate with Home Assistant.",
                 "title": "Connect to the BSB-Lan device"

@@ -1,12 +1,12 @@
 """Tests for the system health component init."""
 import asyncio
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.client_exceptions import ClientError
 
 from homeassistant.components import system_health
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import get_system_health_info, mock_platform
 
 

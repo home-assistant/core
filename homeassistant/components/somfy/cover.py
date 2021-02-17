@@ -18,11 +18,11 @@ from homeassistant.components.cover import (
     SUPPORT_STOP_TILT,
     CoverEntity,
 )
-from homeassistant.const import STATE_CLOSED, STATE_OPEN
+from homeassistant.const import CONF_OPTIMISTIC, STATE_CLOSED, STATE_OPEN
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import SomfyEntity
-from .const import API, CONF_OPTIMISTIC, COORDINATOR, DOMAIN
+from .const import API, COORDINATOR, DOMAIN
 
 BLIND_DEVICE_CATEGORIES = {Category.INTERIOR_BLIND.value, Category.EXTERIOR_BLIND.value}
 SHUTTER_DEVICE_CATEGORIES = {Category.EXTERIOR_BLIND.value}
@@ -35,20 +35,17 @@ SUPPORTED_CATEGORIES = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Somfy cover platform."""
+    domain_data = hass.data[DOMAIN]
+    coordinator = domain_data[COORDINATOR]
+    api = domain_data[API]
 
-    def get_covers():
-        """Retrieve covers."""
-        domain_data = hass.data[DOMAIN]
-        coordinator = domain_data[COORDINATOR]
-        api = domain_data[API]
+    covers = [
+        SomfyCover(coordinator, device_id, api, domain_data[CONF_OPTIMISTIC])
+        for device_id, device in coordinator.data.items()
+        if SUPPORTED_CATEGORIES & set(device.categories)
+    ]
 
-        return [
-            SomfyCover(coordinator, device_id, api, domain_data[CONF_OPTIMISTIC])
-            for device_id, device in coordinator.data.items()
-            if SUPPORTED_CATEGORIES & set(device.categories)
-        ]
-
-    async_add_entities(await hass.async_add_executor_job(get_covers))
+    async_add_entities(covers)
 
 
 class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
@@ -62,12 +59,12 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         self._closed = None
         self._is_opening = None
         self._is_closing = None
-        self.cover = None
+        self._cover = None
         self._create_device()
 
     def _create_device(self) -> Blind:
         """Update the device with the latest data."""
-        self.cover = Blind(self.device, self.api)
+        self._cover = Blind(self.device, self.api)
 
     @property
     def supported_features(self) -> int:
@@ -97,7 +94,7 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         self.async_write_ha_state()
         try:
             # Blocks until the close command is sent
-            await self.hass.async_add_executor_job(self.cover.close)
+            await self.hass.async_add_executor_job(self._cover.close)
             self._closed = True
         finally:
             self._is_closing = None
@@ -109,7 +106,7 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         self.async_write_ha_state()
         try:
             # Blocks until the open command is sent
-            await self.hass.async_add_executor_job(self.cover.open)
+            await self.hass.async_add_executor_job(self._cover.open)
             self._closed = False
         finally:
             self._is_opening = None
@@ -117,11 +114,11 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        self.cover.stop()
+        self._cover.stop()
 
     def set_cover_position(self, **kwargs):
         """Move the cover shutter to a specific position."""
-        self.cover.set_position(100 - kwargs[ATTR_POSITION])
+        self._cover.set_position(100 - kwargs[ATTR_POSITION])
 
     @property
     def device_class(self):
@@ -137,7 +134,7 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         """Return the current position of cover shutter."""
         if not self.has_state("position"):
             return None
-        return 100 - self.cover.get_position()
+        return 100 - self._cover.get_position()
 
     @property
     def is_opening(self):
@@ -158,7 +155,7 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         """Return if the cover is closed."""
         is_closed = None
         if self.has_state("position"):
-            is_closed = self.cover.is_closed()
+            is_closed = self._cover.is_closed()
         elif self.optimistic:
             is_closed = self._closed
         return is_closed
@@ -171,23 +168,23 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
         """
         if not self.has_state("orientation"):
             return None
-        return 100 - self.cover.orientation
+        return 100 - self._cover.orientation
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        self.cover.orientation = 100 - kwargs[ATTR_TILT_POSITION]
+        self._cover.orientation = 100 - kwargs[ATTR_TILT_POSITION]
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
-        self.cover.orientation = 0
+        self._cover.orientation = 0
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
-        self.cover.orientation = 100
+        self._cover.orientation = 100
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover."""
-        self.cover.stop()
+        self._cover.stop()
 
     async def async_added_to_hass(self):
         """Complete the initialization."""

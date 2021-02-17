@@ -1,15 +1,17 @@
 """Provide a way to connect devices to one physical location."""
-from asyncio import Event, gather
 from collections import OrderedDict
-from typing import Dict, Iterable, List, MutableMapping, Optional, cast
+from typing import Container, Dict, Iterable, List, MutableMapping, Optional, cast
 
 import attr
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.loader import bind_hass
-import homeassistant.util.uuid as uuid_util
+from homeassistant.util import slugify
 
 from .typing import HomeAssistantType
+
+# mypy: disallow-any-generics
 
 DATA_REGISTRY = "area_registry"
 EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
@@ -22,8 +24,17 @@ SAVE_DELAY = 10
 class AreaEntry:
     """Area Registry Entry."""
 
-    name: Optional[str] = attr.ib(default=None)
-    id: str = attr.ib(factory=uuid_util.random_uuid_hex)
+    name: str = attr.ib()
+    id: Optional[str] = attr.ib(default=None)
+
+    def generate_id(self, existing_ids: Container[str]) -> None:
+        """Initialize ID."""
+        suggestion = suggestion_base = slugify(self.name)
+        tries = 1
+        while suggestion in existing_ids:
+            tries += 1
+            suggestion = f"{suggestion_base}_{tries}"
+        object.__setattr__(self, "id", suggestion)
 
 
 class AreaRegistry:
@@ -51,23 +62,21 @@ class AreaRegistry:
         if self._async_is_registered(name):
             raise ValueError("Name is already in use")
 
-        area = AreaEntry()
+        area = AreaEntry(name=name)
+        area.generate_id(self.areas)
+        assert area.id is not None
         self.areas[area.id] = area
-
-        created = self._async_update(area.id, name=name)
-
+        self.async_schedule_save()
         self.hass.bus.async_fire(
-            EVENT_AREA_REGISTRY_UPDATED, {"action": "create", "area_id": created.id}
+            EVENT_AREA_REGISTRY_UPDATED, {"action": "create", "area_id": area.id}
         )
+        return area
 
-        return created
-
-    async def async_delete(self, area_id: str) -> None:
+    @callback
+    def async_delete(self, area_id: str) -> None:
         """Delete area."""
-        device_registry, entity_registry = await gather(
-            self.hass.helpers.device_registry.async_get_registry(),
-            self.hass.helpers.entity_registry.async_get_registry(),
-        )
+        device_registry = dr.async_get(self.hass)
+        entity_registry = er.async_get(self.hass)
         device_registry.async_clear_area_id(area_id)
         entity_registry.async_clear_area_id(area_id)
 
@@ -144,24 +153,23 @@ class AreaRegistry:
         return data
 
 
+@callback
+def async_get(hass: HomeAssistantType) -> AreaRegistry:
+    """Get area registry."""
+    return cast(AreaRegistry, hass.data[DATA_REGISTRY])
+
+
+async def async_load(hass: HomeAssistantType) -> None:
+    """Load area registry."""
+    assert DATA_REGISTRY not in hass.data
+    hass.data[DATA_REGISTRY] = AreaRegistry(hass)
+    await hass.data[DATA_REGISTRY].async_load()
+
+
 @bind_hass
 async def async_get_registry(hass: HomeAssistantType) -> AreaRegistry:
-    """Return area registry instance."""
-    reg_or_evt = hass.data.get(DATA_REGISTRY)
+    """Get area registry.
 
-    if not reg_or_evt:
-        evt = hass.data[DATA_REGISTRY] = Event()
-
-        reg = AreaRegistry(hass)
-        await reg.async_load()
-
-        hass.data[DATA_REGISTRY] = reg
-        evt.set()
-        return reg
-
-    if isinstance(reg_or_evt, Event):
-        evt = reg_or_evt
-        await evt.wait()
-        return cast(AreaRegistry, hass.data.get(DATA_REGISTRY))
-
-    return cast(AreaRegistry, reg_or_evt)
+    This is deprecated and will be removed in the future. Use async_get instead.
+    """
+    return async_get(hass)

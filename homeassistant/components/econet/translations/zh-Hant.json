@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "\u96fb\u5b50\u90f5\u4ef6",
+                    "password": "\u5bc6\u78bc"
+                },
+                "title": "\u8a2d\u5b9a Rheem EcoNet \u5e33\u865f"
+            }
+        }
+    }
+}

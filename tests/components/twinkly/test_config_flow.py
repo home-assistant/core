@@ -1,5 +1,7 @@
 """Tests for the config_flow of the twinly component."""
 
+from unittest.mock import patch
+
 from homeassistant import config_entries
 from homeassistant.components.twinkly.const import (
     CONF_ENTRY_HOST,
@@ -9,7 +11,6 @@ from homeassistant.components.twinkly.const import (
     DOMAIN as TWINKLY_DOMAIN,
 )
 
-from tests.async_mock import patch
 from tests.components.twinkly import TEST_MODEL, ClientMock
 
 

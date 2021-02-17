@@ -9,7 +9,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import SCAN_INTERVAL, SENSOR_TYPES
+from .const import DOMAIN, SCAN_INTERVAL, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,6 +95,15 @@ class SolarlogSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def device_info(self):
+        """Return the device information."""
+        return {
+            "identifiers": {(DOMAIN, self.entry_id)},
+            "name": self.device_name,
+            "manufacturer": "Solar-Log",
+        }
 
     def update(self):
         """Get the latest data from the sensor and update the state."""

@@ -66,6 +66,7 @@
             "remote_button_quadruple_press": "\"{subtype}\" Kn\u00e4ppche v\u00e9ier mol gedr\u00e9ckt",
             "remote_button_quintuple_press": "\"{subtype}\" Kn\u00e4ppche f\u00ebnnef mol gedr\u00e9ckt",
             "remote_button_rotated": "Kn\u00e4ppche gedr\u00e9int \"{subtype}\"",
+            "remote_button_rotated_fast": "Kn\u00e4ppche schnell gedr\u00e9int \"{subtype}\"",
             "remote_button_rotation_stopped": "Kn\u00e4ppchen Rotatioun \"{subtype}\" gestoppt",
             "remote_button_short_press": "\"{subtype}\" Kn\u00e4ppche gedr\u00e9ckt",
             "remote_button_short_release": "\"{subtype}\" Kn\u00e4ppche lassgelooss",

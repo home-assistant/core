@@ -41,11 +41,15 @@ ATTR_YELLOW_DRUM_REMAINING_PAGES = "yellow_drum_remaining_pages"
 ATTR_YELLOW_INK_REMAINING = "yellow_ink_remaining"
 ATTR_YELLOW_TONER_REMAINING = "yellow_toner_remaining"
 
+DATA_CONFIG_ENTRY = "config_entry"
+
 DOMAIN = "brother"
 
 UNIT_PAGES = "p"
 
 PRINTER_TYPES = ["laser", "ink"]
+
+SNMP = "snmp"
 
 SENSOR_TYPES = {
     ATTR_STATUS: {
@@ -136,6 +140,7 @@ SENSOR_TYPES = {
         ATTR_ICON: "mdi:printer-3d",
         ATTR_LABEL: ATTR_PF_KIT_MP_REMAINING_LIFE.replace("_", " ").title(),
         ATTR_UNIT: PERCENTAGE,
+        ATTR_ENABLED: True,
     },
     ATTR_BLACK_TONER_REMAINING: {
         ATTR_ICON: "mdi:printer-3d-nozzle",

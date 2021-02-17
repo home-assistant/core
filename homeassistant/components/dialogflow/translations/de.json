@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
+            "webhook_not_internet_accessible": "Deine Home Assistant-Instanz muss \u00fcber das Internet erreichbar sein, um Webhook-Nachrichten empfangen zu k\u00f6nnen."
+        },
         "create_entry": {
             "default": "Um Ereignisse an den Home Assistant zu senden, musst du [Webhook-Integration von Dialogflow]({dialogflow_url}) einrichten. \n\nF\u00fclle die folgenden Informationen aus: \n\n - URL: ` {webhook_url} ` \n - Methode: POST \n - Inhaltstyp: application / json \n\nWeitere Informationen findest du in der [Dokumentation]({docs_url})."
         },

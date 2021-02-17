@@ -27,8 +27,8 @@ class IncidentsSensor(RestoreEntity):
     def __init__(self, client):
         """Initialize."""
         self._client = client
-        self._entry_id = self._client._entry.entry_id
-        self._unique_id = f"{self._client._entry.unique_id}_Incidents"
+        self._entry_id = self._client.entry_id
+        self._unique_id = f"{self._client.unique_id}_Incidents"
         self._state = None
         self._state_attributes = {}
 
@@ -73,6 +73,7 @@ class IncidentsSensor(RestoreEntity):
             return attr
 
         for value in (
+            "id",
             "trigger",
             "created_at",
             "message_to_speech_url",
@@ -106,7 +107,9 @@ class IncidentsSensor(RestoreEntity):
         if state:
             self._state = state.state
             self._state_attributes = state.attributes
-            _LOGGER.debug("Restored entity 'Incidents' state to: %s", self._state)
+            if "id" in self._state_attributes:
+                self._client.incident_id = self._state_attributes["id"]
+            _LOGGER.debug("Restored entity 'Incidents' to: %s", self._state)
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -119,10 +122,12 @@ class IncidentsSensor(RestoreEntity):
     @callback
     def client_update(self) -> None:
         """Handle updated data from the data client."""
-        data = self._client.websocket.incident_data()
+        data = self._client.websocket.incident_data
         if not data or "body" not in data:
             return
 
         self._state = data["body"]
         self._state_attributes = data
+        if "id" in self._state_attributes:
+            self._client.incident_id = self._state_attributes["id"]
         self.async_write_ha_state()

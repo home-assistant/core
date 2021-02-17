@@ -16,5 +16,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "polling_interval": "Polling-interval (in seconden)"
+                }
+            }
+        }
     }
 }

@@ -1,6 +1,7 @@
 """The tests for the MQTT discovery."""
 from pathlib import Path
 import re
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -11,9 +12,9 @@ from homeassistant.components.mqtt.abbreviations import (
     DEVICE_ABBREVIATIONS,
 )
 from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED, async_start
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
+import homeassistant.core as ha
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import (
     async_fire_mqtt_message,
     mock_device_registry,
@@ -45,10 +46,13 @@ async def test_subscribing_config_topic(hass, mqtt_mock):
     discovery_topic = "homeassistant"
     await async_start(hass, discovery_topic, entry)
 
-    assert mqtt_mock.async_subscribe.called
-    call_args = mqtt_mock.async_subscribe.mock_calls[0][1]
-    assert call_args[0] == discovery_topic + "/#"
-    assert call_args[2] == 0
+    call_args1 = mqtt_mock.async_subscribe.mock_calls[0][1]
+    assert call_args1[2] == 0
+    call_args2 = mqtt_mock.async_subscribe.mock_calls[1][1]
+    assert call_args2[2] == 0
+    topics = [call_args1[0], call_args2[0]]
+    assert discovery_topic + "/+/+/config" in topics
+    assert discovery_topic + "/+/+/+/config" in topics
 
 
 async def test_invalid_topic(hass, mqtt_mock):
@@ -252,6 +256,121 @@ async def test_rediscover(hass, mqtt_mock, caplog):
     assert state is not None
 
 
+async def test_rapid_rediscover(hass, mqtt_mock, caplog):
+    """Test immediate rediscover of removed component."""
+
+    events = []
+
+    @ha.callback
+    def callback(event):
+        """Verify event got called."""
+        events.append(event)
+
+    hass.bus.async_listen(EVENT_STATE_CHANGED, callback)
+
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": "Beer", "state_topic": "test-topic" }',
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.beer")
+    assert state is not None
+    assert len(events) == 1
+
+    # Removal immediately followed by rediscover
+    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": "Beer", "state_topic": "test-topic" }',
+    )
+    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": "Milk", "state_topic": "test-topic" }',
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("binary_sensor")) == 1
+    state = hass.states.get("binary_sensor.milk")
+    assert state is not None
+
+    assert len(events) == 5
+    # Remove the entity
+    assert events[1].data["entity_id"] == "binary_sensor.beer"
+    assert events[1].data["new_state"] is None
+    # Add the entity
+    assert events[2].data["entity_id"] == "binary_sensor.beer"
+    assert events[2].data["old_state"] is None
+    # Remove the entity
+    assert events[3].data["entity_id"] == "binary_sensor.beer"
+    assert events[3].data["new_state"] is None
+    # Add the entity
+    assert events[4].data["entity_id"] == "binary_sensor.milk"
+    assert events[4].data["old_state"] is None
+
+
+async def test_rapid_rediscover_unique(hass, mqtt_mock, caplog):
+    """Test immediate rediscover of removed component."""
+
+    events = []
+
+    @ha.callback
+    def callback(event):
+        """Verify event got called."""
+        events.append(event)
+
+    hass.bus.async_listen(EVENT_STATE_CHANGED, callback)
+
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla2/config",
+        '{ "name": "Ale", "state_topic": "test-topic", "unique_id": "very_unique" }',
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.ale")
+    assert state is not None
+    assert len(events) == 1
+
+    # Duplicate unique_id, immediately followed by correct unique_id
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": "Beer", "state_topic": "test-topic", "unique_id": "very_unique" }',
+    )
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": "Beer", "state_topic": "test-topic", "unique_id": "even_uniquer" }',
+    )
+    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": "Milk", "state_topic": "test-topic", "unique_id": "even_uniquer" }',
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("binary_sensor")) == 2
+    state = hass.states.get("binary_sensor.ale")
+    assert state is not None
+    state = hass.states.get("binary_sensor.milk")
+    assert state is not None
+
+    assert len(events) == 4
+    # Add the entity
+    assert events[1].data["entity_id"] == "binary_sensor.beer"
+    assert events[1].data["old_state"] is None
+    # Remove the entity
+    assert events[2].data["entity_id"] == "binary_sensor.beer"
+    assert events[2].data["new_state"] is None
+    # Add the entity
+    assert events[3].data["entity_id"] == "binary_sensor.milk"
+    assert events[3].data["old_state"] is None
+
+
 async def test_duplicate_removal(hass, mqtt_mock, caplog):
     """Test for a non duplicate component."""
     async_fire_mqtt_message(
@@ -282,7 +401,7 @@ async def test_cleanup_device(hass, device_reg, entity_reg, mqtt_mock):
     await hass.async_block_till_done()
 
     # Verify device and registry entries are created
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is not None
     entity_entry = entity_reg.async_get("sensor.mqtt_sensor")
     assert entity_entry is not None
@@ -292,9 +411,10 @@ async def test_cleanup_device(hass, device_reg, entity_reg, mqtt_mock):
 
     device_reg.async_remove_device(device_entry.id)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Verify device and registry entries are cleared
-    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
     assert device_entry is None
     entity_entry = entity_reg.async_get("sensor.mqtt_sensor")
     assert entity_entry is None

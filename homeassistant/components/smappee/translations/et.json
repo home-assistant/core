@@ -21,7 +21,7 @@
                 "data": {
                     "host": ""
                 },
-                "description": "Smappee kohaliku sidumise algatamiseks sisestage hostinimi"
+                "description": "Smappee kohaliku sidumise algatamiseks sisesta hostinimi"
             },
             "pick_implementation": {
                 "title": "Vali tuvastusmeetod"

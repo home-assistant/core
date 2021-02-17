@@ -1,14 +1,12 @@
 """Support for Verisure cameras."""
 import errno
-import logging
 import os
 
 from homeassistant.components.camera import Camera
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-from . import CONF_SMARTCAM, HUB as hub
-
-_LOGGER = logging.getLogger(__name__)
+from . import HUB as hub
+from .const import CONF_SMARTCAM, LOGGER
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -17,16 +15,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
     directory_path = hass.config.config_dir
     if not os.access(directory_path, os.R_OK):
-        _LOGGER.error("file path %s is not readable", directory_path)
+        LOGGER.error("file path %s is not readable", directory_path)
         return False
     hub.update_overview()
-    smartcams = []
-    smartcams.extend(
-        [
-            VerisureSmartcam(hass, device_label, directory_path)
-            for device_label in hub.get("$.customerImageCameras[*].deviceLabel")
-        ]
-    )
+    smartcams = [
+        VerisureSmartcam(hass, device_label, directory_path)
+        for device_label in hub.get("$.customerImageCameras[*].deviceLabel")
+    ]
+
     add_entities(smartcams)
 
 
@@ -47,9 +43,9 @@ class VerisureSmartcam(Camera):
         """Return image response."""
         self.check_imagelist()
         if not self._image:
-            _LOGGER.debug("No image to display")
+            LOGGER.debug("No image to display")
             return
-        _LOGGER.debug("Trying to open %s", self._image)
+        LOGGER.debug("Trying to open %s", self._image)
         with open(self._image, "rb") as file:
             return file.read()
 
@@ -63,14 +59,14 @@ class VerisureSmartcam(Camera):
             return
         new_image_id = image_ids[0]
         if new_image_id in ("-1", self._image_id):
-            _LOGGER.debug("The image is the same, or loading image_id")
+            LOGGER.debug("The image is the same, or loading image_id")
             return
-        _LOGGER.debug("Download new image %s", new_image_id)
+        LOGGER.debug("Download new image %s", new_image_id)
         new_image_path = os.path.join(
             self._directory_path, "{}{}".format(new_image_id, ".jpg")
         )
         hub.session.download_image(self._device_label, new_image_id, new_image_path)
-        _LOGGER.debug("Old image_id=%s", self._image_id)
+        LOGGER.debug("Old image_id=%s", self._image_id)
         self.delete_image(self)
 
         self._image_id = new_image_id
@@ -83,7 +79,7 @@ class VerisureSmartcam(Camera):
         )
         try:
             os.remove(remove_image)
-            _LOGGER.debug("Deleting old image %s", remove_image)
+            LOGGER.debug("Deleting old image %s", remove_image)
         except OSError as error:
             if error.errno != errno.ENOENT:
                 raise

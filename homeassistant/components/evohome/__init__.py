@@ -34,7 +34,7 @@ from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, EVO_FOLLOW, GWS, STORAGE_KEY, STORAGE_VER, TCS, UTC_OFFSET
+from .const import DOMAIN, GWS, STORAGE_KEY, STORAGE_VER, TCS, UTC_OFFSET
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -628,8 +628,8 @@ class EvoChild(EvoDevice):
             dt_aware = dt_naive.replace(tzinfo=dt_util.UTC) - utc_offset
             return dt_util.as_local(dt_aware)
 
-        if not self._schedule["DailySchedules"]:
-            return {}  # no schedule {'DailySchedules': []}, so no scheduled setpoints
+        if not self._schedule or not self._schedule.get("DailySchedules"):
+            return {}  # no scheduled setpoints when {'DailySchedules': []}
 
         day_time = dt_util.now()
         day_of_week = day_time.weekday()  # for evohome, 0 is Monday
@@ -679,10 +679,6 @@ class EvoChild(EvoDevice):
 
     async def _update_schedule(self) -> None:
         """Get the latest schedule, if any."""
-        if "DailySchedules" in self._schedule and not self._schedule["DailySchedules"]:
-            if not self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
-                return  # avoid unnecessary I/O - there's nothing to update
-
         self._schedule = await self._evo_broker.call_client_api(
             self._evo_device.schedule(), update_state=False
         )

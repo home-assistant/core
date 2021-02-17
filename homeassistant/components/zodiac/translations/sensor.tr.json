@@ -1,0 +1,18 @@
+{
+    "state": {
+        "zodiac__sign": {
+            "aquarius": "Kova",
+            "aries": "Ko\u00e7",
+            "cancer": "Yenge\u00e7",
+            "capricorn": "O\u011flak",
+            "gemini": "Ikizler",
+            "leo": "Aslan",
+            "libra": "Terazi",
+            "pisces": "Bal\u0131k",
+            "sagittarius": "Yay",
+            "scorpio": "Akrep",
+            "taurus": "Bo\u011fa",
+            "virgo": "Ba\u015fak"
+        }
+    }
+}

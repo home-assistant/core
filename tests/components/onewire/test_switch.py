@@ -1,5 +1,6 @@
 """Tests for 1-Wire devices connected on OWServer."""
 import copy
+from unittest.mock import patch
 
 from pyownet.protocol import Error as ProtocolError
 import pytest
@@ -11,7 +12,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_onewire_patched_owserver_integration
 
-from tests.async_mock import patch
 from tests.common import mock_registry
 
 MOCK_DEVICE_SENSORS = {
@@ -127,3 +127,6 @@ async def test_owserver_switch(owproxy, hass, device_id):
 
         state = hass.states.get(entity_id)
         assert state.state == expected_sensor["result"]
+        assert state.attributes["device_file"] == expected_sensor.get(
+            "device_file", registry_entry.unique_id
+        )

@@ -1,7 +1,9 @@
 """Support for LED lights."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List
 
 from elgato import Elgato, ElgatoError, Info, State
 
@@ -42,7 +44,7 @@ async def async_setup_entry(
     """Set up Elgato Key Light based on a config entry."""
     elgato: Elgato = hass.data[DOMAIN][entry.entry_id][DATA_ELGATO_CLIENT]
     info = await elgato.info()
-    async_add_entities([ElgatoLight(entry.entry_id, elgato, info)], True)
+    async_add_entities([ElgatoLight(elgato, info)], True)
 
 
 class ElgatoLight(LightEntity):
@@ -50,15 +52,14 @@ class ElgatoLight(LightEntity):
 
     def __init__(
         self,
-        entry_id: str,
         elgato: Elgato,
         info: Info,
     ):
         """Initialize Elgato Key Light."""
-        self._brightness: Optional[int] = None
+        self._brightness: int | None = None
         self._info: Info = info
-        self._state: Optional[bool] = None
-        self._temperature: Optional[int] = None
+        self._state: bool | None = None
+        self._temperature: int | None = None
         self._available = True
         self.elgato = elgato
 
@@ -81,22 +82,22 @@ class ElgatoLight(LightEntity):
         return self._info.serial_number
 
     @property
-    def brightness(self) -> Optional[int]:
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 1..255."""
         return self._brightness
 
     @property
-    def color_temp(self):
+    def color_temp(self) -> int | None:
         """Return the CT color value in mireds."""
         return self._temperature
 
     @property
-    def min_mireds(self):
+    def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
         return 143
 
     @property
-    def max_mireds(self):
+    def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
         return 344
 
@@ -116,9 +117,8 @@ class ElgatoLight(LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        data = {}
+        data: Dict[str, bool | int] = {ATTR_ON: True}
 
-        data[ATTR_ON] = True
         if ATTR_ON in kwargs:
             data[ATTR_ON] = kwargs[ATTR_ON]
 

@@ -250,16 +250,32 @@ class ModbusRegisterSensor(RestoreEntity):
             registers.reverse()
 
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
-        if self._data_type != DATA_TYPE_STRING:
-            val = struct.unpack(self._structure, byte_string)[0]
-            val = self._scale * val + self._offset
-            if isinstance(val, int):
-                self._value = str(val)
-                if self._precision > 0:
-                    self._value += "." + "0" * self._precision
-            else:
-                self._value = f"{val:.{self._precision}f}"
-        else:
+        if self._data_type == DATA_TYPE_STRING:
             self._value = byte_string.decode()
+        else:
+            val = struct.unpack(self._structure, byte_string)
+
+            # Issue: https://github.com/home-assistant/core/issues/41944
+            # If unpack() returns a tuple greater than 1, don't try to process the value.
+            # Instead, return the values of unpack(...) separated by commas.
+            if len(val) > 1:
+                self._value = ",".join(map(str, val))
+            else:
+                val = val[0]
+
+                # Apply scale and precision to floats and ints
+                if isinstance(val, (float, int)):
+                    val = self._scale * val + self._offset
+
+                    # We could convert int to float, and the code would still work; however
+                    # we lose some precision, and unit tests will fail. Therefore, we do
+                    # the conversion only when it's absolutely necessary.
+                    if isinstance(val, int) and self._precision == 0:
+                        self._value = str(val)
+                    else:
+                        self._value = f"{float(val):.{self._precision}f}"
+                else:
+                    # Don't process remaining datatypes (bytes and booleans)
+                    self._value = str(val)
 
         self._available = True

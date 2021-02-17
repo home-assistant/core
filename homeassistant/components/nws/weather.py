@@ -1,6 +1,5 @@
 """Support for NWS weather service."""
 from datetime import timedelta
-import logging
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -46,8 +45,6 @@ from .const import (
     HOURLY,
     NWS_DATA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -161,7 +158,7 @@ class NWSWeather(WeatherEntity):
         temp_c = None
         if self.observation:
             temp_c = self.observation.get("temperature")
-        if temp_c:
+        if temp_c is not None:
             return convert_temperature(temp_c, TEMP_CELSIUS, TEMP_FAHRENHEIT)
         return None
 
@@ -273,7 +270,7 @@ class NWSWeather(WeatherEntity):
 
             data[ATTR_FORECAST_WIND_BEARING] = forecast_entry.get("windBearing")
             wind_speed = forecast_entry.get("windSpeedAvg")
-            if wind_speed:
+            if wind_speed is not None:
                 if self.is_metric:
                     data[ATTR_FORECAST_WIND_SPEED] = round(
                         convert_distance(wind_speed, LENGTH_MILES, LENGTH_KILOMETERS)

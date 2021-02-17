@@ -1,5 +1,7 @@
 """The media player tests for the forked_daapd media player platform."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.forked_daapd.const import (
@@ -65,7 +67,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_mock_signal
 
 TEST_MASTER_ENTITY_NAME = "media_player.forked_daapd_server"
@@ -344,12 +345,12 @@ async def mock_api_object_fixture(hass, config_entry, get_request_return_values)
 
 
 async def test_unload_config_entry(hass, config_entry, mock_api_object):
-    """Test the player is removed when the config entry is unloaded."""
+    """Test the player is set unavailable when the config entry is unloaded."""
     assert hass.states.get(TEST_MASTER_ENTITY_NAME)
     assert hass.states.get(TEST_ZONE_ENTITY_NAMES[0])
     await config_entry.async_unload(hass)
-    assert not hass.states.get(TEST_MASTER_ENTITY_NAME)
-    assert not hass.states.get(TEST_ZONE_ENTITY_NAMES[0])
+    assert hass.states.get(TEST_MASTER_ENTITY_NAME).state == STATE_UNAVAILABLE
+    assert hass.states.get(TEST_ZONE_ENTITY_NAMES[0]).state == STATE_UNAVAILABLE
 
 
 def test_master_state(hass, mock_api_object):

@@ -1,4 +1,6 @@
 """Factory function to initialize KNX devices from config."""
+from typing import Optional, Tuple
+
 from xknx import XKNX
 from xknx.devices import (
     BinarySensor as XknxBinarySensor,
@@ -6,6 +8,7 @@ from xknx.devices import (
     ClimateMode as XknxClimateMode,
     Cover as XknxCover,
     Device as XknxDevice,
+    Fan as XknxFan,
     Light as XknxLight,
     Notification as XknxNotification,
     Scene as XknxScene,
@@ -22,6 +25,7 @@ from .schema import (
     BinarySensorSchema,
     ClimateSchema,
     CoverSchema,
+    FanSchema,
     LightSchema,
     SceneSchema,
     SensorSchema,
@@ -63,6 +67,9 @@ def create_knx_device(
     if platform is SupportedPlatforms.weather:
         return _create_weather(knx_module, config)
 
+    if platform is SupportedPlatforms.fan:
+        return _create_fan(knx_module, config)
+
 
 def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
     """Return a KNX Cover device to be used within XKNX."""
@@ -86,8 +93,30 @@ def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
     )
 
 
+def _create_light_color(
+    color: str, config: ConfigType
+) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
+    """Load color configuration from configuration structure."""
+    if "individual_colors" in config and color in config["individual_colors"]:
+        sub_config = config["individual_colors"][color]
+        group_address_switch = sub_config.get(CONF_ADDRESS)
+        group_address_switch_state = sub_config.get(LightSchema.CONF_STATE_ADDRESS)
+        group_address_brightness = sub_config.get(LightSchema.CONF_BRIGHTNESS_ADDRESS)
+        group_address_brightness_state = sub_config.get(
+            LightSchema.CONF_BRIGHTNESS_STATE_ADDRESS
+        )
+        return (
+            group_address_switch,
+            group_address_switch_state,
+            group_address_brightness,
+            group_address_brightness_state,
+        )
+    return None, None, None, None
+
+
 def _create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
     """Return a KNX Light device to be used within XKNX."""
+
     group_address_tunable_white = None
     group_address_tunable_white_state = None
     group_address_color_temp = None
@@ -103,10 +132,35 @@ def _create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
             LightSchema.CONF_COLOR_TEMP_STATE_ADDRESS
         )
 
+    (
+        red_switch,
+        red_switch_state,
+        red_brightness,
+        red_brightness_state,
+    ) = _create_light_color(LightSchema.CONF_RED, config)
+    (
+        green_switch,
+        green_switch_state,
+        green_brightness,
+        green_brightness_state,
+    ) = _create_light_color(LightSchema.CONF_GREEN, config)
+    (
+        blue_switch,
+        blue_switch_state,
+        blue_brightness,
+        blue_brightness_state,
+    ) = _create_light_color(LightSchema.CONF_BLUE, config)
+    (
+        white_switch,
+        white_switch_state,
+        white_brightness,
+        white_brightness_state,
+    ) = _create_light_color(LightSchema.CONF_WHITE, config)
+
     return XknxLight(
         knx_module,
         name=config[CONF_NAME],
-        group_address_switch=config[CONF_ADDRESS],
+        group_address_switch=config.get(CONF_ADDRESS),
         group_address_switch_state=config.get(LightSchema.CONF_STATE_ADDRESS),
         group_address_brightness=config.get(LightSchema.CONF_BRIGHTNESS_ADDRESS),
         group_address_brightness_state=config.get(
@@ -120,6 +174,22 @@ def _create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
         group_address_tunable_white_state=group_address_tunable_white_state,
         group_address_color_temperature=group_address_color_temp,
         group_address_color_temperature_state=group_address_color_temp_state,
+        group_address_switch_red=red_switch,
+        group_address_switch_red_state=red_switch_state,
+        group_address_brightness_red=red_brightness,
+        group_address_brightness_red_state=red_brightness_state,
+        group_address_switch_green=green_switch,
+        group_address_switch_green_state=green_switch_state,
+        group_address_brightness_green=green_brightness,
+        group_address_brightness_green_state=green_brightness_state,
+        group_address_switch_blue=blue_switch,
+        group_address_switch_blue_state=blue_switch_state,
+        group_address_brightness_blue=blue_brightness,
+        group_address_brightness_blue_state=blue_brightness_state,
+        group_address_switch_white=white_switch,
+        group_address_switch_white_state=white_switch_state,
+        group_address_brightness_white=white_brightness,
+        group_address_brightness_white_state=white_brightness_state,
         min_kelvin=config[LightSchema.CONF_MIN_KELVIN],
         max_kelvin=config[LightSchema.CONF_MAX_KELVIN],
     )
@@ -288,3 +358,20 @@ def _create_weather(knx_module: XKNX, config: ConfigType) -> XknxWeather:
         ),
         group_address_humidity=config.get(WeatherSchema.CONF_KNX_HUMIDITY_ADDRESS),
     )
+
+
+def _create_fan(knx_module: XKNX, config: ConfigType) -> XknxFan:
+    """Return a KNX Fan device to be used within XKNX."""
+
+    fan = XknxFan(
+        knx_module,
+        name=config[CONF_NAME],
+        group_address_speed=config.get(CONF_ADDRESS),
+        group_address_speed_state=config.get(FanSchema.CONF_STATE_ADDRESS),
+        group_address_oscillation=config.get(FanSchema.CONF_OSCILLATION_ADDRESS),
+        group_address_oscillation_state=config.get(
+            FanSchema.CONF_OSCILLATION_STATE_ADDRESS
+        ),
+        max_step=config.get(FanSchema.CONF_MAX_STEP),
+    )
+    return fan

@@ -14,5 +14,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "friendly_name": "U\u017cywaj przyjaznych nazw dla typu odbioru (je\u015bli to mo\u017cliwe)"
+                },
+                "title": "Konfiguracja Recollect Waste"
+            }
+        }
     }
 }
