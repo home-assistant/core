@@ -86,6 +86,7 @@ FLOWS = [
     "gree",
     "griddy",
     "guardian",
+    "habitica",
     "hangouts",
     "harmony",
     "heos",
