@@ -11,6 +11,7 @@ import zigpy.zcl.foundation as zcl_f
 from homeassistant.components import fan
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
+    ATTR_PERCENTAGE_STEP,
     ATTR_PRESET_MODE,
     ATTR_SPEED,
     DOMAIN,
@@ -450,6 +451,7 @@ async def test_fan_update_entity(
     assert hass.states.get(entity_id).attributes[ATTR_SPEED] == SPEED_OFF
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 0
     assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODE] is None
+    assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE_STEP] == 100 / 3
     assert cluster.read_attributes.await_count == 1
 
     await async_setup_component(hass, "homeassistant", {})
@@ -470,4 +472,5 @@ async def test_fan_update_entity(
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 33
     assert hass.states.get(entity_id).attributes[ATTR_SPEED] == SPEED_LOW
     assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODE] is None
+    assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE_STEP] == 100 / 3
     assert cluster.read_attributes.await_count == 3
