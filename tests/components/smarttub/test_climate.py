@@ -1,5 +1,7 @@
 """Test the SmartTub climate platform."""
 
+import smarttub
+
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
@@ -23,7 +25,7 @@ from homeassistant.const import (
 )
 
 
-async def test_thermostat(coordinator, spa, hass, config_entry):
+async def test_thermostat_update(spa, hass, config_entry, smarttub_api):
     """Test the thermostat entity."""
 
     spa.get_status.return_value = {
@@ -72,3 +74,7 @@ async def test_thermostat(coordinator, spa, hass, config_entry):
         blocking=True,
     )
     # does nothing
+
+    spa.get_status.side_effect = smarttub.APIError
+    await hass.helpers.entity_component.async_update_entity(entity_id)
+    # should not fail

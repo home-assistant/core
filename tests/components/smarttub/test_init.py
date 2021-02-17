@@ -11,26 +11,24 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 
 
-async def test_setup_with_no_config(hass):
+async def test_setup_with_no_config(setup_component, hass, smarttub_api):
     """Test that we do not discover anything."""
-    assert await async_setup_component(hass, smarttub.DOMAIN, {}) is True
 
     # No flows started
     assert len(hass.config_entries.flow.async_progress()) == 0
 
-    assert smarttub.const.SMARTTUB_CONTROLLER not in hass.data[smarttub.DOMAIN]
+    smarttub_api.login.assert_not_called()
 
 
-async def test_setup_entry_not_ready(hass, config_entry, smarttub_api):
+async def test_setup_entry_not_ready(setup_component, hass, config_entry, smarttub_api):
     """Test setup when the entry is not ready."""
-    assert await async_setup_component(hass, smarttub.DOMAIN, {}) is True
     smarttub_api.login.side_effect = asyncio.TimeoutError
 
     with pytest.raises(ConfigEntryNotReady):
         await smarttub.async_setup_entry(hass, config_entry)
 
 
-async def test_setup_auth_failed(hass, config_entry, smarttub_api):
+async def test_setup_auth_failed(setup_component, hass, config_entry, smarttub_api):
     """Test setup when the credentials are invalid."""
     assert await async_setup_component(hass, smarttub.DOMAIN, {}) is True
     smarttub_api.login.side_effect = LoginFailed
@@ -38,11 +36,12 @@ async def test_setup_auth_failed(hass, config_entry, smarttub_api):
     assert await smarttub.async_setup_entry(hass, config_entry) is False
 
 
-async def test_config_passed_to_config_entry(hass, config_entry, config_data):
+async def test_config_passed_to_config_entry(
+    hass, config_entry, config_data, smarttub_api
+):
     """Test that configured options are loaded via config entry."""
     config_entry.add_to_hass(hass)
-    ret = await async_setup_component(hass, smarttub.DOMAIN, config_data)
-    assert ret is True
+    assert await async_setup_component(hass, smarttub.DOMAIN, config_data)
 
 
 async def test_unload_entry(hass, config_entry, smarttub_api):
