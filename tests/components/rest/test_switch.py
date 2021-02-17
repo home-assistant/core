@@ -80,6 +80,7 @@ async def test_setup_minimum(hass, aioclient_mock):
                 }
             },
         )
+        await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
 
 
@@ -98,6 +99,8 @@ async def test_setup_query_params(hass, aioclient_mock):
                 }
             },
         )
+        await hass.async_block_till_done()
+
     print(aioclient_mock)
     assert aioclient_mock.call_count == 1
 
@@ -119,6 +122,7 @@ async def test_setup(hass, aioclient_mock):
             }
         },
     )
+    await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
     assert_setup_component(1, SWITCH_DOMAIN)
 
@@ -142,6 +146,7 @@ async def test_setup_with_state_resource(hass, aioclient_mock):
             }
         },
     )
+    await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
     assert_setup_component(1, SWITCH_DOMAIN)
 

@@ -135,7 +135,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
             for platform_conf in conf.get(platform_domain, []):
                 discovery.async_load_platform(
                     hass,
-                    SENSOR_DOMAIN,
+                    platform_domain,
                     DOMAIN,
                     {CONF_REST: rest, CONF_COORDINATOR: coordinator, **platform_conf},
                     config,
