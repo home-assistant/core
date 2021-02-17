@@ -16,10 +16,12 @@ from homeassistant.helpers.reload import async_setup_reload_service
 
 from . import (
     BINARY_SENSOR_SCHEMA,
+    CONF_COORDINATOR,
     CONF_REST,
     DOMAIN,
     PLATFORMS,
     RESOURCE_SCHEMA,
+    RestEntity,
     create_rest_from_config,
 )
 
@@ -34,20 +36,25 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the REST binary sensor."""
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    conf = discovery_info or config
 
-    name = config.get(CONF_NAME)
-    device_class = config.get(CONF_DEVICE_CLASS)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    force_update = config.get(CONF_FORCE_UPDATE)
-    resource_template = config.get(CONF_RESOURCE_TEMPLATE)
+    name = conf.get(CONF_NAME)
+    device_class = conf.get(CONF_DEVICE_CLASS)
+    value_template = conf.get(CONF_VALUE_TEMPLATE)
+    force_update = conf.get(CONF_FORCE_UPDATE)
+    resource_template = conf.get(CONF_RESOURCE_TEMPLATE)
 
     if value_template is not None:
         value_template.hass = hass
 
-    rest = config.get(CONF_REST)
+    rest = conf.get(CONF_REST)
+    coordinator = conf.get(CONF_COORDINATOR)
 
-    if not rest:
-        rest = create_rest_from_config(config)
+    if coordinator:
+        if rest.data is None:
+            await coordinator.async_request_refresh()
+    else:
+        rest = create_rest_from_config(conf)
         await rest.async_update()
 
     if rest.data is None:
@@ -56,7 +63,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(
         [
             RestBinarySensor(
-                hass,
+                coordinator,
                 rest,
                 name,
                 device_class,
@@ -68,12 +75,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class RestBinarySensor(BinarySensorEntity):
+class RestBinarySensor(RestEntity, BinarySensorEntity):
     """Representation of a REST binary sensor."""
 
     def __init__(
         self,
-        hass,
+        coordinator,
         rest,
         name,
         device_class,
@@ -82,36 +89,29 @@ class RestBinarySensor(BinarySensorEntity):
         resource_template,
     ):
         """Initialize a REST binary sensor."""
-        self._hass = hass
+        super.__init__(coordinator, name, device_class, resource_template, force_update)
         self.rest = rest
-        self._name = name
-        self._device_class = device_class
         self._state = False
         self._previous_data = None
         self._value_template = value_template
-        self._force_update = force_update
-        self._resource_template = resource_template
-
-    @property
-    def name(self):
-        """Return the name of the binary sensor."""
-        return self._name
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return self._device_class
+        self._is_on = None
 
     @property
     def available(self):
         """Return the availability of this sensor."""
+        if not super().available:
+            return False
         return self.rest.data is not None
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
+        return self._is_on
+
+    def _update_from_rest_data(self):
+        """Update state from the rest data."""
         if self.rest.data is None:
-            return False
+            self._is_on = False
 
         response = self.rest.data
 
@@ -121,20 +121,8 @@ class RestBinarySensor(BinarySensorEntity):
             )
 
         try:
-            return bool(int(response))
+            self._is_on = bool(int(response))
         except ValueError:
-            return {"true": True, "on": True, "open": True, "yes": True}.get(
+            self._is_on = {"true": True, "on": True, "open": True, "yes": True}.get(
                 response.lower(), False
             )
-
-    @property
-    def force_update(self):
-        """Force update."""
-        return self._force_update
-
-    async def async_update(self):
-        """Get the latest data from REST API and updates the state."""
-        if self._resource_template is not None:
-            self.rest.set_url(self._resource_template.async_render(parse_result=False))
-
-        await self.rest.async_update()

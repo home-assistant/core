@@ -19,10 +19,10 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.reload import async_setup_reload_service
 
 from . import (
+    CONF_COORDINATOR,
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
     CONF_REST,
@@ -30,6 +30,7 @@ from . import (
     PLATFORMS,
     RESOURCE_SCHEMA,
     SENSOR_SCHEMA,
+    RestEntity,
     create_rest_from_config,
 )
 
@@ -45,24 +46,28 @@ PLATFORM_SCHEMA = vol.All(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the RESTful sensor."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    conf = discovery_info or config
 
-    name = config.get(CONF_NAME)
-    unit = config.get(CONF_UNIT_OF_MEASUREMENT)
-    device_class = config.get(CONF_DEVICE_CLASS)
-    json_attrs = config.get(CONF_JSON_ATTRS)
-    json_attrs_path = config.get(CONF_JSON_ATTRS_PATH)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    force_update = config.get(CONF_FORCE_UPDATE)
-    resource_template = config.get(CONF_RESOURCE_TEMPLATE)
+    name = conf.get(CONF_NAME)
+    unit = conf.get(CONF_UNIT_OF_MEASUREMENT)
+    device_class = conf.get(CONF_DEVICE_CLASS)
+    json_attrs = conf.get(CONF_JSON_ATTRS)
+    json_attrs_path = conf.get(CONF_JSON_ATTRS_PATH)
+    value_template = conf.get(CONF_VALUE_TEMPLATE)
+    force_update = conf.get(CONF_FORCE_UPDATE)
+    resource_template = conf.get(CONF_RESOURCE_TEMPLATE)
 
     if value_template is not None:
         value_template.hass = hass
 
-    # maybe discovery info?
-    rest = config.get(CONF_REST)
+    rest = conf.get(CONF_REST)
+    coordinator = conf.get(CONF_COORDINATOR)
 
-    if not rest:
-        rest = create_rest_from_config(config)
+    if coordinator:
+        if rest.data is None:
+            await coordinator.async_request_refresh()
+    else:
+        rest = create_rest_from_config(conf)
         await rest.async_update()
 
     if rest.data is None:
@@ -73,7 +78,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(
         [
             RestSensor(
-                hass,
+                coordinator,
                 rest,
                 name,
                 unit,
@@ -88,12 +93,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class RestSensor(Entity):
+class RestSensor(RestEntity):
     """Implementation of a REST sensor."""
 
     def __init__(
         self,
-        hass,
+        coordinator,
         rest,
         name,
         unit_of_measurement,
@@ -105,23 +110,14 @@ class RestSensor(Entity):
         json_attrs_path,
     ):
         """Initialize the REST sensor."""
-        self._hass = hass
+        super.__init__(coordinator, name, device_class, resource_template, force_update)
         self.rest = rest
-        self._name = name
         self._state = None
         self._unit_of_measurement = unit_of_measurement
-        self._device_class = device_class
         self._value_template = value_template
         self._json_attrs = json_attrs
         self._attributes = None
-        self._force_update = force_update
-        self._resource_template = resource_template
         self._json_attrs_path = json_attrs_path
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def unit_of_measurement(self):
@@ -129,36 +125,16 @@ class RestSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return self._device_class
-
-    @property
     def available(self):
         """Return if the sensor data are available."""
+        if not super().available:
+            return False
         return self.rest.data is not None
 
     @property
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def force_update(self):
-        """Force update."""
-        return self._force_update
-
-    async def async_update(self):
-        """Get the latest data from REST API and update the state."""
-        if self._resource_template is not None:
-            self.rest.set_url(self._resource_template.async_render(parse_result=False))
-
-        await self.rest.async_update()
-        self._update_from_rest_data()
-
-    async def async_added_to_hass(self):
-        """Ensure the data from the initial update is reflected in the state."""
-        self._update_from_rest_data()
 
     def _update_from_rest_data(self):
         """Update state from the rest data."""
