@@ -44,4 +44,3 @@ class WemoBinarySensor(WemoSubscriptionEntity, BinarySensorEntity):
         except ActionException as err:
             _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
             self._available = False
-            self.wemo.reconnect_with_device()
