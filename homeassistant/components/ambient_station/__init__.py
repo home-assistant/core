@@ -239,7 +239,7 @@ SENSOR_TYPES = {
         TYPE_SENSOR,
         None,
     ),
-    TYPE_PM25_Batt: ("PM25 Battery", None, TYPE_BINARY_SENSOR, "battery"),
+    TYPE_PM25_BATT: ("PM25 Battery", None, TYPE_BINARY_SENSOR, "battery"),
     TYPE_PM25_IN: ("PM25 Indoor", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, TYPE_SENSOR, None),
     TYPE_PM25_IN_24H: (
         "PM25 Indoor 24h Avg",
