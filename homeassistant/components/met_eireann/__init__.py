@@ -1,7 +1,6 @@
 """The met_eireann component."""
 from datetime import timedelta
 import logging
-from random import randrange
 
 import meteireann
 
@@ -22,6 +21,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+UPDATE_INTERVAL = timedelta(minutes=60)
+
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     """Set up configured Met Éireann."""
@@ -31,7 +32,26 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 
 async def async_setup_entry(hass, config_entry):
     """Set up Met Éireann as config entry."""
-    coordinator = MetEireannDataUpdateCoordinator(hass, config_entry)
+
+    weather_data = MetEireannWeatherData(
+        hass, config_entry.data, hass.config.units.is_metric
+    )
+    weather_data.init_data()
+
+    async def _async_update_data():
+        """Fetch data from Met Éireann."""
+        try:
+            return await weather_data.fetch_data()
+        except Exception as err:
+            raise UpdateFailed(f"Update failed: {err}") from err
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=DOMAIN,
+        update_method=_async_update_data,
+        update_interval=UPDATE_INTERVAL,
+    )
     await coordinator.async_refresh()
 
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
@@ -49,28 +69,6 @@ async def async_unload_entry(hass, config_entry):
     hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return True
-
-
-class MetEireannDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching Met Éireann data."""
-
-    def __init__(self, hass, config_entry):
-        """Initialize global Met Éireann data updater."""
-        self.weather = MetEireannWeatherData(
-            hass, config_entry.data, hass.config.units.is_metric
-        )
-        self.weather.init_data()
-
-        update_interval = timedelta(minutes=randrange(55, 65))
-
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
-
-    async def _async_update_data(self):
-        """Fetch data from Met Éireann."""
-        try:
-            return await self.weather.fetch_data()
-        except Exception as err:
-            raise UpdateFailed(f"Update failed: {err}") from err
 
 
 class MetEireannWeatherData:
