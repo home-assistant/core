@@ -14,6 +14,10 @@
         },
         "error": {
             "name_exists": "Location already exists"
+        },
+        "abort": {
+            "already_configured": "Location is already configured",
+            "unknown": "Unexpected error"
         }
     }
 }

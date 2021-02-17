@@ -4,21 +4,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
+# pylint:disable=unused-import
 from .const import DOMAIN, HOME_LOCATION_NAME
-
-
-@callback
-def configured_instances(hass):
-    """Return a set of configured SimpliSafe instances."""
-    entries = []
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        entries.append(
-            f"{entry.data.get(CONF_LATITUDE)}-{entry.data.get(CONF_LONGITUDE)}"
-        )
-    return set(entries)
 
 
 class MetEireannFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -36,21 +25,19 @@ class MetEireannFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors = {}
 
         if user_input is not None:
-            if (
-                f"{user_input.get(CONF_LATITUDE)}-{user_input.get(CONF_LONGITUDE)}"
-                not in configured_instances(self.hass)
-            ):
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
-            self._errors[CONF_NAME] = "name_exists"
-
-        return await self._show_config_form(
-            name=HOME_LOCATION_NAME,
-            latitude=self.hass.config.latitude,
-            longitude=self.hass.config.longitude,
-            elevation=self.hass.config.elevation,
-        )
+            # Check if an identical entity is already configured
+            await self.async_set_unique_id(
+                f"{user_input.get(CONF_LATITUDE)},{user_input.get(CONF_LONGITUDE)}"
+            )
+            self._abort_if_unique_id_configured()
+        else:
+            return await self._show_config_form(
+                name=HOME_LOCATION_NAME,
+                latitude=self.hass.config.latitude,
+                longitude=self.hass.config.longitude,
+                elevation=self.hass.config.elevation,
+            )
+        return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
     async def _show_config_form(
         self, name=None, latitude=None, longitude=None, elevation=None
