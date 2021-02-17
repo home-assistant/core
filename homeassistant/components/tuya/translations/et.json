@@ -40,8 +40,10 @@
                     "max_temp": "Maksimaalne sihttemperatuur (vaikimisi kasuta min ja max = 0)",
                     "min_kelvin": "Minimaalne v\u00f5imalik v\u00e4rvitemperatuur (Kelvinites)",
                     "min_temp": "Minimaalne sihttemperatuur (vaikimisi kasuta min ja max = 0)",
+                    "set_temp_divided": "M\u00e4\u00e4ratud temperatuuri k\u00e4su jaoks kasuta jagatud temperatuuri v\u00e4\u00e4rtust",
                     "support_color": "Luba v\u00e4rvuse juhtimine",
                     "temp_divider": "Temperatuuri v\u00e4\u00e4rtuse eraldaja (0 = kasuta vaikev\u00e4\u00e4rtust)",
+                    "temp_step_override": "Sihttemperatuuri samm",
                     "tuya_max_coltemp": "Seadme teatatud maksimaalne v\u00e4rvitemperatuur",
                     "unit_of_measurement": "Seadme temperatuuri\u00fchik"
                 },

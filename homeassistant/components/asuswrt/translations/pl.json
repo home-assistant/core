@@ -32,9 +32,9 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Czas w sekundach, zanim urz\u0105dzenie zostanie uznane za \"nieobecne\"",
+                    "consider_home": "Czas w sekundach, zanim urz\u0105dzenie utrzyma stan \"poza domem\"",
                     "dnsmasq": "Lokalizacja w routerze plik\u00f3w dnsmasq.leases",
-                    "interface": "Interfejs, z kt\u00f3rego chcesz uzyska\u0107 statystyki (np. Eth0, eth1 itp.)",
+                    "interface": "Interfejs, z kt\u00f3rego chcesz uzyska\u0107 statystyki (np. eth0, eth1 itp.)",
                     "require_ip": "Urz\u0105dzenia musz\u0105 mie\u0107 adres IP (w trybie punktu dost\u0119pu)",
                     "track_unknown": "\u015aled\u017a nieznane / nienazwane urz\u0105dzenia"
                 },

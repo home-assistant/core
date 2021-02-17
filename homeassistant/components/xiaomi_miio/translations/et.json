@@ -6,10 +6,20 @@
         },
         "error": {
             "cannot_connect": "\u00dchendus nurjus",
-            "no_device_selected": "Seadmeid pole valitud, vali \u00fcks seade."
+            "no_device_selected": "Seadmeid pole valitud, vali \u00fcks seade.",
+            "unknown_device": "Seadme mudel pole teada, seadet ei saa seadistamisvoo abil seadistada."
         },
         "flow_title": "Xiaomi Miio: {name}",
         "step": {
+            "device": {
+                "data": {
+                    "host": "IP-aadress",
+                    "name": "Seadme nimi",
+                    "token": "API v\u00f5ti"
+                },
+                "description": "Vaja on 32 t\u00e4hem\u00e4rgilist v\u00f5tit API v\u00f5ti , juhiste saamiseks vaata https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token. Pane t\u00e4hele, et see v\u00f5ti API v\u00f5ti erineb Xiaomi Aqara sidumises kasutatavast v\u00f5tmest.",
+                "title": "\u00dchenda Xiaomi Miio seade v\u00f5i Xiaomi Gateway"
+            },
             "gateway": {
                 "data": {
                     "host": "IP aadress",
