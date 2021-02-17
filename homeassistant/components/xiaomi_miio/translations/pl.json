@@ -6,10 +6,20 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "no_device_selected": "Nie wybrano \u017cadnego urz\u0105dzenia, wybierz jedno urz\u0105dzenie"
+            "no_device_selected": "Nie wybrano \u017cadnego urz\u0105dzenia, wybierz jedno urz\u0105dzenie",
+            "unknown_device": "Model urz\u0105dzenia nie jest znany, nie mo\u017cna skonfigurowa\u0107 urz\u0105dzenia przy u\u017cyciu interfejsu u\u017cytkownika."
         },
         "flow_title": "Xiaomi Miio: {name}",
         "step": {
+            "device": {
+                "data": {
+                    "host": "Adres IP",
+                    "name": "Nazwa urz\u0105dzenia",
+                    "token": "Token API"
+                },
+                "description": "B\u0119dziesz potrzebowa\u0107 tokenu API (32 znaki), odwied\u017a https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token, aby uzyska\u0107 instrukcje. Zauwa\u017c i\u017c jest to inny token ni\u017c w integracji Xiaomi Aqara.",
+                "title": "Po\u0142\u0105czenie z bramk\u0105 Xiaomi b\u0105d\u017a innym urz\u0105dzeniem Xiaomi Miio"
+            },
             "gateway": {
                 "data": {
                     "host": "Adres IP",
