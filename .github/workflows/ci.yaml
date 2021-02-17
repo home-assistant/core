@@ -693,6 +693,7 @@ jobs:
             --test-group-count 4 \
             --test-group=${{ matrix.group }} \
             --cov homeassistant \
+            --cov-report= \
             -o console_output_style=count \
             -p no:sugar \
             tests
