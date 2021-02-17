@@ -47,7 +47,11 @@ MODEL_POWER_STRIP_V2 = "zimi.powerstrip.v2"
 MODEL_PLUG_V3 = "chuangmi.plug.v3"
 
 KEY_CHANNEL = "channel"
-GATEWAY_SWITCH_VARS = {"status_ch0": {KEY_CHANNEL: 0}, "status_ch1": {KEY_CHANNEL: 1}, "status_ch2": {KEY_CHANNEL: 2}}
+GATEWAY_SWITCH_VARS = {
+    "status_ch0": {KEY_CHANNEL: 0},
+    "status_ch1": {KEY_CHANNEL: 1},
+    "status_ch2": {KEY_CHANNEL: 2},
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -278,21 +282,15 @@ class XiaomiGatewaySwitch(XiaomiGatewayDevice, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        await self.hass.async_add_executor_job(
-            self._sub_device.on, self._channel
-        )
+        await self.hass.async_add_executor_job(self._sub_device.on, self._channel)
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
-        await self.hass.async_add_executor_job(
-            self._sub_device.off, self._channel
-        )
+        await self.hass.async_add_executor_job(self._sub_device.off, self._channel)
 
     async def async_toggle(self, **kwargs):
         """Toggle the switch."""
-        await self.hass.async_add_executor_job(
-            self._sub_device.toggle, self._channel
-        )
+        await self.hass.async_add_executor_job(self._sub_device.toggle, self._channel)
 
 
 class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
