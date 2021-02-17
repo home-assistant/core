@@ -121,7 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigType):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
     platforms = [platform for platform in PLATFORMS if hass.data[DOMAIN].get(platform)]
     unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
