@@ -1118,19 +1118,18 @@ class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        if not self.is_on:
-            await self.hass.async_add_executor_job(self._sub_device.on)
+        await self.hass.async_add_executor_job(self._sub_device.on)
 
         if ATTR_COLOR_TEMP in kwargs:
             color_temp = kwargs[ATTR_COLOR_TEMP]
             await self.hass.async_add_executor_job(
-                partial(self._sub_device.set_color_temp, color_temp)
+                self._sub_device.set_color_temp, color_temp
             )
 
         if ATTR_BRIGHTNESS in kwargs:
             brightness = round((kwargs[ATTR_BRIGHTNESS] * 100) / 255)
             await self.hass.async_add_executor_job(
-                partial(self._sub_device.set_brightness, brightness)
+                self._sub_device.set_brightness, brightness
             )
 
     async def async_turn_off(self, **kwargsf):
