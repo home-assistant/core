@@ -8,7 +8,7 @@ from jsonpath import jsonpath
 import voluptuous as vol
 import xmltodict
 
-from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
@@ -33,25 +33,17 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.reload import async_setup_reload_service
 
-from . import DOMAIN, PLATFORMS, RESOURCE_SCHEMA
+from . import (
+    CONF_JSON_ATTRS,
+    CONF_JSON_ATTRS_PATH,
+    DOMAIN,
+    PLATFORMS,
+    RESOURCE_SCHEMA,
+    SENSOR_SCHEMA,
+)
 from .data import RestData
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "REST Sensor"
-
-CONF_JSON_ATTRS = "json_attributes"
-CONF_JSON_ATTRS_PATH = "json_attributes_path"
-
-
-SENSOR_SCHEMA = {
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
-    vol.Optional(CONF_JSON_ATTRS_PATH): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({**RESOURCE_SCHEMA, **SENSOR_SCHEMA})
 

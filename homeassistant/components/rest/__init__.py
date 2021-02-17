@@ -3,18 +3,30 @@
 
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+)
+from homeassistant.components.sensor import (
+    DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
+    DOMAIN as SENSOR_DOMAIN,
+)
 from homeassistant.const import (
     CONF_AUTHENTICATION,
+    CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
     CONF_HEADERS,
     CONF_METHOD,
+    CONF_NAME,
     CONF_PARAMS,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_RESOURCE,
     CONF_RESOURCE_TEMPLATE,
     CONF_TIMEOUT,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
+    CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
@@ -29,6 +41,12 @@ PLATFORMS = ["binary_sensor", "notify", "sensor", "switch"]
 DEFAULT_METHOD = "GET"
 DEFAULT_VERIFY_SSL = True
 DEFAULT_FORCE_UPDATE = False
+
+DEFAULT_BINARY_SENSOR_NAME = "REST Binary Sensor"
+DEFAULT_SENSOR_NAME = "REST Sensor"
+CONF_JSON_ATTRS = "json_attributes"
+CONF_JSON_ATTRS_PATH = "json_attributes_path"
+
 
 METHODS = ["POST", "GET"]
 
@@ -48,3 +66,36 @@ RESOURCE_SCHEMA = {
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 }
+
+SENSOR_SCHEMA = {
+    vol.Optional(CONF_NAME, default=DEFAULT_SENSOR_NAME): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
+    vol.Optional(CONF_JSON_ATTRS_PATH): cv.string,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+}
+
+BINARY_SENSOR_SCHEMA = {
+    vol.Optional(CONF_NAME, default=DEFAULT_BINARY_SENSOR_NAME): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+}
+
+
+COMBINED_SCHEMA = vol.Schema(
+    {
+        **RESOURCE_SCHEMA,
+        vol.Optional(SENSOR_DOMAIN): vol.All(
+            cv.ensure_list, [vol.Schema(SENSOR_SCHEMA)]
+        ),
+        vol.Optional(BINARY_SENSOR_DOMAIN): vol.All(
+            cv.ensure_list, [vol.Schema(BINARY_SENSOR_SCHEMA)]
+        ),
+    }
+)
+
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.All(cv.ensure_list, [COMBINED_SCHEMA])},
+    extra=vol.ALLOW_EXTRA,
+)
