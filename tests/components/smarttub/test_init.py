@@ -30,7 +30,6 @@ async def test_setup_entry_not_ready(setup_component, hass, config_entry, smartt
 
 async def test_setup_auth_failed(setup_component, hass, config_entry, smarttub_api):
     """Test setup when the credentials are invalid."""
-    assert await async_setup_component(hass, smarttub.DOMAIN, {}) is True
     smarttub_api.login.side_effect = LoginFailed
 
     assert await smarttub.async_setup_entry(hass, config_entry) is False
