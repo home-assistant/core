@@ -124,12 +124,12 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         if not self._static_info.supports_speed:
             return None
 
-        if self._supports_percentage:
-            return int(self._state.speed_percentage * 100)
-        else:
+        if not self._supports_percentage:
             return ordered_list_item_to_percentage(
                 ORDERED_NAMED_FAN_SPEEDS, self._state.speed
             )
+
+        return int(self._state.speed_percentage * 100)
 
     @esphome_state_property
     def oscillating(self) -> None:
