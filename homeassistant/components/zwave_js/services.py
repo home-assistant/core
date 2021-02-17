@@ -1,6 +1,6 @@
 """Methods and classes related to executing Z-Wave commands and publishing these to hass."""
 import logging
-from typing import Optional, cast
+from typing import cast
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
@@ -40,7 +40,7 @@ class ZWaveServices:
             schema=vol.All(
                 {
                     vol.Exclusive(ATTR_DEVICE_ID, "id"): cv.string,
-                    vol.Exclusive(ATTR_ENTITY_ID, "id"): cv.string,
+                    vol.Exclusive(ATTR_ENTITY_ID, "id"): cv.entity_id,
                     vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
                     vol.Required(const.ATTR_CONFIG_PROPERTY): vol.Coerce(int),
                     vol.Optional(const.ATTR_CONFIG_PROPERTY_KEY_NAME): cv.string,
@@ -51,11 +51,8 @@ class ZWaveServices:
         )
 
     @callback
-    def async_get_node_from_device_id(self, device_id: Optional[str]) -> ZwaveNode:
+    def async_get_node_from_device_id(self, device_id: str) -> ZwaveNode:
         """Get node from a device ID."""
-        if not device_id:
-            return None
-
         device_entry = self._dev_reg.async_get(device_id)
 
         if not device_entry:
@@ -101,11 +98,8 @@ class ZWaveServices:
         return client.driver.controller.nodes[identifier[1]]
 
     @callback
-    def async_get_node_from_entity_id(self, entity_id: Optional[str]) -> ZwaveNode:
+    def async_get_node_from_entity_id(self, entity_id: str) -> ZwaveNode:
         """Get node from an entity ID."""
-        if not entity_id:
-            return None
-
         entity_entry = self._ent_reg.async_get(entity_id)
 
         if not entity_entry:
@@ -114,13 +108,18 @@ class ZWaveServices:
         if entity_entry.platform != const.DOMAIN:
             raise ValueError("Entity is not from zwave_js integration")
 
+        # Assert for mypy, safe because we know that zwave_js entities are always
+        # tied to a device
+        assert entity_entry.device_id
         return self.async_get_node_from_device_id(entity_entry.device_id)
 
     async def async_set_config_value(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
-        node: ZwaveNode = self.async_get_node_from_entity_id(
-            service.data.get(ATTR_ENTITY_ID)
-        ) or self.async_get_node_from_device_id(service.data.get(ATTR_DEVICE_ID))
+        node: ZwaveNode = None
+        if ATTR_ENTITY_ID in service.data:
+            node = self.async_get_node_from_entity_id(service.data[ATTR_ENTITY_ID])
+        else:
+            node = self.async_get_node_from_device_id(service.data[ATTR_DEVICE_ID])
         property = service.data[const.ATTR_CONFIG_PROPERTY]
         property_key_name = service.data.get(const.ATTR_CONFIG_PROPERTY_KEY_NAME)
         endpoint = service.data.get(const.ATTR_ENDPOINT)
@@ -141,6 +140,7 @@ class ZWaveServices:
             f"endpoint: {endpoint}, value_id: {value_id})"
         )
 
+        # We will let async_set_value handle validation of the ZwaveValue and new value
         try:
             await node.async_set_value(config_values[value_id], selection)
         except KeyError:
