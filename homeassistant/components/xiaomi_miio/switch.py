@@ -46,6 +46,9 @@ DATA_KEY = "switch.xiaomi_miio"
 MODEL_POWER_STRIP_V2 = "zimi.powerstrip.v2"
 MODEL_PLUG_V3 = "chuangmi.plug.v3"
 
+KEY_CHANNEL = "channel"
+GATEWAY_SWITCH_VARS = {"status_ch0": {KEY_CHANNEL: 0}, "status_ch1": {KEY_CHANNEL: 1}, "status_ch2": {KEY_CHANNEL: 2}}
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -149,17 +152,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for sub_device in sub_devices.values():
             if sub_device.device_type != "Switch":
                 continue
-            if "status_ch0" in sub_device.status:
-                entities.append(
-                    XiaomiGatewaySwitch(coordinator, sub_device, config_entry, 0)
-                )
-            if "status_ch1" in sub_device.status:
-                entities.append(
-                    XiaomiGatewaySwitch(coordinator, sub_device, config_entry, 1)
-                )
-            if "status_ch2" in sub_device.status:
-                entities.append(
-                    XiaomiGatewaySwitch(coordinator, sub_device, config_entry, 2)
+            switch_variables = set(sub_device.status) & set(GATEWAY_SWITCH_VARS)
+            if switch_variables:
+                entities.extend(
+                    [
+                        XiaomiGatewaySwitch(
+                            coordinator, sub_device, config_entry, variable
+                        )
+                        for variable in switch_variables
+                    ]
                 )
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE or (
@@ -257,13 +258,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class XiaomiGatewaySwitch(XiaomiGatewayDevice, SwitchEntity):
     """Representation of a XiaomiGatewaySwitch."""
 
-    def __init__(self, coordinator, sub_device, entry, channel):
+    def __init__(self, coordinator, sub_device, entry, variable):
         """Initialize the XiaomiSensor."""
         super().__init__(coordinator, sub_device, entry)
-        self._channel = channel
-        self._data_key = f"status_ch{channel}"
-        self._unique_id = f"{sub_device.sid}-ch{channel}"
-        self._name = f"{sub_device.name} ch{channel} ({sub_device.sid})"
+        self._channel = GATEWAY_SWITCH_VARS[variable][KEY_CHANNEL]
+        self._data_key = f"status_ch{self._channel}"
+        self._unique_id = f"{sub_device.sid}-ch{self._channel}"
+        self._name = f"{sub_device.name} ch{self._channel} ({sub_device.sid})"
 
     @property
     def device_class(self):
