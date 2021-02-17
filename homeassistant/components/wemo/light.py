@@ -191,10 +191,9 @@ class WemoLight(WemoEntity, LightEntity):
         try:
             self._update_lights(no_throttle=force_update)
             self._state = self.wemo.state
-        except (AttributeError, ActionException) as err:
+        except ActionException as err:
             _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
             self._available = False
-            self.wemo.bridge.reconnect_with_device()
         else:
             self._is_on = self._state.get("onoff") != WEMO_OFF
             self._brightness = self._state.get("level", 255)
@@ -238,10 +237,9 @@ class WemoDimmer(WemoSubscriptionEntity, LightEntity):
             if not self._available:
                 _LOGGER.info("Reconnected to %s", self.name)
                 self._available = True
-        except (AttributeError, ActionException) as err:
+        except ActionException as err:
             _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
             self._available = False
-            self.wemo.reconnect_with_device()
 
     def turn_on(self, **kwargs):
         """Turn the dimmer on."""
