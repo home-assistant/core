@@ -69,8 +69,11 @@ async def _async_process_config(hass, config) -> bool:
 
     for conf in config[DOMAIN]:
         scan_interval = conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        resource_template = conf.get(CONF_RESOURCE_TEMPLATE)
         rest = create_rest_data_from_config(hass, conf)
-        coordinator = _wrap_rest_in_coordinator(hass, rest, scan_interval)
+        coordinator = _wrap_rest_in_coordinator(
+            hass, rest, resource_template, scan_interval
+        )
         await coordinator.async_refresh()
 
         for platform_domain in COORDINATOR_AWARE_PLATFORMS:
@@ -86,13 +89,23 @@ async def _async_process_config(hass, config) -> bool:
     return True
 
 
-def _wrap_rest_in_coordinator(hass, rest, update_interval):
+def _wrap_rest_in_coordinator(hass, rest, resource_template, update_interval):
     """Wrap a DataUpdateCoordinator around the rest object."""
+    if resource_template:
+
+        async def _async_refresh_with_resource_template():
+            rest.set_url(resource_template.async_render(parse_result=False))
+            await rest.async_refresh()
+
+        update_method = _async_refresh_with_resource_template
+    else:
+        update_method = rest.async_refresh
+
     return DataUpdateCoordinator(
         hass,
         _LOGGER,
         name="rest data",
-        update_method=rest.async_refresh,
+        update_method=update_method,
         update_interval=update_interval,
     )
 

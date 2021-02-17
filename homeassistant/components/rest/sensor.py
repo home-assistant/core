@@ -53,6 +53,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     rest = conf.get(CONF_REST)
     coordinator = conf.get(CONF_COORDINATOR)
 
+    # Must update the sensor now (including fetching the rest resource) to
+    # ensure it's updating its state.
     if coordinator:
         if rest.data is None:
             await coordinator.async_request_refresh()
@@ -63,8 +65,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if rest.data is None:
         raise PlatformNotReady
 
-    # Must update the sensor now (including fetching the rest resource) to
-    # ensure it's updating its state.
     async_add_entities(
         [
             RestSensor(
@@ -119,6 +119,11 @@ class RestSensor(RestEntity):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
 
     def _update_from_rest_data(self):
         """Update state from the rest data."""
@@ -177,8 +182,3 @@ class RestSensor(RestEntity):
             )
 
         self._state = value
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
