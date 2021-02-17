@@ -6,7 +6,10 @@ from unittest.mock import patch
 from smarttub import LoginFailed
 
 from homeassistant.components import smarttub
-from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+from homeassistant.config_entries import (
+    ENTRY_STATE_SETUP_ERROR,
+    ENTRY_STATE_SETUP_RETRY,
+)
 from homeassistant.setup import async_setup_component
 
 
@@ -32,7 +35,9 @@ async def test_setup_auth_failed(setup_component, hass, config_entry, smarttub_a
     """Test setup when the credentials are invalid."""
     smarttub_api.login.side_effect = LoginFailed
 
-    assert await smarttub.async_setup_entry(hass, config_entry) is False
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state == ENTRY_STATE_SETUP_ERROR
 
 
 async def test_config_passed_to_config_entry(
