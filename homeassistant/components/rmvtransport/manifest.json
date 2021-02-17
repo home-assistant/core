@@ -3,7 +3,7 @@
   "name": "RMV",
   "documentation": "https://www.home-assistant.io/integrations/rmvtransport",
   "requirements": [
-    "PyRMVtransport==0.2.10"
+    "PyRMVtransport==0.3.0"
   ],
   "codeowners": [
     "@cgtobi"
