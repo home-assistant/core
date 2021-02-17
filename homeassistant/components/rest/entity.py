@@ -1,5 +1,6 @@
 """The base entity for the rest component."""
 
+from abc import abstractmethod
 from typing import Any
 
 from homeassistant.core import callback
@@ -87,3 +88,7 @@ class RestEntity(Entity):
 
         await self.rest.async_update()
         self._update_from_rest_data()
+
+    @abstractmethod
+    def _update_from_rest_data(self):
+        """Update state from the rest data."""
