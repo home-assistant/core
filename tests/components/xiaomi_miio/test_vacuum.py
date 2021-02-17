@@ -7,7 +7,6 @@ from miio import DeviceException
 import pytest
 from pytz import utc
 
-from homeassistant import config_entries
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
     ATTR_FAN_SPEED,
@@ -58,6 +57,8 @@ from homeassistant.const import (
 )
 
 from .test_config_flow import TEST_MAC
+
+from tests.common import MockConfigEntry
 
 PLATFORM = "xiaomi_miio"
 
@@ -522,23 +523,21 @@ async def setup_component(hass, entity_name):
     """Set up vacuum component."""
     entity_id = f"{DOMAIN}.{entity_name}"
 
-    hass.config.components.add(XIAOMI_DOMAIN)
-    config_entry = config_entries.ConfigEntry(
-        1,
-        XIAOMI_DOMAIN,
-        entity_name,
-        {
+    config_entry = MockConfigEntry(
+        domain=XIAOMI_DOMAIN,
+        unique_id="123456",
+        title=entity_name,
+        data={
             const.CONF_FLOW_TYPE: const.CONF_DEVICE,
             CONF_HOST: "192.168.1.100",
             CONF_TOKEN: "12345678901234567890123456789012",
             const.CONF_MODEL: const.MODELS_VACUUM[0],
             const.CONF_MAC: TEST_MAC,
         },
-        "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
-        system_options={},
     )
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-    # To flush out the service call to update the group
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
     return entity_id
