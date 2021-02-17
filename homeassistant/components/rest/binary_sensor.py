@@ -41,6 +41,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     rest = conf.get(CONF_REST)
     coordinator = conf.get(CONF_COORDINATOR)
 
+    # Must update the sensor now (including fetching the rest resource) to
+    # ensure it's updating its state.
     if coordinator:
         if rest.data is None:
             await coordinator.async_request_refresh()
