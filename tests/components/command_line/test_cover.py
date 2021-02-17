@@ -27,11 +27,22 @@ async def setup_test_entity(
         DOMAIN,
         {
             DOMAIN: [
-                {"platform": "command_line", "covers": {"test": config_dict}},
+                {"platform": "command_line", "covers": config_dict},
             ]
         },
     )
     await hass.async_block_till_done()
+
+
+async def test_no_covers(caplog: Any, hass: HomeAssistantType) -> None:
+    """Test that the cover does not polls when there's no state command."""
+
+    with patch(
+        "homeassistant.components.command_line.subprocess.check_output",
+        return_value=b"50\n",
+    ):
+        await setup_test_entity(hass, {})
+        assert "No covers added" in caplog.text
 
 
 async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistantType) -> None:
@@ -41,7 +52,7 @@ async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistantType) 
         "homeassistant.components.command_line.subprocess.check_output",
         return_value=b"50\n",
     ) as check_output:
-        await setup_test_entity(hass, {})
+        await setup_test_entity(hass, {"test": {}})
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
         assert not check_output.called
@@ -54,7 +65,7 @@ async def test_poll_when_cover_has_command_state(hass: HomeAssistantType) -> Non
         "homeassistant.components.command_line.subprocess.check_output",
         return_value=b"50\n",
     ) as check_output:
-        await setup_test_entity(hass, {"command_state": "echo state"})
+        await setup_test_entity(hass, {"test": {"command_state": "echo state"}})
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
         check_output.assert_called_once_with(
@@ -69,11 +80,13 @@ async def test_state_value(hass: HomeAssistantType) -> None:
         await setup_test_entity(
             hass,
             {
-                "command_state": f"cat {path}",
-                "command_open": f"echo 1 > {path}",
-                "command_close": f"echo 1 > {path}",
-                "command_stop": f"echo 0 > {path}",
-                "value_template": "{{ value }}",
+                "test": {
+                    "command_state": f"cat {path}",
+                    "command_open": f"echo 1 > {path}",
+                    "command_close": f"echo 1 > {path}",
+                    "command_stop": f"echo 0 > {path}",
+                    "value_template": "{{ value }}",
+                }
             },
         )
 
@@ -109,8 +122,10 @@ async def test_reload(hass: HomeAssistantType) -> None:
     await setup_test_entity(
         hass,
         {
-            "command_state": "echo open",
-            "value_template": "{{ value }}",
+            "test": {
+                "command_state": "echo open",
+                "value_template": "{{ value }}",
+            }
         },
     )
     entity_state = hass.states.get("cover.test")
@@ -135,3 +150,16 @@ async def test_reload(hass: HomeAssistantType) -> None:
 
     assert not hass.states.get("cover.test")
     assert hass.states.get("cover.from_yaml")
+
+
+async def test_move_cover_failure(caplog: Any, hass: HomeAssistantType) -> None:
+    """Test with state value."""
+
+    await setup_test_entity(
+        hass,
+        {"test": {"command_open": "exit 1"}},
+    )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
+    )
+    assert "Command failed" in caplog.text

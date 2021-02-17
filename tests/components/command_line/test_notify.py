@@ -1,6 +1,8 @@
 """The tests for the command line notification platform."""
 import os
+import subprocess
 import tempfile
+from unittest.mock import patch
 
 from homeassistant import setup
 from homeassistant.components.notify import DOMAIN
@@ -87,3 +89,27 @@ async def test_timeout(caplog: Any, hass: HomeAssistantType) -> None:
         DOMAIN, "test", {"message": "error"}, blocking=True
     )
     assert "Timeout" in caplog.text
+
+
+async def test_subprocess_exceptions(caplog: Any, hass: HomeAssistantType) -> None:
+    """Test that notify subprocess exceptions are handled correctly."""
+
+    with patch(
+        "homeassistant.components.command_line.notify.subprocess.Popen",
+        side_effect=[
+            subprocess.TimeoutExpired("cmd", 10),
+            subprocess.SubprocessError(),
+        ],
+    ) as check_output:
+        await setup_test_service(hass, {"command": "exit 0"})
+        assert await hass.services.async_call(
+            DOMAIN, "test", {"message": "error"}, blocking=True
+        )
+        assert check_output.call_count == 1
+        assert "Timeout for command" in caplog.text
+
+        assert await hass.services.async_call(
+            DOMAIN, "test", {"message": "error"}, blocking=True
+        )
+        assert check_output.call_count == 2
+        assert "Error trying to exec command" in caplog.text

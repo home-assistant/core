@@ -96,6 +96,19 @@ async def test_template_render_with_quote(hass: HomeAssistantType) -> None:
         )
 
 
+async def test_bad_template_render(caplog: Any, hass: HomeAssistantType) -> None:
+    """Test rendering a broken template."""
+
+    await setup_test_entities(
+        hass,
+        {
+            "command": "echo {{ this template doesn't parse",
+        },
+    )
+
+    assert "Error rendering command template" in caplog.text
+
+
 async def test_bad_command(hass: HomeAssistantType) -> None:
     """Test bad command."""
     await setup_test_entities(
