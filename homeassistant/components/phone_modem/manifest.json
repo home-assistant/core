@@ -1,0 +1,8 @@
+{
+  "domain": "phone_modem",
+  "name": "Phone Modem",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/phone_modem",
+  "requirements": ["phone_modem==0.0.1", "pydub==0.24.1"],
+  "codeowners": ["@tkdrob"]
+}

@@ -163,6 +163,7 @@ FLOWS = [
     "ozw",
     "panasonic_viera",
     "philips_js",
+    "phone_modem",
     "pi_hole",
     "plaato",
     "plex",
