@@ -258,6 +258,7 @@ async def async_setup(hass, config):
             stream = await camera.create_stream()
             if not stream:
                 continue
+            stream.keepalive = True
             stream.hls_output()
             stream.start()
 
