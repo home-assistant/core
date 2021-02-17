@@ -2,9 +2,14 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.const import CONF_ENTITIES
 
 from .const import (
+    ATTR_VALUE,
     BSH_DOOR_STATE,
+    BSH_DOOR_STATE_CLOSED,
+    BSH_DOOR_STATE_LOCKED,
+    BSH_DOOR_STATE_OPEN,
     BSH_REMOTE_CONTROL_ACTIVATION_STATE,
     BSH_REMOTE_START_ALLOWANCE_STATE,
     DOMAIN,
@@ -21,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities = []
         hc_api = hass.data[DOMAIN][config_entry.entry_id]
         for device_dict in hc_api.devices:
-            entity_dicts = device_dict.get("entities", {}).get("binary_sensor", [])
+            entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("binary_sensor", [])
             entities += [HomeConnectBinarySensor(**d) for d in entity_dicts]
         return entities
 
@@ -39,11 +44,8 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
         self._type = sensor_type
         if self._type == "door":
             self._update_key = BSH_DOOR_STATE
-            self._false_value_list = (
-                "BSH.Common.EnumType.DoorState.Closed",
-                "BSH.Common.EnumType.DoorState.Locked",
-            )
-            self._true_value_list = ["BSH.Common.EnumType.DoorState.Open"]
+            self._false_value_list = (BSH_DOOR_STATE_CLOSED, BSH_DOOR_STATE_LOCKED)
+            self._true_value_list = [BSH_DOOR_STATE_OPEN]
         elif self._type == "remote_control":
             self._update_key = BSH_REMOTE_CONTROL_ACTIVATION_STATE
             self._false_value_list = [False]
@@ -68,9 +70,9 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
         state = self.device.appliance.status.get(self._update_key, {})
         if not state:
             self._state = None
-        elif state.get("value") in self._false_value_list:
+        elif state.get(ATTR_VALUE) in self._false_value_list:
             self._state = False
-        elif state.get("value") in self._true_value_list:
+        elif state.get(ATTR_VALUE) in self._true_value_list:
             self._state = True
         else:
             _LOGGER.warning(
