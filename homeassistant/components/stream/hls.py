@@ -89,9 +89,9 @@ class HlsPlaylistView(StreamView):
                 "#EXT-X-DISCONTINUITY-SEQUENCE:{}".format(segments[0].stream_id)
             )
 
-        last_stream_id = None
+        last_stream_id = segments[0].stream_id
         for segment in segments:
-            if last_stream_id is not None and last_stream_id != segment.stream_id:
+            if last_stream_id != segment.stream_id:
                 playlist.append("#EXT-X-DISCONTINUITY")
             playlist.extend(
                 [
