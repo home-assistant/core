@@ -78,3 +78,23 @@ set_direction:
     direction:
       description: The direction to rotate. Either 'forward' or 'reverse'
       example: "forward"
+
+increase_speed:
+  description: Increase the speed of the fan by one speed or a percentage_step.
+  fields:
+    entity_id:
+      description: Name(s) of the entities to increase speed
+      example: "fan.living_room"
+    percentage_step:
+      description: Increase speed by a percentage. Should be between 0..100. [optional]
+      example: 50
+
+decrease_speed:
+  description: Decrease the speed of the fan by one speed or a percentage_step.
+  fields:
+    entity_id:
+      description: Name(s) of the entities to decrease speed
+      example: "fan.living_room"
+    percentage_step:
+      description: Decrease speed by a percentage. Should be between 0..100. [optional]
+      example: 50
