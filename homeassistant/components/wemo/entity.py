@@ -49,16 +49,16 @@ class WemoEntity(Entity):
         """Update WeMo state.
 
         Wemo has an aggressive retry logic that sometimes can take over a
-        minute to return. If we don't get a state after 5 seconds, assume the
-        Wemo switch is unreachable. If update goes through, it will be made
-        available again.
+        minute to return. If we don't get a state within the scan interval,
+        assume the Wemo switch is unreachable. If update goes through, it will
+        be made available again.
         """
         # If an update is in progress, we don't do anything
         if self._update_lock.locked():
             return
 
         try:
-            with async_timeout.timeout(5):
+            with async_timeout.timeout(self.platform.scan_interval.seconds - 0.1):
                 await asyncio.shield(self._async_locked_update(True))
         except asyncio.TimeoutError:
             _LOGGER.warning("Lost connection to %s", self.name)
