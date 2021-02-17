@@ -277,19 +277,19 @@ class XiaomiGatewaySwitch(XiaomiGatewayDevice, SwitchEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
         await self.hass.async_add_executor_job(
-            partial(self._sub_device.on, self._channel)
+            self._sub_device.on, self._channel
         )
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
         await self.hass.async_add_executor_job(
-            partial(self._sub_device.off, self._channel)
+            self._sub_device.off, self._channel
         )
 
     async def async_toggle(self, **kwargs):
         """Toggle the switch."""
         await self.hass.async_add_executor_job(
-            partial(self._sub_device.toggle, self._channel)
+            self._sub_device.toggle, self._channel
         )
 
 
