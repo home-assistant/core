@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       python-key: ${{ steps.generate-python-key.outputs.key }}
+      pre-commit-key: ${{ steps.generate-pre-commit-key.outputs.key }}
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
@@ -56,15 +57,20 @@ jobs:
           . venv/bin/activate
           pip install -U "pip<20.3" setuptools
           pip install -r requirements.txt -r requirements_test.txt
+      - name: Generate partial pre-commit restore key
+        id: generate-pre-commit-key
+        run: >-
+          echo "::set-output name=key::pre-commit-${{ env.CACHE_VERSION }}-${{
+            hashFiles('.pre-commit-config.yaml') }}"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
         uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          key: >-
+            ${{ runner.os }}-${{ steps.generate-pre-commit-key.outputs.key }}
           restore-keys: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-
+            ${{ runner.os }}-pre-commit-${{ env.CACHE_VERSION }}-
       - name: Install pre-commit dependencies
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -100,8 +106,7 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -141,8 +146,7 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -182,8 +186,7 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -245,8 +248,7 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -289,8 +291,7 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -333,8 +334,7 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -374,8 +374,7 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -418,8 +417,7 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -470,8 +468,7 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
