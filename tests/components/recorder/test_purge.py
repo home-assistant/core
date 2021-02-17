@@ -138,7 +138,7 @@ def test_purge_method(hass, hass_recorder):
             hass.data[DATA_INSTANCE].block_till_done()
             wait_recording_done(hass)
             assert (
-                mock_logger.debug.mock_calls[5][1][0]
+                mock_logger.debug.mock_calls[6][1][0]
                 == "Vacuuming SQL DB to free space"
             )
 
