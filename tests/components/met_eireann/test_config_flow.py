@@ -1,11 +1,11 @@
 """Tests for Met Éireann config flow."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.met_eireann.const import DOMAIN, HOME_LOCATION_NAME
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
-
-from unittest.mock import patch
 
 
 @pytest.fixture(name="met_eireann_setup", autouse=True)

@@ -11,9 +11,8 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SNOWY,
     ATTR_CONDITION_SNOWY_RAINY,
     ATTR_CONDITION_SUNNY,
+    DOMAIN as WEATHER_DOMAIN,
 )
-
-from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 
 ATTRIBUTION = "Data provided by Met Éireann"
 
