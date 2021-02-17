@@ -126,6 +126,6 @@ async def async_unload_entry(hass, config_entry):
     platforms = [platform for platform in PLATFORMS if hass.data[DOMAIN].get(platform)]
     unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
     if unload_ok:
-        hass.data[DOMAIN].clear()
+        hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
