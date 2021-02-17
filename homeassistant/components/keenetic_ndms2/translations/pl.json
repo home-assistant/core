@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "name": "Nazwa",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "title": "Konfiguracja routera Keenetic NDMS2"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "consider_home": "Czas przed oznaczeniem \"poza domem\"",
+                    "include_arp": "U\u017cyj danych ARP (ignorowane, je\u015bli u\u017cywane s\u0105 dane hotspotu)",
+                    "include_associated": "U\u017cyj danych skojarze\u0144 WiFi AP (ignorowane, je\u015bli u\u017cywane s\u0105 dane hotspotu)",
+                    "interfaces": "Wybierz interfejsy do skanowania",
+                    "scan_interval": "Cz\u0119stotliwo\u015b\u0107 skanowania",
+                    "try_hotspot": "U\u017cyj danych \u201eip hotspot\u201d (najdok\u0142adniejsze)"
+                }
+            }
+        }
+    }
+}

@@ -44,6 +44,23 @@ def purge_old_data(instance, purge_days: int, repack: bool) -> bool:
 
             _LOGGER.debug("Purging states and events before %s", batch_purge_before)
 
+            # Update old_state_id to NULL before deleting to ensure
+            # the delete does not fail due to a foreign key constraint
+            # since some databases (MSSQL) cannot do the ON DELETE CASCADE
+            # for us.
+            disconnected_rows = (
+                session.query(States)
+                .filter(
+                    States.old_state_id.in_(
+                        session.query(States.state_id)
+                        .filter(States.last_updated < batch_purge_before)
+                        .subquery()
+                    )
+                )
+                .update({"old_state_id": None}, synchronize_session=False)
+            )
+            _LOGGER.debug("Updated %s states to remove old_state_id", disconnected_rows)
+
             deleted_rows = (
                 session.query(States)
                 .filter(States.last_updated < batch_purge_before)
