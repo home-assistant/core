@@ -46,7 +46,7 @@ DEFAULT_BINARY_SENSOR_NAME = "REST Binary Sensor"
 DEFAULT_SENSOR_NAME = "REST Sensor"
 CONF_JSON_ATTRS = "json_attributes"
 CONF_JSON_ATTRS_PATH = "json_attributes_path"
-
+CONF_REST = "rest"
 
 METHODS = ["POST", "GET"]
 
@@ -63,7 +63,6 @@ RESOURCE_SCHEMA = {
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_PAYLOAD): cv.string,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 }
 
@@ -74,12 +73,14 @@ SENSOR_SCHEMA = {
     vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_JSON_ATTRS_PATH): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
 }
 
 BINARY_SENSOR_SCHEMA = {
     vol.Optional(CONF_NAME, default=DEFAULT_BINARY_SENSOR_NAME): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
 }
 
 

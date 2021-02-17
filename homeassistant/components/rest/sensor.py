@@ -3,30 +3,19 @@ import json
 import logging
 from xml.parsers.expat import ExpatError
 
-import httpx
 from jsonpath import jsonpath
 import voluptuous as vol
 import xmltodict
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
-    CONF_HEADERS,
-    CONF_METHOD,
     CONF_NAME,
-    CONF_PARAMS,
-    CONF_PASSWORD,
-    CONF_PAYLOAD,
     CONF_RESOURCE,
     CONF_RESOURCE_TEMPLATE,
-    CONF_TIMEOUT,
     CONF_UNIT_OF_MEASUREMENT,
-    CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
-    CONF_VERIFY_SSL,
-    HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -36,12 +25,13 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from . import (
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
+    CONF_REST,
     DOMAIN,
     PLATFORMS,
     RESOURCE_SCHEMA,
     SENSOR_SCHEMA,
+    create_rest_from_config,
 )
-from .data import RestData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,42 +47,23 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     name = config.get(CONF_NAME)
-    resource = config.get(CONF_RESOURCE)
-    resource_template = config.get(CONF_RESOURCE_TEMPLATE)
-    method = config.get(CONF_METHOD)
-    payload = config.get(CONF_PAYLOAD)
-    verify_ssl = config.get(CONF_VERIFY_SSL)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    headers = config.get(CONF_HEADERS)
-    params = config.get(CONF_PARAMS)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     device_class = config.get(CONF_DEVICE_CLASS)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
     json_attrs = config.get(CONF_JSON_ATTRS)
     json_attrs_path = config.get(CONF_JSON_ATTRS_PATH)
+    value_template = config.get(CONF_VALUE_TEMPLATE)
     force_update = config.get(CONF_FORCE_UPDATE)
-    timeout = config.get(CONF_TIMEOUT)
+    resource_template = config.get(CONF_RESOURCE_TEMPLATE)
 
     if value_template is not None:
         value_template.hass = hass
 
-    if resource_template is not None:
-        resource_template.hass = hass
-        resource = resource_template.async_render(parse_result=False)
+    # maybe discovery info?
+    rest = config.get(CONF_REST)
 
-    if username and password:
-        if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = httpx.DigestAuth(username, password)
-        else:
-            auth = (username, password)
-    else:
-        auth = None
-    rest = RestData(
-        hass, method, resource, auth, headers, params, payload, verify_ssl, timeout
-    )
-
-    await rest.async_update()
+    if not rest:
+        rest = create_rest_from_config(config)
+        await rest.async_update()
 
     if rest.data is None:
         raise PlatformNotReady

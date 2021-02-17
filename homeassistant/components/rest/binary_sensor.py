@@ -1,45 +1,27 @@
 """Support for RESTful binary sensors."""
-import httpx
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
-    BinarySensorEntity,
-)
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import (
-    CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
-    CONF_HEADERS,
-    CONF_METHOD,
     CONF_NAME,
-    CONF_PARAMS,
-    CONF_PASSWORD,
-    CONF_PAYLOAD,
     CONF_RESOURCE,
     CONF_RESOURCE_TEMPLATE,
-    CONF_TIMEOUT,
-    CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
-    CONF_VERIFY_SSL,
-    HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
 
-from . import DOMAIN, PLATFORMS, RESOURCE_SCHEMA
-from .data import RestData
-
-DEFAULT_NAME = "REST Binary Sensor"
-
-
-BINARY_SENSOR_SCHEMA = {
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-}
+from . import (
+    BINARY_SENSOR_SCHEMA,
+    CONF_REST,
+    DOMAIN,
+    PLATFORMS,
+    RESOURCE_SCHEMA,
+    create_rest_from_config,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({**RESOURCE_SCHEMA, **BINARY_SENSOR_SCHEMA})
 
@@ -54,39 +36,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     name = config.get(CONF_NAME)
-    resource = config.get(CONF_RESOURCE)
-    resource_template = config.get(CONF_RESOURCE_TEMPLATE)
-    method = config.get(CONF_METHOD)
-    payload = config.get(CONF_PAYLOAD)
-    verify_ssl = config.get(CONF_VERIFY_SSL)
-    timeout = config.get(CONF_TIMEOUT)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    headers = config.get(CONF_HEADERS)
-    params = config.get(CONF_PARAMS)
     device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     force_update = config.get(CONF_FORCE_UPDATE)
-
-    if resource_template is not None:
-        resource_template.hass = hass
-        resource = resource_template.async_render(parse_result=False)
+    resource_template = config.get(CONF_RESOURCE_TEMPLATE)
 
     if value_template is not None:
         value_template.hass = hass
 
-    if username and password:
-        if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = httpx.DigestAuth(username, password)
-        else:
-            auth = (username, password)
-    else:
-        auth = None
+    rest = config.get(CONF_REST)
 
-    rest = RestData(
-        hass, method, resource, auth, headers, params, payload, verify_ssl, timeout
-    )
-    await rest.async_update()
+    if not rest:
+        rest = create_rest_from_config(config)
+        await rest.async_update()
 
     if rest.data is None:
         raise PlatformNotReady
