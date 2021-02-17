@@ -1,7 +1,7 @@
 """Fixtures for Met Éireann weather testing."""
-import pytest
+from unittest.mock import AsyncMock, patch
 
-from tests.async_mock import AsyncMock, patch
+import pytest
 
 
 @pytest.fixture
