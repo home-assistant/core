@@ -34,15 +34,8 @@ ATTR_PROPERTY_KEY_NAME = "property_key_name"
 ATTR_PARAMETERS = "parameters"
 
 # service constants
-<<<<<<< HEAD
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
 
 ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_PARAMETER_BITMASK = "bitmask"
-=======
-SERVICE_SET_CONFIG_VALUE = "set_config_value"
-
-ATTR_CONFIG_PROPERTY = "property"
-ATTR_CONFIG_PROPERTY_KEY_NAME = "property_key_name"
->>>>>>> 8bd01e0979 (create zwave_js.set_config_value service)
 ATTR_CONFIG_VALUE = "value"

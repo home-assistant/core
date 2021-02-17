@@ -1,6 +1,6 @@
 """Methods and classes related to executing Z-Wave commands and publishing these to hass."""
 import logging
-from typing import cast
+from typing import Dict, List, Union, cast
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
@@ -19,6 +19,30 @@ from .entity import get_home_and_node_id_from_device_id
 _LOGGER = logging.getLogger(__name__)
 
 
+def convert_bitmask_to_int(value: str) -> int:
+    """Convert a bitmask (hex) to an integer."""
+    return int(value, 16)
+
+
+def parameter_name_does_not_need_bitmask(
+    val: Dict[str, Union[int, str]]
+) -> Dict[str, Union[int, str]]:
+    """Validate that if a parameter name is provided, bitmask is not as well."""
+    if isinstance(val[const.ATTR_CONFIG_PARAMETER], str) and (
+        val.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
+    ):
+        raise vol.Invalid(
+            "Don't include a bitmask when a parameter name is specified",
+            path=[const.ATTR_CONFIG_PARAMETER, const.ATTR_CONFIG_PARAMETER_BITMASK],
+        )
+    return val
+
+
+BITMASK_SCHEMA = vol.All(
+    cv.string, vol.Lower, vol.Match(r"^(0x)?[0-9a-f]+$"), convert_bitmask_to_int
+)
+
+
 class ZWaveServices:
     """Class that holds our services (Zwave Commands) that should be published to hass."""
 
@@ -35,18 +59,25 @@ class ZWaveServices:
         """Register all our services."""
         self._hass.services.async_register(
             const.DOMAIN,
-            const.SERVICE_SET_CONFIG_VALUE,
+            const.SERVICE_SET_CONFIG_PARAMETER,
             self.async_set_config_value,
             schema=vol.All(
                 {
                     vol.Exclusive(ATTR_DEVICE_ID, "id"): cv.string,
-                    vol.Exclusive(ATTR_ENTITY_ID, "id"): cv.entity_id,
+                    vol.Exclusive(ATTR_ENTITY_ID, "id"): cv.entity_ids,
                     vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
-                    vol.Required(const.ATTR_CONFIG_PROPERTY): vol.Coerce(int),
-                    vol.Optional(const.ATTR_CONFIG_PROPERTY_KEY_NAME): cv.string,
-                    vol.Required(const.ATTR_CONFIG_VALUE): vol.Coerce(int),
+                    vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Any(
+                        vol.Coerce(int), cv.string
+                    ),
+                    vol.Optional(const.ATTR_CONFIG_PARAMETER_BITMASK): vol.Any(
+                        vol.Coerce(int), BITMASK_SCHEMA
+                    ),
+                    vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
+                        vol.Coerce(int), cv.string
+                    ),
                 },
                 cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+                parameter_name_does_not_need_bitmask,
             ),
         )
 
@@ -115,46 +146,61 @@ class ZWaveServices:
 
     async def async_set_config_value(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
-        node: ZwaveNode = None
+        nodes: List[ZwaveNode]
         if ATTR_ENTITY_ID in service.data:
-            node = self.async_get_node_from_entity_id(service.data[ATTR_ENTITY_ID])
+            nodes = [
+                self.async_get_node_from_entity_id(entity_id)
+                for entity_id in service.data[ATTR_ENTITY_ID]
+            ]
         else:
-            node = self.async_get_node_from_device_id(service.data[ATTR_DEVICE_ID])
-        property = service.data[const.ATTR_CONFIG_PROPERTY]
-        property_key_name = service.data.get(const.ATTR_CONFIG_PROPERTY_KEY_NAME)
+            nodes = [self.async_get_node_from_device_id(service.data[ATTR_DEVICE_ID])]
+
+        property_ = service.data[const.ATTR_CONFIG_PARAMETER]
+        property_key = service.data.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
         endpoint = service.data.get(const.ATTR_ENDPOINT)
-        selection = service.data[const.ATTR_CONFIG_VALUE]
+        new_value = service.data[const.ATTR_CONFIG_VALUE]
 
-        value_id = get_value_id(
-            node,
-            {
-                "commandClass": CommandClass.CONFIGURATION,
-                "property": property,
-                "propertyKeyName": property_key_name,
-                "endpoint": endpoint,
-            },
-        )
-        config_values = node.get_configuration_values()
-        value_error = (
-            f"(property: {property}, property_key_name: {property_key_name}, "
-            f"endpoint: {endpoint}, value_id: {value_id})"
-        )
+        for node in nodes:
+            config_values = node.get_configuration_values()
+            if isinstance(property_, str):
+                try:
+                    zwave_value = next(
+                        config_value
+                        for config_value in config_values.values()
+                        if config_value.property_name == property_
+                        and (endpoint is None or config_value.endpoint == endpoint)
+                    )
+                except StopIteration:
+                    raise ValueError(
+                        f"Configuration parameter with parameter name {property_} could not be found"
+                    )
+                property_ = zwave_value.property_
+                property_key = zwave_value.property_key
 
-        # We will let async_set_value handle validation of the ZwaveValue and new value
-        try:
-            await node.async_set_value(config_values[value_id], selection)
-        except KeyError:
-            raise ValueError(f"Configuration Value could not be found {value_error}")
+                await node.async_set_value(zwave_value, new_value)
+            else:
+                value_id = get_value_id(
+                    node,
+                    {
+                        "commandClass": CommandClass.CONFIGURATION,
+                        "property": property_,
+                        "propertyKey": property_key,
+                        "endpoint": endpoint,
+                    },
+                )
 
-        _LOGGER.info(
-            (
-                "Setting configuration value for (property: %s, property key name: %s, "
-                "endpoint: %s, value_id: %s) on Node %s with value %s"
-            ),
-            property,
-            property_key_name,
-            endpoint,
-            value_id,
-            node,
-            selection,
-        )
+                try:
+                    zwave_value = config_values[value_id]
+                except KeyError:
+                    raise ValueError(
+                        f"Configuration parameter with value ID {value_id} could not be found"
+                    )
+
+                await node.async_set_value(zwave_value, new_value)
+
+            _LOGGER.info(
+                "Setting configuration parameter %s on Node %s with value %s",
+                zwave_value,
+                node,
+                new_value,
+            )
