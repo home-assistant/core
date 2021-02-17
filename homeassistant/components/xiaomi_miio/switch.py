@@ -147,19 +147,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sub_devices = gateway.devices
         coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
         for sub_device in sub_devices.values():
-            if sub_device.device_type == "Switch":
-                if "status_ch0" in sub_device.status.keys():
-                    entities.append(
-                        XiaomiGatewaySwitch(coordinator, sub_device, config_entry, 0)
-                    )
-                if "status_ch1" in sub_device.status.keys():
-                    entities.append(
-                        XiaomiGatewaySwitch(coordinator, sub_device, config_entry, 1)
-                    )
-                if "status_ch2" in sub_device.status.keys():
-                    entities.append(
-                        XiaomiGatewaySwitch(coordinator, sub_device, config_entry, 2)
-                    )
+            if sub_device.device_type != "Switch":
+                continue
+            if "status_ch0" in sub_device.status:
+                entities.append(
+                    XiaomiGatewaySwitch(coordinator, sub_device, config_entry, 0)
+                )
+            if "status_ch1" in sub_device.status:
+                entities.append(
+                    XiaomiGatewaySwitch(coordinator, sub_device, config_entry, 1)
+                )
+            if "status_ch2" in sub_device.status:
+                entities.append(
+                    XiaomiGatewaySwitch(coordinator, sub_device, config_entry, 2)
+                )
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE or (
         config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY
