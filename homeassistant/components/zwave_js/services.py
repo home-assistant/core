@@ -176,8 +176,6 @@ class ZWaveServices:
                     )
                 property_ = zwave_value.property_
                 property_key = zwave_value.property_key
-
-                await node.async_set_value(zwave_value, new_value)
             else:
                 value_id = get_value_id(
                     node,
@@ -196,7 +194,19 @@ class ZWaveServices:
                         f"Configuration parameter with value ID {value_id} could not be found"
                     )
 
-                await node.async_set_value(zwave_value, new_value)
+            if isinstance(new_value, str):
+                try:
+                    new_value = next(
+                        key
+                        for key in zwave_value.metadata.states
+                        if zwave_value.metadata.states == new_value
+                    )
+                except StopIteration:
+                    raise ValueError(
+                        f"New value {new_value} not found, must be one of the keys or "
+                        f"values of {zwave_value.metadata.states}"
+                    )
+            await node.async_set_value(zwave_value, new_value)
 
             _LOGGER.info(
                 "Setting configuration parameter %s on Node %s with value %s",
