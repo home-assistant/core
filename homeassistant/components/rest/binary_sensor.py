@@ -22,7 +22,7 @@ from . import (
     PLATFORMS,
     RESOURCE_SCHEMA,
     RestEntity,
-    create_rest_from_config,
+    create_rest_data_from_config,
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({**RESOURCE_SCHEMA, **BINARY_SENSOR_SCHEMA})
@@ -54,7 +54,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if rest.data is None:
             await coordinator.async_request_refresh()
     else:
-        rest = create_rest_from_config(conf)
+        rest = create_rest_data_from_config(hass, conf)
         await rest.async_update()
 
     if rest.data is None:
@@ -89,7 +89,9 @@ class RestBinarySensor(RestEntity, BinarySensorEntity):
         resource_template,
     ):
         """Initialize a REST binary sensor."""
-        super.__init__(coordinator, name, device_class, resource_template, force_update)
+        super().__init__(
+            coordinator, name, device_class, resource_template, force_update
+        )
         self.rest = rest
         self._state = False
         self._previous_data = None

@@ -127,7 +127,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     for conf in config[DOMAIN]:
         scan_interval = conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        rest = create_rest_from_config(hass, conf)
+        rest = create_rest_data_from_config(hass, conf)
         coordinator = _wrap_rest_in_coordinator(hass, rest, scan_interval)
         await coordinator.async_refresh()
 
@@ -155,7 +155,7 @@ def _wrap_rest_in_coordinator(hass, rest, update_interval):
     )
 
 
-def create_rest_from_config(hass, config):
+def create_rest_data_from_config(hass, config):
     """Create RestData from config."""
     resource = config.get(CONF_RESOURCE)
     resource_template = config.get(CONF_RESOURCE_TEMPLATE)
@@ -202,7 +202,7 @@ class RestEntity(Entity):
         self._device_class = device_class
         self._resource_template = resource_template
         self._force_update = force_update
-        super.__init__()
+        super().__init__()
 
     @property
     def name(self):

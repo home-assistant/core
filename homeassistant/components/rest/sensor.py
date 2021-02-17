@@ -31,7 +31,7 @@ from . import (
     RESOURCE_SCHEMA,
     SENSOR_SCHEMA,
     RestEntity,
-    create_rest_from_config,
+    create_rest_data_from_config,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if rest.data is None:
             await coordinator.async_request_refresh()
     else:
-        rest = create_rest_from_config(conf)
+        rest = create_rest_data_from_config(hass, conf)
         await rest.async_update()
 
     if rest.data is None:
@@ -110,7 +110,9 @@ class RestSensor(RestEntity):
         json_attrs_path,
     ):
         """Initialize the REST sensor."""
-        super.__init__(coordinator, name, device_class, resource_template, force_update)
+        super().__init__(
+            coordinator, name, device_class, resource_template, force_update
+        )
         self.rest = rest
         self._state = None
         self._unit_of_measurement = unit_of_measurement
