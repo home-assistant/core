@@ -70,6 +70,9 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema(
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TOKEN): cv.string,
+        vol.Optional(CONF_PROJECT_WHITELIST, default=[]): vol.All(
+            cv.ensure_list, [vol.All(cv.string, vol.Lower)]
+        ),
         vol.Optional(CONF_EXTRA_PROJECTS, default=[]): vol.All(
             cv.ensure_list,
             vol.Schema(
@@ -98,6 +101,7 @@ SCAN_INTERVAL = timedelta(minutes=15)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Todoist platform."""
     token = config.get(CONF_TOKEN)
+    project_whitelist = config.get(CONF_PROJECT_WHITELIST)
 
     # Look up IDs based on (lowercase) names.
     project_id_lookup = {}
@@ -116,12 +120,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Add all Todoist-defined projects.
     project_devices = []
     for project in projects:
-        # Project is an object, not a dict!
-        # Because of that, we convert what we need to a dict.
-        project_data = {CONF_NAME: project[NAME], CONF_ID: project[ID]}
-        project_devices.append(TodoistProjectDevice(hass, project_data, labels, api))
         # Cache the names so we can easily look up name->ID.
         project_id_lookup[project[NAME].lower()] = project[ID]
+
+        if project[NAME].lower() in project_whitelist:
+            # Project is an object, not a dict!
+            # Because of that, we convert what we need to a dict.
+            project_data = {CONF_NAME: project[NAME], CONF_ID: project[ID]}
+            project_devices.append(
+                TodoistProjectDevice(hass, project_data, labels, api)
+            )
 
     # Cache all label names
     for label in labels:
