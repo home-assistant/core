@@ -34,8 +34,8 @@ ATTR_PROPERTY_KEY_NAME = "property_key_name"
 ATTR_PARAMETERS = "parameters"
 
 # service constants
-SERVICE_SET_CONFIG_VALUE = "set_config_value"
+SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
 
-ATTR_CONFIG_PROPERTY = "property"
-ATTR_CONFIG_PROPERTY_KEY_NAME = "property_key_name"
+ATTR_CONFIG_PARAMETER = "parameter"
+ATTR_CONFIG_PARAMETER_BITMASK = "bitmask"
 ATTR_CONFIG_VALUE = "value"
