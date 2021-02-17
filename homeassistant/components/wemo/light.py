@@ -3,8 +3,6 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from pywemo.ouimeaux_device.api.service import ActionException
-
 from homeassistant import util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -158,7 +156,7 @@ class WemoLight(WemoEntity, LightEntity):
             "force_update": False,
         }
 
-        try:
+        with self._wemo_exception_handler("turn on"):
             if xy_color is not None:
                 self.wemo.set_color(xy_color, transition=transition_time)
 
@@ -167,9 +165,6 @@ class WemoLight(WemoEntity, LightEntity):
 
             if self.wemo.turn_on(**turn_on_kwargs):
                 self._state["onoff"] = WEMO_ON
-        except ActionException as err:
-            _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
-            self._available = False
 
         self.schedule_update_ha_state()
 
@@ -177,28 +172,21 @@ class WemoLight(WemoEntity, LightEntity):
         """Turn the light off."""
         transition_time = int(kwargs.get(ATTR_TRANSITION, 0))
 
-        try:
+        with self._wemo_exception_handler("turn off"):
             if self.wemo.turn_off(transition=transition_time):
                 self._state["onoff"] = WEMO_OFF
-        except ActionException as err:
-            _LOGGER.warning("Error while turning off device %s (%s)", self.name, err)
-            self._available = False
 
         self.schedule_update_ha_state()
 
     def _update(self, force_update=True):
         """Synchronize state with bridge."""
-        try:
+        with self._wemo_exception_handler("update status") as handler:
             self._update_lights(no_throttle=force_update)
             self._state = self.wemo.state
-        except ActionException as err:
-            _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
-            self._available = False
-        else:
+        if handler.success:
             self._is_on = self._state.get("onoff") != WEMO_OFF
             self._brightness = self._state.get("level", 255)
             self._color_temp = self._state.get("temperature_mireds")
-            self._available = True
 
             xy_color = self._state.get("color_xy")
 
@@ -228,18 +216,11 @@ class WemoDimmer(WemoSubscriptionEntity, LightEntity):
 
     def _update(self, force_update=True):
         """Update the device state."""
-        try:
+        with self._wemo_exception_handler("update status"):
             self._state = self.wemo.get_state(force_update)
 
             wemobrightness = int(self.wemo.get_brightness(force_update))
             self._brightness = int((wemobrightness * 255) / 100)
-
-            if not self._available:
-                _LOGGER.info("Reconnected to %s", self.name)
-                self._available = True
-        except ActionException as err:
-            _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
-            self._available = False
 
     def turn_on(self, **kwargs):
         """Turn the dimmer on."""
@@ -251,24 +232,18 @@ class WemoDimmer(WemoSubscriptionEntity, LightEntity):
         else:
             brightness = 255
 
-        try:
+        with self._wemo_exception_handler("turn on"):
             if self.wemo.on():
                 self._state = WEMO_ON
 
             self.wemo.set_brightness(brightness)
-        except ActionException as err:
-            _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
-            self._available = False
 
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the dimmer off."""
-        try:
+        with self._wemo_exception_handler("turn off"):
             if self.wemo.off():
                 self._state = WEMO_OFF
-        except ActionException as err:
-            _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
-            self._available = False
 
         self.schedule_update_ha_state()
