@@ -34,7 +34,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.components.philips_js import PhilipsTVDataUpdateCoordinator
 from homeassistant.const import (
     CONF_API_VERSION,
     CONF_HOST,
@@ -47,7 +46,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import LOGGER as _LOGGER
+from . import LOGGER as _LOGGER, PhilipsTVDataUpdateCoordinator
 from .const import CONF_SYSTEM, DOMAIN
 
 SUPPORT_PHILIPS_JS = (
