@@ -33,12 +33,12 @@ stop:
 toggle:
   description: Generic service to toggle devices on/off under any domain
   target:
-    entity:
+    entity: {}
 
 turn_on:
   description: Generic service to turn devices on under any domain.
   target:
-    entity:
+    entity: {}
 
 turn_off:
   description: Generic service to turn devices off under any domain.
@@ -46,4 +46,4 @@ turn_off:
 update_entity:
   description: Force one or more entities to update its data
   target:
-    entity:
+    entity: {}
