@@ -7,7 +7,7 @@ from jsonpath import jsonpath
 import voluptuous as vol
 import xmltodict
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
@@ -21,7 +21,14 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 from . import create_rest_data_from_config
-from .const import CONF_COORDINATOR, CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH, CONF_REST
+from .const import (
+    CONF_JSON_ATTRS,
+    CONF_JSON_ATTRS_PATH,
+    COORDINATOR,
+    DOMAIN,
+    REST,
+    SHARED_DATA_ID,
+)
 from .entity import RestEntity
 from .schema import RESOURCE_SCHEMA, SENSOR_SCHEMA
 
@@ -50,15 +57,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if value_template is not None:
         value_template.hass = hass
 
-    rest = conf.get(CONF_REST)
-    coordinator = conf.get(CONF_COORDINATOR)
-
     # Must update the sensor now (including fetching the rest resource) to
     # ensure it's updating its state.
-    if coordinator:
+    if discovery_info and SHARED_DATA_ID in discovery_info:
+        shared_data_id = discovery_info[SHARED_DATA_ID]
+        shared_data = hass.data[DOMAIN][SENSOR_DOMAIN][shared_data_id]
+        coordinator = shared_data[COORDINATOR]
+        rest = shared_data[REST]
         if rest.data is None:
             await coordinator.async_request_refresh()
     else:
+        coordinator = None
         rest = create_rest_data_from_config(hass, conf)
         await rest.async_update()
 
