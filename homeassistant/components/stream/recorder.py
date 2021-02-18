@@ -42,11 +42,11 @@ def recorder_save_worker(file_out: str, segments: List[Segment], container_forma
             )
         source.close()
 
-    last_sequence = None
+    last_sequence = float("-inf")
     for segment in segments:
         # Because the stream_worker is in a different thread from the record service,
-        # the lookback segments may still have one overlap with the recorder segments
-        if segment.sequence == last_sequence:
+        # the lookback segments may still have some overlap with the recorder segments
+        if segment.sequence <= last_sequence:
             continue
         last_sequence = segment.sequence
 
