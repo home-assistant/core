@@ -1,12 +1,21 @@
 add_item:
-  description: Adds an item to the shopping list.
+  description: Adds an item to the shopping list
   fields:
     name:
+      name: Name
       description: The name of the item to add.
+      required: true
       example: Beer
+      selector:
+        text:
+
 complete_item:
-  description: Marks an item as completed in the shopping list. It does not remove the item.
+  description: Marks an item as completed in the shopping list.
   fields:
     name:
-      description: The name of the item to mark as completed.
+      name: Name
+      description: The name of the item to mark as completed (without removing).
+      required: true
       example: Beer
+      selector:
+        text:
