@@ -42,7 +42,14 @@ def recorder_save_worker(file_out: str, segments: List[Segment], container_forma
             )
         source.close()
 
+    last_sequence = float("-inf")
     for segment in segments:
+        # Because the stream_worker is in a different thread from the record service,
+        # the lookback segments may still have some overlap with the recorder segments
+        if segment.sequence <= last_sequence:
+            continue
+        last_sequence = segment.sequence
+
         # Open segment
         source = av.open(segment.segment, "r", format=container_format)
         source_v = source.streams.video[0]
