@@ -71,8 +71,9 @@ h11>=0.12.0
 # https://github.com/encode/httpcore/issues/239
 httpcore>=0.12.3
 
-# Constrain httplib2 to protect against CVE-2020-11078
-httplib2>=0.18.0
+# Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
+# https://github.com/advisories/GHSA-93xj-8mrv-444m
+httplib2>=0.19.0
 
 # gRPC 1.32+ currently causes issues on ARMv7, see:
 # https://github.com/home-assistant/core/issues/40148

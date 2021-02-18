@@ -425,7 +425,7 @@ homematicip==0.13.1
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
-httplib2==0.18.1
+httplib2==0.19.0
 
 # homeassistant.components.huawei_lte
 huawei-lte-api==1.4.17
