@@ -106,7 +106,7 @@ class TuyaFanDevice(TuyaDevice, FanEntity):
     def speed_count(self) -> Optional[int]:
         """Return the number of speeds the fan supports."""
         if self.speeds is None:
-            return None
+            return super().speed_count
         return len(self.speeds)
 
     @property
