@@ -70,10 +70,11 @@ class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorEntity):
             TYPE_BATT7,
             TYPE_BATT8,
             TYPE_BATT9,
+            TYPE_BATTOUT,
             TYPE_PM25_CO2,
             TYPE_PM25_BATT,
             TYPE_PM25IN_BATT,
-            TYPE_BATTOUT,
+            
         ):
             return self._state == 0
 
