@@ -1,24 +1,31 @@
 # Describes the format for available Z-Wave services
 
 clear_lock_usercode:
-  description: Clear a usercode from lock.
+  description: Clear a usercode from lock
+  target:
   fields:
-    entity_id:
-      description: Lock entity_id.
-      example: lock.front_door_locked
     code_slot:
-      description: Code slot to clear code from.
+      name: Code slot
+      description: Code slot to clear code from
+      required: true
       example: 1
+      selector:
+        text:
 
 set_lock_usercode:
-  description: Set a usercode to lock.
+  description: Set a usercode to lock
+  target:
   fields:
-    entity_id:
-      description: Lock entity_id.
-      example: lock.front_door_locked
     code_slot:
+      name: Code slot
       description: Code slot to set the code.
       example: 1
+      selector:
+        text:
     usercode:
+      name: Code
       description: Code to set.
+      required: true
       example: 1234
+      selector:
+        text:
