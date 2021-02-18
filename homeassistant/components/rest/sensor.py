@@ -20,15 +20,8 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-from . import create_rest_data_from_config
-from .const import (
-    CONF_JSON_ATTRS,
-    CONF_JSON_ATTRS_PATH,
-    COORDINATOR,
-    DOMAIN,
-    REST,
-    SHARED_DATA_ID,
-)
+from . import async_get_config_and_coordinator, create_rest_data_from_config
+from .const import CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH
 from .entity import RestEntity
 from .schema import RESOURCE_SCHEMA, SENSOR_SCHEMA
 
@@ -43,7 +36,20 @@ PLATFORM_SCHEMA = vol.All(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the RESTful sensor."""
-    conf = discovery_info or config
+    # Must update the sensor now (including fetching the rest resource) to
+    # ensure it's updating its state.
+    if discovery_info is not None:
+        conf, coordinator, rest = await async_get_config_and_coordinator(
+            hass, SENSOR_DOMAIN, discovery_info
+        )
+    else:
+        conf = config
+        coordinator = None
+        rest = create_rest_data_from_config(hass, conf)
+        await rest.async_update()
+
+    if rest.data is None:
+        raise PlatformNotReady
 
     name = conf.get(CONF_NAME)
     unit = conf.get(CONF_UNIT_OF_MEASUREMENT)
@@ -56,23 +62,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     if value_template is not None:
         value_template.hass = hass
-
-    # Must update the sensor now (including fetching the rest resource) to
-    # ensure it's updating its state.
-    if discovery_info and SHARED_DATA_ID in discovery_info:
-        shared_data_id = discovery_info[SHARED_DATA_ID]
-        shared_data = hass.data[DOMAIN][SENSOR_DOMAIN][shared_data_id]
-        coordinator = shared_data[COORDINATOR]
-        rest = shared_data[REST]
-        if rest.data is None:
-            await coordinator.async_request_refresh()
-    else:
-        coordinator = None
-        rest = create_rest_data_from_config(hass, conf)
-        await rest.async_update()
-
-    if rest.data is None:
-        raise PlatformNotReady
 
     async_add_entities(
         [
