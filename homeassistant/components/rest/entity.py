@@ -75,10 +75,6 @@ class RestEntity(Entity):
 
     async def async_update(self):
         """Get the latest data from REST API and update the state."""
-        # Ignore manual update requests if the entity is disabled
-        if not self.enabled:
-            return
-
         if self._resource_template is not None:
             self.rest.set_url(self._resource_template.async_render(parse_result=False))
 
