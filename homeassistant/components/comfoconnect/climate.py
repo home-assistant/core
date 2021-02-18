@@ -20,8 +20,8 @@ from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
 
 _LOGGER = logging.getLogger(__name__)
 HVAC_MODES = [HVAC_MODE_HEAT, HVAC_MODE_COOL]
-SENSOR_BYPASS_STATE_VALUE = 0
-SENSOR_TEMPERATURE_SUPPLY_VALUE = 0
+SENSOR_BYPASS_STATE_LOCAL = 0
+SENSOR_TEMPERATURE_SUPPLY_LOCAL = 0
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -68,9 +68,9 @@ class ComfoConnectBypass(ClimateEntity):
         _LOGGER.debug(
             "Handle update for climate - bypass (%d): %s", SENSOR_BYPASS_STATE, value
         )
-        SENSOR_BYPASS_STATE_VALUE = value
+        SENSOR_BYPASS_STATE_LOCAL = value
 
-        self._ccb.data[SENSOR_BYPASS_STATE] = SENSOR_BYPASS_STATE_VALUE
+        self._ccb.data[SENSOR_BYPASS_STATE] = SENSOR_BYPASS_STATE_LOCAL
         self.schedule_update_ha_state()
 
     def _handle_update_temp(self, value):
@@ -80,9 +80,9 @@ class ComfoConnectBypass(ClimateEntity):
             SENSOR_TEMPERATURE_SUPPLY,
             value,
         )
-        SENSOR_TEMPERATURE_SUPPLY_VALUE = value
+        SENSOR_TEMPERATURE_SUPPLY_LOCAL = value
 
-        self._ccb.data[SENSOR_TEMPERATURE_SUPPLY] = SENSOR_TEMPERATURE_SUPPLY_VALUE
+        self._ccb.data[SENSOR_TEMPERATURE_SUPPLY] = SENSOR_TEMPERATURE_SUPPLY_LOCAL
         self.schedule_update_ha_state()
 
     def set_hvac_mode(self, hvac_mode):
@@ -109,7 +109,7 @@ class ComfoConnectBypass(ClimateEntity):
     @property
     def hvac_mode(self):
         """Return the current bypass mode. If the bypass state > 0 ComfoConenct started enabling bypass. 100% of bypass state = minimal heat recovery."""
-        bypass = SENSOR_BYPASS_STATE_VALUE
+        bypass = SENSOR_BYPASS_STATE_LOCAL
         if bypass:
             _LOGGER.debug(
                 "Current bypass state: %s, return: %s", bypass, HVAC_MODE_COOL
@@ -132,4 +132,4 @@ class ComfoConnectBypass(ClimateEntity):
     @property
     def current_temperature(self):
         """Return current supply temperature."""
-        return SENSOR_TEMPERATURE_SUPPLY_VALUE * 0.1
+        return SENSOR_TEMPERATURE_SUPPLY_LOCAL * 0.1
