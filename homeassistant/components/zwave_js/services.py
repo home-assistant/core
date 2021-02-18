@@ -59,12 +59,11 @@ class ZWaveServices:
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_SET_CONFIG_PARAMETER,
-            self.async_set_config_value,
+            self.async_set_config_parameter,
             schema=vol.All(
                 {
                     vol.Exclusive(ATTR_DEVICE_ID, "id"): cv.string,
                     vol.Exclusive(ATTR_ENTITY_ID, "id"): cv.entity_ids,
-                    vol.Optional(const.ATTR_ENDPOINT): vol.Coerce(int),
                     vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Any(
                         vol.Coerce(int), cv.string
                     ),
@@ -143,7 +142,7 @@ class ZWaveServices:
         assert entity_entry.device_id
         return self.async_get_node_from_device_id(entity_entry.device_id)
 
-    async def async_set_config_value(self, service: ServiceCall) -> None:
+    async def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
         nodes: List[ZwaveNode]
         if ATTR_ENTITY_ID in service.data:
@@ -156,7 +155,6 @@ class ZWaveServices:
 
         property_or_property_name = service.data[const.ATTR_CONFIG_PARAMETER]
         property_key = service.data.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
-        endpoint = service.data.get(const.ATTR_ENDPOINT)
         new_value = service.data[const.ATTR_CONFIG_VALUE]
 
         for node in nodes:
@@ -164,20 +162,13 @@ class ZWaveServices:
                 new_value,
                 property_or_property_name,
                 property_key=property_key,
-                endpoint=endpoint,
             )
 
             if zwave_value:
-                _LOGGER.info(
-                    "Set configuration parameter %s on Node %s with value %s",
-                    zwave_value,
-                    node,
-                    new_value,
-                )
+                error_msg = "Set configuration parameter %s on Node %s with value %s"
             else:
-                _LOGGER.info(
-                    "Unable to set configuration parameter on Node %s with value %s",
-                    zwave_value,
-                    node,
-                    new_value,
+                error_msg = (
+                    "Unable to set configuration parameter on Node %s with value %s"
                 )
+
+            _LOGGER.info(error_msg, zwave_value, node, new_value)
