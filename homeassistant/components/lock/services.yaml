@@ -21,27 +21,29 @@ get_usercode:
       example: 1
 
 lock:
-  description: Lock all or specified locks.
+  description: Lock all or specified locks
+  target:
   fields:
-    entity_id:
-      description: Name of lock to lock.
-      example: "lock.front_door"
     code:
+      name: Code
       description: An optional code to lock the lock with.
       example: 1234
+      selector:
+        text:
 
 open:
-  description: Open all or specified locks.
+  description: Open all or specified locks
+  target:
   fields:
-    entity_id:
-      description: Name of lock to open.
-      example: "lock.front_door"
     code:
+      name: Code
       description: An optional code to open the lock with.
       example: 1234
+      selector:
+        text:
 
 set_usercode:
-  description: Set a usercode to lock.
+  description: Set a usercode to lock
   fields:
     node_id:
       description: Node id of the lock.
@@ -54,11 +56,12 @@ set_usercode:
       example: 1234
 
 unlock:
-  description: Unlock all or specified locks.
+  description: Unlock all or specified locks
+  target:
   fields:
-    entity_id:
-      description: Name of lock to unlock.
-      example: "lock.front_door"
     code:
+      name: Code
       description: An optional code to unlock the lock with.
       example: 1234
+      selector:
+        text:
