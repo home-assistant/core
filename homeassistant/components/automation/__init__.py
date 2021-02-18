@@ -1,4 +1,6 @@
 """Allow to set up simple automation rules via the config file."""
+from collections import deque
+from contextlib import contextmanager
 import logging
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Set, Union, cast
 
@@ -39,6 +41,11 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import condition, extract_domain_configs, template
+from homeassistant.helpers.condition import (
+    condition_path,
+    condition_trace_clear,
+    condition_trace_get,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -50,12 +57,16 @@ from homeassistant.helpers.script import (
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     Script,
+    action_path,
+    action_trace_clear,
+    action_trace_get,
 )
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
+from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import parse_datetime
 
 # Not used except by packages to check config structure
@@ -90,6 +101,10 @@ ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
 
+DATA_AUTOMATION_TRACE = "automation_trace"
+STORED_TRACES = 1000  # Total number of stored automation traces
+
+_LOGGER = logging.getLogger(__name__)
 AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[None]]
 
 
@@ -166,8 +181,9 @@ def devices_in_automation(hass: HomeAssistant, entity_id: str) -> List[str]:
 
 
 async def async_setup(hass, config):
-    """Set up the automation."""
+    """Set up all automations."""
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
+    hass.data.setdefault(DATA_AUTOMATION_TRACE, deque([], STORED_TRACES))
 
     # To register the automation blueprints
     async_get_blueprints(hass)
@@ -176,7 +192,7 @@ async def async_setup(hass, config):
         await async_get_blueprints(hass).async_populate()
 
     async def trigger_service_handler(entity, service_call):
-        """Handle automation triggers."""
+        """Handle forced automation trigger, e.g. from frontend."""
         await entity.async_trigger(
             service_call.data[ATTR_VARIABLES],
             skip_condition=service_call.data[CONF_SKIP_CONDITION],
@@ -215,6 +231,67 @@ async def async_setup(hass, config):
     return True
 
 
+class AutomationTrace:
+    """Container for automation trace."""
+
+    def __init__(self, entity_id, config, trigger):
+        """Container for automation trace."""
+        self._action_trace = None
+        self._condition_trace = None
+        self._config = config
+        self._error = None
+        self._entity_id = entity_id
+        self._timestamp_finish = None
+        self._timestamp_start = dt_util.utcnow()
+        self._trigger = trigger
+        self._variables = None
+
+    def set_error(self, ex):
+        """Set error."""
+        self._error = ex
+
+    def set_variables(self, variables):
+        """Set variables."""
+        self._variables = variables
+
+    def set_condition_trace(self, condition_trace):
+        """Set condition trace."""
+        self._condition_trace = condition_trace
+
+    def set_action_trace(self, action_trace):
+        """Set action trace."""
+        self._action_trace = action_trace
+
+    def finished(self):
+        """Set finish time."""
+        self._timestamp_finish = dt_util.utcnow()
+
+
+@contextmanager
+def trace_automation(hass, entity_id, config, trigger):
+    """Trace action execution."""
+    action_trace_clear()
+    automation_trace = AutomationTrace(entity_id, config, trigger)
+    hass.data[DATA_AUTOMATION_TRACE].append(automation_trace)
+
+    try:
+        yield automation_trace
+    except Exception as ex:  # pylint: disable=broad-except
+        automation_trace.set_error(ex)
+        raise ex
+    finally:
+        automation_trace.finished()
+        action_trace = action_trace_get()
+        automation_trace.set_action_trace(action_trace)
+        # To be removed, only for debugging
+        _LOGGER.info(
+            "Automation finished. Summary:\n\ttrigger: %s\n\tcondition: %s\n\taction: %s",
+            automation_trace._trigger,
+            automation_trace._condition_trace,
+            action_trace,
+        )
+
+
 class AutomationEntity(ToggleEntity, RestoreEntity):
     """Entity to show status of entity."""
 
@@ -228,6 +305,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         initial_state,
         variables,
         trigger_variables,
+        raw_config,
     ):
         """Initialize an automation entity."""
         self._id = automation_id
@@ -244,6 +322,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._logger = LOGGER
         self._variables: ScriptVariables = variables
         self._trigger_variables: ScriptVariables = trigger_variables
+        self._raw_config = raw_config
 
     @property
     def name(self):
@@ -374,52 +453,73 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        if self._variables:
-            try:
-                variables = self._variables.async_render(self.hass, run_variables)
-            except template.TemplateError as err:
-                self._logger.error("Error rendering variables: %s", err)
+        reason = ""
+        if "trigger" in run_variables and "description" in run_variables["trigger"]:
+            reason = f' by {run_variables["trigger"]["description"]}'
+        self._logger.debug(f"Automation triggered{reason}")
+
+        trigger = run_variables["trigger"] if "trigger" in run_variables else None
+        with trace_automation(
+            self.hass, self.entity_id, self._raw_config, trigger
+        ) as automation_trace:
+            if self._variables:
+                try:
+                    variables = self._variables.async_render(self.hass, run_variables)
+                except template.TemplateError as err:
+                    self._logger.error("Error rendering variables: %s", err)
+                    automation_trace.set_error(err)
+                    return
+            else:
+                variables = run_variables
+            automation_trace.set_variables(variables)
+
+            if (
+                not skip_condition
+                and self._cond_func is not None
+                and not self._cond_func(variables)
+            ):
+                self._logger.debug(
+                    "Conditions not met, aborting automation. Condition summary: %s",
+                    condition_trace_get(),
+                )
+                automation_trace.set_condition_trace(condition_trace_get())
                 return
-        else:
-            variables = run_variables
+            automation_trace.set_condition_trace(condition_trace_get())
+            condition_trace_clear()
 
-        if (
-            not skip_condition
-            and self._cond_func is not None
-            and not self._cond_func(variables)
-        ):
-            return
+            # Create a new context referring to the old context.
+            parent_id = None if context is None else context.id
+            trigger_context = Context(parent_id=parent_id)
 
-        # Create a new context referring to the old context.
-        parent_id = None if context is None else context.id
-        trigger_context = Context(parent_id=parent_id)
+            self.async_set_context(trigger_context)
+            event_data = {
+                ATTR_NAME: self._name,
+                ATTR_ENTITY_ID: self.entity_id,
+            }
+            if "trigger" in variables and "description" in variables["trigger"]:
+                event_data[ATTR_SOURCE] = variables["trigger"]["description"]
 
-        self.async_set_context(trigger_context)
-        event_data = {
-            ATTR_NAME: self._name,
-            ATTR_ENTITY_ID: self.entity_id,
-        }
-        if "trigger" in variables and "description" in variables["trigger"]:
-            event_data[ATTR_SOURCE] = variables["trigger"]["description"]
+            @callback
+            def started_action():
+                self.hass.bus.async_fire(
+                    EVENT_AUTOMATION_TRIGGERED, event_data, context=trigger_context
+                )
 
-        @callback
-        def started_action():
-            self.hass.bus.async_fire(
-                EVENT_AUTOMATION_TRIGGERED, event_data, context=trigger_context
-            )
-
-        try:
-            await self.action_script.async_run(
-                variables, trigger_context, started_action
-            )
-        except (vol.Invalid, HomeAssistantError) as err:
-            self._logger.error(
-                "Error while executing automation %s: %s",
-                self.entity_id,
-                err,
-            )
-        except Exception:  # pylint: disable=broad-except
-            self._logger.exception("While executing automation %s", self.entity_id)
+            try:
+                with action_path("action"):
+                    await self.action_script.async_run(
+                        variables, trigger_context, started_action
+                    )
+            except (vol.Invalid, HomeAssistantError) as err:
+                self._logger.error(
+                    "Error while executing automation %s: %s",
+                    self.entity_id,
+                    err,
+                )
+                automation_trace.set_error(err)
+            except Exception as err:  # pylint: disable=broad-except
+                self._logger.exception("While executing automation %s", self.entity_id)
+                automation_trace.set_error(err)
 
     async def async_will_remove_from_hass(self):
         """Remove listeners when removing automation from Home Assistant."""
@@ -527,7 +627,9 @@ async def _async_process_config(
         ]
 
         for list_no, config_block in enumerate(conf):
+            raw_config = config_block.raw_config
             if isinstance(config_block, blueprint.BlueprintInputs):  # type: ignore
+                # TODO: handle raw config for blueprints
                 blueprints_used = True
                 blueprint_inputs = config_block
 
@@ -596,6 +698,7 @@ async def _async_process_config(
                 initial_state,
                 variables,
                 config_block.get(CONF_TRIGGER_VARIABLES),
+                raw_config,
             )
 
             entities.append(entity)
@@ -623,8 +726,9 @@ async def _async_process_if(hass, name, config, p_config):
         errors = []
         for index, check in enumerate(checks):
             try:
-                if not check(hass, variables):
-                    return False
+                with condition_path(["condition", str(index)]):
+                    if not check(hass, variables):
+                        return False
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex(
@@ -672,3 +776,51 @@ def _trigger_extract_entities(trigger_conf: dict) -> List[str]:
         return ["sun.sun"]
 
     return []
+
+
+@callback
+def get_debug_traces(hass):
+    """Return a serializable list of debug traces."""
+    traces = []
+
+    def trace_element_to_dict(trace_element):
+        return {
+            "error": trace_element._error,
+            "result": trace_element._result,
+            "timestamp": trace_element._timestamp,
+            # Commented out because we get too many copies of the same data
+            # "variables": trace_element._variables,
+        }
+
+    for trace in hass.data[DATA_AUTOMATION_TRACE]:
+        action_traces = {}
+        condition_traces = {}
+        for key, trace_list in trace._action_trace.items():
+            action_trace_list = []
+            for t in trace_list:
+                action_trace_list.append(trace_element_to_dict(t))
+            action_traces[key] = action_trace_list
+
+        for key, trace_list in trace._condition_trace.items():
+            condition_trace_list = []
+            for t in trace_list:
+                condition_trace_list.append(trace_element_to_dict(t))
+            condition_traces[key] = condition_trace_list
+
+        traces.append(
+            {
+                "action_trace": action_traces,
+                "condition_trace": condition_traces,
+                "config": trace._config,
+                "error": trace._error,
+                "entity_id": trace._entity_id,
+                "timestamp": {
+                    "start": trace._timestamp_start,
+                    "finish": trace._timestamp_finish,
+                },
+                "trigger": trace._trigger,
+                # Commented out because we get too many copies of the same data
+                # "variables": trace._variables,
+            }
+        )
+    return traces

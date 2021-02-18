@@ -1,6 +1,8 @@
 """Offer reusable conditions."""
 import asyncio
 from collections import deque
+from contextlib import contextmanager
+from contextvars import ContextVar
 from datetime import datetime, timedelta
 import functools as ft
 import logging
@@ -63,6 +65,168 @@ INPUT_ENTITY_ID = re.compile(
 ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
 
 
+# Common helpers for tracing. TODO: Move to own file
+def trace_stack_push(trace_stack_var, node):
+    """Push an element to the top of a trace stack."""
+    trace_stack = trace_stack_var.get()
+    if trace_stack is None:
+        trace_stack_var.set([])
+        trace_stack = trace_stack_var.get()
+    trace_stack.append(node)
+
+
+def trace_stack_pop(trace_stack_var):
+    """Remove the top element from a trace stack."""
+    trace_stack = trace_stack_var.get()
+    trace_stack.pop()
+
+
+def trace_stack_top(trace_stack_var):
+    """Return the element at the top of a trace stack."""
+    trace_stack = trace_stack_var.get()
+    return trace_stack[-1] if trace_stack else None
+
+
+class TraceElement:
+    """Container for trace data."""
+
+    def __init__(self, variables):
+        """Container for trace data."""
+        self._error = None
+        self._result = None
+        self._timestamp = dt_util.utcnow()
+        self._variables = variables
+
+    def __repr__(self):
+        """Container for trace data."""
+        return f"{self._result}"
+
+    def set_error(self, ex):
+        """Set error."""
+        self._error = ex
+
+    def set_result(self, **kwargs):
+        """Set result."""
+        self._result = {**kwargs}
+
+
+def trace_append_element(trace_var, trace_element, path):
+    """Append a TraceElement to trace[path]."""
+    trace = trace_var.get()
+    if trace is None:
+        trace_var.set({})
+        trace = trace_var.get()
+    trace.setdefault(path, [])
+    trace[path].append(trace_element)
+
+
+# Context variables for tracing
+# Config of condition being evaluated - TODO: Remove?
+condition_config = ContextVar("condition_config", default=None)
+# Trace of condition being evaluated
+condition_trace = ContextVar("condition_trace", default=None)
+# Stack of TraceElements
+condition_trace_stack = ContextVar("condition_trace_stack", default=None)
+# Current location in config tree
+condition_path_stack = ContextVar("condition_path_stack", default=None)
+
+
+def condition_trace_stack_push(node):
+    """Push a TraceElement to the top of the trace stack."""
+    trace_stack_push(condition_trace_stack, node)
+
+
+def condition_trace_stack_pop():
+    """Remove the top element from the trace stack."""
+    trace_stack_pop(condition_trace_stack)
+
+
+def condition_trace_stack_top():
+    """Return the element at the top of the trace stack."""
+    return trace_stack_top(condition_trace_stack)
+
+
+def condition_path_push(suffix):
+    """Go deeper in the config tree."""
+    if isinstance(suffix, str):
+        suffix = [suffix]
+    for node in suffix:
+        trace_stack_push(condition_path_stack, node)
+    return len(suffix)
+
+
+def condition_path_pop(n):
+    """Go n levels up in the config tree."""
+    for _ in range(n):
+        trace_stack_pop(condition_path_stack)
+
+
+def condition_path_get():
+    """Return a string representing the current location in the config tree."""
+    path = condition_path_stack.get()
+    if not path:
+        return ""
+    return "/".join(path)
+
+
+def condition_config_get():
+    """Return the config of the condition that was evaluated."""
+    return condition_config.get()
+
+
+def condition_trace_get():
+    """Return the trace of the condition that was evaluated."""
+    return condition_trace.get()
+
+
+def condition_trace_clear():
+    """Clear the condition trace."""
+    condition_config.set(None)
+    condition_trace.set(None)
+    condition_trace_stack.set(None)
+    condition_path_stack.set(None)
+
+
+def condition_trace_append(variables, path):
+    """Append a TraceElement to trace[path]."""
+    trace_element = TraceElement(variables)
+    trace_append_element(condition_trace, trace_element, path)
+    return trace_element
+
+
+def condition_trace_set_result(result, **kwargs):
+    """Set the result of TraceElement at the top of the stack."""
+    node = condition_trace_stack_top()
+    node.set_result(result=result, **kwargs)
+
+
+@contextmanager
+def trace_condition(config, variables):
+    """Trace condition evaluation."""
+    if condition_config.get() is None:
+        condition_config.set(dict(config))
+
+    trace_element = condition_trace_append(variables, condition_path_get())
+    condition_trace_stack_push(trace_element)
+    try:
+        yield trace_element
+    except Exception as ex:  # pylint: disable=broad-except
+        trace_element.set_error(ex)
+        raise ex
+    finally:
+        condition_trace_stack_pop()
+
+
+@contextmanager
+def condition_path(suffix):
+    """Go deeper in the config tree."""
+    n = condition_path_push(suffix)
+    try:
+        yield
+    finally:
+        condition_path_pop(n)
+
+
 async def async_from_config(
     hass: HomeAssistant,
     config: Union[ConfigType, Template],
@@ -115,21 +279,26 @@ async def async_and_from_config(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Test and condition."""
+        result = True
         errors = []
-        for index, check in enumerate(checks):
-            try:
-                if not check(hass, variables):
-                    return False
-            except ConditionError as ex:
-                errors.append(
-                    ConditionErrorIndex("and", index=index, total=len(checks), error=ex)
-                )
+        with trace_condition(config, variables):
+            for index, check in enumerate(checks):
+                try:
+                    with condition_path(["conditions", str(index)]):
+                        if not check(hass, variables):
+                            result = False
+                            break
+                except ConditionError as ex:
+                    errors.append(
+                        ConditionErrorIndex("and", index=index, total=len(checks), error=ex)
+                    )
 
-        # Raise the errors if no check was false
-        if errors:
-            raise ConditionErrorContainer("and", errors=errors)
+            # Raise the errors if no check was false
+            if errors:
+                raise ConditionErrorContainer("and", errors=errors)
 
-        return True
+            condition_trace_set_result(result)
+        return result
 
     return if_and_condition
 
@@ -148,21 +317,26 @@ async def async_or_from_config(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Test or condition."""
+        result = False
         errors = []
-        for index, check in enumerate(checks):
-            try:
-                if check(hass, variables):
-                    return True
-            except ConditionError as ex:
-                errors.append(
-                    ConditionErrorIndex("or", index=index, total=len(checks), error=ex)
-                )
+        with trace_condition(config, variables):
+            for index, check in enumerate(checks):
+                try:
+                    with condition_path(["conditions", str(index)]):
+                        if check(hass, variables):
+                            result = True
+                            break
+                except ConditionError as ex:
+                    errors.append(
+                        ConditionErrorIndex("or", index=index, total=len(checks), error=ex)
+                    )
 
-        # Raise the errors if no check was true
-        if errors:
-            raise ConditionErrorContainer("or", errors=errors)
+            # Raise the errors if no check was true
+            if errors:
+                raise ConditionErrorContainer("or", errors=errors)
 
-        return False
+            condition_trace_set_result(result)
+        return result
 
     return if_or_condition
 
@@ -181,21 +355,26 @@ async def async_not_from_config(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Test not condition."""
+        result = True
         errors = []
-        for index, check in enumerate(checks):
-            try:
-                if check(hass, variables):
-                    return False
-            except ConditionError as ex:
-                errors.append(
-                    ConditionErrorIndex("not", index=index, total=len(checks), error=ex)
-                )
+        with trace_condition(config, variables):
+            for index, check in enumerate(checks):
+                with condition_path(["conditions", str(index)]):
+                    try:
+                        if check(hass, variables):
+                            result = False
+                            break
+                    except ConditionError as ex:
+                        errors.append(
+                            ConditionErrorIndex("not", index=index, total=len(checks), error=ex)
+                        )
 
-        # Raise the errors if no check was true
-        if errors:
-            raise ConditionErrorContainer("not", errors=errors)
+            # Raise the errors if no check was true
+            if errors:
+                raise ConditionErrorContainer("not", errors=errors)
 
-        return True
+            condition_trace_set_result(result)
+        return result
 
     return if_not_condition
 
@@ -290,6 +469,9 @@ def async_numeric_state(
                 )
             try:
                 if fvalue >= float(below_entity.state):
+                    condition_trace_set_result(
+                        False, state=fvalue, wanted_state_below=float(below_entity.state)
+                    )
                     return False
             except (ValueError, TypeError) as ex:
                 raise ConditionErrorMessage(
@@ -297,6 +479,7 @@ def async_numeric_state(
                     f"the 'below' entity {below} state '{below_entity.state}' cannot be processed as a number",
                 ) from ex
         elif fvalue >= below:
+            condition_trace_set_result(False, state=fvalue, wanted_state_below=below)
             return False
 
     if above is not None:
@@ -311,6 +494,9 @@ def async_numeric_state(
                 )
             try:
                 if fvalue <= float(above_entity.state):
+                    condition_trace_set_result(
+                        False, state=fvalue, wanted_state_above=float(above_entity.state)
+                    )
                     return False
             except (ValueError, TypeError) as ex:
                 raise ConditionErrorMessage(
@@ -318,8 +504,10 @@ def async_numeric_state(
                     f"the 'above' entity {above} state '{above_entity.state}' cannot be processed as a number",
                 ) from ex
         elif fvalue <= above:
+            condition_trace_set_result(False, state=fvalue, wanted_state_above=above)
             return False
 
+    condition_trace_set_result(True, state=fvalue)
     return True
 
 
@@ -345,10 +533,11 @@ def async_numeric_state_from_config(
         errors = []
         for index, entity_id in enumerate(entity_ids):
             try:
-                if not async_numeric_state(
-                    hass, entity_id, below, above, value_template, variables, attribute
-                ):
-                    return False
+                with trace_condition(config, variables), condition_path([str(index)]):
+                    if not async_numeric_state(
+                        hass, entity_id, below, above, value_template, variables, attribute
+                    ):
+                        return False
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex(
@@ -421,9 +610,13 @@ def state(
             break
 
     if for_period is None or not is_state:
+        condition_trace_set_result(is_state, state=value, wanted_state=state_value)
         return is_state
 
-    return dt_util.utcnow() - for_period > entity.last_changed
+    duration = dt_util.utcnow() - for_period
+    duration_ok = duration > entity.last_changed
+    condition_trace_set_result(duration_ok, state=value, duration=duration)
+    return duration_ok
 
 
 def state_from_config(
@@ -445,8 +638,9 @@ def state_from_config(
         errors = []
         for index, entity_id in enumerate(entity_ids):
             try:
-                if not state(hass, entity_id, req_states, for_period, attribute):
-                    return False
+                with trace_condition(config, variables), condition_path([str(index)]):
+                    if not state(hass, entity_id, req_states, for_period, attribute):
+                        return False
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex(

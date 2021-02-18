@@ -79,8 +79,14 @@ async def async_validate_config_item(hass, config, full_config=None):
     return config
 
 
+class AutomationConfig(dict):
+    """Dummy class to allow adding attributes."""
+
+
 async def _try_async_validate_config_item(hass, config, full_config=None):
     """Validate config item."""
+    raw_config = dict(config)
+
     try:
         config = await async_validate_config_item(hass, config, full_config)
     except (
@@ -92,6 +98,8 @@ async def _try_async_validate_config_item(hass, config, full_config=None):
         async_log_exception(ex, DOMAIN, full_config or config, hass)
         return None
 
+    config = AutomationConfig(config)
+    setattr(config, "raw_config", raw_config)
     return config
 
 
