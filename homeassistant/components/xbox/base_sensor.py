@@ -48,7 +48,9 @@ class XboxBaseSensorEntity(CoordinatorEntity):
         # with loading the image.
         # The correct domain is images-eds-ssl which can just be replaced
         # to point to the correct image, with the correct domain and certificate
-        return self.data.display_pic.replace("&mode=Padding", "").replace("images-eds.xboxlive.com", "images-eds-ssl.xboxlive.com")
+        return self.data.display_pic.replace("&mode=Padding", "").replace(
+            "images-eds.xboxlive.com", "images-eds-ssl.xboxlive.com"
+        )
 
     @property
     def entity_registry_enabled_default(self) -> bool:

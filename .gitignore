@@ -132,3 +132,6 @@ tmp_cache
 
 # python-language-server / Rope
 .ropeproject
+homeassistant/components/xbox/.vs/slnx.sqlite
+homeassistant/components/xbox/.vs/VSWorkspaceState.json
+homeassistant/components/xbox/.vs/xbox/v16/.suo
