@@ -1070,6 +1070,9 @@ openwebifpy==3.2.7
 # homeassistant.components.luci
 openwrt-luci-rpc==1.1.6
 
+# homeassistant.components.ubus
+openwrt-ubus-rpc==0.0.2
+
 # homeassistant.components.oru
 oru==0.1.11
 
