@@ -103,7 +103,7 @@ play_media:
     media_content_type:
       name: Content type
       description:
-        The type of the content to play. Must be one of image, music, tvshow,
+        The type of the content to play. Like image, music, tvshow,
         video, episode, channel or playlist.
       required: true
       example: "music"

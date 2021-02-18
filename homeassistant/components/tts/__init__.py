@@ -33,6 +33,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_prepare_setup_platform
 
@@ -54,6 +55,10 @@ CONF_CACHE_DIR = "cache_dir"
 CONF_LANG = "language"
 CONF_SERVICE_NAME = "service_name"
 CONF_TIME_MEMORY = "time_memory"
+
+CONF_DESCRIPTION = "description"
+CONF_FIELDS = "fields"
+CONF_TARGET = "target"
 
 DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = "tts"
@@ -192,6 +197,44 @@ async def async_setup(hass, config):
         hass.services.async_register(
             DOMAIN, service_name, async_say_handle, schema=SCHEMA_SERVICE_SAY
         )
+
+        # Register the service description
+        service_desc = {
+            CONF_DESCRIPTION: "Say some things on a media player",
+            CONF_FIELDS: {
+                "entity_id": {
+                    "name": "Entity",
+                    "description": "Name(s) of media player entities.",
+                    "example": "media_player.floor",
+                    "required": True,
+                    "selector": {"entity": {"domain": "media_player"}},
+                },
+                "message": {
+                    "name": "Message",
+                    "description": "Text to speak on devices.",
+                    "example": "My name is hanna",
+                    "required": True,
+                    "selector": {"text": None},
+                },
+                "language": {
+                    "name": "Language",
+                    "description": "Language to use for speech generation.",
+                    "example": "ru",
+                    "selector": {"text": None},
+                },
+                "cache": {
+                    "name": "Cache",
+                    "description": "Control file cache of this message.",
+                    "example": "true",
+                    "selector": {"boolean": None},
+                },
+                "options": {
+                    "description": "A dictionary containing platform-specific options. Optional depending on the platform.",
+                    "example": "platform specific",
+                },
+            },
+        }
+        async_set_service_schema(hass, DOMAIN, service_name, service_desc)
 
     setup_tasks = [
         asyncio.create_task(async_setup_platform(p_type, p_config))
