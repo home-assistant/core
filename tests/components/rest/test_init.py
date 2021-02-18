@@ -6,7 +6,7 @@ from datetime import timedelta
 import respx
 
 from homeassistant.components.rest.const import DOMAIN
-from homeassistant.const import DATA_MEGABYTES, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, DATA_MEGABYTES, STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -16,6 +16,8 @@ from tests.common import async_fire_time_changed
 @respx.mock
 async def test_setup_with_endpoint_timeout_with_recovery(hass):
     """Test setup with an endpoint that times out that recovers."""
+    await async_setup_component(hass, "homeassistant", {})
+
     respx.get("http://localhost").mock(side_effect=asyncio.TimeoutError())
     assert await async_setup_component(
         hass,
@@ -92,6 +94,30 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass):
     assert hass.states.get("sensor.sensor2").state == STATE_UNAVAILABLE
     assert hass.states.get("binary_sensor.binary_sensor1").state == STATE_UNAVAILABLE
     assert hass.states.get("binary_sensor.binary_sensor2").state == STATE_UNAVAILABLE
+
+    # We request a manual refresh when the
+    # endpoint is working again
+
+    respx.get("http://localhost").respond(
+        status_code=200,
+        json={
+            "sensor1": "1",
+            "sensor2": "2",
+            "binary_sensor1": "on",
+            "binary_sensor2": "off",
+        },
+    )
+
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["sensor.sensor1"]},
+        blocking=True,
+    )
+    assert hass.states.get("sensor.sensor1").state == "1"
+    assert hass.states.get("sensor.sensor2").state == "2"
+    assert hass.states.get("binary_sensor.binary_sensor1").state == "on"
+    assert hass.states.get("binary_sensor.binary_sensor2").state == "off"
 
 
 @respx.mock
