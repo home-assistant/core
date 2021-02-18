@@ -221,36 +221,45 @@ async def test_not_condition_with_template(hass):
 
 async def test_time_window(hass):
     """Test time condition windows."""
-    sixam = dt.parse_time("06:00:00")
-    sixpm = dt.parse_time("18:00:00")
+    sixam = "06:00:00"
+    sixpm = "18:00:00"
+
+    test1 = await condition.async_from_config(
+        hass,
+        {"alias": "Time Cond", "condition": "time", "after": sixam, "before": sixpm},
+    )
+    test2 = await condition.async_from_config(
+        hass,
+        {"alias": "Time Cond", "condition": "time", "after": sixpm, "before": sixam},
+    )
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt.now().replace(hour=3),
     ):
-        assert not condition.time(hass, after=sixam, before=sixpm)
-        assert condition.time(hass, after=sixpm, before=sixam)
+        assert not test1(hass)
+        assert test2(hass)
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt.now().replace(hour=9),
     ):
-        assert condition.time(hass, after=sixam, before=sixpm)
-        assert not condition.time(hass, after=sixpm, before=sixam)
+        assert test1(hass)
+        assert not test2(hass)
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt.now().replace(hour=15),
     ):
-        assert condition.time(hass, after=sixam, before=sixpm)
-        assert not condition.time(hass, after=sixpm, before=sixam)
+        assert test1(hass)
+        assert not test2(hass)
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt.now().replace(hour=21),
     ):
-        assert not condition.time(hass, after=sixam, before=sixpm)
-        assert condition.time(hass, after=sixpm, before=sixam)
+        assert not test1(hass)
+        assert test2(hass)
 
 
 async def test_time_using_input_datetime(hass):
