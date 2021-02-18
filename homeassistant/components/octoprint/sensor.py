@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from pyoctoprintapi import OctoprintClient, OctoprintJobInfo, OctoprintPrinterInfo
+from pyoctoprintapi import OctoprintJobInfo, OctoprintPrinterInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -28,27 +28,27 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ):
     """Set up the available OctoPrint binary sensors."""
-    client: OctoprintClient = hass.data[COMPONENT_DOMAIN][config_entry.entry_id][
-        "client"
-    ]
     coordinator: DataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][
         config_entry.entry_id
     ]["coordinator"]
     device_id: str = hass.data[COMPONENT_DOMAIN][config_entry.entry_id]["device_id"]
     entities = []
     sensor_name = config_entry.data[CONF_NAME]
-    try:
-        printer_info = await client.get_printer_info()
-        types = ["actual", "target"]
-        for tool in printer_info.temperatures:
-            for temp_type in types:
-                entities.append(
-                    OctoPrintTemperatureSensor(
-                        coordinator, sensor_name, tool.name, temp_type, device_id
+    if coordinator.data["printer"]:
+        try:
+            printer_info = coordinator.data["printer"]
+            types = ["actual", "target"]
+            for tool in printer_info.temperatures:
+                for temp_type in types:
+                    entities.append(
+                        OctoPrintTemperatureSensor(
+                            coordinator, sensor_name, tool.name, temp_type, device_id
+                        )
                     )
-                )
-    except BaseException as ex:  # pylint: disable=broad-except
-        _LOGGER.error("Error getting printering information %s", ex)
+        except BaseException as ex:  # pylint: disable=broad-except
+            _LOGGER.error("Error getting printering information %s", ex)
+    else:
+        _LOGGER.error("Printer appears to be offline, skipping temperature sensors")
 
     entities.append(OctoPrintStatusSensor(coordinator, sensor_name, device_id))
     entities.append(OctoPrintJobPercentageSensor(coordinator, sensor_name, device_id))
