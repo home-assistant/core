@@ -22,7 +22,8 @@ turn_on:
       description: A human readable color name.
       example: "red"
     hs_color:
-      description: Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
+      description:
+        Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
       example: "[300, 70]"
     xy_color:
       description: Color for the light in XY-format.
@@ -37,11 +38,25 @@ turn_on:
       description: Number between 0..255 indicating level of white.
       example: "250"
     brightness:
-      description: Number between 0..255 indicating brightness, where 0 turns the light off, 1 is the minimum brightness and 255 is the maximum brightness supported by the light.
+      name: Brightness value
+      description:
+        Number between 0..255 indicating brightness, where 0 turns the light
+        off, 1 is the minimum brightness and 255 is the maximum brightness
+        supported by the light.
+      advanced: true
       example: 120
+      selector:
+        number:
+          min: 0
+          max: 255
+          step: 1
+          mode: slider
     brightness_pct:
       name: Brightness
-      description: Number between 0..100 indicating percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness and 100 is the maximum brightness supported by the light.
+      description:
+        Number between 0..100 indicating percentage of full brightness, where 0
+        turns the light off, 1 is the minimum brightness and 100 is the maximum
+        brightness supported by the light.
       example: 47
       selector:
         number:
@@ -54,7 +69,8 @@ turn_on:
       description: Change brightness by an amount. Should be between -255..255.
       example: -25.5
     brightness_step_pct:
-      description: Change brightness by a percentage. Should be between -100..100.
+      description:
+        Change brightness by a percentage. Should be between -100..100.
       example: -10
     profile:
       description: Name of a light profile to use.
@@ -104,7 +120,8 @@ toggle:
       description: A human readable color name.
       example: "red"
     hs_color:
-      description: Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
+      description:
+        Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
       example: "[300, 70]"
     xy_color:
       description: Color for the light in XY-format.
@@ -119,10 +136,16 @@ toggle:
       description: Number between 0..255 indicating level of white.
       example: "250"
     brightness:
-      description: Number between 0..255 indicating brightness, where 0 turns the light off, 1 is the minimum brightness and 255 is the maximum brightness supported by the light.
+      description:
+        Number between 0..255 indicating brightness, where 0 turns the light
+        off, 1 is the minimum brightness and 255 is the maximum brightness
+        supported by the light.
       example: 120
     brightness_pct:
-      description: Number between 0..100 indicating percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness and 100 is the maximum brightness supported by the light.
+      description:
+        Number between 0..100 indicating percentage of full brightness, where 0
+        turns the light off, 1 is the minimum brightness and 100 is the maximum
+        brightness supported by the light.
       example: 47
     profile:
       description: Name of a light profile to use.
