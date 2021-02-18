@@ -34,6 +34,7 @@ async def test_and_condition(hass):
     test = await condition.async_from_config(
         hass,
         {
+            "alias": "And Condition",
             "condition": "and",
             "conditions": [
                 {
@@ -68,6 +69,7 @@ async def test_and_condition_with_template(hass):
             "condition": "and",
             "conditions": [
                 {
+                    "alias": "Template Condition",
                     "condition": "template",
                     "value_template": '{{ states.sensor.temperature.state == "100" }}',
                 },
@@ -95,6 +97,7 @@ async def test_or_condition(hass):
     test = await condition.async_from_config(
         hass,
         {
+            "alias": "Or Condition",
             "condition": "or",
             "conditions": [
                 {
@@ -153,6 +156,7 @@ async def test_not_condition(hass):
     test = await condition.async_from_config(
         hass,
         {
+            "alias": "Not Condition",
             "condition": "not",
             "conditions": [
                 {
@@ -430,6 +434,7 @@ async def test_multiple_states(hass):
             "condition": "and",
             "conditions": [
                 {
+                    "alias": "State Condition",
                     "condition": "state",
                     "entity_id": "sensor.temperature",
                     "state": ["100", "200"],
@@ -699,6 +704,7 @@ async def test_numeric_state_multiple_entities(hass):
             "condition": "and",
             "conditions": [
                 {
+                    "alias": "Numeric State Condition",
                     "condition": "numeric_state",
                     "entity_id": ["sensor.temperature_1", "sensor.temperature_2"],
                     "below": 50,
@@ -819,6 +825,7 @@ async def test_zone_multiple_entities(hass):
             "condition": "and",
             "conditions": [
                 {
+                    "alias": "Zone Condition",
                     "condition": "zone",
                     "entity_id": ["device_tracker.person_1", "device_tracker.person_2"],
                     "zone": "zone.home",
