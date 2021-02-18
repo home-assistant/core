@@ -90,4 +90,4 @@ repos:
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(homeassistant/.+/(manifest|strings)\.json|\.coveragerc)$
+        files: ^(homeassistant/.+/(manifest|strings)\.json|\.coveragerc|homeassistant/.+/services\.yaml)$
