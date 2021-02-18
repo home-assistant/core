@@ -257,6 +257,138 @@ async def test_import_flow_success(hass):
     }
 
 
+async def test_config_flow_step_device_manual_model_succes(hass):
+    """Test config flow, device connection error, manual model."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "device"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=DeviceException({}),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "device"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    overwrite_model = const.MODELS_VACUUM[0]
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=DeviceException({}),
+    ), patch(
+        "homeassistant.components.xiaomi_miio.config_flow.get_mac_address",
+        return_value=TEST_MAC,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: TEST_TOKEN, const.CONF_MODEL: overwrite_model},
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == DEFAULT_DEVICE_NAME
+    assert result["data"] == {
+        const.CONF_FLOW_TYPE: const.CONF_DEVICE,
+        CONF_HOST: TEST_HOST,
+        CONF_TOKEN: TEST_TOKEN,
+        const.CONF_MODEL: overwrite_model,
+        const.CONF_MAC: TEST_MAC,
+    }
+
+
+async def test_config_flow_step_device_manual_model_fail(hass):
+    """Test config flow, device connection error, manual model fail."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "device"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=DeviceException({}),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "device"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    overwrite_model = const.MODELS_VACUUM[0]
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=DeviceException({}),
+    ), patch(
+        "homeassistant.components.xiaomi_miio.config_flow.get_mac_address",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: TEST_TOKEN, const.CONF_MODEL: overwrite_model},
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "device"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_config_flow_step_device_manual_model_err(hass):
+    """Test config flow, device connection error, manual model error."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "device"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=DeviceException({}),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "device"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    overwrite_model = const.MODELS_VACUUM[0]
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        side_effect=DeviceException({}),
+    ), patch(
+        "homeassistant.components.xiaomi_miio.config_flow.get_mac_address",
+        side_effect=OSError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: TEST_TOKEN, const.CONF_MODEL: overwrite_model},
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "device"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
 async def config_flow_device_success(hass, model_to_test):
     """Test a successful config flow for a device (base class)."""
     result = await hass.config_entries.flow.async_init(

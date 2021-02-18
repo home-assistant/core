@@ -118,7 +118,6 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # Setup Gateways
                 for gateway_model in MODELS_GATEWAY:
                     if model.startswith(gateway_model):
-                        mac = format_mac(device_info.mac_address)
                         unique_id = mac
                         await self.async_set_unique_id(unique_id)
                         self._abort_if_unique_id_configured()
@@ -138,7 +137,6 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 for device_model in MODELS_ALL_DEVICES:
                     if model.startswith(device_model):
-                        mac = format_mac(device_info.mac_address)
                         unique_id = mac
                         await self.async_set_unique_id(unique_id)
                         self._abort_if_unique_id_configured()
@@ -162,7 +160,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             schema = DEVICE_CONFIG
 
         if errors:
-            schema.extend(DEVICE_MODEL_CONFIG)
+            schema = schema.extend(DEVICE_MODEL_CONFIG)
 
         return self.async_show_form(step_id="device", data_schema=schema, errors=errors)
 
