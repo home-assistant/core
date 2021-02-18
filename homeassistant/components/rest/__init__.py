@@ -50,10 +50,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     async def reload_service_handler(service):
         """Remove all user-defined groups and load new ones from config."""
-        await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
         conf = await component.async_prepare_reload()
         if conf is None:
             return
+        await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
         await _async_process_config(hass, conf)
 
     hass.services.async_register(
