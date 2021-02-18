@@ -1,11 +1,12 @@
 # Describes the format for available Number entity services
 
 set_value:
-  description: Set the value of a Number entity.
+  description: Set the value of a Number entity
+  target:
   fields:
-    entity_id:
-      description: Entity ID of the Number to set the new value.
-      example: number.volume
     value:
+      name: Value
       description: The target value the entity should be set to.
       example: 42
+      selector:
+        text:
