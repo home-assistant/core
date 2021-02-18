@@ -1,49 +1,49 @@
 check_config:
-  description: Check the Home Assistant configuration files for errors. Errors will be displayed in the Home Assistant log.
+  description:
+    Check the Home Assistant configuration files for errors. Errors will be
+    displayed in the Home Assistant log
 
 reload_core_config:
-  description: Reload the core configuration.
+  description: Reload the core configuration
 
 restart:
-  description: Restart the Home Assistant service.
+  description: Restart the Home Assistant service
 
 set_location:
-  description: Update the Home Assistant location.
+  description: Update the Home Assistant location
   fields:
     latitude:
-      description: Latitude of your location
+      name: Latitude
+      description: Latitude of your location.
+      required: true
       example: 32.87336
+      selector:
+        text:
     longitude:
-      description: Longitude of your location
+      name: Longitude
+      description: Longitude of your location.
+      required: true
       example: 117.22743
+      selector:
+        text:
 
 stop:
   description: Stop the Home Assistant service.
 
 toggle:
-  description: Generic service to toggle devices on/off under any domain. Same usage as the light.turn_on, switch.turn_on, etc. services.
-  fields:
-    entity_id:
-      description: The entity_id of the device to toggle on/off.
-      example: light.living_room
+  description: Generic service to toggle devices on/off under any domain
+  target:
+    entity: {}
 
 turn_on:
-  description: Generic service to turn devices on under any domain. Same usage as the light.turn_on, switch.turn_on, etc. services.
-  fields:
-    entity_id:
-      description: The entity_id of the device to turn on.
-      example: light.living_room
+  description: Generic service to turn devices on under any domain.
+  target:
+    entity: {}
 
 turn_off:
-  description: Generic service to turn devices off under any domain. Same usage as the light.turn_on, switch.turn_on, etc. services.
-  fields:
-    entity_id:
-      description: The entity_id of the device to turn off.
-      example: light.living_room
+  description: Generic service to turn devices off under any domain.
 
 update_entity:
   description: Force one or more entities to update its data
-  fields:
-    entity_id:
-      description: One or multiple entity_ids to update. Can be a list.
-      example: light.living_room
+  target:
+    entity: {}
