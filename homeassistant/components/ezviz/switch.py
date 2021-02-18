@@ -26,16 +26,18 @@ async def async_setup_entry(
         DATA_COORDINATOR
     ]
     switch_entities = []
+    supported_switches = []
+
+    for switches in DeviceSwitchType:
+        supported_switches.append(switches.value)
+
+    supported_switches = set(supported_switches)
 
     for idx, camera in enumerate(coordinator.data):
-        for name in camera:
-            if name == "switches":
-                if camera.get(name):
-                    for switch in camera.get(name):
-                        if switch in DeviceSwitchType._value2member_map_:
-                            switch_entities.append(
-                                EzvizSwitch(coordinator, idx, switch)
-                            )
+        if camera.get("switches"):
+            for switch in camera.get("switches"):
+                if switch in supported_switches:
+                    switch_entities.append(EzvizSwitch(coordinator, idx, switch))
 
     async_add_entities(switch_entities)
 
