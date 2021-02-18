@@ -13,7 +13,6 @@ from homeassistant.components.climate import (
     HVAC_MODE_HEAT,
     TEMP_CELSIUS,
     ClimateEntity,
-
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -21,7 +20,6 @@ from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
 
 _LOGGER = logging.getLogger(__name__)
 HVAC_MODES = [HVAC_MODE_HEAT, HVAC_MODE_COOL]
-
 SENSOR_BYPASS_STATE_VALUE = 0
 SENSOR_TEMPERATURE_SUPPLY_VALUE = 0
 
