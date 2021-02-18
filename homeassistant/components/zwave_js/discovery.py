@@ -242,6 +242,7 @@ DISCOVERY_SCHEMAS = [
         device_class_specific={
             "Tunable Color Light",
             "Binary Tunable Color Light",
+            "Tunable Color Switch",
             "Multilevel Remote Switch",
             "Multilevel Power Switch",
             "Multilevel Scene Switch",
