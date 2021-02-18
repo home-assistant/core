@@ -593,6 +593,8 @@ def zone(
 
         if entity is None:
             raise ConditionError(f"Unknown entity {entity_id}")
+    else:
+        entity_id = entity.entity_id
 
     latitude = entity.attributes.get(ATTR_LATITUDE)
     longitude = entity.attributes.get(ATTR_LONGITUDE)
@@ -619,13 +621,26 @@ def zone_from_config(
 
     def if_in_zone(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
-        return all(
-            any(
-                zone(hass, zone_entity_id, entity_id)
-                for zone_entity_id in zone_entity_ids
-            )
-            for entity_id in entity_ids
-        )
+        errors = []
+
+        all_ok = True
+        for entity_id in entity_ids:
+            entity_ok = False
+            for zone_entity_id in zone_entity_ids:
+                try:
+                    if zone(hass, zone_entity_id, entity_id):
+                        entity_ok = True
+                except ConditionError as ex:
+                    errors.append(str(ex))
+
+            if not entity_ok:
+                all_ok = False
+
+        # Raise the errors only if no definitive result was found
+        if errors and not all_ok:
+            raise ConditionError("Error in 'zone' condition: " + ", ".join(errors))
+
+        return all_ok
 
     return if_in_zone
 
