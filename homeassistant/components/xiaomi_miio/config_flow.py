@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+from getmac import get_mac_address
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
@@ -15,6 +16,7 @@ from .const import (
     CONF_MAC,
     CONF_MODEL,
     DOMAIN,
+    MODELS_ALL,
     MODELS_ALL_DEVICES,
     MODELS_GATEWAY,
 )
@@ -29,7 +31,9 @@ DEVICE_SETTINGS = {
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
 }
 DEVICE_CONFIG = vol.Schema({vol.Required(CONF_HOST): str}).extend(DEVICE_SETTINGS)
-
+DEVICE_MODEL_CONFIG = {
+    vol.Optional(CONF_MODEL): vol.In(MODELS_ALL),
+}
 
 class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Xiaomi Miio config flow."""
@@ -95,6 +99,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             token = user_input[CONF_TOKEN]
+            model = user_input.get(CONF_MODEL)
             if user_input.get(CONF_HOST):
                 self.host = user_input[CONF_HOST]
 
@@ -103,10 +108,16 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await connect_device_class.async_connect_device(self.host, token)
             device_info = connect_device_class.device_info
 
-            if device_info is not None:
+            if model is None and device_info is not None:
+                model = device_info.model
+
+            if model is not None:
+                mac = await self.async_get_mac(device_info, self.host)
+
+            if model is not None and mac is not None:
                 # Setup Gateways
                 for gateway_model in MODELS_GATEWAY:
-                    if device_info.model.startswith(gateway_model):
+                    if model.startswith(gateway_model):
                         mac = format_mac(device_info.mac_address)
                         unique_id = mac
                         await self.async_set_unique_id(unique_id)
@@ -117,7 +128,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                                 CONF_FLOW_TYPE: CONF_GATEWAY,
                                 CONF_HOST: self.host,
                                 CONF_TOKEN: token,
-                                CONF_MODEL: device_info.model,
+                                CONF_MODEL: model,
                                 CONF_MAC: mac,
                             },
                         )
@@ -126,7 +137,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 name = user_input.get(CONF_NAME, DEFAULT_DEVICE_NAME)
 
                 for device_model in MODELS_ALL_DEVICES:
-                    if device_info.model.startswith(device_model):
+                    if model.startswith(device_model):
                         mac = format_mac(device_info.mac_address)
                         unique_id = mac
                         await self.async_set_unique_id(unique_id)
@@ -137,7 +148,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                                 CONF_FLOW_TYPE: CONF_DEVICE,
                                 CONF_HOST: self.host,
                                 CONF_TOKEN: token,
-                                CONF_MODEL: device_info.model,
+                                CONF_MODEL: model,
                                 CONF_MAC: mac,
                             },
                         )
@@ -150,4 +161,29 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             schema = DEVICE_CONFIG
 
+        if errors:
+            schema.extend(DEVICE_MODEL_CONFIG)
+
         return self.async_show_form(step_id="device", data_schema=schema, errors=errors)
+
+    async def async_get_mac(self, device_info, host):
+        """Get the mac address of a Miio Device when the info call fails."""
+        if device_info is not None:
+            return format_mac(device_info.mac_address)
+
+        # If the info call failed, use getmac as backup
+        try:
+            mac = await self.hass.async_add_executor_job(
+                partial(get_mac_address, **{"ip": host})
+            )
+            if not mac:
+                mac = await self.hass.async_add_executor_job(
+                    partial(get_mac_address, **{"hostname": host})
+                )
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error("Unable to get mac address: %s", err)
+            mac = None
+
+        if mac is not None:
+            mac = format_mac(mac)
+        return mac
