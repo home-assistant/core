@@ -385,3 +385,22 @@ async def test_not_allowing_recursion(hass, caplog):
             f"Called service homeassistant.{service} with invalid entities homeassistant.light"
             in caplog.text
         ), service
+
+
+async def test_reload_config_entry(hass):
+    """Test being able to reload a config entry."""
+    await async_setup_component(hass, "homeassistant", {})
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=None,
+    ) as mock_reload:
+        await hass.services.async_call(
+            "homeassistant",
+            "reload_config_entry",
+            {"config_entry_id": "8955375327824e14ba89e4b29cc3ec9a"},
+            blocking=True,
+        )
+
+    assert len(mock_reload.mock_calls) == 1
+    assert mock_reload.mock_calls[0][1][0] == "8955375327824e14ba89e4b29cc3ec9a"
