@@ -284,6 +284,7 @@ asmog==0.0.6
 asterisk_mbox==0.5.0
 
 # homeassistant.components.dlna_dmr
+# homeassistant.components.ssdp
 # homeassistant.components.upnp
 async-upnp-client==0.14.13
 
@@ -778,7 +779,7 @@ horimote==0.4.1
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
-httplib2==0.18.1
+httplib2==0.19.0
 
 # homeassistant.components.huawei_lte
 huawei-lte-api==1.4.17
@@ -1068,6 +1069,9 @@ openwebifpy==3.2.7
 
 # homeassistant.components.luci
 openwrt-luci-rpc==1.1.6
+
+# homeassistant.components.ubus
+openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.oru
 oru==0.1.11
@@ -1503,7 +1507,7 @@ pyloopenergy==0.2.1
 pylutron-caseta==0.9.0
 
 # homeassistant.components.lutron
-pylutron==0.2.5
+pylutron==0.2.7
 
 # homeassistant.components.mailgun
 pymailgunner==1.4

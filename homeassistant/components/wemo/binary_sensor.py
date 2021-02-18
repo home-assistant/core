@@ -2,8 +2,6 @@
 import asyncio
 import logging
 
-from pywemo.ouimeaux_device.api.service import ActionException
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -35,12 +33,5 @@ class WemoBinarySensor(WemoSubscriptionEntity, BinarySensorEntity):
 
     def _update(self, force_update=True):
         """Update the sensor state."""
-        try:
+        with self._wemo_exception_handler("update status"):
             self._state = self.wemo.get_state(force_update)
-
-            if not self._available:
-                _LOGGER.info("Reconnected to %s", self.name)
-                self._available = True
-        except ActionException as err:
-            _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
-            self._available = False

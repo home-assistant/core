@@ -430,7 +430,37 @@ async def test_self_reset_quarterly(hass, legacy_patchable_time):
         hass, gen_config("quarterly"), "2017-03-31T23:59:00.000000+00:00"
     )
 
+   
+async def test_self_reset_biannually(hass, legacy_patchable_time):
+    """Test biannually reset of meter."""
+    await _test_self_reset(
+        hass, gen_config("biannually"), "2017-12-31T23:59:00.000000+00:00"
+    )
+   
+async def test_self_reset_biannually_second_half(hass, legacy_patchable_time):
+    """Test biannually reset of meter for second half of the year."""
+    await _test_self_reset(
+        hass, gen_config("biannually"), "2018-06-30T23:59:00.000000+00:00"
+    )
 
+async def test_self_no_reset_biannually(hass, legacy_patchable_time):
+    """Test yearly reset of meter does not occur after 1st January."""
+    await _test_self_reset(
+        hass,
+        gen_config("biannually"),
+        "2018-01-01T23:59:00.000000+00:00",
+        expect_reset=False,
+    )
+    
+async def test_self_no_reset_biannually(hass, legacy_patchable_time):
+    """Test biannually reset of meter does not occur after 1st July."""
+    await _test_self_reset(
+        hass,
+        gen_config("biannually"),
+        "2018-07-01T23:59:00.000000+00:00",
+        expect_reset=False,
+    )
+    
 async def test_self_reset_yearly(hass, legacy_patchable_time):
     """Test yearly reset of meter."""
     await _test_self_reset(
