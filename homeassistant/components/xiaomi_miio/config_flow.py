@@ -1,8 +1,9 @@
 """Config flow to configure Xiaomi Miio."""
+from functools import partial
 import logging
 
-import voluptuous as vol
 from getmac import get_mac_address
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
@@ -31,9 +32,8 @@ DEVICE_SETTINGS = {
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
 }
 DEVICE_CONFIG = vol.Schema({vol.Required(CONF_HOST): str}).extend(DEVICE_SETTINGS)
-DEVICE_MODEL_CONFIG = {
-    vol.Optional(CONF_MODEL): vol.In(MODELS_ALL),
-}
+DEVICE_MODEL_CONFIG = {vol.Optional(CONF_MODEL): vol.In(MODELS_ALL)}
+
 
 class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Xiaomi Miio config flow."""
