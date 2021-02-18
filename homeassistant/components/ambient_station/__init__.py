@@ -60,6 +60,7 @@ TYPE_BATT6 = "batt6"
 TYPE_BATT7 = "batt7"
 TYPE_BATT8 = "batt8"
 TYPE_BATT9 = "batt9"
+TYPE_BATT_CO2 = "batt_co2"
 TYPE_BATTOUT = "battout"
 TYPE_CO2 = "co2"
 TYPE_DAILYRAININ = "dailyrainin"
@@ -82,6 +83,12 @@ TYPE_HUMIDITYIN = "humidityin"
 TYPE_LASTRAIN = "lastRain"
 TYPE_MAXDAILYGUST = "maxdailygust"
 TYPE_MONTHLYRAININ = "monthlyrainin"
+TYPE_PM25 = "pm25"
+TYPE_PM25_24H = "pm25_24h"
+TYPE_PM25_BATT = "batt_25"
+TYPE_PM25_IN = "pm25_in"
+TYPE_PM25_IN_24H = "pm25_in_24h"
+TYPE_PM25IN_BATT = "batt_25in"
 TYPE_RELAY1 = "relay1"
 TYPE_RELAY10 = "relay10"
 TYPE_RELAY2 = "relay2"
@@ -128,8 +135,6 @@ TYPE_TEMPF = "tempf"
 TYPE_TEMPINF = "tempinf"
 TYPE_TOTALRAININ = "totalrainin"
 TYPE_UV = "uv"
-TYPE_PM25 = "pm25"
-TYPE_PM25_24H = "pm25_24h"
 TYPE_WEEKLYRAININ = "weeklyrainin"
 TYPE_WINDDIR = "winddir"
 TYPE_WINDDIR_AVG10M = "winddir_avg10m"
@@ -155,6 +160,7 @@ SENSOR_TYPES = {
     TYPE_BATT8: ("Battery 8", None, TYPE_BINARY_SENSOR, "battery"),
     TYPE_BATT9: ("Battery 9", None, TYPE_BINARY_SENSOR, "battery"),
     TYPE_BATTOUT: ("Battery", None, TYPE_BINARY_SENSOR, "battery"),
+    TYPE_BATT_CO2: ("CO2 Battery", None, TYPE_BINARY_SENSOR, "battery"),
     TYPE_CO2: ("co2", CONCENTRATION_PARTS_PER_MILLION, TYPE_SENSOR, None),
     TYPE_DAILYRAININ: ("Daily Rain", "in", TYPE_SENSOR, None),
     TYPE_DEWPOINT: ("Dew Point", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
@@ -176,6 +182,27 @@ SENSOR_TYPES = {
     TYPE_LASTRAIN: ("Last Rain", None, TYPE_SENSOR, "timestamp"),
     TYPE_MAXDAILYGUST: ("Max Gust", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
     TYPE_MONTHLYRAININ: ("Monthly Rain", "in", TYPE_SENSOR, None),
+    TYPE_PM25_24H: (
+        "PM25 24h Avg",
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        TYPE_SENSOR,
+        None,
+    ),
+    TYPE_PM25_BATT: ("PM25 Battery", None, TYPE_BINARY_SENSOR, "battery"),
+    TYPE_PM25_IN: (
+        "PM25 Indoor",
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        TYPE_SENSOR,
+        None,
+    ),
+    TYPE_PM25_IN_24H: (
+        "PM25 Indoor 24h Avg",
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        TYPE_SENSOR,
+        None,
+    ),
+    TYPE_PM25: ("PM25", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, TYPE_SENSOR, None),
+    TYPE_PM25IN_BATT: ("PM25 Indoor Battery", None, TYPE_BINARY_SENSOR, "battery"),
     TYPE_RELAY10: ("Relay 10", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
     TYPE_RELAY1: ("Relay 1", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
     TYPE_RELAY2: ("Relay 2", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
@@ -227,13 +254,6 @@ SENSOR_TYPES = {
     TYPE_TEMPINF: ("Inside Temp", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
     TYPE_TOTALRAININ: ("Lifetime Rain", "in", TYPE_SENSOR, None),
     TYPE_UV: ("uv", "Index", TYPE_SENSOR, None),
-    TYPE_PM25: ("PM25", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, TYPE_SENSOR, None),
-    TYPE_PM25_24H: (
-        "PM25 24h Avg",
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        TYPE_SENSOR,
-        None,
-    ),
     TYPE_WEEKLYRAININ: ("Weekly Rain", "in", TYPE_SENSOR, None),
     TYPE_WINDDIR: ("Wind Dir", DEGREE, TYPE_SENSOR, None),
     TYPE_WINDDIR_AVG10M: ("Wind Dir Avg 10m", DEGREE, TYPE_SENSOR, None),
