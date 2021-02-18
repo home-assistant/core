@@ -41,11 +41,25 @@ set_temperature:
     target_temp_high:
       name: Target temperature high
       description: New target high temperature for HVAC.
+      advanced: true
       example: 26
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box
     target_temp_low:
       name: Target temperature low
       description: New target low temperature for HVAC.
+      advanced: true
       example: 20
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box
     hvac_mode:
       name: HVAC mode
       description: HVAC operation mode to set temperature to.
