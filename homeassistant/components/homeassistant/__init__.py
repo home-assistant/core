@@ -23,13 +23,17 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUs
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
+ATTR_CONFIG_ENTRY_ID = "config_entry_id"
+
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = ha.DOMAIN
 SERVICE_RELOAD_CORE_CONFIG = "reload_core_config"
+SERVICE_RELOAD_CONFIG_ENTRY = "reload_config_entry"
 SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
 SCHEMA_UPDATE_ENTITY = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
+SCHEMA_RELOAD_CONFIG_ENTRY = vol.Schema({vol.Required(ATTR_CONFIG_ENTRY_ID): str})
 
 
 async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
@@ -201,6 +205,17 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
         SERVICE_SET_LOCATION,
         async_set_location,
         vol.Schema({ATTR_LATITUDE: cv.latitude, ATTR_LONGITUDE: cv.longitude}),
+    )
+
+    async def async_handle_reload_config_entry(call):
+        """Service handler for reloading a config entry."""
+        await hass.config_entries.async_reload(call.data[ATTR_CONFIG_ENTRY_ID])
+
+    hass.helpers.service.async_register_admin_service(
+        ha.DOMAIN,
+        SERVICE_RELOAD_CONFIG_ENTRY,
+        async_handle_reload_config_entry,
+        schema=SCHEMA_RELOAD_CONFIG_ENTRY,
     )
 
     return True
