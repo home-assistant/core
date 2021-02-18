@@ -49,15 +49,21 @@ def create_stream_buffer(stream_output, video_stream, audio_stream, sequence):
 class SegmentBuffer:
     """Buffer for writing a sequence of packets to the output as a segment."""
 
-    def __init__(self, video_stream, audio_stream, outputs_callback) -> None:
+    def __init__(self, outputs_callback) -> None:
         """Initialize SegmentBuffer."""
-        self._video_stream = video_stream
-        self._audio_stream = audio_stream
+        self._stream_id = 0
+        self._video_stream = None
+        self._audio_stream = None
         self._outputs_callback = outputs_callback
         # tuple of StreamOutput, StreamBuffer
         self._outputs = []
         self._sequence = 0
         self._segment_start_pts = None
+
+    def set_streams(self, video_stream, audio_stream):
+        """Initialize output buffer with streams from container."""
+        self._video_stream = video_stream
+        self._audio_stream = audio_stream
 
     def reset(self, video_pts):
         """Initialize a new stream segment."""
@@ -103,7 +109,16 @@ class SegmentBuffer:
         """Create a segment from the buffered packets and write to output."""
         for (buffer, stream_output) in self._outputs:
             buffer.output.close()
-            stream_output.put(Segment(self._sequence, buffer.segment, duration))
+            stream_output.put(
+                Segment(self._sequence, buffer.segment, duration, self._stream_id)
+            )
+
+    def discontinuity(self):
+        """Mark the stream as having been restarted."""
+        # Preserving sequence and stream_id here keep the HLS playlist logic
+        # simple to check for discontinuity at output time, and to determine
+        # the discontinuity sequence number.
+        self._stream_id += 1
 
     def close(self):
         """Close all StreamBuffers."""
@@ -111,7 +126,7 @@ class SegmentBuffer:
             buffer.output.close()
 
 
-def stream_worker(source, options, outputs_callback, quit_event):
+def stream_worker(source, options, segment_buffer, quit_event):
     """Handle consuming streams."""
 
     try:
@@ -143,8 +158,6 @@ def stream_worker(source, options, outputs_callback, quit_event):
     last_dts = {video_stream: float("-inf"), audio_stream: float("-inf")}
     # Keep track of consecutive packets without a dts to detect end of stream.
     missing_dts = 0
-    # Holds the buffers for each stream provider
-    segment_buffer = SegmentBuffer(video_stream, audio_stream, outputs_callback)
     # The video pts at the beginning of the segment
     segment_start_pts = None
     # Because of problems 1 and 2 below, we need to store the first few packets and replay them
@@ -225,6 +238,7 @@ def stream_worker(source, options, outputs_callback, quit_event):
         container.close()
         return
 
+    segment_buffer.set_streams(video_stream, audio_stream)
     segment_buffer.reset(segment_start_pts)
 
     while not quit_event.is_set():

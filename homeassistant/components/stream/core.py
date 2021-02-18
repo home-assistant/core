@@ -30,6 +30,8 @@ class Segment:
     sequence: int = attr.ib()
     segment: io.BytesIO = attr.ib()
     duration: float = attr.ib()
+    # For detecting discontinuities across stream restarts
+    stream_id: int = attr.ib(default=0)
 
 
 class IdleTimer:
