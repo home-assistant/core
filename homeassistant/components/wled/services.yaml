@@ -53,4 +53,6 @@ preset:
       example: 6
       selector:
         number:
+          min: -1
+          max: 65535
           mode: box
