@@ -4,17 +4,26 @@ notify:
   description: Send a notification.
   fields:
     message:
+      name: Message
       description: Message body of the notification.
       example: The garage door has been open for 10 minutes.
+      selector:
+        text:
     title:
+      name: Title
       description: Optional title for your notification.
       example: "Your Garage Door Friend"
+      selector:
+        text:
     target:
       description: An array of targets to send the notification to. Optional depending on the platform.
       example: platform specific
     data:
+      name: Data
       description: Extended information for notification. Optional depending on the platform.
       example: platform specific
+      selector:
+        object:
 
 persistent_notification:
   description: Sends a notification to the visible in the front-end.

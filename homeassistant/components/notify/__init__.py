@@ -12,6 +12,7 @@ from homeassistant.core import ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_prepare_setup_platform
@@ -40,6 +41,34 @@ SERVICE_NOTIFY = "notify"
 SERVICE_PERSISTENT_NOTIFICATION = "persistent_notification"
 
 NOTIFY_SERVICES = "notify_services"
+
+CONF_DESCRIPTION = "description"
+CONF_FIELDS = "fields"
+
+NOTIFY_FIELDS = {
+    "message": {
+        "name": "Message",
+        "description": "Message body of the notification.",
+        "example": "The garage door has been open for 10 minutes.",
+        "selector": {"text": None},
+    },
+    "title": {
+        "name": "Title",
+        "description": "Optional title for your notification.",
+        "example": "Your Garage Door Friend",
+        "selector": {"text": None},
+    },
+    "target": {
+        "description": "An array of targets to send the notification to. Optional depending on the platform.",
+        "example": "platform specific",
+    },
+    "data": {
+        "name": "Data",
+        "description": "Extended information for notification. Optional depending on the platform.",
+        "example": "platform specific",
+        "selector": {"object": None},
+    },
+}
 
 PLATFORM_SCHEMA = vol.Schema(
     {vol.Required(CONF_PLATFORM): cv.string, vol.Optional(CONF_NAME): cv.string},
@@ -185,6 +214,12 @@ class BaseNotificationService:
                     self._async_notify_message_service,
                     schema=NOTIFY_SERVICE_SCHEMA,
                 )
+                # Register the service description
+                service_desc = {
+                    CONF_DESCRIPTION: f"Send a notification to {target_name}",
+                    CONF_FIELDS: NOTIFY_FIELDS,
+                }
+                async_set_service_schema(self.hass, DOMAIN, target_name, service_desc)
 
             for stale_target_name in stale_targets:
                 del self.registered_targets[stale_target_name]
@@ -202,6 +237,13 @@ class BaseNotificationService:
             self._async_notify_message_service,
             schema=NOTIFY_SERVICE_SCHEMA,
         )
+
+        # Register the service description
+        service_desc = {
+            CONF_DESCRIPTION: f"Send a notification with {self._service_name}",
+            CONF_FIELDS: NOTIFY_FIELDS,
+        }
+        async_set_service_schema(self.hass, DOMAIN, self._service_name, service_desc)
 
     async def async_unregister_services(self) -> None:
         """Unregister the notify services."""

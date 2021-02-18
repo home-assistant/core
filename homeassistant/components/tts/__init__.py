@@ -58,7 +58,6 @@ CONF_TIME_MEMORY = "time_memory"
 
 CONF_DESCRIPTION = "description"
 CONF_FIELDS = "fields"
-CONF_TARGET = "target"
 
 SAY_FIELDS = {
     "entity_id": {
