@@ -60,6 +60,39 @@ CONF_DESCRIPTION = "description"
 CONF_FIELDS = "fields"
 CONF_TARGET = "target"
 
+SAY_FIELDS = {
+    "entity_id": {
+        "name": "Entity",
+        "description": "Name(s) of media player entities.",
+        "example": "media_player.floor",
+        "required": True,
+        "selector": {"entity": {"domain": "media_player"}},
+    },
+    "message": {
+        "name": "Message",
+        "description": "Text to speak on devices.",
+        "example": "My name is hanna",
+        "required": True,
+        "selector": {"text": None},
+    },
+    "language": {
+        "name": "Language",
+        "description": "Language to use for speech generation.",
+        "example": "ru",
+        "selector": {"text": None},
+    },
+    "cache": {
+        "name": "Cache",
+        "description": "Control file cache of this message.",
+        "example": "true",
+        "selector": {"boolean": None},
+    },
+    "options": {
+        "description": "A dictionary containing platform-specific options. Optional depending on the platform.",
+        "example": "platform specific",
+    },
+}
+
 DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = "tts"
 DEFAULT_TIME_MEMORY = 300
@@ -200,39 +233,8 @@ async def async_setup(hass, config):
 
         # Register the service description
         service_desc = {
-            CONF_DESCRIPTION: "Say some things on a media player",
-            CONF_FIELDS: {
-                "entity_id": {
-                    "name": "Entity",
-                    "description": "Name(s) of media player entities.",
-                    "example": "media_player.floor",
-                    "required": True,
-                    "selector": {"entity": {"domain": "media_player"}},
-                },
-                "message": {
-                    "name": "Message",
-                    "description": "Text to speak on devices.",
-                    "example": "My name is hanna",
-                    "required": True,
-                    "selector": {"text": None},
-                },
-                "language": {
-                    "name": "Language",
-                    "description": "Language to use for speech generation.",
-                    "example": "ru",
-                    "selector": {"text": None},
-                },
-                "cache": {
-                    "name": "Cache",
-                    "description": "Control file cache of this message.",
-                    "example": "true",
-                    "selector": {"boolean": None},
-                },
-                "options": {
-                    "description": "A dictionary containing platform-specific options. Optional depending on the platform.",
-                    "example": "platform specific",
-                },
-            },
+            CONF_DESCRIPTION: f"Say some things on a media player with {p_type}",
+            CONF_FIELDS: SAY_FIELDS,
         }
         async_set_service_schema(hass, DOMAIN, service_name, service_desc)
 
