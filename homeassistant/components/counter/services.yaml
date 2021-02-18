@@ -22,7 +22,7 @@ configure:
       example: 0
       selector:
         number:
-          min: 0
+          min: -9223372036854775807
           max: 9223372036854775807
           mode: box
     maximum:
@@ -31,7 +31,7 @@ configure:
       example: 100
       selector:
         number:
-          min: 0
+          min: -9223372036854775807
           max: 9223372036854775807
           mode: box
     step:
