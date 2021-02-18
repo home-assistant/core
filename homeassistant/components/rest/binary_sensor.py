@@ -1,7 +1,11 @@
 """Support for RESTful binary sensors."""
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
@@ -14,7 +18,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 from . import create_rest_data_from_config
-from .const import CONF_COORDINATOR, CONF_REST
+from .const import COORDINATOR, DOMAIN, REST, SHARED_DATA_ID
 from .entity import RestEntity
 from .schema import BINARY_SENSOR_SCHEMA, RESOURCE_SCHEMA
 
@@ -38,15 +42,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if value_template is not None:
         value_template.hass = hass
 
-    rest = conf.get(CONF_REST)
-    coordinator = conf.get(CONF_COORDINATOR)
-
     # Must update the sensor now (including fetching the rest resource) to
     # ensure it's updating its state.
-    if coordinator:
+    if discovery_info and SHARED_DATA_ID in discovery_info:
+        shared_data_id = discovery_info[SHARED_DATA_ID]
+        shared_data = hass.data[DOMAIN][BINARY_SENSOR_DOMAIN][shared_data_id]
+        coordinator = shared_data[COORDINATOR]
+        rest = shared_data[REST]
         if rest.data is None:
             await coordinator.async_request_refresh()
     else:
+        coordinator = None
         rest = create_rest_data_from_config(hass, conf)
         await rest.async_update()
 

@@ -33,20 +33,20 @@ from homeassistant.helpers.entity_component import (
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_COORDINATOR, CONF_REST
+from .const import COORDINATOR, DOMAIN, REST, SHARED_DATA_ID
 from .data import RestData
 from .schema import CONFIG_SCHEMA  # noqa:F401 pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "rest"
 PLATFORMS = ["binary_sensor", "notify", "sensor", "switch"]
 COORDINATOR_AWARE_PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the rest platforms."""
-    component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    hass.data[DOMAIN] = {platform: {} for platform in COORDINATOR_AWARE_PLATFORMS}
 
     async def reload_service_handler(service):
         """Remove all user-defined groups and load new ones from config."""
@@ -54,6 +54,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         if conf is None:
             return
         await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
+        hass.data[DOMAIN] = {platform: {} for platform in COORDINATOR_AWARE_PLATFORMS}
         await _async_process_config(hass, conf)
 
     hass.services.async_register(
@@ -79,12 +80,17 @@ async def _async_process_config(hass, config) -> bool:
         await coordinator.async_refresh()
 
         for platform_domain in COORDINATOR_AWARE_PLATFORMS:
-            for platform_conf in conf.get(platform_domain, []):
+            shared_data = hass.data[DOMAIN][platform_domain]
+            for shared_data_id, platform_conf in enumerate(
+                conf.get(platform_domain, [])
+            ):
+                shared_data[shared_data_id] = {REST: rest, COORDINATOR: coordinator}
+
                 load = discovery.async_load_platform(
                     hass,
                     platform_domain,
                     DOMAIN,
-                    {CONF_REST: rest, CONF_COORDINATOR: coordinator, **platform_conf},
+                    {SHARED_DATA_ID: shared_data_id, **platform_conf},
                     config,
                 )
                 load_tasks.append(load)
