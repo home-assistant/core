@@ -48,6 +48,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         rest = create_rest_data_from_config(hass, conf)
         await rest.async_update()
 
+    if rest.data is None:
+        raise PlatformNotReady
+
     name = conf.get(CONF_NAME)
     unit = conf.get(CONF_UNIT_OF_MEASUREMENT)
     device_class = conf.get(CONF_DEVICE_CLASS)
@@ -59,9 +62,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     if value_template is not None:
         value_template.hass = hass
-
-    if rest.data is None:
-        raise PlatformNotReady
 
     async_add_entities(
         [
