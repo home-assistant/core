@@ -24,7 +24,7 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
     SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
@@ -33,7 +33,7 @@ from homeassistant.helpers.entity_component import (
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import COORDINATOR, DOMAIN, REST, SHARED_DATA_ID
+from .const import COORDINATOR, DOMAIN, PLATFORM_IDX, REST, REST_IDX
 from .data import RestData
 from .schema import CONFIG_SCHEMA  # noqa:F401 pylint: disable=unused-import
 
@@ -46,7 +46,7 @@ COORDINATOR_AWARE_PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the rest platforms."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
-    hass.data[DOMAIN] = {platform: {} for platform in COORDINATOR_AWARE_PLATFORMS}
+    _async_setup_shared_data(hass)
 
     async def reload_service_handler(service):
         """Remove all user-defined groups and load new ones from config."""
@@ -54,7 +54,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         if conf is None:
             return
         await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
-        hass.data[DOMAIN] = {platform: {} for platform in COORDINATOR_AWARE_PLATFORMS}
+        _async_setup_shared_data(hass)
         await _async_process_config(hass, conf)
 
     hass.services.async_register(
@@ -64,13 +64,19 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return await _async_process_config(hass, config)
 
 
+@callback
+def _async_setup_shared_data(hass: HomeAssistant):
+    """Create shared data for platform config and rest coordinators."""
+    hass.data[DOMAIN] = {platform: {} for platform in COORDINATOR_AWARE_PLATFORMS}
+
+
 async def _async_process_config(hass, config) -> bool:
     """Process rest configuration."""
     if DOMAIN not in config:
         return True
 
     load_tasks = []
-    for conf in config[DOMAIN]:
+    for rest_idx, conf in enumerate(config[DOMAIN]):
         scan_interval = conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         resource_template = conf.get(CONF_RESOURCE_TEMPLATE)
         rest = create_rest_data_from_config(hass, conf)
@@ -78,19 +84,20 @@ async def _async_process_config(hass, config) -> bool:
             hass, rest, resource_template, scan_interval
         )
         await coordinator.async_refresh()
+        hass.data[DOMAIN][rest_idx] = {REST: rest, COORDINATOR: coordinator}
 
         for platform_domain in COORDINATOR_AWARE_PLATFORMS:
-            shared_data = hass.data[DOMAIN][platform_domain]
-            for shared_data_id, platform_conf in enumerate(
-                conf.get(platform_domain, [])
-            ):
-                shared_data[shared_data_id] = {REST: rest, COORDINATOR: coordinator}
+            if platform_domain not in conf:
+                continue
+
+            for platform_idx, platform_conf in enumerate(conf[platform_domain]):
+                hass.data[DOMAIN][platform_domain][platform_idx] = platform_conf
 
                 load = discovery.async_load_platform(
                     hass,
                     platform_domain,
                     DOMAIN,
-                    {SHARED_DATA_ID: shared_data_id, **platform_conf},
+                    {REST_IDX: rest_idx, PLATFORM_IDX: platform_idx},
                     config,
                 )
                 load_tasks.append(load)
@@ -99,6 +106,17 @@ async def _async_process_config(hass, config) -> bool:
         await asyncio.gather(*load_tasks)
 
     return True
+
+
+async def async_get_config_and_coordinator(hass, platform_domain, discovery_info):
+    """Get the config and coordinator for the platform from discovery."""
+    shared_data = hass.data[DOMAIN][discovery_info[REST_IDX]]
+    conf = hass.data[DOMAIN][platform_domain][discovery_info[PLATFORM_IDX]]
+    coordinator = shared_data[COORDINATOR]
+    rest = shared_data[REST]
+    if rest.data is None:
+        await coordinator.async_request_refresh()
+    return conf, coordinator, rest
 
 
 def _wrap_rest_in_coordinator(hass, rest, resource_template, update_interval):
