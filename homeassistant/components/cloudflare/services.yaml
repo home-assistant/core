@@ -1,2 +1,2 @@
 update_records:
-  description: Manually trigger update to Cloudflare records.
+  description: Manually trigger update to Cloudflare records
