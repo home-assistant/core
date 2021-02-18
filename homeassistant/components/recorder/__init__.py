@@ -422,11 +422,13 @@ class Recorder(threading.Thread):
             self.event_session.add(dbevent)
         except (TypeError, ValueError):
             _LOGGER.warning("Event is not JSON serializable: %s", event)
+            return
         except Exception as err:  # pylint: disable=broad-except
             # Must catch the exception to prevent the loop from collapsing
             _LOGGER.exception("Error adding event: %s", err)
+            return
 
-        if dbevent and event.event_type == EVENT_STATE_CHANGED:
+        if event.event_type == EVENT_STATE_CHANGED:
             try:
                 dbstate = States.from_event(event)
                 has_new_state = event.data.get("new_state")
