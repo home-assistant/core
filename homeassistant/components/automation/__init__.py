@@ -627,7 +627,7 @@ async def _async_process_config(
         ]
 
         for list_no, config_block in enumerate(conf):
-            raw_config = config_block.raw_config
+            raw_config = None
             if isinstance(config_block, blueprint.BlueprintInputs):  # type: ignore
                 # TODO: handle raw config for blueprints
                 blueprints_used = True
@@ -648,6 +648,8 @@ async def _async_process_config(
                         humanize_error(config_block, err),
                     )
                     continue
+            else:
+                raw_config = config_block.raw_config
 
             automation_id = config_block.get(CONF_ID)
             name = config_block.get(CONF_ALIAS) or f"{config_key} {list_no}"

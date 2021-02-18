@@ -121,7 +121,7 @@ _SHUTDOWN_MAX_WAIT = 60
 
 
 action_config = ContextVar("action_config", default=None)
-action_trace = ContextVar("action_trace")
+action_trace = ContextVar("action_trace", default=None)
 action_trace_stack = ContextVar("action_trace_stack", default=None)
 action_path_stack = ContextVar("action_path_stack", default=None)
 

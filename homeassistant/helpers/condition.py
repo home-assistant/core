@@ -197,6 +197,12 @@ def condition_trace_append(variables, path):
 def condition_trace_set_result(result, **kwargs):
     """Set the result of TraceElement at the top of the stack."""
     node = condition_trace_stack_top()
+
+    # The condition function may be called directly, in which case tracing
+    # is not setup
+    if not node:
+        return
+
     node.set_result(result=result, **kwargs)
 
 

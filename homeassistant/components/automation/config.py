@@ -85,7 +85,12 @@ class AutomationConfig(dict):
 
 async def _try_async_validate_config_item(hass, config, full_config=None):
     """Validate config item."""
-    raw_config = dict(config)
+    raw_config = None
+    try:
+        raw_config = dict(config)
+    except ValueError:
+        # Invalid config
+        pass
 
     try:
         config = await async_validate_config_item(hass, config, full_config)
@@ -97,6 +102,9 @@ async def _try_async_validate_config_item(hass, config, full_config=None):
     ) as ex:
         async_log_exception(ex, DOMAIN, full_config or config, hass)
         return None
+
+    if isinstance(config, blueprint.BlueprintInputs):
+        return config
 
     config = AutomationConfig(config)
     setattr(config, "raw_config", raw_config)
