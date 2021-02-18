@@ -1100,7 +1100,7 @@ pencompy==0.0.3
 # homeassistant.components.unifi_direct
 pexpect==4.6.0
 
-# homeassistant.components.phone_modem
+# homeassistant.components.modem_callerid
 phone_modem==0.0.1
 
 # homeassistant.components.onewire
@@ -1351,7 +1351,7 @@ pydoods==1.0.2
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==0.8
 
-# homeassistant.components.phone_modem
+# homeassistant.components.modem_callerid
 pydub==0.24.1
 
 # homeassistant.components.ebox

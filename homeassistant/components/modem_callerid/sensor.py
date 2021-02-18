@@ -1,9 +1,10 @@
 """A sensor for incoming calls using a USB modem that supports caller ID."""
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    CONF_DEVICE,
     CONF_NAME,
-    CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
 )
@@ -12,6 +13,8 @@ from homeassistant.helpers.entity import Entity
 
 from .const import (
     DATA_KEY_API,
+    DEFAULT_DEVICE,
+    DEFAULT_NAME,
     DOMAIN,
     ICON,
     SERVICE_HANGUP_CALL,
@@ -20,18 +23,25 @@ from .const import (
     STATE_RING,
 )
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+    }
+)
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the Phone Modem sensor."""
+    """Set up the Modem Caller ID sensor."""
     name = entry.data[CONF_NAME]
-    port = entry.data[CONF_PORT]
+    device = entry.data[CONF_DEVICE]
     api = hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]
     sensor = [
         ModemCalleridSensor(
             hass,
             api,
             name,
-            port,
+            device,
             entry.entry_id,
         )
     ]
@@ -65,11 +75,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class ModemCalleridSensor(Entity):
     """Implementation of USB modem caller ID sensor."""
 
-    def __init__(self, hass, api, name, port, server_unique_id):
+    def __init__(self, hass, api, name, device, server_unique_id):
         """Initialize the sensor."""
         self._attributes = {"cid_time": 0, "cid_number": "", "cid_name": ""}
         self._device_class = None
-        self.port = port
+        self.device = device
         self.api = api
         self._state = STATE_IDLE
         self._name = name

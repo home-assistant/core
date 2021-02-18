@@ -564,7 +564,7 @@ pdunehd==1.3.2
 # homeassistant.components.unifi_direct
 pexpect==4.6.0
 
-# homeassistant.components.phone_modem
+# homeassistant.components.modem_callerid
 phone_modem==0.0.1
 
 # homeassistant.components.onewire
@@ -710,7 +710,7 @@ pydexcom==0.2.0
 # homeassistant.components.zwave
 pydispatcher==2.0.5
 
-# homeassistant.components.phone_modem
+# homeassistant.components.modem_callerid
 pydub==0.24.1
 
 # homeassistant.components.econet

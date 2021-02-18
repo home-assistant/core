@@ -1,5 +1,5 @@
 {
-  "domain": "phone_modem",
+  "domain": "modem_callerid",
   "name": "Phone Modem",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/phone_modem",

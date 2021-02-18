@@ -1,10 +1,10 @@
-"""Constants for the Phone Modem integration."""
+"""Constants for the Modem Caller ID integration."""
 
 DATA_KEY_API = "api"
 DATA_KEY_COORDINATOR = "coordinator"
 DEFAULT_DEVICE = "/dev/ttyACM0"
 DEFAULT_NAME = "Phone Modem"
-DOMAIN = "phone_modem"
+DOMAIN = "modem_callerid"
 ICON = "mdi:phone-classic"
 STATE_CALLERID = "callerid"
 STATE_RING = "ring"
