@@ -4,7 +4,7 @@ from typing import Callable, List
 
 from pyezviz.constants import DeviceSwitchType
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import DEVICE_CLASS_SWITCH, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -53,6 +53,7 @@ class EzvizSwitch(CoordinatorEntity, SwitchEntity):
         self._name = switch
         self._sensor_name = f"{self._camera_name}.{DeviceSwitchType(self._name).name}"
         self._serial = self.coordinator.data[self._idx]["serial"]
+        self._device_class = DEVICE_CLASS_SWITCH
 
     @property
     def name(self):
@@ -69,15 +70,15 @@ class EzvizSwitch(CoordinatorEntity, SwitchEntity):
         """Return the unique ID of this switch."""
         return f"{self._serial}_{self._sensor_name}"
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Change a device switch on the camera."""
-        _LOGGER.debug("Set EZVIZ Switch '%s' to %s", self._name, 1)
+        _LOGGER.debug("Set EZVIZ Switch '%s' to on", self._name)
 
         self.coordinator.ezviz_client.switch_status(self._serial, self._name, 1)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Change a device switch on the camera."""
-        _LOGGER.debug("Set EZVIZ Switch '%s' to %s", self._name, 0)
+        _LOGGER.debug("Set EZVIZ Switch '%s' to off", self._name)
 
         self.coordinator.ezviz_client.switch_status(self._serial, self._name, 0)
 
@@ -95,4 +96,4 @@ class EzvizSwitch(CoordinatorEntity, SwitchEntity):
     @property
     def device_class(self):
         """Device class for the sensor."""
-        return "switch"
+        return self._device_class

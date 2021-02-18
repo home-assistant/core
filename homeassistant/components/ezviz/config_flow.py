@@ -10,7 +10,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_TIMEOUT, CONF_U
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import (
+from .const import (  # pylint: disable=unused-import
     CONF_FFMPEG_ARGUMENTS,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_REGION,
