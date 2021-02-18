@@ -6,7 +6,7 @@ from bsblan import BSBLan, BSBLanError, Info
 import voluptuous as vol
 
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
@@ -37,6 +37,8 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
                 host=user_input[CONF_HOST],
                 port=user_input[CONF_PORT],
                 passkey=user_input.get(CONF_PASSKEY),
+                username=user_input.get(CONF_USERNAME),
+                password=user_input.get(CONF_PASSWORD),
             )
         except BSBLanError:
             return self._show_setup_form({"base": "cannot_connect"})
@@ -52,6 +54,8 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: user_input[CONF_PORT],
                 CONF_PASSKEY: user_input.get(CONF_PASSKEY),
                 CONF_DEVICE_IDENT: info.device_identification,
+                CONF_USERNAME: user_input.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
             },
         )
 
@@ -64,16 +68,30 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_HOST): str,
                     vol.Optional(CONF_PORT, default=80): int,
                     vol.Optional(CONF_PASSKEY): str,
+                    vol.Optional(CONF_USERNAME): str,
+                    vol.Optional(CONF_PASSWORD): str,
                 }
             ),
             errors=errors or {},
         )
 
     async def _get_bsblan_info(
-        self, host: str, passkey: Optional[str], port: int
+        self,
+        host: str,
+        username: Optional[str],
+        password: Optional[str],
+        passkey: Optional[str],
+        port: int,
     ) -> Info:
         """Get device information from an BSBLan device."""
         session = async_get_clientsession(self.hass)
         _LOGGER.debug("request bsblan.info:")
-        bsblan = BSBLan(host, passkey=passkey, port=port, session=session)
+        bsblan = BSBLan(
+            host,
+            username=username,
+            password=password,
+            passkey=passkey,
+            port=port,
+            session=session,
+        )
         return await bsblan.info()

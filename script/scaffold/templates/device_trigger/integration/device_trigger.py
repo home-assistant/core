@@ -1,4 +1,4 @@
-"""Provides device automations for NEW_NAME."""
+"""Provides device triggers for NEW_NAME."""
 from typing import List
 
 import voluptuous as vol
@@ -80,23 +80,17 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
-
     # TODO Implement your own logic to attach triggers.
-    # Generally we suggest to re-use the existing state or event
-    # triggers from the automation integration.
+    # Use the existing state or event triggers from the automation integration.
 
     if config[CONF_TYPE] == "turned_on":
-        from_state = STATE_OFF
         to_state = STATE_ON
     else:
-        from_state = STATE_ON
         to_state = STATE_OFF
 
     state_config = {
         state.CONF_PLATFORM: "state",
         CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        state.CONF_FROM: from_state,
         state.CONF_TO: to_state,
     }
     state_config = state.TRIGGER_SCHEMA(state_config)

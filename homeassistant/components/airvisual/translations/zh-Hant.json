@@ -8,7 +8,7 @@
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "general_error": "\u672a\u9810\u671f\u932f\u8aa4",
             "invalid_api_key": "API \u5bc6\u9470\u7121\u6548",
-            "unable_to_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 Node/Pro \u8a2d\u5099\u3002"
+            "location_not_found": "\u627e\u4e0d\u5230\u5730\u9ede"
         },
         "step": {
             "geography": {
@@ -20,12 +20,31 @@
                 "description": "\u4f7f\u7528 AirVisual \u96f2\u7aef API \u4ee5\u76e3\u63a7\u5730\u7406\u5ea7\u6a19\u3002",
                 "title": "\u8a2d\u5b9a\u5730\u7406\u5ea7\u6a19"
             },
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "API \u5bc6\u9470",
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d93\u5ea6"
+                },
+                "description": "\u4f7f\u7528 AirVisual \u96f2\u7aef API \u4ee5\u76e3\u63a7\u7d93\u5ea6/\u7def\u5ea6\u3002",
+                "title": "\u8a2d\u5b9a\u5730\u7406\u5ea7\u6a19"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "API \u5bc6\u9470",
+                    "city": "\u57ce\u5e02",
+                    "country": "\u570b\u5bb6",
+                    "state": "\u5dde"
+                },
+                "description": "\u4f7f\u7528 AirVisual \u96f2\u7aef API \u4ee5\u76e3\u63a7\u57ce\u5e02/\u5dde/\u570b\u5bb6\u3002",
+                "title": "\u8a2d\u5b9a\u5730\u7406\u5ea7\u6a19"
+            },
             "node_pro": {
                 "data": {
                     "ip_address": "\u4e3b\u6a5f\u7aef",
                     "password": "\u5bc6\u78bc"
                 },
-                "description": "\u76e3\u63a7\u500b\u4eba AirVisual \u8a2d\u5099\uff0c\u5bc6\u78bc\u53ef\u4ee5\u900f\u904e\u8a2d\u5099 UI \u7372\u5f97\u3002",
+                "description": "\u76e3\u63a7\u500b\u4eba AirVisual \u88dd\u7f6e\uff0c\u5bc6\u78bc\u53ef\u4ee5\u900f\u904e\u88dd\u7f6e UI \u7372\u5f97\u3002",
                 "title": "\u8a2d\u5b9a AirVisual Node/Pro"
             },
             "reauth_confirm": {

@@ -32,10 +32,10 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
+    PRECIPITATION_MILLIMETERS_PER_HOUR,
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    TIME_HOURS,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -85,13 +85,13 @@ SENSOR_TYPES = {
     "windgust": ["Wind gust", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
     "precipitation": [
         "Precipitation",
-        f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "mdi:weather-pouring",
     ],
     "irradiance": ["Irradiance", IRRADIATION_WATTS_PER_SQUARE_METER, "mdi:sunglasses"],
     "precipitation_forecast_average": [
         "Precipitation forecast average",
-        f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "mdi:weather-pouring",
     ],
     "precipitation_forecast_total": [

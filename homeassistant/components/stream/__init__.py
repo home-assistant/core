@@ -1,48 +1,50 @@
-"""Provide functionality to stream video source."""
+"""Provide functionality to stream video source.
+
+Components use create_stream with a stream source (e.g. an rtsp url) to create
+a new Stream object. Stream manages:
+  - Background work to fetch and decode a stream
+  - Desired output formats
+  - Home Assistant URLs for viewing a stream
+  - Access tokens for URLs for viewing a stream
+
+A Stream consists of a background worker and multiple output streams (e.g. hls
+and recorder). The worker has a callback to retrieve the current active output
+streams where it writes the decoded output packets.  The HLS stream has an
+inactivity idle timeout that expires the access token. When all output streams
+are inactive, the background worker is shut down. Alternatively, a Stream
+can be configured with keepalive to always keep workers active.
+"""
 import logging
 import secrets
 import threading
-from types import MappingProxyType
+import time
+from typing import List
 
-import voluptuous as vol
-
-from homeassistant.const import CONF_FILENAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.loader import bind_hass
 
 from .const import (
-    ATTR_ENDPOINTS,
+    ATTR_HLS_ENDPOINT,
     ATTR_STREAMS,
-    CONF_DURATION,
-    CONF_LOOKBACK,
-    CONF_STREAM_SOURCE,
     DOMAIN,
     MAX_SEGMENTS,
-    SERVICE_RECORD,
+    OUTPUT_IDLE_TIMEOUT,
+    STREAM_RESTART_INCREMENT,
+    STREAM_RESTART_RESET_TIME,
 )
-from .core import PROVIDERS
-from .hls import async_setup_hls
+from .core import IdleTimer, StreamOutput
+from .hls import HlsStreamOutput, async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-STREAM_SERVICE_SCHEMA = vol.Schema({vol.Required(CONF_STREAM_SOURCE): cv.string})
+def create_stream(hass, stream_source, options=None):
+    """Create a stream with the specified identfier based on the source url.
 
-SERVICE_RECORD_SCHEMA = STREAM_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(CONF_FILENAME): cv.string,
-        vol.Optional(CONF_DURATION, default=30): int,
-        vol.Optional(CONF_LOOKBACK, default=0): int,
-    }
-)
-
-
-@bind_hass
-def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=None):
-    """Set up stream with token."""
+    The stream_source is typically an rtsp url and options are passed into
+    pyav / ffmpeg as options.
+    """
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
 
@@ -57,25 +59,9 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
             **options,
         }
 
-    try:
-        streams = hass.data[DOMAIN][ATTR_STREAMS]
-        stream = streams.get(stream_source)
-        if not stream:
-            stream = Stream(hass, stream_source, options=options, keepalive=keepalive)
-            streams[stream_source] = stream
-        else:
-            # Update keepalive option on existing stream
-            stream.keepalive = keepalive
-
-        # Add provider
-        stream.add_provider(fmt)
-
-        if not stream.access_token:
-            stream.access_token = secrets.token_hex()
-            stream.start()
-        return hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(stream.access_token)
-    except Exception as err:
-        raise HomeAssistantError("Unable to get stream") from err
+    stream = Stream(hass, stream_source, options=options)
+    hass.data[DOMAIN][ATTR_STREAMS].append(stream)
+    return stream
 
 
 async def async_setup(hass, config):
@@ -89,12 +75,10 @@ async def async_setup(hass, config):
     from .recorder import async_setup_recorder
 
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
-    hass.data[DOMAIN][ATTR_STREAMS] = {}
+    hass.data[DOMAIN][ATTR_STREAMS] = []
 
     # Setup HLS
-    hls_endpoint = async_setup_hls(hass)
-    hass.data[DOMAIN][ATTR_ENDPOINTS]["hls"] = hls_endpoint
+    hass.data[DOMAIN][ATTR_HLS_ENDPOINT] = async_setup_hls(hass)
 
     # Setup Recorder
     async_setup_recorder(hass)
@@ -102,20 +86,11 @@ async def async_setup(hass, config):
     @callback
     def shutdown(event):
         """Stop all stream workers."""
-        for stream in hass.data[DOMAIN][ATTR_STREAMS].values():
-            stream.keepalive = False
+        for stream in hass.data[DOMAIN][ATTR_STREAMS]:
             stream.stop()
         _LOGGER.info("Stopped stream workers")
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
-
-    async def async_record(call):
-        """Call record stream service handler."""
-        await async_handle_record_service(hass, call)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_RECORD, async_record, schema=SERVICE_RECORD_SCHEMA
-    )
 
     return True
 
@@ -123,75 +98,133 @@ async def async_setup(hass, config):
 class Stream:
     """Represents a single stream."""
 
-    def __init__(self, hass, source, options=None, keepalive=False):
+    def __init__(self, hass, source, options=None):
         """Initialize a stream."""
         self.hass = hass
         self.source = source
         self.options = options
-        self.keepalive = keepalive
+        self.keepalive = False
         self.access_token = None
         self._thread = None
-        self._thread_quit = None
-        self._outputs = {}
+        self._thread_quit = threading.Event()
+        self._hls = None
+        self._hls_timer = None
+        self._recorder = None
+        self._fast_restart_once = False
 
         if self.options is None:
             self.options = {}
 
-    @property
-    def outputs(self):
-        """Return a copy of the stream outputs."""
-        # A copy is returned so the caller can iterate through the outputs
-        # without concern about self._outputs being modified from another thread.
-        return MappingProxyType(self._outputs.copy())
+    def endpoint_url(self) -> str:
+        """Start the stream and returns a url for the hls endpoint."""
+        if not self._hls:
+            raise ValueError("Stream is not configured for hls")
+        if not self.access_token:
+            self.access_token = secrets.token_hex()
+        return self.hass.data[DOMAIN][ATTR_HLS_ENDPOINT].format(self.access_token)
 
-    def add_provider(self, fmt):
-        """Add provider output stream."""
-        if not self._outputs.get(fmt):
-            provider = PROVIDERS[fmt](self)
-            self._outputs[fmt] = provider
-        return self._outputs[fmt]
+    def outputs(self) -> List[StreamOutput]:
+        """Return the active stream outputs."""
+        return [output for output in [self._hls, self._recorder] if output]
 
-    def remove_provider(self, provider):
-        """Remove provider output stream."""
-        if provider.name in self._outputs:
-            del self._outputs[provider.name]
-            self.check_idle()
+    def hls_output(self) -> StreamOutput:
+        """Return the hls output stream, creating if not already active."""
+        if not self._hls:
+            self._hls = HlsStreamOutput(self.hass)
+            self._hls_timer = IdleTimer(self.hass, OUTPUT_IDLE_TIMEOUT, self._hls_idle)
+            self._hls_timer.start()
+        self._hls_timer.awake()
+        return self._hls
 
-        if not self._outputs:
-            self.stop()
+    @callback
+    def _hls_idle(self):
+        """Reset access token and cleanup stream due to inactivity."""
+        self.access_token = None
+        if not self.keepalive:
+            if self._hls:
+                self._hls.cleanup()
+                self._hls = None
+            self._hls_timer = None
+        self._check_idle()
 
-    def check_idle(self):
-        """Reset access token if all providers are idle."""
-        if all([p.idle for p in self._outputs.values()]):
-            self.access_token = None
+    def _check_idle(self):
+        """Check if all outputs are idle and shut down worker."""
+        if self.keepalive or self.outputs():
+            return
+        self.stop()
 
     def start(self):
-        """Start a stream."""
-        # Keep import here so that we can import stream integration without installing reqs
-        # pylint: disable=import-outside-toplevel
-        from .worker import stream_worker
-
+        """Start stream decode worker."""
         if self._thread is None or not self._thread.is_alive():
             if self._thread is not None:
                 # The thread must have crashed/exited. Join to clean up the
                 # previous thread.
                 self._thread.join(timeout=0)
-            self._thread_quit = threading.Event()
+            self._thread_quit.clear()
             self._thread = threading.Thread(
                 name="stream_worker",
-                target=stream_worker,
-                args=(self.hass, self, self._thread_quit),
+                target=self._run_worker,
             )
             self._thread.start()
             _LOGGER.info("Started stream: %s", self.source)
 
+    def update_source(self, new_source):
+        """Restart the stream with a new stream source."""
+        _LOGGER.debug("Updating stream source %s", new_source)
+        self.source = new_source
+        self._fast_restart_once = True
+        self._thread_quit.set()
+
+    def _run_worker(self):
+        """Handle consuming streams and restart keepalive streams."""
+        # Keep import here so that we can import stream integration without installing reqs
+        # pylint: disable=import-outside-toplevel
+        from .worker import SegmentBuffer, stream_worker
+
+        segment_buffer = SegmentBuffer(self.outputs)
+        wait_timeout = 0
+        while not self._thread_quit.wait(timeout=wait_timeout):
+            start_time = time.time()
+            stream_worker(self.source, self.options, segment_buffer, self._thread_quit)
+            segment_buffer.discontinuity()
+            if not self.keepalive or self._thread_quit.is_set():
+                if self._fast_restart_once:
+                    # The stream source is updated, restart without any delay.
+                    self._fast_restart_once = False
+                    self._thread_quit.clear()
+                    continue
+                break
+            # To avoid excessive restarts, wait before restarting
+            # As the required recovery time may be different for different setups, start
+            # with trying a short wait_timeout and increase it on each reconnection attempt.
+            # Reset the wait_timeout after the worker has been up for several minutes
+            if time.time() - start_time > STREAM_RESTART_RESET_TIME:
+                wait_timeout = 0
+            wait_timeout += STREAM_RESTART_INCREMENT
+            _LOGGER.debug(
+                "Restarting stream worker in %d seconds: %s",
+                wait_timeout,
+                self.source,
+            )
+        self._worker_finished()
+
+    def _worker_finished(self):
+        """Schedule cleanup of all outputs."""
+        self.hass.loop.call_soon_threadsafe(self.stop)
+
     def stop(self):
         """Remove outputs and access token."""
-        self._outputs = {}
         self.access_token = None
-
-        if not self.keepalive:
-            self._stop()
+        if self._hls_timer:
+            self._hls_timer.clear()
+            self._hls_timer = None
+        if self._hls:
+            self._hls.cleanup()
+            self._hls = None
+        if self._recorder:
+            self._recorder.save()
+            self._recorder = None
+        self._stop()
 
     def _stop(self):
         """Stop worker thread."""
@@ -201,40 +234,38 @@ class Stream:
             self._thread = None
             _LOGGER.info("Stopped stream: %s", self.source)
 
+    async def async_record(self, video_path, duration=30, lookback=5):
+        """Make a .mp4 recording from a provided stream."""
 
-async def async_handle_record_service(hass, call):
-    """Handle save video service calls."""
-    stream_source = call.data[CONF_STREAM_SOURCE]
-    video_path = call.data[CONF_FILENAME]
-    duration = call.data[CONF_DURATION]
-    lookback = call.data[CONF_LOOKBACK]
+        # Keep import here so that we can import stream integration without installing reqs
+        # pylint: disable=import-outside-toplevel
+        from .recorder import RecorderOutput
 
-    # Check for file access
-    if not hass.config.is_allowed_path(video_path):
-        raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
+        # Check for file access
+        if not self.hass.config.is_allowed_path(video_path):
+            raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
 
-    # Check for active stream
-    streams = hass.data[DOMAIN][ATTR_STREAMS]
-    stream = streams.get(stream_source)
-    if not stream:
-        stream = Stream(hass, stream_source)
-        streams[stream_source] = stream
+        # Add recorder
+        if self._recorder:
+            raise HomeAssistantError(
+                f"Stream already recording to {self._recorder.video_path}!"
+            )
+        self._recorder = RecorderOutput(self.hass)
+        self._recorder.video_path = video_path
+        self.start()
 
-    # Add recorder
-    recorder = stream.outputs.get("recorder")
-    if recorder:
-        raise HomeAssistantError(f"Stream already recording to {recorder.video_path}!")
+        # Take advantage of lookback
+        if lookback > 0 and self._hls:
+            num_segments = min(int(lookback // self._hls.target_duration), MAX_SEGMENTS)
+            # Wait for latest segment, then add the lookback
+            await self._hls.recv()
+            self._recorder.prepend(list(self._hls.get_segment())[-num_segments:])
 
-    recorder = stream.add_provider("recorder")
-    recorder.video_path = video_path
-    recorder.timeout = duration
+        @callback
+        def save_recording():
+            if self._recorder:
+                self._recorder.save()
+                self._recorder = None
+            self._check_idle()
 
-    stream.start()
-
-    # Take advantage of lookback
-    hls = stream.outputs.get("hls")
-    if lookback > 0 and hls:
-        num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
-        # Wait for latest segment, then add the lookback
-        await hls.recv()
-        recorder.prepend(list(hls.get_segment())[-num_segments:])
+        IdleTimer(self.hass, duration, save_recording).start()

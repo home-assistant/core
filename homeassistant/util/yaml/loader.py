@@ -4,14 +4,14 @@ import fnmatch
 import logging
 import os
 import sys
-from typing import Dict, Iterator, List, TypeVar, Union, overload
+from typing import Dict, Iterator, List, TextIO, TypeVar, Union, overload
 
 import yaml
 
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import _SECRET_NAMESPACE, SECRET_YAML
-from .objects import NodeListClass, NodeStrClass
+from .objects import Input, NodeListClass, NodeStrClass
 
 try:
     import keyring
@@ -31,6 +31,9 @@ DICT_T = TypeVar("DICT_T", bound=Dict)  # pylint: disable=invalid-name
 
 _LOGGER = logging.getLogger(__name__)
 __SECRET_CACHE: Dict[str, JSON_TYPE] = {}
+
+CREDSTASH_WARN = False
+KEYRING_WARN = False
 
 
 def clear_secret_cache() -> None:
@@ -56,14 +59,20 @@ def load_yaml(fname: str) -> JSON_TYPE:
     """Load a YAML file."""
     try:
         with open(fname, encoding="utf-8") as conf_file:
-            # If configuration file is empty YAML returns None
-            # We convert that to an empty dict
-            return yaml.load(conf_file, Loader=SafeLineLoader) or OrderedDict()
-    except yaml.YAMLError as exc:
-        _LOGGER.error(str(exc))
-        raise HomeAssistantError(exc) from exc
+            return parse_yaml(conf_file)
     except UnicodeDecodeError as exc:
         _LOGGER.error("Unable to read file %s: %s", fname, exc)
+        raise HomeAssistantError(exc) from exc
+
+
+def parse_yaml(content: Union[str, TextIO]) -> JSON_TYPE:
+    """Load a YAML file."""
+    try:
+        # If configuration file is empty YAML returns None
+        # We convert that to an empty dict
+        return yaml.load(content, Loader=SafeLineLoader) or OrderedDict()
+    except yaml.YAMLError as exc:
+        _LOGGER.error(str(exc))
         raise HomeAssistantError(exc) from exc
 
 
@@ -266,6 +275,11 @@ def _load_secret_yaml(secret_path: str) -> JSON_TYPE:
 
 def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
     """Load secrets and embed it into the configuration YAML."""
+    if os.path.basename(loader.name) == SECRET_YAML:
+        _LOGGER.error("secrets.yaml: attempt to load secret from within secrets file")
+        raise HomeAssistantError(
+            "secrets.yaml: attempt to load secret from within secrets file"
+        )
     secret_path = os.path.dirname(loader.name)
     while True:
         secrets = _load_secret_yaml(secret_path)
@@ -289,6 +303,14 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
         # do some keyring stuff
         pwd = keyring.get_password(_SECRET_NAMESPACE, node.value)
         if pwd:
+            global KEYRING_WARN  # pylint: disable=global-statement
+
+            if not KEYRING_WARN:
+                KEYRING_WARN = True
+                _LOGGER.warning(
+                    "Keyring is deprecated and will be removed in March 2021."
+                )
+
             _LOGGER.debug("Secret %s retrieved from keyring", node.value)
             return pwd
 
@@ -299,6 +321,13 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
         try:
             pwd = credstash.getSecret(node.value, table=_SECRET_NAMESPACE)
             if pwd:
+                global CREDSTASH_WARN  # pylint: disable=global-statement
+
+                if not CREDSTASH_WARN:
+                    CREDSTASH_WARN = True
+                    _LOGGER.warning(
+                        "Credstash is deprecated and will be removed in March 2021."
+                    )
                 _LOGGER.debug("Secret %s retrieved from credstash", node.value)
                 return pwd
         except credstash.ItemNotFound:
@@ -325,3 +354,4 @@ yaml.SafeLoader.add_constructor("!include_dir_named", _include_dir_named_yaml)
 yaml.SafeLoader.add_constructor(
     "!include_dir_merge_named", _include_dir_merge_named_yaml
 )
+yaml.SafeLoader.add_constructor("!input", Input.from_node)

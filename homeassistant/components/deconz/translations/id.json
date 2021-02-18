@@ -2,8 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Bridge sudah dikonfigurasi",
-            "no_bridges": "deCONZ bridges tidak ditemukan",
-            "one_instance_only": "Komponen hanya mendukung satu instance deCONZ"
+            "no_bridges": "deCONZ bridges tidak ditemukan"
         },
         "error": {
             "no_key": "Tidak bisa mendapatkan kunci API"

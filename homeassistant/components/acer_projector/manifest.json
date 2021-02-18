@@ -2,6 +2,6 @@
   "domain": "acer_projector",
   "name": "Acer Projector",
   "documentation": "https://www.home-assistant.io/integrations/acer_projector",
-  "requirements": ["pyserial==3.4"],
+  "requirements": ["pyserial==3.5"],
   "codeowners": []
 }

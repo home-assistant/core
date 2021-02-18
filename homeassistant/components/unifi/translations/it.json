@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il sito del Controller \u00e8 gi\u00e0 configurato"
+            "already_configured": "Il sito del Controller \u00e8 gi\u00e0 configurato",
+            "configuration_updated": "Configurazione aggiornata.",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
             "faulty_credentials": "Autenticazione non valida",
             "service_unavailable": "Impossibile connettersi",
             "unknown_client_mac": "Nessun client disponibile su quell'indirizzo MAC"
         },
+        "flow_title": "Rete UniFi {site} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -27,6 +30,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Client controllati per l'accesso alla rete",
+                    "dpi_restrictions": "Consenti il controllo dei gruppi di restrizione DPI",
                     "poe_clients": "Consentire il controllo POE dei client"
                 },
                 "description": "Configurare i controlli client \n\nCreare interruttori per i numeri di serie dei quali si desidera controllare l'accesso alla rete.",
@@ -43,12 +47,6 @@
                 },
                 "description": "Configurare il tracciamento del dispositivo",
                 "title": "Opzioni UniFi 1/3"
-            },
-            "init": {
-                "data": {
-                    "one": "uno",
-                    "other": "altri"
-                }
             },
             "simple_options": {
                 "data": {

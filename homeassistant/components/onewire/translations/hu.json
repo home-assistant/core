@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_path": "A k\u00f6nyvt\u00e1r nem tal\u00e1lhat\u00f3."
+        },
+        "step": {
+            "owserver": {
+                "data": {
+                    "host": "Gazdag\u00e9p",
+                    "port": "Port"
+                }
+            },
+            "user": {
+                "data": {
+                    "type": "Kapcsolat t\u00edpusa"
+                }
+            }
+        }
+    }
+}

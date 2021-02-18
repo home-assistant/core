@@ -3,11 +3,7 @@
         "abort": {
             "access_token": "Ukjent feil ved oppretting av tilgangstoken.",
             "already_configured": "Kontoen er allerede konfigurert",
-            "already_configured_account": "Kontoen er allerede konfigurert",
-            "already_setup": "Ambiclimate-kontoen er konfigurert.",
-            "missing_configuration": "Komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen.",
-            "no_config": "Du m\u00e5 konfigurere Ambiclimate f\u00f8r du kan godkjenne den. [Vennligst les instruksjonene](https://www.home-assistant.io/components/ambiclimate/).",
-            "oauth2_missing_configuration": "Komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
+            "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen"
         },
         "create_entry": {
             "default": "Vellykket godkjenning"
@@ -18,7 +14,7 @@
         },
         "step": {
             "auth": {
-                "description": "Vennligst f\u00f8lg denne [linken]({authorization_url}) og **Tillat** tilgang til din Ambiclimate konto, kom deretter tilbake og trykk **Send** nedenfor.\n(Kontroller at den angitte URL-adressen for tilbakeringing er {cb_url})",
+                "description": "F\u00f8lg denne [linken]({authorization_url}) og **Tillat** tilgang til Ambiclimate-kontoen din, og kom deretter tilbake og trykk **Send** nedenfor.\n(Kontroller at den angitte url-adressen for tilbakeringing er {cb_url})",
                 "title": "Godkjenn Ambiclimate"
             }
         }

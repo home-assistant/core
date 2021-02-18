@@ -1,8 +1,7 @@
 """Support for Cameras with FFmpeg as decoder."""
-import asyncio
 
 from haffmpeg.camera import CameraMjpeg
-from haffmpeg.tools import IMAGE_JPEG, ImageFrame
+from haffmpeg.tools import IMAGE_JPEG
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
@@ -10,7 +9,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 import homeassistant.helpers.config_validation as cv
 
-from . import CONF_EXTRA_ARGUMENTS, CONF_INPUT, DATA_FFMPEG
+from . import CONF_EXTRA_ARGUMENTS, CONF_INPUT, DATA_FFMPEG, async_get_image
 
 DEFAULT_NAME = "FFmpeg"
 DEFAULT_ARGUMENTS = "-pred 1"
@@ -52,20 +51,17 @@ class FFmpegCamera(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-
-        ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
-
-        image = await asyncio.shield(
-            ffmpeg.get_image(
-                self._input, output_format=IMAGE_JPEG, extra_cmd=self._extra_arguments
-            )
+        return await async_get_image(
+            self.hass,
+            self._input,
+            output_format=IMAGE_JPEG,
+            extra_cmd=self._extra_arguments,
         )
-        return image
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
 
-        stream = CameraMjpeg(self._manager.binary, loop=self.hass.loop)
+        stream = CameraMjpeg(self._manager.binary)
         await stream.open_camera(self._input, extra_cmd=self._extra_arguments)
 
         try:

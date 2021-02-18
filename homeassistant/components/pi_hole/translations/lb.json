@@ -14,7 +14,7 @@
                     "location": "Standuert",
                     "name": "Numm",
                     "port": "Port",
-                    "ssl": "SSL benotzen",
+                    "ssl": "Benotzt ee SSL Zertifikat",
                     "verify_ssl": "SSL Zertifikat iwwerpr\u00e9iwen"
                 }
             }

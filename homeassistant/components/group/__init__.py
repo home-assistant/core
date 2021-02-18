@@ -1,4 +1,5 @@
 """Provide the functionality to group entities."""
+from abc import abstractmethod
 import asyncio
 from contextvars import ContextVar
 import logging
@@ -12,6 +13,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_NAME,
+    CONF_ENTITIES,
     CONF_ICON,
     CONF_NAME,
     ENTITY_MATCH_ALL,
@@ -40,7 +42,6 @@ GROUP_ORDER = "group_order"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-CONF_ENTITIES = "entities"
 CONF_ALL = "all"
 
 ATTR_ADD_ENTITIES = "add_entities"
@@ -344,7 +345,6 @@ async def async_setup(hass, config):
 
 async def _process_group_platform(hass, domain, platform):
     """Process a group platform."""
-
     current_domain.set(domain)
     platform.async_describe_on_off_states(hass, hass.data[REG_KEY])
 
@@ -398,7 +398,8 @@ class GroupEntity(Entity):
         assert self.hass is not None
 
         async def _update_at_start(_):
-            await self.async_update_ha_state(True)
+            await self.async_update()
+            self.async_write_ha_state()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _update_at_start)
 
@@ -409,7 +410,12 @@ class GroupEntity(Entity):
         if self.hass.state != CoreState.running:
             return
 
-        await self.async_update_ha_state(True)
+        await self.async_update()
+        self.async_write_ha_state()
+
+    @abstractmethod
+    async def async_update(self) -> None:
+        """Abstract method to update the entity."""
 
 
 class Group(Entity):

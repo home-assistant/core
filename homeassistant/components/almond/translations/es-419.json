@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Solo puede configurar una cuenta Almond.",
             "cannot_connect": "No se puede conectar con el servidor Almond.",
             "missing_configuration": "Por favor, consulte la documentaci\u00f3n sobre c\u00f3mo configurar Almond."
         },

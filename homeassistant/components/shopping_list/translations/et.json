@@ -5,8 +5,10 @@
         },
         "step": {
             "user": {
-                "description": "Kas soovid seadistada ostunimekirja?"
+                "description": "Kas soovid seadistada ostunimekirja?",
+                "title": "Ostunimekiri"
             }
         }
-    }
+    },
+    "title": "Ostunimekiri"
 }

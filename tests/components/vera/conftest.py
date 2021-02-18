@@ -1,9 +1,10 @@
 """Fixtures for tests."""
+from unittest.mock import patch
+
 import pytest
 
 from .common import ComponentFactory
 
-from tests.async_mock import patch
 from tests.components.light.conftest import mock_light_profiles  # noqa
 
 

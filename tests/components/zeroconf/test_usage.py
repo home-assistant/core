@@ -1,11 +1,11 @@
 """Test Zeroconf multiple instance protection."""
+from unittest.mock import Mock, patch
+
 import zeroconf
 
 from homeassistant.components.zeroconf import async_get_instance
 from homeassistant.components.zeroconf.usage import install_multiple_zeroconf_catcher
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import Mock, patch
 
 DOMAIN = "zeroconf"
 

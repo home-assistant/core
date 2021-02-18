@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ein Controller ist bereits konfiguriert.",
             "cannot_connect": "Konnte keine Verbindung zum Controller mit url {base_url} herstellen"
         },
         "step": {

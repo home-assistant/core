@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Z-Wave este deja configurat",
-            "one_instance_only": "Componenta accept\u0103 numai o instan\u021b\u0103 Z-Wave"
+            "already_configured": "Z-Wave este deja configurat"
         },
         "error": {
             "option_error": "Validarea Z-Wave a e\u0219uat. Este corect\u0103 calea c\u0103tre stick-ul USB?"

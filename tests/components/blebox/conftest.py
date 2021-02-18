@@ -1,5 +1,6 @@
 """PyTest fixtures and test helpers."""
 from unittest import mock
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 import blebox_uniapi
 import pytest
@@ -8,7 +9,6 @@ from homeassistant.components.blebox.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import AsyncMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa
 

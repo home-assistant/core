@@ -1,4 +1,5 @@
 """Zerproc light platform."""
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Callable, List, Optional
@@ -28,25 +29,20 @@ SUPPORT_ZERPROC = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
 DISCOVERY_INTERVAL = timedelta(seconds=60)
 
-PARALLEL_UPDATES = 0
+
+async def connect_light(light: pyzerproc.Light) -> Optional[pyzerproc.Light]:
+    """Return the given light if it connects successfully."""
+    try:
+        await light.connect()
+    except pyzerproc.ZerprocException:
+        _LOGGER.debug("Unable to connect to '%s'", light.address, exc_info=True)
+        return None
+    return light
 
 
-def connect_lights(lights: List[pyzerproc.Light]) -> List[pyzerproc.Light]:
-    """Attempt to connect to lights, and return the connected lights."""
-    connected = []
-    for light in lights:
-        try:
-            light.connect(auto_reconnect=True)
-            connected.append(light)
-        except pyzerproc.ZerprocException:
-            _LOGGER.debug("Unable to connect to '%s'", light.address, exc_info=True)
-
-    return connected
-
-
-def discover_entities(hass: HomeAssistant) -> List[Entity]:
+async def discover_entities(hass: HomeAssistant) -> List[Entity]:
     """Attempt to discover new lights."""
-    lights = pyzerproc.discover()
+    lights = await pyzerproc.discover()
 
     # Filter out already discovered lights
     new_lights = [
@@ -54,8 +50,11 @@ def discover_entities(hass: HomeAssistant) -> List[Entity]:
     ]
 
     entities = []
-    for light in connect_lights(new_lights):
-        # Double-check the light hasn't been added in another thread
+    connected_lights = filter(
+        None, await asyncio.gather(*(connect_light(light) for light in new_lights))
+    )
+    for light in connected_lights:
+        # Double-check the light hasn't been added in the meantime
         if light.address not in hass.data[DOMAIN]["addresses"]:
             hass.data[DOMAIN]["addresses"].add(light.address)
             entities.append(ZerprocLight(light))
@@ -68,7 +67,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
-    """Set up Abode light devices."""
+    """Set up Zerproc light devices."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
     if "addresses" not in hass.data[DOMAIN]:
@@ -80,7 +79,7 @@ async def async_setup_entry(
         """Wrap discovery to include params."""
         nonlocal warned
         try:
-            entities = await hass.async_add_executor_job(discover_entities, hass)
+            entities = await discover_entities(hass)
             async_add_entities(entities, update_before_add=True)
             warned = False
         except pyzerproc.ZerprocException:
@@ -111,17 +110,18 @@ class ZerprocLight(LightEntity):
         """Run when entity about to be added to hass."""
         self.async_on_remove(
             self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, self.on_hass_shutdown
+                EVENT_HOMEASSISTANT_STOP, self.async_will_remove_from_hass
             )
         )
 
-    async def async_will_remove_from_hass(self) -> None:
+    async def async_will_remove_from_hass(self, *args) -> None:
         """Run when entity will be removed from hass."""
-        await self.hass.async_add_executor_job(self._light.disconnect)
-
-    def on_hass_shutdown(self, event):
-        """Execute when Home Assistant is shutting down."""
-        self._light.disconnect()
+        try:
+            await self._light.disconnect()
+        except pyzerproc.ZerprocException:
+            _LOGGER.debug(
+                "Exception disconnected from %s", self.entity_id, exc_info=True
+            )
 
     @property
     def name(self):
@@ -172,7 +172,7 @@ class ZerprocLight(LightEntity):
         """Return True if entity is available."""
         return self._available
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         if ATTR_BRIGHTNESS in kwargs or ATTR_HS_COLOR in kwargs:
             default_hs = (0, 0) if self._hs_color is None else self._hs_color
@@ -182,18 +182,20 @@ class ZerprocLight(LightEntity):
             brightness = kwargs.get(ATTR_BRIGHTNESS, default_brightness)
 
             rgb = color_util.color_hsv_to_RGB(*hue_sat, brightness / 255 * 100)
-            self._light.set_color(*rgb)
+            await self._light.set_color(*rgb)
         else:
-            self._light.turn_on()
+            await self._light.turn_on()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        self._light.turn_off()
+        await self._light.turn_off()
 
-    def update(self):
+    async def async_update(self):
         """Fetch new state data for this light."""
         try:
-            state = self._light.get_state()
+            if not self._available:
+                await self._light.connect()
+            state = await self._light.get_state()
         except pyzerproc.ZerprocException:
             if self._available:
                 _LOGGER.warning("Unable to connect to %s", self.entity_id)

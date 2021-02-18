@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "credential_error": "Error al obtener las credenciales.",
-            "devices_configured": "Todos los dispositivos encontrados ya est\u00e1n configurados.",
             "no_devices_found": "No se encontraron dispositivos PlayStation 4 en la red.",
             "port_987_bind_error": "No se pudo enlazar al puerto 987.",
             "port_997_bind_error": "No se pudo enlazar al puerto 997."
@@ -10,8 +9,7 @@
         "error": {
             "credential_timeout": "Servicio de credenciales agotado. Presione enviar para reiniciar.",
             "login_failed": "No se ha podido emparejar con PlayStation 4. Verifique que el PIN sea correcto.",
-            "no_ipaddress": "Ingrese la direcci\u00f3n IP de la PlayStation 4 que desea configurar.",
-            "not_ready": "PlayStation 4 no est\u00e1 encendida o conectada a la red."
+            "no_ipaddress": "Ingrese la direcci\u00f3n IP de la PlayStation 4 que desea configurar."
         },
         "step": {
             "creds": {

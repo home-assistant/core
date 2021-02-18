@@ -26,23 +26,25 @@ def get_connection(connections, connection_id=None):
     return connection
 
 
-def has_unique_connection_names(connections):
+def has_unique_host_names(hosts):
     """Validate that all connection names are unique.
 
     Use 'pchk' as default connection_name (or add a numeric suffix if
     pchk' is already in use.
     """
-    for suffix, connection in enumerate(connections):
-        connection_name = connection.get(CONF_NAME)
-        if connection_name is None:
+    suffix = 0
+    for host in hosts:
+        host_name = host.get(CONF_NAME)
+        if host_name is None:
             if suffix == 0:
-                connection[CONF_NAME] = DEFAULT_NAME
+                host[CONF_NAME] = DEFAULT_NAME
             else:
-                connection[CONF_NAME] = f"{DEFAULT_NAME}{suffix:d}"
+                host[CONF_NAME] = f"{DEFAULT_NAME}{suffix:d}"
+            suffix += 1
 
     schema = vol.Schema(vol.Unique())
-    schema([connection.get(CONF_NAME) for connection in connections])
-    return connections
+    schema([host.get(CONF_NAME) for host in hosts])
+    return hosts
 
 
 def is_address(value):

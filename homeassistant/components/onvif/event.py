@@ -74,6 +74,14 @@ class EventManager:
     async def async_start(self) -> bool:
         """Start polling events."""
         if await self.device.create_pullpoint_subscription():
+            # Create subscription manager
+            self._subscription = self.device.create_subscription_service(
+                "PullPointSubscription"
+            )
+
+            # Renew immediately
+            await self.async_renew()
+
             # Initialize events
             pullpoint = self.device.create_pullpoint_service()
             try:
@@ -86,11 +94,6 @@ class EventManager:
 
             # Parse event initialization
             await self.async_parse_messages(response.NotificationMessage)
-
-            # Create subscription manager
-            self._subscription = self.device.create_subscription_service(
-                "PullPointSubscription"
-            )
 
             self.started = True
             return True

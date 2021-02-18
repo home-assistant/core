@@ -2,8 +2,8 @@
   "domain": "tado",
   "name": "Tado",
   "documentation": "https://www.home-assistant.io/integrations/tado",
-  "requirements": ["python-tado==0.8.1"],
-  "codeowners": ["@michaelarnauts", "@bdraco"],
+  "requirements": ["python-tado==0.10.0"],
+  "codeowners": ["@michaelarnauts", "@bdraco", "@noltari"],
   "config_flow": true,
   "homekit": {
     "models": ["tado", "AC02"]

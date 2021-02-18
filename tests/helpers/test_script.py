@@ -6,7 +6,9 @@ from datetime import timedelta
 import logging
 from types import MappingProxyType
 from unittest import mock
+from unittest.mock import patch
 
+from async_timeout import timeout
 import pytest
 import voluptuous as vol
 
@@ -19,7 +21,6 @@ from homeassistant.helpers import config_validation as cv, script
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import (
     async_capture_events,
     async_fire_time_changed,
@@ -544,6 +545,84 @@ async def test_wait_basic(hass, action_type):
         assert script_obj.last_action is None
 
 
+async def test_wait_for_trigger_variables(hass):
+    """Test variables are passed to wait_for_trigger action."""
+    context = Context()
+    wait_alias = "wait step"
+    actions = [
+        {
+            "alias": "variables",
+            "variables": {"seconds": 5},
+        },
+        {
+            "alias": wait_alias,
+            "wait_for_trigger": {
+                "platform": "state",
+                "entity_id": "switch.test",
+                "to": "off",
+                "for": {"seconds": "{{ seconds }}"},
+            },
+        },
+    ]
+    sequence = cv.SCRIPT_SCHEMA(actions)
+    sequence = await script.async_validate_actions_config(hass, sequence)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, wait_alias)
+
+    try:
+        hass.states.async_set("switch.test", "on")
+        hass.async_create_task(script_obj.async_run(context=context))
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+        assert script_obj.is_running
+        assert script_obj.last_action == wait_alias
+        hass.states.async_set("switch.test", "off")
+        # the script task +  2 tasks created by wait_for_trigger script step
+        await hass.async_wait_for_task_count(3)
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+        await hass.async_block_till_done()
+    except (AssertionError, asyncio.TimeoutError):
+        await script_obj.async_stop()
+        raise
+    else:
+        assert not script_obj.is_running
+        assert script_obj.last_action is None
+
+
+@pytest.mark.parametrize("action_type", ["template", "trigger"])
+async def test_wait_basic_times_out(hass, action_type):
+    """Test wait actions times out when the action does not happen."""
+    wait_alias = "wait step"
+    action = {"alias": wait_alias}
+    if action_type == "template":
+        action["wait_template"] = "{{ states.switch.test.state == 'off' }}"
+    else:
+        action["wait_for_trigger"] = {
+            "platform": "state",
+            "entity_id": "switch.test",
+            "to": "off",
+        }
+    sequence = cv.SCRIPT_SCHEMA(action)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, wait_alias)
+    timed_out = False
+
+    try:
+        hass.states.async_set("switch.test", "on")
+        hass.async_create_task(script_obj.async_run(context=Context()))
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+        assert script_obj.is_running
+        assert script_obj.last_action == wait_alias
+        hass.states.async_set("switch.test", "not_on")
+
+        with timeout(0.1):
+            await hass.async_block_till_done()
+    except asyncio.TimeoutError:
+        timed_out = True
+        await script_obj.async_stop()
+
+    assert timed_out
+
+
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
 async def test_multiple_runs_wait(hass, action_type):
     """Test multiple runs with wait in script."""
@@ -780,6 +859,61 @@ async def test_wait_template_variables_in(hass):
         assert not script_obj.is_running
 
 
+async def test_wait_template_with_utcnow(hass):
+    """Test the wait template with utcnow."""
+    sequence = cv.SCRIPT_SCHEMA({"wait_template": "{{ utcnow().hour == 12 }}"})
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, "wait")
+    start_time = dt_util.utcnow().replace(minute=1) + timedelta(hours=48)
+
+    try:
+        non_maching_time = start_time.replace(hour=3)
+        with patch("homeassistant.util.dt.utcnow", return_value=non_maching_time):
+            hass.async_create_task(script_obj.async_run(context=Context()))
+            await asyncio.wait_for(wait_started_flag.wait(), 1)
+            assert script_obj.is_running
+
+        match_time = start_time.replace(hour=12)
+        with patch("homeassistant.util.dt.utcnow", return_value=match_time):
+            async_fire_time_changed(hass, match_time)
+    except (AssertionError, asyncio.TimeoutError):
+        await script_obj.async_stop()
+        raise
+    else:
+        await hass.async_block_till_done()
+        assert not script_obj.is_running
+
+
+async def test_wait_template_with_utcnow_no_match(hass):
+    """Test the wait template with utcnow that does not match."""
+    sequence = cv.SCRIPT_SCHEMA({"wait_template": "{{ utcnow().hour == 12 }}"})
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, "wait")
+    start_time = dt_util.utcnow().replace(minute=1) + timedelta(hours=48)
+    timed_out = False
+
+    try:
+        non_maching_time = start_time.replace(hour=3)
+        with patch("homeassistant.util.dt.utcnow", return_value=non_maching_time):
+            hass.async_create_task(script_obj.async_run(context=Context()))
+            await asyncio.wait_for(wait_started_flag.wait(), 1)
+            assert script_obj.is_running
+
+        second_non_maching_time = start_time.replace(hour=4)
+        with patch(
+            "homeassistant.util.dt.utcnow", return_value=second_non_maching_time
+        ):
+            async_fire_time_changed(hass, second_non_maching_time)
+
+        with timeout(0.1):
+            await hass.async_block_till_done()
+    except asyncio.TimeoutError:
+        timed_out = True
+        await script_obj.async_stop()
+
+    assert timed_out
+
+
 @pytest.mark.parametrize("mode", ["no_timeout", "timeout_finish", "timeout_not_finish"])
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
 async def test_wait_variables_out(hass, mode, action_type):
@@ -870,7 +1004,63 @@ async def test_wait_for_trigger_bad(hass, caplog):
         hass.async_create_task(script_obj.async_run())
         await hass.async_block_till_done()
 
+    assert "Unknown error while setting up trigger" in caplog.text
+
+
+async def test_wait_for_trigger_generated_exception(hass, caplog):
+    """Test bad wait_for_trigger."""
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA(
+            {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
+        ),
+        "Test Name",
+        "test_domain",
+    )
+
+    async def async_attach_trigger_mock(*args, **kwargs):
+        raise ValueError("something bad")
+
+    with mock.patch(
+        "homeassistant.components.homeassistant.triggers.state.async_attach_trigger",
+        wraps=async_attach_trigger_mock,
+    ):
+        hass.async_create_task(script_obj.async_run())
+        await hass.async_block_till_done()
+
     assert "Error setting up trigger" in caplog.text
+    assert "ValueError" in caplog.text
+    assert "something bad" in caplog.text
+
+
+async def test_condition_warning(hass, caplog):
+    """Test warning on condition."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event},
+            {
+                "condition": "numeric_state",
+                "entity_id": "test.entity",
+                "above": 0,
+            },
+            {"event": event},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    hass.states.async_set("test.entity", "string")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(caplog.record_tuples) == 1
+    assert caplog.record_tuples[0][1] == logging.WARNING
+
+    assert len(events) == 1
 
 
 async def test_condition_basic(hass):
@@ -981,6 +1171,48 @@ async def test_repeat_count(hass):
         assert event.data.get("first") == (index == 0)
         assert event.data.get("index") == index + 1
         assert event.data.get("last") == (index == count - 1)
+
+
+@pytest.mark.parametrize("condition", ["while", "until"])
+async def test_repeat_condition_warning(hass, caplog, condition):
+    """Test warning on repeat conditions."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    count = 0 if condition == "while" else 1
+
+    sequence = {
+        "repeat": {
+            "sequence": [
+                {
+                    "event": event,
+                },
+            ],
+        }
+    }
+    sequence["repeat"][condition] = {
+        "condition": "numeric_state",
+        "entity_id": "sensor.test",
+        "value_template": "{{ unassigned_variable }}",
+        "above": "0",
+    }
+
+    script_obj = script.Script(
+        hass, cv.SCRIPT_SCHEMA(sequence), f"Test {condition}", "test_domain"
+    )
+
+    # wait_started = async_watch_for_action(script_obj, "wait")
+    hass.states.async_set("sensor.test", "1")
+
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    hass.async_create_task(script_obj.async_run(context=Context()))
+    await asyncio.wait_for(hass.async_block_till_done(), 1)
+
+    assert len(caplog.record_tuples) == 1
+    assert caplog.record_tuples[0][1] == logging.WARNING
+
+    assert len(events) == count
 
 
 @pytest.mark.parametrize("condition", ["while", "until"])
@@ -1188,6 +1420,55 @@ async def test_repeat_nested(hass, variables, first_last, inside_x):
         }
 
 
+async def test_choose_warning(hass, caplog):
+    """Test warning on choose."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "choose": [
+                {
+                    "conditions": {
+                        "condition": "numeric_state",
+                        "entity_id": "test.entity",
+                        "value_template": "{{ undefined_a + undefined_b }}",
+                        "above": 1,
+                    },
+                    "sequence": {"event": event, "event_data": {"choice": "first"}},
+                },
+                {
+                    "conditions": {
+                        "condition": "numeric_state",
+                        "entity_id": "test.entity",
+                        "value_template": "{{ 'string' }}",
+                        "above": 2,
+                    },
+                    "sequence": {"event": event, "event_data": {"choice": "second"}},
+                },
+            ],
+            "default": {"event": event, "event_data": {"choice": "default"}},
+        }
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "9")
+    await hass.async_block_till_done()
+
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(caplog.record_tuples) == 2
+    assert caplog.record_tuples[0][1] == logging.WARNING
+    assert caplog.record_tuples[1][1] == logging.WARNING
+
+    assert len(events) == 1
+    assert events[0].data["choice"] == "default"
+
+
 @pytest.mark.parametrize("var,result", [(1, "first"), (2, "second"), (3, "default")])
 async def test_choose(hass, var, result):
     """Test choose action."""
@@ -1339,6 +1620,18 @@ async def test_referenced_entities(hass):
                     "data": {"entity_id": "{{ 'light.service_template' }}"},
                 },
                 {
+                    "service": "test.script",
+                    "entity_id": "light.direct_entity_referenced",
+                },
+                {
+                    "service": "test.script",
+                    "target": {"entity_id": "light.entity_in_target"},
+                },
+                {
+                    "service": "test.script",
+                    "data_template": {"entity_id": "light.entity_in_data_template"},
+                },
+                {
                     "condition": "state",
                     "entity_id": "sensor.condition",
                     "state": "100",
@@ -1357,6 +1650,9 @@ async def test_referenced_entities(hass):
         "light.service_list",
         "sensor.condition",
         "scene.hello",
+        "light.direct_entity_referenced",
+        "light.entity_in_target",
+        "light.entity_in_data_template",
     }
     # Test we cache results.
     assert script_obj.referenced_entities is script_obj.referenced_entities
@@ -1374,12 +1670,36 @@ async def test_referenced_devices(hass):
                     "device_id": "condition-dev-id",
                     "domain": "switch",
                 },
+                {
+                    "service": "test.script",
+                    "data": {"device_id": "data-string-id"},
+                },
+                {
+                    "service": "test.script",
+                    "data_template": {"device_id": "data-template-string-id"},
+                },
+                {
+                    "service": "test.script",
+                    "target": {"device_id": "target-string-id"},
+                },
+                {
+                    "service": "test.script",
+                    "target": {"device_id": ["target-list-id-1", "target-list-id-2"]},
+                },
             ]
         ),
         "Test Name",
         "test_domain",
     )
-    assert script_obj.referenced_devices == {"script-dev-id", "condition-dev-id"}
+    assert script_obj.referenced_devices == {
+        "script-dev-id",
+        "condition-dev-id",
+        "data-string-id",
+        "data-template-string-id",
+        "target-string-id",
+        "target-list-id-1",
+        "target-list-id-2",
+    }
     # Test we cache results.
     assert script_obj.referenced_devices is script_obj.referenced_devices
 

@@ -45,10 +45,10 @@ class NetatmoBase(Entity):
                     data_class["name"],
                     signal_name,
                     self.async_update_callback,
-                    LAT_NE=data_class["LAT_NE"],
-                    LON_NE=data_class["LON_NE"],
-                    LAT_SW=data_class["LAT_SW"],
-                    LON_SW=data_class["LON_SW"],
+                    lat_ne=data_class["lat_ne"],
+                    lon_ne=data_class["lon_ne"],
+                    lat_sw=data_class["lat_sw"],
+                    lon_sw=data_class["lon_sw"],
                 )
 
             else:
@@ -71,16 +71,6 @@ class NetatmoBase(Entity):
             await self.data_handler.unregister_data_class(
                 data_class[SIGNAL_NAME], self.async_update_callback
             )
-
-    async def async_remove(self):
-        """Clean up when removing entity."""
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
-        entity_entry = entity_registry.async_get(self.entity_id)
-        if not entity_entry:
-            await super().async_remove()
-            return
-
-        entity_registry.async_remove(self.entity_id)
 
     @callback
     def async_update_callback(self):

@@ -111,10 +111,9 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        active_support = SUPPORT_XBOX
         if self.state not in [STATE_PLAYING, STATE_PAUSED]:
-            active_support &= ~SUPPORT_NEXT_TRACK & ~SUPPORT_PREVIOUS_TRACK
-        return active_support
+            return SUPPORT_XBOX & ~SUPPORT_NEXT_TRACK & ~SUPPORT_PREVIOUS_TRACK
+        return SUPPORT_XBOX
 
     @property
     def media_content_type(self):

@@ -1,5 +1,6 @@
 """Fixtures for Hass.io."""
 import os
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -8,8 +9,6 @@ from homeassistant.core import CoreState
 from homeassistant.setup import async_setup_component
 
 from . import HASSIO_TOKEN
-
-from tests.async_mock import Mock, patch
 
 
 @pytest.fixture

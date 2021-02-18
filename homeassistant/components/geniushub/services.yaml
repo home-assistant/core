@@ -26,3 +26,15 @@ set_zone_override:
       description: >-
         The duration of the override. Optional, default 1 hour, maximum 24 hours.
       example: '{"minutes": 135}'
+
+set_switch_override:
+  description: >-
+    Override switch for a given duration.
+  fields:
+    entity_id:
+      description: The zone's entity_id.
+      example: switch.study
+    duration:
+      description: >-
+        The duration of the override. Optional, default 1 hour, maximum 24 hours.
+      example: '{"minutes": 135}'

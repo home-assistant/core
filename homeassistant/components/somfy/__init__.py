@@ -1,4 +1,5 @@
 """Support for Somfy hubs."""
+from abc import abstractmethod
 import asyncio
 from datetime import timedelta
 import logging
@@ -8,7 +9,8 @@ import voluptuous as vol
 
 from homeassistant.components.somfy import config_flow
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_OPTIMISTIC
+from homeassistant.core import callback
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
@@ -19,15 +21,16 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from . import api
-from .const import API, CONF_OPTIMISTIC, COORDINATOR, DOMAIN
+from .const import API, COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=1)
-
+SCAN_INTERVAL_ALL_ASSUMED_STATE = timedelta(minutes=60)
 
 SOMFY_AUTH_CALLBACK_PATH = "/auth/somfy/callback"
 SOMFY_AUTH_START = "/auth/somfy"
@@ -45,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SOMFY_COMPONENTS = ["cover", "switch"]
+SOMFY_COMPONENTS = ["climate", "cover", "sensor", "switch"]
 
 
 async def async_setup(hass, config):
@@ -90,6 +93,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     async def _update_all_devices():
         """Update all the devices."""
         devices = await hass.async_add_executor_job(data[API].get_devices)
+        previous_devices = data[COORDINATOR].data
+        # Sometimes Somfy returns an empty list.
+        if not devices and previous_devices:
+            raise UpdateFailed("No devices returned")
         return {dev.id: dev for dev in devices}
 
     coordinator = DataUpdateCoordinator(
@@ -102,6 +109,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     data[COORDINATOR] = coordinator
 
     await coordinator.async_refresh()
+
+    if all(not bool(device.states) for device in coordinator.data.values()):
+        _LOGGER.debug(
+            "All devices have assumed state. Update interval has been reduced to: %s",
+            SCAN_INTERVAL_ALL_ASSUMED_STATE,
+        )
+        coordinator.update_interval = SCAN_INTERVAL_ALL_ASSUMED_STATE
 
     device_registry = await dr.async_get_registry(hass)
 
@@ -155,12 +169,12 @@ class SomfyEntity(CoordinatorEntity, Entity):
         return self.coordinator.data[self._id]
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique id base on the id returned by Somfy."""
         return self._id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self.device.name
 
@@ -174,17 +188,32 @@ class SomfyEntity(CoordinatorEntity, Entity):
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "model": self.device.type,
-            "via_hub": (DOMAIN, self.device.parent_id),
+            "via_device": (DOMAIN, self.device.parent_id),
             # For the moment, Somfy only returns their own device.
             "manufacturer": "Somfy",
         }
 
-    def has_capability(self, capability):
+    def has_capability(self, capability: str) -> bool:
         """Test if device has a capability."""
         capabilities = self.device.capabilities
         return bool([c for c in capabilities if c.name == capability])
 
+    def has_state(self, state: str) -> bool:
+        """Test if device has a state."""
+        states = self.device.states
+        return bool([c for c in states if c.name == state])
+
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return if the device has an assumed state."""
         return not bool(self.device.states)
+
+    @callback
+    def _handle_coordinator_update(self):
+        """Process an update from the coordinator."""
+        self._create_device()
+        super()._handle_coordinator_update()
+
+    @abstractmethod
+    def _create_device(self):
+        """Update the device with the latest data."""

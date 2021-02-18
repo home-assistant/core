@@ -1,7 +1,7 @@
 """Config flow to configure the Meteo-France integration."""
 import logging
 
-from meteofrance.client import MeteoFranceClient
+from meteofrance_api.client import MeteoFranceClient
 import voluptuous as vol
 
 from homeassistant import config_entries

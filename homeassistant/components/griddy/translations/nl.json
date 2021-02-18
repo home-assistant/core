@@ -9,6 +9,9 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "loadzone": "Laadzone (vestigingspunt)"
+                },
                 "description": "Uw Load Zone staat op uw Griddy account onder \"Account > Meter > Load Zone\".",
                 "title": "Stel uw Griddy Load Zone in"
             }

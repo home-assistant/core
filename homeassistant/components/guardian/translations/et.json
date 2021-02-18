@@ -3,20 +3,19 @@
         "abort": {
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
-            "cannot_connect": "\u00dchendamine nurjus",
-            "connection_error": "Guardian seadmega \u00fchenduse loomine nurjus."
+            "cannot_connect": "\u00dchendamine nurjus"
         },
         "step": {
             "user": {
                 "data": {
                     "ip_address": "IP aadress",
                     "port": ""
-                }
+                },
+                "description": "Seadista kohalik Elexa Guardiani seade."
             },
             "zeroconf_confirm": {
                 "description": "Kas soovid seadistada seda Guardian'i seadet?"
             }
         }
-    },
-    "title": ""
+    }
 }

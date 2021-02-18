@@ -12,6 +12,7 @@
                     "email": "E-Mail",
                     "password": "Passwuert"
                 },
+                "description": "Soll den Ariichtungs Prozess gestart ginn?",
                 "title": "PoolSense"
             }
         }

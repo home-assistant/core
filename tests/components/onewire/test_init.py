@@ -1,5 +1,6 @@
 """Tests for 1-Wire config flow."""
-from asynctest.mock import patch
+from unittest.mock import patch
+
 from pyownet.protocol import ConnError, OwnetError
 
 from homeassistant.components.onewire.const import CONF_TYPE_OWSERVER, DOMAIN

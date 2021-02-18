@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     switches = []
     tags = platform.load_tags()
     for switch_type in config.get(CONF_MONITORED_CONDITIONS):
-        for _, tag in tags.items():
+        for tag in tags.values():
             if switch_type in tag.allowed_monitoring_types:
                 switches.append(WirelessTagSwitch(platform, tag, switch_type))
 

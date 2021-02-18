@@ -5,7 +5,6 @@
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
-            "connection_error": "Verbinding mislukt, probeer het opnieuw",
             "unauthorized": "Koppelen geweigerd, controleer apparaat op autorisatieverzoek"
         },
         "step": {
@@ -13,11 +12,10 @@
                 "data": {
                     "email": "Email",
                     "host": "Host",
-                    "port": "Poort (10000)"
+                    "port": "Poort "
                 },
                 "title": "Verbinding maken met het apparaat"
             }
         }
-    },
-    "title": ""
+    }
 }

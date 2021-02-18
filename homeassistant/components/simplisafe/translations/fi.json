@@ -1,8 +1,7 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Tili on jo rekister\u00f6ity",
-            "invalid_credentials": "Virheelliset tunnistetiedot"
+            "identifier_exists": "Tili on jo rekister\u00f6ity"
         },
         "step": {
             "user": {

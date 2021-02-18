@@ -6,7 +6,6 @@
         },
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "connect_error": "Nepoda\u0159ilo se p\u0159ipojit",
             "no_device_selected": "Nebylo vybr\u00e1no \u017e\u00e1dn\u00e9 za\u0159\u00edzen\u00ed, vyberte jedno za\u0159\u00edzen\u00ed."
         },
         "flow_title": "Xiaomi Miio: {name}",

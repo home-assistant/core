@@ -1,9 +1,11 @@
 """Helper to check the configuration file."""
+from __future__ import annotations
+
 from collections import OrderedDict
+import logging
 import os
 from typing import List, NamedTuple, Optional
 
-import attr
 import voluptuous as vol
 
 from homeassistant import loader
@@ -36,18 +38,20 @@ class CheckConfigError(NamedTuple):
     config: Optional[ConfigType]
 
 
-@attr.s
 class HomeAssistantConfig(OrderedDict):
     """Configuration result with errors attribute."""
 
-    errors: List[CheckConfigError] = attr.ib(factory=list)
+    def __init__(self) -> None:
+        """Initialize HA config."""
+        super().__init__()
+        self.errors: List[CheckConfigError] = []
 
     def add_error(
         self,
         message: str,
         domain: Optional[str] = None,
         config: Optional[ConfigType] = None,
-    ) -> "HomeAssistantConfig":
+    ) -> HomeAssistantConfig:
         """Add a single error."""
         self.errors.append(CheckConfigError(str(message), domain, config))
         return self
@@ -76,7 +80,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
 
     def _comp_error(ex: Exception, domain: str, config: ConfigType) -> None:
         """Handle errors from components: async_log_exception."""
-        result.add_error(_format_config_error(ex, domain, config), domain, config)
+        result.add_error(_format_config_error(ex, domain, config)[0], domain, config)
 
     # Load configuration.yaml
     config_path = hass.config.path(YAML_CONFIG_FILE)
@@ -122,6 +126,42 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
         except ImportError as ex:
             result.add_error(f"Component error: {domain} - {ex}")
             continue
+
+        # Check if the integration has a custom config validator
+        config_validator = None
+        try:
+            config_validator = integration.get_platform("config")
+        except ImportError as err:
+            # Filter out import error of the config platform.
+            # If the config platform contains bad imports, make sure
+            # that still fails.
+            if err.name != f"{integration.pkg_path}.config":
+                result.add_error(f"Error importing config platform {domain}: {err}")
+                continue
+
+        if config_validator is not None and hasattr(
+            config_validator, "async_validate_config"
+        ):
+            try:
+                result[domain] = (
+                    await config_validator.async_validate_config(  # type: ignore
+                        hass, config
+                    )
+                )[domain]
+                continue
+            except (vol.Invalid, HomeAssistantError) as ex:
+                _comp_error(ex, domain, config)
+                continue
+            except Exception as err:  # pylint: disable=broad-except
+                logging.getLogger(__name__).exception(
+                    "Unexpected error validating config"
+                )
+                result.add_error(
+                    f"Unexpected error calling config validator: {err}",
+                    domain,
+                    config.get(domain),
+                )
+                continue
 
         config_schema = getattr(component, "CONFIG_SCHEMA", None)
         if config_schema is not None:

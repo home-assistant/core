@@ -3,10 +3,6 @@
         "abort": {
             "already_configured": "\uc774 RainMachine \ucee8\ud2b8\ub864\ub7ec\ub294 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
         },
-        "error": {
-            "identifier_exists": "\uacc4\uc815\uc774 \uc774\ubbf8 \ub4f1\ub85d\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
-            "invalid_credentials": "\ube44\ubc00\ubc88\ud638\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
-        },
         "step": {
             "user": {
                 "data": {

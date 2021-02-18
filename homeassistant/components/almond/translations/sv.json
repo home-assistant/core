@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Du kan bara konfigurera ett Almond-konto.",
             "cannot_connect": "Det g\u00e5r inte att ansluta till Almond-servern.",
             "missing_configuration": "Kontrollera dokumentationen f\u00f6r hur du st\u00e4ller in Almond."
         },

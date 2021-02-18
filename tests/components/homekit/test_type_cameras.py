@@ -1,5 +1,6 @@
 """Test different accessory types: Camera."""
 
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from uuid import UUID
 
 from pyhap.accessory_driver import AccessoryDriver
@@ -33,8 +34,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .common import mock_turbo_jpeg
-
-from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
 
 MOCK_START_STREAM_TLV = "ARUCAQEBEDMD1QMXzEaatnKSQ2pxovYCNAEBAAIJAQECAgECAwEAAwsBAgAFAgLQAgMBHgQXAQFjAgQ768/RAwIrAQQEAAAAPwUCYgUDLAEBAwIMAQEBAgEAAwECBAEUAxYBAW4CBCzq28sDAhgABAQAAKBABgENBAEA"
 MOCK_END_POINTS_TLV = "ARAzA9UDF8xGmrZykkNqcaL2AgEAAxoBAQACDTE5Mi4xNjguMjA4LjUDAi7IBAKkxwQlAQEAAhDN0+Y0tZ4jzoO0ske9UsjpAw6D76oVXnoi7DbawIG4CwUlAQEAAhCyGcROB8P7vFRDzNF2xrK1Aw6NdcLugju9yCfkWVSaVAYEDoAsAAcEpxV8AA=="
@@ -100,6 +99,7 @@ def _get_exits_after_startup_mock_ffmpeg():
     ffmpeg.open = AsyncMock(return_value=True)
     ffmpeg.close = AsyncMock(return_value=True)
     ffmpeg.kill = AsyncMock(return_value=True)
+    ffmpeg.get_reader = AsyncMock()
     return ffmpeg
 
 
@@ -109,6 +109,7 @@ def _get_working_mock_ffmpeg():
     ffmpeg.open = AsyncMock(return_value=True)
     ffmpeg.close = AsyncMock(return_value=True)
     ffmpeg.kill = AsyncMock(return_value=True)
+    ffmpeg.get_reader = AsyncMock()
     return ffmpeg
 
 
@@ -119,6 +120,7 @@ def _get_failing_mock_ffmpeg():
     ffmpeg.open = AsyncMock(return_value=False)
     ffmpeg.close = AsyncMock(side_effect=OSError)
     ffmpeg.kill = AsyncMock(side_effect=OSError)
+    ffmpeg.get_reader = AsyncMock()
     return ffmpeg
 
 
@@ -190,6 +192,8 @@ async def test_camera_stream_source_configured(hass, run_driver, events):
         input_source="-i /dev/null",
         output=expected_output.format(**session_info),
         stdout_pipe=False,
+        extra_cmd="-hide_banner -nostats",
+        stderr_pipe=True,
     )
 
     await _async_setup_endpoints(hass, acc)
@@ -213,22 +217,23 @@ async def test_camera_stream_source_configured(hass, run_driver, events):
     )
     with patch("turbojpeg.TurboJPEG", return_value=turbo_jpeg):
         TurboJPEGSingleton()
-        assert await hass.async_add_executor_job(
-            acc.get_snapshot, {"aid": 2, "image-width": 300, "image-height": 200}
+        assert await acc.async_get_snapshot(
+            {"aid": 2, "image-width": 300, "image-height": 200}
         )
-        # Verify the bridge only forwards get_snapshot for
+        # Verify the bridge only forwards async_get_snapshot for
         # cameras and valid accessory ids
-        assert await hass.async_add_executor_job(
-            bridge.get_snapshot, {"aid": 2, "image-width": 300, "image-height": 200}
+        assert await bridge.async_get_snapshot(
+            {"aid": 2, "image-width": 300, "image-height": 200}
         )
 
     with pytest.raises(ValueError):
-        assert await hass.async_add_executor_job(
-            bridge.get_snapshot, {"aid": 3, "image-width": 300, "image-height": 200}
+        assert await bridge.async_get_snapshot(
+            {"aid": 3, "image-width": 300, "image-height": 200}
         )
+
     with pytest.raises(ValueError):
-        assert await hass.async_add_executor_job(
-            bridge.get_snapshot, {"aid": 4, "image-width": 300, "image-height": 200}
+        assert await bridge.async_get_snapshot(
+            {"aid": 4, "image-width": 300, "image-height": 200}
         )
 
 
@@ -401,8 +406,8 @@ async def test_camera_with_no_stream(hass, run_driver, events):
     await _async_stop_all_streams(hass, acc)
 
     with pytest.raises(HomeAssistantError):
-        await hass.async_add_executor_job(
-            acc.get_snapshot, {"aid": 2, "image-width": 300, "image-height": 200}
+        assert await acc.async_get_snapshot(
+            {"aid": 2, "image-width": 300, "image-height": 200}
         )
 
 
@@ -472,6 +477,8 @@ async def test_camera_stream_source_configured_and_copy_codec(hass, run_driver, 
         input_source="-i /dev/null",
         output=expected_output.format(**session_info),
         stdout_pipe=False,
+        extra_cmd="-hide_banner -nostats",
+        stderr_pipe=True,
     )
 
 
@@ -542,6 +549,8 @@ async def test_camera_streaming_fails_after_starting_ffmpeg(hass, run_driver, ev
         input_source="-i /dev/null",
         output=expected_output.format(**session_info),
         stdout_pipe=False,
+        extra_cmd="-hide_banner -nostats",
+        stderr_pipe=True,
     )
 
 

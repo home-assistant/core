@@ -1,8 +1,6 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "Uw Home Assistant-instantie moet via internet toegankelijk zijn om IFTTT-berichten te ontvangen.",
-            "one_instance_allowed": "Slechts \u00e9\u00e9n instantie is nodig.",
             "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "create_entry": {

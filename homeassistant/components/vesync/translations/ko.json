@@ -1,11 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_setup": "\ud558\ub098\uc758 Vesync \uc778\uc2a4\ud134\uc2a4\ub9cc \ud5c8\uc6a9\ub429\ub2c8\ub2e4"
-        },
-        "error": {
-            "invalid_login": "\uc0ac\uc6a9\uc790 \uc774\ub984 \ub610\ub294 \ube44\ubc00\ubc88\ud638\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
-        },
         "step": {
             "user": {
                 "data": {

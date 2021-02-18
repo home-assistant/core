@@ -1,5 +1,6 @@
 """Tests for the EE BrightBox device scanner."""
 from datetime import datetime
+from unittest.mock import patch
 
 from eebrightbox import EEBrightBoxException
 import pytest
@@ -7,8 +8,6 @@ import pytest
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 def _configure_mock_get_devices(eebrightbox_mock):

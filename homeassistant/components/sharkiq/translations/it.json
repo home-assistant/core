@@ -2,9 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato",
-            "already_configured_account": "L'account \u00e8 gi\u00e0 configurato",
             "cannot_connect": "Impossibile connettersi",
-            "reauth_successful": "La riautenticazione ha avuto successo",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
             "unknown": "Errore imprevisto"
         },
         "error": {

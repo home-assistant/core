@@ -12,10 +12,10 @@
         "step": {
             "2fa": {
                 "data": {
-                    "2fa": "To-faktorskode"
+                    "2fa": "Totrinnsbekreftelse kode"
                 },
-                "description": "Skriv inn pin-koden som sendes til e-posten din",
-                "title": "Totrinnsverifisering"
+                "description": "Skriv inn pin-koden som ble sendt til din e-posten",
+                "title": "Totrinnsbekreftelse"
             },
             "user": {
                 "data": {

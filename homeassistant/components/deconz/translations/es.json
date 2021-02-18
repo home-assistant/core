@@ -6,7 +6,6 @@
             "no_bridges": "No se han descubierto pasarelas deCONZ",
             "no_hardware_available": "No hay hardware de radio conectado a deCONZ",
             "not_deconz_bridge": "No es una pasarela deCONZ",
-            "one_instance_only": "El componente solo admite una instancia de deCONZ",
             "updated_instance": "Instancia deCONZ actualizada con nueva direcci\u00f3n de host"
         },
         "error": {

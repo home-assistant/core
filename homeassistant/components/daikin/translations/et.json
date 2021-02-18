@@ -6,9 +6,6 @@
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "device_fail": "Tundmatu viga",
-            "device_timeout": "\u00dchendamine nurjus",
-            "forbidden": "Tuvastamine nurjus",
             "invalid_auth": "Tuvastamise viga",
             "unknown": "Tundmatu viga"
         },
@@ -17,7 +14,6 @@
                 "data": {
                     "api_key": "API v\u00f5ti",
                     "host": "",
-                    "key": "API v\u00f5ti",
                     "password": "Salas\u00f5na"
                 },
                 "description": "Sisesta oma Daikin AC IP aadress.\nPane t\u00e4hele, et API v\u00f5ti ja Salas\u00f5na kasutavad ainult seadmed BRP072Cxx ja SKYFi.",

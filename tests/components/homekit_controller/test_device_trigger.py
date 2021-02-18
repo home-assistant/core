@@ -12,6 +12,7 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
 from tests.components.homekit_controller.common import setup_test_component
 
 

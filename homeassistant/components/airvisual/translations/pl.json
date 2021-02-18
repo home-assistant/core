@@ -8,7 +8,7 @@
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "general_error": "Nieoczekiwany b\u0142\u0105d",
             "invalid_api_key": "Nieprawid\u0142owy klucz API",
-            "unable_to_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z jednostk\u0105 Node/Pro"
+            "location_not_found": "Nie znaleziono lokalizacji"
         },
         "step": {
             "geography": {
@@ -18,6 +18,25 @@
                     "longitude": "D\u0142ugo\u015b\u0107 geograficzna"
                 },
                 "description": "U\u017cyj interfejsu API chmury AirVisual do monitorowania lokalizacji geograficznej.",
+                "title": "Konfiguracja Geography"
+            },
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "latitude": "Szeroko\u015b\u0107 geograficzna",
+                    "longitude": "D\u0142ugo\u015b\u0107 geograficzna"
+                },
+                "description": "U\u017cyj API chmury AirVisual do monitorowania szeroko\u015bci/d\u0142ugo\u015bci geograficznej.",
+                "title": "Konfiguracja Geography"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "city": "Miasto",
+                    "country": "Kraj",
+                    "state": "Stan"
+                },
+                "description": "U\u017cyj API chmury AirVisual do monitorowania miasta/stanu/kraju.",
                 "title": "Konfiguracja Geography"
             },
             "node_pro": {

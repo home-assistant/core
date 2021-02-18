@@ -8,8 +8,7 @@
             "onvif_error": "Feeler beim ariichten vum ONVIF Apparat. Kuck d'Logs fir m\u00e9i Informatiounen."
         },
         "error": {
-            "cannot_connect": "Feeler beim verbannen",
-            "connection_failed": "Konnt sech net mam ONVIF Service mat den ugebueden Umeldungsinformatiounen verbannen."
+            "cannot_connect": "Feeler beim verbannen"
         },
         "step": {
             "auth": {

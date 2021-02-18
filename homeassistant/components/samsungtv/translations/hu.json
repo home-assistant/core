@@ -4,7 +4,7 @@
             "already_configured": "Ez a Samsung TV m\u00e1r konfigur\u00e1lva van.",
             "already_in_progress": "A Samsung TV konfigur\u00e1l\u00e1sa m\u00e1r folyamatban van.",
             "auth_missing": "A Home Assistant nem jogosult csatlakozni ehhez a Samsung TV-hez. Ellen\u0151rizd a TV be\u00e1ll\u00edt\u00e1sait a Home Assistant enged\u00e9lyez\u00e9s\u00e9hez.",
-            "not_successful": "Nem lehet csatlakozni ehhez a Samsung TV k\u00e9sz\u00fcl\u00e9khez.",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "not_supported": "Ez a Samsung TV k\u00e9sz\u00fcl\u00e9k jelenleg nem t\u00e1mogatott."
         },
         "flow_title": "Samsung TV: {model}",

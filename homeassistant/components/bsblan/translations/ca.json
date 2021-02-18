@@ -4,8 +4,7 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
-            "cannot_connect": "Ha fallat la connexi\u00f3",
-            "connection_error": "No s'ha pogut connectar amb el dispositiu BSB-Lan."
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "flow_title": "BSB-Lan: {name}",
         "step": {
@@ -13,12 +12,13 @@
                 "data": {
                     "host": "Amfitri\u00f3",
                     "passkey": "String Passkey",
-                    "port": "Port"
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "username": "Nom d'usuari"
                 },
                 "description": "Configura un dispositiu BSB-Lan per a integrar-lo amb Home Assistant.",
                 "title": "Connexi\u00f3 amb dispositiu BSB-Lan"
             }
         }
-    },
-    "title": "BSB-Lan"
+    }
 }

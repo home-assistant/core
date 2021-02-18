@@ -1,4 +1,6 @@
 """Test the flume config flow."""
+from unittest.mock import MagicMock, patch
+
 import requests.exceptions
 
 from homeassistant import config_entries, setup
@@ -9,8 +11,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-
-from tests.async_mock import MagicMock, patch
 
 
 def _get_mocked_flume_device_list():

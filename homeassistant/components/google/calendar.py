@@ -11,17 +11,14 @@ from homeassistant.components.calendar import (
     calculate_offset,
     is_offset_reached,
 )
+from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.util import Throttle, dt
 
 from . import (
     CONF_CAL_ID,
-    CONF_DEVICE_ID,
-    CONF_ENTITIES,
     CONF_IGNORE_AVAILABILITY,
     CONF_MAX_RESULTS,
-    CONF_NAME,
-    CONF_OFFSET,
     CONF_SEARCH,
     CONF_TRACK,
     DEFAULT_CONF_OFFSET,
@@ -156,7 +153,7 @@ class GoogleCalendarData:
         items = result.get("items", [])
         event_list = []
         for item in items:
-            if not self.ignore_availability and "transparency" in item.keys():
+            if not self.ignore_availability and "transparency" in item:
                 if item["transparency"] == "opaque":
                     event_list.append(item)
             else:
@@ -178,7 +175,7 @@ class GoogleCalendarData:
 
         new_event = None
         for item in items:
-            if not self.ignore_availability and "transparency" in item.keys():
+            if not self.ignore_availability and "transparency" in item:
                 if item["transparency"] == "opaque":
                     new_event = item
                     break

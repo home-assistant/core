@@ -8,7 +8,7 @@
             "cannot_connect": "Failed to connect",
             "general_error": "Unexpected error",
             "invalid_api_key": "Invalid API key",
-            "unable_to_connect": "Unable to connect to Node/Pro unit."
+            "location_not_found": "Location not found"
         },
         "step": {
             "geography": {
@@ -18,6 +18,25 @@
                     "longitude": "Longitude"
                 },
                 "description": "Use the AirVisual cloud API to monitor a geographical location.",
+                "title": "Configure a Geography"
+            },
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "API Key",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "description": "Use the AirVisual cloud API to monitor a latitude/longitude.",
+                "title": "Configure a Geography"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "API Key",
+                    "city": "City",
+                    "country": "Country",
+                    "state": "state"
+                },
+                "description": "Use the AirVisual cloud API to monitor a city/state/country.",
                 "title": "Configure a Geography"
             },
             "node_pro": {

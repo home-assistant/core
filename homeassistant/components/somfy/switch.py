@@ -10,20 +10,17 @@ from .const import API, COORDINATOR, DOMAIN
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Somfy switch platform."""
+    domain_data = hass.data[DOMAIN]
+    coordinator = domain_data[COORDINATOR]
+    api = domain_data[API]
 
-    def get_shutters():
-        """Retrieve switches."""
-        domain_data = hass.data[DOMAIN]
-        coordinator = domain_data[COORDINATOR]
-        api = domain_data[API]
+    switches = [
+        SomfyCameraShutter(coordinator, device_id, api)
+        for device_id, device in coordinator.data.items()
+        if Category.CAMERA.value in device.categories
+    ]
 
-        return [
-            SomfyCameraShutter(coordinator, device_id, api)
-            for device_id, device in coordinator.data.items()
-            if Category.CAMERA.value in device.categories
-        ]
-
-    async_add_entities(await hass.async_add_executor_job(get_shutters), True)
+    async_add_entities(switches)
 
 
 class SomfyCameraShutter(SomfyEntity, SwitchEntity):
@@ -32,11 +29,10 @@ class SomfyCameraShutter(SomfyEntity, SwitchEntity):
     def __init__(self, coordinator, device_id, api):
         """Initialize the Somfy device."""
         super().__init__(coordinator, device_id, api)
-        self.shutter = CameraProtect(self.device, self.api)
+        self._create_device()
 
-    async def async_update(self):
+    def _create_device(self):
         """Update the device with the latest data."""
-        await super().async_update()
         self.shutter = CameraProtect(self.device, self.api)
 
     def turn_on(self, **kwargs) -> None:

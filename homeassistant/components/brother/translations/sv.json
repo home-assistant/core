@@ -5,7 +5,6 @@
             "unsupported_model": "Den h\u00e4r skrivarmodellen st\u00f6ds inte."
         },
         "error": {
-            "connection_error": "Anslutningsfel.",
             "snmp_error": "SNMP-servern har st\u00e4ngts av eller s\u00e5 st\u00f6ds inte skrivaren.",
             "wrong_host": "Ogiltigt v\u00e4rdnamn eller IP-adress."
         },

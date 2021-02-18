@@ -2,7 +2,6 @@
     "config": {
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
-            "connection_error": "CoolMasterNet'iga \u00fchenduse loomine nurjus. Palun kontrolli hosti andmeid.",
             "no_units": "CoolMasterNet'ist ei leitud \u00fchtegi HVAC seadet."
         },
         "step": {

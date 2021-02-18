@@ -1,10 +1,11 @@
 """The tests for local file sensor platform."""
+from unittest.mock import Mock, mock_open, patch
+
 import pytest
 
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, mock_open, patch
 from tests.common import mock_registry
 
 

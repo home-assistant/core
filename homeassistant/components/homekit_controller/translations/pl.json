@@ -12,11 +12,8 @@
         },
         "error": {
             "authentication_error": "Niepoprawny kod parowania HomeKit. Sprawd\u017a go i spr\u00f3buj ponownie.",
-            "busy_error": "Urz\u0105dzenie odm\u00f3wi\u0142o parowania, poniewa\u017c jest ju\u017c powi\u0105zane z innym kontrolerem",
             "max_peers_error": "Urz\u0105dzenie odm\u00f3wi\u0142o parowania, poniewa\u017c nie ma wolnej pami\u0119ci parowania",
-            "max_tries_error": "Urz\u0105dzenie odm\u00f3wi\u0142o dodania parowania, poniewa\u017c otrzyma\u0142o ponad 100 nieudanych pr\u00f3b uwierzytelnienia",
             "pairing_failed": "Wyst\u0105pi\u0142 nieobs\u0142ugiwany b\u0142\u0105d podczas pr\u00f3by sparowania z tym urz\u0105dzeniem. Mo\u017ce to by\u0107 tymczasowa awaria lub urz\u0105dzenie mo\u017ce nie by\u0107 obecnie obs\u0142ugiwane.",
-            "protocol_error": "B\u0142\u0105d w komunikacji z urz\u0105dzeniem. Urz\u0105dzenie mo\u017ce nie by\u0107 w trybie parowania i mo\u017ce wymaga\u0107 fizycznego lub wirtualnego naci\u015bni\u0119cia przycisku.",
             "unable_to_pair": "Nie mo\u017cna sparowa\u0107, spr\u00f3buj ponownie",
             "unknown_error": "Urz\u0105dzenie zg\u0142osi\u0142o nieznany b\u0142\u0105d. Parowanie nie powiod\u0142o si\u0119."
         },
@@ -40,10 +37,6 @@
             "protocol_error": {
                 "description": "Urz\u0105dzenie mo\u017ce nie by\u0107 w trybie parowania i mo\u017ce wymaga\u0107 fizycznego lub wirtualnego naci\u015bni\u0119cia przycisku. Upewnij si\u0119, \u017ce urz\u0105dzenie jest w trybie parowania lub spr\u00f3buj je ponownie uruchomi\u0107, a nast\u0119pnie wzn\u00f3w parowanie.",
                 "title": "B\u0142\u0105d komunikacji z akcesorium"
-            },
-            "try_pair_later": {
-                "description": "Upewnij si\u0119, \u017ce urz\u0105dzenie jest w trybie parowania lub spr\u00f3buj ponownie uruchomi\u0107 urz\u0105dzenie, a nast\u0119pnie spr\u00f3buj ponownego parowania.",
-                "title": "Parowanie niedost\u0119pne"
             },
             "user": {
                 "data": {
@@ -69,9 +62,9 @@
             "doorbell": "dzwonek do drzwi"
         },
         "trigger_type": {
-            "double_press": "\"{subtype}\" naci\u015bni\u0119ty dwukrotnie",
-            "long_press": "\"{subtype}\" naci\u015bni\u0119ty i przytrzymany",
-            "single_press": "\"{subtype}\" naci\u015bni\u0119ty"
+            "double_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty dwukrotnie",
+            "long_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty i przytrzymany",
+            "single_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty"
         }
     },
     "title": "Kontroler HomeKit"

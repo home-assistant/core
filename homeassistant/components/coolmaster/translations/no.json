@@ -2,7 +2,6 @@
     "config": {
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
-            "connection_error": "Kunne ikke koble til CoolMasterNet-forekomsten. Sjekk verten din.",
             "no_units": "Kunne ikke finne noen HVAC-enheter i CoolMasterNet vert."
         },
         "step": {

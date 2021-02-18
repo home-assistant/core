@@ -1,11 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_setup": "Konfigurirate lahko samo eno povezavo Heos, le ta bo podpirala vse naprave v omre\u017eju."
-        },
-        "error": {
-            "connection_failure": "Ni mogo\u010de vzpostaviti povezave z dolo\u010denim gostiteljem."
-        },
         "step": {
             "user": {
                 "data": {

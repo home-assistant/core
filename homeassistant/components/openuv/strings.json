@@ -12,7 +12,6 @@
       }
     },
     "error": {
-      "identifier_exists": "Coordinates already registered",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
     },
     "abort": {

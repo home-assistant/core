@@ -1,9 +1,7 @@
 {
     "config": {
         "error": {
-            "communication_error": "Nem lehet kommunik\u00e1lni a Luftdaten API-val",
-            "invalid_sensor": "Az \u00e9rz\u00e9kel\u0151 nem el\u00e9rhet\u0151 vagy \u00e9rv\u00e9nytelen",
-            "sensor_exists": "Az \u00e9rz\u00e9kel\u0151 m\u00e1r regisztr\u00e1lt"
+            "invalid_sensor": "Az \u00e9rz\u00e9kel\u0151 nem el\u00e9rhet\u0151 vagy \u00e9rv\u00e9nytelen"
         },
         "step": {
             "user": {

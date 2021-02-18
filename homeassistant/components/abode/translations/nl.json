@@ -5,11 +5,18 @@
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
-            "connection_error": "Kan geen verbinding maken met Abode.",
-            "identifier_exists": "Account is al geregistreerd.",
-            "invalid_credentials": "Ongeldige inloggegevens."
+            "invalid_auth": "Ongeldige authenticatie",
+            "invalid_mfa_code": "Ongeldige MFA-code"
         },
         "step": {
+            "mfa": {
+                "data": {
+                    "mfa_code": "MFA-code (6-cijfers)"
+                }
+            },
+            "reauth_confirm": {
+                "title": "Vul uw Abode-inloggegevens in"
+            },
             "user": {
                 "data": {
                     "password": "Wachtwoord",

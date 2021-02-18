@@ -1,4 +1,6 @@
 """Tests for the GogoGate2 component."""
+from unittest.mock import MagicMock, patch
+
 from gogogate2_api import GogoGate2Api
 import pytest
 
@@ -15,7 +17,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 
@@ -24,7 +25,7 @@ async def test_config_update(gogogate2api_mock, hass: HomeAssistant) -> None:
     """Test config setup where the config is updated."""
 
     api = MagicMock(GogoGate2Api)
-    api.info.side_effect = Exception("Error")
+    api.async_info.side_effect = Exception("Error")
     gogogate2api_mock.return_value = api
 
     config_entry = MockConfigEntry(
@@ -52,7 +53,7 @@ async def test_config_update(gogogate2api_mock, hass: HomeAssistant) -> None:
 async def test_config_no_update(ismartgateapi_mock, hass: HomeAssistant) -> None:
     """Test config setup where the data is not updated."""
     api = MagicMock(GogoGate2Api)
-    api.info.side_effect = Exception("Error")
+    api.async_info.side_effect = Exception("Error")
     ismartgateapi_mock.return_value = api
 
     config_entry = MockConfigEntry(

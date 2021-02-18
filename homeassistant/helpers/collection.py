@@ -1,8 +1,9 @@
 """Helper to deal with YAML + storage."""
 from abc import ABC, abstractmethod
 import asyncio
+from dataclasses import dataclass
 import logging
-from typing import Any, Awaitable, Callable, Dict, List, Optional, cast
+from typing import Any, Awaitable, Callable, Dict, Iterable, List, Optional, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -24,6 +25,20 @@ SAVE_DELAY = 10
 CHANGE_ADDED = "added"
 CHANGE_UPDATED = "updated"
 CHANGE_REMOVED = "removed"
+
+
+@dataclass
+class CollectionChangeSet:
+    """Class to represent a change set.
+
+    change_type: One of CHANGE_*
+    item_id: The id of the item
+    item: The item
+    """
+
+    change_type: str
+    item_id: str
+    item: Any
 
 
 ChangeListener = Callable[
@@ -105,11 +120,14 @@ class ObservableCollection(ABC):
         """
         self.listeners.append(listener)
 
-    async def notify_change(self, change_type: str, item_id: str, item: dict) -> None:
+    async def notify_changes(self, change_sets: Iterable[CollectionChangeSet]) -> None:
         """Notify listeners of a change."""
-        self.logger.debug("%s %s: %s", change_type, item_id, item)
         await asyncio.gather(
-            *[listener(change_type, item_id, item) for listener in self.listeners]
+            *[
+                listener(change_set.change_type, change_set.item_id, change_set.item)
+                for listener in self.listeners
+                for change_set in change_sets
+            ]
         )
 
 
@@ -120,7 +138,7 @@ class YamlCollection(ObservableCollection):
         """Load the YAML collection. Overrides existing data."""
         old_ids = set(self.data)
 
-        tasks = []
+        change_sets = []
 
         for item in data:
             item_id = item[CONF_ID]
@@ -135,15 +153,15 @@ class YamlCollection(ObservableCollection):
                 event = CHANGE_ADDED
 
             self.data[item_id] = item
-            tasks.append(self.notify_change(event, item_id, item))
+            change_sets.append(CollectionChangeSet(event, item_id, item))
 
         for item_id in old_ids:
-            tasks.append(
-                self.notify_change(CHANGE_REMOVED, item_id, self.data.pop(item_id))
+            change_sets.append(
+                CollectionChangeSet(CHANGE_REMOVED, item_id, self.data.pop(item_id))
             )
 
-        if tasks:
-            await asyncio.gather(*tasks)
+        if change_sets:
+            await self.notify_changes(change_sets)
 
 
 class StorageCollection(ObservableCollection):
@@ -178,9 +196,9 @@ class StorageCollection(ObservableCollection):
         for item in raw_storage["items"]:
             self.data[item[CONF_ID]] = item
 
-        await asyncio.gather(
-            *[
-                self.notify_change(CHANGE_ADDED, item[CONF_ID], item)
+        await self.notify_changes(
+            [
+                CollectionChangeSet(CHANGE_ADDED, item[CONF_ID], item)
                 for item in raw_storage["items"]
             ]
         )
@@ -204,7 +222,9 @@ class StorageCollection(ObservableCollection):
         item[CONF_ID] = self.id_manager.generate_id(self._get_suggested_id(item))
         self.data[item[CONF_ID]] = item
         self._async_schedule_save()
-        await self.notify_change(CHANGE_ADDED, item[CONF_ID], item)
+        await self.notify_changes(
+            [CollectionChangeSet(CHANGE_ADDED, item[CONF_ID], item)]
+        )
         return item
 
     async def async_update_item(self, item_id: str, updates: dict) -> dict:
@@ -222,7 +242,9 @@ class StorageCollection(ObservableCollection):
         self.data[item_id] = updated
         self._async_schedule_save()
 
-        await self.notify_change(CHANGE_UPDATED, item_id, updated)
+        await self.notify_changes(
+            [CollectionChangeSet(CHANGE_UPDATED, item_id, updated)]
+        )
 
         return self.data[item_id]
 
@@ -234,7 +256,7 @@ class StorageCollection(ObservableCollection):
         item = self.data.pop(item_id)
         self._async_schedule_save()
 
-        await self.notify_change(CHANGE_REMOVED, item_id, item)
+        await self.notify_changes([CollectionChangeSet(CHANGE_REMOVED, item_id, item)])
 
     @callback
     def _async_schedule_save(self) -> None:
@@ -254,9 +276,9 @@ class IDLessCollection(ObservableCollection):
 
     async def async_load(self, data: List[dict]) -> None:
         """Load the collection. Overrides existing data."""
-        await asyncio.gather(
-            *[
-                self.notify_change(CHANGE_REMOVED, item_id, item)
+        await self.notify_changes(
+            [
+                CollectionChangeSet(CHANGE_REMOVED, item_id, item)
                 for item_id, item in list(self.data.items())
             ]
         )
@@ -269,16 +291,19 @@ class IDLessCollection(ObservableCollection):
 
             self.data[item_id] = item
 
-        await asyncio.gather(
-            *[
-                self.notify_change(CHANGE_ADDED, item_id, item)
+        await self.notify_changes(
+            [
+                CollectionChangeSet(CHANGE_ADDED, item_id, item)
                 for item_id, item in self.data.items()
             ]
         )
 
 
 @callback
-def attach_entity_component_collection(
+def sync_entity_lifecycle(
+    hass: HomeAssistantType,
+    domain: str,
+    platform: str,
     entity_component: EntityComponent,
     collection: ObservableCollection,
     create_entity: Callable[[dict], Entity],
@@ -295,34 +320,17 @@ def attach_entity_component_collection(
             return
 
         if change_type == CHANGE_REMOVED:
-            entity = entities.pop(item_id)
-            await entity.async_remove()
+            ent_reg = await entity_registry.async_get_registry(hass)
+            ent_to_remove = ent_reg.async_get_entity_id(domain, platform, item_id)
+            if ent_to_remove is not None:
+                ent_reg.async_remove(ent_to_remove)
+            else:
+                await entities[item_id].async_remove(force_remove=True)
+            entities.pop(item_id)
             return
 
         # CHANGE_UPDATED
         await entities[item_id].async_update_config(config)  # type: ignore
-
-    collection.async_add_listener(_collection_changed)
-
-
-@callback
-def attach_entity_registry_cleaner(
-    hass: HomeAssistantType,
-    domain: str,
-    platform: str,
-    collection: ObservableCollection,
-) -> None:
-    """Attach a listener to clean up entity registry on collection changes."""
-
-    async def _collection_changed(change_type: str, item_id: str, config: Dict) -> None:
-        """Handle a collection change: clean up entity registry on removals."""
-        if change_type != CHANGE_REMOVED:
-            return
-
-        ent_reg = await entity_registry.async_get_registry(hass)
-        ent_to_remove = ent_reg.async_get_entity_id(domain, platform, item_id)
-        if ent_to_remove is not None:
-            ent_reg.async_remove(ent_to_remove)
 
     collection.async_add_listener(_collection_changed)
 

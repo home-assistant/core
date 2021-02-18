@@ -9,7 +9,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
 )
 
-from tests.components.homekit_controller.common import setup_test_component
+from tests.components.homekit_controller.common import Helper, setup_test_component
 
 TEMPERATURE = ("temperature", "temperature.current")
 HUMIDITY = ("humidity", "relative-humidity.current")
@@ -18,6 +18,7 @@ CARBON_DIOXIDE_LEVEL = ("carbon-dioxide", "carbon-dioxide.level")
 BATTERY_LEVEL = ("battery", "battery-level")
 CHARGING_STATE = ("battery", "charging-state")
 LO_BATT = ("battery", "status-lo-batt")
+ON = ("outlet", "on")
 
 
 def create_temperature_sensor_service(accessory):
@@ -183,3 +184,45 @@ async def test_battery_low(hass, utcnow):
     helper.characteristics[LO_BATT].value = 1
     state = await helper.poll_and_get_state()
     assert state.attributes["icon"] == "mdi:battery-alert"
+
+
+def create_switch_with_sensor(accessory):
+    """Define battery level characteristics."""
+    service = accessory.add_service(ServicesTypes.OUTLET)
+
+    realtime_energy = service.add_char(
+        CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY
+    )
+    realtime_energy.value = 0
+    realtime_energy.format = "float"
+
+    cur_state = service.add_char(CharacteristicsTypes.ON)
+    cur_state.value = True
+
+    return service
+
+
+async def test_switch_with_sensor(hass, utcnow):
+    """Test a switch service that has a sensor characteristic is correctly handled."""
+    helper = await setup_test_component(hass, create_switch_with_sensor)
+    outlet = helper.accessory.services.first(service_type=ServicesTypes.OUTLET)
+
+    # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
+    energy_helper = Helper(
+        hass,
+        "sensor.testdevice_real_time_energy",
+        helper.pairing,
+        helper.accessory,
+        helper.config_entry,
+    )
+
+    outlet = energy_helper.accessory.services.first(service_type=ServicesTypes.OUTLET)
+    realtime_energy = outlet[CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY]
+
+    realtime_energy.value = 1
+    state = await energy_helper.poll_and_get_state()
+    assert state.state == "1"
+
+    realtime_energy.value = 50
+    state = await energy_helper.poll_and_get_state()
+    assert state.state == "50"

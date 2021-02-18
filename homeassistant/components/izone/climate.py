@@ -110,6 +110,8 @@ class ControllerDevice(ClimateEntity):
 
         self._supported_features = SUPPORT_FAN_MODE
 
+        # If mode RAS, or mode master with CtrlZone 13 then can set master temperature,
+        # otherwise the unit determines which zone to use as target. See interface manual p. 8
         if (
             controller.ras_mode == "master" and controller.zone_ctrl == 13
         ) or controller.ras_mode == "RAS":
@@ -269,6 +271,16 @@ class ControllerDevice(ClimateEntity):
                 self.temperature_unit,
                 PRECISION_HALVES,
             ),
+            "control_zone": self._controller.zone_ctrl,
+            "control_zone_name": self.control_zone_name,
+            # Feature SUPPORT_TARGET_TEMPERATURE controls both displaying target temp & setting it
+            # As the feature is turned off for zone control, report target temp as extra state attribute
+            "control_zone_setpoint": show_temp(
+                self.hass,
+                self.control_zone_setpoint,
+                self.temperature_unit,
+                PRECISION_HALVES,
+            ),
         }
 
     @property
@@ -315,12 +327,34 @@ class ControllerDevice(ClimateEntity):
         return self._controller.temp_return
 
     @property
+    def control_zone_name(self):
+        """Return the zone that currently controls the AC unit (if target temp not set by controller)."""
+        if self._supported_features & SUPPORT_TARGET_TEMPERATURE:
+            return None
+        zone_ctrl = self._controller.zone_ctrl
+        zone = next((z for z in self.zones.values() if z.zone_index == zone_ctrl), None)
+        if zone is None:
+            return None
+        return zone.name
+
+    @property
+    def control_zone_setpoint(self) -> Optional[float]:
+        """Return the temperature setpoint of the zone that currently controls the AC unit (if target temp not set by controller)."""
+        if self._supported_features & SUPPORT_TARGET_TEMPERATURE:
+            return None
+        zone_ctrl = self._controller.zone_ctrl
+        zone = next((z for z in self.zones.values() if z.zone_index == zone_ctrl), None)
+        if zone is None:
+            return None
+        return zone.target_temperature
+
+    @property
     @_return_on_connection_error()
     def target_temperature(self) -> Optional[float]:
-        """Return the temperature we try to reach."""
-        if not self._supported_features & SUPPORT_TARGET_TEMPERATURE:
-            return None
-        return self._controller.temp_setpoint
+        """Return the temperature we try to reach (either from control zone or master unit)."""
+        if self._supported_features & SUPPORT_TARGET_TEMPERATURE:
+            return self._controller.temp_setpoint
+        return self.control_zone_setpoint
 
     @property
     def supply_temperature(self) -> float:
@@ -509,7 +543,7 @@ class ZoneDevice(ClimateEntity):
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return list(self._state_to_pizone.keys())
+        return list(self._state_to_pizone)
 
     @property
     def current_temperature(self):
@@ -569,3 +603,15 @@ class ZoneDevice(ClimateEntity):
         """Turn device off (close zone)."""
         await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.CLOSE))
         self.async_write_ha_state()
+
+    @property
+    def zone_index(self):
+        """Return the zone index for matching to CtrlZone."""
+        return self._zone.index
+
+    @property
+    def device_state_attributes(self):
+        """Return the optional state attributes."""
+        return {
+            "zone_index": self.zone_index,
+        }

@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El lloc del controlador ja est\u00e0 configurat"
+            "already_configured": "El lloc del controlador ja est\u00e0 configurat",
+            "configuration_updated": "S'ha actualitzat la configuraci\u00f3.",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
             "faulty_credentials": "[%key::common::config_flow::error::invalid_auth%]",
             "service_unavailable": "[%key::common::config_flow::error::cannot_connect%]",
             "unknown_client_mac": "No hi ha cap client disponible en aquesta adre\u00e7a MAC"
         },
+        "flow_title": "Xarxa UniFi {site} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -27,6 +30,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Clients controlats amb acc\u00e9s a la xarxa",
+                    "dpi_restrictions": "Permet el control de grups de restricci\u00f3 DPI",
                     "poe_clients": "Permet control POE dels clients"
                 },
                 "description": "Configura els controls del client \n\nConfigura interruptors per als n\u00fameros de s\u00e8rie als quals vulguis controlar l'acc\u00e9s a la xarxa.",

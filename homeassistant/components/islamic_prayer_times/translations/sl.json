@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "one_instance_allowed": "Potrebna je samo ena instanca."
-        },
         "step": {
             "user": {
                 "description": "Ali \u017eelite nastaviti Islamski \u010das molitve?",

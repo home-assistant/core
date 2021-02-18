@@ -2,8 +2,7 @@
     "config": {
         "error": {
             "identifier_exists": "\u8d26\u6237\u5df2\u6ce8\u518c",
-            "invalid_auth": "\u65e0\u6548\u7684\u8eab\u4efd\u9a8c\u8bc1",
-            "invalid_credentials": "\u65e0\u6548\u7684\u8eab\u4efd\u8ba4\u8bc1"
+            "invalid_auth": "\u65e0\u6548\u7684\u8eab\u4efd\u9a8c\u8bc1"
         },
         "step": {
             "user": {

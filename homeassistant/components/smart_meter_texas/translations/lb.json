@@ -13,10 +13,8 @@
                 "data": {
                     "password": "Passwuert",
                     "username": "Benotzernumm"
-                },
-                "description": "G\u00ebff den Benotzernumm an d'Passwuert fir den Smart Meter Texas un."
+                }
             }
         }
-    },
-    "title": "Smart Meter Texas"
+    }
 }

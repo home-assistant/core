@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_TIMEOUT,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -34,8 +35,9 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_SSL,
     DEFAULT_TIMEOUT,
+    DEFAULT_USE_SSL,
+    DEFAULT_VERIFY_SSL,
 )
 from .const import DOMAIN  # pylint: disable=unused-import
 
@@ -62,7 +64,13 @@ def _ordered_shared_schema(schema_input):
         vol.Required(CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")): str,
         vol.Required(CONF_PASSWORD, default=schema_input.get(CONF_PASSWORD, "")): str,
         vol.Optional(CONF_PORT, default=schema_input.get(CONF_PORT, "")): str,
-        vol.Optional(CONF_SSL, default=schema_input.get(CONF_SSL, DEFAULT_SSL)): bool,
+        vol.Optional(
+            CONF_SSL, default=schema_input.get(CONF_SSL, DEFAULT_USE_SSL)
+        ): bool,
+        vol.Optional(
+            CONF_VERIFY_SSL,
+            default=schema_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+        ): bool,
     }
 
 
@@ -117,7 +125,8 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         port = user_input.get(CONF_PORT)
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
-        use_ssl = user_input.get(CONF_SSL, DEFAULT_SSL)
+        use_ssl = user_input.get(CONF_SSL, DEFAULT_USE_SSL)
+        verify_ssl = user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
         otp_code = user_input.get(CONF_OTP_CODE)
 
         if not port:
@@ -126,7 +135,9 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 port = DEFAULT_PORT
 
-        api = SynologyDSM(host, port, username, password, use_ssl, timeout=30)
+        api = SynologyDSM(
+            host, port, username, password, use_ssl, verify_ssl, timeout=30
+        )
 
         try:
             serial = await self.hass.async_add_executor_job(
@@ -153,14 +164,17 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if errors:
             return await self._show_setup_form(user_input, errors)
 
-        # Check if already configured
+        # unique_id should be serial for services purpose
         await self.async_set_unique_id(serial, raise_on_progress=False)
+
+        # Check if already configured
         self._abort_if_unique_id_configured()
 
         config_data = {
             CONF_HOST: host,
             CONF_PORT: port,
             CONF_SSL: use_ssl,
+            CONF_VERIFY_SSL: verify_ssl,
             CONF_USERNAME: username,
             CONF_PASSWORD: password,
             CONF_MAC: api.network.macs,
@@ -194,7 +208,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: friendly_name,
             CONF_HOST: parsed_url.hostname,
         }
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_user()
 
@@ -275,7 +288,6 @@ def _login_and_fetch_syno_info(api, otp_code):
     if (
         not api.information.serial
         or api.utilisation.cpu_user_load is None
-        or not api.storage.disks_ids
         or not api.storage.volumes_ids
         or not api.network.macs
     ):

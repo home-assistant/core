@@ -190,16 +190,13 @@ async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     trigger_type = config[CONF_TYPE]
     if trigger_type in TURNED_ON:
-        from_state = "off"
         to_state = "on"
     else:
-        from_state = "on"
         to_state = "off"
 
     state_config = {
         state_trigger.CONF_PLATFORM: "state",
         state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        state_trigger.CONF_FROM: from_state,
         state_trigger.CONF_TO: to_state,
     }
     if CONF_FOR in config:

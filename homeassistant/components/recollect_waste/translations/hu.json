@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "invalid_place_or_service_id": "\u00c9rv\u00e9nytelen hely vagy szolg\u00e1ltat\u00e1s azonos\u00edt\u00f3"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "place_id": "Hely azonos\u00edt\u00f3ja",
+                    "service_id": "Szolg\u00e1ltat\u00e1s azonos\u00edt\u00f3ja"
+                }
+            }
+        }
+    }
+}

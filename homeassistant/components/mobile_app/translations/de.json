@@ -8,5 +8,10 @@
                 "description": "M\u00f6chtest du die Mobile App-Komponente einrichten?"
             }
         }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "Sende eine Benachrichtigung"
+        }
     }
 }

@@ -54,7 +54,7 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 otgw = pyotgw.pyotgw()
                 status = await otgw.connect(self.hass.loop, device)
                 await otgw.disconnect()
-                return status.get(gw_vars.OTGW_ABOUT)
+                return status[gw_vars.OTGW].get(gw_vars.OTGW_ABOUT)
 
             try:
                 res = await asyncio.wait_for(test_connection(), timeout=10)
@@ -114,8 +114,6 @@ class OpenThermGwOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the opentherm_gw options."""
         if user_input is not None:
-            if user_input.get(CONF_PRECISION) == 0:
-                user_input[CONF_PRECISION] = None
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(

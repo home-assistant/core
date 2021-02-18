@@ -4,9 +4,11 @@ import pypck
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_ADDRESS
 
-from . import LcnDevice
+from . import LcnEntity
 from .const import CONF_CONNECTIONS, CONF_OUTPUT, DATA_LCN, OUTPUT_PORTS
 from .helpers import get_connection
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_platform(
@@ -34,12 +36,12 @@ async def async_setup_platform(
     async_add_entities(devices)
 
 
-class LcnOutputSwitch(LcnDevice, SwitchEntity):
+class LcnOutputSwitch(LcnEntity, SwitchEntity):
     """Representation of a LCN switch for output ports."""
 
-    def __init__(self, config, address_connection):
+    def __init__(self, config, device_connection):
         """Initialize the LCN switch."""
-        super().__init__(config, address_connection)
+        super().__init__(config, device_connection)
 
         self.output = pypck.lcn_defs.OutputPort[config[CONF_OUTPUT]]
 
@@ -48,7 +50,8 @@ class LcnOutputSwitch(LcnDevice, SwitchEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        await self.address_connection.activate_status_request_handler(self.output)
+        if not self.device_connection.is_group:
+            await self.device_connection.activate_status_request_handler(self.output)
 
     @property
     def is_on(self):
@@ -57,14 +60,16 @@ class LcnOutputSwitch(LcnDevice, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
+        if not await self.device_connection.dim_output(self.output.value, 100, 0):
+            return
         self._is_on = True
-        self.address_connection.dim_output(self.output.value, 100, 0)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
+        if not await self.device_connection.dim_output(self.output.value, 0, 0):
+            return
         self._is_on = False
-        self.address_connection.dim_output(self.output.value, 0, 0)
         self.async_write_ha_state()
 
     def input_received(self, input_obj):
@@ -79,12 +84,12 @@ class LcnOutputSwitch(LcnDevice, SwitchEntity):
         self.async_write_ha_state()
 
 
-class LcnRelaySwitch(LcnDevice, SwitchEntity):
+class LcnRelaySwitch(LcnEntity, SwitchEntity):
     """Representation of a LCN switch for relay ports."""
 
-    def __init__(self, config, address_connection):
+    def __init__(self, config, device_connection):
         """Initialize the LCN switch."""
-        super().__init__(config, address_connection)
+        super().__init__(config, device_connection)
 
         self.output = pypck.lcn_defs.RelayPort[config[CONF_OUTPUT]]
 
@@ -93,7 +98,8 @@ class LcnRelaySwitch(LcnDevice, SwitchEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        await self.address_connection.activate_status_request_handler(self.output)
+        if not self.device_connection.is_group:
+            await self.device_connection.activate_status_request_handler(self.output)
 
     @property
     def is_on(self):
@@ -102,20 +108,20 @@ class LcnRelaySwitch(LcnDevice, SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        self._is_on = True
-
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
         states[self.output.value] = pypck.lcn_defs.RelayStateModifier.ON
-        self.address_connection.control_relays(states)
+        if not await self.device_connection.control_relays(states):
+            return
+        self._is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        self._is_on = False
-
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
         states[self.output.value] = pypck.lcn_defs.RelayStateModifier.OFF
-        self.address_connection.control_relays(states)
+        if not await self.device_connection.control_relays(states):
+            return
+        self._is_on = False
         self.async_write_ha_state()
 
     def input_received(self, input_obj):
