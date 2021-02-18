@@ -16,8 +16,8 @@ from . import (
     TYPE_BATT9,
     TYPE_BATT10,
     TYPE_BATTOUT,
-    TYPE_PM25_CO2,
     TYPE_PM25_BATT,
+    TYPE_PM25_CO2,
     TYPE_PM25IN_BATT,
     AmbientWeatherEntity,
 )
