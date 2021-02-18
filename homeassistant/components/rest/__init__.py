@@ -1,5 +1,6 @@
 """The rest component."""
 
+import asyncio
 import logging
 
 import httpx
@@ -67,6 +68,7 @@ async def _async_process_config(hass, config) -> bool:
     if DOMAIN not in config:
         return True
 
+    load_tasks = []
     for conf in config[DOMAIN]:
         scan_interval = conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         resource_template = conf.get(CONF_RESOURCE_TEMPLATE)
@@ -78,13 +80,17 @@ async def _async_process_config(hass, config) -> bool:
 
         for platform_domain in COORDINATOR_AWARE_PLATFORMS:
             for platform_conf in conf.get(platform_domain, []):
-                discovery.async_load_platform(
+                load = discovery.async_load_platform(
                     hass,
                     platform_domain,
                     DOMAIN,
                     {CONF_REST: rest, CONF_COORDINATOR: coordinator, **platform_conf},
                     config,
                 )
+                load_tasks.append(load)
+
+    if load_tasks:
+        await asyncio.gather(*load_tasks)
 
     return True
 
