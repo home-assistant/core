@@ -75,13 +75,12 @@ class RestEntity(Entity):
 
     async def async_update(self):
         """Get the latest data from REST API and update the state."""
-        if self._resource_template is not None:
-            self.rest.set_url(self._resource_template.async_render(parse_result=False))
-
         if self.coordinator:
             await self.coordinator.async_request_refresh()
             return
 
+        if self._resource_template is not None:
+            self.rest.set_url(self._resource_template.async_render(parse_result=False))
         await self.rest.async_update()
         self._update_from_rest_data()
 
