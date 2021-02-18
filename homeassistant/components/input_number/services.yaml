@@ -1,23 +1,25 @@
 decrement:
-  description: Decrement the value of an input number entity by its stepping.
-  fields:
-    entity_id:
-      description: Entity id of the input number that should be decremented.
-      example: input_number.threshold
+  description: Decrement the value of an input number entity by its stepping
+  target:
+
 increment:
-  description: Increment the value of an input number entity by its stepping.
-  fields:
-    entity_id:
-      description: Entity id of the input number that should be incremented.
-      example: input_number.threshold
+  description: Increment the value of an input number entity by its stepping
+  target:
+
 set_value:
-  description: Set the value of an input number entity.
+  description: Set the value of an input number entity
+  target:
   fields:
-    entity_id:
-      description: Entity id of the input number to set the new value.
-      example: input_number.threshold
     value:
+      name: Value
       description: The target value the entity should be set to.
+      required: true
       example: 42
+      selector:
+        number:
+          min: 0
+          max: 9223372036854775807
+          step: 0.001
+          mode: box
 reload:
   description: Reload the input_number configuration.
