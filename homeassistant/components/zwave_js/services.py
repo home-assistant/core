@@ -3,8 +3,7 @@ import logging
 from typing import Dict, List, Union, cast
 
 import voluptuous as vol
-from zwave_js_server.const import CommandClass
-from zwave_js_server.model.node import Node as ZwaveNode, get_value_id
+from zwave_js_server.model.node import Node as ZwaveNode
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
@@ -155,62 +154,30 @@ class ZWaveServices:
         else:
             nodes = [self.async_get_node_from_device_id(service.data[ATTR_DEVICE_ID])]
 
-        property_ = service.data[const.ATTR_CONFIG_PARAMETER]
+        property_or_property_name = service.data[const.ATTR_CONFIG_PARAMETER]
         property_key = service.data.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
         endpoint = service.data.get(const.ATTR_ENDPOINT)
         new_value = service.data[const.ATTR_CONFIG_VALUE]
 
         for node in nodes:
-            config_values = node.get_configuration_values()
-            if isinstance(property_, str):
-                try:
-                    zwave_value = next(
-                        config_value
-                        for config_value in config_values.values()
-                        if config_value.property_name == property_
-                        and (endpoint is None or config_value.endpoint == endpoint)
-                    )
-                except StopIteration:
-                    raise ValueError(
-                        f"Configuration parameter with parameter name {property_} could not be found"
-                    )
-                property_ = zwave_value.property_
-                property_key = zwave_value.property_key
-            else:
-                value_id = get_value_id(
-                    node,
-                    {
-                        "commandClass": CommandClass.CONFIGURATION,
-                        "property": property_,
-                        "propertyKey": property_key,
-                        "endpoint": endpoint,
-                    },
-                )
-
-                try:
-                    zwave_value = config_values[value_id]
-                except KeyError:
-                    raise ValueError(
-                        f"Configuration parameter with value ID {value_id} could not be found"
-                    )
-
-            if isinstance(new_value, str):
-                try:
-                    new_value = next(
-                        key
-                        for key in zwave_value.metadata.states
-                        if zwave_value.metadata.states == new_value
-                    )
-                except StopIteration:
-                    raise ValueError(
-                        f"New value {new_value} not found, must be one of the keys or "
-                        f"values of {zwave_value.metadata.states}"
-                    )
-            await node.async_set_value(zwave_value, new_value)
-
-            _LOGGER.info(
-                "Setting configuration parameter %s on Node %s with value %s",
-                zwave_value,
-                node,
+            zwave_value = node.async_set_config_parameter(
                 new_value,
+                property_or_property_name,
+                property_key=property_key,
+                endpoint=endpoint,
             )
+
+            if zwave_value:
+                _LOGGER.info(
+                    "Set configuration parameter %s on Node %s with value %s",
+                    zwave_value,
+                    node,
+                    new_value,
+                )
+            else:
+                _LOGGER.info(
+                    "Unable to set configuration parameter on Node %s with value %s",
+                    zwave_value,
+                    node,
+                    new_value,
+                )
