@@ -6,7 +6,7 @@ from datetime import timedelta
 import respx
 
 from homeassistant.components.rest.const import DOMAIN
-from homeassistant.const import DATA_MEGABYTES
+from homeassistant.const import DATA_MEGABYTES, STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -80,6 +80,18 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass):
     assert hass.states.get("sensor.sensor2").state == "2"
     assert hass.states.get("binary_sensor.binary_sensor1").state == "on"
     assert hass.states.get("binary_sensor.binary_sensor2").state == "off"
+
+    # Now the end point flakes out again
+    respx.get("http://localhost").mock(side_effect=asyncio.TimeoutError())
+
+    # Refresh the coordinator
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.sensor2").state == STATE_UNAVAILABLE
+    assert hass.states.get("binary_sensor.binary_sensor1").state == STATE_UNAVAILABLE
+    assert hass.states.get("binary_sensor.binary_sensor2").state == STATE_UNAVAILABLE
 
 
 @respx.mock
