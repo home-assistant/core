@@ -29,6 +29,7 @@ FIELD_SCHEMA = vol.Schema(
         vol.Optional("default"): exists,
         vol.Optional("values"): exists,
         vol.Optional("required"): bool,
+        vol.Optional("advanced"): bool,
         vol.Optional(CONF_SELECTOR): selector.validate_selector,
     }
 )
