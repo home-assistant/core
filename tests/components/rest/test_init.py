@@ -58,3 +58,8 @@ async def test_setup_minimum_resource_template(hass):
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 4
+
+    assert hass.states.get("sensor.sensor1").state == "1"
+    assert hass.states.get("sensor.sensor2").state == "2"
+    assert hass.states.get("binary_sensor.binary_sensor1").state == "on"
+    assert hass.states.get("binary_sensor.binary_sensor2").state == "off"
