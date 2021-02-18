@@ -110,6 +110,13 @@ increase_speed:
     percentage_step:
       description: Increase speed by a percentage. Should be between 0..100. [optional]
       example: 50
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider
 
 decrease_speed:
   description: Decrease the speed of the fan by one speed or a percentage_step.
@@ -120,3 +127,10 @@ decrease_speed:
     percentage_step:
       description: Decrease speed by a percentage. Should be between 0..100. [optional]
       example: 50
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider
