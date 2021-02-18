@@ -1,18 +1,18 @@
 {
     "config": {
         "error": {
-            "invalid_credentials": "Invalid credentials",
-            "unknown": "Unknown error"
+            "invalid_credentials": "Invalid authentication",
+            "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
-                    "url": "Habitica URL",
-                    "name": "Override for Habitica’s username. Will be used for service calls",
-                    "api_user": "Habitica’s API user ID",
-                    "api_key": "Habitica's API user KEY"
+                    "api_key": "API Key",
+                    "api_user": "Habitica\u2019s API user ID",
+                    "name": "Override for Habitica\u2019s username. Will be used for service calls",
+                    "url": "URL"
                 },
-                "description": "Connect your Habitica profile to allow monitoring of your user's profile and tasks. Note that api_id and api_key must be grabed from https://habitica.com/user/settings/api"
+                "description": "Connect your Habitica profile to allow monitoring of your user's profile and tasks. Note that api_id and api_key must be gotten from https://habitica.com/user/settings/api"
             }
         }
     },
