@@ -27,8 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     name = config[CONF_NAME]
     device_info = config[ATTR_DEVICE_INFO]
 
-    remote_device = PanasonicVieraRemoteEntity(remote, name, device_info)
-    async_add_entities([remote_device])
+    async_add_entities([PanasonicVieraRemoteEntity(remote, name, device_info)])
 
 
 class PanasonicVieraRemoteEntity(RemoteEntity):
