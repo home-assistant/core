@@ -95,11 +95,11 @@ def _wrap_rest_in_coordinator(hass, rest, resource_template, update_interval):
 
         async def _async_refresh_with_resource_template():
             rest.set_url(resource_template.async_render(parse_result=False))
-            await rest.async_refresh()
+            await rest.async_update()
 
         update_method = _async_refresh_with_resource_template
     else:
-        update_method = rest.async_refresh
+        update_method = rest.async_update
 
     return DataUpdateCoordinator(
         hass,

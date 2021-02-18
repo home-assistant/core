@@ -24,32 +24,36 @@ async def test_setup_minimum_resource_template(hass):
         hass,
         DOMAIN,
         {
-            "resource_template": "{% set url = 'http://localhost' %}{{ url }}",
-            "method": "GET",
-            "verify_ssl": "false",
-            "timeout": 30,
-            "sensor": [
+            DOMAIN: [
                 {
-                    "unit_of_measurement": DATA_MEGABYTES,
-                    "name": "sensor1",
-                    "value_template": "{{ value_json.sensor1 }}",
-                },
-                {
-                    "unit_of_measurement": DATA_MEGABYTES,
-                    "name": "sensor2",
-                    "value_template": "{{ value_json.sensor2 }}",
-                },
-            ],
-            "binary_sensor": [
-                {
-                    "name": "binary_sensor1",
-                    "value_template": "{{ value_json.binary_sensor1 }}",
-                },
-                {
-                    "name": "binary_sensor2",
-                    "value_template": "{{ value_json.binary_sensor2 }}",
-                },
-            ],
+                    "resource_template": "{% set url = 'http://localhost' %}{{ url }}",
+                    "method": "GET",
+                    "verify_ssl": "false",
+                    "timeout": 30,
+                    "sensor": [
+                        {
+                            "unit_of_measurement": DATA_MEGABYTES,
+                            "name": "sensor1",
+                            "value_template": "{{ value_json.sensor1 }}",
+                        },
+                        {
+                            "unit_of_measurement": DATA_MEGABYTES,
+                            "name": "sensor2",
+                            "value_template": "{{ value_json.sensor2 }}",
+                        },
+                    ],
+                    "binary_sensor": [
+                        {
+                            "name": "binary_sensor1",
+                            "value_template": "{{ value_json.binary_sensor1 }}",
+                        },
+                        {
+                            "name": "binary_sensor2",
+                            "value_template": "{{ value_json.binary_sensor2 }}",
+                        },
+                    ],
+                }
+            ]
         },
     )
     await hass.async_block_till_done()
