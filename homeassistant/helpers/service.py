@@ -443,22 +443,19 @@ async def async_get_all_descriptions(
             # Cache missing descriptions
             if description is None:
                 domain_yaml = loaded[domain]
-                yaml_description = domain_yaml.get(service)  # type: ignore
+                yaml_description = domain_yaml.get(service, {})  # type: ignore
 
                 # Don't warn for missing services, because it triggers false
                 # positives for things like scripts, that register as a service
 
-                if yaml_description:
-                    description = {
-                        "name": yaml_description.get("name", ""),
-                        "description": yaml_description.get("description", ""),
-                        "fields": yaml_description.get("fields", {}),
-                    }
+                description = {
+                    "name": yaml_description.get("name", ""),
+                    "description": yaml_description.get("description", ""),
+                    "fields": yaml_description.get("fields", {}),
+                }
 
-                    if "target" in yaml_description:
-                        description["target"] = yaml_description["target"]
-                else:
-                    description = {}
+                if "target" in yaml_description:
+                    description["target"] = yaml_description["target"]
 
                 descriptions_cache[cache_key] = description
 
