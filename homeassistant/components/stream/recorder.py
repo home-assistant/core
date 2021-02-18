@@ -24,48 +24,45 @@ def recorder_save_worker(file_out: str, segments: List[Segment], container_forma
     if not os.path.exists(os.path.dirname(file_out)):
         os.makedirs(os.path.dirname(file_out), exist_ok=True)
 
-    pts_adjuster = {"video": None, "audio": None}
+    first_pts = {"video": None, "audio": None}
     output = av.open(file_out, "w", format=container_format)
     output_v = None
     output_a = None
 
-    last_stream_id = None
-    running_duration = 0  # the running duration of processed segments
+    # Get first_pts values from first segment
+    if len(segments) > 0:
+        segment = segments[0]
+        source = av.open(segment.segment, "r", format=container_format)
+        source_v = source.streams.video[0]
+        first_pts["video"] = source_v.start_time
+        if len(source.streams.audio) > 0:
+            source_a = source.streams.audio[0]
+            first_pts["audio"] = int(
+                source_v.start_time * source_v.time_base / source_a.time_base
+            )
+        source.close()
 
     for segment in segments:
         # Open segment
         source = av.open(segment.segment, "r", format=container_format)
         source_v = source.streams.video[0]
-        source_a = source.streams.audio[0] if len(source.streams.audio) > 0 else None
-
-        # Add output streams if necessary
+        # Add output streams
         if not output_v:
             output_v = output.add_stream(template=source_v)
             context = output_v.codec_context
             context.flags |= "GLOBAL_HEADER"
-        if source_a and not output_a:
+        if not output_a and len(source.streams.audio) > 0:
+            source_a = source.streams.audio[0]
             output_a = output.add_stream(template=source_a)
-
-        # Recalculate pts adjustments on first segment and on any discontinuity
-        # We are assuming time base is the same across all discontinuities
-        if last_stream_id != segment.stream_id:
-            last_stream_id = segment.stream_id
-            pts_adjuster["video"] = running_duration - source_v.start_time
-            if source_a:
-                pts_adjuster["audio"] = running_duration - int(
-                    source_v.start_time * source_v.time_base / source_a.time_base
-                )
 
         # Remux video
         for packet in source.demux():
             if packet.dts is None:
                 continue
-            packet.pts += pts_adjuster[packet.stream.type]
-            packet.dts += pts_adjuster[packet.stream.type]
+            packet.pts -= first_pts[packet.stream.type]
+            packet.dts -= first_pts[packet.stream.type]
             packet.stream = output_v if packet.stream.type == "video" else output_a
             output.mux(packet)
-
-        running_duration += source_v.duration
 
         source.close()
 
