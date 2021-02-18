@@ -1,5 +1,9 @@
 """Test the Panasonic Viera remote entity."""
 
+from unittest.mock import patch
+
+import pytest
+
 from homeassistant.components.panasonic_viera.const import ATTR_UDN, DOMAIN
 from homeassistant.components.remote import (
     ATTR_COMMAND,
@@ -15,8 +19,19 @@ from .test_init import (
     get_mock_remote,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(name="mock_remote", autouse=True)
+def mock_remote_fixture():
+    """Mock the remote."""
+    mock_remote = get_mock_remote()
+
+    with patch(
+        "homeassistant.components.panasonic_viera.Remote",
+        return_value=mock_remote,
+    ):
+        yield mock_remote
 
 
 async def setup_panasonic_viera(hass):
@@ -29,56 +44,35 @@ async def setup_panasonic_viera(hass):
 
     mock_entry.add_to_hass(hass)
 
-    mock_remote = get_mock_remote()
-
-    with patch(
-        "homeassistant.components.panasonic_viera.Remote",
-        return_value=mock_remote,
-    ):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_turn_on(hass):
     """Test turn on service call."""
-    mock_remote = get_mock_remote()
 
-    with patch(
-        "homeassistant.components.panasonic_viera.Remote",
-        return_value=mock_remote,
-    ):
-        await setup_panasonic_viera(hass)
+    await setup_panasonic_viera(hass)
 
-        data = {ATTR_ENTITY_ID: "remote.panasonic_viera_tv"}
-        await hass.services.async_call(REMOTE_DOMAIN, SERVICE_TURN_ON, data)
-        await hass.async_block_till_done()
+    data = {ATTR_ENTITY_ID: "remote.panasonic_viera_tv"}
+    await hass.services.async_call(REMOTE_DOMAIN, SERVICE_TURN_ON, data)
+    await hass.async_block_till_done()
 
 
 async def test_turn_off(hass):
     """Test turn off service call."""
-    mock_remote = get_mock_remote()
 
-    with patch(
-        "homeassistant.components.panasonic_viera.Remote",
-        return_value=mock_remote,
-    ):
-        await setup_panasonic_viera(hass)
+    await setup_panasonic_viera(hass)
 
-        data = {ATTR_ENTITY_ID: "remote.panasonic_viera_tv"}
-        await hass.services.async_call(REMOTE_DOMAIN, SERVICE_TURN_OFF, data)
-        await hass.async_block_till_done()
+    data = {ATTR_ENTITY_ID: "remote.panasonic_viera_tv"}
+    await hass.services.async_call(REMOTE_DOMAIN, SERVICE_TURN_OFF, data)
+    await hass.async_block_till_done()
 
 
 async def test_send_command(hass):
     """Test send command service call."""
-    mock_remote = get_mock_remote()
 
-    with patch(
-        "homeassistant.components.panasonic_viera.Remote",
-        return_value=mock_remote,
-    ):
-        await setup_panasonic_viera(hass)
+    await setup_panasonic_viera(hass)
 
-        data = {ATTR_ENTITY_ID: "remote.panasonic_viera_tv", ATTR_COMMAND: "power"}
-        await hass.services.async_call(REMOTE_DOMAIN, SERVICE_SEND_COMMAND, data)
-        await hass.async_block_till_done()
+    data = {ATTR_ENTITY_ID: "remote.panasonic_viera_tv", ATTR_COMMAND: "power"}
+    await hass.services.async_call(REMOTE_DOMAIN, SERVICE_SEND_COMMAND, data)
+    await hass.async_block_till_done()

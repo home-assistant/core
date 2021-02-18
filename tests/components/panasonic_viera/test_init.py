@@ -56,6 +56,21 @@ def get_mock_remote(device_info=MOCK_DEVICE_INFO):
 
     mock_remote.async_get_device_info = async_get_device_info
 
+    async def async_turn_on():
+        return
+
+    mock_remote.async_turn_on = async_turn_on
+
+    async def async_turn_off():
+        return
+
+    mock_remote.async_turn_on = async_turn_off
+
+    async def async_send_key(key):
+        return
+
+    mock_remote.async_send_key = async_send_key
+
     return mock_remote
 
 
@@ -284,12 +299,12 @@ async def test_setup_unload_entry(hass):
 
     assert state_tv.state == STATE_UNAVAILABLE
     assert state_remote.state == STATE_UNAVAILABLE
-    
+
     await hass.config_entries.async_remove(mock_entry.entry_id)
     await hass.async_block_till_done()
-    
+
     state_tv = hass.states.get("media_player.panasonic_viera_tv")
     state_remote = hass.states.get("remote.panasonic_viera_tv")
-    
+
     assert state_tv is None
     assert state_remote is None
