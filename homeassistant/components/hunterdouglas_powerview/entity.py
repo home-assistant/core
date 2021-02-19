@@ -56,9 +56,9 @@ class HDEntity(CoordinatorEntity):
 class ShadeEntity(HDEntity):
     """Base class for hunter douglas shade entities."""
 
-    def __init__(self, coordinator, device_info, shade, shade_name):
+    def __init__(self, coordinator, device_info, room_name, shade, shade_name):
         """Initialize the shade."""
-        super().__init__(coordinator, device_info, shade.id)
+        super().__init__(coordinator, device_info, room_name, shade.id)
         self._shade_name = shade_name
         self._shade = shade
 
