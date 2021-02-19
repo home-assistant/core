@@ -24,7 +24,6 @@ import homeassistant.util.dt as dt_util
 
 from .const import (
     ATTR_VALUE,
-    BIANNUALLY,
     BIMONTHLY,
     CONF_METER,
     CONF_METER_NET_CONSUMPTION,
@@ -39,6 +38,7 @@ from .const import (
     MONTHLY,
     QUARTER_HOURLY,
     QUARTERLY,
+    SEMIANNUALLY,
     SERVICE_CALIBRATE_METER,
     SIGNAL_RESET_METER,
     WEEKLY,
@@ -218,7 +218,7 @@ class UtilityMeterSensor(RestoreEntity):
         ):
             return
         if (
-            self._period == BIANNUALLY
+            self._period == SEMIANNUALLY
             and now
             != date(now.year, (((now.month - 1) // 6) * 6 + 1), 1) + self._period_offset
         ):
@@ -269,7 +269,7 @@ class UtilityMeterSensor(RestoreEntity):
             MONTHLY,
             BIMONTHLY,
             QUARTERLY,
-            BIANNUALLY,
+            SEMIANNUALLY,
             YEARLY,
         ]:
             async_track_time_change(
