@@ -29,6 +29,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.philips_js import PhilipsTVDataUpdateCoordinator
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     CONF_API_VERSION,
     CONF_HOST,
     CONF_NAME,
@@ -290,7 +291,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             },
             "model": self._system.get("model"),
             "manufacturer": "Philips",
-            "sw_version": self._system.get("softwareversion"),
+            ATTR_SW_VERSION: self._system.get("softwareversion"),
         }
 
     def play_media(self, media_type, media_id, **kwargs):

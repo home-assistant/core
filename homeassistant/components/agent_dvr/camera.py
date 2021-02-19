@@ -11,7 +11,7 @@ from homeassistant.components.mjpeg.camera import (
     MjpegCamera,
     filter_urllib3_logging,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_SW_VERSION, CONF_NAME
 from homeassistant.helpers import entity_platform
 
 from .const import (
@@ -91,7 +91,7 @@ class AgentCamera(MjpegCamera):
             "name": self._name,
             "manufacturer": "Agent",
             "model": "Camera",
-            "sw_version": self.device.client.version,
+            ATTR_SW_VERSION: self.device.client.version,
         }
 
     async def async_update(self):

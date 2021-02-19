@@ -13,6 +13,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    ATTR_SW_VERSION,
     ATTR_TEMPERATURE,
     CONF_DEVICES,
     PRECISION_HALVES,
@@ -81,7 +82,7 @@ class FritzboxThermostat(ClimateEntity):
             "identifiers": {(FRITZBOX_DOMAIN, self._device.ain)},
             "manufacturer": self._device.manufacturer,
             "model": self._device.productname,
-            "sw_version": self._device.fw_version,
+            ATTR_SW_VERSION: self._device.fw_version,
         }
 
     @property

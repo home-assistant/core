@@ -62,6 +62,7 @@ from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.plex.const import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import play_on_sonos
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     ATTR_TIME,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
@@ -586,7 +587,7 @@ class SonosEntity(MediaPlayerEntity):
             "identifiers": {(SONOS_DOMAIN, self._unique_id)},
             "name": self._name,
             "model": self._model.replace("Sonos ", ""),
-            "sw_version": self._sw_version,
+            ATTR_SW_VERSION: self._sw_version,
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_address)},
             "manufacturer": "Sonos",
         }

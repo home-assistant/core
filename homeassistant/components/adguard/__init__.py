@@ -18,6 +18,7 @@ from homeassistant.components.adguard.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -197,6 +198,6 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
             },
             "name": "AdGuard Home",
             "manufacturer": "AdGuard Team",
-            "sw_version": self.hass.data[DOMAIN].get(DATA_ADGUARD_VERION),
+            ATTR_SW_VERSION: self.hass.data[DOMAIN].get(DATA_ADGUARD_VERION),
             "entry_type": "service",
         }

@@ -3,6 +3,7 @@ import requests
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     ATTR_TEMPERATURE,
     CONF_DEVICES,
     ENERGY_KILO_WATT_HOUR,
@@ -53,7 +54,7 @@ class FritzboxSwitch(SwitchEntity):
             "identifiers": {(FRITZBOX_DOMAIN, self._device.ain)},
             "manufacturer": self._device.manufacturer,
             "model": self._device.productname,
-            "sw_version": self._device.fw_version,
+            ATTR_SW_VERSION: self._device.fw_version,
         }
 
     @property

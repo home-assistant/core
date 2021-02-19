@@ -9,7 +9,13 @@ from pydaikin.daikin_base import Appliance
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_HOSTS, CONF_PASSWORD
+from homeassistant.const import (
+    ATTR_SW_VERSION,
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_HOSTS,
+    CONF_PASSWORD,
+)
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -162,5 +168,5 @@ class DaikinApi:
             "manufacturer": "Daikin",
             "model": info.get("model"),
             "name": info.get("name"),
-            "sw_version": info.get("ver", "").replace("_", "."),
+            ATTR_SW_VERSION: info.get("ver", "").replace("_", "."),
         }

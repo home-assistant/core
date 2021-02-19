@@ -30,7 +30,7 @@ from homeassistant.components.remote import (
     SUPPORT_LEARN_COMMAND,
     RemoteEntity,
 )
-from homeassistant.const import CONF_HOST, STATE_OFF
+from homeassistant.const import ATTR_SW_VERSION, CONF_HOST, STATE_OFF
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -168,7 +168,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
             "manufacturer": self._device.api.manufacturer,
             "model": self._device.api.model,
             "name": self._device.name,
-            "sw_version": self._device.fw_version,
+            ATTR_SW_VERSION: self._device.fw_version,
         }
 
     def get_code(self, command, device):

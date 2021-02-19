@@ -21,6 +21,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.ps4 import format_unique_id, load_games, save_games
 from homeassistant.const import (
     ATTR_LOCKED,
+    ATTR_SW_VERSION,
     CONF_HOST,
     CONF_NAME,
     CONF_REGION,
@@ -346,7 +347,7 @@ class PS4Device(MediaPlayerEntity):
                         "model": device.model,
                         "identifiers": device.identifiers,
                         "manufacturer": device.manufacturer,
-                        "sw_version": device.sw_version,
+                        ATTR_SW_VERSION: device.sw_version,
                     }
                     break
 
@@ -359,7 +360,7 @@ class PS4Device(MediaPlayerEntity):
                 "model": "PlayStation 4",
                 "identifiers": {(PS4_DOMAIN, status["host-id"])},
                 "manufacturer": "Sony Interactive Entertainment Inc.",
-                "sw_version": sw_version,
+                ATTR_SW_VERSION: sw_version,
             }
 
             self._unique_id = format_unique_id(self._creds, status["host-id"])

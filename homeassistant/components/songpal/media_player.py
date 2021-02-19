@@ -24,7 +24,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_SW_VERSION,
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -212,7 +218,7 @@ class SongpalEntity(MediaPlayerEntity):
             "identifiers": {(DOMAIN, self.unique_id)},
             "manufacturer": "Sony Corporation",
             "name": self.name,
-            "sw_version": self._sysinfo.version,
+            ATTR_SW_VERSION: self._sysinfo.version,
             "model": self._model,
         }
 

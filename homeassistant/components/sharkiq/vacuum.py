@@ -23,6 +23,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SHARK
@@ -125,7 +126,7 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
             "name": self.name,
             "manufacturer": SHARK,
             "model": self.model,
-            "sw_version": self.sharkiq.get_property_value(
+            ATTR_SW_VERSION: self.sharkiq.get_property_value(
                 Properties.ROBOT_FIRMWARE_VERSION
             ),
         }

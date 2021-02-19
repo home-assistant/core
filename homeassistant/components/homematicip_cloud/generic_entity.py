@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional
 from homematicip.aio.device import AsyncDevice
 from homematicip.aio.group import AsyncGroup
 
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import Entity
@@ -102,7 +103,7 @@ class HomematicipGenericEntity(Entity):
                 "name": self._device.label,
                 "manufacturer": self._device.oem,
                 "model": self._device.modelType,
-                "sw_version": self._device.firmwareVersion,
+                ATTR_SW_VERSION: self._device.firmwareVersion,
                 # Link to the homematic ip access point.
                 "via_device": (HMIPC_DOMAIN, self._device.homeId),
             }

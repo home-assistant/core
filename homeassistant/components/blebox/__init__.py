@@ -7,7 +7,7 @@ from blebox_uniapi.products import Products
 from blebox_uniapi.session import ApiHost
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import ATTR_SW_VERSION, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -122,5 +122,5 @@ class BleBoxEntity(Entity):
             "name": product.name,
             "manufacturer": product.brand,
             "model": product.model,
-            "sw_version": product.firmware_version,
+            ATTR_SW_VERSION: product.firmware_version,
         }

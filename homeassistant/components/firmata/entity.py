@@ -2,6 +2,7 @@
 from typing import Type
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_SW_VERSION
 
 from .board import FirmataPinType
 from .const import DOMAIN, FIRMATA_MANUFACTURER
@@ -23,7 +24,7 @@ class FirmataEntity:
             "identifiers": {(DOMAIN, self._api.board.name)},
             "manufacturer": FIRMATA_MANUFACTURER,
             "name": self._api.board.name,
-            "sw_version": self._api.board.firmware_version,
+            ATTR_SW_VERSION: self._api.board.firmware_version,
         }
 
 

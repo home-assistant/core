@@ -3,6 +3,7 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_STATE,
+    ATTR_SW_VERSION,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -262,7 +263,7 @@ class AirVisualNodeProSensor(AirVisualEntity):
             "name": self.coordinator.data["settings"]["node_name"],
             "manufacturer": "AirVisual",
             "model": f'{self.coordinator.data["status"]["model"]}',
-            "sw_version": (
+            ATTR_SW_VERSION: (
                 f'Version {self.coordinator.data["status"]["system_version"]}'
                 f'{self.coordinator.data["status"]["app_version"]}'
             ),

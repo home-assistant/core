@@ -1,7 +1,12 @@
 """Provides a sensor to track various status aspects of a UPS."""
 import logging
 
-from homeassistant.const import ATTR_STATE, CONF_RESOURCES, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_STATE,
+    ATTR_SW_VERSION,
+    CONF_RESOURCES,
+    STATE_UNKNOWN,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -116,7 +121,7 @@ class NUTSensor(CoordinatorEntity):
         if self._manufacturer:
             device_info["manufacturer"] = self._manufacturer
         if self._firmware:
-            device_info["sw_version"] = self._firmware
+            device_info[ATTR_SW_VERSION] = self._firmware
         return device_info
 
     @property

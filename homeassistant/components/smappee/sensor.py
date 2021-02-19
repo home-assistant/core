@@ -1,5 +1,11 @@
 """Support for monitoring a Smappee energy sensor."""
-from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_WATT_HOUR, POWER_WATT, VOLT
+from homeassistant.const import (
+    ATTR_SW_VERSION,
+    DEVICE_CLASS_POWER,
+    ENERGY_WATT_HOUR,
+    POWER_WATT,
+    VOLT,
+)
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -312,7 +318,7 @@ class SmappeeSensor(Entity):
             "name": self._service_location.service_location_name,
             "manufacturer": "Smappee",
             "model": self._service_location.device_model,
-            "sw_version": self._service_location.firmware_version,
+            ATTR_SW_VERSION: self._service_location.firmware_version,
         }
 
     async def async_update(self):

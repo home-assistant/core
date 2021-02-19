@@ -24,6 +24,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_SW_VERSION,
     CONF_DISKS,
     CONF_HOST,
     CONF_MAC,
@@ -598,7 +599,7 @@ class SynologyDSMBaseEntity(Entity):
             "name": "Synology NAS",
             "manufacturer": "Synology",
             "model": self._api.information.model,
-            "sw_version": self._api.information.version_string,
+            ATTR_SW_VERSION: self._api.information.version_string,
         }
 
     @property
@@ -713,6 +714,6 @@ class SynologyDSMDeviceEntity(SynologyDSMDispatcherEntity):
             "name": f"Synology NAS ({self._device_name} - {self._device_type})",
             "manufacturer": self._device_manufacturer,
             "model": self._device_model,
-            "sw_version": self._device_firmware,
+            ATTR_SW_VERSION: self._device_firmware,
             "via_device": (DOMAIN, self._api.information.serial),
         }

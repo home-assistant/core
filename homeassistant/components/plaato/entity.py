@@ -1,6 +1,7 @@
 """PlaatoEntity class."""
 from pyplaato.models.device import PlaatoDevice
 
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers import entity
 
 from .const import (
@@ -63,7 +64,7 @@ class PlaatoEntity(entity.Entity):
         }
 
         if self._sensor_data.firmware_version != "":
-            device_info["sw_version"] = self._sensor_data.firmware_version
+            device_info[ATTR_SW_VERSION] = self._sensor_data.firmware_version
 
         return device_info
 

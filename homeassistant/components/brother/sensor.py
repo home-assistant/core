@@ -1,5 +1,5 @@
 """Support for the Brother service."""
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import ATTR_SW_VERSION, DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -47,7 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         "name": coordinator.data[ATTR_MODEL],
         "manufacturer": ATTR_MANUFACTURER,
         "model": coordinator.data[ATTR_MODEL],
-        "sw_version": coordinator.data.get(ATTR_FIRMWARE),
+        ATTR_SW_VERSION: coordinator.data.get(ATTR_FIRMWARE),
     }
 
     for sensor in SENSOR_TYPES:

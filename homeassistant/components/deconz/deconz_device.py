@@ -1,4 +1,5 @@
 """Base class for deCONZ devices."""
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -42,7 +43,7 @@ class DeconzBase:
             "manufacturer": self._device.manufacturer,
             "model": self._device.modelid,
             "name": self._device.name,
-            "sw_version": self._device.swversion,
+            ATTR_SW_VERSION: self._device.swversion,
             "via_device": (DECONZ_DOMAIN, bridgeid),
         }
 

@@ -29,7 +29,13 @@ from homeassistant.components.ssdp import (
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, SOURCE_SSDP
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
+from homeassistant.const import (
+    ATTR_SW_VERSION,
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PORT,
+    CONTENT_TYPE_JSON,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from tests.common import MockConfigEntry
@@ -51,7 +57,7 @@ DECONZ_CONFIG = {
     "mac": "00:11:22:33:44:55",
     "modelid": "deCONZ",
     "name": "deCONZ mock gateway",
-    "sw_version": "2.05.69",
+    ATTR_SW_VERSION: "2.05.69",
     "uuid": "1234",
     "websocketport": 1234,
 }

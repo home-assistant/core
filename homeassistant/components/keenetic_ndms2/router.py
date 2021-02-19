@@ -8,6 +8,7 @@ from ndms2_client.client import RouterInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -70,7 +71,7 @@ class KeeneticRouter:
             "manufacturer": self.manufacturer,
             "model": self.model,
             "name": self.name,
-            "sw_version": self.firmware,
+            ATTR_SW_VERSION: self.firmware,
         }
 
     @property

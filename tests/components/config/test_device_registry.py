@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components.config import device_registry
+from homeassistant.const import ATTR_SW_VERSION
 
 from tests.common import mock_device_registry
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
@@ -51,7 +52,7 @@ async def test_list_devices(hass, client, registry):
             "manufacturer": "manufacturer",
             "model": "model",
             "name": None,
-            "sw_version": None,
+            ATTR_SW_VERSION: None,
             "entry_type": None,
             "via_device_id": None,
             "area_id": None,
@@ -65,7 +66,7 @@ async def test_list_devices(hass, client, registry):
             "manufacturer": "manufacturer",
             "model": "model",
             "name": None,
-            "sw_version": None,
+            ATTR_SW_VERSION: None,
             "entry_type": "service",
             "via_device_id": dev1,
             "area_id": None,

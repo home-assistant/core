@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, Optional
 from starline import StarlineApi, StarlineDevice
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -129,7 +130,7 @@ class StarlineAccount:
             "identifiers": {(DOMAIN, device.device_id)},
             "manufacturer": "StarLine",
             "name": device.name,
-            "sw_version": device.fw_version,
+            ATTR_SW_VERSION: device.fw_version,
             "model": device.typename,
         }
 

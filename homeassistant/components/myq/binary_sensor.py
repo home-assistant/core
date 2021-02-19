@@ -10,6 +10,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
 )
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY
@@ -75,7 +76,7 @@ class MyQBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
             "identifiers": {(DOMAIN, self._device.device_id)},
             "name": self.name,
             "manufacturer": MANUFACTURER,
-            "sw_version": self._device.firmware_version,
+            ATTR_SW_VERSION: self._device.firmware_version,
         }
         model = KNOWN_MODELS.get(self._device.device_id[2:4])
         if model:

@@ -7,7 +7,7 @@ import logging
 from wiffi import WiffiTcpServer
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT, CONF_TIMEOUT
+from homeassistant.const import ATTR_SW_VERSION, CONF_PORT, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry
@@ -166,7 +166,7 @@ class WiffiEntity(Entity):
             "manufacturer": "stall.biz",
             "name": f"{device.moduletype} {device.mac_address}",
             "model": device.moduletype,
-            "sw_version": device.sw_version,
+            ATTR_SW_VERSION: device.sw_version,
         }
         self._name = metric.description
         self._expiration_date = None

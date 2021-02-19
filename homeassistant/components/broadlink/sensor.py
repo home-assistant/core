@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
     PLATFORM_SCHEMA,
 )
-from homeassistant.const import CONF_HOST, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import ATTR_SW_VERSION, CONF_HOST, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -109,7 +109,7 @@ class BroadlinkSensor(Entity):
             "manufacturer": self._device.api.manufacturer,
             "model": self._device.api.model,
             "name": self._device.name,
-            "sw_version": self._device.fw_version,
+            ATTR_SW_VERSION: self._device.fw_version,
         }
 
     @callback

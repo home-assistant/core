@@ -3,6 +3,7 @@ import logging
 
 from miio import DeviceException, gateway
 
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -87,5 +88,5 @@ class XiaomiGatewayDevice(CoordinatorEntity, Entity):
             "manufacturer": "Xiaomi",
             "name": self._sub_device.name,
             "model": self._sub_device.model,
-            "sw_version": self._sub_device.firmware_version,
+            ATTR_SW_VERSION: self._sub_device.firmware_version,
         }

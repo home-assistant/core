@@ -26,6 +26,7 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.debounce import Debouncer
@@ -366,7 +367,7 @@ class HueLight(CoordinatorEntity, LightEntity):
             # (published 03/05/2018)
             "model": self.light.productname or self.light.modelid,
             # Not yet exposed as properties in aiohue
-            "sw_version": self.light.raw["swversion"],
+            ATTR_SW_VERSION: self.light.raw["swversion"],
             "via_device": (HUE_DOMAIN, self.bridge.api.config.bridgeid),
         }
 

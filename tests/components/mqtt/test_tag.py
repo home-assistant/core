@@ -5,6 +5,8 @@ from unittest.mock import ANY, patch
 
 import pytest
 
+from homeassistant.const import ATTR_SW_VERSION
+
 from tests.common import (
     async_fire_mqtt_message,
     async_get_device_automations,
@@ -388,7 +390,7 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock):
                 "manufacturer": "Whatever",
                 "name": "Beer",
                 "model": "Glass",
-                "sw_version": "0.1-beta",
+                ATTR_SW_VERSION: "0.1-beta",
             },
         }
     )
@@ -416,7 +418,7 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
                 "manufacturer": "Whatever",
                 "name": "Beer",
                 "model": "Glass",
-                "sw_version": "0.1-beta",
+                ATTR_SW_VERSION: "0.1-beta",
             },
         }
     )
@@ -444,7 +446,7 @@ async def test_entity_device_info_update(hass, mqtt_mock):
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",
-            "sw_version": "0.1-beta",
+            ATTR_SW_VERSION: "0.1-beta",
         },
     }
 

@@ -10,7 +10,7 @@ from homeassistant.components.switch import (
     ATTR_TODAY_ENERGY_KWH,
     SwitchEntity,
 )
-from homeassistant.const import ATTR_VOLTAGE
+from homeassistant.const import ATTR_SW_VERSION, ATTR_VOLTAGE
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
@@ -78,7 +78,7 @@ class SmartPlugSwitch(SwitchEntity):
             "model": self._model,
             "manufacturer": "TP-Link",
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            "sw_version": self._sysinfo["sw_ver"],
+            ATTR_SW_VERSION: self._sysinfo["sw_ver"],
         }
 
     @property

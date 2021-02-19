@@ -7,7 +7,7 @@ from unittest.mock import ANY, patch
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_SW_VERSION, STATE_UNAVAILABLE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
@@ -18,7 +18,7 @@ DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "manufacturer": "Whatever",
     "name": "Beer",
     "model": "Glass",
-    "sw_version": "0.1-beta",
+    ATTR_SW_VERSION: "0.1-beta",
 }
 
 DEFAULT_CONFIG_DEVICE_INFO_MAC = {
@@ -26,7 +26,7 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "manufacturer": "Whatever",
     "name": "Beer",
     "model": "Glass",
-    "sw_version": "0.1-beta",
+    ATTR_SW_VERSION: "0.1-beta",
 }
 
 

@@ -1,5 +1,6 @@
 """The DoorBird integration base entity."""
 
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 
@@ -31,6 +32,6 @@ class DoorBirdEntity(Entity):
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_addr)},
             "name": self._doorstation.name,
             "manufacturer": MANUFACTURER,
-            "sw_version": f"{firmware} {firmware_build}",
+            ATTR_SW_VERSION: f"{firmware} {firmware_build}",
             "model": self._doorstation_info[DOORBIRD_INFO_KEY_DEVICE_TYPE],
         }

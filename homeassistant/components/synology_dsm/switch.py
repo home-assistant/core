@@ -6,6 +6,7 @@ from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
 from homeassistant.components.switch import ToggleEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import SynoApi, SynologyDSMDispatcherEntity
@@ -108,6 +109,6 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMDispatcherEntity, ToggleEntit
             "name": "Surveillance Station",
             "manufacturer": "Synology",
             "model": self._api.information.model,
-            "sw_version": self._version,
+            ATTR_SW_VERSION: self._version,
             "via_device": (DOMAIN, self._api.information.serial),
         }

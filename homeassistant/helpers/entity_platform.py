@@ -9,7 +9,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Callable, Coroutine, Dict, Iterable, List, Optional
 
 from homeassistant import config_entries
-from homeassistant.const import ATTR_RESTORED, DEVICE_DEFAULT_NAME
+from homeassistant.const import ATTR_RESTORED, ATTR_SW_VERSION, DEVICE_DEFAULT_NAME
 from homeassistant.core import (
     CALLBACK_TYPE,
     ServiceCall,
@@ -396,7 +396,7 @@ class EntityPlatform:
                     "default_manufacturer",
                     "default_model",
                     "default_name",
-                    "sw_version",
+                    ATTR_SW_VERSION,
                     "entry_type",
                     "via_device",
                 ):

@@ -3,7 +3,7 @@ import logging
 from pprint import pformat
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
-from homeassistant.const import CONF_ID
+from homeassistant.const import ATTR_SW_VERSION, CONF_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
@@ -142,7 +142,7 @@ class OpenThermSensor(Entity):
             "name": self._gateway.name,
             "manufacturer": "Schelte Bron",
             "model": "OpenTherm Gateway",
-            "sw_version": self._gateway.gw_version,
+            ATTR_SW_VERSION: self._gateway.gw_version,
         }
 
     @property

@@ -8,6 +8,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
+    ATTR_SW_VERSION,
     STATE_OFF,
     STATE_ON,
 )
@@ -120,7 +121,7 @@ class LogiCam(Camera):
             "name": self._camera.name,
             "identifiers": {(LOGI_CIRCLE_DOMAIN, self._camera.id)},
             "model": self._camera.model_name,
-            "sw_version": self._camera.firmware,
+            ATTR_SW_VERSION: self._camera.firmware,
             "manufacturer": DEVICE_BRAND,
         }
 

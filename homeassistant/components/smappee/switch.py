@@ -1,5 +1,6 @@
 """Support for interacting with Smappee Comport Plugs, Switches and Output Modules."""
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import ATTR_SW_VERSION
 
 from .const import DOMAIN
 
@@ -166,7 +167,7 @@ class SmappeeActuator(SwitchEntity):
             "name": self._service_location.service_location_name,
             "manufacturer": "Smappee",
             "model": self._service_location.device_model,
-            "sw_version": self._service_location.firmware_version,
+            ATTR_SW_VERSION: self._service_location.firmware_version,
         }
 
     async def async_update(self):

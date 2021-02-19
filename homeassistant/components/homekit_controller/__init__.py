@@ -11,6 +11,7 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components import zeroconf
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 
@@ -157,7 +158,7 @@ class HomeKitEntity(Entity):
             "name": info.value(CharacteristicsTypes.NAME),
             "manufacturer": info.value(CharacteristicsTypes.MANUFACTURER, ""),
             "model": info.value(CharacteristicsTypes.MODEL, ""),
-            "sw_version": info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
+            ATTR_SW_VERSION: info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
         }
 
         # Some devices only have a single accessory - we don't add a

@@ -11,7 +11,6 @@ ATTR_IDENTIFIERS = "identifiers"
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL = "model"
 ATTR_ON = "on"
-ATTR_SOFTWARE_VERSION = "sw_version"
 ATTR_TEMPERATURE = "temperature"
 
 CONF_SERIAL_NUMBER = "serial_number"

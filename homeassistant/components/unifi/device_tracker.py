@@ -18,6 +18,7 @@ from aiounifi.events import (
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -404,7 +405,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
             "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
             "manufacturer": ATTR_MANUFACTURER,
             "model": self.device.model,
-            "sw_version": self.device.version,
+            ATTR_SW_VERSION: self.device.version,
         }
 
         if self.device.name:

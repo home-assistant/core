@@ -9,6 +9,7 @@ from pyatv.const import Protocol
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     CONF_ADDRESS,
     CONF_NAME,
     CONF_PROTOCOL,
@@ -352,7 +353,7 @@ class AppleTVManager:
             dev_info = self.atv.device_info
 
             attrs["model"] = "Apple TV " + dev_info.model.name.replace("Gen", "")
-            attrs["sw_version"] = dev_info.version
+            attrs[ATTR_SW_VERSION] = dev_info.version
 
             if dev_info.mac:
                 attrs["connections"] = {(dr.CONNECTION_NETWORK_MAC, dev_info.mac)}

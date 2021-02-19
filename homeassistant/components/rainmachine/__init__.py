@@ -10,6 +10,7 @@ from regenmaschine.errors import RainMachineError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_SW_VERSION,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_PORT,
@@ -221,7 +222,7 @@ class RainMachineEntity(CoordinatorEntity):
                 f"Version {self._controller.hardware_version} "
                 f"(API: {self._controller.api_version})"
             ),
-            "sw_version": self._controller.software_version,
+            ATTR_SW_VERSION: self._controller.software_version,
         }
 
     @property

@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_TOKEN,
@@ -312,7 +313,7 @@ class MinutPointEntity(Entity):
             "manufacturer": "Minut",
             "model": f"Point v{device['hardware_version']}",
             "name": device["description"],
-            "sw_version": device["firmware"]["installed"],
+            ATTR_SW_VERSION: device["firmware"]["installed"],
             "via_device": (DOMAIN, device["home"]),
         }
 

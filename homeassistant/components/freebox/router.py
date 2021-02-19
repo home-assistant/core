@@ -9,7 +9,7 @@ from freebox_api.api.wifi import Wifi
 from freebox_api.exceptions import HttpRequestError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import ATTR_SW_VERSION, CONF_HOST, CONF_PORT
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -161,7 +161,7 @@ class FreeboxRouter:
             "identifiers": {(DOMAIN, self.mac)},
             "name": self._name,
             "manufacturer": "Freebox SAS",
-            "sw_version": self._sw_v,
+            ATTR_SW_VERSION: self._sw_v,
         }
 
     @property

@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import ATTR_SW_VERSION, PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import entity_platform, entity_registry
@@ -727,7 +727,7 @@ async def test_device_info_called(hass):
                         "manufacturer": "test-manuf",
                         "model": "test-model",
                         "name": "test-name",
-                        "sw_version": "test-sw",
+                        ATTR_SW_VERSION: "test-sw",
                         "entry_type": "service",
                         "via_device": ("hue", "via-id"),
                     },

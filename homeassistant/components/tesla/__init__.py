@@ -13,6 +13,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
+    ATTR_SW_VERSION,
     CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -323,7 +324,7 @@ class TeslaDevice(CoordinatorEntity):
             "name": self.tesla_device.car_name(),
             "manufacturer": "Tesla",
             "model": self.tesla_device.car_type,
-            "sw_version": self.tesla_device.car_version,
+            ATTR_SW_VERSION: self.tesla_device.car_version,
         }
 
     async def async_added_to_hass(self):

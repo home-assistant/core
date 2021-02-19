@@ -14,6 +14,7 @@ from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_SERVICE,
+    ATTR_SW_VERSION,
     EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_STOP,
     TEMP_CELSIUS,
@@ -254,7 +255,7 @@ def test_entity_device_info_schema():
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",
-            "sw_version": "0.1-beta",
+            ATTR_SW_VERSION: "0.1-beta",
         }
     )
     # full device info with via_device
@@ -265,7 +266,7 @@ def test_entity_device_info_schema():
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",
-            "sw_version": "0.1-beta",
+            ATTR_SW_VERSION: "0.1-beta",
             "via_device": "test-hub",
         }
     )
@@ -276,7 +277,7 @@ def test_entity_device_info_schema():
                 "manufacturer": "Whatever",
                 "name": "Beer",
                 "model": "Glass",
-                "sw_version": "0.1-beta",
+                ATTR_SW_VERSION: "0.1-beta",
             }
         )
     # empty identifiers

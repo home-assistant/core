@@ -18,6 +18,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     CONF_DEVICE,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
@@ -156,5 +157,5 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
             "name": self._config_entry.title,
             "manufacturer": MANUFACTURER,
             "model": data.model,
-            "sw_version": data.firmwareversion,
+            ATTR_SW_VERSION: data.firmwareversion,
         }

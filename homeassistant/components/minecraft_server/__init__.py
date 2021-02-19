@@ -8,7 +8,7 @@ from typing import Any, Dict
 from mcstatus.server import MinecraftServer as MCStatus
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import ATTR_SW_VERSION, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -243,7 +243,7 @@ class MinecraftServerEntity(Entity):
             "name": self._server.name,
             "manufacturer": MANUFACTURER,
             "model": f"Minecraft Server ({self._server.version})",
-            "sw_version": self._server.protocol_version,
+            ATTR_SW_VERSION: self._server.protocol_version,
         }
         self._device_class = device_class
         self._device_state_attributes = None

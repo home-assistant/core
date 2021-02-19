@@ -24,7 +24,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
-from homeassistant.const import ATTR_MODE
+from homeassistant.const import ATTR_MODE, ATTR_SW_VERSION
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import (
@@ -320,7 +320,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         if self._robot_stats:
             info["manufacturer"] = self._robot_stats["battery"]["vendor"]
             info["model"] = self._robot_stats["model"]
-            info["sw_version"] = self._robot_stats["firmware"]
+            info[ATTR_SW_VERSION] = self._robot_stats["firmware"]
         return info
 
     def start(self):

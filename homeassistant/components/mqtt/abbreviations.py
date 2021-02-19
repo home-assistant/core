@@ -1,4 +1,5 @@
 """Abbreviations supported by MQTT discovery."""
+from homeassistant.const import ATTR_SW_VERSION
 
 ABBREVIATIONS = {
     "act_t": "action_topic",
@@ -202,5 +203,5 @@ DEVICE_ABBREVIATIONS = {
     "name": "name",
     "mf": "manufacturer",
     "mdl": "model",
-    "sw": "sw_version",
+    "sw": ATTR_SW_VERSION,
 }

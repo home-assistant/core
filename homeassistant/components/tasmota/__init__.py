@@ -18,6 +18,7 @@ from homeassistant.components.mqtt.subscription import (
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -160,7 +161,7 @@ def _update_device(hass, config_entry, config, device_registry):
         "manufacturer": config[CONF_MANUFACTURER],
         "model": config[CONF_MODEL],
         "name": config[CONF_NAME],
-        "sw_version": config[CONF_SW_VERSION],
+        ATTR_SW_VERSION: config[CONF_SW_VERSION],
         "config_entry_id": config_entry_id,
     }
     _LOGGER.debug("Adding or updating tasmota device %s", config[CONF_MAC])

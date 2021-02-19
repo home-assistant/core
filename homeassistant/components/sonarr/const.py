@@ -4,7 +4,6 @@ DOMAIN = "sonarr"
 # Attributes
 ATTR_IDENTIFIERS = "identifiers"
 ATTR_MANUFACTURER = "manufacturer"
-ATTR_SOFTWARE_VERSION = "sw_version"
 
 # Config Keys
 CONF_BASE_PATH = "base_path"

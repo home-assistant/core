@@ -3,7 +3,7 @@ import asyncio
 
 import upb_lib
 
-from homeassistant.const import CONF_FILE_PATH, CONF_HOST
+from homeassistant.const import ATTR_SW_VERSION, CONF_FILE_PATH, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
@@ -144,7 +144,7 @@ class UpbAttachedEntity(UpbEntity):
         return {
             "name": self._element.name,
             "identifiers": {(DOMAIN, self._element.index)},
-            "sw_version": self._element.version,
+            ATTR_SW_VERSION: self._element.version,
             "manufacturer": self._element.manufacturer,
             "model": self._element.product,
         }

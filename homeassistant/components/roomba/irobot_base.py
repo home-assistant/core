@@ -21,6 +21,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers.entity import Entity
 
 from . import roomba_reported_state
@@ -96,7 +97,7 @@ class IRobotEntity(Entity):
             "identifiers": {(DOMAIN, self.robot_unique_id)},
             "manufacturer": "iRobot",
             "name": str(self._name),
-            "sw_version": self._version,
+            ATTR_SW_VERSION: self._version,
             "model": self._sku,
         }
 

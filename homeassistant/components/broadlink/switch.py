@@ -13,6 +13,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
 )
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_FRIENDLY_NAME,
@@ -184,7 +185,7 @@ class BroadlinkSwitch(SwitchEntity, RestoreEntity, ABC):
             "manufacturer": self._device.api.manufacturer,
             "model": self._device.api.model,
             "name": self._device.name,
-            "sw_version": self._device.fw_version,
+            ATTR_SW_VERSION: self._device.fw_version,
         }
 
     @callback

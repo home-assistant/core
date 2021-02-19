@@ -7,7 +7,12 @@ from aiohttp.web import Response, json_response
 from nacl.encoding import Base64Encoder
 from nacl.secret import SecretBox
 
-from homeassistant.const import CONTENT_TYPE_JSON, HTTP_BAD_REQUEST, HTTP_OK
+from homeassistant.const import (
+    ATTR_SW_VERSION,
+    CONTENT_TYPE_JSON,
+    HTTP_BAD_REQUEST,
+    HTTP_OK,
+)
 from homeassistant.core import Context
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import HomeAssistantType
@@ -168,5 +173,5 @@ def device_info(registration: Dict) -> Dict:
         "manufacturer": registration[ATTR_MANUFACTURER],
         "model": registration[ATTR_MODEL],
         "device_name": registration[ATTR_DEVICE_NAME],
-        "sw_version": registration[ATTR_OS_VERSION],
+        ATTR_SW_VERSION: registration[ATTR_OS_VERSION],
     }

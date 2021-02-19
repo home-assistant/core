@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 from mysensors import BaseAsyncGateway, Sensor
 from mysensors.sensor import ChildSensor
 
-from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_SW_VERSION, STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -113,7 +113,7 @@ class MySensorsDevice:
             "identifiers": {(DOMAIN, f"{self.gateway_id}-{self.node_id}")},
             "name": self.node_name,
             "manufacturer": DOMAIN,
-            "sw_version": self.sketch_version,
+            ATTR_SW_VERSION: self.sketch_version,
         }
 
     @property

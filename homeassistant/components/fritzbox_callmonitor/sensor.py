@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -183,7 +184,7 @@ class FritzBoxCallSensor(Entity):
             "identifiers": {(DOMAIN, self._unique_id)},
             "manufacturer": MANUFACTURER,
             "model": self._fritzbox_phonebook.fph.modelname,
-            "sw_version": self._fritzbox_phonebook.fph.fc.system_version,
+            ATTR_SW_VERSION: self._fritzbox_phonebook.fph.fc.system_version,
         }
 
     @property

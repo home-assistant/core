@@ -1,4 +1,5 @@
 """Base class for August entity."""
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
@@ -35,7 +36,7 @@ class AugustEntityMixin(Entity):
             "identifiers": {(DOMAIN, self._device_id)},
             "name": self._device.device_name,
             "manufacturer": MANUFACTURER,
-            "sw_version": self._detail.firmware_version,
+            ATTR_SW_VERSION: self._detail.firmware_version,
             "model": self._detail.model,
         }
 

@@ -9,6 +9,7 @@ from yeelight import Bulb, BulbException, discover_bulbs
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     CONF_DEVICES,
     CONF_HOST,
     CONF_ID,
@@ -571,7 +572,7 @@ class YeelightEntity(Entity):
             "name": self._device.name,
             "manufacturer": "Yeelight",
             "model": self._device.model,
-            "sw_version": self._device.fw_version,
+            ATTR_SW_VERSION: self._device.fw_version,
         }
 
     @property

@@ -373,6 +373,9 @@ ATTR_DEVICE_CLASS = "device_class"
 # Temperature attribute
 ATTR_TEMPERATURE = "temperature"
 
+# Device Info
+ATTR_SW_VERSION = "sw_version"
+
 # #### UNITS OF MEASUREMENT ####
 # Power units
 POWER_WATT = "W"

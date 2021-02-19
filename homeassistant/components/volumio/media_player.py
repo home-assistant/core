@@ -25,6 +25,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     CONF_ID,
     CONF_NAME,
     STATE_IDLE,
@@ -107,7 +108,7 @@ class Volumio(MediaPlayerEntity):
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "manufacturer": "Volumio",
-            "sw_version": self._info["systemversion"],
+            ATTR_SW_VERSION: self._info["systemversion"],
             "model": self._info["hardware"],
         }
 

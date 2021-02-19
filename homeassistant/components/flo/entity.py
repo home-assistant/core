@@ -2,6 +2,7 @@
 
 from typing import Any, Dict
 
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import Entity
 
@@ -44,7 +45,7 @@ class FloEntity(Entity):
             "manufacturer": self._device.manufacturer,
             "model": self._device.model,
             "name": self._device.device_name,
-            "sw_version": self._device.firmware_version,
+            ATTR_SW_VERSION: self._device.firmware_version,
         }
 
     @property

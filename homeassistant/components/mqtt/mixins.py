@@ -6,7 +6,7 @@ from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE, CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.const import ATTR_SW_VERSION, CONF_DEVICE, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -60,7 +60,6 @@ CONF_IDENTIFIERS = "identifiers"
 CONF_CONNECTIONS = "connections"
 CONF_MANUFACTURER = "manufacturer"
 CONF_MODEL = "model"
-CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 
@@ -127,7 +126,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
             vol.Optional(CONF_MANUFACTURER): cv.string,
             vol.Optional(CONF_MODEL): cv.string,
             vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_SW_VERSION): cv.string,
+            vol.Optional(ATTR_SW_VERSION): cv.string,
             vol.Optional(CONF_VIA_DEVICE): cv.string,
         }
     ),
@@ -482,8 +481,8 @@ def device_info_from_config(config):
     if CONF_NAME in config:
         info["name"] = config[CONF_NAME]
 
-    if CONF_SW_VERSION in config:
-        info["sw_version"] = config[CONF_SW_VERSION]
+    if ATTR_SW_VERSION in config:
+        info[ATTR_SW_VERSION] = config[ATTR_SW_VERSION]
 
     if CONF_VIA_DEVICE in config:
         info["via_device"] = (DOMAIN, config[CONF_VIA_DEVICE])

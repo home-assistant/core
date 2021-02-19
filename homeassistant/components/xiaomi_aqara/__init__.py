@@ -9,6 +9,7 @@ from xiaomi_gateway import XiaomiGateway, XiaomiGatewayDiscovery
 from homeassistant import config_entries, core
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    ATTR_SW_VERSION,
     ATTR_VOLTAGE,
     CONF_HOST,
     CONF_MAC,
@@ -302,7 +303,7 @@ class XiaomiDevice(Entity):
                 "manufacturer": "Xiaomi Aqara",
                 "model": self._model,
                 "name": self._device_name,
-                "sw_version": self._protocol,
+                ATTR_SW_VERSION: self._protocol,
                 "via_device": (DOMAIN, self._gateway_id),
             }
 

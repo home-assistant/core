@@ -16,6 +16,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.typing import HomeAssistantType
@@ -154,7 +155,7 @@ class TPLinkSmartBulb(LightEntity):
             "model": self._light_features.model,
             "manufacturer": "TP-Link",
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._light_features.mac)},
-            "sw_version": self._light_features.sysinfo["sw_ver"],
+            ATTR_SW_VERSION: self._light_features.sysinfo["sw_ver"],
         }
 
     @property

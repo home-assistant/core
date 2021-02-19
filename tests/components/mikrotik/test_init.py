@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components import mikrotik
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_DATA
@@ -48,7 +49,7 @@ async def test_successful_config_entry(hass):
         "manufacturer": mikrotik.ATTR_MANUFACTURER,
         "model": "RB750",
         "name": "mikrotik",
-        "sw_version": "3.65",
+        ATTR_SW_VERSION: "3.65",
     }
 
 

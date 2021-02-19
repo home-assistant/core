@@ -12,6 +12,7 @@ from aiohomekit.model import Accessories
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -207,7 +208,7 @@ class HKDevice:
                 "name": info.value(CharacteristicsTypes.NAME),
                 "manufacturer": info.value(CharacteristicsTypes.MANUFACTURER, ""),
                 "model": info.value(CharacteristicsTypes.MODEL, ""),
-                "sw_version": info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
+                ATTR_SW_VERSION: info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
             }
 
             if accessory.aid == 1:

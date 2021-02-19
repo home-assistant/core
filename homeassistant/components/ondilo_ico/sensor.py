@@ -5,6 +5,7 @@ import logging
 from ondilo import OndiloError
 
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
@@ -160,5 +161,5 @@ class OndiloICO(CoordinatorEntity):
             "name": self._device_name,
             "manufacturer": "Ondilo",
             "model": "ICO",
-            "sw_version": pooldata["ICO"]["sw_version"],
+            ATTR_SW_VERSION: pooldata["ICO"][ATTR_SW_VERSION],
         }

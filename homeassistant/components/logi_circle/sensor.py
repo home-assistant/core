@@ -4,6 +4,7 @@ import logging
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_BATTERY_CHARGING,
+    ATTR_SW_VERSION,
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
     STATE_OFF,
@@ -78,7 +79,7 @@ class LogiSensor(Entity):
             "name": self._camera.name,
             "identifiers": {(LOGI_CIRCLE_DOMAIN, self._camera.id)},
             "model": self._camera.model_name,
-            "sw_version": self._camera.firmware,
+            ATTR_SW_VERSION: self._camera.firmware,
             "manufacturer": DEVICE_BRAND,
         }
 

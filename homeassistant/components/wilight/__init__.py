@@ -2,6 +2,7 @@
 import asyncio
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
@@ -101,7 +102,7 @@ class WiLightDevice(Entity):
             "identifiers": {(DOMAIN, self._unique_id)},
             "model": self._model,
             "manufacturer": "WiLight",
-            "sw_version": self._sw_version,
+            ATTR_SW_VERSION: self._sw_version,
             "via_device": (DOMAIN, self._device_id),
         }
 

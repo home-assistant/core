@@ -13,7 +13,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    ATTR_SW_VERSION,
+    ATTR_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -80,7 +85,7 @@ class CoolmasterClimate(CoordinatorEntity, ClimateEntity):
             "name": self.name,
             "manufacturer": "CoolAutomation",
             "model": "CoolMasterNet",
-            "sw_version": self._info["version"],
+            ATTR_SW_VERSION: self._info["version"],
         }
 
     @property

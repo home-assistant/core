@@ -43,6 +43,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    ATTR_SW_VERSION,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -192,7 +193,7 @@ async def test_fan_speed(hass: HomeAssistant, fan_speed: str) -> None:
         ("manufacturer", "Shark"),
         ("model", "RV1001AE"),
         ("name", "Sharknado"),
-        ("sw_version", "Dummy Firmware 1.0"),
+        (ATTR_SW_VERSION, "Dummy Firmware 1.0"),
     ],
 )
 async def test_device_properties(

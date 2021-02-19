@@ -10,7 +10,6 @@ ATTR_MEDIA_RATING = "media_rating"
 ATTR_MEDIA_RECORDED = "media_recorded"
 ATTR_MEDIA_START_TIME = "media_start_time"
 ATTR_MODEL = "model"
-ATTR_SOFTWARE_VERSION = "sw_version"
 ATTR_VIA_DEVICE = "via_device"
 
 CONF_RECEIVER_ID = "receiver_id"

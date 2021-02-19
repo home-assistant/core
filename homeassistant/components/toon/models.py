@@ -1,6 +1,7 @@
 """DataUpdate Coordinator, and base Entity and Device models for Toon."""
 from typing import Any, Dict, Optional
 
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -55,7 +56,7 @@ class ToonDisplayDeviceEntity(ToonEntity):
             "name": "Toon Display",
             "manufacturer": "Eneco",
             "model": model,
-            "sw_version": sw_version,
+            ATTR_SW_VERSION: sw_version,
         }
 
 

@@ -1,4 +1,6 @@
 """Support for the Philips Hue sensor devices."""
+from homeassistant.const import ATTR_SW_VERSION
+
 from .const import DOMAIN as HUE_DOMAIN
 
 
@@ -48,6 +50,6 @@ class GenericHueDevice:
             "name": self.primary_sensor.name,
             "manufacturer": self.primary_sensor.manufacturername,
             "model": (self.primary_sensor.productname or self.primary_sensor.modelid),
-            "sw_version": self.primary_sensor.swversion,
+            ATTR_SW_VERSION: self.primary_sensor.swversion,
             "via_device": (HUE_DOMAIN, self.bridge.api.config.bridgeid),
         }

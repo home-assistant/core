@@ -2,6 +2,7 @@
 
 from aiopvapi.resources.shade import ATTR_TYPE
 
+from homeassistant.const import ATTR_SW_VERSION
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -46,7 +47,7 @@ class HDEntity(CoordinatorEntity):
             },
             "name": self._device_info[DEVICE_NAME],
             "model": self._device_info[DEVICE_MODEL],
-            "sw_version": sw_version,
+            ATTR_SW_VERSION: sw_version,
             "manufacturer": MANUFACTURER,
         }
 
@@ -82,6 +83,6 @@ class ShadeEntity(HDEntity):
                 model = shade.description
                 break
 
-        device_info["sw_version"] = sw_version
+        device_info[ATTR_SW_VERSION] = sw_version
         device_info["model"] = model
         return device_info

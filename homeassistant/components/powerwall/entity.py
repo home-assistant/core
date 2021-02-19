@@ -1,5 +1,6 @@
 """The Tesla Powerwall integration base entity."""
 
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODEL
@@ -30,5 +31,5 @@ class PowerWallEntity(CoordinatorEntity):
         model = MODEL
         model += f" ({self._device_type.name})"
         device_info["model"] = model
-        device_info["sw_version"] = self._version
+        device_info[ATTR_SW_VERSION] = self._version
         return device_info

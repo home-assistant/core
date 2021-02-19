@@ -6,6 +6,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_NIGHT,
 )
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
@@ -65,7 +66,7 @@ class AgentBaseStation(AlarmControlPanelEntity):
             "identifiers": {(AGENT_DOMAIN, self._client.unique)},
             "manufacturer": "Agent",
             "model": CONST_ALARM_CONTROL_PANEL_NAME,
-            "sw_version": self._client.version,
+            ATTR_SW_VERSION: self._client.version,
         }
 
     async def async_update(self):

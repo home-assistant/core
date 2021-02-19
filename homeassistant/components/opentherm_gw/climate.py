@@ -16,6 +16,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     ATTR_TEMPERATURE,
     CONF_ID,
     PRECISION_HALVES,
@@ -167,7 +168,7 @@ class OpenThermClimate(ClimateEntity):
             "name": self._gateway.name,
             "manufacturer": "Schelte Bron",
             "model": "OpenTherm Gateway",
-            "sw_version": self._gateway.gw_version,
+            ATTR_SW_VERSION: self._gateway.gw_version,
         }
 
     @property

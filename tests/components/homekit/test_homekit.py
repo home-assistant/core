@@ -40,6 +40,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_SW_VERSION,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -811,7 +812,7 @@ async def test_homekit_finds_linked_batteries(
         {
             "manufacturer": "Tesla",
             "model": "Powerwall 2",
-            "sw_version": "0.16.0",
+            ATTR_SW_VERSION: "0.16.0",
             "linked_battery_charging_sensor": "binary_sensor.powerwall_battery_charging",
             "linked_battery_sensor": "sensor.powerwall_battery",
         },
@@ -895,7 +896,7 @@ async def test_homekit_async_get_integration_fails(
         ANY,
         {
             "model": "Powerwall 2",
-            "sw_version": "0.16.0",
+            ATTR_SW_VERSION: "0.16.0",
             "platform": "invalid_integration_does_not_exist",
             "linked_battery_charging_sensor": "binary_sensor.invalid_integration_does_not_exist_battery_charging",
             "linked_battery_sensor": "sensor.invalid_integration_does_not_exist_battery",
@@ -1134,7 +1135,7 @@ async def test_homekit_finds_linked_motion_sensors(
         {
             "manufacturer": "Ubq",
             "model": "Camera Server",
-            "sw_version": "0.16.0",
+            ATTR_SW_VERSION: "0.16.0",
             "linked_motion_sensor": "binary_sensor.camera_motion_sensor",
         },
     )
@@ -1211,7 +1212,7 @@ async def test_homekit_finds_linked_humidity_sensors(
         {
             "manufacturer": "Home Assistant",
             "model": "Smart Brainy Clever Humidifier",
-            "sw_version": "0.16.1",
+            ATTR_SW_VERSION: "0.16.1",
             "linked_humidity_sensor": "sensor.humidifier_humidity_sensor",
         },
     )

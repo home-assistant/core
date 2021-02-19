@@ -1,4 +1,5 @@
 """Support for Vilfo Router sensors."""
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -39,7 +40,7 @@ class VilfoRouterSensor(Entity):
             "name": ROUTER_DEFAULT_NAME,
             "manufacturer": ROUTER_MANUFACTURER,
             "model": ROUTER_DEFAULT_MODEL,
-            "sw_version": api.firmware_version,
+            ATTR_SW_VERSION: api.firmware_version,
         }
         self._unique_id = f"{self.api.unique_id}_{self.sensor_type}"
         self._state = None

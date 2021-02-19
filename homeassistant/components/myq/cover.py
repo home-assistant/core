@@ -17,7 +17,13 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     CoverEntity,
 )
-from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
+from homeassistant.const import (
+    ATTR_SW_VERSION,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY, MYQ_TO_HASS
@@ -150,7 +156,7 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
             "identifiers": {(DOMAIN, self._device.device_id)},
             "name": self._device.name,
             "manufacturer": MANUFACTURER,
-            "sw_version": self._device.firmware_version,
+            ATTR_SW_VERSION: self._device.firmware_version,
         }
         model = KNOWN_MODELS.get(self._device.device_id[2:4])
         if model:

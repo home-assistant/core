@@ -1,6 +1,6 @@
 """Support for Home Assistant iOS app sensors."""
 from homeassistant.components import ios
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import ATTR_SW_VERSION, PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -57,7 +57,9 @@ class IOSSensor(Entity):
             "name": self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_NAME],
             "manufacturer": "Apple",
             "model": self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_TYPE],
-            "sw_version": self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_SYSTEM_VERSION],
+            ATTR_SW_VERSION: self._device[ios.ATTR_DEVICE][
+                ios.ATTR_DEVICE_SYSTEM_VERSION
+            ],
         }
 
     @property

@@ -6,6 +6,7 @@ from homeassistant.components.websocket_api.decorators import (
     async_response,
     require_admin,
 )
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import async_get_registry
 
@@ -72,7 +73,7 @@ def _entry_dict(entry):
         "manufacturer": entry.manufacturer,
         "model": entry.model,
         "name": entry.name,
-        "sw_version": entry.sw_version,
+        ATTR_SW_VERSION: entry.sw_version,
         "entry_type": entry.entry_type,
         "id": entry.id,
         "identifiers": list(entry.identifiers),

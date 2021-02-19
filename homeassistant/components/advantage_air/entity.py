@@ -1,5 +1,6 @@
 """Advantage Air parent entity class."""
 
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -31,5 +32,5 @@ class AdvantageAirEntity(CoordinatorEntity):
             "name": self.coordinator.data["system"]["name"],
             "manufacturer": "Advantage Air",
             "model": self.coordinator.data["system"]["sysType"],
-            "sw_version": self.coordinator.data["system"]["myAppRev"],
+            ATTR_SW_VERSION: self.coordinator.data["system"]["myAppRev"],
         }

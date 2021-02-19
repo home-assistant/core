@@ -6,6 +6,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.mqtt import DOMAIN, debug_info
 from homeassistant.components.mqtt.device_trigger import async_attach_trigger
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -774,7 +775,7 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock):
                 "manufacturer": "Whatever",
                 "name": "Beer",
                 "model": "Glass",
-                "sw_version": "0.1-beta",
+                ATTR_SW_VERSION: "0.1-beta",
             },
         }
     )
@@ -805,7 +806,7 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
                 "manufacturer": "Whatever",
                 "name": "Beer",
                 "model": "Glass",
-                "sw_version": "0.1-beta",
+                ATTR_SW_VERSION: "0.1-beta",
             },
         }
     )
@@ -836,7 +837,7 @@ async def test_entity_device_info_update(hass, mqtt_mock):
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",
-            "sw_version": "0.1-beta",
+            ATTR_SW_VERSION: "0.1-beta",
         },
     }
 
@@ -1097,7 +1098,7 @@ async def test_trigger_debug_info(hass, mqtt_mock):
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",
-            "sw_version": "0.1-beta",
+            ATTR_SW_VERSION: "0.1-beta",
         },
     }
     data = json.dumps(config)

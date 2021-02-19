@@ -9,6 +9,7 @@ from homeassistant.components.climate import DOMAIN as CLIMATE
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.core import HomeAssistant, asyncio
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -107,7 +108,7 @@ class AtagEntity(CoordinatorEntity):
             "identifiers": {(DOMAIN, device)},
             "name": "Atag Thermostat",
             "model": "Atag One",
-            "sw_version": version,
+            ATTR_SW_VERSION: version,
             "manufacturer": "Atag",
         }
 

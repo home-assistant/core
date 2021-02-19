@@ -32,6 +32,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RECIPIENT,
@@ -407,7 +408,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     if not sw_version and router.data.get(KEY_DEVICE_BASIC_INFORMATION):
         sw_version = router.data[KEY_DEVICE_BASIC_INFORMATION].get("SoftwareVersion")
     if sw_version:
-        device_data["sw_version"] = sw_version
+        device_data[ATTR_SW_VERSION] = sw_version
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,

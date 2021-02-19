@@ -6,7 +6,7 @@ import velbus
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PORT
+from homeassistant.const import ATTR_SW_VERSION, CONF_ADDRESS, CONF_NAME, CONF_PORT
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -171,7 +171,7 @@ class VelbusEntity(Entity):
             ),
             "manufacturer": "Velleman",
             "model": self._module.get_module_type_name(),
-            "sw_version": "{}.{}-{}".format(
+            ATTR_SW_VERSION: "{}.{}-{}".format(
                 self._module.memory_map_version,
                 self._module.build_year,
                 self._module.build_week,

@@ -13,6 +13,7 @@ from openzwavemqtt.const import (
 from openzwavemqtt.models.node import OZWNode
 from openzwavemqtt.models.value import OZWValue
 
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -199,7 +200,7 @@ class ZWaveDeviceEntity(Entity):
             "model": node.node_product_name,
         }
         if node_firmware is not None:
-            device_info["sw_version"] = node_firmware.value
+            device_info[ATTR_SW_VERSION] = node_firmware.value
 
         # device with multiple instances is split up into virtual devices for each instance
         if node_instance > 1:

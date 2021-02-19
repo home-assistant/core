@@ -27,7 +27,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import ATTR_SW_VERSION, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
@@ -258,7 +258,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
             "name": self._player.name,
             "model": self._player.model,
             "manufacturer": "HEOS",
-            "sw_version": self._player.version,
+            ATTR_SW_VERSION: self._player.version,
         }
 
     @property

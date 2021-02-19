@@ -1,6 +1,6 @@
 """The nexia integration base entity."""
 
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_SW_VERSION
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -55,7 +55,7 @@ class NexiaThermostatEntity(NexiaEntity):
             "identifiers": {(DOMAIN, self._thermostat.thermostat_id)},
             "name": self._thermostat.get_name(),
             "model": self._thermostat.get_model(),
-            "sw_version": self._thermostat.get_firmware(),
+            ATTR_SW_VERSION: self._thermostat.get_firmware(),
             "manufacturer": MANUFACTURER,
         }
 

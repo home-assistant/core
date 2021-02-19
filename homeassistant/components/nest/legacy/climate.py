@@ -26,6 +26,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     ATTR_TEMPERATURE,
     CONF_SCAN_INTERVAL,
     TEMP_CELSIUS,
@@ -173,7 +174,7 @@ class NestThermostat(ClimateEntity):
             "name": self.device.name_long,
             "manufacturer": "Nest Labs",
             "model": "Thermostat",
-            "sw_version": self.device.software_version,
+            ATTR_SW_VERSION: self.device.software_version,
         }
 
     @property

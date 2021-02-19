@@ -4,6 +4,7 @@ import logging
 
 from pytradfri.error import PytradfriError
 
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
@@ -119,7 +120,7 @@ class TradfriBaseDevice(TradfriBaseClass):
             "manufacturer": info.manufacturer,
             "model": info.model_number,
             "name": self._name,
-            "sw_version": info.firmware_version,
+            ATTR_SW_VERSION: info.firmware_version,
             "via_device": (DOMAIN, self._gateway_id),
         }
 

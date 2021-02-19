@@ -1,6 +1,7 @@
 """Support for Plex media server monitoring."""
 import logging
 
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -104,5 +105,5 @@ class PlexSensor(Entity):
             "manufacturer": "Plex",
             "model": "Plex Media Server",
             "name": "Activity Sensor",
-            "sw_version": self._server.version,
+            ATTR_SW_VERSION: self._server.version,
         }

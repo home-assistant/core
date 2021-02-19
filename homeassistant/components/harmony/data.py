@@ -7,6 +7,8 @@ from aioharmony.const import ClientCallbackType, SendCommandDevice
 import aioharmony.exceptions as aioexc
 from aioharmony.harmonyapi import HarmonyAPI as HarmonyClient
 
+from homeassistant.const import ATTR_SW_VERSION
+
 from .const import ACTIVITY_POWER_OFF
 from .subscriber import HarmonySubscriberMixin
 
@@ -95,7 +97,7 @@ class HarmonyData(HarmonySubscriberMixin):
         return {
             "identifiers": {(domain, self.unique_id)},
             "manufacturer": "Logitech",
-            "sw_version": self._client.hub_config.info.get(
+            ATTR_SW_VERSION: self._client.hub_config.info.get(
                 "hubSwVersion", self._client.fw_version
             ),
             "name": self.name,

@@ -1,4 +1,5 @@
 """Base classes for ONVIF entities."""
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import Entity
 
@@ -27,7 +28,7 @@ class ONVIFBaseEntity(Entity):
             "manufacturer": self.device.info.manufacturer,
             "model": self.device.info.model,
             "name": self.device.name,
-            "sw_version": self.device.info.fw_version,
+            ATTR_SW_VERSION: self.device.info.fw_version,
             "identifiers": {
                 # MAC address is not always available, and given the number
                 # of non-conformant ONVIF devices we have historically supported,

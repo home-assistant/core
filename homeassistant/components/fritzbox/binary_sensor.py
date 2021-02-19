@@ -5,7 +5,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_WINDOW,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_DEVICES
+from homeassistant.const import ATTR_SW_VERSION, CONF_DEVICES
 
 from .const import CONF_CONNECTIONS, DOMAIN as FRITZBOX_DOMAIN, LOGGER
 
@@ -40,7 +40,7 @@ class FritzboxBinarySensor(BinarySensorEntity):
             "identifiers": {(FRITZBOX_DOMAIN, self._device.ain)},
             "manufacturer": self._device.manufacturer,
             "model": self._device.productname,
-            "sw_version": self._device.fw_version,
+            ATTR_SW_VERSION: self._device.fw_version,
         }
 
     @property

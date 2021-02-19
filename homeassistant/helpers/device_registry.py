@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union, 
 
 import attr
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import ATTR_SW_VERSION, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, callback
 from homeassistant.loader import bind_hass
 import homeassistant.util.uuid as uuid_util
@@ -399,7 +399,7 @@ class DeviceRegistry:
             ("manufacturer", manufacturer),
             ("model", model),
             ("name", name),
-            ("sw_version", sw_version),
+            (ATTR_SW_VERSION, sw_version),
             ("entry_type", entry_type),
             ("via_device_id", via_device_id),
             ("disabled_by", disabled_by),
@@ -471,7 +471,7 @@ class DeviceRegistry:
                     manufacturer=device["manufacturer"],
                     model=device["model"],
                     name=device["name"],
-                    sw_version=device["sw_version"],
+                    sw_version=device[ATTR_SW_VERSION],
                     # Introduced in 0.110
                     entry_type=device.get("entry_type"),
                     id=device["id"],
@@ -520,7 +520,7 @@ class DeviceRegistry:
                 "manufacturer": entry.manufacturer,
                 "model": entry.model,
                 "name": entry.name,
-                "sw_version": entry.sw_version,
+                ATTR_SW_VERSION: entry.sw_version,
                 "entry_type": entry.entry_type,
                 "id": entry.id,
                 "via_device_id": entry.via_device_id,

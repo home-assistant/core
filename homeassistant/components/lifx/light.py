@@ -35,7 +35,12 @@ from homeassistant.components.light import (
     LightEntity,
     preprocess_turn_on_alternatives,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    ATTR_SW_VERSION,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
@@ -465,7 +470,7 @@ class LIFXLight(LightEntity):
 
         version = self.bulb.host_firmware_version
         if version is not None:
-            info["sw_version"] = version
+            info[ATTR_SW_VERSION] = version
 
         product_map = aiolifx().products.product_map
 

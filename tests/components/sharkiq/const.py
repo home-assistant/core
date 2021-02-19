@@ -1,6 +1,6 @@
 """Constants used in shark iq tests."""
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import ATTR_SW_VERSION, CONF_PASSWORD, CONF_USERNAME
 
 # Dummy device dict of the form returned by AylaApi.list_devices()
 SHARK_DEVICE_DICT = {
@@ -8,7 +8,7 @@ SHARK_DEVICE_DICT = {
     "model": "AY001MRT1",
     "dsn": "AC000Wxxxxxxxxx",
     "oem_model": "RV1000A",
-    "sw_version": "devd 1.7 2020-05-13 11:50:36",
+    ATTR_SW_VERSION: "devd 1.7 2020-05-13 11:50:36",
     "template_id": 99999,
     "mac": "ffffffffffff",
     "unique_hardware_id": None,

@@ -1,4 +1,5 @@
 """Base class for Tado entity."""
+from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers.entity import Entity
 
 from .const import DEFAULT_NAME, DOMAIN, TADO_ZONE
@@ -21,7 +22,7 @@ class TadoDeviceEntity(Entity):
             "identifiers": {(DOMAIN, self.device_id)},
             "name": self.device_name,
             "manufacturer": DEFAULT_NAME,
-            "sw_version": self._device_info["currentFwVersion"],
+            ATTR_SW_VERSION: self._device_info["currentFwVersion"],
             "model": self._device_info["deviceType"],
             "via_device": (DOMAIN, self._device_info["serialNo"]),
         }

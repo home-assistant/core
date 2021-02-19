@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 from aiohttp import ClientError
 from bond_api import BPUPSubscriptions
 
-from homeassistant.const import ATTR_NAME
+from homeassistant.const import ATTR_NAME, ATTR_SW_VERSION
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
@@ -70,7 +70,7 @@ class BondEntity(Entity):
         }
         if not self._hub.is_bridge:
             device_info["model"] = self._hub.model
-            device_info["sw_version"] = self._hub.fw_ver
+            device_info[ATTR_SW_VERSION] = self._hub.fw_ver
         else:
             model_data = []
             if self._device.branding_profile:

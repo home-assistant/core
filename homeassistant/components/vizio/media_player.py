@@ -15,6 +15,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_SW_VERSION,
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
     CONF_EXCLUDE,
@@ -434,7 +435,7 @@ class VizioDevice(MediaPlayerEntity):
             "name": self.name,
             "manufacturer": "VIZIO",
             "model": self._model,
-            "sw_version": self._sw_version,
+            ATTR_SW_VERSION: self._sw_version,
         }
 
     @property

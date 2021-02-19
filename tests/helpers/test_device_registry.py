@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import ATTR_SW_VERSION, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, callback
 from homeassistant.helpers import device_registry, entity_registry
 
@@ -149,7 +149,7 @@ async def test_loading_from_storage(hass, hass_storage):
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "name": "name",
-                    "sw_version": "version",
+                    ATTR_SW_VERSION: "version",
                     "entry_type": "service",
                     "area_id": "12345A",
                     "name_by_user": "Test Friendly Name",
