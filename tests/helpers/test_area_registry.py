@@ -175,8 +175,8 @@ async def test_update_area_with_normalized_name_already_in_use(registry):
 
 async def test_load_area(hass, registry):
     """Make sure that we can load/save data correctly."""
-    registry.async_create("mock1")
-    registry.async_create("mock2")
+    area1 = registry.async_create("mock1")
+    area2 = registry.async_create("mock2")
 
     assert len(registry.areas) == 2
 
@@ -185,6 +185,11 @@ async def test_load_area(hass, registry):
     await registry2.async_load()
 
     assert list(registry.areas) == list(registry2.areas)
+
+    area1_registry2 = registry2.async_get_or_create("mock1")
+    assert area1_registry2.id == area1.id
+    area2_registry2 = registry2.async_get_or_create("mock2")
+    assert area2_registry2.id == area2.id
 
 
 @pytest.mark.parametrize("load_registries", [False])
