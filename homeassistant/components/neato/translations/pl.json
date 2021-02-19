@@ -1,20 +1,27 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto jest ju\u017c skonfigurowane.",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji",
             "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce"
+            "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
+            "no_url_available": "Brak dost\u0119pnego adresu URL. Aby uzyska\u0107 informacje na temat tego b\u0142\u0119du, [sprawd\u017a sekcj\u0119 pomocy] ({docs_url})",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "create_entry": {
-            "default": "Zapoznaj si\u0119 z [dokumentacj\u0105 Neato]({docs_url})."
+            "default": "Pomy\u015blnie uwierzytelniono"
         },
         "error": {
             "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce",
-            "unexpected_error": "Nieoczekiwany b\u0142\u0105d",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "step": {
+            "pick_implementation": {
+                "title": "Wybierz metod\u0119 uwierzytelniania"
+            },
+            "reauth_confirm": {
+                "title": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?"
+            },
             "user": {
                 "data": {
                     "password": "Has\u0142o",
@@ -25,5 +32,6 @@
                 "title": "Informacje o koncie Neato"
             }
         }
-    }
+    },
+    "title": "Neato Botvac"
 }

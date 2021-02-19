@@ -5,9 +5,9 @@
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
-            "authorization_error": "B\u0142\u0105d autoryzacji. Sprawd\u017a, czy masz dost\u0119p do projektu i masz prawid\u0142owe po\u015bwiadczenia.",
-            "connection_error": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z us\u0142ug\u0105 Azure DevOps.",
-            "project_error": "Nie mo\u017cna uzyska\u0107 informacji o projekcie."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "project_error": "Nie mo\u017cna uzyska\u0107 informacji o projekcie"
         },
         "flow_title": "Azure DevOps: {project_url}",
         "step": {
@@ -15,7 +15,7 @@
                 "data": {
                     "personal_access_token": "Osobisty token dost\u0119pu (PAT)"
                 },
-                "description": "Uwierzytelnianie dla {project_url}  nie powiod\u0142o si\u0119. Wprowad\u017a aktualne dane uwierzytelniaj\u0105ce.",
+                "description": "Uwierzytelnianie dla {project_url} nie powiod\u0142o si\u0119. Wprowad\u017a aktualne dane uwierzytelniaj\u0105ce.",
                 "title": "Ponowne uwierzytelnianie"
             },
             "user": {
@@ -28,6 +28,5 @@
                 "title": "Dodaj projekt Azure DevOps"
             }
         }
-    },
-    "title": "Azure DevOps"
+    }
 }

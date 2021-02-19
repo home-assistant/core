@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 import re
+from typing import Dict, List, cast
 
 from aiohttp import web
 
@@ -41,6 +42,16 @@ async def async_setup(hass, config):
 
     await component.async_setup(config)
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 def get_date(date):
@@ -207,10 +218,10 @@ class CalendarListView(http.HomeAssistantView):
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve calendar list."""
         hass = request.app["hass"]
-        calendar_list = []
+        calendar_list: List[Dict[str, str]] = []
 
         for entity in self.component.entities:
             state = hass.states.get(entity.entity_id)
             calendar_list.append({"name": state.name, "entity_id": entity.entity_id})
 
-        return self.json(sorted(calendar_list, key=lambda x: x["name"]))
+        return self.json(sorted(calendar_list, key=lambda x: cast(str, x["name"])))

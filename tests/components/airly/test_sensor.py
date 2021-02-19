@@ -1,6 +1,5 @@
 """Test sensor of Airly integration."""
 from datetime import timedelta
-import json
 
 from homeassistant.components.airly.sensor import ATTRIBUTION
 from homeassistant.const import (
@@ -21,14 +20,15 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import patch
+from . import API_POINT_URL
+
 from tests.common import async_fire_time_changed, load_fixture
 from tests.components.airly import init_integration
 
 
-async def test_sensor(hass):
+async def test_sensor(hass, aioclient_mock):
     """Test states of the sensor."""
-    await init_integration(hass)
+    await init_integration(hass, aioclient_mock)
     registry = await hass.helpers.entity_registry.async_get_registry()
 
     state = hass.states.get("sensor.home_humidity")
@@ -40,7 +40,7 @@ async def test_sensor(hass):
 
     entry = registry.async_get("sensor.home_humidity")
     assert entry
-    assert entry.unique_id == "55.55-122.12-humidity"
+    assert entry.unique_id == "123-456-humidity"
 
     state = hass.states.get("sensor.home_pm1")
     assert state
@@ -54,7 +54,7 @@ async def test_sensor(hass):
 
     entry = registry.async_get("sensor.home_pm1")
     assert entry
-    assert entry.unique_id == "55.55-122.12-pm1"
+    assert entry.unique_id == "123-456-pm1"
 
     state = hass.states.get("sensor.home_pressure")
     assert state
@@ -65,7 +65,7 @@ async def test_sensor(hass):
 
     entry = registry.async_get("sensor.home_pressure")
     assert entry
-    assert entry.unique_id == "55.55-122.12-pressure"
+    assert entry.unique_id == "123-456-pressure"
 
     state = hass.states.get("sensor.home_temperature")
     assert state
@@ -76,53 +76,51 @@ async def test_sensor(hass):
 
     entry = registry.async_get("sensor.home_temperature")
     assert entry
-    assert entry.unique_id == "55.55-122.12-temperature"
+    assert entry.unique_id == "123-456-temperature"
 
 
-async def test_availability(hass):
+async def test_availability(hass, aioclient_mock):
     """Ensure that we mark the entities unavailable correctly when service is offline."""
-    await init_integration(hass)
+    await init_integration(hass, aioclient_mock)
 
     state = hass.states.get("sensor.home_humidity")
     assert state
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "92.8"
 
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(API_POINT_URL, exc=ConnectionError())
     future = utcnow() + timedelta(minutes=60)
-    with patch("airly._private._RequestsHandler.get", side_effect=ConnectionError()):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.home_humidity")
-        assert state
-        assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get("sensor.home_humidity")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
     future = utcnow() + timedelta(minutes=120)
-    with patch(
-        "airly._private._RequestsHandler.get",
-        return_value=json.loads(load_fixture("airly_valid_station.json")),
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.home_humidity")
-        assert state
-        assert state.state != STATE_UNAVAILABLE
-        assert state.state == "92.8"
+    state = hass.states.get("sensor.home_humidity")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "92.8"
 
 
-async def test_manual_update_entity(hass):
+async def test_manual_update_entity(hass, aioclient_mock):
     """Test manual update entity via service homeasasistant/update_entity."""
-    await init_integration(hass)
+    await init_integration(hass, aioclient_mock)
 
+    call_count = aioclient_mock.call_count
     await async_setup_component(hass, "homeassistant", {})
-    with patch(
-        "homeassistant.components.airly.AirlyDataUpdateCoordinator._async_update_data"
-    ) as mock_update:
-        await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
-            {ATTR_ENTITY_ID: ["sensor.home_humidity"]},
-            blocking=True,
-        )
-        assert mock_update.call_count == 1
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["sensor.home_humidity"]},
+        blocking=True,
+    )
+
+    assert aioclient_mock.call_count == call_count + 1

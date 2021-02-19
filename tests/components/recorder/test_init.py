@@ -1,6 +1,9 @@
 """The tests for the Recorder component."""
 # pylint: disable=protected-access
 from datetime import datetime, timedelta
+from unittest.mock import patch
+
+from sqlalchemy.exc import OperationalError
 
 from homeassistant.components.recorder import (
     CONFIG_SCHEMA,
@@ -20,8 +23,7 @@ from homeassistant.util import dt as dt_util
 
 from .common import wait_recording_done
 
-from tests.async_mock import patch
-from tests.common import async_fire_time_changed, get_test_home_assistant
+from tests.common import fire_time_changed, get_test_home_assistant
 
 
 def test_saving_state(hass, hass_recorder):
@@ -43,6 +45,44 @@ def test_saving_state(hass, hass_recorder):
         state = db_states[0].to_native()
 
     assert state == _state_empty_context(hass, entity_id)
+
+
+def test_saving_state_with_exception(hass, hass_recorder, caplog):
+    """Test saving and restoring a state."""
+    hass = hass_recorder()
+
+    entity_id = "test.recorder"
+    state = "restoring_from_db"
+    attributes = {"test_attr": 5, "test_attr_10": "nice"}
+
+    def _throw_if_state_in_session(*args, **kwargs):
+        for obj in hass.data[DATA_INSTANCE].event_session:
+            if isinstance(obj, States):
+                raise OperationalError(
+                    "insert the state", "fake params", "forced to fail"
+                )
+
+    with patch("time.sleep"), patch.object(
+        hass.data[DATA_INSTANCE].event_session,
+        "flush",
+        side_effect=_throw_if_state_in_session,
+    ):
+        hass.states.set(entity_id, "fail", attributes)
+        wait_recording_done(hass)
+
+    assert "Error executing query" in caplog.text
+    assert "Error saving events" not in caplog.text
+
+    caplog.clear()
+    hass.states.set(entity_id, state, attributes)
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        db_states = list(session.query(States))
+        assert len(db_states) >= 1
+
+    assert "Error executing query" not in caplog.text
+    assert "Error saving events" not in caplog.text
 
 
 def test_saving_event(hass, hass_recorder):
@@ -311,8 +351,15 @@ async def test_defaults_set(hass):
     assert recorder_config["purge_keep_days"] == 10
 
 
+def run_tasks_at_time(hass, test_time):
+    """Advance the clock and wait for any callbacks to finish."""
+    fire_time_changed(hass, test_time)
+    hass.block_till_done()
+    hass.data[DATA_INSTANCE].block_till_done()
+
+
 def test_auto_purge(hass_recorder):
-    """Test saving and restoring a state."""
+    """Test periodic purge alarm scheduling."""
     hass = hass_recorder()
 
     original_tz = dt_util.DEFAULT_TIME_ZONE
@@ -320,18 +367,40 @@ def test_auto_purge(hass_recorder):
     tz = dt_util.get_time_zone("Europe/Copenhagen")
     dt_util.set_default_time_zone(tz)
 
+    # Purging is schedule to happen at 4:12am every day. Exercise this behavior
+    # by firing alarms and advancing the clock around this time. Pick an arbitrary
+    # year in the future to avoid boundary conditions relative to the current date.
+    #
+    # The clock is started at 4:15am then advanced forward below
     now = dt_util.utcnow()
-    test_time = tz.localize(datetime(now.year + 1, 1, 1, 4, 12, 0))
-    async_fire_time_changed(hass, test_time)
+    test_time = tz.localize(datetime(now.year + 2, 1, 1, 4, 15, 0))
+    run_tasks_at_time(hass, test_time)
 
     with patch(
         "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data:
-        for delta in (-1, 0, 1):
-            async_fire_time_changed(hass, test_time + timedelta(seconds=delta))
-            hass.block_till_done()
-            hass.data[DATA_INSTANCE].block_till_done()
+        # Advance one day, and the purge task should run
+        test_time = test_time + timedelta(days=1)
+        run_tasks_at_time(hass, test_time)
+        assert len(purge_old_data.mock_calls) == 1
 
+        purge_old_data.reset_mock()
+
+        # Advance one day, and the purge task should run again
+        test_time = test_time + timedelta(days=1)
+        run_tasks_at_time(hass, test_time)
+        assert len(purge_old_data.mock_calls) == 1
+
+        purge_old_data.reset_mock()
+
+        # Advance less than one full day.  The alarm should not yet fire.
+        test_time = test_time + timedelta(hours=23)
+        run_tasks_at_time(hass, test_time)
+        assert len(purge_old_data.mock_calls) == 0
+
+        # Advance to the next day and fire the alarm again
+        test_time = test_time + timedelta(hours=1)
+        run_tasks_at_time(hass, test_time)
         assert len(purge_old_data.mock_calls) == 1
 
     dt_util.set_default_time_zone(original_tz)

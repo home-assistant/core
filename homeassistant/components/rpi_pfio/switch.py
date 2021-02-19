@@ -1,6 +1,4 @@
 """Support for switches using the PiFace Digital I/O module on a RPi."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components import rpi_pfio
@@ -8,8 +6,6 @@ from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_NAME, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_INVERT_LOGIC = "invert_logic"
 

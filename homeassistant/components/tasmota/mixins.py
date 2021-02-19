@@ -16,8 +16,6 @@ from .discovery import (
     set_discovery_hash,
 )
 
-DATA_MQTT = "mqtt"
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -40,11 +38,12 @@ class TasmotaEntity(Entity):
         await self._tasmota_entity.unsubscribe_topics()
         await super().async_will_remove_from_hass()
 
-    async def discovery_update(self, update):
+    async def discovery_update(self, update, write_state=True):
         """Handle updated discovery message."""
         self._tasmota_entity.config_update(update)
         await self._subscribe_topics()
-        self.async_write_ha_state()
+        if write_state:
+            self.async_write_ha_state()
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -52,7 +51,7 @@ class TasmotaEntity(Entity):
 
     @callback
     def state_updated(self, state, **kwargs):
-        """Handle new MQTT state messages."""
+        """Handle state updates."""
         self._state = state
         self.async_write_ha_state()
 
@@ -86,7 +85,7 @@ class TasmotaAvailability(TasmotaEntity):
         super().__init__(**kwds)
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe MQTT events."""
+        """Subscribe to MQTT events."""
         self._tasmota_entity.set_on_availability_callback(self.availability_updated)
         self.async_on_remove(
             async_subscribe_connection_status(self.hass, self.async_mqtt_connected)
@@ -96,6 +95,7 @@ class TasmotaAvailability(TasmotaEntity):
     @callback
     def availability_updated(self, available: bool) -> None:
         """Handle updated availability."""
+        self._tasmota_entity.poll_status()
         self._available = available
         self.async_write_ha_state()
 
@@ -103,23 +103,22 @@ class TasmotaAvailability(TasmotaEntity):
     def async_mqtt_connected(self, _):
         """Update state on connection/disconnection to MQTT broker."""
         if not self.hass.is_stopping:
+            if not mqtt_connected(self.hass):
+                self._available = False
             self.async_write_ha_state()
 
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        if not mqtt_connected(self.hass) and not self.hass.is_stopping:
-            return False
         return self._available
 
 
 class TasmotaDiscoveryUpdate(TasmotaEntity):
     """Mixin used to handle updated discovery message."""
 
-    def __init__(self, discovery_hash, discovery_update, **kwds) -> None:
+    def __init__(self, discovery_hash, **kwds) -> None:
         """Initialize the discovery update mixin."""
         self._discovery_hash = discovery_hash
-        self._discovery_update = discovery_update
         self._removed_from_hass = False
         super().__init__(**kwds)
 
@@ -138,7 +137,7 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
             if not self._tasmota_entity.config_same(config):
                 # Changed payload: Notify component
                 _LOGGER.debug("Updating component: %s", self.entity_id)
-                await self._discovery_update(config)
+                await self.discovery_update(config)
             else:
                 # Unchanged payload: Ignore to avoid changing states
                 _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
@@ -152,6 +151,12 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
                 discovery_callback,
             )
         )
+
+    @callback
+    def add_to_platform_abort(self) -> None:
+        """Abort adding an entity to a platform."""
+        clear_discovery_hash(self.hass, self._discovery_hash)
+        super().add_to_platform_abort()
 
     async def async_will_remove_from_hass(self) -> None:
         """Stop listening to signal and cleanup discovery data.."""

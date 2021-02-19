@@ -15,6 +15,7 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     PRESSURE_MBAR,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
@@ -48,41 +49,65 @@ SUPPORTED_PUBLIC_SENSOR_TYPES = [
 ]
 
 SENSOR_TYPES = {
-    "temperature": ["Temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
-    "temp_trend": ["Temperature trend", None, "mdi:trending-up", None],
-    "co2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:molecule-co2", None],
-    "pressure": ["Pressure", PRESSURE_MBAR, None, DEVICE_CLASS_PRESSURE],
-    "pressure_trend": ["Pressure trend", None, "mdi:trending-up", None],
-    "noise": ["Noise", "dB", "mdi:volume-high", None],
-    "humidity": ["Humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
-    "rain": ["Rain", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
-    "sum_rain_1": ["Rain last hour", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
-    "sum_rain_24": ["Rain today", LENGTH_MILLIMETERS, "mdi:weather-rainy", None],
-    "battery_percent": ["Battery Percent", PERCENTAGE, None, DEVICE_CLASS_BATTERY],
-    "min_temp": ["Min Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
-    "max_temp": ["Max Temp.", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
-    "windangle": ["Direction", None, "mdi:compass-outline", None],
-    "windangle_value": ["Angle", DEGREE, "mdi:compass-outline", None],
+    "temperature": ["Temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE, True],
+    "temp_trend": ["Temperature trend", None, "mdi:trending-up", None, False],
+    "co2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:molecule-co2", None, True],
+    "pressure": ["Pressure", PRESSURE_MBAR, None, DEVICE_CLASS_PRESSURE, True],
+    "pressure_trend": ["Pressure trend", None, "mdi:trending-up", None, False],
+    "noise": ["Noise", "dB", "mdi:volume-high", None, True],
+    "humidity": ["Humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY, True],
+    "rain": ["Rain", LENGTH_MILLIMETERS, "mdi:weather-rainy", None, True],
+    "sum_rain_1": [
+        "Rain last hour",
+        LENGTH_MILLIMETERS,
+        "mdi:weather-rainy",
+        None,
+        False,
+    ],
+    "sum_rain_24": ["Rain today", LENGTH_MILLIMETERS, "mdi:weather-rainy", None, True],
+    "battery_percent": [
+        "Battery Percent",
+        PERCENTAGE,
+        None,
+        DEVICE_CLASS_BATTERY,
+        True,
+    ],
+    "windangle": ["Direction", None, "mdi:compass-outline", None, True],
+    "windangle_value": ["Angle", DEGREE, "mdi:compass-outline", None, False],
     "windstrength": [
         "Wind Strength",
         SPEED_KILOMETERS_PER_HOUR,
         "mdi:weather-windy",
         None,
+        True,
     ],
-    "gustangle": ["Gust Direction", None, "mdi:compass-outline", None],
-    "gustangle_value": ["Gust Angle", DEGREE, "mdi:compass-outline", None],
+    "gustangle": ["Gust Direction", None, "mdi:compass-outline", None, False],
+    "gustangle_value": ["Gust Angle", DEGREE, "mdi:compass-outline", None, False],
     "guststrength": [
         "Gust Strength",
         SPEED_KILOMETERS_PER_HOUR,
         "mdi:weather-windy",
         None,
+        False,
     ],
-    "reachable": ["Reachability", None, "mdi:signal", None],
-    "rf_status": ["Radio", None, "mdi:signal", None],
-    "rf_status_lvl": ["Radio Level", "", None, DEVICE_CLASS_SIGNAL_STRENGTH],
-    "wifi_status": ["Wifi", None, "mdi:wifi", None],
-    "wifi_status_lvl": ["Wifi Level", "dBm", None, DEVICE_CLASS_SIGNAL_STRENGTH],
-    "health_idx": ["Health", None, "mdi:cloud", None],
+    "reachable": ["Reachability", None, "mdi:signal", None, False],
+    "rf_status": ["Radio", None, "mdi:signal", None, False],
+    "rf_status_lvl": [
+        "Radio Level",
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        None,
+        DEVICE_CLASS_SIGNAL_STRENGTH,
+        False,
+    ],
+    "wifi_status": ["Wifi", None, "mdi:wifi", None, False],
+    "wifi_status_lvl": [
+        "Wifi Level",
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        None,
+        DEVICE_CLASS_SIGNAL_STRENGTH,
+        False,
+    ],
+    "health_idx": ["Health", None, "mdi:cloud", None, True],
 }
 
 MODULE_TYPE_OUTDOOR = "NAModule1"
@@ -136,7 +161,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             conditions = [
                 c.lower()
                 for c in data_class.get_monitored_conditions(module_id=module["_id"])
-                if c in SENSOR_TYPES
+                if c.lower() in SENSOR_TYPES
             ]
             for condition in conditions:
                 if f"{condition}_value" in SENSOR_TYPES:
@@ -159,7 +184,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
 
-    @callback
     async def add_public_entities(update=True):
         """Retrieve Netatmo public weather entities."""
         entities = {
@@ -191,10 +215,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 PUBLICDATA_DATA_CLASS_NAME,
                 signal_name,
                 None,
-                LAT_NE=area.lat_ne,
-                LON_NE=area.lon_ne,
-                LAT_SW=area.lat_sw,
-                LON_SW=area.lon_sw,
+                lat_ne=area.lat_ne,
+                lon_ne=area.lon_ne,
+                lat_sw=area.lat_sw,
+                lon_sw=area.lon_sw,
             )
             for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
                 new_entities.append(
@@ -260,6 +284,7 @@ class NetatmoSensor(NetatmoBase):
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._model = device["type"]
         self._unique_id = f"{self._id}-{self.type}"
+        self._enabled_default = SENSOR_TYPES[self.type][4]
 
     @property
     def icon(self):
@@ -285,6 +310,11 @@ class NetatmoSensor(NetatmoBase):
     def available(self):
         """Return entity availability."""
         return self._state is not None
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._enabled_default
 
     @callback
     def async_update_callback(self):
@@ -334,10 +364,6 @@ class NetatmoSensor(NetatmoBase):
                 self._state = data["pressure_trend"]
             elif self.type == "battery_percent":
                 self._state = data["battery_percent"]
-            elif self.type == "min_temp":
-                self._state = data["min_temp"]
-            elif self.type == "max_temp":
-                self._state = data["max_temp"]
             elif self.type == "windangle_value":
                 self._state = fix_angle(data["WindAngle"])
             elif self.type == "windangle":
@@ -460,10 +486,10 @@ class NetatmoPublicSensor(NetatmoBase):
         self._data_classes.append(
             {
                 "name": PUBLICDATA_DATA_CLASS_NAME,
-                "LAT_NE": area.lat_ne,
-                "LON_NE": area.lon_ne,
-                "LAT_SW": area.lat_sw,
-                "LON_SW": area.lon_sw,
+                "lat_ne": area.lat_ne,
+                "lon_ne": area.lon_ne,
+                "lat_sw": area.lat_sw,
+                "lon_sw": area.lon_sw,
                 "area_name": area.area_name,
                 SIGNAL_NAME: self._signal_name,
             }
@@ -550,10 +576,10 @@ class NetatmoPublicSensor(NetatmoBase):
         self._data_classes = [
             {
                 "name": PUBLICDATA_DATA_CLASS_NAME,
-                "LAT_NE": area.lat_ne,
-                "LON_NE": area.lon_ne,
-                "LAT_SW": area.lat_sw,
-                "LON_SW": area.lon_sw,
+                "lat_ne": area.lat_ne,
+                "lon_ne": area.lon_ne,
+                "lat_sw": area.lat_sw,
+                "lon_sw": area.lon_sw,
                 "area_name": area.area_name,
                 SIGNAL_NAME: self._signal_name,
             }
@@ -564,10 +590,10 @@ class NetatmoPublicSensor(NetatmoBase):
             PUBLICDATA_DATA_CLASS_NAME,
             self._signal_name,
             self.async_update_callback,
-            LAT_NE=area.lat_ne,
-            LON_NE=area.lon_ne,
-            LAT_SW=area.lat_sw,
-            LON_SW=area.lon_sw,
+            lat_ne=area.lat_ne,
+            lon_ne=area.lon_ne,
+            lat_sw=area.lat_sw,
+            lon_sw=area.lon_sw,
         )
 
     @callback

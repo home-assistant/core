@@ -1,6 +1,4 @@
 """Config flow to configure the Azure DevOps integration."""
-import logging
-
 from aioazuredevops.client import DevOpsClient
 import aiohttp
 import voluptuous as vol
@@ -13,8 +11,6 @@ from homeassistant.components.azure_devops.const import (  # pylint:disable=unus
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigFlow
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -64,14 +60,14 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             if self._pat is not None:
                 await client.authorize(self._pat, self._organization)
                 if not client.authorized:
-                    errors["base"] = "authorization_error"
+                    errors["base"] = "invalid_auth"
                     return errors
             project_info = await client.get_project(self._organization, self._project)
             if project_info is None:
                 errors["base"] = "project_error"
                 return errors
         except aiohttp.ClientError:
-            errors["base"] = "connection_error"
+            errors["base"] = "cannot_connect"
             return errors
         return None
 
@@ -99,7 +95,6 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             self._project = user_input[CONF_PROJECT]
         self._pat = user_input[CONF_PAT]
 
-        # pylint: disable=no-member
         self.context["title_placeholders"] = {
             "project_url": f"{self._organization}/{self._project}",
         }

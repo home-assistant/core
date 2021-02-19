@@ -1,7 +1,6 @@
 """Support for Homekit Alarm Control Panel."""
-import logging
-
 from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import (
@@ -22,8 +21,6 @@ from homeassistant.core import callback
 from . import KNOWN_DEVICES, HomeKitEntity
 
 ICON = "mdi:security"
-
-_LOGGER = logging.getLogger(__name__)
 
 CURRENT_STATE_MAP = {
     0: STATE_ALARM_ARMED_HOME,
@@ -47,10 +44,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(aid, service):
-        if service["stype"] != "security-system":
+    def async_add_service(service):
+        if service.short_type != ServicesTypes.SECURITY_SYSTEM:
             return False
-        info = {"aid": aid, "iid": service["iid"]}
+        info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([HomeKitAlarmControlPanelEntity(conn, info)], True)
         return True
 

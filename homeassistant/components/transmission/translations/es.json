@@ -4,10 +4,9 @@
             "already_configured": "El host ya est\u00e1 configurado."
         },
         "error": {
-            "cannot_connect": "No se puede conectar al host",
+            "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
-            "name_exists": "El nombre ya existe",
-            "wrong_credentials": "Nombre de usuario o contrase\u00f1a incorrectos"
+            "name_exists": "El nombre ya existe"
         },
         "step": {
             "user": {

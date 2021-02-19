@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Sentry jest ju\u017c skonfigurowane.",
-            "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja"
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
             "bad_dsn": "Nieprawid\u0142owy DSN",
@@ -24,7 +23,10 @@
                 "data": {
                     "environment": "Opcjonalna nazwa \u015brodowiska.",
                     "event_custom_components": "Wysy\u0142aj zdarzenia z niestandardowych komponent\u00f3w",
+                    "event_handled": "Wysy\u0142aj obs\u0142u\u017cone zdarzenia",
+                    "event_third_party_packages": "Wysy\u0142aj zdarzenia z zewn\u0119trznych pakiet\u00f3w Pythona (spoza HA)",
                     "logging_event_level": "Poziom wpis\u00f3w dziennika, dla kt\u00f3rego Sentry zarejestruje zdarzenie",
+                    "logging_level": "Poziom wpis\u00f3w dziennika, dla kt\u00f3rego Sentry zapisze poprzedzaj\u0105ce wpisy (breadcrumbs)",
                     "tracing": "W\u0142\u0105cz \u015bledzenie wydajno\u015bci",
                     "tracing_sample_rate": "Cz\u0119stotliwo\u015b\u0107 \u015bledzenia; od 0.0 do 1.0 (1.0 = 100%)"
                 }

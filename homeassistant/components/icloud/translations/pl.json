@@ -1,16 +1,23 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto jest ju\u017c skonfigurowane.",
-            "no_device": "\u017badne z Twoich urz\u0105dze\u0144 nie ma aktywowanej funkcji \"Znajd\u017a m\u00f3j iPhone\"."
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "no_device": "\u017badne z Twoich urz\u0105dze\u0144 nie ma aktywowanej funkcji \"Znajd\u017a m\u00f3j iPhone\"",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
             "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "login": "B\u0142\u0105d logowania: sprawd\u017a adres e-mail i has\u0142o",
             "send_verification_code": "Nie uda\u0142o si\u0119 wys\u0142a\u0107 kodu weryfikacyjnego",
-            "validate_verification_code": "Nie uda\u0142o si\u0119 zweryfikowa\u0107 kodu weryfikacyjnego, wybierz urz\u0105dzenie zaufane i ponownie rozpocznij weryfikacj\u0119"
+            "validate_verification_code": "Nie uda\u0142o si\u0119 zweryfikowa\u0107 kodu weryfikacyjnego, spr\u00f3buj ponownie"
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Has\u0142o"
+                },
+                "description": "Twoje poprzednio wprowadzone has\u0142o dla {username} ju\u017c nie dzia\u0142a. Zaktualizuj swoje has\u0142o, aby nadal korzysta\u0107 z tej integracji.",
+                "title": "Ponownie uwierzytelnij integracj\u0119"
+            },
             "trusted_device": {
                 "data": {
                     "trusted_device": "Zaufane urz\u0105dzenie"

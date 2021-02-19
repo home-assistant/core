@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "one_instance_only": "Komponent obs\u0142uguje tylko jedn\u0105 instancj\u0119 ecobee",
-            "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja"
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
             "pin_request_failed": "B\u0142\u0105d podczas \u017c\u0105dania kodu PIN od ecobee; sprawd\u017a, czy klucz API jest poprawny.",

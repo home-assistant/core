@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_ALL
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
     Event,
@@ -83,6 +83,11 @@ async def async_attach_trigger(
     match_from_state = process_state_match(from_state)
     match_to_state = process_state_match(to_state)
     attribute = config.get(CONF_ATTRIBUTE)
+    job = HassJob(action)
+
+    _variables = {}
+    if automation_info:
+        _variables = automation_info.get("variables") or {}
 
     @callback
     def state_automation_listener(event: Event):
@@ -122,8 +127,8 @@ async def async_attach_trigger(
         @callback
         def call_action():
             """Call action with right context."""
-            hass.async_run_job(
-                action,
+            hass.async_run_hass_job(
+                job,
                 {
                     "trigger": {
                         "platform": platform_type,
@@ -142,7 +147,7 @@ async def async_attach_trigger(
             call_action()
             return
 
-        variables = {
+        trigger_info = {
             "trigger": {
                 "platform": "state",
                 "entity_id": entity,
@@ -150,6 +155,7 @@ async def async_attach_trigger(
                 "to_state": to_s,
             }
         }
+        variables = {**_variables, **trigger_info}
 
         try:
             period[entity] = cv.positive_time_period(

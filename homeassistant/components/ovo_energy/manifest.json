@@ -3,6 +3,6 @@
   "name": "OVO Energy",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ovo_energy",
-  "requirements": ["ovoenergy==1.1.7"],
+  "requirements": ["ovoenergy==1.1.11"],
   "codeowners": ["@timmo001"]
 }

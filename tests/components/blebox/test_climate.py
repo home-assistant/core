@@ -1,6 +1,7 @@
 """BleBox climate entities tests."""
 
 import logging
+from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
 import pytest
@@ -29,8 +30,6 @@ from homeassistant.const import (
 )
 
 from .conftest import async_setup_entity, mock_feature
-
-from tests.async_mock import AsyncMock, PropertyMock
 
 
 @pytest.fixture(name="saunabox")

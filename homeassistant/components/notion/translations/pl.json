@@ -1,11 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ta nazwa u\u017cytkownika jest ju\u017c w u\u017cyciu."
+            "already_configured": "Konto jest ju\u017c skonfigurowane"
         },
         "error": {
             "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "invalid_credentials": "Nieprawid\u0142owa nazwa u\u017cytkownika lub has\u0142o",
             "no_devices": "Nie znaleziono urz\u0105dze\u0144 na koncie"
         },
         "step": {

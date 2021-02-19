@@ -2,15 +2,15 @@
     "config": {
         "abort": {
             "already_configured": "Configurazione aggiornata per il profilo.",
-            "authorize_url_timeout": "Timeout durante la generazione dell'URL di autorizzazione.",
-            "missing_configuration": "Il componente Withings non \u00e8 configurato. Si prega di seguire la documentazione.",
+            "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
+            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
             "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})"
         },
         "create_entry": {
             "default": "Autenticazione riuscita con Withings."
         },
         "error": {
-            "profile_exists": "Il profilo utente \u00e8 gi\u00e0 configurato. Si prega di fornire un nome di profilo univoco."
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato"
         },
         "flow_title": "Withings: {profile}",
         "step": {
@@ -26,7 +26,7 @@
             },
             "reauth": {
                 "description": "Il profilo \"{profile}\" deve essere autenticato nuovamente per continuare a ricevere i dati Withings.",
-                "title": "Riautenticare il profilo"
+                "title": "Autenticare nuovamente l'integrazione"
             }
         }
     }

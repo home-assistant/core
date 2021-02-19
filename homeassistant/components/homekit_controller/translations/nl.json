@@ -12,9 +12,7 @@
         },
         "error": {
             "authentication_error": "Onjuiste HomeKit-code. Controleer het en probeer het opnieuw.",
-            "busy_error": "Het apparaat weigerde om koppelingen toe te voegen, omdat het al gekoppeld is met een andere controller.",
             "max_peers_error": "Apparaat heeft geweigerd om koppelingen toe te voegen omdat het geen vrije koppelingsopslag heeft.",
-            "max_tries_error": "Apparaat weigerde pairing toe te voegen omdat het meer dan 100 niet-succesvolle authenticatiepogingen heeft ontvangen.",
             "pairing_failed": "Er deed zich een fout voor tijdens het koppelen met dit apparaat. Dit kan een tijdelijke storing zijn of uw apparaat wordt mogelijk momenteel niet ondersteund.",
             "unable_to_pair": "Kan niet koppelen, probeer het opnieuw.",
             "unknown_error": "Apparaat meldde een onbekende fout. Koppelen mislukt."

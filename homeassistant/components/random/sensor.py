@@ -1,5 +1,4 @@
 """Support for showing random numbers."""
-import logging
 from random import randrange
 
 import voluptuous as vol
@@ -13,8 +12,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_MAXIMUM = "maximum"
 ATTR_MINIMUM = "minimum"

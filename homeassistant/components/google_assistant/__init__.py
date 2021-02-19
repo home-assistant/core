@@ -5,14 +5,12 @@ from typing import Any, Dict
 import voluptuous as vol
 
 # Typing imports
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_ALIASES,
-    CONF_ALLOW_UNLOCK,
-    CONF_API_KEY,
     CONF_CLIENT_EMAIL,
     CONF_ENTITY_CONFIG,
     CONF_EXPOSE,
@@ -35,6 +33,8 @@ from .http import GoogleAssistantView, GoogleConfig
 from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401, isort:skip
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_ALLOW_UNLOCK = "allow_unlock"
 
 ENTITY_SCHEMA = vol.Schema(
     {
@@ -61,8 +61,6 @@ def _check_report_state(data):
 
 
 GOOGLE_ASSISTANT_SCHEMA = vol.All(
-    cv.deprecated(CONF_ALLOW_UNLOCK, invalidation_version="0.95"),
-    cv.deprecated(CONF_API_KEY, invalidation_version="0.105"),
     vol.Schema(
         {
             vol.Required(CONF_PROJECT_ID): cv.string,
@@ -72,13 +70,14 @@ GOOGLE_ASSISTANT_SCHEMA = vol.All(
             vol.Optional(
                 CONF_EXPOSED_DOMAINS, default=DEFAULT_EXPOSED_DOMAINS
             ): cv.ensure_list,
-            vol.Optional(CONF_API_KEY): cv.string,
             vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
-            vol.Optional(CONF_ALLOW_UNLOCK): cv.boolean,
             # str on purpose, makes sure it is configured correctly.
             vol.Optional(CONF_SECURE_DEVICES_PIN): str,
             vol.Optional(CONF_REPORT_STATE, default=False): cv.boolean,
             vol.Optional(CONF_SERVICE_ACCOUNT): GOOGLE_SERVICE_ACCOUNT,
+            # deprecated configuration options
+            vol.Remove(CONF_ALLOW_UNLOCK): cv.boolean,
+            vol.Remove(CONF_API_KEY): cv.string,
         },
         extra=vol.PREVENT_EXTRA,
     ),
@@ -113,7 +112,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
         await google_config.async_sync_entities(agent_user_id)
 
     # Register service only if key is provided
-    if CONF_API_KEY in config or CONF_SERVICE_ACCOUNT in config:
+    if CONF_SERVICE_ACCOUNT in config:
         hass.services.async_register(
             DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler
         )

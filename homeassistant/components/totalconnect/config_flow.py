@@ -1,6 +1,4 @@
 """Config flow for the Total Connect component."""
-import logging
-
 from total_connect_client import TotalConnectClient
 import voluptuous as vol
 
@@ -8,8 +6,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN  # pylint: disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

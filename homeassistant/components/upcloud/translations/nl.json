@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord"
+                }
+            }
+        }
+    }
+}

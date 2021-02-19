@@ -20,6 +20,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.const import (
+    CONF_COVERS,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
@@ -52,8 +53,6 @@ _VALID_STATES = [
     "true",
     "false",
 ]
-
-CONF_COVERS = "covers"
 
 CONF_POSITION_TEMPLATE = "position_template"
 CONF_TILT_TEMPLATE = "tilt_template"
@@ -161,7 +160,6 @@ async def _async_create_entities(hass, config):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Template cover."""
-
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     async_add_entities(await _async_create_entities(hass, config))
 
@@ -228,7 +226,6 @@ class CoverTemplate(TemplateEntity, CoverEntity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-
         if self._template:
             self.add_template_attribute(
                 "_position", self._template, None, self._update_state
@@ -259,6 +256,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             return
 
         state = str(result).lower()
+
         if state in _VALID_STATES:
             if state in ("true", STATE_OPEN):
                 self._position = 100

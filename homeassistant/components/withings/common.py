@@ -402,8 +402,8 @@ WITHINGS_ATTRIBUTES = [
         Measurement.SLEEP_SCORE,
         GetSleepSummaryField.SLEEP_SCORE,
         "Sleep score",
-        "",
-        None,
+        const.SCORE_POINTS,
+        "mdi:medal",
         SENSOR_DOMAIN,
         False,
         UpdateType.POLL,
@@ -811,7 +811,28 @@ class DataManager:
         )
 
         def get_sleep_summary() -> SleepGetSummaryResponse:
-            return self._api.sleep_get_summary(lastupdate=yesterday_noon)
+            return self._api.sleep_get_summary(
+                lastupdate=yesterday_noon,
+                data_fields=[
+                    GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY,
+                    GetSleepSummaryField.DEEP_SLEEP_DURATION,
+                    GetSleepSummaryField.DURATION_TO_SLEEP,
+                    GetSleepSummaryField.DURATION_TO_WAKEUP,
+                    GetSleepSummaryField.HR_AVERAGE,
+                    GetSleepSummaryField.HR_MAX,
+                    GetSleepSummaryField.HR_MIN,
+                    GetSleepSummaryField.LIGHT_SLEEP_DURATION,
+                    GetSleepSummaryField.REM_SLEEP_DURATION,
+                    GetSleepSummaryField.RR_AVERAGE,
+                    GetSleepSummaryField.RR_MAX,
+                    GetSleepSummaryField.RR_MIN,
+                    GetSleepSummaryField.SLEEP_SCORE,
+                    GetSleepSummaryField.SNORING,
+                    GetSleepSummaryField.SNORING_EPISODE_COUNT,
+                    GetSleepSummaryField.WAKEUP_COUNT,
+                    GetSleepSummaryField.WAKEUP_DURATION,
+                ],
+            )
 
         response = await self._hass.async_add_executor_job(get_sleep_summary)
 

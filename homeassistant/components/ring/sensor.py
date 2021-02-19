@@ -1,6 +1,4 @@
 """This component provides HA sensor support for Ring Door Bell/Chimes."""
-import logging
-
 from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
@@ -8,8 +6,6 @@ from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DOMAIN
 from .entity import RingEntityMixin
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

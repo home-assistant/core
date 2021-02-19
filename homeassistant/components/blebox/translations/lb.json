@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "address_already_configured": "Ee BleBox Apparat ass scho konfigur\u00e9iert op {adress}.",
-            "already_configured": "D\u00ebse BleBox Apparat ass scho konfigur\u00e9iert"
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
-            "cannot_connect": "Keng Verbindung mam BleBox Apparat m\u00e9iglech. (Kuck Logs fir Feeler.)",
-            "unknown": "Onbekannte Feeler beim verbannen mam  BleBox Apparat. (Kuck Logs fir Feeler.)",
+            "cannot_connect": "Feeler beim verbannen",
+            "unknown": "Onerwaarte Feeler",
             "unsupported_version": "BleBox Apparat huet eng aal Firmware. Maach fir d'\u00e9ischt d'Mise \u00e0 jour."
         },
         "flow_title": "BleBox Apparat: {name} ({host})",

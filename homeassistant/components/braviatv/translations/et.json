@@ -1,10 +1,38 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "no_ip_control": "Teleris on IP-juhtimine keelatud v\u00f5i telerit ei toetata."
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_host": "Vigane hostinimi v\u00f5i IP aadress",
+            "unsupported_model": "Teleri mudelit ei toetata."
+        },
         "step": {
             "authorize": {
                 "data": {
                     "pin": "PIN kood"
-                }
+                },
+                "description": "Sisesta Sony Bravia teleris kuvatud PIN-kood.\n\n Kui PIN-koodi ei kuvata pead teleri Home Assistan'i sidumise t\u00fchistama. Mine: Seaded - > V\u00f5rk - > Kaugseadme seaded - > Kaugseadme registreerimise t\u00fchistamine.",
+                "title": "Sony Bravia TV autoriseerimine"
+            },
+            "user": {
+                "data": {
+                    "host": ""
+                },
+                "description": "Seadista Sony Bravia TV sidumine. Kuion probleeme seadetega mine: https://www.home-assistant.io/integrations/braviatv \n\nVeendu, et teler on sisse l\u00fclitatud.",
+                "title": ""
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "ignored_sources": "Eiratud sisendite loend"
+                },
+                "title": "Sony Bravia teleri valikud"
             }
         }
     }

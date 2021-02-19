@@ -1,0 +1,17 @@
+[
+    {
+        "vin": "JM000000000000000",
+        "id": 12345,
+        "nickname": "My Mazda3",
+        "carlineCode": "M3S",
+        "carlineName": "MAZDA3 2.5 S SE AWD",
+        "modelYear": "2021",
+        "modelCode": "M3S  SE XA",
+        "modelName": "W/ SELECT PKG AWD SDN",
+        "automaticTransmission": true,
+        "interiorColorCode": "BY3",
+        "interiorColorName": "BLACK",
+        "exteriorColorCode": "42M",
+        "exteriorColorName": "DEEP CRYSTAL BLUE MICA"
+    }
+]

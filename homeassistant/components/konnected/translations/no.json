@@ -7,7 +7,7 @@
             "unknown": "Uventet feil"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
             "confirm": {
@@ -21,7 +21,7 @@
             "user": {
                 "data": {
                     "host": "IP adresse",
-                    "port": ""
+                    "port": "Port"
                 },
                 "description": "Vennligst skriv inn verten informasjon for din Konnected Panel."
             }
@@ -32,7 +32,7 @@
             "not_konn_panel": "Ikke en anerkjent Konnected.io-enhet"
         },
         "error": {
-            "bad_host": "Ugyldig overstyr API-vertsadresse"
+            "bad_host": "Url-adresse for ugyldig overstyring av API-vert"
         },
         "step": {
             "options_binary": {
@@ -41,7 +41,7 @@
                     "name": "Navn (valgfritt)",
                     "type": "Bin\u00e6r sensortype"
                 },
-                "description": "{zone} -alternativer",
+                "description": "{zone}-alternativer",
                 "title": "Konfigurer bin\u00e6r sensor"
             },
             "options_digital": {
@@ -50,7 +50,7 @@
                     "poll_interval": "Avstemningsintervall (minutter) (valgfritt)",
                     "type": "Sensortype"
                 },
-                "description": "{zone} -alternativer",
+                "description": "{zone}-alternativer",
                 "title": "Konfigurere Digital Sensor"
             },
             "options_io": {

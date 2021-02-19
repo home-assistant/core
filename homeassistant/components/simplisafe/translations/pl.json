@@ -1,17 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "To konto SimpliSafe jest ju\u017c w u\u017cyciu.",
+            "already_configured": "To konto SimpliSafe jest ju\u017c w u\u017cyciu",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
-            "identifier_exists": "Konto jest ju\u017c zarejestrowane.",
-            "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce",
+            "identifier_exists": "Konto jest ju\u017c zarejestrowane",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "still_awaiting_mfa": "Wci\u0105\u017c nie potwierdzono linka w e-mailu od SimpliSafe",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "step": {
             "mfa": {
-                "description": "Sprawd\u017a email od SimpliSafe. Po zweryfikowaniu linka, wr\u00f3\u0107 tutaj, aby doko\u0144czy\u0107 instalacj\u0119 integracji.",
+                "description": "Sprawd\u017a e-mail od SimpliSafe. Po zweryfikowaniu linka, wr\u00f3\u0107 tutaj, aby doko\u0144czy\u0107 instalacj\u0119 integracji.",
                 "title": "Uwierzytelnianie wielosk\u0142adnikowe SimpliSafe"
             },
             "reauth_confirm": {
@@ -19,11 +20,11 @@
                     "password": "Has\u0142o"
                 },
                 "description": "Tw\u00f3j token dost\u0119pu wygas\u0142 lub zosta\u0142 uniewa\u017cniony. Wprowad\u017a has\u0142o, aby ponownie po\u0142\u0105czy\u0107 swoje konto.",
-                "title": "Po\u0142\u0105cz ponownie konto SimpliSafe"
+                "title": "Ponownie uwierzytelnij integracj\u0119"
             },
             "user": {
                 "data": {
-                    "code": "Kod (u\u017cywany w interfejsie Home Assistanta)",
+                    "code": "Kod (u\u017cywany w interfejsie Home Assistant)",
                     "password": "Has\u0142o",
                     "username": "Adres e-mail"
                 },
@@ -35,7 +36,7 @@
         "step": {
             "init": {
                 "data": {
-                    "code": "Kod (u\u017cywany w interfejsie u\u017cytkownika Home Assistanta)"
+                    "code": "Kod (u\u017cywany w interfejsie u\u017cytkownika Home Assistant)"
                 },
                 "title": "Konfiguracja SimpliSafe"
             }

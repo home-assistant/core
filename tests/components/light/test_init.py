@@ -1,7 +1,5 @@
 """The tests for the Light component."""
-# pylint: disable=protected-access
-from io import StringIO
-import os
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 import voluptuous as vol
@@ -21,18 +19,9 @@ from homeassistant.const import (
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
 
-import tests.async_mock as mock
 from tests.common import async_mock_service
 
-
-@pytest.fixture
-def mock_storage(hass, hass_storage):
-    """Clean up user light files at the end."""
-    yield
-    user_light_file = hass.config.path(light.LIGHT_PROFILES_FILE)
-
-    if os.path.isfile(user_light_file):
-        os.remove(user_light_file)
+orig_Profiles = light.Profiles
 
 
 async def test_methods(hass):
@@ -117,7 +106,7 @@ async def test_methods(hass):
     assert call.data[light.ATTR_TRANSITION] == "transition_val"
 
 
-async def test_services(hass):
+async def test_services(hass, mock_light_profiles):
     """Test the provided services."""
     platform = getattr(hass.components, "test.light")
 
@@ -292,13 +281,14 @@ async def test_services(hass):
     assert data == {}
 
     # One of the light profiles
-    prof_name, prof_h, prof_s, prof_bri, prof_t = "relax", 35.932, 69.412, 144, 0
+    profile = light.Profile("relax", 0.513, 0.413, 144, 0)
+    mock_light_profiles[profile.name] = profile
 
     # Test light profiles
     await hass.services.async_call(
         light.DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ent1.entity_id, light.ATTR_PROFILE: prof_name},
+        {ATTR_ENTITY_ID: ent1.entity_id, light.ATTR_PROFILE: profile.name},
         blocking=True,
     )
     # Specify a profile and a brightness attribute to overwrite it
@@ -307,7 +297,7 @@ async def test_services(hass):
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: ent2.entity_id,
-            light.ATTR_PROFILE: prof_name,
+            light.ATTR_PROFILE: profile.name,
             light.ATTR_BRIGHTNESS: 100,
             light.ATTR_TRANSITION: 1,
         },
@@ -316,15 +306,15 @@ async def test_services(hass):
 
     _, data = ent1.last_call("turn_on")
     assert data == {
-        light.ATTR_BRIGHTNESS: prof_bri,
-        light.ATTR_HS_COLOR: (prof_h, prof_s),
-        light.ATTR_TRANSITION: prof_t,
+        light.ATTR_BRIGHTNESS: profile.brightness,
+        light.ATTR_HS_COLOR: profile.hs_color,
+        light.ATTR_TRANSITION: profile.transition,
     }
 
     _, data = ent2.last_call("turn_on")
     assert data == {
         light.ATTR_BRIGHTNESS: 100,
-        light.ATTR_HS_COLOR: (prof_h, prof_s),
+        light.ATTR_HS_COLOR: profile.hs_color,
         light.ATTR_TRANSITION: 1,
     }
 
@@ -334,7 +324,7 @@ async def test_services(hass):
         SERVICE_TOGGLE,
         {
             ATTR_ENTITY_ID: ent3.entity_id,
-            light.ATTR_PROFILE: prof_name,
+            light.ATTR_PROFILE: profile.name,
             light.ATTR_BRIGHTNESS_PCT: 100,
         },
         blocking=True,
@@ -343,8 +333,23 @@ async def test_services(hass):
     _, data = ent3.last_call("turn_on")
     assert data == {
         light.ATTR_BRIGHTNESS: 255,
-        light.ATTR_HS_COLOR: (prof_h, prof_s),
-        light.ATTR_TRANSITION: prof_t,
+        light.ATTR_HS_COLOR: profile.hs_color,
+        light.ATTR_TRANSITION: profile.transition,
+    }
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TOGGLE,
+        {
+            ATTR_ENTITY_ID: ent3.entity_id,
+            light.ATTR_TRANSITION: 4,
+        },
+        blocking=True,
+    )
+
+    _, data = ent3.last_call("turn_off")
+    assert data == {
+        light.ATTR_TRANSITION: 4,
     }
 
     # Test bad data
@@ -388,7 +393,7 @@ async def test_services(hass):
             SERVICE_TURN_ON,
             {
                 ATTR_ENTITY_ID: ent1.entity_id,
-                light.ATTR_PROFILE: prof_name,
+                light.ATTR_PROFILE: profile.name,
                 light.ATTR_BRIGHTNESS: "bright",
             },
             blocking=True,
@@ -418,34 +423,92 @@ async def test_services(hass):
     assert data == {}
 
 
-async def test_broken_light_profiles(hass, mock_storage):
+@pytest.mark.parametrize(
+    "profile_name, last_call, expected_data",
+    (
+        (
+            "test",
+            "turn_on",
+            {
+                light.ATTR_HS_COLOR: (71.059, 100),
+                light.ATTR_BRIGHTNESS: 100,
+                light.ATTR_TRANSITION: 0,
+            },
+        ),
+        (
+            "color_no_brightness_no_transition",
+            "turn_on",
+            {
+                light.ATTR_HS_COLOR: (71.059, 100),
+            },
+        ),
+        (
+            "no color",
+            "turn_on",
+            {
+                light.ATTR_BRIGHTNESS: 110,
+                light.ATTR_TRANSITION: 0,
+            },
+        ),
+        (
+            "test_off",
+            "turn_off",
+            {
+                light.ATTR_TRANSITION: 0,
+            },
+        ),
+        (
+            "no brightness",
+            "turn_on",
+            {
+                light.ATTR_HS_COLOR: (71.059, 100),
+            },
+        ),
+        (
+            "color_and_brightness",
+            "turn_on",
+            {
+                light.ATTR_HS_COLOR: (71.059, 100),
+                light.ATTR_BRIGHTNESS: 120,
+            },
+        ),
+        (
+            "color_and_transition",
+            "turn_on",
+            {
+                light.ATTR_HS_COLOR: (71.059, 100),
+                light.ATTR_TRANSITION: 4.2,
+            },
+        ),
+        (
+            "brightness_and_transition",
+            "turn_on",
+            {
+                light.ATTR_BRIGHTNESS: 130,
+                light.ATTR_TRANSITION: 5.3,
+            },
+        ),
+    ),
+)
+async def test_light_profiles(
+    hass, mock_light_profiles, profile_name, expected_data, last_call
+):
     """Test light profiles."""
     platform = getattr(hass.components, "test.light")
     platform.init()
 
-    user_light_file = hass.config.path(light.LIGHT_PROFILES_FILE)
-
-    # Setup a wrong light file
-    with open(user_light_file, "w") as user_file:
-        user_file.write("id,x,y,brightness,transition\n")
-        user_file.write("I,WILL,NOT,WORK,EVER\n")
-
-    assert not await async_setup_component(
-        hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
-    )
-
-
-async def test_light_profiles(hass, mock_storage):
-    """Test light profiles."""
-    platform = getattr(hass.components, "test.light")
-    platform.init()
-
-    user_light_file = hass.config.path(light.LIGHT_PROFILES_FILE)
-
-    with open(user_light_file, "w") as user_file:
-        user_file.write("id,x,y,brightness\n")
-        user_file.write("test,.4,.6,100\n")
-        user_file.write("test_off,0,0,0\n")
+    profile_mock_data = {
+        "test": (0.4, 0.6, 100, 0),
+        "color_no_brightness_no_transition": (0.4, 0.6, None, None),
+        "no color": (None, None, 110, 0),
+        "test_off": (0, 0, 0, 0),
+        "no brightness": (0.4, 0.6, None),
+        "color_and_brightness": (0.4, 0.6, 120),
+        "color_and_transition": (0.4, 0.6, None, 4.2),
+        "brightness_and_transition": (None, None, 130, 5.3),
+    }
+    for name, data in profile_mock_data.items():
+        mock_light_profiles[name] = light.Profile(*(name, *data))
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -459,104 +522,31 @@ async def test_light_profiles(hass, mock_storage):
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: ent1.entity_id,
-            light.ATTR_PROFILE: "test",
+            light.ATTR_PROFILE: profile_name,
         },
         blocking=True,
     )
 
-    _, data = ent1.last_call("turn_on")
-    assert light.is_on(hass, ent1.entity_id)
-    assert data == {
-        light.ATTR_HS_COLOR: (71.059, 100),
-        light.ATTR_BRIGHTNESS: 100,
-        light.ATTR_TRANSITION: 0,
-    }
-
-    await hass.services.async_call(
-        light.DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ent1.entity_id, light.ATTR_PROFILE: "test_off"},
-        blocking=True,
-    )
-
-    _, data = ent1.last_call("turn_off")
-    assert not light.is_on(hass, ent1.entity_id)
-    assert data == {light.ATTR_TRANSITION: 0}
+    _, data = ent1.last_call(last_call)
+    if last_call == "turn_on":
+        assert light.is_on(hass, ent1.entity_id)
+    else:
+        assert not light.is_on(hass, ent1.entity_id)
+    assert data == expected_data
 
 
-async def test_light_profiles_with_transition(hass, mock_storage):
-    """Test light profiles with transition."""
+async def test_default_profiles_group(hass, mock_light_profiles):
+    """Test default turn-on light profile for all lights."""
     platform = getattr(hass.components, "test.light")
     platform.init()
-
-    user_light_file = hass.config.path(light.LIGHT_PROFILES_FILE)
-
-    with open(user_light_file, "w") as user_file:
-        user_file.write("id,x,y,brightness,transition\n")
-        user_file.write("test,.4,.6,100,2\n")
-        user_file.write("test_off,0,0,0,0\n")
 
     assert await async_setup_component(
         hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
     await hass.async_block_till_done()
 
-    ent1, _, _ = platform.ENTITIES
-
-    await hass.services.async_call(
-        light.DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ent1.entity_id, light.ATTR_PROFILE: "test"},
-        blocking=True,
-    )
-
-    _, data = ent1.last_call("turn_on")
-    assert light.is_on(hass, ent1.entity_id)
-    assert data == {
-        light.ATTR_HS_COLOR: (71.059, 100),
-        light.ATTR_BRIGHTNESS: 100,
-        light.ATTR_TRANSITION: 2,
-    }
-
-    await hass.services.async_call(
-        light.DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ent1.entity_id, light.ATTR_PROFILE: "test_off"},
-        blocking=True,
-    )
-
-    _, data = ent1.last_call("turn_off")
-    assert not light.is_on(hass, ent1.entity_id)
-    assert data == {light.ATTR_TRANSITION: 0}
-
-
-async def test_default_profiles_group(hass, mock_storage):
-    """Test default turn-on light profile for all lights."""
-    platform = getattr(hass.components, "test.light")
-    platform.init()
-
-    user_light_file = hass.config.path(light.LIGHT_PROFILES_FILE)
-    real_isfile = os.path.isfile
-    real_open = open
-
-    def _mock_isfile(path):
-        if path == user_light_file:
-            return True
-        return real_isfile(path)
-
-    def _mock_open(path, *args, **kwargs):
-        if path == user_light_file:
-            return StringIO(profile_data)
-        return real_open(path, *args, **kwargs)
-
-    profile_data = "id,x,y,brightness,transition\ngroup.all_lights.default,.4,.6,99,2\n"
-    with mock.patch("os.path.isfile", side_effect=_mock_isfile), mock.patch(
-        "builtins.open", side_effect=_mock_open
-    ):
-        assert await async_setup_component(
-            hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
-        )
-        await hass.async_block_till_done()
+    profile = light.Profile("group.all_lights.default", 0.4, 0.6, 99, 2)
+    mock_light_profiles[profile.name] = profile
 
     ent, _, _ = platform.ENTITIES
     await hass.services.async_call(
@@ -571,37 +561,71 @@ async def test_default_profiles_group(hass, mock_storage):
     }
 
 
-async def test_default_profiles_light(hass, mock_storage):
+@pytest.mark.parametrize(
+    "extra_call_params, expected_params",
+    (
+        (
+            {},
+            {
+                light.ATTR_HS_COLOR: (50.353, 100),
+                light.ATTR_BRIGHTNESS: 100,
+                light.ATTR_TRANSITION: 3,
+            },
+        ),
+        (
+            {light.ATTR_BRIGHTNESS: 22},
+            {
+                light.ATTR_HS_COLOR: (50.353, 100),
+                light.ATTR_BRIGHTNESS: 22,
+                light.ATTR_TRANSITION: 3,
+            },
+        ),
+        (
+            {light.ATTR_TRANSITION: 22},
+            {
+                light.ATTR_HS_COLOR: (50.353, 100),
+                light.ATTR_BRIGHTNESS: 100,
+                light.ATTR_TRANSITION: 22,
+            },
+        ),
+        (
+            {
+                light.ATTR_XY_COLOR: [0.4448, 0.4066],
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_HS_COLOR: (38.88, 49.02),
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+        ),
+        (
+            {light.ATTR_BRIGHTNESS: 11, light.ATTR_TRANSITION: 1},
+            {
+                light.ATTR_HS_COLOR: (50.353, 100),
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+        ),
+    ),
+)
+async def test_default_profiles_light(
+    hass, mock_light_profiles, extra_call_params, expected_params
+):
     """Test default turn-on light profile for a specific light."""
     platform = getattr(hass.components, "test.light")
     platform.init()
 
-    user_light_file = hass.config.path(light.LIGHT_PROFILES_FILE)
-    real_isfile = os.path.isfile
-    real_open = open
-
-    def _mock_isfile(path):
-        if path == user_light_file:
-            return True
-        return real_isfile(path)
-
-    def _mock_open(path, *args, **kwargs):
-        if path == user_light_file:
-            return StringIO(profile_data)
-        return real_open(path, *args, **kwargs)
-
-    profile_data = (
-        "id,x,y,brightness,transition\n"
-        + "group.all_lights.default,.3,.5,200,0\n"
-        + "light.ceiling_2.default,.6,.6,100,3\n"
+    assert await async_setup_component(
+        hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
     )
-    with mock.patch("os.path.isfile", side_effect=_mock_isfile), mock.patch(
-        "builtins.open", side_effect=_mock_open
-    ):
-        assert await async_setup_component(
-            hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: "test"}}
-        )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    profile = light.Profile("group.all_lights.default", 0.3, 0.5, 200, 0)
+    mock_light_profiles[profile.name] = profile
+    profile = light.Profile("light.ceiling_2.default", 0.6, 0.6, 100, 3)
+    mock_light_profiles[profile.name] = profile
 
     dev = next(filter(lambda x: x.entity_id == "light.ceiling_2", platform.ENTITIES))
     await hass.services.async_call(
@@ -609,14 +633,26 @@ async def test_default_profiles_light(hass, mock_storage):
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: dev.entity_id,
+            **extra_call_params,
         },
         blocking=True,
     )
 
     _, data = dev.last_call("turn_on")
+    assert data == expected_params
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: dev.entity_id,
+            light.ATTR_BRIGHTNESS: 0,
+        },
+        blocking=True,
+    )
+
+    _, data = dev.last_call("turn_off")
     assert data == {
-        light.ATTR_HS_COLOR: (50.353, 100),
-        light.ATTR_BRIGHTNESS: 100,
         light.ATTR_TRANSITION: 3,
     }
 
@@ -775,3 +811,92 @@ def test_deprecated_base_class(caplog):
 
     CustomLight()
     assert "Light is deprecated, modify CustomLight" in caplog.text
+
+
+async def test_profiles(hass):
+    """Test profiles loading."""
+    profiles = orig_Profiles(hass)
+    await profiles.async_initialize()
+    assert profiles.data == {
+        "concentrate": light.Profile("concentrate", 0.5119, 0.4147, 219, None),
+        "energize": light.Profile("energize", 0.368, 0.3686, 203, None),
+        "reading": light.Profile("reading", 0.4448, 0.4066, 240, None),
+        "relax": light.Profile("relax", 0.5119, 0.4147, 144, None),
+    }
+    assert profiles.data["concentrate"].hs_color == (35.932, 69.412)
+    assert profiles.data["energize"].hs_color == (43.333, 21.176)
+    assert profiles.data["reading"].hs_color == (38.88, 49.02)
+    assert profiles.data["relax"].hs_color == (35.932, 69.412)
+
+
+@patch("os.path.isfile", MagicMock(side_effect=(True, False)))
+async def test_profile_load_optional_hs_color(hass):
+    """Test profile loading with profiles containing no xy color."""
+
+    csv_file = """the first line is skipped
+no_color,,,100,1
+no_color_no_transition,,,110
+color,0.5119,0.4147,120,2
+color_no_transition,0.4448,0.4066,130
+color_and_brightness,0.4448,0.4066,170,
+only_brightness,,,140
+only_transition,,,,150
+transition_float,,,,1.6
+invalid_profile_1,
+invalid_color_2,,0.1,1,2
+invalid_color_3,,0.1,1
+invalid_color_4,0.1,,1,3
+invalid_color_5,0.1,,1
+invalid_brightness,0,0,256,4
+invalid_brightness_2,0,0,256
+invalid_no_brightness_no_color_no_transition,,,
+"""
+
+    profiles = orig_Profiles(hass)
+    with patch("builtins.open", mock_open(read_data=csv_file)):
+        await profiles.async_initialize()
+        await hass.async_block_till_done()
+
+    assert profiles.data["no_color"].hs_color is None
+    assert profiles.data["no_color"].brightness == 100
+    assert profiles.data["no_color"].transition == 1
+
+    assert profiles.data["no_color_no_transition"].hs_color is None
+    assert profiles.data["no_color_no_transition"].brightness == 110
+    assert profiles.data["no_color_no_transition"].transition is None
+
+    assert profiles.data["color"].hs_color == (35.932, 69.412)
+    assert profiles.data["color"].brightness == 120
+    assert profiles.data["color"].transition == 2
+
+    assert profiles.data["color_no_transition"].hs_color == (38.88, 49.02)
+    assert profiles.data["color_no_transition"].brightness == 130
+    assert profiles.data["color_no_transition"].transition is None
+
+    assert profiles.data["color_and_brightness"].hs_color == (38.88, 49.02)
+    assert profiles.data["color_and_brightness"].brightness == 170
+    assert profiles.data["color_and_brightness"].transition is None
+
+    assert profiles.data["only_brightness"].hs_color is None
+    assert profiles.data["only_brightness"].brightness == 140
+    assert profiles.data["only_brightness"].transition is None
+
+    assert profiles.data["only_transition"].hs_color is None
+    assert profiles.data["only_transition"].brightness is None
+    assert profiles.data["only_transition"].transition == 150
+
+    assert profiles.data["transition_float"].hs_color is None
+    assert profiles.data["transition_float"].brightness is None
+    assert profiles.data["transition_float"].transition == 1.6
+
+    for invalid_profile_name in (
+        "invalid_profile_1",
+        "invalid_color_2",
+        "invalid_color_3",
+        "invalid_color_4",
+        "invalid_color_5",
+        "invalid_brightness",
+        "invalid_brightness_2",
+        "invalid_no_brightness_no_color_no_transition",
+    ):
+        assert invalid_profile_name not in profiles.data

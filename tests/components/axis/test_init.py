@@ -1,6 +1,9 @@
 """Test Axis component setup process."""
+from unittest.mock import AsyncMock, Mock, patch
+
 from homeassistant.components import axis
 from homeassistant.components.axis.const import CONF_MODEL, DOMAIN as AXIS_DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
@@ -10,11 +13,12 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.helpers import entity_registry
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.setup import async_setup_component
 
 from .test_device import MAC, setup_axis_integration
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -28,13 +32,13 @@ async def test_setup_entry(hass):
     """Test successful setup of entry."""
     await setup_axis_integration(hass)
     assert len(hass.data[AXIS_DOMAIN]) == 1
-    assert MAC in hass.data[AXIS_DOMAIN]
+    assert format_mac(MAC) in hass.data[AXIS_DOMAIN]
 
 
 async def test_setup_entry_fails(hass):
     """Test successful setup of entry."""
     config_entry = MockConfigEntry(
-        domain=AXIS_DOMAIN, data={CONF_MAC: "0123"}, version=2
+        domain=AXIS_DOMAIN, data={CONF_MAC: "0123"}, version=3
     )
     config_entry.add_to_hass(hass)
 
@@ -51,7 +55,8 @@ async def test_setup_entry_fails(hass):
 
 async def test_unload_entry(hass):
     """Test successful unload of entry."""
-    device = await setup_axis_integration(hass)
+    config_entry = await setup_axis_integration(hass)
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
     assert hass.data[AXIS_DOMAIN]
 
     assert await hass.config_entries.async_unload(device.config_entry.entry_id)
@@ -67,7 +72,7 @@ async def test_migrate_entry(hass):
             CONF_PASSWORD: "password",
             CONF_PORT: 80,
         },
-        CONF_MAC: "mac",
+        CONF_MAC: "00408C123456",
         CONF_MODEL: "model",
         CONF_NAME: "name",
     }
@@ -75,6 +80,17 @@ async def test_migrate_entry(hass):
 
     assert entry.data == legacy_config
     assert entry.version == 1
+    assert not entry.unique_id
+
+    # Create entity entry to migrate to new unique ID
+    registry = await entity_registry.async_get_registry(hass)
+    registry.async_get_or_create(
+        BINARY_SENSOR_DOMAIN,
+        AXIS_DOMAIN,
+        "00408C123456-vmd4-0",
+        suggested_object_id="vmd4",
+        config_entry=entry,
+    )
 
     await entry.async_migrate(hass)
 
@@ -89,8 +105,12 @@ async def test_migrate_entry(hass):
         CONF_USERNAME: "username",
         CONF_PASSWORD: "password",
         CONF_PORT: 80,
-        CONF_MAC: "mac",
+        CONF_MAC: "00408C123456",
         CONF_MODEL: "model",
         CONF_NAME: "name",
     }
-    assert entry.version == 2
+    assert entry.version == 2  # Keep version to support rollbacking
+    assert entry.unique_id == "00:40:8c:12:34:56"
+
+    vmd4_entity = registry.async_get("binary_sensor.vmd4")
+    assert vmd4_entity.unique_id == "00:40:8c:12:34:56-vmd4-0"

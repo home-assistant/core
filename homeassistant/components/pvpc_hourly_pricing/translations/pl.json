@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Integracja jest ju\u017c skonfigurowana z istniej\u0105cym sensorem dla tej taryfy."
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
         },
         "step": {
             "user": {

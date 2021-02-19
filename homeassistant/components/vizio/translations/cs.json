@@ -1,21 +1,52 @@
 {
     "config": {
         "abort": {
-            "already_configured_device": "Za\u0159\u00edzen\u00ed je ji\u017e nakonfigurov\u00e1no"
+            "already_configured_device": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "updated_entry": "Tato polo\u017eka ji\u017e byla nastavena, ale jm\u00e9no, aplikace nebo mo\u017enosti definovan\u00e9 v konfiguraci neodpov\u00eddaj\u00ed d\u0159\u00edve importovan\u00e9 konfiguraci, tak\u017ee polo\u017eka konfigurace byla odpov\u00eddaj\u00edc\u00edm zp\u016fsobem aktualizov\u00e1na."
         },
         "error": {
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "existing_config_entry_found": "Za\u0159\u00edzen\u00ed VIZIO SmartCast se stejn\u00fdm s\u00e9riov\u00fdm \u010d\u00edslem ji\u017e bylo nastaveno. Chcete-li nastavit tuto polo\u017eku, mus\u00edte odstranit st\u00e1vaj\u00edc\u00ed polo\u017eku."
         },
         "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN k\u00f3d"
+                },
+                "description": "Va\u0161e televize by m\u011bla zobrazovat k\u00f3d. Zadejte tento k\u00f3d do formul\u00e1\u0159e a pokra\u010dujte dal\u0161\u00edm krokem, kter\u00fdm dokon\u010d\u00edte p\u00e1rov\u00e1n\u00ed.",
+                "title": "Dokon\u010dete proces p\u00e1rov\u00e1n\u00ed"
+            },
+            "pairing_complete": {
+                "description": "V\u00e1\u0161 Za\u0159\u00edzen\u00ed VIZIO SmartCast je nyn\u00ed p\u0159ipojeno k Home Assistant.",
+                "title": "P\u00e1rov\u00e1n\u00ed dokon\u010deno"
+            },
             "pairing_complete_import": {
-                "description": "V\u00e1\u0161  je nyn\u00ed p\u0159ipojen k Home Assistant. \n\n V\u00e1\u0161 P\u0159\u00edstupov\u00fd token je '** {access_token} **'."
+                "description": "V\u00e1\u0161 Za\u0159\u00edzen\u00ed VIZIO SmartCast je nyn\u00ed p\u0159ipojen k Home Assistant. \n\n V\u00e1\u0161 P\u0159\u00edstupov\u00fd token je '** {access_token} **'.",
+                "title": "P\u00e1rov\u00e1n\u00ed dokon\u010deno"
             },
             "user": {
                 "data": {
                     "access_token": "P\u0159\u00edstupov\u00fd token",
-                    "host": "Hostitel"
+                    "device_class": "Typ za\u0159\u00edzen\u00ed",
+                    "host": "Hostitel",
+                    "name": "Jm\u00e9no"
                 },
-                "description": "P\u0159\u00edstupov\u00fd token je pot\u0159eba pouze pro televizory. Pokud konfigurujete televizor a nem\u00e1te [%key:common:common::config_flow::data::access_token%], ponechte jej pr\u00e1zdn\u00e9, abyste mohli proj\u00edt procesem p\u00e1rov\u00e1n\u00ed."
+                "description": "P\u0159\u00edstupov\u00fd token je pot\u0159eba pouze pro televizory. Pokud konfigurujete televizor a nem\u00e1te [%key:common:common::config_flow::data::access_token%], ponechte jej pr\u00e1zdn\u00e9, abyste mohli proj\u00edt procesem p\u00e1rov\u00e1n\u00ed.",
+                "title": "Za\u0159\u00edzen\u00ed VIZIO SmartCast"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "apps_to_include_or_exclude": "Aplikace, kter\u00e9 chcete zahrnout nebo vylou\u010dit",
+                    "include_or_exclude": "Zahrnout nebo vylou\u010dit aplikace?",
+                    "volume_step": "V\u00fd\u0161e kroku hlasitosti"
+                },
+                "description": "Pokud m\u00e1te Smart TV, m\u016f\u017eete vyfiltrovat seznam zdroj\u016f v\u00fdb\u011brem aplikac\u00ed, kter\u00e9 chcete do seznamu zdroj\u016f zahrnout nebo vylou\u010dit.",
+                "title": "Aktualizujte mo\u017enosti Za\u0159\u00edzen\u00ed VIZIO SmartCast"
             }
         }
     }

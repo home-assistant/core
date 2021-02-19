@@ -4,6 +4,7 @@
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "no_uuid": "Kodi nie ma unikalnego identyfikatora. Najprawdopodobniej jest to spowodowane star\u0105 wersj\u0105 Kodi (17.x lub starsz\u0105). Mo\u017cesz skonfigurowa\u0107 integracj\u0119 r\u0119cznie lub zaktualizowa\u0107 Kodi do nowszej wersji.",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
@@ -21,16 +22,8 @@
                 "description": "Wprowad\u017a nazw\u0119 u\u017cytkownika i has\u0142o Kodi. Mo\u017cna je znale\u017a\u0107 w System/Ustawienia/Sie\u0107/Us\u0142ugi."
             },
             "discovery_confirm": {
-                "description": "Czy chcesz doda\u0107 Kodi (\"{name}\") do Home Assistant?",
-                "title": "Wykryto urz\u0105dzenia Kodi"
-            },
-            "host": {
-                "data": {
-                    "host": "Nazwa hosta lub adres IP",
-                    "port": "Port",
-                    "ssl": "Po\u0142\u0105cz przez SSL"
-                },
-                "description": "Informacje o po\u0142\u0105czeniu Kodi. Upewnij si\u0119, \u017ce w\u0142\u0105czy\u0142e\u015b \"Zezwalaj na zdalne sterowanie przez HTTP\" w System/Ustawienia/Sieci/Us\u0142ugi."
+                "description": "Czy chcesz doda\u0107 Kodi (\"{name}\") do Home Assistanta?",
+                "title": "Wykryte urz\u0105dzenia Kodi"
             },
             "user": {
                 "data": {
@@ -50,8 +43,8 @@
     },
     "device_automation": {
         "trigger_type": {
-            "turn_off": "{entity_name} zosta\u0142 poproszony o wy\u0142\u0105czenie",
-            "turn_on": "{entity_name} zosta\u0142 poproszony o w\u0142\u0105czenie"
+            "turn_off": "{entity_name} zostanie poproszony o wy\u0142\u0105czenie",
+            "turn_on": "{entity_name} zostanie poproszony o w\u0142\u0105czenie"
         }
     }
 }

@@ -1,4 +1,4 @@
-"""Provide the device automations for NEW_NAME."""
+"""Provide the device conditions for NEW_NAME."""
 from typing import Dict, List
 
 import voluptuous as vol

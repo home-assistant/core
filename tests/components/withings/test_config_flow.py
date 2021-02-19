@@ -30,7 +30,7 @@ async def test_config_non_unique_profile(hass: HomeAssistant) -> None:
     )
 
     assert result
-    assert result["errors"]["base"] == "already_configured_account"
+    assert result["errors"]["base"] == "already_configured"
 
 
 async def test_config_reauth_profile(
@@ -71,7 +71,13 @@ async def test_config_reauth_profile(
     )
 
     # pylint: disable=protected-access
-    state = config_entry_oauth2_flow._encode_jwt(hass, {"flow_id": result["flow_id"]})
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
 
     client: TestClient = await aiohttp_client(hass.http.app)
     resp = await client.get(f"{AUTH_CALLBACK_PATH}?code=abcd&state={state}")

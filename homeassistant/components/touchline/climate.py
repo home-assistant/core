@@ -1,6 +1,4 @@
 """Platform for Roth Touchline floor heating controller."""
-import logging
-
 from pytouchline import PyTouchline
 import voluptuous as vol
 
@@ -12,8 +10,6 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 PRESET_MODES = {
     "Normal": {"mode": 0, "program": 0},

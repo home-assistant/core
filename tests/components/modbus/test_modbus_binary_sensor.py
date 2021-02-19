@@ -1,100 +1,83 @@
 """The tests for the Modbus sensor component."""
-from datetime import timedelta
-import logging
+import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
-    CONF_ADDRESS,
     CONF_INPUT_TYPE,
     CONF_INPUTS,
 )
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_SLAVE, STATE_OFF, STATE_ON
 
-from .conftest import run_base_read_test, setup_base_test
-
-_LOGGER = logging.getLogger(__name__)
+from .conftest import base_config_test, base_test
 
 
-async def run_sensor_test(hass, use_mock_hub, register_config, value, expected):
+@pytest.mark.parametrize("do_options", [False, True])
+async def test_config_binary_sensor(hass, do_options):
+    """Run test for binary sensor."""
+    sensor_name = "test_sensor"
+    config_sensor = {
+        CONF_NAME: sensor_name,
+        CONF_ADDRESS: 51,
+    }
+    if do_options:
+        config_sensor.update(
+            {
+                CONF_SLAVE: 10,
+                CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
+            }
+        )
+    await base_config_test(
+        hass,
+        config_sensor,
+        sensor_name,
+        SENSOR_DOMAIN,
+        None,
+        CONF_INPUTS,
+        method_discovery=False,
+    )
+
+
+@pytest.mark.parametrize("do_type", [CALL_TYPE_COIL, CALL_TYPE_DISCRETE])
+@pytest.mark.parametrize(
+    "regs,expected",
+    [
+        (
+            [0xFF],
+            STATE_ON,
+        ),
+        (
+            [0x01],
+            STATE_ON,
+        ),
+        (
+            [0x00],
+            STATE_OFF,
+        ),
+        (
+            [0x80],
+            STATE_OFF,
+        ),
+        (
+            [0xFE],
+            STATE_OFF,
+        ),
+    ],
+)
+async def test_all_binary_sensor(hass, do_type, regs, expected):
     """Run test for given config."""
     sensor_name = "modbus_test_binary_sensor"
-    scan_interval = 5
-    entity_id, now, device = await setup_base_test(
+    state = await base_test(
+        hass,
+        {CONF_NAME: sensor_name, CONF_ADDRESS: 1234, CONF_INPUT_TYPE: do_type},
         sensor_name,
-        hass,
-        use_mock_hub,
-        {
-            CONF_INPUTS: [
-                dict(**{CONF_NAME: sensor_name, CONF_ADDRESS: 1234}, **register_config)
-            ]
-        },
         SENSOR_DOMAIN,
-        scan_interval,
-    )
-    await run_base_read_test(
-        entity_id,
-        hass,
-        use_mock_hub,
-        register_config.get(CONF_INPUT_TYPE),
-        value,
+        None,
+        CONF_INPUTS,
+        regs,
         expected,
-        now + timedelta(seconds=scan_interval + 1),
+        method_discovery=False,
+        scan_interval=5,
     )
-
-
-async def test_coil_true(hass, mock_hub):
-    """Test conversion of single word register."""
-    register_config = {
-        CONF_INPUT_TYPE: CALL_TYPE_COIL,
-    }
-    await run_sensor_test(
-        hass,
-        mock_hub,
-        register_config,
-        [0xFF],
-        STATE_ON,
-    )
-
-
-async def test_coil_false(hass, mock_hub):
-    """Test conversion of single word register."""
-    register_config = {
-        CONF_INPUT_TYPE: CALL_TYPE_COIL,
-    }
-    await run_sensor_test(
-        hass,
-        mock_hub,
-        register_config,
-        [0x00],
-        STATE_OFF,
-    )
-
-
-async def test_discrete_true(hass, mock_hub):
-    """Test conversion of single word register."""
-    register_config = {
-        CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
-    }
-    await run_sensor_test(
-        hass,
-        mock_hub,
-        register_config,
-        [0xFF],
-        expected="on",
-    )
-
-
-async def test_discrete_false(hass, mock_hub):
-    """Test conversion of single word register."""
-    register_config = {
-        CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
-    }
-    await run_sensor_test(
-        hass,
-        mock_hub,
-        register_config,
-        [0x00],
-        expected="off",
-    )
+    assert state == expected

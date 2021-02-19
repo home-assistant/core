@@ -2,8 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Z-Wave ya est\u00e1 configurado",
-            "one_instance_only": "El componente solo admite una instancia de Z-Wave",
-            "single_instance_allowed": "Ya est\u00e1 configurado. S\u00f3lo es posible una \u00fanica configuraci\u00f3n."
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "error": {
             "option_error": "Z-Wave error de validaci\u00f3n. \u00bfLa ruta de acceso a la memoria USB escorrecta?"

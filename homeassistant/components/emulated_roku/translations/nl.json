@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "name_exists": "Naam bestaat al"
+            "already_configured": "Apparaat is al geconfigureerd"
         },
         "step": {
             "user": {

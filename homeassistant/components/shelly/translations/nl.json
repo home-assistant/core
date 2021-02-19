@@ -4,17 +4,18 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "auth_not_supported": "Shelly apparaten die verificatie vereisen, worden momenteel niet ondersteund.",
             "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
         "flow_title": "Shelly: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "Wilt u het {model} bij {host} opzetten?"
+                "description": "Wilt u het {model} bij {host} instellen? Voordat apparaten op batterijen kunnen worden ingesteld, moet het worden gewekt door op de knop op het apparaat te drukken."
             },
             "credentials": {
                 "data": {
+                    "password": "Wachtwoord",
                     "username": "Benutzername"
                 }
             },
@@ -24,6 +25,5 @@
                 }
             }
         }
-    },
-    "title": "Shelly"
+    }
 }

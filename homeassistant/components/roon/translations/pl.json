@@ -4,7 +4,7 @@
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
-            "duplicate_entry": "Ten adres hosta zosta\u0142 ju\u017c dodany.",
+            "duplicate_entry": "Ten host lub adres IP zosta\u0142 ju\u017c dodany",
             "invalid_auth": "Niepoprawne uwierzytelnienie",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
@@ -14,10 +14,11 @@
                 "title": "Autoryzuj Home Assistant w Roon"
             },
             "user": {
-                "description": "Wprowad\u017a nazw\u0119 hosta lub adres IP swojego serwera Roon.",
-                "title": "Konfiguracja serwera Roon"
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                },
+                "description": "Nie wykryto serwera Roon, wprowad\u017a nazw\u0119 hosta lub adres IP."
             }
         }
-    },
-    "title": "Roon"
+    }
 }

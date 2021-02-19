@@ -1,0 +1,49 @@
+{
+  "title": "Z-Wave JS",
+  "config": {
+    "step": {
+      "manual": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        }
+      },
+      "on_supervisor": {
+        "title": "Select connection method",
+        "description": "Do you want to use the Z-Wave JS Supervisor add-on?",
+        "data": { "use_addon": "Use the Z-Wave JS Supervisor add-on" }
+      },
+      "install_addon": {
+        "title": "The Z-Wave JS add-on installation has started"
+      },
+      "start_addon": {
+        "title": "Enter the Z-Wave JS add-on configuration",
+        "data": {
+          "usb_path": "[%key:common::config_flow::data::usb_path%]",
+          "network_key": "Network Key"
+        }
+      },
+      "hassio_confirm": {
+        "title": "Set up Z-Wave JS integration with the Z-Wave JS add-on"
+      }
+    },
+    "error": {
+      "addon_start_failed": "Failed to start the Z-Wave JS add-on. Check the configuration.",
+      "invalid_ws_url": "Invalid websocket URL",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "addon_info_failed": "Failed to get Z-Wave JS add-on info.",
+      "addon_install_failed": "Failed to install the Z-Wave JS add-on.",
+      "addon_set_config_failed": "Failed to set Z-Wave JS configuration.",
+      "addon_get_discovery_info_failed": "Failed to get Z-Wave JS add-on discovery info.",
+      "addon_missing_discovery_info": "Missing Z-Wave JS add-on discovery info.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "progress": {
+      "install_addon": "Please wait while the Z-Wave JS add-on installation finishes. This can take several minutes."
+    }
+  }
+}

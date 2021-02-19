@@ -1,7 +1,22 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Asukoht on juba m\u00e4\u00e4ratud"
+        },
         "error": {
-            "connection_error": "\u00dchenduse loomine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_address": "Aadress ei kuuluTwente Milieu teeninduspiirkondat."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "house_letter": "Maja numbri laiendus",
+                    "house_number": "Maja number",
+                    "post_code": "Sihtnumber"
+                },
+                "description": "Seadista Twente Milieu, mis pakub j\u00e4\u00e4tmekogumist teie aadressil.",
+                "title": ""
+            }
         }
     }
 }

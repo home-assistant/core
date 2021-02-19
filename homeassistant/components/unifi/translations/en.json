@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Controller site is already configured"
+            "already_configured": "Controller site is already configured",
+            "configuration_updated": "Configuration updated.",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "faulty_credentials": "Invalid authentication",
             "service_unavailable": "Failed to connect",
             "unknown_client_mac": "No client available on that MAC address"
         },
+        "flow_title": "UniFi Network {site} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -27,6 +30,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Network access controlled clients",
+                    "dpi_restrictions": "Allow control of DPI restriction groups",
                     "poe_clients": "Allow POE control of clients"
                 },
                 "description": "Configure client controls\n\nCreate switches for serial numbers you want to control network access for.",

@@ -7,19 +7,18 @@
         },
         "error": {
             "discovery_error": "Failed to discover a Xiaomi Aqara Gateway, try using the IP of the device running HomeAssistant as interface",
-            "invalid_host": "Invalid IP Address, see https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+            "invalid_host": "Invalid hostname or IP address, see https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
             "invalid_interface": "Invalid network interface",
             "invalid_key": "Invalid gateway key",
-            "invalid_mac": "Invalid Mac Address",
-            "not_found_error": "Zeroconf discovered Gateway could not be located to get the necessary information, try using the IP of the device running HomeAssistant as interface"
+            "invalid_mac": "Invalid Mac Address"
         },
         "flow_title": "Xiaomi Aqara Gateway: {name}",
         "step": {
             "select": {
                 "data": {
-                    "select_ip": "Gateway IP"
+                    "select_ip": "IP Address"
                 },
-                "description": "Run the setup again if you want to connect aditional gateways",
+                "description": "Run the setup again if you want to connect additional gateways",
                 "title": "Select the Xiaomi Aqara Gateway that you wish to connect"
             },
             "settings": {
@@ -36,7 +35,7 @@
                     "interface": "The network interface to use",
                     "mac": "Mac Address (optional)"
                 },
-                "description": "Connect to your Xiaomi Aqara Gateway, if the IP and mac addresses are left empty, auto-discovery is used",
+                "description": "Connect to your Xiaomi Aqara Gateway, if the IP and MAC addresses are left empty, auto-discovery is used",
                 "title": "Xiaomi Aqara Gateway"
             }
         }

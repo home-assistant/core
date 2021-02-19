@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'host \u00e8 gi\u00e0 configurato."
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi all'host",
-            "name_exists": "Il nome \u00e8 gi\u00e0 esistente",
-            "wrong_credentials": "Nome utente o password non validi"
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "name_exists": "Nome gi\u00e0 esistente"
         },
         "step": {
             "user": {

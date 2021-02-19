@@ -3,7 +3,7 @@ repos:
     rev: v2.7.2
     hooks:
       - id: pyupgrade
-        args: [--py37-plus]
+        args: [--py38-plus]
   - repo: https://github.com/psf/black
     rev: 20.8b1
     hooks:
@@ -13,14 +13,15 @@ repos:
           - --quiet
         files: ^((homeassistant|script|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/codespell-project/codespell
-    rev: v1.17.1
+    rev: v2.0.0
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=hass,alot,datas,dof,dur,farenheit,hist,iff,ines,ist,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,iam,incomfort
+          - --ignore-words-list=hass,alot,datas,dof,dur,ether,farenheit,hist,iff,ines,ist,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,iam,incomfort
           - --skip="./.*,*.csv,*.json"
           - --quiet-level=2
         exclude_types: [csv, json]
+        exclude: ^tests/fixtures/
   - repo: https://gitlab.com/pycqa/flake8
     rev: 3.8.4
     hooks:
@@ -30,7 +31,7 @@ repos:
           - pydocstyle==5.1.1
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.6.2
+    rev: 1.7.0
     hooks:
       - id: bandit
         args:
@@ -48,6 +49,7 @@ repos:
       - id: check-executables-have-shebangs
         stages: [manual]
       - id: check-json
+        exclude: (.vscode|.devcontainer)
       - id: no-commit-to-branch
         args:
           - --branch=dev
@@ -57,8 +59,8 @@ repos:
     rev: v1.24.2
     hooks:
       - id: yamllint
-  - repo: https://github.com/prettier/prettier
-    rev: 2.0.4
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v2.2.1
     hooks:
       - id: prettier
         stages: [manual]
@@ -87,5 +89,5 @@ repos:
         entry: script/run-in-env.sh python3 -m script.hassfest
         pass_filenames: false
         language: script
-        types: [json]
-        files: ^homeassistant/.+/(manifest|strings)\.json$
+        types: [text]
+        files: ^(homeassistant/.+/(manifest|strings)\.json|\.coveragerc|homeassistant/.+/services\.yaml)$

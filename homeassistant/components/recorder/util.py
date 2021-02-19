@@ -149,7 +149,7 @@ def basic_sanity_check(cursor):
     """Check tables to make sure select does not fail."""
 
     for table in ALL_TABLES:
-        cursor.execute(f"SELECT * FROM {table} LIMIT 1;")  # sec: not injection
+        cursor.execute(f"SELECT * FROM {table} LIMIT 1;")  # nosec # not injection
 
     return True
 

@@ -1,12 +1,16 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Configuratie bijgewerkt voor profiel.",
             "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
             "missing_configuration": "De Withings integratie is niet geconfigureerd. Gelieve de documentatie te volgen.",
             "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})"
         },
         "create_entry": {
             "default": "Succesvol geverifieerd met Withings voor het geselecteerde profiel."
+        },
+        "error": {
+            "already_configured": "Account is al geconfigureerd"
         },
         "step": {
             "pick_implementation": {

@@ -12,6 +12,8 @@ from homeassistant.const import (
     LENGTH_FEET,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
+    LENGTH_MILES,
+    LENGTH_YARD,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -37,7 +39,13 @@ DEFAULT_PROXIMITY_ZONE = "home"
 DEFAULT_TOLERANCE = 1
 DOMAIN = "proximity"
 
-UNITS = [LENGTH_KILOMETERS, LENGTH_METERS, "mi", LENGTH_FEET]
+UNITS = [
+    LENGTH_METERS,
+    LENGTH_KILOMETERS,
+    LENGTH_FEET,
+    LENGTH_YARD,
+    LENGTH_MILES,
+]
 
 ZONE_SCHEMA = vol.Schema(
     {

@@ -1,11 +1,7 @@
 """Summary data from Nextcoud."""
-import logging
-
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN, SENSORS
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

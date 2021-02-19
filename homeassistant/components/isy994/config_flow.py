@@ -94,13 +94,12 @@ def _fetch_isy_configuration(
             password,
             use_https,
             tls_ver,
-            log=_LOGGER,
             webroot=webroot,
         )
     except ValueError as err:
         raise InvalidAuth(err.args[0]) from err
 
-    return Configuration(log=_LOGGER, xml=isy_conn.get_config())
+    return Configuration(xml=isy_conn.get_config())
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -169,7 +168,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_HOST: url,
         }
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_user()
 

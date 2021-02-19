@@ -40,7 +40,7 @@ DOMAIN = const.DOMAIN
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            cv.deprecated(const.CONF_PROFILES, invalidation_version="0.114"),
+            cv.deprecated(const.CONF_PROFILES),
             vol.Schema(
                 {
                     vol.Required(CONF_CLIENT_ID): vol.All(cv.string, vol.Length(min=1)),

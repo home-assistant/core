@@ -56,7 +56,7 @@ STREAM_PING_PAYLOAD = "ping"
 STREAM_PING_INTERVAL = 50  # seconds
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Register the API with the HTTP interface."""
     hass.http.register_view(APIStatusView)
     hass.http.register_view(APIEventStream)
@@ -178,6 +178,7 @@ class APIDiscoveryView(HomeAssistantView):
     requires_auth = False
     url = URL_API_DISCOVERY_INFO
     name = "api:discovery"
+    cors_allowed = True
 
     async def get(self, request):
         """Get discovery information."""
@@ -377,7 +378,7 @@ class APIDomainServicesView(HomeAssistantView):
         with AsyncTrackStates(hass) as changed_states:
             try:
                 await hass.services.async_call(
-                    domain, service, data, True, self.context(request)
+                    domain, service, data, blocking=True, context=self.context(request)
                 )
             except (vol.Invalid, ServiceNotFound) as ex:
                 raise HTTPBadRequest() from ex
@@ -410,7 +411,7 @@ class APITemplateView(HomeAssistantView):
         try:
             data = await request.json()
             tpl = template.Template(data["template"], request.app["hass"])
-            return str(tpl.async_render(data.get("variables")))
+            return tpl.async_render(variables=data.get("variables"), parse_result=False)
         except (ValueError, TemplateError) as ex:
             return self.json_message(
                 f"Error rendering template: {ex}", HTTP_BAD_REQUEST

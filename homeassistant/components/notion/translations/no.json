@@ -5,7 +5,6 @@
         },
         "error": {
             "invalid_auth": "Ugyldig godkjenning",
-            "invalid_credentials": "Ugyldig brukernavn eller passord",
             "no_devices": "Ingen enheter funnet i kontoen"
         },
         "step": {

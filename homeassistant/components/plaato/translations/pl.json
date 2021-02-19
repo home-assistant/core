@@ -1,17 +1,53 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "Twoja instancja Home Assistant musi by\u0107 dost\u0119pna z Internetu, aby otrzymywa\u0107 wiadomo\u015bci z Plaato Airlock.",
-            "one_instance_allowed": "Wymagana jest tylko jedna instancja.",
-            "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja"
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
+            "webhook_not_internet_accessible": "Tw\u00f3j Home Assistant musi by\u0107 dost\u0119pny z Internetu, aby odbiera\u0107 komunikaty webhook"
         },
         "create_entry": {
-            "default": "Aby wysy\u0142a\u0107 zdarzenia do Home Assistanta, musisz skonfigurowa\u0107 webhook w Plaato Airlock. \n\n Wprowad\u017a nast\u0119puj\u0105ce dane:\n\n - URL: `{webhook_url}` \n - Metoda: POST \n\nZapoznaj si\u0119 z [dokumentacj\u0105]({docs_url}), by pozna\u0107 szczeg\u00f3\u0142y."
+            "default": "Tw\u00f3j {device_type} Plaato o nazwie *{device_name}* zosta\u0142o pomy\u015blnie skonfigurowane!"
+        },
+        "error": {
+            "invalid_webhook_device": "Wybra\u0142e\u015b urz\u0105dzenie, kt\u00f3re nie obs\u0142uguje wysy\u0142ania danych do webhooka. Opcja dost\u0119pna tylko w areometrze Airlock",
+            "no_api_method": "Musisz doda\u0107 token uwierzytelniania lub wybra\u0107 webhook",
+            "no_auth_token": "Musisz doda\u0107 token autoryzacji"
         },
         "step": {
+            "api_method": {
+                "data": {
+                    "token": "Wklej token autoryzacji",
+                    "use_webhook": "U\u017cyj webhook"
+                },
+                "description": "Aby m\u00f3c przesy\u0142a\u0107 zapytania do API, wymagany jest \u201etoken autoryzacji\u201d, kt\u00f3ry mo\u017cna uzyska\u0107, post\u0119puj\u0105c zgodnie z [t\u0105] (https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) instrukcj\u0105\n\nWybrane urz\u0105dzenie: *{device_type}* \n\nJe\u015bli wolisz u\u017cywa\u0107 wbudowanej metody webhook (tylko areomierz Airlock), zaznacz poni\u017csze pole i pozostaw token autoryzacji pusty",
+                "title": "Wybierz metod\u0119 API"
+            },
             "user": {
-                "description": "Na pewno chcesz skonfigurowa\u0107 Airlock Plaato?",
-                "title": "Konfiguracja Plaato Webhook"
+                "data": {
+                    "device_name": "Nazwij swoje urz\u0105dzenie",
+                    "device_type": "Rodzaj urz\u0105dzenia Plaato"
+                },
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?",
+                "title": "Konfiguracja urz\u0105dze\u0144 Plaato"
+            },
+            "webhook": {
+                "description": "Aby wysy\u0142a\u0107 zdarzenia do Home Assistanta, musisz skonfigurowa\u0107 webhook w Plaato Airlock. \n\n Wprowad\u017a nast\u0119puj\u0105ce dane:\n\n - URL: `{webhook_url}` \n - Metoda: POST \n\nZapoznaj si\u0119 z [dokumentacj\u0105]({docs_url}), by pozna\u0107 szczeg\u00f3\u0142y.",
+                "title": "Webhook do u\u017cycia"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "update_interval": "Cz\u0119stotliwo\u015b\u0107 aktualizacji (w minutach)"
+                },
+                "description": "Ustaw cz\u0119stotliwo\u015bci aktualizacji (w minutach)",
+                "title": "Opcje dla Plaato"
+            },
+            "webhook": {
+                "description": "Informacje o webhooku: \n\n - URL: `{webhook_url}`\n - Metoda: POST \n\n",
+                "title": "Opcje dla areomierza Plaato Airlock"
             }
         }
     }

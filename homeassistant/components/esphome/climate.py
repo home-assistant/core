@@ -1,5 +1,4 @@
 """Support for ESPHome climate devices."""
-import logging
 from typing import List, Optional
 
 from aioesphomeapi import (
@@ -63,8 +62,6 @@ from . import (
     esphome_state_property,
     platform_async_setup_entry,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

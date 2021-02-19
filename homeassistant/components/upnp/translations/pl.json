@@ -1,10 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "UPnP/IGD jest ju\u017c skonfigurowane.",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "incomplete_discovery": "Wykrywanie niekompletne",
-            "no_devices_discovered": "Nie wykryto urz\u0105dze\u0144 UPnP/IGD.",
-            "no_devices_found": "Nie znaleziono w sieci urz\u0105dze\u0144 UPnP/IGD."
+            "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci"
         },
         "error": {
             "few": "kilka",

@@ -1,18 +1,25 @@
 {
     "device_automation": {
         "condition_type": {
-            "is_idle": "odtwarzacz medi\u00f3w {entity_name} jest nieaktywny",
-            "is_off": "odtwarzacz medi\u00f3w {entity_name} jest wy\u0142\u0105czony",
-            "is_on": "odtwarzacz medi\u00f3w {entity_name} jest w\u0142\u0105czony",
+            "is_idle": "odtwarzacz {entity_name} jest nieaktywny",
+            "is_off": "odtwarzacz {entity_name} jest wy\u0142\u0105czony",
+            "is_on": "odtwarzacz {entity_name} jest w\u0142\u0105czony",
             "is_paused": "odtwarzanie medi\u00f3w na {entity_name} jest wstrzymane",
             "is_playing": "{entity_name} odtwarza media"
+        },
+        "trigger_type": {
+            "idle": "odtwarzacz {entity_name} stanie si\u0119 bezczynny",
+            "paused": "odtwarzacz {entity_name} zostanie wstrzymany",
+            "playing": "odtwarzacz {entity_name} rozpocznie odtwarzanie",
+            "turned_off": "odtwarzacz {entity_name} zostanie wy\u0142\u0105czony",
+            "turned_on": "odtwarzacz {entity_name} zostanie w\u0142\u0105czony"
         }
     },
     "state": {
         "_": {
             "idle": "nieaktywny",
-            "off": "wy\u0142\u0105czony",
-            "on": "w\u0142\u0105czony",
+            "off": "wy\u0142.",
+            "on": "w\u0142.",
             "paused": "wstrzymany",
             "playing": "odtwarzanie",
             "standby": "tryb czuwania"

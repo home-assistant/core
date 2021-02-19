@@ -1,6 +1,5 @@
 """Test ZHA Gateway."""
 import asyncio
-import logging
 import time
 from unittest.mock import patch
 
@@ -17,7 +16,6 @@ from .common import async_enable_traffic, async_find_group_entity_id, get_zha_ga
 
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture

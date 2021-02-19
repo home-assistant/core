@@ -1,6 +1,5 @@
-"""Track devices using UniFi controllers."""
+"""Track both clients and devices using UniFi controllers."""
 from datetime import timedelta
-import logging
 
 from aiounifi.api import SOURCE_DATA, SOURCE_EVENT
 from aiounifi.events import (
@@ -22,14 +21,11 @@ from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
 
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
 from .unifi_entity_base import UniFiBase
-
-LOGGER = logging.getLogger(__name__)
 
 CLIENT_TRACKER = "client"
 DEVICE_TRACKER = "device"
@@ -55,6 +51,9 @@ CLIENT_STATIC_ATTRIBUTES = [
     "name",
     "oui",
 ]
+
+
+CLIENT_CONNECTED_ALL_ATTRIBUTES = CLIENT_CONNECTED_ATTRIBUTES + CLIENT_STATIC_ATTRIBUTES
 
 DEVICE_UPGRADED = (ACCESS_POINT_UPGRADED, GATEWAY_UPGRADED, SWITCH_UPGRADED)
 
@@ -144,9 +143,10 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         """Set up tracked client."""
         super().__init__(client, controller)
 
-        self.schedule_update = False
-        self.cancel_scheduled_update = None
+        self.heartbeat_check = False
         self._is_connected = False
+        self._controller_connection_state_changed = False
+
         if client.last_seen:
             self._is_connected = (
                 self.is_wired == client.is_wired
@@ -154,31 +154,55 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
                 - dt_util.utc_from_timestamp(float(client.last_seen))
                 < controller.option_detection_time
             )
-            if self._is_connected:
-                self.schedule_update = True
+
+        self.schedule_update = self._is_connected
+
+    async def async_added_to_hass(self) -> None:
+        """Watch object when added."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self.controller.signal_heartbeat_missed}_{self.unique_id}",
+                self._make_disconnected,
+            )
+        )
+        await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect object when removed."""
-        if self.cancel_scheduled_update:
-            self.cancel_scheduled_update()
+        self.controller.async_heartbeat(self.unique_id)
         await super().async_will_remove_from_hass()
+
+    @callback
+    def async_signal_reachable_callback(self) -> None:
+        """Call when controller connection state change."""
+        self._controller_connection_state_changed = True
+        super().async_signal_reachable_callback()
 
     @callback
     def async_update_callback(self) -> None:
         """Update the clients state."""
 
-        if self.client.last_updated == SOURCE_EVENT:
+        if self._controller_connection_state_changed:
+            self._controller_connection_state_changed = False
+
+            if self.controller.available:
+                self.schedule_update = True
+
+            else:
+                self.controller.async_heartbeat(self.unique_id)
+
+        elif self.client.last_updated == SOURCE_EVENT:
             if (self.is_wired and self.client.event.event in WIRED_CONNECTION) or (
                 not self.is_wired and self.client.event.event in WIRELESS_CONNECTION
             ):
                 self._is_connected = True
                 self.schedule_update = False
-                if self.cancel_scheduled_update:
-                    self.cancel_scheduled_update()
-                    self.cancel_scheduled_update = None
+                self.controller.async_heartbeat(self.unique_id)
+                self.heartbeat_check = False
 
             # Ignore extra scheduled update from wired bug
-            elif not self.cancel_scheduled_update:
+            elif not self.heartbeat_check:
                 self.schedule_update = True
 
         elif not self.client.event and self.client.last_updated == SOURCE_DATA:
@@ -188,23 +212,17 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
 
         if self.schedule_update:
             self.schedule_update = False
-
-            if self.cancel_scheduled_update:
-                self.cancel_scheduled_update()
-
-            self.cancel_scheduled_update = async_track_point_in_utc_time(
-                self.hass,
-                self._make_disconnected,
-                dt_util.utcnow() + self.controller.option_detection_time,
+            self.controller.async_heartbeat(
+                self.unique_id, dt_util.utcnow() + self.controller.option_detection_time
             )
+            self.heartbeat_check = True
 
         super().async_update_callback()
 
     @callback
-    def _make_disconnected(self, _):
-        """Mark client as disconnected."""
+    def _make_disconnected(self, *_):
+        """No heart beat by device."""
         self._is_connected = False
-        self.cancel_scheduled_update = None
         self.async_write_ha_state()
 
     @property
@@ -233,18 +251,33 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
     @property
     def device_state_attributes(self):
         """Return the client state attributes."""
-        attributes = {"is_wired": self.is_wired}
+        raw = self.client.raw
 
         if self.is_connected:
-            for variable in CLIENT_CONNECTED_ATTRIBUTES:
-                if variable in self.client.raw:
-                    attributes[variable] = self.client.raw[variable]
+            attributes = {
+                k: raw[k] for k in CLIENT_CONNECTED_ALL_ATTRIBUTES if k in raw
+            }
+        else:
+            attributes = {k: raw[k] for k in CLIENT_STATIC_ATTRIBUTES if k in raw}
 
-        for variable in CLIENT_STATIC_ATTRIBUTES:
-            if variable in self.client.raw:
-                attributes[variable] = self.client.raw[variable]
+        attributes["is_wired"] = self.is_wired
 
         return attributes
+
+    @property
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return self.client.raw.get("ip")
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self.client.raw.get("mac")
+
+    @property
+    def hostname(self) -> str:
+        """Return hostname of the device."""
+        return self.client.raw.get("hostname")
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
@@ -272,36 +305,50 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         """Set up tracked device."""
         super().__init__(device, controller)
 
+        self.device = self._item
         self._is_connected = device.state == 1
-        self.cancel_scheduled_update = None
+        self._controller_connection_state_changed = False
+        self.schedule_update = False
 
-    @property
-    def device(self):
-        """Wrap item."""
-        return self._item
+    async def async_added_to_hass(self) -> None:
+        """Watch object when added."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{self.controller.signal_heartbeat_missed}_{self.unique_id}",
+                self._make_disconnected,
+            )
+        )
+        await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
-        """Disconnect device object when removed."""
-        if self.cancel_scheduled_update:
-            self.cancel_scheduled_update()
+        """Disconnect object when removed."""
+        self.controller.async_heartbeat(self.unique_id)
         await super().async_will_remove_from_hass()
 
     @callback
-    def async_update_callback(self):
+    def async_signal_reachable_callback(self) -> None:
+        """Call when controller connection state change."""
+        self._controller_connection_state_changed = True
+        super().async_signal_reachable_callback()
+
+    @callback
+    def async_update_callback(self) -> None:
         """Update the devices' state."""
 
-        if self.device.last_updated == SOURCE_DATA:
+        if self._controller_connection_state_changed:
+            self._controller_connection_state_changed = False
 
+            if self.controller.available:
+                if self._is_connected:
+                    self.schedule_update = True
+
+            else:
+                self.controller.async_heartbeat(self.unique_id)
+
+        elif self.device.last_updated == SOURCE_DATA:
             self._is_connected = True
-
-            if self.cancel_scheduled_update:
-                self.cancel_scheduled_update()
-
-            self.cancel_scheduled_update = async_track_point_in_utc_time(
-                self.hass,
-                self._no_heartbeat,
-                dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 60),
-            )
+            self.schedule_update = True
 
         elif (
             self.device.last_updated == SOURCE_EVENT
@@ -310,13 +357,19 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
             self.hass.async_create_task(self.async_update_device_registry())
             return
 
+        if self.schedule_update:
+            self.schedule_update = False
+            self.controller.async_heartbeat(
+                self.unique_id,
+                dt_util.utcnow() + timedelta(seconds=self.device.next_interval + 60),
+            )
+
         super().async_update_callback()
 
     @callback
-    def _no_heartbeat(self, _):
+    def _make_disconnected(self, *_):
         """No heart beat by device."""
         self._is_connected = False
-        self.cancel_scheduled_update = None
         self.async_write_ha_state()
 
     @property

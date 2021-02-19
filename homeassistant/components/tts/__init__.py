@@ -11,7 +11,7 @@ from typing import Dict, Optional
 
 from aiohttp import web
 import mutagen
-from mutagen.id3 import ID3FileType, TextFrame as ID3Text
+from mutagen.id3 import ID3, TextFrame as ID3Text
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -27,7 +27,6 @@ from homeassistant.const import (
     CONF_PLATFORM,
     HTTP_BAD_REQUEST,
     HTTP_NOT_FOUND,
-    HTTP_OK,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -117,7 +116,7 @@ async def async_setup(hass, config):
         use_cache = conf.get(CONF_CACHE, DEFAULT_CACHE)
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
-        base_url = conf.get(CONF_BASE_URL) or get_url(hass)
+        base_url = conf.get(CONF_BASE_URL)
         hass.data[BASE_URL_KEY] = base_url
 
         await tts.async_init_cache(use_cache, cache_dir, time_memory, base_url)
@@ -165,12 +164,15 @@ async def async_setup(hass, config):
             options = service.data.get(ATTR_OPTIONS)
 
             try:
-                url = await tts.async_get_url(
+                url = await tts.async_get_url_path(
                     p_type, message, cache=cache, language=language, options=options
                 )
             except HomeAssistantError as err:
                 _LOGGER.error("Error on init TTS: %s", err)
                 return
+
+            base = tts.base_url or get_url(hass)
+            url = base + url
 
             data = {
                 ATTR_MEDIA_CONTENT_ID: url,
@@ -192,7 +194,7 @@ async def async_setup(hass, config):
         )
 
     setup_tasks = [
-        async_setup_platform(p_type, p_config)
+        asyncio.create_task(async_setup_platform(p_type, p_config))
         for p_type, p_config in config_per_platform(config, DOMAIN)
     ]
 
@@ -290,7 +292,7 @@ class SpeechManager:
             provider.name = engine
         self.providers[engine] = provider
 
-    async def async_get_url(
+    async def async_get_url_path(
         self, engine, message, cache=None, language=None, options=None
     ):
         """Get URL for play message.
@@ -342,7 +344,7 @@ class SpeechManager:
                 engine, key, message, use_cache, language, options
             )
 
-        return f"{self.base_url}/api/tts_proxy/{filename}"
+        return f"/api/tts_proxy/{filename}"
 
     async def async_get_tts_audio(self, engine, key, message, cache, language, options):
         """Receive TTS and store for view in cache.
@@ -468,7 +470,9 @@ class SpeechManager:
         try:
             tts_file = mutagen.File(data_bytes)
             if tts_file is not None:
-                if isinstance(tts_file, ID3FileType):
+                if not tts_file.tags:
+                    tts_file.add_tags()
+                if isinstance(tts_file.tags, ID3):
                     tts_file["artist"] = ID3Text(encoding=3, text=artist)
                     tts_file["album"] = ID3Text(encoding=3, text=album)
                     tts_file["title"] = ID3Text(encoding=3, text=message)
@@ -577,15 +581,17 @@ class TextToSpeechUrlView(HomeAssistantView):
         options = data.get(ATTR_OPTIONS)
 
         try:
-            url = await self.tts.async_get_url(
+            path = await self.tts.async_get_url_path(
                 p_type, message, cache=cache, language=language, options=options
             )
-            resp = self.json({"url": url}, HTTP_OK)
         except HomeAssistantError as err:
             _LOGGER.error("Error on init tts: %s", err)
-            resp = self.json({"error": err}, HTTP_BAD_REQUEST)
+            return self.json({"error": err}, HTTP_BAD_REQUEST)
 
-        return resp
+        base = self.tts.base_url or get_url(self.tts.hass)
+        url = base + path
+
+        return self.json({"url": url, "path": path})
 
 
 class TextToSpeechView(HomeAssistantView):
@@ -593,7 +599,7 @@ class TextToSpeechView(HomeAssistantView):
 
     requires_auth = False
     url = "/api/tts_proxy/{filename}"
-    name = "api:tts:speech"
+    name = "api:tts_speech"
 
     def __init__(self, tts):
         """Initialize a tts view."""
@@ -612,4 +618,4 @@ class TextToSpeechView(HomeAssistantView):
 
 def get_base_url(hass):
     """Get base URL."""
-    return hass.data[BASE_URL_KEY]
+    return hass.data[BASE_URL_KEY] or get_url(hass)

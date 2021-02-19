@@ -4,7 +4,7 @@
             "already_configured": "Este dispositivo ya ha sido a\u00f1adido a HomeAssistant"
         },
         "error": {
-            "connection_error": "No se pudo conectar, por favor, int\u00e9ntalo de nuevo",
+            "cannot_connect": "No se pudo conectar",
             "unauthorized": "Emparejamiento denegado, comprobar el dispositivo para la solicitud de autorizaci\u00f3n"
         },
         "step": {
@@ -17,6 +17,5 @@
                 "title": "Conectarse al dispositivo"
             }
         }
-    },
-    "title": "Atag"
+    }
 }

@@ -48,7 +48,7 @@ ATTR_REPACK = "repack"
 
 SERVICE_PURGE_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_KEEP_DAYS): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional(ATTR_KEEP_DAYS): cv.positive_int,
         vol.Optional(ATTR_REPACK, default=False): cv.boolean,
     }
 )
@@ -92,13 +92,11 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_PURGE_KEEP_DAYS, default=10): vol.All(
                         vol.Coerce(int), vol.Range(min=1)
                     ),
-                    vol.Optional(CONF_PURGE_INTERVAL, default=1): vol.All(
-                        vol.Coerce(int), vol.Range(min=0)
-                    ),
+                    vol.Optional(CONF_PURGE_INTERVAL, default=1): cv.positive_int,
                     vol.Optional(CONF_DB_URL): cv.string,
                     vol.Optional(
                         CONF_COMMIT_INTERVAL, default=DEFAULT_COMMIT_INTERVAL
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                    ): cv.positive_int,
                     vol.Optional(
                         CONF_DB_MAX_RETRIES, default=DEFAULT_DB_MAX_RETRIES
                     ): cv.positive_int,
@@ -254,7 +252,22 @@ class Recorder(threading.Thread):
     @callback
     def async_initialize(self):
         """Initialize the recorder."""
-        self.hass.bus.async_listen(MATCH_ALL, self.event_listener)
+        self.hass.bus.async_listen(
+            MATCH_ALL, self.event_listener, event_filter=self._async_event_filter
+        )
+
+    @callback
+    def _async_event_filter(self, event):
+        """Filter events."""
+        if event.event_type in self.exclude_t:
+            return False
+
+        entity_id = event.data.get(ATTR_ENTITY_ID)
+        if entity_id is not None:
+            if not self.entity_filter(entity_id):
+                return False
+
+        return True
 
     def do_adhoc_purge(self, **kwargs):
         """Trigger an adhoc purge retaining keep_days worth of data."""
@@ -380,19 +393,13 @@ class Recorder(threading.Thread):
                         self._timechanges_seen = 0
                         self._commit_event_session_or_retry()
                 continue
-            if event.event_type in self.exclude_t:
-                continue
-
-            entity_id = event.data.get(ATTR_ENTITY_ID)
-            if entity_id is not None:
-                if not self.entity_filter(entity_id):
-                    continue
 
             try:
                 if event.event_type == EVENT_STATE_CHANGED:
                     dbevent = Events.from_event(event, event_data="{}")
                 else:
                     dbevent = Events.from_event(event)
+                dbevent.created = event.time_fired
                 self.event_session.add(dbevent)
             except (TypeError, ValueError):
                 _LOGGER.warning("Event is not JSON serializable: %s", event)
@@ -405,10 +412,15 @@ class Recorder(threading.Thread):
                     dbstate = States.from_event(event)
                     has_new_state = event.data.get("new_state")
                     if dbstate.entity_id in self._old_states:
-                        dbstate.old_state = self._old_states.pop(dbstate.entity_id)
+                        old_state = self._old_states.pop(dbstate.entity_id)
+                        if old_state.state_id:
+                            dbstate.old_state_id = old_state.state_id
+                        else:
+                            dbstate.old_state = old_state
                     if not has_new_state:
                         dbstate.state = None
                     dbstate.event = dbevent
+                    dbstate.created = event.time_fired
                     self.event_session.add(dbstate)
                     if has_new_state:
                         self._old_states[dbstate.entity_id] = dbstate
@@ -506,9 +518,18 @@ class Recorder(threading.Thread):
                 for dbstate in self._pending_expunge:
                     # Expunge the state so its not expired
                     # until we use it later for dbstate.old_state
-                    self.event_session.expunge(dbstate)
+                    if dbstate in self.event_session:
+                        self.event_session.expunge(dbstate)
                 self._pending_expunge = []
             self.event_session.commit()
+        except exc.IntegrityError as err:
+            _LOGGER.error(
+                "Integrity error executing query (database likely deleted out from under us): %s",
+                err,
+            )
+            self.event_session.rollback()
+            self._old_states = {}
+            raise
         except Exception as err:
             _LOGGER.error("Error executing query: %s", err)
             self.event_session.rollback()

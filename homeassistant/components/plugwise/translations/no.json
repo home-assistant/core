@@ -4,7 +4,7 @@
             "already_configured": "Tjenesten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
@@ -12,11 +12,19 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "IP adresse",
-                    "password": "",
-                    "port": "Port"
+                    "flow_type": "Tilkoblingstype"
                 },
-                "description": "Vennligst skriv inn:",
+                "description": "Produkt:",
+                "title": ""
+            },
+            "user_gateway": {
+                "data": {
+                    "host": "IP adresse",
+                    "password": "Smile ID",
+                    "port": "Port",
+                    "username": "Smile brukernavn"
+                },
+                "description": "Vennligst skriv inn",
                 "title": "Koble til Smile"
             }
         }

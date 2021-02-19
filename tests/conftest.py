@@ -5,13 +5,16 @@ import functools
 import logging
 import ssl
 import threading
+from unittest.mock import MagicMock, patch
 
 from aiohttp.test_utils import make_mocked_request
+import multidict
 import pytest
 import requests_mock as _requests_mock
 
 from homeassistant import core as ha, loader, runner, util
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
+from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
 from homeassistant.components import mqtt
 from homeassistant.components.websocket_api.auth import (
@@ -22,11 +25,10 @@ from homeassistant.components.websocket_api.auth import (
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED
 from homeassistant.exceptions import ServiceNotFound
-from homeassistant.helpers import event
+from homeassistant.helpers import config_entry_oauth2_flow, event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
-from tests.async_mock import MagicMock, Mock, patch
 from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
 pytest.register_assert_rewrite("tests.common")
@@ -96,6 +98,21 @@ def verify_cleanup():
     assert not threads
 
 
+@pytest.fixture(autouse=True)
+def bcrypt_cost():
+    """Run with reduced rounds during tests, to speed up uses."""
+    import bcrypt
+
+    gensalt_orig = bcrypt.gensalt
+
+    def gensalt_mock(rounds=12, prefix=b"2b"):
+        return gensalt_orig(4, prefix)
+
+    bcrypt.gensalt = gensalt_mock
+    yield
+    bcrypt.gensalt = gensalt_orig
+
+
 @pytest.fixture
 def hass_storage():
     """Fixture to mock storage."""
@@ -104,16 +121,37 @@ def hass_storage():
 
 
 @pytest.fixture
-def hass(loop, hass_storage, request):
+def load_registries():
+    """Fixture to control the loading of registries when setting up the hass fixture.
+
+    To avoid loading the registries, tests can be marked with:
+    @pytest.mark.parametrize("load_registries", [False])
+    """
+    return True
+
+
+@pytest.fixture
+def hass(loop, load_registries, hass_storage, request):
     """Fixture to provide a test instance of Home Assistant."""
 
     def exc_handle(loop, context):
         """Handle exceptions by rethrowing them, which will fail the test."""
-        exceptions.append(context["exception"])
+        # Most of these contexts will contain an exception, but not all.
+        # The docs note the key as "optional"
+        # See https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.call_exception_handler
+        if "exception" in context:
+            exceptions.append(context["exception"])
+        else:
+            exceptions.append(
+                Exception(
+                    "Received exception handler without exception, but with message: %s"
+                    % context["message"]
+                )
+            )
         orig_exception_handler(loop, context)
 
     exceptions = []
-    hass = loop.run_until_complete(async_test_home_assistant(loop))
+    hass = loop.run_until_complete(async_test_home_assistant(loop, load_registries))
     orig_exception_handler = loop.get_exception_handler()
     loop.set_exception_handler(exc_handle)
 
@@ -189,10 +227,24 @@ def mock_device_tracker_conf():
 
 
 @pytest.fixture
-def hass_access_token(hass, hass_admin_user):
+async def hass_admin_credential(hass, local_auth):
+    """Provide credentials for admin user."""
+    return Credentials(
+        id="mock-credential-id",
+        auth_provider_type="homeassistant",
+        auth_provider_id=None,
+        data={"username": "admin"},
+        is_new=False,
+    )
+
+
+@pytest.fixture
+async def hass_access_token(hass, hass_admin_user, hass_admin_credential):
     """Return an access token to access Home Assistant."""
-    refresh_token = hass.loop.run_until_complete(
-        hass.auth.async_create_refresh_token(hass_admin_user, CLIENT_ID)
+    await hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
+
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID, credential=hass_admin_credential
     )
     return hass.auth.async_create_access_token(refresh_token)
 
@@ -222,10 +274,21 @@ def hass_read_only_user(hass, local_auth):
 
 
 @pytest.fixture
-def hass_read_only_access_token(hass, hass_read_only_user):
+def hass_read_only_access_token(hass, hass_read_only_user, local_auth):
     """Return a Home Assistant read only user."""
+    credential = Credentials(
+        id="mock-readonly-credential-id",
+        auth_provider_type="homeassistant",
+        auth_provider_id=None,
+        data={"username": "readonly"},
+        is_new=False,
+    )
+    hass_read_only_user.credentials.append(credential)
+
     refresh_token = hass.loop.run_until_complete(
-        hass.auth.async_create_refresh_token(hass_read_only_user, CLIENT_ID)
+        hass.auth.async_create_refresh_token(
+            hass_read_only_user, CLIENT_ID, credential=credential
+        )
     )
     return hass.auth.async_create_access_token(refresh_token)
 
@@ -248,6 +311,7 @@ def local_auth(hass):
     prv = homeassistant.HassAuthProvider(
         hass, hass.auth._store, {"type": "homeassistant"}
     )
+    hass.loop.run_until_complete(prv.async_initialize())
     hass.auth._providers[(prv.type, prv.id)] = prv
     return prv
 
@@ -266,17 +330,27 @@ def hass_client(hass, aiohttp_client, hass_access_token):
 
 
 @pytest.fixture
-def current_request(hass):
+def current_request():
     """Mock current request."""
-    with patch("homeassistant.helpers.network.current_request") as mock_request_context:
+    with patch("homeassistant.components.http.current_request") as mock_request_context:
         mocked_request = make_mocked_request(
             "GET",
             "/some/request",
             headers={"Host": "example.com"},
             sslcontext=ssl.SSLContext(ssl.PROTOCOL_TLS),
         )
-        mock_request_context.get = Mock(return_value=mocked_request)
+        mock_request_context.get.return_value = mocked_request
         yield mock_request_context
+
+
+@pytest.fixture
+def current_request_with_host(current_request):
+    """Mock current request with a host header."""
+    new_headers = multidict.CIMultiDict(current_request.get.return_value.headers)
+    new_headers[config_entry_oauth2_flow.HEADER_FRONTEND_BASE] = "https://example.com"
+    current_request.get.return_value = current_request.get.return_value.clone(
+        headers=new_headers
+    )
 
 
 @pytest.fixture
@@ -378,15 +452,19 @@ def mqtt_client_mock(hass):
 async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     """Fixture to mock MQTT component."""
     if mqtt_config is None:
-        mqtt_config = {mqtt.CONF_BROKER: "mock-broker"}
+        mqtt_config = {mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}
 
     result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: mqtt_config})
     assert result
     await hass.async_block_till_done()
 
+    # Workaround: asynctest==0.13 fails on @functools.lru_cache
+    spec = dir(hass.data["mqtt"])
+    spec.remove("_matching_subscriptions")
+
     mqtt_component_mock = MagicMock(
         return_value=hass.data["mqtt"],
-        spec_set=hass.data["mqtt"],
+        spec_set=spec,
         wraps=hass.data["mqtt"],
     )
     mqtt_component_mock._mqttc = mqtt_client_mock
@@ -511,3 +589,9 @@ def legacy_patchable_time():
         async_track_utc_time_change,
     ):
         yield
+
+
+@pytest.fixture
+def enable_custom_integrations(hass):
+    """Enable custom integrations defined in the test dir."""
+    hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)

@@ -1,13 +1,10 @@
 """DataUpdate Coordinator, and base Entity and Device models for Toon."""
-import logging
 from typing import Any, Dict, Optional
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ToonDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ToonEntity(CoordinatorEntity):

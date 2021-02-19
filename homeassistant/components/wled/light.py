@@ -1,6 +1,5 @@
 """Support for LED lights."""
 from functools import partial
-import logging
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import voluptuous as vol
@@ -43,9 +42,8 @@ from .const import (
     ATTR_SPEED,
     DOMAIN,
     SERVICE_EFFECT,
+    SERVICE_PRESET,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -67,12 +65,23 @@ async def async_setup_entry(
             vol.Optional(ATTR_INTENSITY): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=255)
             ),
+            vol.Optional(ATTR_PALETTE): vol.Any(cv.positive_int, cv.string),
             vol.Optional(ATTR_REVERSE): cv.boolean,
             vol.Optional(ATTR_SPEED): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=255)
             ),
         },
         "async_effect",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_PRESET,
+        {
+            vol.Required(ATTR_PRESET): vol.All(
+                vol.Coerce(int), vol.Range(min=-1, max=65535)
+            ),
+        },
+        "async_preset",
     )
 
     update_segments = partial(
@@ -350,6 +359,7 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
         self,
         effect: Optional[Union[int, str]] = None,
         intensity: Optional[int] = None,
+        palette: Optional[Union[int, str]] = None,
         reverse: Optional[bool] = None,
         speed: Optional[int] = None,
     ) -> None:
@@ -362,6 +372,9 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
         if intensity is not None:
             data[ATTR_INTENSITY] = intensity
 
+        if palette is not None:
+            data[ATTR_PALETTE] = palette
+
         if reverse is not None:
             data[ATTR_REVERSE] = reverse
 
@@ -369,6 +382,16 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
             data[ATTR_SPEED] = speed
 
         await self.coordinator.wled.segment(**data)
+
+    @wled_exception_handler
+    async def async_preset(
+        self,
+        preset: int,
+    ) -> None:
+        """Set a WLED light to a saved preset."""
+        data = {ATTR_PRESET: preset}
+
+        await self.coordinator.wled.preset(**data)
 
 
 @callback
@@ -419,7 +442,7 @@ async def async_remove_entity(
 ) -> None:
     """Remove WLED segment light from Home Assistant."""
     entity = current[index]
-    await entity.async_remove()
+    await entity.async_remove(force_remove=True)
     registry = await async_get_entity_registry(coordinator.hass)
     if entity.entity_id in registry.entities:
         registry.async_remove(entity.entity_id)

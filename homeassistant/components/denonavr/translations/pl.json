@@ -2,10 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "already_in_progress": "Konfiguracja urz\u0105dzenia jest ju\u017c w toku",
-            "connection_error": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z urz\u0105dzeniem, spr\u00f3buj ponownie, od\u0142\u0105czenie zasilania sieciowego i kabla Ethernet i ponowne pod\u0142\u0105czenie mo\u017ce pom\u00f3c",
-            "not_denonavr_manufacturer": "Nie jest to urz\u0105dzenie AVR firmy Denon, producent wykrytego urz\u0105dzenia nie pasuje.",
-            "not_denonavr_missing": "Nie jest to urz\u0105dzenie AVR firmy Denon, dane z automatycznego wykrywania nie s\u0105 kompletne."
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia, spr\u00f3buj ponownie. Od\u0142\u0105czenie zasilania oraz kabla sieciowego i ponowne ich pod\u0142\u0105czenie mo\u017ce pom\u00f3c.",
+            "not_denonavr_manufacturer": "Nie jest to urz\u0105dzenie AVR firmy Denon, producent wykrytego urz\u0105dzenia nie pasuje",
+            "not_denonavr_missing": "Nie jest to urz\u0105dzenie AVR firmy Denon, dane z automatycznego wykrywania nie s\u0105 kompletne"
         },
         "error": {
             "discovery_error": "Nie uda\u0142o si\u0119 wykry\u0107 urz\u0105dzenia AVR firmy Denon"

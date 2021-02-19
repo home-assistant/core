@@ -1,13 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquest AVM FRITZ!Box ja est\u00e0 configurat.",
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
-            "not_found": "No s'ha trobat cap AVM FRITZ!Box compatible a la xarxa.",
-            "not_supported": "Connectat a AVM FRITZ!Box per\u00f2 no es poden controlar dispositius Smart Home."
+            "no_devices_found": "No s'han trobat dispositius a la xarxa",
+            "not_supported": "Connectat a AVM FRITZ!Box per\u00f2 no es poden controlar dispositius Smart Home.",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
-            "auth_failed": "Nom d'usuari i/o contrasenya incorrectes."
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "flow_title": "AVM FRITZ!Box: {name}",
         "step": {
@@ -17,6 +18,13 @@
                     "username": "Nom d'usuari"
                 },
                 "description": "Vols configurar {name}?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Actualitza la informaci\u00f3 d'inici de sessi\u00f3 de {name}."
             },
             "user": {
                 "data": {

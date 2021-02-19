@@ -119,8 +119,8 @@ SERVICE_SCHEMAS = {
             vol.Required(ATTR_ENDPOINT_ID): cv.positive_int,
             vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
-            vol.Required(ATTR_ATTRIBUTE): vol.Any(int, cv.boolean, cv.string),
-            vol.Required(ATTR_VALUE): cv.string,
+            vol.Required(ATTR_ATTRIBUTE): vol.Any(cv.positive_int, str),
+            vol.Required(ATTR_VALUE): vol.Any(int, cv.boolean, cv.string),
             vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
         }
     ),
@@ -472,6 +472,19 @@ async def websocket_reconfigure_node(hass, connection, msg):
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/topology/update",
+    }
+)
+async def websocket_update_topology(hass, connection, msg):
+    """Update the ZHA network topology."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    hass.async_create_task(zha_gateway.application_controller.topology.scan())
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
     {vol.Required(TYPE): "zha/devices/clusters", vol.Required(ATTR_IEEE): EUI64.convert}
 )
 async def websocket_device_clusters(hass, connection, msg):
@@ -807,18 +820,12 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
 
     clusters_to_bind = await get_matched_clusters(source_device, target_device)
 
+    zdo = source_device.device.zdo
     bind_tasks = []
-    for cluster_pair in clusters_to_bind:
-        destination_address = zdo_types.MultiAddress()
-        destination_address.addrmode = 3
-        destination_address.ieee = target_device.ieee
-        destination_address.endpoint = cluster_pair.target_cluster.endpoint.endpoint_id
-
-        zdo = cluster_pair.source_cluster.endpoint.device.zdo
-
+    for binding_pair in clusters_to_bind:
         op_msg = "cluster: %s %s --> [%s]"
         op_params = (
-            cluster_pair.source_cluster.cluster_id,
+            binding_pair.source_cluster.cluster_id,
             operation.name,
             target_ieee,
         )
@@ -829,9 +836,9 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
                 zdo.request(
                     operation,
                     source_device.ieee,
-                    cluster_pair.source_cluster.endpoint.endpoint_id,
-                    cluster_pair.source_cluster.cluster_id,
-                    destination_address,
+                    binding_pair.source_cluster.endpoint.endpoint_id,
+                    binding_pair.source_cluster.cluster_id,
+                    binding_pair.destination_address,
                 ),
                 op_msg,
                 op_params,
@@ -1149,6 +1156,7 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_get_bindable_devices)
     websocket_api.async_register_command(hass, websocket_bind_devices)
     websocket_api.async_register_command(hass, websocket_unbind_devices)
+    websocket_api.async_register_command(hass, websocket_update_topology)
 
 
 @callback

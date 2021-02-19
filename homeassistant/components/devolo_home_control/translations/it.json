@@ -4,8 +4,7 @@
             "already_configured": "L'account \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "invalid_auth": "Autenticazione non valida",
-            "invalid_credentials": "Nome utente e/o password non corretti."
+            "invalid_auth": "Autenticazione non valida"
         },
         "step": {
             "user": {
@@ -14,10 +13,8 @@
                     "mydevolo_url": "URL di mydevolo",
                     "password": "Password",
                     "username": "E-mail / devolo ID"
-                },
-                "title": "devolo Home Control"
+                }
             }
         }
-    },
-    "title": "devolo Home Control"
+    }
 }

@@ -1,17 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Nastavite lahko samo en ra\u010dun Logi Circle.",
             "external_error": "Izjema je pri\u0161la iz drugega toka.",
-            "external_setup": "Logi Circle uspe\u0161no konfiguriran iz drugega toka.",
-            "no_flows": "Preden lahko preverite pristnost, morate konfigurirati Logi Circle. [Preberite navodila](https://www.home-assistant.io/components/logi_circle/)."
-        },
-        "create_entry": {
-            "default": "Uspe\u0161no overjen z Logi Circle-om."
+            "external_setup": "Logi Circle uspe\u0161no konfiguriran iz drugega toka."
         },
         "error": {
-            "auth_error": "Odobritev API-ja ni uspela.",
-            "auth_timeout": "Pri zahtevi za dostopni \u017eeton je potekla \u010dasovna omejitev.",
             "follow_link": "Prosimo, sledite povezavi in preverite pristnost, preden pritisnete Po\u0161lji"
         },
         "step": {

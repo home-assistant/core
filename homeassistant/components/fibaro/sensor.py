@@ -1,6 +1,4 @@
 """Support for Fibaro sensors."""
-import logging
-
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
@@ -38,8 +36,6 @@ SENSOR_TYPES = {
     ],
     "com.fibaro.lightSensor": ["Light", LIGHT_LUX, None, DEVICE_CLASS_ILLUMINANCE],
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

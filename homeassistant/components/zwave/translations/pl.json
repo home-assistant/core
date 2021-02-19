@@ -1,9 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Z-Wave jest ju\u017c skonfigurowany.",
-            "one_instance_only": "Komponent obs\u0142uguje tylko jedn\u0105 instancj\u0119 Z-Wave",
-            "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja"
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
             "option_error": "Walidacja Z-Wave si\u0119 nie powiod\u0142a. Czy \u015bcie\u017cka do kontrolera Z-Wave USB jest prawid\u0142owa?"
@@ -14,7 +13,7 @@
                     "network_key": "Klucz sieciowy (pozostaw pusty, by generowa\u0107 automatycznie)",
                     "usb_path": "\u015acie\u017cka urz\u0105dzenia USB"
                 },
-                "description": "Przejd\u017a na https://www.home-assistant.io/docs/z-wave/installation/, aby uzyska\u0107 informacje na temat zmiennych konfiguracyjnych",
+                "description": "Ta integracja nie jest ju\u017c wspierana. Dla nowych instalacji, u\u017cyj Z-Wave JS.\n\nPrzejd\u017a na https://www.home-assistant.io/docs/z-wave/installation/, aby uzyska\u0107 informacje na temat zmiennych konfiguracyjnych",
                 "title": "Konfiguracja Z-Wave"
             }
         }
@@ -22,9 +21,9 @@
     "state": {
         "_": {
             "dead": "martwy",
-            "initializing": "Inicjowanie",
-            "ready": "Gotowe",
-            "sleeping": "U\u015bpiony"
+            "initializing": "inicjalizacja",
+            "ready": "gotowy",
+            "sleeping": "u\u015bpiony"
         },
         "query_stage": {
             "dead": "martwy",

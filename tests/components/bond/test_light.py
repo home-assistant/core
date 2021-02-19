@@ -1,6 +1,5 @@
 """Tests for the Bond light device."""
 from datetime import timedelta
-import logging
 
 from bond_api import Action, DeviceType
 
@@ -29,7 +28,14 @@ from .common import (
 
 from tests.common import async_fire_time_changed
 
-_LOGGER = logging.getLogger(__name__)
+
+def light(name: str):
+    """Create a light with a given name."""
+    return {
+        "name": name,
+        "type": DeviceType.LIGHT,
+        "actions": [Action.TURN_LIGHT_ON, Action.TURN_LIGHT_OFF, Action.SET_BRIGHTNESS],
+    }
 
 
 def ceiling_fan(name: str):
@@ -52,21 +58,86 @@ def dimmable_ceiling_fan(name: str):
 
 def fireplace(name: str):
     """Create a fireplace with given name."""
-    return {"name": name, "type": DeviceType.FIREPLACE}
+    return {
+        "name": name,
+        "type": DeviceType.FIREPLACE,
+        "actions": [Action.TURN_ON, Action.TURN_OFF],
+    }
 
 
-async def test_entity_registry(hass: core.HomeAssistant):
-    """Tests that the devices are registered in the entity registry."""
+def fireplace_with_light(name: str):
+    """Create a fireplace with given name."""
+    return {
+        "name": name,
+        "type": DeviceType.FIREPLACE,
+        "actions": [
+            Action.TURN_ON,
+            Action.TURN_OFF,
+            Action.TURN_LIGHT_ON,
+            Action.TURN_LIGHT_OFF,
+        ],
+    }
+
+
+async def test_fan_entity_registry(hass: core.HomeAssistant):
+    """Tests that fan with light devices are registered in the entity registry."""
     await setup_platform(
         hass,
         LIGHT_DOMAIN,
-        ceiling_fan("name-1"),
+        ceiling_fan("fan-name"),
         bond_version={"bondid": "test-hub-id"},
         bond_device_id="test-device-id",
     )
 
     registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
-    entity = registry.entities["light.name_1"]
+    entity = registry.entities["light.fan_name"]
+    assert entity.unique_id == "test-hub-id_test-device-id"
+
+
+async def test_fireplace_entity_registry(hass: core.HomeAssistant):
+    """Tests that flame fireplace devices are registered in the entity registry."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        fireplace("fireplace-name"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_device_id="test-device-id",
+    )
+
+    registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    entity = registry.entities["light.fireplace_name"]
+    assert entity.unique_id == "test-hub-id_test-device-id"
+
+
+async def test_fireplace_with_light_entity_registry(hass: core.HomeAssistant):
+    """Tests that flame+light devices are registered in the entity registry."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        fireplace_with_light("fireplace-name"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_device_id="test-device-id",
+    )
+
+    registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    entity_flame = registry.entities["light.fireplace_name"]
+    assert entity_flame.unique_id == "test-hub-id_test-device-id"
+    entity_light = registry.entities["light.fireplace_name_2"]
+    assert entity_light.unique_id == "test-hub-id_test-device-id_light"
+
+
+async def test_light_entity_registry(hass: core.HomeAssistant):
+    """Tests lights are registered in the entity registry."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        light("light-name"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_device_id="test-device-id",
+    )
+
+    registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    entity = registry.entities["light.light_name"]
     assert entity.unique_id == "test-hub-id_test-device-id"
 
 

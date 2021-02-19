@@ -31,8 +31,8 @@ DATA_SCHEMA_CONFIRM = vol.Schema(
     }
 )
 
-RESULT_AUTH_FAILED = "auth_failed"
-RESULT_NOT_FOUND = "not_found"
+RESULT_INVALID_AUTH = "invalid_auth"
+RESULT_NO_DEVICES_FOUND = "no_devices_found"
 RESULT_NOT_SUPPORTED = "not_supported"
 RESULT_SUCCESS = "success"
 
@@ -43,10 +43,9 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-
     def __init__(self):
         """Initialize flow."""
+        self._entry = None
         self._host = None
         self._name = None
         self._password = None
@@ -62,6 +61,17 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def _update_entry(self):
+        self.hass.config_entries.async_update_entry(
+            self._entry,
+            data={
+                CONF_HOST: self._host,
+                CONF_PASSWORD: self._password,
+                CONF_USERNAME: self._username,
+            },
+        )
+        await self.hass.config_entries.async_reload(self._entry.entry_id)
+
     def _try_connect(self):
         """Try to connect and check auth."""
         fritzbox = Fritzhome(
@@ -73,11 +83,11 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             fritzbox.logout()
             return RESULT_SUCCESS
         except LoginError:
-            return RESULT_AUTH_FAILED
+            return RESULT_INVALID_AUTH
         except HTTPError:
             return RESULT_NOT_SUPPORTED
         except OSError:
-            return RESULT_NOT_FOUND
+            return RESULT_NO_DEVICES_FOUND
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
@@ -102,7 +112,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if result == RESULT_SUCCESS:
                 return self._get_entry()
-            if result != RESULT_AUTH_FAILED:
+            if result != RESULT_INVALID_AUTH:
                 return self.async_abort(reason=result)
             errors["base"] = result
 
@@ -150,13 +160,51 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if result == RESULT_SUCCESS:
                 return self._get_entry()
-            if result != RESULT_AUTH_FAILED:
+            if result != RESULT_INVALID_AUTH:
                 return self.async_abort(reason=result)
             errors["base"] = result
 
         return self.async_show_form(
             step_id="confirm",
             data_schema=DATA_SCHEMA_CONFIRM,
+            description_placeholders={"name": self._name},
+            errors=errors,
+        )
+
+    async def async_step_reauth(self, entry):
+        """Trigger a reauthentication flow."""
+        self._entry = entry
+        self._host = entry.data[CONF_HOST]
+        self._name = entry.data[CONF_HOST]
+        self._username = entry.data[CONF_USERNAME]
+
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Handle reauthorization flow."""
+        errors = {}
+
+        if user_input is not None:
+            self._password = user_input[CONF_PASSWORD]
+            self._username = user_input[CONF_USERNAME]
+
+            result = await self.hass.async_add_executor_job(self._try_connect)
+
+            if result == RESULT_SUCCESS:
+                await self._update_entry()
+                return self.async_abort(reason="reauth_successful")
+            if result != RESULT_INVALID_AUTH:
+                return self.async_abort(reason=result)
+            errors["base"] = result
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME, default=self._username): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
             description_placeholders={"name": self._name},
             errors=errors,
         )

@@ -2,16 +2,16 @@
     "config": {
         "abort": {
             "all_configured": "Wszystkie mostki Hue s\u0105 ju\u017c skonfigurowane",
-            "already_configured": "Mostek jest ju\u017c skonfigurowany",
-            "already_in_progress": "Konfiguracja mostka jest ju\u017c w toku.",
-            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "discover_timeout": "Nie mo\u017cna wykry\u0107 \u017cadnych mostk\u00f3w Hue",
             "no_bridges": "Nie wykryto mostk\u00f3w Hue",
             "not_hue_bridge": "To nie jest mostek Hue",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "error": {
-            "linking": "[%key::common::config_flow::error::unknown%]",
+            "linking": "Nieoczekiwany b\u0142\u0105d",
             "register_failed": "Nie uda\u0142o si\u0119 zarejestrowa\u0107. Spr\u00f3buj ponownie"
         },
         "step": {
@@ -22,7 +22,7 @@
                 "title": "Wybierz mostek Hue"
             },
             "link": {
-                "description": "Naci\u015bnij przycisk na mostku, aby zarejestrowa\u0107 Philips Hue w Home Assistant.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
+                "description": "Naci\u015bnij przycisk na mostku, aby zarejestrowa\u0107 Philips Hue w Home Assistant.\n\n![Umiejscowienie przycisku na mostku](/static/images/config_philips_hue.jpg)",
                 "title": "Hub Link"
             },
             "manual": {
@@ -47,11 +47,11 @@
             "turn_on": "w\u0142\u0105cznik"
         },
         "trigger_type": {
-            "remote_button_long_release": "\"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
-            "remote_button_short_press": "\"{subtype}\" zostanie naci\u015bni\u0119ty",
-            "remote_button_short_release": "\"{subtype}\" zostanie zwolniony",
-            "remote_double_button_long_press": "oba \"{subtype}\" zostan\u0105 zwolnione po d\u0142ugim naci\u015bni\u0119ciu",
-            "remote_double_button_short_press": "oba \"{subtype}\" zostan\u0105 zwolnione"
+            "remote_button_long_release": "przycisk \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
+            "remote_button_short_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty",
+            "remote_button_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
+            "remote_double_button_long_press": "oba przyciski \"{subtype}\" zostan\u0105 zwolnione po d\u0142ugim naci\u015bni\u0119ciu",
+            "remote_double_button_short_press": "oba przyciski \"{subtype}\" zostan\u0105 zwolnione"
         }
     },
     "options": {

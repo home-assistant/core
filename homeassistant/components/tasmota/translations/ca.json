@@ -13,6 +13,9 @@
                 },
                 "description": "Introdureix la configuraci\u00f3 de Tasmota.",
                 "title": "Tasmota"
+            },
+            "confirm": {
+                "description": "Vols configurar Tasmota?"
             }
         }
     }

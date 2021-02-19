@@ -1,12 +1,11 @@
 {
-  "title": "Tibber",
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "timeout": "Timeout connecting to Tibber",
-      "connection_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]"
     },
     "step": {

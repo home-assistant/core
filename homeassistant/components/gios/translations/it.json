@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
@@ -11,12 +11,17 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "Nome dell'integrazione",
+                    "name": "Nome",
                     "station_id": "ID della stazione di misura"
                 },
                 "description": "Impostare l'integrazione della qualit\u00e0 dell'aria GIO\u015a (Ispettorato capo polacco di protezione ambientale). Se hai bisogno di aiuto con la configurazione dai un'occhiata qui: https://www.home-assistant.io/integrations/gios",
                 "title": "GIO\u015a (Ispettorato capo polacco di protezione ambientale)"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Server GIO\u015a raggiungibile"
         }
     }
 }

@@ -1,6 +1,4 @@
 """Support for tracking the zodiac sign."""
-import logging
-
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import as_local, utcnow
 
@@ -28,8 +26,6 @@ from .const import (
     SIGN_TAURUS,
     SIGN_VIRGO,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 ZODIAC_BY_DATE = (
     (

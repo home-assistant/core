@@ -1,87 +1,70 @@
 # Describes the format for available vacuum services
 
 turn_on:
-  description: Start a new cleaning task.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: "vacuum.xiaomi_vacuum_cleaner"
+  description: Start a new cleaning task
+  target:
 
 turn_off:
-  description: Stop the current cleaning task and return to home.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: "vacuum.xiaomi_vacuum_cleaner"
+  description: Stop the current cleaning task and return to home
+  target:
 
 stop:
-  description: Stop the current cleaning task.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: "vacuum.xiaomi_vacuum_cleaner"
+  description: Stop the current cleaning task
+  target:
 
 locate:
-  description: Locate the vacuum cleaner robot.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: "vacuum.xiaomi_vacuum_cleaner"
+  description: Locate the vacuum cleaner robot
+  target:
 
 start_pause:
-  description: Start, pause, or resume the cleaning task.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: "vacuum.xiaomi_vacuum_cleaner"
+  description: Start, pause, or resume the cleaning task
+  target:
 
 start:
-  description: Start or resume the cleaning task.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: "vacuum.xiaomi_vacuum_cleaner"
+  description: Start or resume the cleaning task
+  target:
 
 pause:
-  description: Pause the cleaning task.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: "vacuum.xiaomi_vacuum_cleaner"
+  description: Pause the cleaning task
+  target:
 
 return_to_base:
-  description: Tell the vacuum cleaner to return to its dock.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: "vacuum.xiaomi_vacuum_cleaner"
+  description: Tell the vacuum cleaner to return to its dock
+  target:
 
 clean_spot:
-  description: Tell the vacuum cleaner to do a spot clean-up.
-  fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: "vacuum.xiaomi_vacuum_cleaner"
+  description: Tell the vacuum cleaner to do a spot clean-up
+  target:
 
 send_command:
-  description: Send a raw command to the vacuum cleaner.
+  description: Send a raw command to the vacuum cleaner
+  target:
   fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: "vacuum.xiaomi_vacuum_cleaner"
     command:
+      name: Command
       description: Command to execute.
+      required: true
       example: "set_dnd_timer"
+      selector:
+        text:
+
     params:
+      name: Parameters
       description: Parameters for the command.
       example: '{ "key": "value" }'
+      selector:
+        object:
 
 set_fan_speed:
-  description: Set the fan speed of the vacuum cleaner.
+  description: Set the fan speed of the vacuum cleaner
+  target:
   fields:
-    entity_id:
-      description: Name of the vacuum entity.
-      example: "vacuum.xiaomi_vacuum_cleaner"
     fan_speed:
-      description: Platform dependent vacuum cleaner fan speed, with speed steps, like 'medium' or by percentage, between 0 and 100.
+      name: Fan speed
+      description:
+        Platform dependent vacuum cleaner fan speed, with speed steps, like
+        'medium' or by percentage, between 0 and 100.
+      required: true
       example: "low"
+      selector:
+        text:

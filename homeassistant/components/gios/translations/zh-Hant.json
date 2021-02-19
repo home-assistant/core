@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u6b64\u76e3\u6e2c\u7ad9\u4e4b\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u5ea7\u6a19\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
@@ -17,6 +17,11 @@
                 "description": "\u8a2d\u5b9a GIO\u015a\uff08\u6ce2\u862d\u7e3d\u74b0\u5883\u4fdd\u8b77\u7763\u5bdf\u8655\uff09\u7a7a\u6c23\u54c1\u8cea\u6574\u5408\u3002\u5047\u5982\u9700\u8981\u5354\u52a9\uff0c\u8acb\u53c3\u8003\uff1ahttps://www.home-assistant.io/integrations/gios",
                 "title": "GIO\u015a\uff08\u6ce2\u862d\u7e3d\u74b0\u5883\u4fdd\u8b77\u7763\u5bdf\u8655\uff09"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "\u9023\u7dda GIO\u015a \u4f3a\u670d\u5668"
         }
     }
 }

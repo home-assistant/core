@@ -1,9 +1,10 @@
 """Test config flow."""
 from collections import namedtuple
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.esphome import DATA_KEY
+from homeassistant.components.esphome import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -11,7 +12,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from tests.async_mock import AsyncMock, MagicMock, patch
 from tests.common import MockConfigEntry
 
 MockDeviceInfo = namedtuple("DeviceInfo", ["uses_password", "name"])
@@ -174,7 +174,7 @@ async def test_user_invalid_password(hass, mock_api_connection_error, mock_clien
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "authenticate"
-    assert result["errors"] == {"base": "invalid_password"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_discovery_initiation(hass, mock_client):
@@ -207,7 +207,7 @@ async def test_discovery_initiation(hass, mock_client):
 async def test_discovery_already_configured_hostname(hass, mock_client):
     """Test discovery aborts if already configured via hostname."""
     entry = MockConfigEntry(
-        domain="esphome",
+        domain=DOMAIN,
         data={CONF_HOST: "test8266.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
     )
 
@@ -232,7 +232,7 @@ async def test_discovery_already_configured_hostname(hass, mock_client):
 async def test_discovery_already_configured_ip(hass, mock_client):
     """Test discovery aborts if already configured via static IP."""
     entry = MockConfigEntry(
-        domain="esphome",
+        domain=DOMAIN,
         data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
     )
 
@@ -257,14 +257,14 @@ async def test_discovery_already_configured_ip(hass, mock_client):
 async def test_discovery_already_configured_name(hass, mock_client):
     """Test discovery aborts if already configured via name."""
     entry = MockConfigEntry(
-        domain="esphome",
+        domain=DOMAIN,
         data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
     )
     entry.add_to_hass(hass)
 
     mock_entry_data = MagicMock()
     mock_entry_data.device_info.name = "test8266"
-    hass.data[DATA_KEY] = {entry.entry_id: mock_entry_data}
+    hass.data[DOMAIN] = {entry.entry_id: mock_entry_data}
 
     service_info = {
         "host": "192.168.43.184",
@@ -310,7 +310,7 @@ async def test_discovery_duplicate_data(hass, mock_client):
 async def test_discovery_updates_unique_id(hass, mock_client):
     """Test a duplicate discovery host aborts and updates existing entry."""
     entry = MockConfigEntry(
-        domain="esphome",
+        domain=DOMAIN,
         data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
     )
 

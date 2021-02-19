@@ -5,12 +5,11 @@ import voluptuous as vol
 import yeelight
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import (
-    CONF_DEVICE,
     CONF_MODE_MUSIC,
     CONF_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
@@ -18,6 +17,7 @@ from . import (
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
+    _async_unique_name,
 )
 from . import DOMAIN  # pylint:disable=unused-import
 
@@ -38,7 +38,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the config flow."""
-        self._capabilities = None
         self._discovered_devices = {}
 
     async def async_step_user(self, user_input=None):
@@ -49,7 +48,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 try:
                     await self._async_try_connect(user_input[CONF_HOST])
                     return self.async_create_entry(
-                        title=self._async_default_name(),
+                        title=user_input[CONF_HOST],
                         data=user_input,
                     )
                 except CannotConnect:
@@ -59,9 +58,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 return await self.async_step_pick_device()
 
+        user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional(CONF_HOST): str}),
+            data_schema=vol.Schema(
+                {vol.Optional(CONF_HOST, default=user_input.get(CONF_HOST, "")): str}
+            ),
             errors=errors,
         )
 
@@ -69,9 +71,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the step to pick discovered device."""
         if user_input is not None:
             unique_id = user_input[CONF_DEVICE]
-            self._capabilities = self._discovered_devices[unique_id]
+            capabilities = self._discovered_devices[unique_id]
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=self._async_default_name(),
+                title=_async_unique_name(capabilities),
                 data={CONF_ID: unique_id},
             )
 
@@ -122,25 +126,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_try_connect(self, host):
         """Set up with options."""
+        for entry in self._async_current_entries():
+            if entry.data.get(CONF_HOST) == host:
+                raise AlreadyConfigured
+
         bulb = yeelight.Bulb(host)
         try:
             capabilities = await self.hass.async_add_executor_job(bulb.get_capabilities)
             if capabilities is None:  # timeout
-                _LOGGER.error("Failed to get capabilities from %s: timeout", host)
-                raise CannotConnect
+                _LOGGER.debug("Failed to get capabilities from %s: timeout", host)
+            else:
+                _LOGGER.debug("Get capabilities: %s", capabilities)
+                await self.async_set_unique_id(capabilities["id"])
+                self._abort_if_unique_id_configured()
+                return
         except OSError as err:
-            _LOGGER.error("Failed to get capabilities from %s: %s", host, err)
-            raise CannotConnect from err
-        _LOGGER.debug("Get capabilities: %s", capabilities)
-        self._capabilities = capabilities
-        await self.async_set_unique_id(capabilities["id"])
-        self._abort_if_unique_id_configured()
+            _LOGGER.debug("Failed to get capabilities from %s: %s", host, err)
+            # Ignore the error since get_capabilities uses UDP discovery packet
+            # which does not work in all network environments
 
-    @callback
-    def _async_default_name(self):
-        model = self._capabilities["model"]
-        unique_id = self._capabilities["id"]
-        return f"yeelight_{model}_{unique_id}"
+        # Fallback to get properties
+        try:
+            await self.hass.async_add_executor_job(bulb.get_properties)
+        except yeelight.BulbException as err:
+            _LOGGER.error("Failed to get properties from %s: %s", host, err)
+            raise CannotConnect from err
+        _LOGGER.debug("Get properties: %s", bulb.last_properties)
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
@@ -153,11 +164,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Handle the initial step."""
         if user_input is not None:
-            # keep the name from imported entries
-            options = {
-                CONF_NAME: self._config_entry.options.get(CONF_NAME),
-                **user_input,
-            }
+            options = {**self._config_entry.options}
+            options.update(user_input)
             return self.async_create_entry(title="", data=options)
 
         options = self._config_entry.options

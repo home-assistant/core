@@ -1,5 +1,6 @@
 """Define tests for the GIOS config flow."""
 import json
+from unittest.mock import patch
 
 from gios import ApiError
 
@@ -8,7 +9,6 @@ from homeassistant.components.gios import config_flow
 from homeassistant.components.gios.const import CONF_STATION_ID
 from homeassistant.const import CONF_NAME
 
-from tests.async_mock import patch
 from tests.common import load_fixture
 from tests.components.gios import STATIONS
 

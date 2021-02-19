@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Standuert ass scho konfigu\u00e9iert."
+            "already_configured": "Service ass scho konfigu\u00e9iert"
         },
         "step": {
             "user": {

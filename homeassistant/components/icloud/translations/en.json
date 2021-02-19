@@ -2,15 +2,22 @@
     "config": {
         "abort": {
             "already_configured": "Account is already configured",
-            "no_device": "None of your devices have \"Find my iPhone\" activated"
+            "no_device": "None of your devices have \"Find my iPhone\" activated",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "invalid_auth": "Invalid authentication",
-            "login": "Login error: please check your email & password",
             "send_verification_code": "Failed to send verification code",
-            "validate_verification_code": "Failed to verify your verification code, choose a trust device and start the verification again"
+            "validate_verification_code": "Failed to verify your verification code, try again"
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "Your previously entered password for {username} is no longer working. Update your password to keep using this integration.",
+                "title": "Reauthenticate Integration"
+            },
             "trusted_device": {
                 "data": {
                     "trusted_device": "Trusted device"

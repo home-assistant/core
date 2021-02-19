@@ -1,13 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "These coordinates or Node/Pro ID are already registered."
+            "already_configured": "Location is already configured or Node/Pro ID is already registered.",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
             "general_error": "Unexpected error",
             "invalid_api_key": "Invalid API key",
-            "unable_to_connect": "Unable to connect to Node/Pro unit."
+            "location_not_found": "Location not found"
         },
         "step": {
             "geography": {
@@ -19,13 +20,38 @@
                 "description": "Use the AirVisual cloud API to monitor a geographical location.",
                 "title": "Configure a Geography"
             },
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "API Key",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "description": "Use the AirVisual cloud API to monitor a latitude/longitude.",
+                "title": "Configure a Geography"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "API Key",
+                    "city": "City",
+                    "country": "Country",
+                    "state": "state"
+                },
+                "description": "Use the AirVisual cloud API to monitor a city/state/country.",
+                "title": "Configure a Geography"
+            },
             "node_pro": {
                 "data": {
-                    "ip_address": "Unit IP Address/Hostname",
+                    "ip_address": "Host",
                     "password": "Password"
                 },
                 "description": "Monitor a personal AirVisual unit. The password can be retrieved from the unit's UI.",
                 "title": "Configure an AirVisual Node/Pro"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Key"
+                },
+                "title": "Re-authenticate AirVisual"
             },
             "user": {
                 "data": {

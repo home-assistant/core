@@ -1,17 +1,53 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "Home Assistant \u8a2d\u5099\u5fc5\u9808\u80fd\u5920\u7531\u7db2\u969b\u7db2\u8def\u5b58\u53d6\uff0c\u65b9\u80fd\u63a5\u53d7 Plaato Airlock \u8a0a\u606f\u3002",
-            "one_instance_allowed": "\u50c5\u9700\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u5373\u53ef\u3002",
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002",
+            "webhook_not_internet_accessible": "Home Assistant \u5be6\u9ad4\u5fc5\u9808\u8981\u80fd\u5f9e\u7db2\u969b\u7db2\u8def\u5b58\u53d6\u65b9\u80fd\u63a5\u6536 Webhook \u8a0a\u606f\u3002"
         },
         "create_entry": {
-            "default": "\u6b32\u50b3\u9001\u4e8b\u4ef6\u81f3 Home Assistant\uff0c\u5c07\u9700\u65bc Plaato Airlock \u5167\u8a2d\u5b9a webhook \u529f\u80fd\u3002\n\n\u8acb\u586b\u5beb\u4e0b\u5217\u8cc7\u8a0a\uff1a\n\n- URL: `{webhook_url}`\n- Method: POST\n\n\u8acb\u53c3\u95b1 [\u6587\u4ef6]({docs_url})\u4ee5\u4e86\u89e3\u66f4\u8a73\u7d30\u8cc7\u6599\u3002"
+            "default": "\u540d\u7a31\u70ba **{device_name}** \u7684 Plaato {device_type} \u5df2\u6210\u529f\u8a2d\u5b9a\uff01"
+        },
+        "error": {
+            "invalid_webhook_device": "\u6240\u9078\u64c7\u7684\u88dd\u7f6e\u4e0d\u652f\u63f4\u50b3\u9001\u8cc7\u6599\u81f3 Webhook\u3001AirLock \u50c5\u652f\u63f4\u6b64\u985e\u578b",
+            "no_api_method": "\u9700\u8981\u65b0\u589e\u6388\u6b0a\u5bc6\u9470\u6216\u9078\u64c7 Webhook",
+            "no_auth_token": "\u9700\u8981\u65b0\u589e\u6388\u6b0a\u5bc6\u9470"
         },
         "step": {
+            "api_method": {
+                "data": {
+                    "token": "\u65bc\u6b64\u8cbc\u4e0a\u6388\u6b0a\u5bc6\u9470",
+                    "use_webhook": "\u4f7f\u7528 Webhook"
+                },
+                "description": "\u9700\u8981\u6388\u6b0a\u5bc6\u8981 `auth_token` \u65b9\u80fd\u67e5\u8a62 API\u3002\u7372\u5f97\u7684\u65b9\u6cd5\u8acb [\u53c3\u95b1](https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token) \u6559\u5b78\n\n\u9078\u64c7\u7684\u88dd\u7f6e\uff1a**{device_type}** \n\n\u5047\u5982\u9078\u64c7\u5167\u5efa Webhook \u65b9\u6cd5\uff08Airlock \u552f\u4e00\u652f\u63f4\uff09\uff0c\u8acb\u6aa2\u67e5\u4e0b\u65b9\u6838\u9078\u76d2\u4e26\u78ba\u5b9a\u4fdd\u6301\u6388\u6b0a\u5bc6\u9470\u6b04\u4f4d\u7a7a\u767d",
+                "title": "\u9078\u64c7 API \u65b9\u5f0f"
+            },
             "user": {
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Plaato Airlock\uff1f",
-                "title": "\u8a2d\u5b9a Plaato Webhook"
+                "data": {
+                    "device_name": "\u88dd\u7f6e\u540d\u7a31",
+                    "device_type": "Plaato \u88dd\u7f6e\u985e\u578b"
+                },
+                "description": "\u662f\u5426\u8981\u958b\u59cb\u8a2d\u5b9a\uff1f",
+                "title": "\u8a2d\u5b9a Plaato \u88dd\u7f6e"
+            },
+            "webhook": {
+                "description": "\u6b32\u50b3\u9001\u4e8b\u4ef6\u81f3 Home Assistant\uff0c\u5c07\u9700\u65bc Plaato Airlock \u5167\u8a2d\u5b9a webhook \u529f\u80fd\u3002\n\n\u8acb\u586b\u5beb\u4e0b\u5217\u8cc7\u8a0a\uff1a\n\n- URL: `{webhook_url}`\n- Method: POST\n\n\u8acb\u53c3\u95b1 [\u6587\u4ef6]({docs_url})\u4ee5\u4e86\u89e3\u66f4\u8a73\u7d30\u8cc7\u6599\u3002",
+                "title": "\u4f7f\u7528\u4e4b Webhook"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "update_interval": "\u66f4\u65b0\u983b\u7387\uff08\u5206\uff09"
+                },
+                "description": "\u8a2d\u5b9a\u66f4\u65b0\u983b\u7387\uff08\u5206\uff09",
+                "title": "Plaato \u9078\u9805"
+            },
+            "webhook": {
+                "description": "Webhook \u8a0a\u606f\uff1a\n\n- URL\uff1a`{webhook_url}`\n- \u65b9\u5f0f\uff1aPOST\n\n",
+                "title": "Plaato Airlock \u9078\u9805"
             }
         }
     }

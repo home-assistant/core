@@ -36,6 +36,7 @@ def _send_blink_2fa_pin(auth, pin):
     """Send 2FA pin to blink servers."""
     blink = Blink()
     blink.auth = auth
+    blink.setup_login_ids()
     blink.setup_urls()
     return auth.send_auth_key(blink, pin)
 

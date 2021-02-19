@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana dla tej stacji pomiarowej"
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
@@ -17,6 +17,11 @@
                 "description": "Konfiguracja integracji jako\u015bci powietrza GIO\u015a (G\u0142\u00f3wny Inspektorat Ochrony \u015arodowiska). Je\u015bli potrzebujesz pomocy z konfiguracj\u0105, przejd\u017a na stron\u0119: https://www.home-assistant.io/integrations/gios",
                 "title": "G\u0142\u00f3wny Inspektorat Ochrony \u015arodowiska (GIO\u015a)"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Dost\u0119p do serwera GIO\u015a"
         }
     }
 }

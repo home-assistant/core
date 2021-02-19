@@ -110,7 +110,7 @@ class MjpegCamera(Camera):
             self._authentication == HTTP_DIGEST_AUTHENTICATION
             or self._still_image_url is None
         ):
-            image = await self.hass.async_add_job(self.camera_image)
+            image = await self.hass.async_add_executor_job(self.camera_image)
             return image
 
         websession = async_get_clientsession(self.hass, verify_ssl=self._verify_ssl)

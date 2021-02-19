@@ -1,11 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto jest ju\u017c skonfigurowane."
+            "already_configured": "Konto jest ju\u017c skonfigurowane"
         },
         "error": {
-            "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "login": "B\u0142\u0105d logowania: sprawd\u017a swoj\u0105 nazw\u0119 u\u017cytkownika i has\u0142o"
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
         "step": {
             "user": {

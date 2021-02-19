@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
-            "unable_to_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z urz\u0105dzeniem."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "error": {
             "few": "kilka",
@@ -14,7 +14,7 @@
         "flow_title": "Arcam FMJ na {host}",
         "step": {
             "confirm": {
-                "description": "Czy chcesz doda\u0107 Arcam FMJ na \"{host}\" do Home Assistant?"
+                "description": "Czy chcesz doda\u0107 Arcam FMJ na \"{host}\" do Home Assistanta?"
             },
             "user": {
                 "data": {

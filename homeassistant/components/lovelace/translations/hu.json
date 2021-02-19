@@ -1,3 +1,10 @@
 {
-    "title": "Lovelace"
+    "system_health": {
+        "info": {
+            "dashboards": "Ir\u00e1ny\u00edt\u00f3pultok",
+            "mode": "M\u00f3d",
+            "resources": "Er\u0151forr\u00e1sok",
+            "views": "N\u00e9zetek"
+        }
+    }
 }

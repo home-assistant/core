@@ -1,23 +1,53 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Saate konfigureerida ainult \u00fche Nest-i konto.",
             "authorize_url_fail": "Tundmatu viga tuvastamise URL-i loomisel.",
-            "authorize_url_timeout": "Tuvastamise URL- i loomise ajal\u00f5pp.",
-            "no_flows": "Enne tuvastamist pead Nesti konfigureerima. [Palun lugege juhiseid] (https://www.home-assistant.io/components/nest/)."
+            "authorize_url_timeout": "Tuvastamise URL-i loomise ajal\u00f5pp.",
+            "missing_configuration": "Osis pole seadistatud. Vaata dokumentatsiooni.",
+            "no_url_available": "URL pole saadaval. Selle t\u00f5rke kohta teabe saamiseks vaata [spikrijaotis]({docs_url})",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus",
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
+            "unknown_authorize_url_generation": "Tundmatu viga tuvastamise URL-i loomisel."
+        },
+        "create_entry": {
+            "default": "Tuvastamine \u00f5nnestus"
         },
         "error": {
             "internal_error": "Sisemine viga tuvastuskoodi kinnitamisel",
-            "invalid_code": "Kehtetu kood",
+            "invalid_pin": "Vale PIN kood",
             "timeout": "Tuvastuskoodi ajal\u00f5pp",
             "unknown": "Tundmatu viga tuvastuskoodi kinnitamisel"
         },
         "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Pakkuja"
+                },
+                "description": "Vali millise autentimisteenuse pakkujaga soovid Nest-i autentida.",
+                "title": "Autentimisteenuse pakkuja"
+            },
             "link": {
                 "data": {
-                    "code": "PIN-kood"
-                }
+                    "code": "PIN kood"
+                },
+                "description": "Nest-i konto linkimiseks [authorize your account] ({url}).\n\nP\u00e4rast autoriseerimist kopeeri allolev PIN kood.",
+                "title": "Lingi Nesti konto"
+            },
+            "pick_implementation": {
+                "title": "Vali tuvastusmeetod"
+            },
+            "reauth_confirm": {
+                "description": "Nesti sidumine peab konto taastuvastama",
+                "title": "Taastuvasta sidumine"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Tuvastati liikumine",
+            "camera_person": "Isik tuvastatud",
+            "camera_sound": "Tuvastati heli",
+            "doorbell_chime": "Uksekell helises"
         }
     }
 }

@@ -1,22 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
-            "already_in_progress": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "not_huawei_lte": "To nie jest urz\u0105dzenie Huawei LTE"
         },
         "error": {
-            "connection_failed": "Po\u0142\u0105czenie nie powiod\u0142o si\u0119",
-            "connection_timeout": "Przekroczono limit czasu pr\u00f3by po\u0142\u0105czenia.",
+            "connection_timeout": "Przekroczono limit czasu pr\u00f3by po\u0142\u0105czenia",
             "incorrect_password": "Nieprawid\u0142owe has\u0142o",
             "incorrect_username": "Nieprawid\u0142owa nazwa u\u017cytkownika",
-            "incorrect_username_or_password": "Nieprawid\u0142owa nazwa u\u017cytkownika lub has\u0142o",
             "invalid_auth": "Niepoprawne uwierzytelnienie",
             "invalid_url": "Nieprawid\u0142owy URL",
             "login_attempts_exceeded": "Przekroczono maksymaln\u0105 liczb\u0119 pr\u00f3b logowania. Spr\u00f3buj ponownie p\u00f3\u017aniej.",
-            "response_error": "Wyst\u0105pi\u0142 nieznany b\u0142\u0105d w urz\u0105dzeniu.",
-            "unknown": "Nieoczekiwany b\u0142\u0105d",
-            "unknown_connection_error": "Nieznany b\u0142\u0105d podczas \u0142\u0105czenia z urz\u0105dzeniem"
+            "response_error": "Wyst\u0105pi\u0142 nieznany b\u0142\u0105d w urz\u0105dzeniu",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "flow_title": "Huawei LTE: {name}",
         "step": {
@@ -26,7 +23,7 @@
                     "url": "URL",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Wprowad\u017a szczeg\u00f3\u0142y dost\u0119pu do urz\u0105dzenia. Okre\u015blenie nazwy u\u017cytkownika i has\u0142a jest opcjonalne, ale umo\u017cliwia obs\u0142ug\u0119 wi\u0119kszej liczby funkcji integracji. Z drugiej strony u\u017cycie autoryzowanego po\u0142\u0105czenia mo\u017ce powodowa\u0107 problemy z dost\u0119pem do interfejsu internetowego urz\u0105dzenia z zewn\u0105trz Home Assistanta gdy integracja jest aktywna.",
+                "description": "Wprowad\u017a szczeg\u00f3\u0142y dost\u0119pu do urz\u0105dzenia. Okre\u015blenie nazwy u\u017cytkownika i has\u0142a jest opcjonalne, ale umo\u017cliwia obs\u0142ug\u0119 wi\u0119kszej liczby funkcji integracji. Z drugiej strony u\u017cycie autoryzowanego po\u0142\u0105czenia mo\u017ce powodowa\u0107 problemy z dost\u0119pem do interfejsu internetowego urz\u0105dzenia z zewn\u0105trz Home Assistanta, gdy integracja jest aktywna.",
                 "title": "Konfiguracja Huawei LTE"
             }
         }

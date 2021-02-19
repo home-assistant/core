@@ -1,7 +1,27 @@
 {
     "config": {
+        "abort": {
+            "invalid_auth": "Tuvastamise viga",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "create_entry": {
+            "default": "T\u00e4psemate suvandite kohta leiad teemat [Life360 documentation]({docs_url})."
+        },
         "error": {
-            "unexpected": "Ootamatu t\u00f5rge Life360 serveriga suhtlemisel"
+            "already_configured": "Kasutaja on juba seadistatud",
+            "invalid_auth": "Tuvastamise viga",
+            "invalid_username": "Vale kasutajanimi",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "description": "T\u00e4psemate suvandite kohta leiad teemat [Life360 documentation]({docs_url}).\nTee seda enne uute kontode lisamist.",
+                "title": "Life360 konto teave"
+            }
         }
     }
 }

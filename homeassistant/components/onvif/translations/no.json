@@ -8,8 +8,7 @@
             "onvif_error": "Feil ved konfigurering av ONVIF-enhet. Sjekk logger for mer informasjon."
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
-            "connection_failed": "Kan ikke koble til ONVIF-tjenesten med angitt legitimasjon."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
             "auth": {
@@ -36,7 +35,7 @@
                 "data": {
                     "host": "Vert",
                     "name": "Navn",
-                    "port": ""
+                    "port": "Port"
                 },
                 "title": "Konfigurere ONVIF-enhet"
             },

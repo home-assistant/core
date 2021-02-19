@@ -1,20 +1,35 @@
 {
     "config": {
         "abort": {
-            "port_name_in_use": "En bro med samme navn eller port er allerede konfigurert."
+            "port_name_in_use": "Et tilbeh\u00f8r eller bro med samme navn eller port er allerede konfigurert."
         },
         "step": {
+            "accessory_mode": {
+                "data": {
+                    "entity_id": "Enhet"
+                },
+                "description": "Velg enheten som skal inkluderes. I tilbeh\u00f8rsmodus er bare en enkelt enhet inkludert.",
+                "title": "Velg enhet som skal inkluderes"
+            },
+            "bridge_mode": {
+                "data": {
+                    "include_domains": "Domener \u00e5 inkludere"
+                },
+                "description": "Velg domenene som skal inkluderes. Alle st\u00f8ttede enheter i domenet vil bli inkludert.",
+                "title": "Velg domener som skal inkluderes"
+            },
             "pairing": {
-                "description": "S\u00e5 snart {name} bridge er klar, vil sammenkoblingen v\u00e6re tilgjengelig i \u201cVarsler\u201d som \u201cHomeKit Bridge Setup\u201d.",
-                "title": "Par HomeKit Bridge"
+                "description": "S\u00e5 snart {name} er klart, vil sammenkobling v\u00e6re tilgjengelig i \"Notifications\" som \"HomeKit Bridge Setup\".",
+                "title": "Koble sammen HomeKit"
             },
             "user": {
                 "data": {
                     "auto_start": "Autostart (deaktiver hvis du bruker Z-Wave eller annet forsinket startsystem)",
-                    "include_domains": "Domener \u00e5 inkludere"
+                    "include_domains": "Domener \u00e5 inkludere",
+                    "mode": "Modus"
                 },
-                "description": "En HomeKit Bridge gir deg tilgang til home assistant-enhetene dine i HomeKit. HomeKit Bridges er begrenset til 150 tilbeh\u00f8r per forekomst, inkludert selve broen. Hvis du \u00f8nsker \u00e5 bygge bro over mer enn maksimalt antall tilbeh\u00f8r, anbefales det at du bruker flere HomeKit-broer for forskjellige domener. Detaljert enhetskonfigurasjon er bare tilgjengelig via YAML for hovedbroen.",
-                "title": "Aktiver HomeKit Bridge"
+                "description": "HomeKit-integrasjonen gir deg tilgang til Home Assistant-enhetene dine i HomeKit. I bromodus er HomeKit Bridges begrenset til 150 tilbeh\u00f8r per forekomst inkludert selve broen. Hvis du \u00f8nsker \u00e5 bygge bro over maksimalt antall tilbeh\u00f8r, anbefales det at du bruker flere HomeKit-broer for forskjellige domener. Detaljert enhetskonfigurasjon er bare tilgjengelig via YAML. For best ytelse og for \u00e5 forhindre uventet utilgjengelighet, opprett og par sammen en egen HomeKit-forekomst i tilbeh\u00f8rsmodus for hver tv-mediaspiller og kamera.",
+                "title": "Aktiver HomeKit"
             }
         }
     },
@@ -22,10 +37,10 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (deaktiver hvis du bruker Z-Wave eller annet forsinket startsystem)",
+                    "auto_start": "Autostart (deaktiver hvis du ringer til homekit.start-tjenesten manuelt)",
                     "safe_mode": "Sikker modus (aktiver bare hvis sammenkoblingen mislykkes)"
                 },
-                "description": "Disse innstillingene m\u00e5 bare justeres dersom HomeKit bridge er ikke i bruk.",
+                "description": "Disse innstillingene m\u00e5 bare justeres hvis HomeKit ikke fungerer.",
                 "title": "Avansert konfigurasjon"
             },
             "cameras": {
@@ -35,25 +50,26 @@
                 "description": "Sjekk alle kameraer som st\u00f8tter opprinnelige H.264-str\u00f8mmer. Hvis kameraet ikke sender ut en H.264-str\u00f8m, vil systemet omkode videoen til H.264 for HomeKit. Transkoding krever en potent prosessor og er usannsynlig \u00e5 fungere p\u00e5 enkeltkortdatamaskiner som Raspberry Pi o.l.",
                 "title": "Velg videokodek for kamera."
             },
-            "exclude": {
+            "include_exclude": {
                 "data": {
-                    "exclude_entities": "Enheter \u00e5 ekskludere"
+                    "entities": "Entiteter",
+                    "mode": "Modus"
                 },
-                "description": "Velg enhetene du IKKE vil skal bygges inn.",
-                "title": "Ekskluder enheter i utvalgte domener fra bridge"
+                "description": "Velg enhetene som skal inkluderes. I tilbeh\u00f8rsmodus er bare \u00e9n enkelt enhet inkludert. I bridge include-modus inkluderes alle enheter i domenet med mindre bestemte enheter er valgt. I brounnlatingsmodus inkluderes alle enheter i domenet, med unntak av de utelatte enhetene. For best mulig ytelse, og for \u00e5 forhindre uventet utilgjengelighet, opprett og par en separat HomeKit-forekomst i tilbeh\u00f8rsmodus for hver tv-mediespiller og kamera.",
+                "title": "Velg enheter som skal inkluderes"
             },
             "init": {
                 "data": {
-                    "include_domains": "Domener \u00e5 inkludere"
+                    "include_domains": "Domener \u00e5 inkludere",
+                    "mode": "Modus"
                 },
-                "description": "Enheter i \"Domener som skal inkluderes\" vil bli brolagt til HomeKit. Du kan velge hvilke enheter som skal utelates fra denne listen p\u00e5 neste skjermbilde.",
-                "title": "Velg domener du vil bygge bro."
+                "description": "HomeKit kan konfigureres vise en bro eller ett enkelt tilbeh\u00f8r. I tilbeh\u00f8rsmodus kan bare \u00e9n enkelt enhet brukes. Tilbeh\u00f8rsmodus kreves for at mediespillere med TV-enhetsklassen skal fungere som de skal. Enheter i \"Domener som skal inkluderes\" inkluderes i HomeKit. Du kan velge hvilke enheter som skal inkluderes eller ekskluderes fra denne listen p\u00e5 neste skjermbilde.",
+                "title": "Velg domener som skal inkluderes."
             },
             "yaml": {
                 "description": "Denne oppf\u00f8ringen kontrolleres via YAML",
-                "title": "Juster alternativene for HomeKit Bridge"
+                "title": "Juster HomeKit-alternativer"
             }
         }
-    },
-    "title": "HomeKit Bridge"
+    }
 }

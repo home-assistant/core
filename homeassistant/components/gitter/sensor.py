@@ -98,7 +98,7 @@ class GitterSensor(Entity):
             _LOGGER.error(error)
             return
 
-        if "error" not in data.keys():
+        if "error" not in data:
             self._mention = len(data["mention"])
             self._state = len(data["chat"])
         else:

@@ -1,6 +1,7 @@
 """Test songpal media_player."""
 from datetime import timedelta
 import logging
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from songpal import (
     ConnectChange,
@@ -32,7 +33,6 @@ from . import (
     _patch_media_player_device,
 )
 
-from tests.async_mock import AsyncMock, MagicMock, call, patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
@@ -114,9 +114,7 @@ async def test_state(hass):
     assert attributes["supported_features"] == SUPPORT_SONGPAL
 
     device_registry = await dr.async_get_registry(hass)
-    device = device_registry.async_get_device(
-        identifiers={(songpal.DOMAIN, MAC)}, connections={}
-    )
+    device = device_registry.async_get_device(identifiers={(songpal.DOMAIN, MAC)})
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, MAC)}
     assert device.manufacturer == "Sony Corporation"
     assert device.name == FRIENDLY_NAME

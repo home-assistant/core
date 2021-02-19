@@ -1,10 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja s'ha configurat.",
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
-            "cannot_connect": "Ha fallat la connexi\u00f3",
-            "unable_to_connect": "No es pot connectar amb el dispositiu."
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "flow_title": "Arcam FMJ a {host}",
         "step": {

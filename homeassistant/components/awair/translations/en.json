@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Account is already configured",
-            "no_devices": "No devices found on the network",
+            "no_devices_found": "No devices found on the network",
             "reauth_successful": "Re-authentication was successful"
         },
         "error": {
-            "auth": "Invalid access token",
-            "unknown": "Unknown Awair API error."
+            "invalid_access_token": "Invalid access token",
+            "unknown": "Unexpected error"
         },
         "step": {
             "reauth": {

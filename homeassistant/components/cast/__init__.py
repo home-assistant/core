@@ -29,3 +29,8 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
         hass.config_entries.async_forward_entry_setup(entry, "media_player")
     )
     return True
+
+
+async def async_remove_entry(hass, entry):
+    """Remove Home Assistant Cast user."""
+    await home_assistant_cast.async_remove_user(hass, entry)

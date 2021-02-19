@@ -88,7 +88,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         pin = async_get_pin_from_discovery_hostname(discovery_info["hostname"])
         await self._async_set_unique_id(pin)
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context[CONF_IP_ADDRESS] = discovery_info["host"]
 
         if any(

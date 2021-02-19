@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Dozwolona jest tylko jedna konfiguracja MQTT."
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
-            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "broker": {
@@ -34,33 +34,33 @@
             "button_4": "czwarty",
             "button_5": "pi\u0105ty",
             "button_6": "sz\u00f3sty",
-            "turn_off": "nast\u0105pi wy\u0142\u0105czenie",
-            "turn_on": "nast\u0105pi w\u0142\u0105czenie"
+            "turn_off": "wy\u0142\u0105cznik",
+            "turn_on": "w\u0142\u0105cznik"
         },
         "trigger_type": {
-            "button_double_press": "\"{subtype}\" zostanie podw\u00f3jnie naci\u015bni\u0119ty",
-            "button_long_press": "\"{subtype}\" zostanie naci\u015bni\u0119ty w spos\u00f3b ci\u0105g\u0142y",
-            "button_long_release": "\"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
-            "button_quadruple_press": "\"{subtype}\" zostanie czterokrotnie naci\u015bni\u0119ty",
-            "button_quintuple_press": "\"{subtype}\" zostanie pi\u0119ciokrotnie naci\u015bni\u0119ty",
-            "button_short_press": "\"{subtype}\" zostanie naci\u015bni\u0119ty",
-            "button_short_release": "\"{subtype}\" zostanie zwolniony",
-            "button_triple_press": "\"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
+            "button_double_press": "przycisk \"{subtype}\" zostanie podw\u00f3jnie naci\u015bni\u0119ty",
+            "button_long_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty w spos\u00f3b ci\u0105g\u0142y",
+            "button_long_release": "przycisk \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
+            "button_quadruple_press": "przycisk \"{subtype}\" zostanie czterokrotnie naci\u015bni\u0119ty",
+            "button_quintuple_press": "przycisk \"{subtype}\" zostanie pi\u0119ciokrotnie naci\u015bni\u0119ty",
+            "button_short_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty",
+            "button_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
+            "button_triple_press": "przycisk \"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty"
         }
     },
     "options": {
         "error": {
-            "bad_birth": "Nieprawid\u0142owy temat \"birth\".",
-            "bad_will": "Nieprawid\u0142owy temat \"will\".",
-            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]"
+            "bad_birth": "Nieprawid\u0142owy temat \"birth\"",
+            "bad_will": "Nieprawid\u0142owy temat \"will\"",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "broker": {
                 "data": {
                     "broker": "Po\u015brednik",
-                    "password": "[%key_id:common::config_flow::data::password%]",
+                    "password": "Has\u0142o",
                     "port": "Port",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "description": "Wprowad\u017a informacje o po\u0142\u0105czeniu po\u015brednika MQTT"
             },

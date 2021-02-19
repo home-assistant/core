@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.const import CONF_FOR, CONF_PLATFORM, CONF_VALUE_TEMPLATE
-from homeassistant.core import callback
+from homeassistant.core import HassJob, callback
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
     TrackTemplate,
@@ -36,12 +36,33 @@ async def async_attach_trigger(
     time_delta = config.get(CONF_FOR)
     template.attach(hass, time_delta)
     delay_cancel = None
+    job = HassJob(action)
+    armed = False
+
+    # Arm at setup if the template is already false.
+    try:
+        if not result_as_boolean(value_template.async_render()):
+            armed = True
+    except exceptions.TemplateError as ex:
+        _LOGGER.warning(
+            "Error initializing 'template' trigger for '%s': %s",
+            automation_info["name"],
+            ex,
+        )
 
     @callback
     def template_listener(event, updates):
         """Listen for state changes and calls action."""
-        nonlocal delay_cancel
+        nonlocal delay_cancel, armed
         result = updates.pop().result
+
+        if isinstance(result, exceptions.TemplateError):
+            _LOGGER.warning(
+                "Error evaluating 'template' trigger for '%s': %s",
+                automation_info["name"],
+                result,
+            )
+            return
 
         if delay_cancel:
             # pylint: disable=not-callable
@@ -49,27 +70,43 @@ async def async_attach_trigger(
             delay_cancel = None
 
         if not result_as_boolean(result):
+            armed = True
             return
 
-        entity_id = event.data.get("entity_id")
-        from_s = event.data.get("old_state")
-        to_s = event.data.get("new_state")
+        # Only fire when previously armed.
+        if not armed:
+            return
+
+        # Fire!
+        armed = False
+
+        entity_id = event and event.data.get("entity_id")
+        from_s = event and event.data.get("old_state")
+        to_s = event and event.data.get("new_state")
+
+        if entity_id is not None:
+            description = f"{entity_id} via template"
+        else:
+            description = "time change or manual update via template"
+
+        template_variables = {
+            "platform": platform_type,
+            "entity_id": entity_id,
+            "from_state": from_s,
+            "to_state": to_s,
+        }
+        trigger_variables = {
+            "for": time_delta,
+            "description": description,
+        }
 
         @callback
         def call_action(*_):
             """Call action with right context."""
-            hass.async_run_job(
-                action,
-                {
-                    "trigger": {
-                        "platform": "template",
-                        "entity_id": entity_id,
-                        "from_state": from_s,
-                        "to_state": to_s,
-                        "for": time_delta if not time_delta else period,
-                        "description": f"{entity_id} via template",
-                    }
-                },
+            nonlocal trigger_variables
+            hass.async_run_hass_job(
+                job,
+                {"trigger": {**template_variables, **trigger_variables}},
                 (to_s.context if to_s else None),
             )
 
@@ -77,24 +114,17 @@ async def async_attach_trigger(
             call_action()
             return
 
-        variables = {
-            "trigger": {
-                "platform": platform_type,
-                "entity_id": entity_id,
-                "from_state": from_s,
-                "to_state": to_s,
-            }
-        }
-
         try:
             period = cv.positive_time_period(
-                template.render_complex(time_delta, variables)
+                template.render_complex(time_delta, {"trigger": template_variables})
             )
         except (exceptions.TemplateError, vol.Invalid) as ex:
             _LOGGER.error(
                 "Error rendering '%s' for template: %s", automation_info["name"], ex
             )
             return
+
+        trigger_variables["for"] = period
 
         delay_cancel = async_call_later(hass, period.seconds, call_action)
 

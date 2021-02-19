@@ -1,19 +1,22 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "UPB PIM z takim adresem jest ju\u017c skonfigurowany."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z UPB PIM, spr\u00f3buj ponownie.",
-            "invalid_upb_file": "Brak lub nieprawid\u0142owy plik eksportu UPB UPStart, sprawd\u017a nazw\u0119 i \u015bcie\u017ck\u0119 do pliku.",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_upb_file": "Brak lub nieprawid\u0142owy plik eksportu UPB UPStart, sprawd\u017a nazw\u0119 i \u015bcie\u017ck\u0119 do pliku",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "step": {
             "user": {
                 "data": {
+                    "address": "Adres (opis powy\u017cej)",
                     "file_path": "\u015acie\u017cka i nazwa pliku eksportu UPStart UPB.",
                     "protocol": "Protok\u00f3\u0142"
-                }
+                },
+                "description": "Po\u0142\u0105czenie Universal Powerline Bus Powerline Interface Module (UPB PIM). Adres musi mie\u0107 posta\u0107 \"adres[:port]\" dla protoko\u0142u \"tcp\". Numer portu jest opcjonalny i domy\u015blnie ustawiony na 2101. Przyk\u0142ad: \"192.168.1.42\". Dla protoko\u0142u szeregowego adres musi mie\u0107 posta\u0107 \"tty[:baud]\". Szybko\u015b\u0107 transmisji (baud) jest opcjonalna i domy\u015blnie ustawiona na 4800. Przyk\u0142ad: \"/dev/ttyS1\".",
+                "title": "Po\u0142\u0105czenie z UPB PIM"
             }
         }
     }

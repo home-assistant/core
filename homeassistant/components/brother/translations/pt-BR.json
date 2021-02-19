@@ -4,7 +4,6 @@
             "unsupported_model": "Este modelo de impressora n\u00e3o \u00e9 suportado."
         },
         "error": {
-            "connection_error": "Erro de conex\u00e3o.",
             "snmp_error": "Servidor SNMP desligado ou impressora n\u00e3o suportada.",
             "wrong_host": "Nome de host ou endere\u00e7o IP inv\u00e1lido."
         },

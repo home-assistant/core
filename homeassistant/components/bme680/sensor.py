@@ -111,7 +111,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     SENSOR_TYPES[SENSOR_TEMP][1] = hass.config.units.temperature_unit
     name = config[CONF_NAME]
 
-    sensor_handler = await hass.async_add_job(_setup_bme680, config)
+    sensor_handler = await hass.async_add_executor_job(_setup_bme680, config)
     if sensor_handler is None:
         return
 
@@ -347,7 +347,7 @@ class BME680Sensor(Entity):
 
     async def async_update(self):
         """Get the latest data from the BME680 and update the states."""
-        await self.hass.async_add_job(self.bme680_client.update)
+        await self.hass.async_add_executor_job(self.bme680_client.update)
         if self.type == SENSOR_TEMP:
             temperature = round(self.bme680_client.sensor_data.temperature, 1)
             if self.temp_unit == TEMP_FAHRENHEIT:

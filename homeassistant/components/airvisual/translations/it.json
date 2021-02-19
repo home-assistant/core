@@ -1,13 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Queste coordinate o Node/Pro ID sono gi\u00e0 registrate."
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata o Node/Pro ID sono gi\u00e0 registrati.",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "general_error": "Errore imprevisto",
             "invalid_api_key": "Chiave API non valida",
-            "unable_to_connect": "Impossibile connettersi all'unit\u00e0 Node/Pro."
+            "location_not_found": "Posizione non trovata"
         },
         "step": {
             "geography": {
@@ -19,13 +20,38 @@
                 "description": "Utilizzare l'API di AirVisual cloud per monitorare una posizione geografica.",
                 "title": "Configurare una Geografia"
             },
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "Chiave API",
+                    "latitude": "Latitudine",
+                    "longitude": "Logitudine"
+                },
+                "description": "Usa l'API cloud di AirVisual per monitorare una latitudine/longitudine.",
+                "title": "Configurare un'area geografica"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "Chiave API",
+                    "city": "Citt\u00e0",
+                    "country": "Nazione",
+                    "state": "Stato"
+                },
+                "description": "Usa l'API cloud di AirVisual per monitorare una citt\u00e0/stato/paese.",
+                "title": "Configurare un'area geografica"
+            },
             "node_pro": {
                 "data": {
-                    "ip_address": "Indirizzo IP/Nome host dell'unit\u00e0",
+                    "ip_address": "Host",
                     "password": "Password"
                 },
                 "description": "Monitorare un'unit\u00e0 AirVisual personale. La password pu\u00f2 essere recuperata dall'interfaccia utente dell'unit\u00e0.",
                 "title": "Configurare un AirVisual Node/Pro"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Chiave API"
+                },
+                "title": "Riautenticare AirVisual"
             },
             "user": {
                 "data": {

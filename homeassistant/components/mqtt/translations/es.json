@@ -52,7 +52,7 @@
         "error": {
             "bad_birth": "Tema de nacimiento inv\u00e1lido.",
             "bad_will": "Tema deseado inv\u00e1lido.",
-            "cannot_connect": "No se puede conectar con el agente."
+            "cannot_connect": "No se pudo conectar"
         },
         "step": {
             "broker": {

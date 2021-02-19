@@ -1,4 +1,5 @@
 """Config flow for Elk-M1 Control integration."""
+import asyncio
 import logging
 from urllib.parse import urlparse
 
@@ -10,6 +11,7 @@ from homeassistant.const import (
     CONF_ADDRESS,
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_PREFIX,
     CONF_PROTOCOL,
     CONF_TEMPERATURE_UNIT,
     CONF_USERNAME,
@@ -19,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.util import slugify
 
 from . import async_wait_for_elk_to_sync
-from .const import CONF_AUTO_CONFIGURE, CONF_PREFIX
+from .const import CONF_AUTO_CONFIGURE
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +51,6 @@ async def validate_input(data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-
     userid = data.get(CONF_USERNAME)
     password = data.get(CONF_PASSWORD)
 
@@ -65,20 +66,7 @@ async def validate_input(data):
     )
     elk.connect()
 
-    timed_out = False
-    if not await async_wait_for_elk_to_sync(elk, VALIDATE_TIMEOUT):
-        _LOGGER.error(
-            "Timed out after %d seconds while trying to sync with ElkM1 at %s",
-            VALIDATE_TIMEOUT,
-            url,
-        )
-        timed_out = True
-
-    elk.disconnect()
-
-    if timed_out:
-        raise CannotConnect
-    if elk.invalid_auth:
+    if not await async_wait_for_elk_to_sync(elk, VALIDATE_TIMEOUT, url):
         raise InvalidAuth
 
     device_name = data[CONF_PREFIX] if data[CONF_PREFIX] else "ElkM1"
@@ -116,7 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(user_input)
 
-            except CannotConnect:
+            except asyncio.TimeoutError:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
@@ -159,10 +147,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for entry in self._async_current_entries()
         }
         return urlparse(url).hostname in existing_hosts
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
 
 
 class InvalidAuth(exceptions.HomeAssistantError):

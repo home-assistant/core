@@ -1,4 +1,6 @@
 """Test Alexa capabilities."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.alexa import smart_home
@@ -33,7 +35,6 @@ from . import (
     reported_properties,
 )
 
-from tests.async_mock import patch
 from tests.common import async_mock_service
 
 

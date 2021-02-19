@@ -1,10 +1,7 @@
 """Demo camera platform that has a fake camera."""
-import logging
 from pathlib import Path
 
 from homeassistant.components.camera import SUPPORT_ON_OFF, Camera
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

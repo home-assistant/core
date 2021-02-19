@@ -1,40 +1,76 @@
 # Describes the format for available MQTT services
 
 publish:
-  description: Publish a message to an MQTT topic.
+  description: Publish a message to an MQTT topic
   fields:
     topic:
+      name: Topic
       description: Topic to publish payload.
+      required: true
       example: /homeassistant/hello
+      selector:
+        text:
     payload:
+      name: Payload
       description: Payload to publish.
       example: This is great
+      selector:
+        text:
     payload_template:
-      description: Template to render as payload value. Ignored if payload given.
+      name: Payload Template
+      description:
+        Template to render as payload value. Ignored if payload given.
+      advanced: true
       example: "{{ states('sensor.temperature') }}"
+      selector:
+        object:
     qos:
+      name: QoS
       description: Quality of Service to use.
+      advanced: true
       example: 2
       values:
         - 0
         - 1
         - 2
       default: 0
+      selector:
+        select:
+          options:
+            - "0"
+            - "1"
+            - "2"
     retain:
+      name: Retain
       description: If message should have the retain flag set.
-      example: true
       default: false
+      example: true
+      selector:
+        boolean:
 
 dump:
-  description: Dump messages on a topic selector to the 'mqtt_dump.txt' file in your config folder.
+  description:
+    Dump messages on a topic selector to the 'mqtt_dump.txt' file in your config
+    folder
   fields:
     topic:
+      name: Topic
       description: topic to listen to
       example: "OpenZWave/#"
+      selector:
+        text:
     duration:
+      name: Duration
       description: how long we should listen for messages in seconds
       example: 5
       default: 5
+      selector:
+        number:
+          min: 1
+          max: 300
+          step: 1
+          unit_of_measurement: "seconds"
+          mode: slider
 
 reload:
-  description: Reload all mqtt entities from yaml.
+  description: Reload all MQTT entities from YAML

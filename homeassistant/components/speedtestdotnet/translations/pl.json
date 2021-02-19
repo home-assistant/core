@@ -1,21 +1,16 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Wymagana jest tylko jedna instancja.",
-            "single_instance_allowed": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
             "wrong_server_id": "Identyfikator serwera jest nieprawid\u0142owy"
         },
         "step": {
             "user": {
-                "description": "Czy na pewno chcesz skonfigurowa\u0107 SpeedTest?",
-                "title": "Konfiguracja SpeedTest"
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?"
             }
         }
     },
     "options": {
-        "error": {
-            "retrive_error": "B\u0142\u0105d podczas pobierania listy serwer\u00f3w"
-        },
         "step": {
             "init": {
                 "data": {

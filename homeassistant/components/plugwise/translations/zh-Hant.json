@@ -12,11 +12,19 @@
         "step": {
             "user": {
                 "data": {
+                    "flow_type": "\u9023\u7dda\u985e\u578b"
+                },
+                "description": "\u7522\u54c1\uff1a",
+                "title": "Plugwise \u985e\u578b"
+            },
+            "user_gateway": {
+                "data": {
                     "host": "IP \u4f4d\u5740",
                     "password": "Smile ID",
-                    "port": "\u901a\u8a0a\u57e0"
+                    "port": "\u901a\u8a0a\u57e0",
+                    "username": "Smile \u4f7f\u7528\u8005\u540d\u7a31"
                 },
-                "description": "\u8acb\u8f38\u5165\u8cc7\u8a0a\uff1a",
+                "description": "\u8acb\u8f38\u5165\uff1a",
                 "title": "\u9023\u7dda\u81f3 Smile"
             }
         }

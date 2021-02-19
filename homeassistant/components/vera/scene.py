@@ -1,5 +1,4 @@
 """Support for Vera scenes."""
-import logging
 from typing import Any, Callable, Dict, List, Optional
 
 import pyvera as veraApi
@@ -13,8 +12,6 @@ from homeassistant.util import slugify
 from .common import ControllerData, get_controller_data
 from .const import VERA_ID_FORMAT
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -24,7 +21,7 @@ async def async_setup_entry(
     """Set up the sensor config entry."""
     controller_data = get_controller_data(hass, entry)
     async_add_entities(
-        [VeraScene(device, controller_data) for device in controller_data.scenes]
+        [VeraScene(device, controller_data) for device in controller_data.scenes], True
     )
 
 

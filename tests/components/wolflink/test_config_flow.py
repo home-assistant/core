@@ -1,4 +1,6 @@
 """Test the Wolf SmartSet Service config flow."""
+from unittest.mock import patch
+
 from httpcore import ConnectError
 from wolf_smartset.models import Device
 from wolf_smartset.token_auth import InvalidAuth
@@ -12,7 +14,6 @@ from homeassistant.components.wolflink.const import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONFIG = {

@@ -158,7 +158,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.zone3,
         )
         if not await connect_denonavr.async_connect_receiver():
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
         receiver = connect_denonavr.receiver
 
         mac_address = await self.async_get_mac(self.host)
@@ -225,7 +225,6 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
             {
                 "title_placeholders": {

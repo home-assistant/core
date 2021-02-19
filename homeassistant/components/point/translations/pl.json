@@ -1,11 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Ju\u017c skonfigurowano, mo\u017cliwa jest tylko jedna konfiguracja",
-            "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania url autoryzacji.",
-            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji.",
-            "external_setup": "Punkt pomy\u015blnie skonfigurowany.",
-            "no_flows": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105."
+            "already_setup": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
+            "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania URL autoryzacji",
+            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji",
+            "external_setup": "Punkt pomy\u015blnie skonfigurowany",
+            "no_flows": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
+            "unknown_authorize_url_generation": "Nieznany b\u0142\u0105d podczas generowania URL autoryzacji"
         },
         "create_entry": {
             "default": "Pomy\u015blnie uwierzytelniono"
@@ -16,14 +17,14 @@
         },
         "step": {
             "auth": {
-                "description": "Kliknij poni\u017cszy link i <b>Zaakceptuj</b> dost\u0119p do konta Minut, a nast\u0119pnie wr\u00f3\u0107 i naci\u015bnij <b>Zatwierd\u017a</b> poni\u017cej. \n\n [Link]({authorization_url})",
+                "description": "Kliknij poni\u017cszy link i **Zaakceptuj** dost\u0119p do konta Minut, a nast\u0119pnie wr\u00f3\u0107 i naci\u015bnij **Zatwierd\u017a** poni\u017cej. \n\n [Link]({authorization_url})",
                 "title": "Uwierzytelnienie Point"
             },
             "user": {
                 "data": {
                     "flow_impl": "Dostawca"
                 },
-                "description": "Wybierz, kt\u00f3rego dostawc\u0119 uwierzytelnienia chcesz u\u017cywa\u0107 z Point.",
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?",
                 "title": "Wybierz metod\u0119 uwierzytelniania"
             }
         }

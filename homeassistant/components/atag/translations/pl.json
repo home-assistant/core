@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "To urz\u0105dzenie zosta\u0142o ju\u017c dodane do Home Assistant"
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
-            "connection_error": "[%key::common::config_flow::error::cannot_connect%]",
-            "unauthorized": "Odmowa parowania, sprawd\u017a urz\u0105dzenie pod k\u0105tem \u017c\u0105dania autoryzacji."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "unauthorized": "Odmowa parowania, sprawd\u017a urz\u0105dzenie pod k\u0105tem \u017c\u0105dania autoryzacji"
         },
         "step": {
             "user": {
@@ -17,6 +17,5 @@
                 "title": "Po\u0142\u0105czenie z urz\u0105dzeniem"
             }
         }
-    },
-    "title": "Atag"
+    }
 }

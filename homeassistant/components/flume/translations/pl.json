@@ -4,7 +4,7 @@
             "already_configured": "Konto jest ju\u017c skonfigurowane"
         },
         "error": {
-            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_auth": "Niepoprawne uwierzytelnienie",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
@@ -16,7 +16,7 @@
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Aby uzyska\u0107 dost\u0119p do API Flume, musisz poprosi\u0107 o 'ID klienta\u201d i 'klucz tajny klienta' na stronie https://portal.flumetech.com/settings#token",
+                "description": "Aby uzyska\u0107 dost\u0119p do API Flume, musisz poprosi\u0107 o \"Client ID\" oraz \"Client secret\" na stronie https://portal.flumetech.com/settings#token",
                 "title": "Po\u0142\u0105czenie z kontem Flume"
             }
         }

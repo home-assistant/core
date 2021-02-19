@@ -2,19 +2,16 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "bad_config_file": "B\u0142\u0119dne dane z pliku konfiguracyjnego",
             "link_local_address": "Po\u0142\u0105czenie lokalnego adresu nie jest obs\u0142ugiwane",
             "not_axis_device": "Wykryte urz\u0105dzenie nie jest urz\u0105dzeniem Axis"
         },
         "error": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "already_in_progress": "Konfiguracja urz\u0105dzenia jest ju\u017c w toku.",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "device_unavailable": "Urz\u0105dzenie jest niedost\u0119pne",
-            "faulty_credentials": "B\u0142\u0119dne dane uwierzytelniaj\u0105ce",
             "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
-        "flow_title": "Urz\u0105dzenie Axis: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

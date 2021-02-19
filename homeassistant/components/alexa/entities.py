@@ -96,8 +96,23 @@ class DisplayCategory:
     # to HDMI1. Applies to Scenes
     ACTIVITY_TRIGGER = "ACTIVITY_TRIGGER"
 
-    # Indicates media devices with video or photo capabilities.
+    # Indicates a device that emits pleasant odors and masks unpleasant odors in interior spaces.
+    AIR_FRESHENER = "AIR_FRESHENER"
+
+    # Indicates a device that improves the quality of air in interior spaces.
+    AIR_PURIFIER = "AIR_PURIFIER"
+
+    # Indicates a smart device in an automobile, such as a dash camera.
+    AUTO_ACCESSORY = "AUTO_ACCESSORY"
+
+    # Indicates a security device with video or photo functionality.
     CAMERA = "CAMERA"
+
+    # Indicates a religious holiday decoration that often contains lights.
+    CHRISTMAS_TREE = "CHRISTMAS_TREE"
+
+    # Indicates a device that makes coffee.
+    COFFEE_MAKER = "COFFEE_MAKER"
 
     # Indicates a non-mobile computer, such as a desktop computer.
     COMPUTER = "COMPUTER"
@@ -120,8 +135,15 @@ class DisplayCategory:
     # Indicates a game console, such as Microsoft Xbox or Nintendo Switch
     GAME_CONSOLE = "GAME_CONSOLE"
 
-    # Indicates a garage door. Garage doors must implement the ModeController interface to open and close the door.
+    # Indicates a garage door.
+    # Garage doors must implement the ModeController interface to open and close the door.
     GARAGE_DOOR = "GARAGE_DOOR"
+
+    # Indicates a wearable device that transmits audio directly into the ear.
+    HEADPHONES = "HEADPHONES"
+
+    # Indicates a smart-home hub.
+    HUB = "HUB"
 
     # Indicates a window covering on the inside of a structure.
     INTERIOR_BLIND = "INTERIOR_BLIND"
@@ -144,17 +166,23 @@ class DisplayCategory:
     # Indicates a network-connected music system.
     MUSIC_SYSTEM = "MUSIC_SYSTEM"
 
-    # An endpoint that cannot be described in on of the other categories.
-    OTHER = "OTHER"
-
     # Indicates a network router.
     NETWORK_HARDWARE = "NETWORK_HARDWARE"
+
+    # An endpoint that cannot be described in on of the other categories.
+    OTHER = "OTHER"
 
     # Indicates an oven cooking appliance.
     OVEN = "OVEN"
 
     # Indicates a non-mobile phone, such as landline or an IP phone.
     PHONE = "PHONE"
+
+    # Indicates a device that prints.
+    PRINTER = "PRINTER"
+
+    # Indicates a network router.
+    ROUTER = "ROUTER"
 
     # Describes a combination of devices set to a specific state, when the
     # order of the state change is not important. For example a bedtime scene
@@ -167,6 +195,13 @@ class DisplayCategory:
 
     # Indicates a security panel.
     SECURITY_PANEL = "SECURITY_PANEL"
+
+    # Indicates a security system.
+    SECURITY_SYSTEM = "SECURITY_SYSTEM"
+
+    # Indicates an electric cooking device that sits on a countertop, cooks at low temperatures,
+    # and is often shaped like a cooking pot.
+    SLOW_COOKER = "SLOW_COOKER"
 
     # Indicates an endpoint that locks.
     SMARTLOCK = "SMARTLOCK"
@@ -197,6 +232,9 @@ class DisplayCategory:
 
     # Indicates the endpoint is a television.
     TV = "TV"
+
+    # Indicates a vacuum cleaner.
+    VACUUM_CLEANER = "VACUUM_CLEANER"
 
     # Indicates a network-connected wearable device, such as an Apple Watch, Fitbit, or Samsung Gear.
     WEARABLE = "WEARABLE"
@@ -291,7 +329,7 @@ class AlexaEntity:
                 "manufacturer": "Home Assistant",
                 "model": self.entity.domain,
                 "softwareVersion": __version__,
-                "customIdentifier": self.entity_id,
+                "customIdentifier": f"{self.config.user_identifier()}-{self.entity_id}",
             },
         }
 
@@ -347,6 +385,9 @@ class GenericCapabilities(AlexaEntity):
 
     def default_display_categories(self):
         """Return the display categories for this entity."""
+        if self.entity.domain == automation.DOMAIN:
+            return [DisplayCategory.ACTIVITY_TRIGGER]
+
         return [DisplayCategory.OTHER]
 
     def interfaces(self):
@@ -769,7 +810,7 @@ class VacuumCapabilities(AlexaEntity):
 
     def default_display_categories(self):
         """Return the display categories for this entity."""
-        return [DisplayCategory.OTHER]
+        return [DisplayCategory.VACUUM_CLEANER]
 
     def interfaces(self):
         """Yield the supported interfaces."""

@@ -2,21 +2,23 @@
 
 import logging
 import re
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Callable, Dict, List, Optional, Set, cast
 
 import attr
 from stringcase import snakecase
 
-from homeassistant.components.device_tracker import (
+from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker.const import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     SOURCE_TYPE_ROUTER,
 )
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import HuaweiLteBaseEntity
 from .const import DOMAIN, KEY_WLAN_HOST_LIST, UPDATE_SIGNAL
@@ -26,7 +28,11 @@ _LOGGER = logging.getLogger(__name__)
 _DEVICE_SCAN = f"{DEVICE_TRACKER_DOMAIN}/device_scan"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    config_entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
     """Set up from config entry."""
 
     # Grab hosts list once to examine whether the initial fetch has got some data for
@@ -42,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # Initialize already tracked entities
     tracked: Set[str] = set()
     registry = await entity_registry.async_get_registry(hass)
-    known_entities: List[HuaweiLteScannerEntity] = []
+    known_entities: List[Entity] = []
     for entity in registry.entities.values():
         if (
             entity.domain == DEVICE_TRACKER_DOMAIN
@@ -73,7 +79,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 @callback
-def async_add_new_entities(hass, router_url, async_add_entities, tracked):
+def async_add_new_entities(
+    hass: HomeAssistantType,
+    router_url: str,
+    async_add_entities: Callable[[List[Entity], bool], None],
+    tracked: Set[str],
+) -> None:
     """Add new entities that are not already being tracked."""
     router = hass.data[DOMAIN].routers[router_url]
     try:
@@ -104,7 +115,7 @@ def _better_snakecase(text: str) -> str:
             lambda match: f"{match.group(1)}{match.group(2).lower()}{match.group(3)}",
             text,
         )
-    return snakecase(text)
+    return cast(str, snakecase(text))
 
 
 @attr.s

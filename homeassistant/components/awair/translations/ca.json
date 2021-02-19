@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "El compte ja ha estat configurat",
-            "no_devices": "No s'han trobat dispositius a la xarxa",
+            "no_devices_found": "No s'han trobat dispositius a la xarxa",
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
-            "auth": "Token d'acc\u00e9s no v\u00e0lid",
-            "unknown": "Error desconegut de l'API Awair."
+            "invalid_access_token": "Token d'acc\u00e9s no v\u00e0lid",
+            "unknown": "Error inesperat"
         },
         "step": {
             "reauth": {

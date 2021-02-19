@@ -1,7 +1,6 @@
 """Support for Twente Milieu."""
 import asyncio
 from datetime import timedelta
-import logging
 from typing import Optional
 
 from twentemilieu import TwenteMilieu
@@ -23,8 +22,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 SCAN_INTERVAL = timedelta(seconds=3600)
-
-_LOGGER = logging.getLogger(__name__)
 
 SERVICE_UPDATE = "update"
 SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_ID): cv.string})

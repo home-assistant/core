@@ -1,5 +1,5 @@
 """Webhook tests for mobile_app."""
-import logging
+from unittest.mock import patch
 
 import pytest
 
@@ -13,10 +13,7 @@ from homeassistant.setup import async_setup_component
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
-from tests.async_mock import patch
 from tests.common import async_mock_service
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def encrypt_payload(secret_key, payload):
@@ -70,13 +67,26 @@ async def test_webhook_handle_render_template(create_registrations, webhook_clie
     """Test that we render templates properly."""
     resp = await webhook_client.post(
         "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
-        json=RENDER_TEMPLATE,
+        json={
+            "type": "render_template",
+            "data": {
+                "one": {"template": "Hello world"},
+                "two": {"template": "{{ now() | random }}"},
+                "three": {"template": "{{ now() 3 }}"},
+            },
+        },
     )
 
     assert resp.status == 200
 
     json = await resp.json()
-    assert json == {"one": "Hello world"}
+    assert json == {
+        "one": "Hello world",
+        "two": {"error": "TypeError: object of type 'datetime.datetime' has no len()"},
+        "three": {
+            "error": "TemplateSyntaxError: expected token 'end of print statement', got 'integer'"
+        },
+    }
 
 
 async def test_webhook_handle_call_services(hass, create_registrations, webhook_client):
@@ -99,7 +109,7 @@ async def test_webhook_handle_fire_event(hass, create_registrations, webhook_cli
 
     @callback
     def store_event(event):
-        """Helepr to store events."""
+        """Help store events."""
         events.append(event)
 
     hass.bus.async_listen("test_event", store_event)

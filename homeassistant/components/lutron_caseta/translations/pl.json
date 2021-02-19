@@ -2,10 +2,75 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "not_lutron_device": "Wykryte urz\u0105dzenie nie jest urz\u0105dzeniem Lutron"
         },
         "error": {
-            "cannot_connect": "[%key::common::config_flow::error::cannot_connect%]"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "flow_title": "Lutron Cas\u00e9ta {name} ({host})",
+        "step": {
+            "import_failed": {
+                "description": "Nie mo\u017cna skonfigurowa\u0107 mostka (host: {host}) zaimportowanego z pliku configuration.yaml.",
+                "title": "Nie uda\u0142o si\u0119 zaimportowa\u0107 konfiguracji mostka Cas\u00e9ta."
+            },
+            "link": {
+                "description": "Aby sparowa\u0107 z {name} ({host}), po przes\u0142aniu tego formularza naci\u015bnij czarny przycisk z ty\u0142u mostka.",
+                "title": "Sparuj z mostkiem"
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                },
+                "description": "Wprowad\u017a adres IP urz\u0105dzenia",
+                "title": "Po\u0142\u0105cz si\u0119 automatycznie z mostkiem"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "pierwszy",
+            "button_2": "drugi",
+            "button_3": "trzeci",
+            "button_4": "czwarty",
+            "close_1": "zamknij 1",
+            "close_2": "zamknij 2",
+            "close_3": "zamknij 3",
+            "close_4": "zamknij 4",
+            "close_all": "zamknij wszystkie",
+            "group_1_button_1": "pierwsza grupa pierwszy przycisk",
+            "group_1_button_2": "pierwsza grupa drugi przycisk",
+            "group_2_button_1": "druga grupa pierwszy przycisk",
+            "group_2_button_2": "druga grupa drugi przycisk",
+            "lower": "opu\u015b\u0107",
+            "lower_1": "opu\u015b\u0107 1",
+            "lower_2": "opu\u015b\u0107 2",
+            "lower_3": "opu\u015b\u0107 3",
+            "lower_4": "opu\u015b\u0107 4",
+            "lower_all": "opu\u015b\u0107 wszystkie",
+            "off": "wy\u0142\u0105cz",
+            "on": "w\u0142\u0105cz",
+            "open_1": "otw\u00f3rz 1",
+            "open_2": "otw\u00f3rz 2",
+            "open_3": "otw\u00f3rz 3",
+            "open_4": "otw\u00f3rz 4",
+            "open_all": "otw\u00f3rz wszystkie",
+            "raise": "podnie\u015b",
+            "raise_1": "podnie\u015b 1",
+            "raise_2": "podnie\u015b 2",
+            "raise_3": "podnie\u015b 3",
+            "raise_4": "podnie\u015b 4",
+            "raise_all": "podnie\u015b wszystkie",
+            "stop": "zatrzymaj (ulubione)",
+            "stop_1": "zatrzymaj 1",
+            "stop_2": "zatrzymaj 2",
+            "stop_3": "zatrzymaj 3",
+            "stop_4": "zatrzymaj 4",
+            "stop_all": "zatrzymaj wszystkie"
+        },
+        "trigger_type": {
+            "press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty",
+            "release": "przycisk \"{subtype}\" zostanie zwolniony"
         }
     }
 }

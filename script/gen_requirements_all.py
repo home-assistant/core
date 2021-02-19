@@ -24,12 +24,10 @@ COMMENT_REQUIREMENTS = (
     "credstash",
     "decora",
     "decora_wifi",
-    "env_canada",
     "envirophat",
     "evdev",
     "face_recognition",
     "i2csense",
-    "nuimo",
     "opencv-python-headless",
     "py_noaa",
     "pybluez",
@@ -66,8 +64,16 @@ pycryptodome>=3.6.6
 # Constrain urllib3 to ensure we deal with CVE-2019-11236 & CVE-2019-11324
 urllib3>=1.24.3
 
-# Constrain httplib2 to protect against CVE-2020-11078
-httplib2>=0.18.0
+# Constrain H11 to ensure we get a new enough version to support non-rfc line endings
+h11>=0.12.0
+
+# Constrain httpcore to fix exception when connection dropped
+# https://github.com/encode/httpcore/issues/239
+httpcore>=0.12.3
+
+# Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
+# https://github.com/advisories/GHSA-93xj-8mrv-444m
+httplib2>=0.19.0
 
 # gRPC 1.32+ currently causes issues on ARMv7, see:
 # https://github.com/home-assistant/core/issues/40148

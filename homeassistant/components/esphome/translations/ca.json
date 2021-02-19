@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP ja est\u00e0 configurat",
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs"
         },
         "error": {
             "connection_error": "No s'ha pogut connectar amb ESP. Verifica que l'arxiu YAML cont\u00e9 la l\u00ednia 'api:'.",
-            "invalid_password": "Contrasenya inv\u00e0lida!",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "resolve_error": "No s'ha pogut trobar l'adre\u00e7a de l'ESP. Si l'error persisteix, configura una adre\u00e7a IP est\u00e0tica: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",

@@ -1,5 +1,4 @@
 """Support for Vera lights."""
-import logging
 from typing import Any, Callable, List, Optional, Tuple
 
 import pyvera as veraApi
@@ -21,8 +20,6 @@ import homeassistant.util.color as color_util
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -35,7 +32,8 @@ async def async_setup_entry(
         [
             VeraLight(device, controller_data)
             for device in controller_data.devices.get(PLATFORM_DOMAIN)
-        ]
+        ],
+        True,
     )
 
 
@@ -95,6 +93,7 @@ class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
 
     def update(self) -> None:
         """Call to update state."""
+        super().update()
         self._state = self.vera_device.is_switched_on()
         if self.vera_device.is_dimmable:
             # If it is dimmable, both functions exist. In case color

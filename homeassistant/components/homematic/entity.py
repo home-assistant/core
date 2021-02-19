@@ -48,7 +48,7 @@ class HMDevice(Entity):
 
     async def async_added_to_hass(self):
         """Load data init callbacks."""
-        await self.hass.async_add_job(self._subscribe_homematic_events)
+        self._subscribe_homematic_events()
 
     @property
     def unique_id(self):
@@ -73,7 +73,11 @@ class HMDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        attr = {}
+        # Static attributes
+        attr = {
+            "id": self._hmdevice.ADDRESS,
+            "interface": self._interface,
+        }
 
         # Generate a dictionary with attributes
         for node, data in HM_ATTRIBUTE_SUPPORT.items():
@@ -81,10 +85,6 @@ class HMDevice(Entity):
             if node in self._data:
                 value = data[1].get(self._data[node], self._data[node])
                 attr[data[0]] = value
-
-        # Static attributes
-        attr["id"] = self._hmdevice.ADDRESS
-        attr["interface"] = self._interface
 
         return attr
 

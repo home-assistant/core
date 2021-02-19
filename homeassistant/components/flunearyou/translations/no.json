@@ -1,10 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Disse koordinatene er allerede registrert."
+            "already_configured": "Plasseringen er allerede konfigurert"
         },
         "error": {
-            "general_error": "Det oppstod en ukjent feil.",
             "unknown": "Uventet feil"
         },
         "step": {
@@ -13,7 +12,7 @@
                     "latitude": "Breddegrad",
                     "longitude": "Lengdegrad"
                 },
-                "description": "Overv\u00e5k brukerbaserte og CDC-repoter for et par koordinater.",
+                "description": "Overv\u00e5k brukerbaserte rapporter og CDC-rapporter for et par koordinater.",
                 "title": "Konfigurere influensa i n\u00e6rheten av deg"
             }
         }
