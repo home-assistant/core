@@ -75,6 +75,7 @@ async def _async_process_config(hass, config) -> bool:
     if DOMAIN not in config:
         return True
 
+    refresh_tasks = []
     load_tasks = []
     for rest_idx, conf in enumerate(config[DOMAIN]):
         scan_interval = conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -83,7 +84,7 @@ async def _async_process_config(hass, config) -> bool:
         coordinator = _wrap_rest_in_coordinator(
             hass, rest, resource_template, scan_interval
         )
-        await coordinator.async_refresh()
+        refresh_tasks.append(coordinator.async_refresh())
         hass.data[DOMAIN][rest_idx] = {REST: rest, COORDINATOR: coordinator}
 
         for platform_domain in COORDINATOR_AWARE_PLATFORMS:
@@ -101,6 +102,9 @@ async def _async_process_config(hass, config) -> bool:
                     config,
                 )
                 load_tasks.append(load)
+
+    if refresh_tasks:
+        await asyncio.gather(*refresh_tasks)
 
     if load_tasks:
         await asyncio.gather(*load_tasks)
