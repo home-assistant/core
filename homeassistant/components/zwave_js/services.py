@@ -4,6 +4,7 @@ from typing import Dict, List, Union, cast
 
 import voluptuous as vol
 from zwave_js_server.model.node import Node as ZwaveNode
+from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
@@ -37,6 +38,8 @@ def parameter_name_does_not_need_bitmask(
     return val
 
 
+# Validates that a bitmask is provided in hex form and converts it to decimal
+# int equivalent since that's what the library uses
 BITMASK_SCHEMA = vol.All(
     cv.string, vol.Lower, vol.Match(r"^(0x)?[0-9a-f]+$"), convert_bitmask_to_int
 )
@@ -158,7 +161,8 @@ class ZWaveServices:
         new_value = service.data[const.ATTR_CONFIG_VALUE]
 
         for node in nodes:
-            zwave_value = node.async_set_config_parameter(
+            zwave_value = async_set_config_parameter(
+                node,
                 new_value,
                 property_or_property_name,
                 property_key=property_key,
