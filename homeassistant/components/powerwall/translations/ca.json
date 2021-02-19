@@ -17,7 +17,7 @@
                     "ip_address": "Adre\u00e7a IP",
                     "password": "Contrasenya"
                 },
-                "description": "La contrasenya normalment s\u00f3n els darrers cinc car\u00e0cters del n\u00famero de s\u00e8rie de la pasarel\u00b7la de control i es pot trobar a l'aplicaci\u00f3 de Tesla; tamb\u00e9 pot consistir en els darrers 5 car\u00e0cters de la contrasenya que es troba a l'interior de la tapa de la pasarel\u00b7la de control 2.",
+                "description": "La contrasenya normalment s\u00f3n els darrers cinc car\u00e0cters del n\u00famero de s\u00e8rie de la pasarel\u00b7la (backup gateway) i es pot trobar a l'aplicaci\u00f3 de Tesla. Tamb\u00e9 s\u00f3n els darrers 5 car\u00e0cters de la contrasenya que es troba a l'interior de la tapa de la pasarel\u00b7la vers\u00f3 2 (backup gateway 2).",
                 "title": "Connexi\u00f3 amb el Powerwall"
             }
         }
