@@ -30,6 +30,7 @@ async def async_setup(hass):
     hass.http.register_view(OptionManagerFlowIndexView(hass.config_entries.options))
     hass.http.register_view(OptionManagerFlowResourceView(hass.config_entries.options))
 
+    hass.components.websocket_api.async_register_command(config_entry_disable)
     hass.components.websocket_api.async_register_command(config_entry_update)
     hass.components.websocket_api.async_register_command(config_entries_progress)
     hass.components.websocket_api.async_register_command(system_options_list)
@@ -265,6 +266,21 @@ async def system_options_list(hass, connection, msg):
         connection.send_result(msg["id"], entry.system_options.as_dict())
 
 
+def send_entry_not_found(connection, msg_id):
+    """Send Config entry not found error."""
+    connection.send_error(
+        msg_id, websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
+    )
+
+
+def get_entry(hass, connection, entry_id, msg_id):
+    """Get entry, send error message if it doesn't exist."""
+    entry = hass.config_entries.async_get_entry(entry_id)
+    if entry is None:
+        send_entry_not_found(connection, msg_id)
+    return entry
+
+
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
@@ -279,13 +295,10 @@ async def system_options_update(hass, connection, msg):
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
-    entry_id = changes.pop("entry_id")
-    entry = hass.config_entries.async_get_entry(entry_id)
+    changes.pop("entry_id")
 
+    entry = get_entry(hass, connection, msg["entry_id"], msg["id"])
     if entry is None:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
-        )
         return
 
     hass.config_entries.async_update_entry(entry, system_options=changes)
@@ -302,18 +315,43 @@ async def config_entry_update(hass, connection, msg):
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
-    entry_id = changes.pop("entry_id")
+    changes.pop("entry_id")
 
-    entry = hass.config_entries.async_get_entry(entry_id)
-
+    entry = get_entry(hass, connection, msg["entry_id"], msg["id"])
     if entry is None:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
-        )
         return
 
     hass.config_entries.async_update_entry(entry, **changes)
     connection.send_result(msg["id"], entry_json(entry))
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        "type": "config_entries/disable",
+        "entry_id": str,
+        # We only allow setting disabled_by user via API.
+        "disabled_by": vol.Any("user", None),
+    }
+)
+async def config_entry_disable(hass, connection, msg):
+    """Disable config entry."""
+    disabled_by = msg["disabled_by"]
+
+    result = False
+    try:
+        result = await hass.config_entries.async_disable(msg["entry_id"], disabled_by)
+    except config_entries.OperationNotAllowed:
+        # Failed to unload the config entry
+        pass
+    except config_entries.UnknownEntry:
+        send_entry_not_found(connection, msg["id"])
+        return
+
+    result = {"require_restart": not result}
+
+    connection.send_result(msg["id"], result)
 
 
 @websocket_api.require_admin
@@ -333,9 +371,7 @@ async def ignore_config_flow(hass, connection, msg):
     )
 
     if flow is None:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
-        )
+        send_entry_not_found(connection, msg["id"])
         return
 
     if "unique_id" not in flow["context"]:

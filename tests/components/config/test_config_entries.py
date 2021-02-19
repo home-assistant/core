@@ -722,6 +722,83 @@ async def test_update_entry_nonexisting(hass, hass_ws_client):
     assert response["error"]["code"] == "not_found"
 
 
+async def test_disable_entry(hass, hass_ws_client):
+    """Test that we can disable entry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(domain="demo", state="loaded")
+    entry.add_to_hass(hass)
+    assert entry.disabled_by is None
+
+    # Disable
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/disable",
+            "entry_id": entry.entry_id,
+            "disabled_by": "user",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"require_restart": True}
+    assert entry.disabled_by == "user"
+    assert entry.state == "failed_unload"
+
+    # Enable
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "config_entries/disable",
+            "entry_id": entry.entry_id,
+            "disabled_by": None,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"require_restart": True}
+    assert entry.disabled_by is None
+    assert entry.state == "failed_unload"
+
+    # Enable again -> no op
+    await ws_client.send_json(
+        {
+            "id": 7,
+            "type": "config_entries/disable",
+            "entry_id": entry.entry_id,
+            "disabled_by": None,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"require_restart": False}
+    assert entry.disabled_by is None
+    assert entry.state == "failed_unload"
+
+
+async def test_disable_entry_nonexisting(hass, hass_ws_client):
+    """Test that we can disable entry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/disable",
+            "entry_id": "non_existing",
+            "disabled_by": "user",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "not_found"
+
+
 async def test_ignore_flow(hass, hass_ws_client):
     """Test we can ignore a flow."""
     assert await async_setup_component(hass, "config", {})
