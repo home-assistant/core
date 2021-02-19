@@ -45,9 +45,7 @@ async def test_valid_path(hass):
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == 1
-    state = hass.states.get(
-        "sensor." + slugify(TEST_DIR) + "_mock_file_test_filesize_txt_mb"
-    )
+    state = hass.states.get("sensor." + slugify(TEST_FILE) + "_mb")
     assert state.state == "0.0"
     assert state.attributes.get("bytes") == 4
 
@@ -66,16 +64,13 @@ async def test_entity_id_with_path(hass):
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == 1
-    state = hass.states.get(
-        "sensor." + slugify(TEST_DIR) + "_mock_file_test_filesize_txt_gb"
-    )
+    state = hass.states.get("sensor." + slugify(TEST_FILE) + "_gb")
     assert state
 
 
 async def test_reload(hass):
     """Verify we can reload filesize sensors."""
-    testfile = "file.txt"
-    await hass.async_add_executor_job(create_file, testfile)
+    await hass.async_add_executor_job(create_file, TEST_FILE)
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await async_setup_component(
             hass,
@@ -83,7 +78,7 @@ async def test_reload(hass):
             {
                 "sensor": {
                     "platform": "filesize",
-                    CONF_FILE_PATH: testfile,
+                    CONF_FILE_PATH: TEST_FILE,
                 }
             },
         )
@@ -91,7 +86,8 @@ async def test_reload(hass):
 
     assert len(hass.states.async_all()) == 1
 
-    assert hass.states.get("sensor.file_txt_mb")
+    state = hass.states.get("sensor." + slugify(TEST_FILE) + "_mb")
+    assert state.state == "0.0"
 
     yaml_path = os.path.join(
         _get_fixtures_base_path(),
@@ -99,7 +95,7 @@ async def test_reload(hass):
         "filesize/configuration.yaml",
     )
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch.object(
-        hass.config, "is_allowed_path", return_value=True
+        hass.config, "is_allowed_path", return_value=False
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -109,7 +105,9 @@ async def test_reload(hass):
         )
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.file") is None
+    assert len(hass.states.async_all()) == 1
+    state = hass.states.get("sensor." + slugify(TEST_FILE) + "_mb")
+    assert state.state == "unavailable"
 
 
 def _get_fixtures_base_path():
