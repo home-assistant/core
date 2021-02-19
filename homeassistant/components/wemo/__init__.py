@@ -187,15 +187,43 @@ class WemoDiscovery:
         self._wemo_dispatcher = wemo_dispatcher
         self._stop = None
         self._scan_delay = 0
+        self._upnp_entries = set()
+
+    async def async_add_from_upnp_entry(self, entry: pywemo.ssdp.UPNPEntry) -> None:
+        """Create a WeMoDevice from an UPNPEntry and add it to the dispatcher.
+
+        Uses the self._upnp_entries set to avoid interrogating the same device
+        multiple times.
+        """
+        if entry in self._upnp_entries:
+            return
+        try:
+            device = await self._hass.async_add_executor_job(
+                pywemo.discovery.device_from_uuid_and_location,
+                entry.udn,
+                entry.location,
+            )
+        except pywemo.PyWeMoException as err:
+            _LOGGER.error("Unable to setup WeMo %r (%s)", entry, err)
+        else:
+            self._wemo_dispatcher.async_add_unique_device(self._hass, device)
+            self._upnp_entries.add(entry)
 
     async def async_discover_and_schedule(self, *_) -> None:
         """Periodically scan the network looking for WeMo devices."""
         _LOGGER.debug("Scanning network for WeMo devices...")
         try:
-            for device in await self._hass.async_add_executor_job(
-                pywemo.discover_devices
-            ):
-                self._wemo_dispatcher.async_add_unique_device(self._hass, device)
+            # pywemo.ssdp.scan is a light-weight UDP UPnP scan for WeMo devices.
+            entries = await self._hass.async_add_executor_job(pywemo.ssdp.scan)
+
+            # async_add_from_upnp_entry causes multiple HTTP requests to be sent
+            # to the WeMo device for the initial setup of the WeMoDevice
+            # instance. This may take some time to complete. The per-device
+            # setup work is done in parallel to speed up initial setup for the
+            # component.
+            await asyncio.gather(
+                *[self.async_add_from_upnp_entry(entry) for entry in entries]
+            )
         finally:
             # Run discovery more frequently after hass has just started.
             self._scan_delay = min(
