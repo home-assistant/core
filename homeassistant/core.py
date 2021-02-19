@@ -1606,7 +1606,7 @@ class Config:
 
         thepath = pathlib.Path(path)
         try:
-            # The file path does not have to exist (it's parent should)
+            # The file path does not have to exist (its parent should)
             if thepath.exists():
                 thepath = thepath.resolve()
             else:

@@ -76,7 +76,7 @@ async def test_form_invalid_path(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_FILE_PATH: "/dummy/test.abcde"},
+            {CONF_FILE_PATH: "/dummy/invalid_test_path"},
         )
 
     assert result2["type"] == "form"
@@ -84,7 +84,7 @@ async def test_form_invalid_path(hass):
 
 
 async def test_form_not_a_file(hass):
-    """Test we handle invalid path."""
+    """Test we handle path that is not pointing to a file."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -95,7 +95,7 @@ async def test_form_not_a_file(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_FILE_PATH: "/dummy/does_not_exist.abcde"},
+            {CONF_FILE_PATH: "./not_a_file"},
         )
 
     assert result2["type"] == "form"
