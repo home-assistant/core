@@ -108,6 +108,7 @@ increase_speed:
       description: Name(s) of the entities to increase speed
       example: "fan.living_room"
     percentage_step:
+      advanced: true
       required: false
       description: Increase speed by a percentage. Should be between 0..100. [optional]
       example: 50
