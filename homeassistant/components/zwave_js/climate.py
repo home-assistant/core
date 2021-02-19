@@ -337,7 +337,8 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if not self._fan_mode:
-            raise NotImplementedError
+            return
+
         try:
             new_state = int(
                 next(
