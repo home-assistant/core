@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries, setup
-from homeassistant.components.anova_cooker.config_flow import CannotConnect, InvalidAuth
+# from homeassistant.components.anova_cooker.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.anova_cooker.const import DOMAIN
 
 
@@ -62,22 +62,22 @@ async def test_form_invalid_auth(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+# async def test_form_cannot_connect(hass):
+#     """Test we handle cannot connect error."""
+#     result = await hass.config_entries.flow.async_init(
+#         DOMAIN, context={"source": config_entries.SOURCE_USER}
+#     )
 
-    with patch(
-        "homeassistant.components.anova_cooker.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "device_id": "123456qwerty",
-            },
-        )
+#     with patch(
+#         "homeassistant.components.anova_cooker.config_flow.PlaceholderHub.authenticate",
+#         side_effect=CannotConnect,
+#     ):
+#         result2 = await hass.config_entries.flow.async_configure(
+#             result["flow_id"],
+#             {
+#                 "device_id": "123456qwerty",
+#             },
+#         )
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+#     assert result2["type"] == "form"
+#     assert result2["errors"] == {"base": "cannot_connect"}
