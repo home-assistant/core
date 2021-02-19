@@ -105,7 +105,7 @@ async def async_attach_trigger(
             hass, to_s, below, above, value_template, variables(entity_id), attribute
         )
 
-    # If the condition is False at startup, we are already armed.
+    # Each entity that starts outside the range is already armed (ready to fire).
     for entity_id in entity_ids:
         try:
             if not check_numeric_state(entity_id, None, entity_id):
@@ -150,7 +150,9 @@ async def async_attach_trigger(
             try:
                 return check_numeric_state(entity_id, from_s, to_s)
             except exceptions.ConditionError:
-                # We can skip logging since the main listener will get and log an identical exception
+                # This is an internal same-state listener so we just drop the
+                # error. The same error will be reached and logged by the
+                # primary async_track_state_change_event() listener.
                 return False
 
         try:
