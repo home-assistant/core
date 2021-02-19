@@ -1,15 +1,42 @@
 """Sensor for monitoring the size of a file."""
 import datetime
+import logging
 import os
 
-from homeassistant.const import CONF_FILE_PATH, CONF_UNIT_OF_MEASUREMENT, DATA_BYTES
+from homeassistant.const import (
+    CONF_FILE_PATH,
+    CONF_UNIT_OF_MEASUREMENT,
+    DATA_BYTES,
+    DATA_MEGABYTES,
+)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.util import slugify
 import homeassistant.util.data_size as data_size
 
-from .const import DOMAIN
+from .const import DOMAIN, PLATFORMS
+
+_LOGGER = logging.getLogger(__name__)
 
 ICON = "mdi:file"
+
+
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the file size sensor."""
+
+    setup_reload_service(hass, DOMAIN, PLATFORMS)
+
+    file_path = config.get(CONF_FILE_PATH)
+    if not hass.config.is_allowed_path(file_path):
+        _LOGGER.error(
+            "Path %s is not valid or allowed. Check directory whitelisting.",
+            file_path,
+        )
+    else:
+        add_entities(
+            [Filesize(file_path, config.get(CONF_UNIT_OF_MEASUREMENT, DATA_MEGABYTES))],
+            True,
+        )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
