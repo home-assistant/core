@@ -1,4 +1,5 @@
 """Test the Z-Wave JS Websocket API."""
+import json
 from unittest.mock import patch
 
 from zwave_js_server.event import Event
@@ -164,7 +165,7 @@ async def test_dump_view(integration, hass_client):
     ):
         resp = await client.get(f"/api/zwave_js/dump/{integration.entry_id}")
     assert resp.status == 200
-    assert await resp.text() == '{"hello": "world"}\n{"second": "msg"}\n'
+    assert json.loads(await resp.text()) == [{"hello": "world"}, {"second": "msg"}]
 
 
 async def test_dump_view_invalid_entry_id(integration, hass_client):
