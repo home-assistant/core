@@ -348,7 +348,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
                 )
             )
         except StopIteration:
-            raise ValueError(f"Received an invalid fan mode: {fan_mode}")
+            raise ValueError(f"Received an invalid fan mode: {fan_mode}") from None
 
         await self.info.node.async_set_value(self._fan_mode, new_state)
 
