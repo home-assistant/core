@@ -1,7 +1,5 @@
 """Test the SmartTub climate platform."""
 
-from datetime import timedelta
-
 import smarttub
 
 from homeassistant.components.climate.const import (
@@ -19,19 +17,14 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.components.smarttub.const import (
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_TEMP,
-    SCAN_INTERVAL,
-)
+from homeassistant.components.smarttub.const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
 )
-from homeassistant.util import dt
 
-from tests.common import async_fire_time_changed
+from . import trigger_update
 
 
 async def test_thermostat_update(spa, hass, config_entry, smarttub_api):
@@ -87,10 +80,3 @@ async def test_thermostat_update(spa, hass, config_entry, smarttub_api):
     spa.get_status.side_effect = smarttub.APIError
     await trigger_update(hass)
     # should not fail
-
-
-async def trigger_update(hass):
-    """Trigger a polling update by moving time forward."""
-    new_time = dt.utcnow() + timedelta(seconds=SCAN_INTERVAL + 1)
-    async_fire_time_changed(hass, new_time)
-    await hass.async_block_till_done()
