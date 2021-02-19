@@ -10,7 +10,7 @@ from rokuecp.models import Device
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME, CONF_HOST
+from homeassistant.const import ATTR_NAME, ATTR_SW_VERSION, CONF_HOST
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -22,13 +22,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util.dt import utcnow
 
-from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
-    DOMAIN,
-)
+from .const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, ATTR_MODEL, DOMAIN
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
@@ -160,5 +154,5 @@ class RokuEntity(CoordinatorEntity):
             ATTR_NAME: self.name,
             ATTR_MANUFACTURER: self.coordinator.data.info.brand,
             ATTR_MODEL: self.coordinator.data.info.model_name,
-            ATTR_SOFTWARE_VERSION: self.coordinator.data.info.version,
+            ATTR_SW_VERSION: self.coordinator.data.info.version,
         }

@@ -24,6 +24,7 @@ from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
+    ATTR_SW_VERSION,
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
@@ -63,7 +64,6 @@ from .const import (
     ATTR_INTERGRATION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
     CONF_ADVERTISE_IP,
@@ -751,7 +751,7 @@ class HomeKit:
                 if dev_reg_ent.model:
                     ent_cfg[ATTR_MODEL] = dev_reg_ent.model
                 if dev_reg_ent.sw_version:
-                    ent_cfg[ATTR_SOFTWARE_VERSION] = dev_reg_ent.sw_version
+                    ent_cfg[ATTR_SW_VERSION] = dev_reg_ent.sw_version
         if ATTR_MANUFACTURER not in ent_cfg:
             try:
                 integration = await async_get_integration(

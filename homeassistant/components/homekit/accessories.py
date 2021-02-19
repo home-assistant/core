@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SERVICE,
     ATTR_SUPPORTED_FEATURES,
+    ATTR_SW_VERSION,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
@@ -42,7 +43,6 @@ from .const import (
     ATTR_INTERGRATION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
     ATTR_VALUE,
     BRIDGE_MODEL,
     BRIDGE_SERIAL_NUMBER,
@@ -224,8 +224,8 @@ class HomeAccessory(Accessory):
             model = self.config[ATTR_MODEL]
         else:
             model = domain.title()
-        if ATTR_SOFTWARE_VERSION in self.config:
-            sw_version = format_sw_version(self.config[ATTR_SOFTWARE_VERSION])
+        if ATTR_SW_VERSION in self.config:
+            sw_version = format_sw_version(self.config[ATTR_SW_VERSION])
         else:
             sw_version = __version__
 

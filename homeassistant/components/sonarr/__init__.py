@@ -9,6 +9,7 @@ from sonarr import Sonarr, SonarrAccessRestricted, SonarrError
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
+    ATTR_SW_VERSION,
     CONF_API_KEY,
     CONF_HOST,
     CONF_PORT,
@@ -24,7 +25,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
-    ATTR_SOFTWARE_VERSION,
     CONF_BASE_PATH,
     CONF_UPCOMING_DAYS,
     CONF_WANTED_MAX_ITEMS,
@@ -173,6 +173,6 @@ class SonarrEntity(Entity):
             ATTR_IDENTIFIERS: {(DOMAIN, self._device_id)},
             ATTR_NAME: "Activity Sensor",
             ATTR_MANUFACTURER: "Sonarr",
-            ATTR_SOFTWARE_VERSION: self.sonarr.app.info.version,
+            ATTR_SW_VERSION: self.sonarr.app.info.version,
             "entry_type": "service",
         }

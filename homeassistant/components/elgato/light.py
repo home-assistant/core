@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
+from homeassistant.const import ATTR_NAME, ATTR_SW_VERSION
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -24,7 +24,6 @@ from .const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_ON,
-    ATTR_SOFTWARE_VERSION,
     ATTR_TEMPERATURE,
     DATA_ELGATO_CLIENT,
     DOMAIN,
@@ -157,5 +156,5 @@ class ElgatoLight(LightEntity):
             ATTR_NAME: self._info.product_name,
             ATTR_MANUFACTURER: "Elgato",
             ATTR_MODEL: self._info.product_name,
-            ATTR_SOFTWARE_VERSION: f"{self._info.firmware_version} ({self._info.firmware_build_number})",
+            ATTR_SW_VERSION: f"{self._info.firmware_version} ({self._info.firmware_build_number})",
         }

@@ -10,6 +10,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
+    ATTR_SW_VERSION,
     CONF_HOST,
     CONF_PORT,
     CONF_SSL,
@@ -28,7 +29,6 @@ from .const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
     CONF_BASE_PATH,
     DOMAIN,
 )
@@ -176,5 +176,5 @@ class IPPEntity(CoordinatorEntity):
             ATTR_NAME: self.coordinator.data.info.name,
             ATTR_MANUFACTURER: self.coordinator.data.info.manufacturer,
             ATTR_MODEL: self.coordinator.data.info.model,
-            ATTR_SOFTWARE_VERSION: self.coordinator.data.info.version,
+            ATTR_SW_VERSION: self.coordinator.data.info.version,
         }
