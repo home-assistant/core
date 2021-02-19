@@ -263,7 +263,15 @@ class UtilityMeterSensor(RestoreEntity):
                 minute=self._period_offset.seconds // 60,
                 second=self._period_offset.seconds % 60,
             )
-        elif self._period in [DAILY, WEEKLY, MONTHLY, BIMONTHLY, QUARTERLY, BIANNUALLY, YEARLY]:
+        elif self._period in [
+            DAILY,
+            WEEKLY,
+            MONTHLY,
+            BIMONTHLY,
+            QUARTERLY,
+            BIANNUALLY,
+            YEARLY,
+        ]:
             async_track_time_change(
                 self.hass,
                 self._async_reset_meter,
