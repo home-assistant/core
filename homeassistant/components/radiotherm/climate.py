@@ -37,6 +37,8 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_FAN_ACTION = "fan_action"
 
 CONF_HOLD_TEMP = "hold_temp"
+CONF_MIN_TEMP = "min_temp"
+CONF_MAX_TEMP = "max_temp"
 
 PRESET_HOLIDAY = "holiday"
 
@@ -94,6 +96,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_HOLD_TEMP, default=False): cv.boolean,
+        vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
+        vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
     }
 )
 
@@ -114,12 +118,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
 
     hold_temp = config.get(CONF_HOLD_TEMP)
+    min_temp = config.get(CONF_MIN_TEMP)
+    max_temp = config.get(CONF_MAX_TEMP)
     tstats = []
 
     for host in hosts:
         try:
             tstat = radiotherm.get_thermostat(host)
-            tstats.append(RadioThermostat(tstat, hold_temp))
+            rt = RadioThermostat(tstat, hold_temp, min_temp, max_temp)
+            tstats.append(rt)
         except OSError:
             _LOGGER.exception("Unable to connect to Radio Thermostat: %s", host)
 
@@ -129,7 +136,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RadioThermostat(ClimateEntity):
     """Representation of a Radio Thermostat."""
 
-    def __init__(self, device, hold_temp):
+    def __init__(self, device, hold_temp, min_temp, max_temp):
         """Initialize the thermostat."""
         self.device = device
         self._target_temperature = None
@@ -142,6 +149,8 @@ class RadioThermostat(ClimateEntity):
         self._tmode = None
         self._tstate = None
         self._hold_temp = hold_temp
+        self._min_temp = min_temp
+        self._max_temp = max_temp
         self._hold_set = False
         self._prev_temp = None
         self._preset_mode = None
@@ -251,6 +260,24 @@ class RadioThermostat(ClimateEntity):
     def preset_modes(self):
         """Return a list of available preset modes."""
         return PRESET_MODES
+
+    @property
+    def min_temp(self):
+        """Return the minimum temperature."""
+        if self._min_temp is not None:
+            return self._min_temp
+
+        # get default temp from super class
+        return super().min_temp
+
+    @property
+    def max_temp(self):
+        """Return the maximum temperature."""
+        if self._max_temp is not None:
+            return self._max_temp
+
+        # Get default temp from super class
+        return super().max_temp
 
     def update(self):
         """Update and validate the data from the thermostat."""
