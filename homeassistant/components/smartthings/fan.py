@@ -6,6 +6,7 @@ from pysmartthings import Capability
 
 from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
 from homeassistant.util.percentage import (
+    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
@@ -78,6 +79,11 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     def percentage(self) -> str:
         """Return the current speed percentage."""
         return ranged_value_to_percentage(SPEED_RANGE, self._device.status.fan_speed)
+
+    @property
+    def speed_count(self) -> Optional[int]:
+        """Return the number of speeds the fan supports."""
+        return int_states_in_range(SPEED_RANGE)
 
     @property
     def supported_features(self) -> int:
