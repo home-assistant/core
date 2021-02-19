@@ -96,7 +96,6 @@ class RecorderOutput(StreamOutput):
 
     def prepend(self, segments: List[Segment]) -> None:
         """Prepend segments to existing list."""
-        segments = [s for s in segments if s.sequence not in self._segments]
         self._segments = segments + self._segments
 
     def save(self):
