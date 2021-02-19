@@ -84,7 +84,7 @@ class MCP23017Switch(ToggleEntity):
         self._pin_name = config_entry.data[CONF_FLOW_PIN_NAME]
         self._pin_number = config_entry.data[CONF_FLOW_PIN_NUMBER]
 
-        self._invert_logic = config_entry.data.get(
+        self._invert_logic = config_entry.options.get(
             CONF_INVERT_LOGIC, DEFAULT_INVERT_LOGIC
         )
 

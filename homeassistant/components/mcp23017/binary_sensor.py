@@ -72,6 +72,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass, config_entry, binary_sensor_entity
     )
 
+    # FIXME: Not clear what exception should be raised to avoid the config flow
+    #        'succes' message when configure message is not successful
     if await hass.async_add_executor_job(binary_sensor_entity.configure_device):
         async_add_entities([binary_sensor_entity])
 
@@ -93,7 +95,7 @@ class MCP23017BinarySensor(BinarySensorEntity):
         self._pin_name = config_entry.data[CONF_FLOW_PIN_NAME]
         self._pin_number = config_entry.data[CONF_FLOW_PIN_NUMBER]
 
-        self._invert_logic = config_entry.data.get(
+        self._invert_logic = config_entry.options.get(
             CONF_INVERT_LOGIC, DEFAULT_INVERT_LOGIC
         )
         self._pull_mode = config_entry.data.get(CONF_PULL_MODE, DEFAULT_PULL_MODE)
