@@ -183,6 +183,21 @@ async def test_recorder_save(tmpdir):
     assert os.path.exists(filename)
 
 
+async def test_recorder_discontinuity(tmpdir):
+    """Test recorder save across a discontinuity."""
+    # Setup
+    source = generate_h264_video()
+    filename = f"{tmpdir}/test.mp4"
+
+    # Run
+    recorder_save_worker(
+        filename, [Segment(1, source, 4, 0), Segment(2, source, 4, 1)], "mp4"
+    )
+
+    # Assert
+    assert os.path.exists(filename)
+
+
 async def test_record_stream_audio(hass, hass_client, record_worker_sync):
     """
     Test treatment of different audio inputs.
