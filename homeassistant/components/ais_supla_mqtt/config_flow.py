@@ -98,7 +98,7 @@ class SuplaMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         web_session = self.hass.helpers.aiohttp_client.async_get_clientsession()
         token_response = await web_session.post(TOKEN_URL, json=data)
-        result = await token_response.json()
+        result = await token_response.json(content_type=None)
 
         # get mqtt connection info from cloud
         access_token = result["access_token"]
