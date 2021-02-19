@@ -30,6 +30,7 @@ turn_on:
       selector:
         select:
           options:
+            - "homeassistant"
             - "aliceblue"
             - "antiquewhite"
             - "aqua"
@@ -368,6 +369,7 @@ toggle:
       selector:
         select:
           options:
+            - "homeassistant"
             - "aliceblue"
             - "antiquewhite"
             - "aqua"
