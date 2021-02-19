@@ -5,7 +5,7 @@ from homeassistant.components import light
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 
-from . import init_integration
+from . import async_init_integration
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ ENTITY_OTHER_LIGHT_NUMBER = 2
 
 async def test_on_brightness(hass, mock_litejet):
     """Test turning the light on with brightness."""
-    await init_integration(hass)
+    await async_init_integration(hass)
 
     assert hass.states.get(ENTITY_LIGHT).state == "off"
     assert hass.states.get(ENTITY_OTHER_LIGHT).state == "off"
@@ -35,7 +35,7 @@ async def test_on_brightness(hass, mock_litejet):
 
 async def test_on_off(hass, mock_litejet):
     """Test turning the light on and off."""
-    await init_integration(hass)
+    await async_init_integration(hass)
 
     assert hass.states.get(ENTITY_LIGHT).state == "off"
     assert hass.states.get(ENTITY_OTHER_LIGHT).state == "off"
@@ -62,7 +62,7 @@ async def test_on_off(hass, mock_litejet):
 async def test_activated_event(hass, mock_litejet):
     """Test handling an event from LiteJet."""
 
-    await init_integration(hass)
+    await async_init_integration(hass)
 
     # Light 1
     mock_litejet.get_load_level.return_value = 99
@@ -98,7 +98,7 @@ async def test_activated_event(hass, mock_litejet):
 
 async def test_deactivated_event(hass, mock_litejet):
     """Test handling an event from LiteJet."""
-    await init_integration(hass)
+    await async_init_integration(hass)
 
     # Initial state is on.
     mock_litejet.get_load_level.return_value = 99

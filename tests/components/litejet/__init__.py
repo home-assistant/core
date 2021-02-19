@@ -6,7 +6,9 @@ from homeassistant.const import CONF_PORT
 from tests.common import MockConfigEntry
 
 
-async def init_integration(hass, use_switch=False, use_scene=False) -> MockConfigEntry:
+async def async_init_integration(
+    hass, use_switch=False, use_scene=False
+) -> MockConfigEntry:
     """Set up the LiteJet integration in Home Assistant."""
 
     registry = await hass.helpers.entity_registry.async_get_registry()

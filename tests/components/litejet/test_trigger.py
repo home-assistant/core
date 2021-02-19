@@ -10,7 +10,7 @@ from homeassistant import setup
 import homeassistant.components.automation as automation
 import homeassistant.util.dt as dt_util
 
-from . import init_integration
+from . import async_init_integration
 
 from tests.common import async_fire_time_changed, async_mock_service
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
@@ -73,7 +73,7 @@ async def simulate_time(hass, mock_litejet, delta):
 
 async def setup_automation(hass, trigger):
     """Test setting up the automation."""
-    await init_integration(hass, use_switch=True)
+    await async_init_integration(hass, use_switch=True)
     assert await setup.async_setup_component(
         hass,
         automation.DOMAIN,

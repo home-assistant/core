@@ -4,7 +4,7 @@ import logging
 from homeassistant.components import switch
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 
-from . import init_integration
+from . import async_init_integration
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ ENTITY_OTHER_SWITCH_NUMBER = 2
 async def test_on_off(hass, mock_litejet):
     """Test turning the switch on and off."""
 
-    await init_integration(hass, use_switch=True)
+    await async_init_integration(hass, use_switch=True)
 
     assert hass.states.get(ENTITY_SWITCH).state == "off"
     assert hass.states.get(ENTITY_OTHER_SWITCH).state == "off"
@@ -38,7 +38,7 @@ async def test_on_off(hass, mock_litejet):
 async def test_pressed_event(hass, mock_litejet):
     """Test handling an event from LiteJet."""
 
-    await init_integration(hass, use_switch=True)
+    await async_init_integration(hass, use_switch=True)
 
     # Switch 1
     mock_litejet.switch_pressed_callbacks[ENTITY_SWITCH_NUMBER]()
@@ -62,7 +62,7 @@ async def test_pressed_event(hass, mock_litejet):
 async def test_released_event(hass, mock_litejet):
     """Test handling an event from LiteJet."""
 
-    await init_integration(hass, use_switch=True)
+    await async_init_integration(hass, use_switch=True)
 
     # Initial state is on.
     mock_litejet.switch_pressed_callbacks[ENTITY_OTHER_SWITCH_NUMBER]()

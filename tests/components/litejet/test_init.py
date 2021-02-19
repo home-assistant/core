@@ -4,7 +4,7 @@ from homeassistant.components.litejet.const import DOMAIN
 from homeassistant.const import CONF_PORT
 from homeassistant.setup import async_setup_component
 
-from . import init_integration
+from . import async_init_integration
 
 
 async def test_setup_with_no_config(hass):
@@ -24,7 +24,7 @@ async def test_setup_with_config_to_import(hass, mock_litejet):
 
 async def test_unload_entry(hass, mock_litejet):
     """Test being able to unload an entry."""
-    entry = await init_integration(hass, use_switch=True, use_scene=True)
+    entry = await async_init_integration(hass, use_switch=True, use_scene=True)
 
     assert await litejet.async_unload_entry(hass, entry)
     assert DOMAIN not in hass.data

@@ -2,7 +2,7 @@
 from homeassistant.components import scene
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 
-from . import init_integration
+from . import async_init_integration
 
 ENTITY_SCENE = "scene.mock_scene_1"
 ENTITY_SCENE_NUMBER = 1
@@ -12,7 +12,7 @@ ENTITY_OTHER_SCENE_NUMBER = 2
 
 async def test_disabled_by_default(hass, mock_litejet):
     """Test the scene is disabled by default."""
-    await init_integration(hass)
+    await async_init_integration(hass)
 
     registry = await hass.helpers.entity_registry.async_get_registry()
 
@@ -28,7 +28,7 @@ async def test_disabled_by_default(hass, mock_litejet):
 async def test_activate(hass, mock_litejet):
     """Test activating the scene."""
 
-    await init_integration(hass, use_scene=True)
+    await async_init_integration(hass, use_scene=True)
 
     state = hass.states.get(ENTITY_SCENE)
     assert state is not None
