@@ -61,7 +61,7 @@ def mock_account(spa):
     return mock_account
 
 
-@pytest.fixture(name="smarttub_api")
+@pytest.fixture(name="smarttub_api", autouse=True)
 def mock_api(account, spa):
     """Mock the SmartTub API."""
 
@@ -75,7 +75,7 @@ def mock_api(account, spa):
 
 
 @pytest.fixture
-async def setup_entry(hass, config_entry, smarttub_api):
+async def setup_entry(hass, config_entry):
     """Initialize the config entry."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)

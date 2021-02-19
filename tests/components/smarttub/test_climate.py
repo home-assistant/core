@@ -27,7 +27,7 @@ from homeassistant.const import (
 from . import trigger_update
 
 
-async def test_thermostat_update(spa, setup_entry, hass, smarttub_api):
+async def test_thermostat_update(spa, setup_entry, hass):
     """Test the thermostat entity."""
 
     entity_id = f"climate.{spa.brand}_{spa.model}_thermostat"
