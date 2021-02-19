@@ -12,12 +12,25 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, PLATFORMS
+from .const import CONF_EXCLUDE_NAMES, CONF_INCLUDE_SWITCHES, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_PORT): cv.string})},
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_PORT): cv.string,
+                    vol.Optional(CONF_EXCLUDE_NAMES): vol.All(
+                        cv.ensure_list, [cv.string]
+                    ),
+                    vol.Optional(CONF_INCLUDE_SWITCHES, default=False): cv.boolean,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
