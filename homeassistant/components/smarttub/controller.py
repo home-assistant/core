@@ -79,11 +79,14 @@ class SmartTubController:
         try:
             async with async_timeout.timeout(POLLING_TIMEOUT):
                 for spa in self.spas:
-                    data[spa.id] = {"status": await spa.get_status()}
+                    data[spa.id] = await self._get_spa_data(spa)
         except APIError as err:
             raise UpdateFailed(err) from err
 
         return data
+
+    async def _get_spa_data(self, spa):
+        return {"status": await spa.get_status()}
 
     async def async_register_devices(self, entry):
         """Register devices with the device registry for all spas."""
