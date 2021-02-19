@@ -58,7 +58,7 @@ async def test_create_area_with_name_already_in_use(hass, registry, update_event
     with pytest.raises(ValueError) as e_info:
         area2 = registry.async_create("mock")
         assert area1 != area2
-        assert e_info == "Name is already in use"
+        assert e_info == "The name mock 2 (mock2) is already in use"
 
     await hass.async_block_till_done()
 
@@ -152,7 +152,7 @@ async def test_update_area_with_name_already_in_use(registry):
 
     with pytest.raises(ValueError) as e_info:
         registry.async_update(area1.id, name="mock2")
-        assert e_info == "Name is already in use"
+        assert e_info == "The name mock 2 (mock2) is already in use"
 
     assert area1.name == "mock1"
     assert area2.name == "mock2"
@@ -166,7 +166,7 @@ async def test_update_area_with_normalized_name_already_in_use(registry):
 
     with pytest.raises(ValueError) as e_info:
         registry.async_update(area1.id, name="mock2")
-        assert e_info == "Name is already in use"
+        assert e_info == "The name mock 2 (mock2) is already in use"
 
     assert area1.name == "mock1"
     assert area2.name == "Moc k2"
