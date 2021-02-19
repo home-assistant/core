@@ -108,13 +108,19 @@ async def async_and_from_config(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Test and condition."""
-        try:
-            for check in checks:
+        errors = []
+        for check in checks:
+            try:
                 if not check(hass, variables):
                     return False
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.warning("Error during and-condition: %s", ex)
-            return False
+            except ConditionError as ex:
+                errors.append(str(ex))
+            except Exception as ex:  # pylint: disable=broad-except
+                errors.append(str(ex))
+
+        # Raise the errors if no check was false
+        if errors:
+            raise ConditionError("Error in 'and' condition: " + ", ".join(errors))
 
         return True
 
@@ -134,13 +140,20 @@ async def async_or_from_config(
     def if_or_condition(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
-        """Test and condition."""
-        try:
-            for check in checks:
+        """Test or condition."""
+        errors = []
+        for check in checks:
+            try:
                 if check(hass, variables):
                     return True
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.warning("Error during or-condition: %s", ex)
+            except ConditionError as ex:
+                errors.append(str(ex))
+            except Exception as ex:  # pylint: disable=broad-except
+                errors.append(str(ex))
+
+        # Raise the errors if no check was true
+        if errors:
+            raise ConditionError("Error in 'or' condition: " + ", ".join(errors))
 
         return False
 
@@ -161,12 +174,19 @@ async def async_not_from_config(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Test not condition."""
-        try:
-            for check in checks:
+        errors = []
+        for check in checks:
+            try:
                 if check(hass, variables):
                     return False
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.warning("Error during not-condition: %s", ex)
+            except ConditionError as ex:
+                errors.append(str(ex))
+            except Exception as ex:  # pylint: disable=broad-except
+                errors.append(str(ex))
+
+        # Raise the errors if no check was true
+        if errors:
+            raise ConditionError("Error in 'not' condition: " + ", ".join(errors))
 
         return True
 
