@@ -2,7 +2,7 @@
 import asyncio
 from functools import partial
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import voluptuous as vol
 
@@ -14,9 +14,10 @@ from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.loader import bind_hass
+from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util import slugify
+from homeassistant.util.yaml import load_yaml
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -44,31 +45,6 @@ NOTIFY_SERVICES = "notify_services"
 
 CONF_DESCRIPTION = "description"
 CONF_FIELDS = "fields"
-
-NOTIFY_FIELDS = {
-    "message": {
-        "name": "Message",
-        "description": "Message body of the notification.",
-        "example": "The garage door has been open for 10 minutes.",
-        "selector": {"text": None},
-    },
-    "title": {
-        "name": "Title",
-        "description": "Optional title for your notification.",
-        "example": "Your Garage Door Friend",
-        "selector": {"text": None},
-    },
-    "target": {
-        "description": "An array of targets to send the notification to. Optional depending on the platform.",
-        "example": "platform specific",
-    },
-    "data": {
-        "name": "Data",
-        "description": "Extended information for notification. Optional depending on the platform.",
-        "example": "platform specific",
-        "selector": {"object": None},
-    },
-}
 
 PLATFORM_SCHEMA = vol.Schema(
     {vol.Required(CONF_PLATFORM): cv.string, vol.Optional(CONF_NAME): cv.string},
@@ -190,6 +166,14 @@ class BaseNotificationService:
         self._target_service_name_prefix = target_service_name_prefix
         self.registered_targets = {}
 
+        # Load service descriptions from notify/services.yaml
+        integration = await async_get_integration(hass, DOMAIN)
+        services_yaml = integration.file_path / "services.yaml"
+        if services_yaml.exists():
+            self.services_dict = cast(dict, load_yaml(str(services_yaml)))
+        else:
+            self.services_dict = {}
+
     async def async_register_services(self) -> None:
         """Create or update the notify services."""
         assert self.hass
@@ -217,7 +201,9 @@ class BaseNotificationService:
                 # Register the service description
                 service_desc = {
                     CONF_DESCRIPTION: f"Send a notification to {target_name}",
-                    CONF_FIELDS: NOTIFY_FIELDS,
+                    CONF_FIELDS: self.services_dict.get(SERVICE_NOTIFY, {}).get(
+                        CONF_FIELDS, {}
+                    ),
                 }
                 async_set_service_schema(self.hass, DOMAIN, target_name, service_desc)
 
@@ -241,7 +227,9 @@ class BaseNotificationService:
         # Register the service description
         service_desc = {
             CONF_DESCRIPTION: f"Send a notification with {self._service_name}",
-            CONF_FIELDS: NOTIFY_FIELDS,
+            CONF_FIELDS: self.services_dict.get(SERVICE_NOTIFY, {}).get(
+                CONF_FIELDS, {}
+            ),
         }
         async_set_service_schema(self.hass, DOMAIN, self._service_name, service_desc)
 

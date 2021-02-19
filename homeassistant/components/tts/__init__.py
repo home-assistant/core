@@ -7,7 +7,7 @@ import logging
 import mimetypes
 import os
 import re
-from typing import Dict, Optional
+from typing import Dict, Optional, cast
 
 from aiohttp import web
 import mutagen
@@ -35,7 +35,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.util.yaml import load_yaml
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -58,39 +60,6 @@ CONF_TIME_MEMORY = "time_memory"
 
 CONF_DESCRIPTION = "description"
 CONF_FIELDS = "fields"
-
-SAY_FIELDS = {
-    "entity_id": {
-        "name": "Entity",
-        "description": "Name(s) of media player entities.",
-        "example": "media_player.floor",
-        "required": True,
-        "selector": {"entity": {"domain": "media_player"}},
-    },
-    "message": {
-        "name": "Message",
-        "description": "Text to speak on devices.",
-        "example": "My name is hanna",
-        "required": True,
-        "selector": {"text": None},
-    },
-    "language": {
-        "name": "Language",
-        "description": "Language to use for speech generation.",
-        "example": "ru",
-        "selector": {"text": None},
-    },
-    "cache": {
-        "name": "Cache",
-        "description": "Control file cache of this message.",
-        "example": "true",
-        "selector": {"boolean": None},
-    },
-    "options": {
-        "description": "A dictionary containing platform-specific options. Optional depending on the platform.",
-        "example": "platform specific",
-    },
-}
 
 DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = "tts"
@@ -164,6 +133,14 @@ async def async_setup(hass, config):
     hass.http.register_view(TextToSpeechView(tts))
     hass.http.register_view(TextToSpeechUrlView(tts))
 
+    # Load service descriptions from tts/services.yaml
+    integration = await async_get_integration(hass, DOMAIN)
+    services_yaml = integration.file_path / "services.yaml"
+    if services_yaml.exists():
+        services_dict = cast(dict, load_yaml(str(services_yaml)))
+    else:
+        services_dict = {}
+
     async def async_setup_platform(p_type, p_config=None, discovery_info=None):
         """Set up a TTS platform."""
         if p_config is None:
@@ -233,7 +210,7 @@ async def async_setup(hass, config):
         # Register the service description
         service_desc = {
             CONF_DESCRIPTION: f"Say some things on a media player with {p_type}",
-            CONF_FIELDS: SAY_FIELDS,
+            CONF_FIELDS: services_dict.get(SERVICE_SAY, {}).get(CONF_FIELDS, {}),
         }
         async_set_service_schema(hass, DOMAIN, service_name, service_desc)
 
