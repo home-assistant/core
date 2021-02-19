@@ -68,6 +68,12 @@ async def test_get_entries(hass, client):
             state=core_ce.ENTRY_STATE_LOADED,
             connection_class=core_ce.CONN_CLASS_ASSUMED,
         ).add_to_hass(hass)
+        MockConfigEntry(
+            domain="comp3",
+            title="Test 3",
+            source="bla3",
+            disabled_by="user",
+        ).add_to_hass(hass)
 
         resp = await client.get("/api/config/config_entries/entry")
         assert resp.status == 200
@@ -83,6 +89,7 @@ async def test_get_entries(hass, client):
                 "connection_class": "local_poll",
                 "supports_options": True,
                 "supports_unload": True,
+                "disabled_by": None,
             },
             {
                 "domain": "comp2",
@@ -92,6 +99,17 @@ async def test_get_entries(hass, client):
                 "connection_class": "assumed",
                 "supports_options": False,
                 "supports_unload": False,
+                "disabled_by": None,
+            },
+            {
+                "domain": "comp3",
+                "title": "Test 3",
+                "source": "bla3",
+                "state": "not_loaded",
+                "connection_class": "unknown",
+                "supports_options": False,
+                "supports_unload": False,
+                "disabled_by": "user",
             },
         ]
 

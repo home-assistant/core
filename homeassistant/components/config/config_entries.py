@@ -373,7 +373,7 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
     """Return JSON value of a config entry."""
     handler = config_entries.HANDLERS.get(entry.domain)
     supports_options = (
-        # Guard in case handler is no longer registered (custom compnoent etc)
+        # Guard in case handler is no longer registered (custom component etc)
         handler is not None
         # pylint: disable=comparison-with-callable
         and handler.async_get_options_flow
@@ -388,4 +388,5 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "connection_class": entry.connection_class,
         "supports_options": supports_options,
         "supports_unload": entry.supports_unload,
+        "disabled_by": entry.disabled_by,
     }
