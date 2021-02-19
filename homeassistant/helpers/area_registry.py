@@ -142,9 +142,10 @@ class AreaRegistry:
         changes["normalized_name"] = normalized_name
 
         new = self.areas[area_id] = attr.evolve(old, **changes)
+        self._normalized_name_area_idx[
+            normalized_name
+        ] = self._normalized_name_area_idx.pop(old.normalized_name)
 
-        del self._normalized_name_area_idx[old.normalized_name]
-        self._normalized_name_area_idx[normalized_name] = area_id
         self.async_schedule_save()
         return new
 
