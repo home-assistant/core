@@ -10,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["climate"]
 
 
-async def async_setup(hass, _config):
+async def async_setup(hass, config):
     """Set up smarttub component."""
 
     hass.data.setdefault(DOMAIN, {})

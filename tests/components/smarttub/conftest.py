@@ -6,8 +6,8 @@ import pytest
 import smarttub
 
 from homeassistant.components.smarttub.const import DOMAIN
-from homeassistant.components.smarttub.controller import SmartTubController
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -26,6 +26,12 @@ def config_entry(config_data):
         data=config_data,
         options={},
     )
+
+
+@pytest.fixture
+async def setup_component(hass):
+    """Set up the component."""
+    assert await async_setup_component(hass, DOMAIN, {}) is True
 
 
 @pytest.fixture(name="spa")
@@ -65,22 +71,3 @@ def mock_api(account, spa):
         api_mock = api_class_mock.return_value
         api_mock.get_account.return_value = account
         yield api_mock
-
-
-@pytest.fixture
-async def controller(smarttub_api, hass, config_entry):
-    """Instantiate controller for testing."""
-
-    controller = SmartTubController(hass)
-    assert len(controller.spas) == 0
-    assert await controller.async_setup_entry(config_entry)
-
-    assert len(controller.spas) > 0
-
-    return controller
-
-
-@pytest.fixture
-async def coordinator(controller):
-    """Provide convenient access to the coordinator via the controller."""
-    return controller.coordinator

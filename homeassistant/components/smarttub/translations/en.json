@@ -5,8 +5,7 @@
             "reauth_successful": "Re-authentication was successful"
         },
         "error": {
-            "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error"
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
             "user": {
