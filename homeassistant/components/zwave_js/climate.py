@@ -296,7 +296,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             and self._fan_mode.value is not None
             and self._fan_mode.metadata.states
         ):
-            return cast(str, self._fan_mode.metadata.states[str(self._fan_mode.value)])
+            return cast(
+                str, self._fan_mode.metadata.states.get(str(self._fan_mode.value))
+            )
         return None
 
     @property
