@@ -7,6 +7,7 @@
             "addon_missing_discovery_info": "Informations manquantes sur la d\u00e9couverte du module compl\u00e9mentaire Z-Wave JS.",
             "addon_set_config_failed": "\u00c9chec de la d\u00e9finition de la configuration Z-Wave JS.",
             "already_configured": "Le p\u00e9riph\u00e9rique est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
             "cannot_connect": "\u00c9chec de la connexion "
         },
         "error": {
@@ -39,7 +40,8 @@
             },
             "start_addon": {
                 "data": {
-                    "network_key": "Cl\u00e9 r\u00e9seau"
+                    "network_key": "Cl\u00e9 r\u00e9seau",
+                    "usb_path": "Chemin du p\u00e9riph\u00e9rique USB"
                 },
                 "title": "Entrez la configuration du module compl\u00e9mentaire Z-Wave JS"
             },
