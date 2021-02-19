@@ -50,6 +50,7 @@ def purge_old_data(instance, purge_days: int, repack: bool) -> bool:
             # for us.
             disconnected_rows = (
                 session.query(States)
+                .filter(States.last_updated >= batch_purge_before)
                 .filter(
                     States.old_state_id.in_(
                         session.query(States.state_id)
