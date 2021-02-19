@@ -70,7 +70,7 @@ class KNXFan(KnxEntity, FanEntity):
         return self._device.current_speed
 
     @property
-    def speed_count(self) -> Optional[int]:
+    def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         if self._step_range is None:
             return super().speed_count

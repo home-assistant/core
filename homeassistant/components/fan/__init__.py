@@ -272,15 +272,17 @@ class FanEntity(ToggleEntity):
         else:
             await self.async_set_speed(self.percentage_to_speed(percentage))
 
-    async def async_increase_speed(self, percentage_step=None) -> None:
+    async def async_increase_speed(self, percentage_step: Optional[int] = None) -> None:
         """Increase the speed of the fan."""
         await self._async_adjust_speed(1, percentage_step)
 
-    async def async_decrease_speed(self, percentage_step=None) -> None:
+    async def async_decrease_speed(self, percentage_step: Optional[int] = None) -> None:
         """Decrease the speed of the fan."""
         await self._async_adjust_speed(-1, percentage_step)
 
-    async def _async_adjust_speed(self, modifier, percentage_step) -> None:
+    async def _async_adjust_speed(
+        self, modifier: int, percentage_step: Optional[int]
+    ) -> None:
         """Increase or decrease the speed of the fan."""
         current_percentage = self.percentage or 0
 
@@ -462,7 +464,7 @@ class FanEntity(ToggleEntity):
         return 0
 
     @property
-    def speed_count(self) -> Optional[int]:
+    def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         speed_list = speed_list_without_preset_modes(self.speed_list)
         if speed_list:
@@ -470,7 +472,7 @@ class FanEntity(ToggleEntity):
         return 100
 
     @property
-    def percentage_step(self) -> Optional[float]:
+    def percentage_step(self) -> float:
         """Return the step size for percentage."""
         return 100 / self.speed_count
 
