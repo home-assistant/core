@@ -9,7 +9,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
 
 class AnovaCookerSensor(Entity):
-    """Anova Cooker Sensor"""
+    """Anova Cooker Sensor."""
 
     def __init__(self, device_id):
         """Set up the device_id, cooker, and empty state & attr."""
