@@ -1168,3 +1168,35 @@ async def test_get_or_create_sets_default_values(hass, registry):
     assert entry.name == "default name 1"
     assert entry.model == "default model 1"
     assert entry.manufacturer == "default manufacturer 1"
+
+
+async def test_verify_suggested_area_does_not_overwrite_area_id(
+    hass, registry, area_registry
+):
+    """Make sure suggested area does not override a set area id."""
+    game_room_area = area_registry.async_create("Game Room")
+
+    original_entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        sw_version="sw-version",
+        name="name",
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry = registry.async_update_device(original_entry.id, area_id=game_room_area.id)
+
+    assert entry.area_id == game_room_area.id
+
+    entry2 = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        sw_version="sw-version",
+        name="name",
+        manufacturer="manufacturer",
+        model="model",
+        suggested_area="New Game Room",
+    )
+    assert entry2.area_id == game_room_area.id
