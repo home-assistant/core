@@ -91,8 +91,8 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
     @property
     def preset_mode(self):
         """Get the current preset mode."""
-        if self.smartfan.mode == FAN_MODE_AUTO:
-            return FAN_MODE_AUTO
+        if self.smartfan.mode in (FAN_MODE_AUTO, FAN_MODE_SLEEP):
+            return self.smartfan.mode
         return None
 
     @property
@@ -136,7 +136,11 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         if not self.smartfan.is_on:
             self.smartfan.turn_on()
 
-        self.smartfan.auto_mode()
+        if preset_mode == FAN_MODE_AUTO:
+            self.smartfan.auto_mode()
+        elif preset_mode == FAN_MODE_SLEEP:
+            self.smartfan.sleep_mode()
+
         self.schedule_update_ha_state()
 
     def turn_on(
@@ -150,4 +154,6 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         if preset_mode:
             self.set_preset_mode(preset_mode)
             return
+        if percentage is None:
+            percentage = 50
         self.set_percentage(percentage)
