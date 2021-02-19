@@ -1,7 +1,6 @@
 """Http views to control the config manager."""
 import aiohttp.web_exceptions
 import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
@@ -10,7 +9,6 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import HTTP_FORBIDDEN, HTTP_NOT_FOUND
 from homeassistant.core import callback
 from homeassistant.exceptions import Unauthorized
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
@@ -38,24 +36,6 @@ async def async_setup(hass):
     hass.components.websocket_api.async_register_command(ignore_config_flow)
 
     return True
-
-
-def _prepare_json(result):
-    """Convert result for JSON."""
-    if result["type"] != data_entry_flow.RESULT_TYPE_FORM:
-        return result
-
-    data = result.copy()
-
-    schema = data["data_schema"]
-    if schema is None:
-        data["data_schema"] = []
-    else:
-        data["data_schema"] = voluptuous_serialize.convert(
-            schema, custom_serializer=cv.custom_serializer
-        )
-
-    return data
 
 
 class ConfigManagerEntryIndexView(HomeAssistantView):
