@@ -81,7 +81,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         return ranged_value_to_percentage(SPEED_RANGE, self._device.status.fan_speed)
 
     @property
-    def speed_count(self) -> Optional[int]:
+    def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
 
