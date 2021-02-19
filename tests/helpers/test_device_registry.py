@@ -71,6 +71,7 @@ async def test_get_or_create_returns_same_entry(
 
     game_room_area = area_registry.async_get_area_by_name("Game Room")
     assert game_room_area is not None
+    assert len(area_registry.areas) == 1
 
     assert len(registry.devices) == 1
     assert entry.area_id == game_room_area.id
@@ -564,6 +565,7 @@ async def test_loading_saving_data(hass, registry, area_registry):
     assert kitchen_area is not None
     assert orig_via.area_id == "mock-area-id"
     assert orig_via.area_id != kitchen_area.id
+    assert len(area_registry.areas) == 1
 
 
 async def test_no_unnecessary_changes(registry):
@@ -765,6 +767,7 @@ async def test_update_suggested_area(registry, area_registry):
     pool_area = area_registry.async_get_area_by_name("Pool")
     assert pool_area is not None
     assert updated_entry.area_id == pool_area.id
+    assert len(area_registry.areas) == 1
 
 
 async def test_cleanup_device_registry(hass, registry):
