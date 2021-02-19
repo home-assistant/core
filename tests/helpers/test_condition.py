@@ -50,6 +50,9 @@ async def test_and_condition(hass):
         },
     )
 
+    with pytest.raises(ConditionError):
+        test(hass)
+
     hass.states.async_set("sensor.temperature", 120)
     assert not test(hass)
 
@@ -111,6 +114,9 @@ async def test_or_condition(hass):
         },
     )
 
+    with pytest.raises(ConditionError):
+        test(hass)
+
     hass.states.async_set("sensor.temperature", 120)
     assert not test(hass)
 
@@ -168,6 +174,9 @@ async def test_not_condition(hass):
             ],
         },
     )
+
+    with pytest.raises(ConditionError):
+        test(hass)
 
     hass.states.async_set("sensor.temperature", 101)
     assert test(hass)
@@ -466,7 +475,8 @@ async def test_state_attribute(hass):
     )
 
     hass.states.async_set("sensor.temperature", 100, {"unkown_attr": 200})
-    assert not test(hass)
+    with pytest.raises(ConditionError):
+        test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": 200})
     assert test(hass)
@@ -720,7 +730,7 @@ async def test_numeric_state_multiple_entities(hass):
     assert not test(hass)
 
 
-async def test_numberic_state_attribute(hass):
+async def test_numeric_state_attribute(hass):
     """Test with numeric state attribute in condition."""
     test = await condition.async_from_config(
         hass,
@@ -738,7 +748,8 @@ async def test_numberic_state_attribute(hass):
     )
 
     hass.states.async_set("sensor.temperature", 100, {"unkown_attr": 10})
-    assert not test(hass)
+    with pytest.raises(ConditionError):
+        assert test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": 49})
     assert test(hass)
@@ -750,7 +761,8 @@ async def test_numberic_state_attribute(hass):
     assert not test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": None})
-    assert not test(hass)
+    with pytest.raises(ConditionError):
+        assert test(hass)
 
 
 async def test_numeric_state_using_input_number(hass):
