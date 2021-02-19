@@ -289,6 +289,7 @@ FLOWS = [
     "vesync",
     "vilfo",
     "vizio",
+    "vlc_telnet",
     "volumio",
     "wallbox",
     "waze_travel_time",

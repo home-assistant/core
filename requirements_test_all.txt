@@ -1058,6 +1058,9 @@ python-songpal==0.12
 # homeassistant.components.tado
 python-tado==0.10.0
 
+# homeassistant.components.vlc_telnet
+python-telnet-vlc==2.0.1
+
 # homeassistant.components.twitch
 python-twitch-client==0.6.0
 

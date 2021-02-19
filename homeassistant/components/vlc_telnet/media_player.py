@@ -1,7 +1,8 @@
 """Provide functionality to interact with the vlc telnet interface."""
-import logging
+from typing import Callable
 
 from python_telnet_vlc import (
+    AuthError,
     CommandError,
     ConnectionError as ConnErr,
     LuaError,
@@ -25,6 +26,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -33,17 +35,13 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_PAUSED,
     STATE_PLAYING,
-    STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN, LOGGER
 
-DOMAIN = "vlc_telnet"
-
-DEFAULT_NAME = "VLC-TELNET"
-DEFAULT_PORT = 4212
 MAX_VOLUME = 500
 
 SUPPORT_VLC = (
@@ -71,50 +69,72 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the vlc platform."""
-    add_entities(
-        [
-            VlcDevice(
-                config.get(CONF_NAME),
-                config.get(CONF_HOST),
-                config.get(CONF_PORT),
-                config.get(CONF_PASSWORD),
-            )
-        ],
-        True,
-    )
+    name = config[CONF_NAME]
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    password = config[CONF_PASSWORD]
+
+    try:
+        vlc = VLCTelnet(host, password, port)
+    except AuthError:
+        LOGGER.error("Failed to login to VLC")
+        return
+    except (ConnErr, EOFError):
+        LOGGER.error("Failed to connect to VLC. Trying again")
+        vlc = None
+
+    add_entities([VlcDevice(vlc, name, host, port, password)], True)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+) -> None:
+    """Set up the vlc platform."""
+    name = entry.data[CONF_NAME]
+    vlc = hass.data[DOMAIN][entry.entry_id]
+    available = True
+
+    try:
+        await hass.async_add_executor_job(vlc.connect)
+    except (ConnErr, EOFError) as err:
+        LOGGER.warning("Failed to connect to VLC: %s. Trying again", err)
+        available = False
+
+    if available:
+        try:
+            await hass.async_add_executor_job(vlc.login)
+        except AuthError:
+            LOGGER.error("Failed to login to VLC")
+            return
+
+    async_add_entities([VlcDevice(vlc, name, available)], True)
 
 
 class VlcDevice(MediaPlayerEntity):
     """Representation of a vlc player."""
 
-    def __init__(self, name, host, port, passwd):
+    def __init__(self, vlc, name, available):
         """Initialize the vlc device."""
         self._name = name
         self._volume = None
         self._muted = None
-        self._state = STATE_UNAVAILABLE
+        self._state = None
         self._media_position_updated_at = None
         self._media_position = None
         self._media_duration = None
-        self._host = host
-        self._port = port
-        self._password = passwd
-        self._vlc = None
-        self._available = True
+        self._vlc = vlc
+        self._available = available
         self._volume_bkp = 0
-        self._media_artist = ""
-        self._media_title = ""
+        self._media_artist = None
+        self._media_title = None
 
     def update(self):
         """Get the latest details from the device."""
-        if self._vlc is None:
+        if not self._available:
             try:
-                self._vlc = VLCTelnet(self._host, self._password, self._port)
+                self._vlc.connect()
             except (ConnErr, EOFError) as err:
-                if self._available:
-                    _LOGGER.error("Connection error: %s", err)
-                    self._available = False
-                self._vlc = None
+                LOGGER.debug("Connection error: %s", err)
                 return
 
             self._state = STATE_IDLE
@@ -122,7 +142,7 @@ class VlcDevice(MediaPlayerEntity):
 
         try:
             status = self._vlc.status()
-            _LOGGER.debug("Status: %s", status)
+            LOGGER.debug("Status: %s", status)
 
             if status:
                 if "volume" in status:
@@ -150,7 +170,7 @@ class VlcDevice(MediaPlayerEntity):
                     self._media_position = vlc_position
 
             info = self._vlc.info()
-            _LOGGER.debug("Info: %s", info)
+            LOGGER.debug("Info: %s", info)
 
             if info:
                 self._media_artist = info.get(0, {}).get("artist")
@@ -163,12 +183,11 @@ class VlcDevice(MediaPlayerEntity):
                         self._media_title = data_info["filename"]
 
         except (CommandError, LuaError, ParseError) as err:
-            _LOGGER.error("Command error: %s", err)
+            LOGGER.error("Command error: %s", err)
         except (ConnErr, EOFError) as err:
             if self._available:
-                _LOGGER.error("Connection error: %s", err)
+                LOGGER.error("Connection error: %s", err)
                 self._available = False
-            self._vlc = None
 
     @property
     def name(self):
@@ -275,7 +294,7 @@ class VlcDevice(MediaPlayerEntity):
     def play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL or file."""
         if media_type != MEDIA_TYPE_MUSIC:
-            _LOGGER.error(
+            LOGGER.error(
                 "Invalid media type %s. Only %s is supported",
                 media_type,
                 MEDIA_TYPE_MUSIC,
