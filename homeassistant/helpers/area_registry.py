@@ -79,7 +79,7 @@ class AreaRegistry:
         """Create a new area."""
         normalized_name = normalize_area_name(name)
 
-        if self._async_is_registered(normalized_name):
+        if self.async_get_area_by_name(name):
             raise ValueError(f"The name {name} ({normalized_name}) is already in use")
 
         area = AreaEntry(name=name, normalized_name=normalized_name)
@@ -133,23 +133,20 @@ class AreaRegistry:
         normalized_name = normalize_area_name(name)
 
         if normalized_name != old.normalized_name:
-            if self._async_is_registered(normalized_name):
-                raise ValueError("Name is already in use")
+            if self.async_get_area_by_name(name):
+                raise ValueError(
+                    f"The name {name} ({normalized_name}) is already in use"
+                )
 
         changes["name"] = name
         changes["normalized_name"] = normalized_name
 
         new = self.areas[area_id] = attr.evolve(old, **changes)
+
+        del self._normalized_name_area_idx[old.normalized_name]
+        self._normalized_name_area_idx[normalized_name] = area_id
         self.async_schedule_save()
         return new
-
-    @callback
-    def _async_is_registered(self, normalized_name: str) -> Optional[AreaEntry]:
-        """Check if a name is currently registered."""
-        for area in self.areas.values():
-            if normalized_name == area.normalized_name:
-                return area
-        return None
 
     async def async_load(self) -> None:
         """Load the area registry."""
