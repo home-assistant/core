@@ -209,7 +209,6 @@ async def _async_register_bridge_device(hass, config_entry_id, bridge_device):
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         name=bridge_device["name"],
-        suggested_area=bridge_device["name"].split("_")[0],
         manufacturer=MANUFACTURER,
         config_entry_id=config_entry_id,
         identifiers={(DOMAIN, bridge_device["serial"])},
