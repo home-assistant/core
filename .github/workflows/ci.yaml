@@ -650,6 +650,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-tests
     strategy:
+      fail-fast: false
       matrix:
         group: [1, 2, 3, 4]
         python-version: [3.8, 3.9]
