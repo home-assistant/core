@@ -24,6 +24,9 @@ from homeassistant.const import (
     VOLT,
 )
 
+CONF_IDENTIFIERS = "identifiers"
+CONF_MANUFACTURER = "manufacturer"
+CONF_SW_VERSION = "sw_version"
 DATA_KEY_COORDINATOR = "coordinator"
 DOMAIN = "goalzero"
 DEFAULT_NAME = "Yeti"

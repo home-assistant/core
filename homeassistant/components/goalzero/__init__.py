@@ -19,7 +19,14 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DOMAIN
+from .const import (
+    CONF_IDENTIFIERS,
+    CONF_MANUFACTURER,
+    CONF_SW_VERSION,
+    DATA_KEY_API,
+    DATA_KEY_COORDINATOR,
+    DOMAIN,
+)
 
 _LOGGER = getLogger(__name__)
 
@@ -108,10 +115,10 @@ class YetiEntity(CoordinatorEntity):
     def device_info(self):
         """Return the device information of the entity."""
         return {
-            "identifiers": {(DOMAIN, self._server_unique_id)},
-            "name": self._name,
-            "manufacturer": "Goal Zero",
-            "sw_version": self.api.data["firmwareVersion"],
+            CONF_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
+            CONF_NAME: self._name,
+            CONF_MANUFACTURER: "Goal Zero",
+            CONF_SW_VERSION: self.api.data["firmwareVersion"],
         }
 
     @property
