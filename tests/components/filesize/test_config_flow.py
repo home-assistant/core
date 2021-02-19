@@ -1,10 +1,30 @@
 """Test the filesize config flow."""
+import os
+from unittest.mock import patch
+
+import pytest
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.filesize.config_flow import InvalidPath, NotAFile
 from homeassistant.components.filesize.const import DOMAIN
 from homeassistant.const import CONF_FILE_PATH, CONF_UNIT_OF_MEASUREMENT
 
-from tests.async_mock import patch
+TEST_DIR = os.path.join(os.path.dirname(__file__))
+TEST_FILE = os.path.join(TEST_DIR, "mock_file_test_filesize.txt")
+
+
+def create_file(path):
+    """Create a test file."""
+    with open(path, "w") as test_file:
+        test_file.write("test")
+
+
+@pytest.fixture(autouse=True)
+def remove_file():
+    """Remove test file."""
+    yield
+    if os.path.isfile(TEST_FILE):
+        os.remove(TEST_FILE)
 
 
 async def test_form(hass):
@@ -16,7 +36,8 @@ async def test_form(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
 
-    hass.config.allowlist_external_dirs = "/home/philip/.homeassistant/"
+    hass.config.allowlist_external_dirs = TEST_DIR
+    create_file(TEST_FILE)
 
     with patch(
         "homeassistant.components.filesize.async_setup", return_value=True
@@ -27,15 +48,15 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_FILE_PATH: "/home/philip/.homeassistant/home-assistant_v2.db",
+                CONF_FILE_PATH: TEST_FILE,
                 CONF_UNIT_OF_MEASUREMENT: "GB",
             },
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "/home/philip/.homeassistant/home-assistant_v2.db (GB)"
+    assert result2["title"] == TEST_FILE + " (GB)"
     assert result2["data"] == {
-        CONF_FILE_PATH: "/home/philip/.homeassistant/home-assistant_v2.db",
+        CONF_FILE_PATH: TEST_FILE,
         CONF_UNIT_OF_MEASUREMENT: "GB",
     }
     await hass.async_block_till_done()
@@ -55,7 +76,7 @@ async def test_form_invalid_path(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_FILE_PATH: "/root/test"},
+            {CONF_FILE_PATH: "/dummy/test.abcde"},
         )
 
     assert result2["type"] == "form"
@@ -74,7 +95,7 @@ async def test_form_not_a_file(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_FILE_PATH: "./does_not_exist.txt"},
+            {CONF_FILE_PATH: "/dummy/does_not_exist.abcde"},
         )
 
     assert result2["type"] == "form"
