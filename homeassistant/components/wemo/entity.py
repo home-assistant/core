@@ -1,30 +1,16 @@
 """Classes shared among Wemo entities."""
 import asyncio
-import contextlib
 import logging
-from typing import Any, Dict, Generator, Optional
+from typing import Any, Dict, Optional
 
 import async_timeout
 from pywemo import WeMoDevice
-from pywemo.ouimeaux_device.api.service import ActionException
 
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as WEMO_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class ExceptionHandlerStatus:
-    """Exit status from the _wemo_exception_handler context manager."""
-
-    # An exception if one was raised in the _wemo_exception_handler.
-    exception: Optional[Exception] = None
-
-    @property
-    def success(self) -> bool:
-        """Return True if the handler completed with no exception."""
-        return self.exception is None
 
 
 class WemoEntity(Entity):
@@ -50,23 +36,6 @@ class WemoEntity(Entity):
         """Return true if switch is available."""
         return self._available
 
-    @contextlib.contextmanager
-    def _wemo_exception_handler(
-        self, message: str
-    ) -> Generator[ExceptionHandlerStatus, None, None]:
-        """Wrap device calls to set `_available` when wemo exceptions happen."""
-        status = ExceptionHandlerStatus()
-        try:
-            yield status
-        except ActionException as err:
-            status.exception = err
-            _LOGGER.warning("Could not %s for %s (%s)", message, self.name, err)
-            self._available = False
-        else:
-            if not self._available:
-                _LOGGER.info("Reconnected to %s", self.name)
-                self._available = True
-
     def _update(self, force_update: Optional[bool] = True):
         """Update the device state."""
         raise NotImplementedError()
@@ -89,28 +58,16 @@ class WemoEntity(Entity):
             return
 
         try:
-            async with async_timeout.timeout(
-                self.platform.scan_interval.seconds - 0.1
-            ) as timeout:
-                await asyncio.shield(self._async_locked_update(True, timeout))
+            with async_timeout.timeout(self.platform.scan_interval.seconds - 0.1):
+                await asyncio.shield(self._async_locked_update(True))
         except asyncio.TimeoutError:
             _LOGGER.warning("Lost connection to %s", self.name)
             self._available = False
 
-    async def _async_locked_update(
-        self, force_update: bool, timeout: Optional[async_timeout.timeout] = None
-    ) -> None:
+    async def _async_locked_update(self, force_update: bool) -> None:
         """Try updating within an async lock."""
         async with self._update_lock:
             await self.hass.async_add_executor_job(self._update, force_update)
-            # When the timeout expires HomeAssistant is no longer waiting for an
-            # update from the device. Instead, the state needs to be updated
-            # asynchronously. This also handles the case where an update came
-            # directly from the device (device push). In that case no polling
-            # update was involved and the state also needs to be updated
-            # asynchronously.
-            if not timeout or timeout.expired:
-                self.async_write_ha_state()
 
 
 class WemoSubscriptionEntity(WemoEntity):
@@ -164,3 +121,4 @@ class WemoSubscriptionEntity(WemoEntity):
             return
 
         await self._async_locked_update(force_update)
+        self.async_write_ha_state()

@@ -3,6 +3,8 @@ import asyncio
 from datetime import datetime, timedelta
 import logging
 
+from pywemo.ouimeaux_device.api.service import ActionException
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -138,23 +140,29 @@ class WemoSwitch(WemoSubscriptionEntity, SwitchEntity):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        with self._wemo_exception_handler("turn on"):
+        try:
             if self.wemo.on():
                 self._state = WEMO_ON
+        except ActionException as err:
+            _LOGGER.warning("Error while turning on device %s (%s)", self.name, err)
+            self._available = False
 
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        with self._wemo_exception_handler("turn off"):
+        try:
             if self.wemo.off():
                 self._state = WEMO_OFF
+        except ActionException as err:
+            _LOGGER.warning("Error while turning off device %s (%s)", self.name, err)
+            self._available = False
 
         self.schedule_update_ha_state()
 
     def _update(self, force_update=True):
         """Update the device state."""
-        with self._wemo_exception_handler("update status"):
+        try:
             self._state = self.wemo.get_state(force_update)
 
             if self.wemo.model_name == "Insight":
@@ -165,3 +173,10 @@ class WemoSwitch(WemoSubscriptionEntity, SwitchEntity):
             elif self.wemo.model_name == "CoffeeMaker":
                 self.coffeemaker_mode = self.wemo.mode
                 self._mode_string = self.wemo.mode_string
+
+            if not self._available:
+                _LOGGER.info("Reconnected to %s", self.name)
+                self._available = True
+        except ActionException as err:
+            _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
+            self._available = False

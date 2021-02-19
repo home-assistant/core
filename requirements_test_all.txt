@@ -173,7 +173,6 @@ aprslib==0.6.46
 arcam-fmj==0.5.3
 
 # homeassistant.components.dlna_dmr
-# homeassistant.components.ssdp
 # homeassistant.components.upnp
 async-upnp-client==0.14.13
 
@@ -425,7 +424,7 @@ homematicip==0.13.1
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
-httplib2==0.19.0
+httplib2==0.18.1
 
 # homeassistant.components.huawei_lte
 huawei-lte-api==1.4.17
