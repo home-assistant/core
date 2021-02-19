@@ -2,7 +2,8 @@
     "config": {
         "error": {
             "cannot_connect": "\u00c9chec de la connexion ",
-            "invalid_auth": "Authentification invalide "
+            "invalid_auth": "Authentification invalide ",
+            "unknown": "Erreur inattendue"
         },
         "step": {
             "user": {

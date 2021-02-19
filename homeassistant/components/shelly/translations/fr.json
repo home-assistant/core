@@ -12,7 +12,7 @@
         "flow_title": "Shelly: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "Voulez-vous configurer le {model} \u00e0 {host}?"
+                "description": "Voulez-vous configurer le {model} \u00e0 {host}?\n\nLes appareils aliment\u00e9s par batterie prot\u00e9g\u00e9s par mot de passe doivent \u00eatre r\u00e9veill\u00e9s avant de continuer \u00e0 s\u2019installer.\nLes appareils aliment\u00e9s par batterie qui ne sont pas prot\u00e9g\u00e9s par mot de passe seront ajout\u00e9s lorsque l\u2019appareil se r\u00e9veillera, vous pouvez maintenant r\u00e9veiller manuellement l\u2019appareil \u00e0 l\u2019aide d\u2019un bouton dessus ou attendre la prochaine mise \u00e0 jour des donn\u00e9es de l\u2019appareil."
             },
             "credentials": {
                 "data": {
@@ -24,7 +24,7 @@
                 "data": {
                     "host": "H\u00f4te"
                 },
-                "description": "Avant la configuration, l'appareil aliment\u00e9 par batterie doit \u00eatre r\u00e9veill\u00e9 en appuyant sur le bouton de l'appareil."
+                "description": "Avant la configuration, les appareils aliment\u00e9s par batterie doivent \u00eatre r\u00e9veill\u00e9s, vous pouvez maintenant r\u00e9veiller l'appareil \u00e0 l'aide d'un bouton dessus."
             }
         }
     },
@@ -38,6 +38,7 @@
         "trigger_type": {
             "double": "{subtype} double-cliqu\u00e9",
             "long": " {sous-type} long cliqu\u00e9",
+            "long_single": "{subtype} clic long et simple clic",
             "single": "{subtype} simple clic",
             "single_long": "{subtype} simple clic, puis un clic long",
             "triple": "{subtype} cliqu\u00e9 trois fois"

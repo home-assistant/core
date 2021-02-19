@@ -8,6 +8,7 @@
                 "data": {
                     "name": "Nom du capteur"
                 },
+                "description": "Voulez-vous commencer la configuration ?",
                 "title": "Adresse IP locale"
             }
         }
