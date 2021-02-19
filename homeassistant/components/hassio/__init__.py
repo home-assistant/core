@@ -76,7 +76,7 @@ SERVICE_RESTORE_PARTIAL = "restore_partial"
 
 SCHEMA_NO_DATA = vol.Schema({})
 
-SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): cv.slug})
+SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): cv.string})
 
 SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
     {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
