@@ -80,7 +80,7 @@ class AreaRegistry:
         normalized_name = normalize_area_name(name)
 
         if self._async_is_registered(normalized_name):
-            raise ValueError("The name {name} ({normalized_name}) is already in use")
+            raise ValueError(f"The name {name} ({normalized_name}) is already in use")
 
         area = AreaEntry(name=name, normalized_name=normalized_name)
         area.generate_id(self.areas)
