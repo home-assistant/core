@@ -50,6 +50,9 @@ async def test_and_condition(hass):
         },
     )
 
+    with pytest.raises(ConditionError):
+        test(hass)
+
     hass.states.async_set("sensor.temperature", 120)
     assert not test(hass)
 
@@ -111,6 +114,9 @@ async def test_or_condition(hass):
         },
     )
 
+    with pytest.raises(ConditionError):
+        test(hass)
+
     hass.states.async_set("sensor.temperature", 120)
     assert not test(hass)
 
@@ -168,6 +174,9 @@ async def test_not_condition(hass):
             ],
         },
     )
+
+    with pytest.raises(ConditionError):
+        test(hass)
 
     hass.states.async_set("sensor.temperature", 101)
     assert test(hass)
@@ -466,7 +475,8 @@ async def test_state_attribute(hass):
     )
 
     hass.states.async_set("sensor.temperature", 100, {"unkown_attr": 200})
-    assert not test(hass)
+    with pytest.raises(ConditionError):
+        test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": 200})
     assert test(hass)
@@ -720,7 +730,7 @@ async def test_numeric_state_multiple_entities(hass):
     assert not test(hass)
 
 
-async def test_numberic_state_attribute(hass):
+async def test_numeric_state_attribute(hass):
     """Test with numeric state attribute in condition."""
     test = await condition.async_from_config(
         hass,
@@ -738,7 +748,8 @@ async def test_numberic_state_attribute(hass):
     )
 
     hass.states.async_set("sensor.temperature", 100, {"unkown_attr": 10})
-    assert not test(hass)
+    with pytest.raises(ConditionError):
+        assert test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": 49})
     assert test(hass)
@@ -750,7 +761,8 @@ async def test_numberic_state_attribute(hass):
     assert not test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": None})
-    assert not test(hass)
+    with pytest.raises(ConditionError):
+        assert test(hass)
 
 
 async def test_numeric_state_using_input_number(hass):
@@ -809,6 +821,86 @@ async def test_numeric_state_using_input_number(hass):
         condition.async_numeric_state(
             hass, entity="sensor.temperature", above="input_number.not_exist"
         )
+
+
+async def test_zone_raises(hass):
+    """Test that zone raises ConditionError on errors."""
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "zone",
+            "entity_id": "device_tracker.cat",
+            "zone": "zone.home",
+        },
+    )
+
+    with pytest.raises(ConditionError, match="Unknown zone"):
+        test(hass)
+
+    hass.states.async_set(
+        "zone.home",
+        "zoning",
+        {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
+    )
+
+    with pytest.raises(ConditionError, match="Unknown entity"):
+        test(hass)
+
+    hass.states.async_set(
+        "device_tracker.cat",
+        "home",
+        {"friendly_name": "cat"},
+    )
+
+    with pytest.raises(ConditionError, match="latitude"):
+        test(hass)
+
+    hass.states.async_set(
+        "device_tracker.cat",
+        "home",
+        {"friendly_name": "cat", "latitude": 2.1},
+    )
+
+    with pytest.raises(ConditionError, match="longitude"):
+        test(hass)
+
+    hass.states.async_set(
+        "device_tracker.cat",
+        "home",
+        {"friendly_name": "cat", "latitude": 2.1, "longitude": 1.1},
+    )
+
+    # All okay, now test multiple failed conditions
+    assert test(hass)
+
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "zone",
+            "entity_id": ["device_tracker.cat", "device_tracker.dog"],
+            "zone": ["zone.home", "zone.work"],
+        },
+    )
+
+    with pytest.raises(ConditionError, match="dog"):
+        test(hass)
+
+    with pytest.raises(ConditionError, match="work"):
+        test(hass)
+
+    hass.states.async_set(
+        "zone.work",
+        "zoning",
+        {"name": "work", "latitude": 20, "longitude": 10, "radius": 25000},
+    )
+
+    hass.states.async_set(
+        "device_tracker.dog",
+        "work",
+        {"friendly_name": "dog", "latitude": 20.1, "longitude": 10.1},
+    )
+
+    assert test(hass)
 
 
 async def test_zone_multiple_entities(hass):

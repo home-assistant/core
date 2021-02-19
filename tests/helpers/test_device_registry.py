@@ -8,13 +8,24 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, callback
 from homeassistant.helpers import device_registry, entity_registry
 
-from tests.common import MockConfigEntry, flush_store, mock_device_registry
+from tests.common import (
+    MockConfigEntry,
+    flush_store,
+    mock_area_registry,
+    mock_device_registry,
+)
 
 
 @pytest.fixture
 def registry(hass):
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
+
+
+@pytest.fixture
+def area_registry(hass):
+    """Return an empty, loaded, registry."""
+    return mock_area_registry(hass)
 
 
 @pytest.fixture
@@ -31,7 +42,9 @@ def update_events(hass):
     return events
 
 
-async def test_get_or_create_returns_same_entry(hass, registry, update_events):
+async def test_get_or_create_returns_same_entry(
+    hass, registry, area_registry, update_events
+):
     """Make sure we do not duplicate entries."""
     entry = registry.async_get_or_create(
         config_entry_id="1234",
@@ -41,7 +54,7 @@ async def test_get_or_create_returns_same_entry(hass, registry, update_events):
         name="name",
         manufacturer="manufacturer",
         model="model",
-        suggested_area="Man Cave",
+        suggested_area="Game Room",
     )
     entry2 = registry.async_get_or_create(
         config_entry_id="1234",
@@ -49,23 +62,30 @@ async def test_get_or_create_returns_same_entry(hass, registry, update_events):
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
-        suggested_area="Man Cave",
+        suggested_area="Game Room",
     )
     entry3 = registry.async_get_or_create(
         config_entry_id="1234",
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
+    game_room_area = area_registry.async_get_area_by_name("Game Room")
+    assert game_room_area is not None
+
     assert len(registry.devices) == 1
+    assert entry.area_id == game_room_area.id
     assert entry.id == entry2.id
     assert entry.id == entry3.id
     assert entry.identifiers == {("bridgeid", "0123")}
+
+    assert entry2.area_id == game_room_area.id
 
     assert entry3.manufacturer == "manufacturer"
     assert entry3.model == "model"
     assert entry3.name == "name"
     assert entry3.sw_version == "sw-version"
-    assert entry3.suggested_area == "Man Cave"
+    assert entry3.suggested_area == "Game Room"
+    assert entry3.area_id == game_room_area.id
 
     await hass.async_block_till_done()
 
@@ -448,7 +468,7 @@ async def test_specifying_via_device_update(registry):
     assert light.via_device_id == via.id
 
 
-async def test_loading_saving_data(hass, registry):
+async def test_loading_saving_data(hass, registry, area_registry):
     """Test that we load/save data correctly."""
     orig_via = registry.async_get_or_create(
         config_entry_id="123",
@@ -539,6 +559,11 @@ async def test_loading_saving_data(hass, registry):
     assert orig_via == new_via
     assert orig_light == new_light
     assert orig_light4 == new_light4
+
+    kitchen_area = area_registry.async_get_area_by_name("kitchen")
+    assert kitchen_area is not None
+    assert orig_via.area_id == "mock-area-id"
+    assert orig_via.area_id != kitchen_area.id
 
 
 async def test_no_unnecessary_changes(registry):
@@ -716,7 +741,7 @@ async def test_update_sw_version(registry):
     assert updated_entry.sw_version == sw_version
 
 
-async def test_update_suggested_area(registry):
+async def test_update_suggested_area(registry, area_registry):
     """Verify that we can update the suggested area version of a device."""
     entry = registry.async_get_or_create(
         config_entry_id="1234",
@@ -724,6 +749,8 @@ async def test_update_suggested_area(registry):
         identifiers={("bla", "123")},
     )
     assert not entry.suggested_area
+    assert entry.area_id is None
+
     suggested_area = "Pool"
 
     with patch.object(registry, "async_schedule_save") as mock_save:
@@ -734,6 +761,10 @@ async def test_update_suggested_area(registry):
     assert mock_save.call_count == 1
     assert updated_entry != entry
     assert updated_entry.suggested_area == suggested_area
+
+    pool_area = area_registry.async_get_area_by_name("Pool")
+    assert pool_area is not None
+    assert updated_entry.area_id == pool_area.id
 
 
 async def test_cleanup_device_registry(hass, registry):

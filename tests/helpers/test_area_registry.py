@@ -133,6 +133,18 @@ async def test_update_area_with_same_name(registry):
     assert len(registry.areas) == 1
 
 
+async def test_update_area_with_same_name_change_case(registry):
+    """Make sure that we can reapply the same name with a different case to the area."""
+    area = registry.async_create("mock")
+
+    updated_area = registry.async_update(area.id, name="Mock")
+
+    assert updated_area.name == "Mock"
+    assert updated_area.id == area.id
+    assert updated_area.normalized_name == area.normalized_name
+    assert len(registry.areas) == 1
+
+
 async def test_update_area_with_name_already_in_use(registry):
     """Make sure that we can't update an area with a name already in use."""
     area1 = registry.async_create("mock1")
@@ -144,6 +156,20 @@ async def test_update_area_with_name_already_in_use(registry):
 
     assert area1.name == "mock1"
     assert area2.name == "mock2"
+    assert len(registry.areas) == 2
+
+
+async def test_update_area_with_normalized_name_already_in_use(registry):
+    """Make sure that we can't update an area with a normalized name already in use."""
+    area1 = registry.async_create("mock1")
+    area2 = registry.async_create("Moc k2")
+
+    with pytest.raises(ValueError) as e_info:
+        registry.async_update(area1.id, name="mock2")
+        assert e_info == "Name is already in use"
+
+    assert area1.name == "mock1"
+    assert area2.name == "Moc k2"
     assert len(registry.areas) == 2
 
 
@@ -173,3 +199,38 @@ async def test_loading_area_from_storage(hass, hass_storage):
     registry = area_registry.async_get(hass)
 
     assert len(registry.areas) == 1
+
+
+async def test_async_get_or_create(hass, registry):
+    """Make sure we can get the area by name."""
+    area = registry.async_get_or_create("Mock1")
+    area2 = registry.async_get_or_create("mock1")
+
+    assert area == area2
+
+
+async def test_async_get_area_by_name(hass, registry):
+    """Make sure we can get the area by name."""
+    registry.async_create("Mock1")
+
+    assert len(registry.areas) == 1
+
+    assert registry.async_get_area_by_name("M o c k 1").normalized_name == "mock1"
+
+
+async def test_async_get_area_by_name_not_found(hass, registry):
+    """Make sure we return None for non-existent areas."""
+    registry.async_create("Mock1")
+
+    assert len(registry.areas) == 1
+
+    assert registry.async_get_area_by_name("non_exist") is None
+
+
+async def test_async_get_area(hass, registry):
+    """Make sure we can get the area by id."""
+    area = registry.async_create("Mock1")
+
+    assert len(registry.areas) == 1
+
+    assert registry.async_get_area(area.id).normalized_name == "mock1"
