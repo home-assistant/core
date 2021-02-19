@@ -124,10 +124,12 @@ class ZWaveServices:
             None,
         )
 
-        if identifier is None or identifier[1] not in client.driver.controller.nodes:
+        node_id = int(identifier[1]) if identifier is not None else None
+
+        if node_id is None or node_id not in client.driver.controller.nodes:
             raise ValueError("Device node can't be found")
 
-        return client.driver.controller.nodes[identifier[1]]
+        return client.driver.controller.nodes[node_id]
 
     @callback
     def async_get_node_from_entity_id(self, entity_id: str) -> ZwaveNode:
@@ -161,7 +163,7 @@ class ZWaveServices:
         new_value = service.data[const.ATTR_CONFIG_VALUE]
 
         for node in nodes:
-            zwave_value = async_set_config_parameter(
+            zwave_value = await async_set_config_parameter(
                 node,
                 new_value,
                 property_or_property_name,
