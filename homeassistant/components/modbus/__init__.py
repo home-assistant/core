@@ -117,9 +117,9 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_SLAVE): cv.positive_int,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
-            cv.time_period, lambda value: value.total_seconds()
-        ),
+        vol.Optional(
+            CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+        ): cv.positive_int,
     }
 )
 
