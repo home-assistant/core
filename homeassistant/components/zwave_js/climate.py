@@ -294,11 +294,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if (
             self._fan_mode
             and self._fan_mode.value is not None
-            and self._fan_mode.metadata.states
+            and str(self._fan_mode.value) in self._fan_mode.metadata.states
         ):
-            return cast(
-                str, self._fan_mode.metadata.states.get(str(self._fan_mode.value))
-            )
+            return cast(str, self._fan_mode.metadata.states[str(self._fan_mode.value)])
         return None
 
     @property
@@ -314,12 +312,12 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if (
             self._fan_state
             and self._fan_state.value is not None
-            and self._fan_state.metadata.states
+            and str(self._fan_state.value) in self._fan_state.metadata.states
         ):
             return {
-                ATTR_FAN_STATE: self._fan_state.metadata.states.get(
+                ATTR_FAN_STATE: self._fan_state.metadata.states[
                     str(self._fan_state.value)
-                )
+                ]
             }
 
         return None
