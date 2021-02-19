@@ -250,7 +250,7 @@ async def test_stream_source_error(aioclient_mock, hass, hass_client, hass_ws_cl
         }
 
 
-async def test_setup_stream_source_alternative_options(hass):
+async def test_setup_alternative_options(hass, hass_ws_client):
     """Test that the stream source is setup with different config options."""
     assert await async_setup_component(
         hass,
@@ -269,6 +269,7 @@ async def test_setup_stream_source_alternative_options(hass):
         },
     )
     await hass.async_block_till_done()
+    assert hass.data["camera"].get_entity("camera.config_test")
 
 
 async def test_no_stream_source(aioclient_mock, hass, hass_client, hass_ws_client):
