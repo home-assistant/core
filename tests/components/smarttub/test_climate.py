@@ -27,19 +27,8 @@ from homeassistant.const import (
 from . import trigger_update
 
 
-async def test_thermostat_update(spa, hass, config_entry, smarttub_api):
+async def test_thermostat_update(spa, setup_entry, hass, smarttub_api):
     """Test the thermostat entity."""
-
-    spa.get_status.return_value = {
-        "heater": "ON",
-        "water": {
-            "temperature": 38,
-        },
-        "setTemperature": 39,
-    }
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
     entity_id = f"climate.{spa.brand}_{spa.model}_thermostat"
     state = hass.states.get(entity_id)
