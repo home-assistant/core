@@ -205,8 +205,11 @@ async def test_async_get_or_create(hass, registry):
     """Make sure we can get the area by name."""
     area = registry.async_get_or_create("Mock1")
     area2 = registry.async_get_or_create("mock1")
+    area3 = registry.async_get_or_create("mock   1")
 
     assert area == area2
+    assert area == area3
+    assert area2 == area3
 
 
 async def test_async_get_area_by_name(hass, registry):
