@@ -163,6 +163,7 @@ class AreaRegistry:
                 areas[area["id"]] = AreaEntry(
                     name=area["name"], id=area["id"], normalized_name=normalized_name
                 )
+                self._normalized_name_area_idx[normalized_name] = area["id"]
 
         self.areas = areas
 
