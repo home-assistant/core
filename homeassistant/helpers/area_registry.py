@@ -57,10 +57,9 @@ class AreaRegistry:
     def async_get_area_by_name(self, name: str) -> Optional[AreaEntry]:
         """Get area by name."""
         normalized_name = normalize_area_name(name)
-        area_id = self._normalized_name_area_idx.get(normalized_name)
-        if area_id is None:
+        if normalized_name not in self._normalized_name_area_idx:
             return None
-        return self.areas.get(area_id)
+        return self.areas.get(self._normalized_name_area_idx[normalized_name])
 
     @callback
     def async_list_areas(self) -> Iterable[AreaEntry]:
