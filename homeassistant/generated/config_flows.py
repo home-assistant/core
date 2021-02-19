@@ -182,6 +182,7 @@ FLOWS = [
     "rfxtrx",
     "ring",
     "risco",
+    "rituals_perfume_genie",
     "roku",
     "roomba",
     "roon",
