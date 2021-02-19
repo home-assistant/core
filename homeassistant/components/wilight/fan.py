@@ -88,6 +88,11 @@ class WiLightFan(WiLightDevice, FanEntity):
         return ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, wl_speed)
 
     @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return len(ORDERED_NAMED_FAN_SPEEDS)
+
+    @property
     def current_direction(self) -> str:
         """Return the current direction of the fan."""
         if "direction" in self._status:

@@ -100,3 +100,41 @@ set_direction:
           options:
             - "forward"
             - "reverse"
+
+increase_speed:
+  description: Increase the speed of the fan by one speed or a percentage_step.
+  fields:
+    entity_id:
+      description: Name(s) of the entities to increase speed
+      example: "fan.living_room"
+    percentage_step:
+      advanced: true
+      required: false
+      description: Increase speed by a percentage. Should be between 0..100. [optional]
+      example: 50
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider
+
+decrease_speed:
+  description: Decrease the speed of the fan by one speed or a percentage_step.
+  fields:
+    entity_id:
+      description: Name(s) of the entities to decrease speed
+      example: "fan.living_room"
+    percentage_step:
+      advanced: true
+      required: false
+      description: Decrease speed by a percentage. Should be between 0..100. [optional]
+      example: 50
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider

@@ -103,6 +103,13 @@ class TuyaFanDevice(TuyaDevice, FanEntity):
         self._tuya.oscillate(oscillating)
 
     @property
+    def speed_count(self) -> Optional[int]:
+        """Return the number of speeds the fan supports."""
+        if self.speeds is None:
+            return super().speed_count
+        return len(self.speeds)
+
+    @property
     def oscillating(self):
         """Return current oscillating status."""
         if self.supported_features & SUPPORT_OSCILLATE == 0:

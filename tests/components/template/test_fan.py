@@ -203,6 +203,7 @@ async def test_templates_with_entities(hass, calls):
                             "preset_mode_template": "{{ states('input_select.preset_mode') }}",
                             "oscillating_template": "{{ states('input_select.osc') }}",
                             "direction_template": "{{ states('input_select.direction') }}",
+                            "speed_count": "3",
                             "set_percentage": {
                                 "service": "script.fans_set_speed",
                                 "data_template": {"percentage": "{{ percentage }}"},
@@ -646,6 +647,46 @@ async def test_set_percentage(hass, calls):
     assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 50
 
     _verify(hass, STATE_ON, SPEED_MEDIUM, 50, None, None, None)
+
+
+async def test_increase_decrease_speed(hass, calls):
+    """Test set valid increase and derease speed."""
+    await _register_components(hass)
+
+    # Turn on fan
+    await common.async_turn_on(hass, _TEST_FAN)
+
+    # Set fan's percentage speed to 100
+    await common.async_set_percentage(hass, _TEST_FAN, 100)
+
+    # verify
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 100
+
+    _verify(hass, STATE_ON, SPEED_HIGH, 100, None, None, None)
+
+    # Set fan's percentage speed to 66
+    await common.async_decrease_speed(hass, _TEST_FAN)
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 66
+
+    _verify(hass, STATE_ON, SPEED_MEDIUM, 66, None, None, None)
+
+    # Set fan's percentage speed to 33
+    await common.async_decrease_speed(hass, _TEST_FAN)
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 33
+
+    _verify(hass, STATE_ON, SPEED_LOW, 33, None, None, None)
+
+    # Set fan's percentage speed to 0
+    await common.async_decrease_speed(hass, _TEST_FAN)
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 0
+
+    _verify(hass, STATE_OFF, SPEED_OFF, 0, None, None, None)
+
+    # Set fan's percentage speed to 33
+    await common.async_increase_speed(hass, _TEST_FAN)
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 33
+
+    _verify(hass, STATE_ON, SPEED_LOW, 33, None, None, None)
 
 
 async def test_set_invalid_speed_from_initial_stage(hass, calls):

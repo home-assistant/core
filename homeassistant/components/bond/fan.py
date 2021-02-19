@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.percentage import (
+    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
@@ -84,6 +85,11 @@ class BondFan(BondEntity, FanEntity):
         if not self._speed or not self._power:
             return 0
         return ranged_value_to_percentage(self._speed_range, self._speed)
+
+    @property
+    def speed_count(self) -> Optional[int]:
+        """Return the number of speeds the fan supports."""
+        return int_states_in_range(self._speed_range)
 
     @property
     def current_direction(self) -> Optional[str]:

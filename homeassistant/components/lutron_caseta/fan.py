@@ -49,6 +49,11 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
         )
 
     @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return len(ORDERED_NAMED_FAN_SPEEDS)
+
+    @property
     def supported_features(self) -> int:
         """Flag supported features. Speed Only."""
         return SUPPORT_SET_SPEED

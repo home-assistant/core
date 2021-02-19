@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.components.fan import SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.util.percentage import (
+    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
@@ -153,6 +154,11 @@ class DysonFanEntity(DysonEntity, FanEntity):
         if self.auto_mode:
             return None
         return ranged_value_to_percentage(SPEED_RANGE, int(self._device.state.speed))
+
+    @property
+    def speed_count(self) -> Optional[int]:
+        """Return the number of speeds the fan supports."""
+        return int_states_in_range(SPEED_RANGE)
 
     @property
     def preset_modes(self):
