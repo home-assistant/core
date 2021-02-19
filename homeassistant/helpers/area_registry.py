@@ -96,6 +96,7 @@ class AreaRegistry:
     @callback
     def async_delete(self, area_id: str) -> None:
         """Delete area."""
+        area = self.areas[area_id]
         device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
         device_registry.async_clear_area_id(area_id)
