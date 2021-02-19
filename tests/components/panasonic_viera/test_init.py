@@ -1,5 +1,7 @@
 """Test the Panasonic Viera setup process."""
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from homeassistant.components.panasonic_viera.const import (
     ATTR_DEVICE_INFO,
@@ -49,32 +51,46 @@ def get_mock_remote(device_info=MOCK_DEVICE_INFO):
     async def async_create_remote_control(during_setup=False):
         return
 
-    mock_remote.async_create_remote_control = async_create_remote_control
+    mock_remote.async_create_remote_control = AsyncMock(
+        side_effect=async_create_remote_control
+    )
 
     async def async_get_device_info():
         return device_info
 
-    mock_remote.async_get_device_info = async_get_device_info
+    mock_remote.async_get_device_info = AsyncMock(side_effect=async_get_device_info)
 
     async def async_turn_on():
         return
 
-    mock_remote.async_turn_on = async_turn_on
+    mock_remote.async_turn_on = AsyncMock(side_effect=async_turn_on)
 
     async def async_turn_off():
         return
 
-    mock_remote.async_turn_on = async_turn_off
+    mock_remote.async_turn_on = AsyncMock(side_effect=async_turn_off)
 
     async def async_send_key(key):
         return
 
-    mock_remote.async_send_key = async_send_key
+    mock_remote.async_send_key = AsyncMock(side_effect=async_send_key)
 
     return mock_remote
 
 
-async def test_setup_entry_encrypted(hass):
+@pytest.fixture(name="mock_remote")
+def mock_remote_fixture():
+    """Mock the remote."""
+    mock_remote = get_mock_remote()
+
+    with patch(
+        "homeassistant.components.panasonic_viera.Remote",
+        return_value=mock_remote,
+    ):
+        yield mock_remote
+
+
+async def test_setup_entry_encrypted(hass, mock_remote):
     """Test setup with encrypted config entry."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -84,26 +100,20 @@ async def test_setup_entry_encrypted(hass):
 
     mock_entry.add_to_hass(hass)
 
-    mock_remote = get_mock_remote()
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.panasonic_viera.Remote",
-        return_value=mock_remote,
-    ):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    state_tv = hass.states.get("media_player.panasonic_viera_tv")
+    state_remote = hass.states.get("remote.panasonic_viera_tv")
 
-        state_tv = hass.states.get("media_player.panasonic_viera_tv")
-        state_remote = hass.states.get("remote.panasonic_viera_tv")
+    assert state_tv
+    assert state_tv.name == DEFAULT_NAME
 
-        assert state_tv
-        assert state_tv.name == DEFAULT_NAME
-
-        assert state_remote
-        assert state_remote.name == DEFAULT_NAME
+    assert state_remote
+    assert state_remote.name == DEFAULT_NAME
 
 
-async def test_setup_entry_encrypted_missing_device_info(hass):
+async def test_setup_entry_encrypted_missing_device_info(hass, mock_remote):
     """Test setup with encrypted config entry and missing device info."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -113,26 +123,20 @@ async def test_setup_entry_encrypted_missing_device_info(hass):
 
     mock_entry.add_to_hass(hass)
 
-    mock_remote = get_mock_remote()
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.panasonic_viera.Remote",
-        return_value=mock_remote,
-    ):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    assert mock_entry.data[ATTR_DEVICE_INFO] == MOCK_DEVICE_INFO
+    assert mock_entry.unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
 
-        assert mock_entry.data[ATTR_DEVICE_INFO] == MOCK_DEVICE_INFO
-        assert mock_entry.unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
+    state_tv = hass.states.get("media_player.panasonic_viera_tv")
+    state_remote = hass.states.get("remote.panasonic_viera_tv")
 
-        state_tv = hass.states.get("media_player.panasonic_viera_tv")
-        state_remote = hass.states.get("remote.panasonic_viera_tv")
+    assert state_tv
+    assert state_tv.name == DEFAULT_NAME
 
-        assert state_tv
-        assert state_tv.name == DEFAULT_NAME
-
-        assert state_remote
-        assert state_remote.name == DEFAULT_NAME
+    assert state_remote
+    assert state_remote.name == DEFAULT_NAME
 
 
 async def test_setup_entry_encrypted_missing_device_info_none(hass):
@@ -167,7 +171,7 @@ async def test_setup_entry_encrypted_missing_device_info_none(hass):
         assert state_remote.name == DEFAULT_NAME
 
 
-async def test_setup_entry_unencrypted(hass):
+async def test_setup_entry_unencrypted(hass, mock_remote):
     """Test setup with unencrypted config entry."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -177,26 +181,20 @@ async def test_setup_entry_unencrypted(hass):
 
     mock_entry.add_to_hass(hass)
 
-    mock_remote = get_mock_remote()
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.panasonic_viera.Remote",
-        return_value=mock_remote,
-    ):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    state_tv = hass.states.get("media_player.panasonic_viera_tv")
+    state_remote = hass.states.get("remote.panasonic_viera_tv")
 
-        state_tv = hass.states.get("media_player.panasonic_viera_tv")
-        state_remote = hass.states.get("remote.panasonic_viera_tv")
+    assert state_tv
+    assert state_tv.name == DEFAULT_NAME
 
-        assert state_tv
-        assert state_tv.name == DEFAULT_NAME
-
-        assert state_remote
-        assert state_remote.name == DEFAULT_NAME
+    assert state_remote
+    assert state_remote.name == DEFAULT_NAME
 
 
-async def test_setup_entry_unencrypted_missing_device_info(hass):
+async def test_setup_entry_unencrypted_missing_device_info(hass, mock_remote):
     """Test setup with unencrypted config entry and missing device info."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -206,26 +204,20 @@ async def test_setup_entry_unencrypted_missing_device_info(hass):
 
     mock_entry.add_to_hass(hass)
 
-    mock_remote = get_mock_remote()
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.panasonic_viera.Remote",
-        return_value=mock_remote,
-    ):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    assert mock_entry.data[ATTR_DEVICE_INFO] == MOCK_DEVICE_INFO
+    assert mock_entry.unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
 
-        assert mock_entry.data[ATTR_DEVICE_INFO] == MOCK_DEVICE_INFO
-        assert mock_entry.unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
+    state_tv = hass.states.get("media_player.panasonic_viera_tv")
+    state_remote = hass.states.get("remote.panasonic_viera_tv")
 
-        state_tv = hass.states.get("media_player.panasonic_viera_tv")
-        state_remote = hass.states.get("remote.panasonic_viera_tv")
+    assert state_tv
+    assert state_tv.name == DEFAULT_NAME
 
-        assert state_tv
-        assert state_tv.name == DEFAULT_NAME
-
-        assert state_remote
-        assert state_remote.name == DEFAULT_NAME
+    assert state_remote
+    assert state_remote.name == DEFAULT_NAME
 
 
 async def test_setup_entry_unencrypted_missing_device_info_none(hass):
@@ -274,7 +266,7 @@ async def test_setup_config_flow_initiated(hass):
     assert len(hass.config_entries.flow.async_progress()) == 1
 
 
-async def test_setup_unload_entry(hass):
+async def test_setup_unload_entry(hass, mock_remote):
     """Test if config entry is unloaded."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN, unique_id=MOCK_DEVICE_INFO[ATTR_UDN], data=MOCK_CONFIG_DATA
@@ -282,14 +274,8 @@ async def test_setup_unload_entry(hass):
 
     mock_entry.add_to_hass(hass)
 
-    mock_remote = get_mock_remote()
-
-    with patch(
-        "homeassistant.components.panasonic_viera.Remote",
-        return_value=mock_remote,
-    ):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
 
     await hass.config_entries.async_unload(mock_entry.entry_id)
     assert mock_entry.state == ENTRY_STATE_NOT_LOADED
