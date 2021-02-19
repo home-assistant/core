@@ -59,8 +59,10 @@ def recorder_save_worker(file_out: str, segments: List[Segment], container_forma
             last_stream_id = segment.stream_id
             pts_adjuster["video"] = running_duration - source_v.start_time
             if source_a:
-                pts_adjuster["audio"] = running_duration - int(
-                    source_v.start_time * source_v.time_base / source_a.time_base
+                pts_adjuster["audio"] = int(
+                    (running_duration - source_v.start_time)
+                    * source_v.time_base
+                    / source_a.time_base
                 )
 
         # Remux video
