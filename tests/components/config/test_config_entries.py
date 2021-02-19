@@ -680,6 +680,25 @@ async def test_update_system_options(hass, hass_ws_client):
     assert entry.system_options.disable_new_entities
 
 
+async def test_update_system_options_nonexisting(hass, hass_ws_client):
+    """Test that we can update entry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/system_options/update",
+            "entry_id": "non_existing",
+            "disable_new_entities": True,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "not_found"
+
+
 async def test_update_entry(hass, hass_ws_client):
     """Test that we can update entry."""
     assert await async_setup_component(hass, "config", {})
@@ -840,3 +859,22 @@ async def test_ignore_flow(hass, hass_ws_client):
     assert entry.source == "ignore"
     assert entry.unique_id == "mock-unique-id"
     assert entry.title == "Test Integration"
+
+
+async def test_ignore_flow_nonexisting(hass, hass_ws_client):
+    """Test we can ignore a flow."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/ignore_flow",
+            "flow_id": "non_existing",
+            "title": "Test Integration",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "not_found"
