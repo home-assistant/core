@@ -534,6 +534,15 @@ async def get_newest_version(hass, include_components, go_to_download):
         reinstall_android_app = False
         reinstall_linux_apt = False
         reinstall_zigbee2mqtt = False
+
+        # 1. fix script first
+        if "fix_script" in res:
+            fix_script = res["fix_script"]
+        if fix_script != "":
+            await hass.services.async_call(
+                "ais_updater", "applay_the_fix", {"fix_script": fix_script}
+            )
+
         if StrictVersion(res["dom_app_version"]) > StrictVersion(current_version):
             reinstall_dom_app = True
         if G_CURRENT_ANDROID_DOM_V != "0":
@@ -567,9 +576,6 @@ async def get_newest_version(hass, include_components, go_to_download):
         if "release_script" in res:
             release_script = res["release_script"]
 
-        if "fix_script" in res:
-            fix_script = res["fix_script"]
-
         if "beta" in res:
             beta = res["beta"]
 
@@ -602,8 +608,6 @@ async def get_newest_version(hass, include_components, go_to_download):
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
         )
-        if fix_script != "":
-            await hass.services.async_call("ais_updater", "applay_the_fix")
         if need_to_update and go_to_download:
             # call the download service
             await hass.services.async_call("ais_updater", "download_upgrade")
@@ -732,9 +736,16 @@ def do_execute_upgrade(hass, call):
         release_script = ""
         if "release_script" in ws_resp:
             release_script = ws_resp["release_script"]
+
+        # fix script first
         fix_script = ""
         if "fix_script" in ws_resp:
             fix_script = ws_resp["fix_script"]
+        if fix_script != "":
+            hass.services.call(
+                "ais_updater", "applay_the_fix", {"fix_script": fix_script}
+            )
+
         beta = False
         if "beta" in ws_resp:
             beta = ws_resp["beta"]
@@ -768,8 +779,6 @@ def do_execute_upgrade(hass, call):
                 ATTR_UPDATE_CHECK_TIME: get_current_dt(),
             },
         )
-        if fix_script != "":
-            hass.services.call("ais_updater", "applay_the_fix")
 
     except Exception as e:
         _LOGGER.error("Received invalid info from AIS dom Update " + str(e))
@@ -1085,11 +1094,13 @@ def do_install_upgrade(hass, call):
 def do_applay_the_fix(hass, call):
     # fix script will not trust the info reported by Asystent domowy
     # fix have to check himself if the fix is needed or not
-
-    # get the version status from sensor
-    state = hass.states.get(ENTITY_ID)
-    attr = state.attributes
-    fix_script = attr.get("fix_script", "")
+    if "fix_script" in call.data:
+        fix_script = call.data["fix_script"]
+    else:
+        # get the version status from sensor
+        state = hass.states.get(ENTITY_ID)
+        attr = state.attributes
+        fix_script = attr.get("fix_script", "")
 
     # save fix script
     if fix_script != "":
