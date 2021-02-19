@@ -125,8 +125,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for host in hosts:
         try:
             tstat = radiotherm.get_thermostat(host)
-            rt = RadioThermostat(tstat, hold_temp, min_temp, max_temp)
-            tstats.append(rt)
+            tstats.append(RadioThermostat(tstat, hold_temp, min_temp, max_temp))
         except OSError:
             _LOGGER.exception("Unable to connect to Radio Thermostat: %s", host)
 
