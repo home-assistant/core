@@ -370,6 +370,12 @@ class DeviceRegistry:
 
         config_entries = old.config_entries
 
+        if suggested_area not in (UNDEFINED, None, "") and area_id is UNDEFINED:
+            area = self.hass.data.get("area_registry").async_get_or_create(
+                suggested_area
+            )
+            area_id = area.id
+
         if (
             add_config_entry_id is not UNDEFINED
             and add_config_entry_id not in old.config_entries

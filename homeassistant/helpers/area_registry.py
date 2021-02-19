@@ -67,6 +67,14 @@ class AreaRegistry:
         return self.areas.values()
 
     @callback
+    def async_get_or_create(self, name: str) -> AreaEntry:
+        """Get or create an area."""
+        area = self.async_get_area_by_name(name)
+        if area:
+            return area
+        return self.async_create(name)
+
+    @callback
     def async_create(self, name: str) -> AreaEntry:
         """Create a new area."""
         normalized_name = normalize_area_name(name)
