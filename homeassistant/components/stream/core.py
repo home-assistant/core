@@ -86,7 +86,12 @@ class StreamOutput(abc.ABC):
     @property
     def container_options(self) -> Callable[[int], dict]:
         """Return Callable which takes a sequence number and returns container options."""
-        return None
+        return lambda sequence: {
+            # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
+            "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont",
+            "avoid_negative_ts": "make_non_negative",
+            "fragment_index": str(sequence),
+        }
 
     def put(self, segment: Segment) -> None:
         """Store output."""

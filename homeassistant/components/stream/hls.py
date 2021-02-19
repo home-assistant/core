@@ -2,7 +2,7 @@
 import asyncio
 from collections import deque
 import io
-from typing import Any, Callable, List
+from typing import Any, List
 
 from aiohttp import web
 
@@ -164,16 +164,6 @@ class HlsStreamOutput(StreamOutput):
         self._cursor = None
         self._event = asyncio.Event()
         self._segments = deque(maxlen=MAX_SEGMENTS)
-
-    @property
-    def container_options(self) -> Callable[[int], dict]:
-        """Return Callable which takes a sequence number and returns container options."""
-        return lambda sequence: {
-            # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
-            "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont",
-            "avoid_negative_ts": "make_non_negative",
-            "fragment_index": str(sequence),
-        }
 
     @property
     def segments(self) -> List[int]:
