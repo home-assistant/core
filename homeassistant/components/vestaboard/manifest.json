@@ -1,0 +1,7 @@
+{
+  "domain": "vestaboard",
+  "name": "Vestaboard",
+  "documentation": "https://www.home-assistant.io/integrations/vestaboard",
+  "requirements": ["Vestaboard==0.4.0"],
+  "codeowners": ["@robbiet480"]
+}

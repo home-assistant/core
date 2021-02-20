@@ -86,6 +86,9 @@ TwitterAPI==2.6.3
 # homeassistant.components.tof
 # VL53L1X2==0.1.5
 
+# homeassistant.components.vestaboard
+Vestaboard==0.4.0
+
 # homeassistant.components.onvif
 WSDiscovery==2.0.0
 
