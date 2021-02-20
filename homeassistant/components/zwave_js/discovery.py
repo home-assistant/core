@@ -126,7 +126,6 @@ DISCOVERY_SCHEMAS = [
     # Fibaro Shutter Fibaro FGS222
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="fibaro_fgs222",
         manufacturer_id={0x010F},
         product_id={0x1000},
         product_type={0x0302},
@@ -139,7 +138,6 @@ DISCOVERY_SCHEMAS = [
     # Qubino flush shutter
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="fibaro_fgs222",
         manufacturer_id={0x0159},
         product_id={0x0052},
         product_type={0x0003},
@@ -152,7 +150,6 @@ DISCOVERY_SCHEMAS = [
     # Graber/Bali/Spring Fashion Covers
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="fibaro_fgs222",
         manufacturer_id={0x026E},
         product_id={0x5A31},
         product_type={0x4353},
