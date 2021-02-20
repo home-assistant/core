@@ -24,6 +24,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -46,17 +47,18 @@ DEFAULT_PORT = 4212
 MAX_VOLUME = 500
 
 SUPPORT_VLC = (
-    SUPPORT_PAUSE
-    | SUPPORT_SEEK
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PREVIOUS_TRACK
+    SUPPORT_CLEAR_PLAYLIST
     | SUPPORT_NEXT_TRACK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_STOP
-    | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_PAUSE
     | SUPPORT_PLAY
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_SEEK
     | SUPPORT_SHUFFLE_SET
+    | SUPPORT_STOP
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_SET
+    | SUPPORT_VOLUME_STEP
 )
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -237,6 +239,26 @@ class VlcDevice(MediaPlayerEntity):
         """Set volume level, range 0..1."""
         self._vlc.set_volume(volume * MAX_VOLUME)
         self._volume = volume
+
+    def volume_up(self):
+        """Service to send VLC the command for volume up."""
+        if self._volume is None:
+            return
+
+        current_volume = self._volume
+        if current_volume < MAX_VOLUME:
+            new_volume = min(current_volume + 0.05, MAX_VOLUME)
+            self.set_volume_level(new_volume)
+
+    def volume_down(self):
+        """Service to send VLC the command for volume down."""
+        if self._volume is None:
+            return
+
+        current_volume = self._volume
+        if current_volume > 0:
+            new_volume = max(current_volume - 0.05, 0)
+            self.set_volume_level(new_volume)
 
     def media_play(self):
         """Send play command."""
