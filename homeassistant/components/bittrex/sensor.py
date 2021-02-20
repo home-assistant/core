@@ -47,7 +47,7 @@ class Ticker(CoordinatorEntity):
         self._currency = self._symbol.split("-")[0]
         self._unit_of_measurement = self._symbol.split("-")[1]
 
-        self._name = f"Ticker - {self._symbol}"
+        self._name = f"BTX Ticker - {self._symbol}"
         self._unique_id = f"btx_ticker_{self._symbol})"
 
     def _get_data_property(self, property_name):
@@ -101,7 +101,7 @@ class Balance(CoordinatorEntity):
         super().__init__(coordinator)
         self._balance = balance
 
-        self._name = f"Balance - {self._balance}"
+        self._name = f"BTX Balance - {self._balance}"
         self._unique_id = f"btx_balance_{self._balance})"
 
     def _get_data_property(self, property_name):
@@ -177,7 +177,7 @@ class OpenOrder(Order):
         """Initialize the sensor."""
         super().__init__(coordinator, order)
 
-        self._name = "Bittrex Orders - Open"
+        self._name = "BTX Orders - Open"
         self._unique_id = "btx_orders_open"
 
     def _get_data(self):
@@ -207,7 +207,7 @@ class ClosedOrder(Order):
         """Initialize the sensor."""
         super().__init__(coordinator, order)
 
-        self._name = "Bittrex Orders - Closed"
+        self._name = "BTX Orders - Closed"
         self._unique_id = "btx_orders_closed"
 
     def _get_data(self):
