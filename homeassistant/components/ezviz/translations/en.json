@@ -5,7 +5,8 @@
             "unknown": "Unexpected error"
         },
         "error": {
-            "cannot_connect": "Failed to connect"
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
         },
         "flow_title": "ezviz: {name}",
         "step": {
