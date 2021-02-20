@@ -383,6 +383,7 @@ async def test_variable_fan(hass):
             "supported_features": 1,
             "speed_list": ["low", "medium", "high"],
             "speed": "high",
+            "percentage": 100,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -423,82 +424,82 @@ async def test_variable_fan(hass):
         "Alexa.PercentageController",
         "SetPercentage",
         "fan#test_2",
-        "fan.set_speed",
+        "fan.set_percentage",
         hass,
         payload={"percentage": "50"},
     )
-    assert call.data["speed"] == "medium"
+    assert call.data["percentage"] == 50
 
     call, _ = await assert_request_calls_service(
         "Alexa.PercentageController",
         "SetPercentage",
         "fan#test_2",
-        "fan.set_speed",
+        "fan.set_percentage",
         hass,
         payload={"percentage": "33"},
     )
-    assert call.data["speed"] == "low"
+    assert call.data["percentage"] == 33
 
     call, _ = await assert_request_calls_service(
         "Alexa.PercentageController",
         "SetPercentage",
         "fan#test_2",
-        "fan.set_speed",
+        "fan.set_percentage",
         hass,
         payload={"percentage": "100"},
     )
-    assert call.data["speed"] == "high"
+    assert call.data["percentage"] == 100
 
     await assert_percentage_changes(
         hass,
-        [("high", "-5"), ("off", "5"), ("low", "-80"), ("medium", "-34")],
+        [(95, "-5"), (100, "5"), (20, "-80"), (66, "-34")],
         "Alexa.PercentageController",
         "AdjustPercentage",
         "fan#test_2",
         "percentageDelta",
-        "fan.set_speed",
-        "speed",
+        "fan.set_percentage",
+        "percentage",
     )
 
     call, _ = await assert_request_calls_service(
         "Alexa.PowerLevelController",
         "SetPowerLevel",
         "fan#test_2",
-        "fan.set_speed",
+        "fan.set_percentage",
         hass,
         payload={"powerLevel": "20"},
     )
-    assert call.data["speed"] == "low"
+    assert call.data["percentage"] == 20
 
     call, _ = await assert_request_calls_service(
         "Alexa.PowerLevelController",
         "SetPowerLevel",
         "fan#test_2",
-        "fan.set_speed",
+        "fan.set_percentage",
         hass,
         payload={"powerLevel": "50"},
     )
-    assert call.data["speed"] == "medium"
+    assert call.data["percentage"] == 50
 
     call, _ = await assert_request_calls_service(
         "Alexa.PowerLevelController",
         "SetPowerLevel",
         "fan#test_2",
-        "fan.set_speed",
+        "fan.set_percentage",
         hass,
         payload={"powerLevel": "99"},
     )
-    assert call.data["speed"] == "high"
+    assert call.data["percentage"] == 99
 
     await assert_percentage_changes(
         hass,
-        [("high", "-5"), ("medium", "-50"), ("low", "-80")],
+        [(95, "-5"), (50, "-50"), (20, "-80")],
         "Alexa.PowerLevelController",
         "AdjustPowerLevel",
         "fan#test_2",
         "powerLevelDelta",
-        "fan.set_speed",
-        "speed",
+        "fan.set_percentage",
+        "percentage",
     )
 
 
