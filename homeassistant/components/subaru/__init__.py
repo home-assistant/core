@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 import time
 
-from subarulink import Controller as SubaruAPI, SubaruException
+from subarulink import Controller as SubaruAPI, InvalidCredentials, SubaruException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -65,6 +65,9 @@ async def async_setup_entry(hass, entry):
         )
         _LOGGER.debug("Using subarulink %s", controller.version)
         await controller.connect()
+    except InvalidCredentials:
+        _LOGGER.error("Invalid account")
+        return False
     except SubaruException as err:
         raise ConfigEntryNotReady(err.message) from err
 

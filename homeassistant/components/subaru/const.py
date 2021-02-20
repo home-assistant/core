@@ -23,6 +23,8 @@ VEHICLE_HAS_REMOTE_START = "has_res"
 VEHICLE_HAS_REMOTE_SERVICE = "has_remote"
 VEHICLE_HAS_SAFETY_SERVICE = "has_safety"
 VEHICLE_LAST_UPDATE = "last_update"
+VEHICLE_STATUS = "status"
+
 
 API_GEN_1 = "g1"
 API_GEN_2 = "g2"
@@ -36,10 +38,8 @@ SUPPORTED_PLATFORMS = [
 ICONS = {
     "12V Battery Voltage": "mdi:car-battery",
     "Avg Fuel Consumption": "mdi:leaf",
-    "EV Battery Level": "mdi:battery-high",
     "EV Time to Full Charge": "mdi:car-electric",
     "EV Range": "mdi:ev-station",
-    "External Temp": "mdi:thermometer",
     "Odometer": "mdi:road-variant",
     "Range": "mdi:gas-station",
     "Tire Pressure FL": "mdi:gauge",

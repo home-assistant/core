@@ -1,7 +1,11 @@
 """Support for Subaru sensors."""
 import subarulink.const as sc
 
+from homeassistant.components.sensor import DEVICE_CLASSES
 from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     PERCENTAGE,
@@ -30,6 +34,7 @@ from .const import (
     VEHICLE_API_GEN,
     VEHICLE_HAS_EV,
     VEHICLE_HAS_SAFETY_SERVICE,
+    VEHICLE_STATUS,
 )
 from .entity import SubaruEntity
 
@@ -42,6 +47,7 @@ FUEL_CONSUMPTION_MPG = "mi/gal"
 FUEL_CONSUMPTION_UNITS = [FUEL_CONSUMPTION_L_PER_100KM, FUEL_CONSUMPTION_MPG]
 
 SENSOR_TYPE = "type"
+SENSOR_CLASS = "class"
 SENSOR_FIELD = "field"
 SENSOR_UNITS = "units"
 
@@ -49,6 +55,7 @@ SENSOR_UNITS = "units"
 SAFETY_SENSORS = [
     {
         SENSOR_TYPE: "Odometer",
+        SENSOR_CLASS: None,
         SENSOR_FIELD: sc.ODOMETER,
         SENSOR_UNITS: LENGTH_KILOMETERS,
     },
@@ -58,41 +65,49 @@ SAFETY_SENSORS = [
 API_GEN_2_SENSORS = [
     {
         SENSOR_TYPE: "Avg Fuel Consumption",
+        SENSOR_CLASS: None,
         SENSOR_FIELD: sc.AVG_FUEL_CONSUMPTION,
         SENSOR_UNITS: FUEL_CONSUMPTION_L_PER_100KM,
     },
     {
         SENSOR_TYPE: "Range",
+        SENSOR_CLASS: None,
         SENSOR_FIELD: sc.DIST_TO_EMPTY,
         SENSOR_UNITS: LENGTH_KILOMETERS,
     },
     {
         SENSOR_TYPE: "Tire Pressure FL",
+        SENSOR_CLASS: None,
         SENSOR_FIELD: sc.TIRE_PRESSURE_FL,
         SENSOR_UNITS: PRESSURE_HPA,
     },
     {
         SENSOR_TYPE: "Tire Pressure FR",
+        SENSOR_CLASS: None,
         SENSOR_FIELD: sc.TIRE_PRESSURE_FR,
         SENSOR_UNITS: PRESSURE_HPA,
     },
     {
         SENSOR_TYPE: "Tire Pressure RL",
+        SENSOR_CLASS: None,
         SENSOR_FIELD: sc.TIRE_PRESSURE_RL,
         SENSOR_UNITS: PRESSURE_HPA,
     },
     {
         SENSOR_TYPE: "Tire Pressure RR",
+        SENSOR_CLASS: None,
         SENSOR_FIELD: sc.TIRE_PRESSURE_RR,
         SENSOR_UNITS: PRESSURE_HPA,
     },
     {
         SENSOR_TYPE: "External Temp",
+        SENSOR_CLASS: DEVICE_CLASS_TEMPERATURE,
         SENSOR_FIELD: sc.EXTERNAL_TEMP,
         SENSOR_UNITS: TEMP_CELSIUS,
     },
     {
         SENSOR_TYPE: "12V Battery Voltage",
+        SENSOR_CLASS: DEVICE_CLASS_VOLTAGE,
         SENSOR_FIELD: sc.BATTERY_VOLTAGE,
         SENSOR_UNITS: VOLT,
     },
@@ -102,16 +117,19 @@ API_GEN_2_SENSORS = [
 EV_SENSORS = [
     {
         SENSOR_TYPE: "EV Range",
+        SENSOR_CLASS: None,
         SENSOR_FIELD: sc.EV_DISTANCE_TO_EMPTY,
         SENSOR_UNITS: LENGTH_MILES,
     },
     {
         SENSOR_TYPE: "EV Battery Level",
+        SENSOR_CLASS: DEVICE_CLASS_BATTERY,
         SENSOR_FIELD: sc.EV_STATE_OF_CHARGE_PERCENT,
         SENSOR_UNITS: PERCENTAGE,
     },
     {
         SENSOR_TYPE: "EV Time to Full Charge",
+        SENSOR_CLASS: None,
         SENSOR_FIELD: sc.EV_TIME_TO_FULLY_CHARGED,
         SENSOR_UNITS: TIME_MINUTES,
     },
@@ -124,11 +142,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     vehicle_info = hass.data[DOMAIN][config_entry.entry_id][ENTRY_VEHICLES]
     entities = []
     for vin in vehicle_info.keys():
-        _create_sensor_entities(entities, vehicle_info[vin], coordinator)
+        entities.extend(create_vehicle_sensors(vehicle_info[vin], coordinator))
     async_add_entities(entities, True)
 
 
-def _create_sensor_entities(entities, vehicle_info, coordinator):
+def create_vehicle_sensors(vehicle_info, coordinator):
+    """Instantiate all available sensors for the vehicle."""
     sensors_to_add = []
     if vehicle_info[VEHICLE_HAS_SAFETY_SERVICE]:
         sensors_to_add.extend(SAFETY_SENSORS)
@@ -139,44 +158,60 @@ def _create_sensor_entities(entities, vehicle_info, coordinator):
         if vehicle_info[VEHICLE_HAS_EV]:
             sensors_to_add.extend(EV_SENSORS)
 
-    for subaru_sensor in sensors_to_add:
-        entities.append(
-            SubaruSensor(
-                vehicle_info,
-                coordinator,
-                subaru_sensor[SENSOR_TYPE],
-                subaru_sensor[SENSOR_FIELD],
-                subaru_sensor[SENSOR_UNITS],
-            )
+    return [
+        SubaruSensor(
+            vehicle_info,
+            coordinator,
+            s[SENSOR_TYPE],
+            s[SENSOR_CLASS],
+            s[SENSOR_FIELD],
+            s[SENSOR_UNITS],
         )
+        for s in sensors_to_add
+    ]
 
 
 class SubaruSensor(SubaruEntity):
     """Class for Subaru sensors."""
 
-    def __init__(self, vehicle_info, coordinator, entity_type, data_field, api_unit):
+    def __init__(
+        self, vehicle_info, coordinator, entity_type, sensor_class, data_field, api_unit
+    ):
         """Initialize the sensor."""
         super().__init__(vehicle_info, coordinator)
         self.hass_type = "sensor"
         self.current_value = None
         self.entity_type = entity_type
+        self.sensor_class = sensor_class
         self.data_field = data_field
         self.api_unit = api_unit
 
     @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return (
+            self.sensor_class
+            if self.sensor_class in DEVICE_CLASSES
+            else super().device_class
+        )
+
+    @property
     def icon(self):
         """Return icon for sensor."""
-        if self.entity_type == "EV Battery Level" and self.coordinator.data.get(
-            self.vin
+        if not (
+            self.entity_type == "EV Battery Level"
+            and self.coordinator.data.get(self.vin)
         ):
-            charge_status = (
-                self.coordinator.data[self.vin]["status"].get(sc.EV_CHARGER_STATE_TYPE)
-                == "CHARGING"
+            return super().icon
+        charge_status = (
+            self.coordinator.data[self.vin][VEHICLE_STATUS].get(
+                sc.EV_CHARGER_STATE_TYPE
             )
-            return icon_for_battery_level(
-                battery_level=self.current_value, charging=charge_status
-            )
-        return super().icon
+            == sc.CHARGING
+        )
+        return icon_for_battery_level(
+            battery_level=self.current_value, charging=charge_status
+        )
 
     @property
     def state(self):
@@ -240,7 +275,7 @@ class SubaruSensor(SubaruEntity):
 
     def get_current_value(self):
         """Get raw value from the coordinator."""
-        value = self.coordinator.data[self.vin]["status"].get(self.data_field)
+        value = self.coordinator.data[self.vin][VEHICLE_STATUS].get(self.data_field)
         if value in sc.BAD_SENSOR_VALUES:
             value = None
         if isinstance(value, str):

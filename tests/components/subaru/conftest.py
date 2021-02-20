@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 import pytest
-from subarulink import InvalidCredentials
 from subarulink.const import COUNTRY_USA
 
 from homeassistant.components.subaru.const import (
@@ -70,7 +69,7 @@ async def setup_subaru_integration(
     vehicle_list=None,
     vehicle_data=None,
     vehicle_status=None,
-    connect_success=True,
+    connect_effect=None,
 ):
     """Create Subaru entry."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -85,10 +84,8 @@ async def setup_subaru_integration(
 
     with patch(
         MOCK_API_CONNECT,
-        return_value=connect_success,
-        side_effect=None
-        if connect_success
-        else InvalidCredentials("Invalid Credentials"),
+        return_value=connect_effect is None,
+        side_effect=connect_effect,
     ), patch(MOCK_API_GET_VEHICLES, return_value=vehicle_list,), patch(
         MOCK_API_VIN_TO_NAME,
         return_value=vehicle_data[VEHICLE_NAME],

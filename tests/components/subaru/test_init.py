@@ -1,7 +1,7 @@
 """Test Subaru component setup and updates."""
 from unittest.mock import patch
 
-from subarulink import SubaruException
+from subarulink import InvalidCredentials, SubaruException
 
 from homeassistant.components.subaru.const import (
     DOMAIN,
@@ -11,6 +11,7 @@ from homeassistant.components.subaru.const import (
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
+    ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
 )
 from homeassistant.setup import async_setup_component
@@ -70,10 +71,10 @@ async def test_setup_g1(hass):
 
 
 async def test_unsuccessful_connect(hass):
-    """Test that entry is not loaded after unsuccessful connection."""
+    """Test unsuccessful connect due to connectivity."""
     entry = await setup_subaru_integration(
         hass,
-        connect_success=False,
+        connect_effect=SubaruException("Service Unavailable"),
         vehicle_list=[TEST_VIN_2_EV],
         vehicle_data=VEHICLE_DATA[TEST_VIN_2_EV],
         vehicle_status=VEHICLE_STATUS_EV,
@@ -81,6 +82,20 @@ async def test_unsuccessful_connect(hass):
     check_entry = hass.config_entries.async_get_entry(entry.entry_id)
     assert check_entry
     assert check_entry.state == ENTRY_STATE_SETUP_RETRY
+
+
+async def test_invalid_credentials(hass):
+    """Test invalid credentials."""
+    entry = await setup_subaru_integration(
+        hass,
+        connect_effect=InvalidCredentials("Invalid Credentials"),
+        vehicle_list=[TEST_VIN_2_EV],
+        vehicle_data=VEHICLE_DATA[TEST_VIN_2_EV],
+        vehicle_status=VEHICLE_STATUS_EV,
+    )
+    check_entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert check_entry
+    assert check_entry.state == ENTRY_STATE_SETUP_ERROR
 
 
 async def test_update_skip_unsubscribed(hass):
