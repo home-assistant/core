@@ -30,7 +30,9 @@ async def test_user_form(hass: core.HomeAssistant):
 
     with patch_bond_version(
         return_value={"bondid": "test-bond-id"}
-    ), patch_bond_device_ids(), patch_bond_bridge(), _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+    ), patch_bond_device_ids(
+        return_value=["f6776c11", "f6776c12"]
+    ), patch_bond_bridge(), patch_bond_device_properties(), patch_bond_device(), _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
