@@ -352,7 +352,7 @@ async def test_hls_playlist_view_discontinuity(hass, hls_stream, stream_worker_s
 
     stream = create_stream(hass, STREAM_SOURCE)
     stream_worker_sync.pause()
-    hls = stream.hls_output()
+    hls = stream.add_provider("hls")
 
     hls.put(Segment(1, SEQUENCE_BYTES, DURATION, stream_id=0))
     hls.put(Segment(2, SEQUENCE_BYTES, DURATION, stream_id=0))
@@ -382,7 +382,7 @@ async def test_hls_max_segments_discontinuity(hass, hls_stream, stream_worker_sy
 
     stream = create_stream(hass, STREAM_SOURCE)
     stream_worker_sync.pause()
-    hls = stream.hls_output()
+    hls = stream.add_provider("hls")
 
     hls_client = await hls_stream(stream)
 
