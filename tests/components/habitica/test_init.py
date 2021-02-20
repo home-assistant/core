@@ -1,5 +1,9 @@
 """Test the habitica init module."""
-from homeassistant.components.habitica.const import DEFAULT_URL, DOMAIN
+from homeassistant.components.habitica.const import (
+    DEFAULT_URL,
+    DOMAIN,
+    SERVICE_API_CALL,
+)
 
 from tests.common import MockConfigEntry
 
@@ -25,4 +29,8 @@ async def test_entry_setup_unload(hass, aioclient_mock):
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    assert hass.services.has_service(DOMAIN, SERVICE_API_CALL)
+
     assert await hass.config_entries.async_unload(entry.entry_id)
+
+    assert not hass.services.has_service(DOMAIN, SERVICE_API_CALL)
