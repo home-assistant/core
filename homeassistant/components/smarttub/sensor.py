@@ -25,11 +25,6 @@ class SmartTubState(SmartTubEntity):
         super().__init__(coordinator, spa, "state")
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique id for the entity."""
-        return f"{self.spa.id}-{self._entity_type}"
-
-    @property
     def state(self) -> str:
         """Return the current state of the sensor."""
         return self.get_spa_status("state").lower()
