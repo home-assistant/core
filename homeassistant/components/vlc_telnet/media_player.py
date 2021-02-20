@@ -246,8 +246,8 @@ class VlcDevice(MediaPlayerEntity):
             return
 
         current_volume = self._volume
-        if current_volume < MAX_VOLUME:
-            new_volume = min(current_volume + 0.05, MAX_VOLUME)
+        if current_volume < 1.0:
+            new_volume = min(current_volume + 0.05, 1.0)
             self.set_volume_level(new_volume)
 
     def volume_down(self):
