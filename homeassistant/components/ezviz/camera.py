@@ -7,15 +7,18 @@ from typing import Callable, List
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import voluptuous as vol
 
-from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    ACC_PASSWORD,
+    ACC_USERNAME,
     ATTR_CAMERAS,
     ATTR_DIRECTION,
     ATTR_LEVEL,
@@ -25,6 +28,7 @@ from .const import (
     DATA_COORDINATOR,
     DEFAULT_CAMERA_USERNAME,
     DEFAULT_FFMPEG_ARGUMENTS,
+    DEFAULT_REGION,
     DEFAULT_RTSP_PORT,
     DIR_DOWN,
     DIR_LEFT,
@@ -35,19 +39,49 @@ from .const import (
 )
 from .coordinator import EzvizDataUpdateCoordinator
 
+CAMERA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(ACC_USERNAME): cv.string,
+        vol.Required(ACC_PASSWORD): cv.string,
+        vol.Optional(CONF_REGION, default=DEFAULT_REGION): cv.string,
+        vol.Optional(ATTR_CAMERAS, default={}): {cv.string: CAMERA_SCHEMA},
+    }
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_SESSION_RENEW = timedelta(seconds=90)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up a Ezviz IP Camera from platform config."""
+    _LOGGER.warning(
+        "Loading ezviz via platform config is deprecated, it will be automatically imported. Please remove it afterwards."
+    )
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
 
 async def async_setup_entry(
     hass, entry, async_add_entities: Callable[[List[Entity], bool], None]
 ) -> None:
     """Set up Ezviz cameras based on a config entry."""
+
     coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         DATA_COORDINATOR
     ]
-    conf_cameras = hass.data[DOMAIN]["config"][ATTR_CAMERAS]
+
+    conf_cameras = entry.data.get("cameras", {})
     ffmpeg_arguments = entry.options.get(
         CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
     )

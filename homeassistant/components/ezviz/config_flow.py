@@ -42,7 +42,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         Data has the keys from DATA_SCHEMA with values provided by the user.
         """
-
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if (
                 entry.data[CONF_USERNAME] == data[CONF_USERNAME]

@@ -5,44 +5,21 @@ import logging
 
 from pyezviz.client import EzvizClient
 from requests import ConnectTimeout, HTTPError
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
-    ACC_PASSWORD,
-    ACC_USERNAME,
-    ATTR_CAMERAS,
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
     DATA_UNDO_UPDATE_LISTENER,
     DEFAULT_FFMPEG_ARGUMENTS,
-    DEFAULT_REGION,
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
 from .coordinator import EzvizDataUpdateCoordinator
-
-CAMERA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
-)
-
-EZVIZ_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Optional(ACC_USERNAME): cv.string,
-            vol.Optional(ACC_PASSWORD): cv.string,
-            vol.Optional(CONF_REGION, default=DEFAULT_REGION): cv.string,
-            vol.Optional(ATTR_CAMERAS, default={}): {cv.string: CAMERA_SCHEMA},
-        }
-    )
-)
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: EZVIZ_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,23 +31,6 @@ PLATFORMS = ["camera", "sensor", "binary_sensor", "switch"]
 async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
     """Set up the Ezviz integration."""
     hass.data.setdefault(DOMAIN, {})
-    conf = config.get(DOMAIN, EZVIZ_SCHEMA({}))
-    hass.data[DOMAIN] = {"config": conf}
-
-    if hass.config_entries.async_entries(DOMAIN):
-        return True
-
-    if ACC_USERNAME or ACC_PASSWORD or CONF_REGION not in conf:
-        return True
-
-    if ACC_USERNAME or ACC_PASSWORD or CONF_REGION in conf:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config[DOMAIN],
-            )
-        )
 
     return True
 
