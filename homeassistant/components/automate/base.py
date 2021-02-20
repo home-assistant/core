@@ -31,6 +31,7 @@ class AutomateBase(entity.Entity):
         """Return True if roller and hub is available."""
         return self.roller.online and self.roller.hub.connected
 
+    # pylint: disable=no-self-use
     def include_entity(self) -> bool:
         """Return True (default) if entity should be included.
 
