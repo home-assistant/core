@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from croniter import croniter
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -14,6 +15,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_TARIFF,
+    CONF_CRON_PATTERN,
     CONF_METER,
     CONF_METER_NET_CONSUMPTION,
     CONF_METER_OFFSET,
@@ -40,6 +42,13 @@ ATTR_TARIFFS = "tariffs"
 DEFAULT_OFFSET = timedelta(hours=0)
 
 
+def validate_cron_pattern(pattern):
+    """Check that the pattern is well-formed."""
+    if croniter.is_valid(pattern):
+        return pattern
+    raise vol.Invalid("Invalid pattern")
+
+
 METER_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
@@ -50,6 +59,7 @@ METER_CONFIG_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
         vol.Optional(CONF_TARIFFS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_CRON_PATTERN): validate_cron_pattern,
     }
 )
 

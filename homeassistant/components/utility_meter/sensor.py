@@ -1,8 +1,9 @@
 """Utility meter from sensors providing raw data."""
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal, DecimalException
 import logging
 
+from croniter import croniter
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -25,6 +26,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
+    async_track_point_in_time,
     async_track_state_change_event,
     async_track_time_change,
 )
@@ -34,6 +36,7 @@ import homeassistant.util.dt as dt_util
 from .const import (
     ATTR_VALUE,
     BIMONTHLY,
+    CONF_CRON_PATTERN,
     CONF_METER,
     CONF_METER_NET_CONSUMPTION,
     CONF_METER_OFFSET,
@@ -91,6 +94,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         conf_meter_tariff_entity = hass.data[DATA_UTILITY][meter].get(
             CONF_TARIFF_ENTITY
         )
+        conf_cron_pattern = hass.data[DATA_UTILITY][meter].get(CONF_CRON_PATTERN)
 
         meters.append(
             UtilityMeterSensor(
@@ -101,6 +105,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 conf_meter_net_consumption,
                 conf.get(CONF_TARIFF),
                 conf_meter_tariff_entity,
+                conf_cron_pattern,
             )
         )
 
@@ -127,6 +132,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         net_consumption,
         tariff=None,
         tariff_entity=None,
+        cron_pattern=None,
     ):
         """Initialize the Utility Meter sensor."""
         self._sensor_source_id = source_entity
@@ -141,6 +147,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         self._unit_of_measurement = None
         self._period = meter_type
         self._period_offset = meter_offset
+        self._cron_pattern = cron_pattern
         self._sensor_net_consumption = net_consumption
         self._tariff = tariff
         self._tariff_entity = tariff_entity
@@ -207,29 +214,33 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
     async def _async_reset_meter(self, event):
         """Determine cycle - Helper function for larger than daily cycles."""
         now = dt_util.now().date()
-        if (
+        if self._cron_pattern is not None:
+            pass
+        elif (
             self._period == WEEKLY
             and now != now - timedelta(days=now.weekday()) + self._period_offset
         ):
             return
-        if (
+        elif (
             self._period == MONTHLY
             and now != date(now.year, now.month, 1) + self._period_offset
         ):
             return
-        if (
+        elif (
             self._period == BIMONTHLY
             and now
             != date(now.year, (((now.month - 1) // 2) * 2 + 1), 1) + self._period_offset
         ):
             return
-        if (
+        elif (
             self._period == QUARTERLY
             and now
             != date(now.year, (((now.month - 1) // 3) * 3 + 1), 1) + self._period_offset
         ):
             return
-        if self._period == YEARLY and now != date(now.year, 1, 1) + self._period_offset:
+        elif (
+            self._period == YEARLY and now != date(now.year, 1, 1) + self._period_offset
+        ):
             return
         await self.async_reset_meter(self._tariff_entity)
 
@@ -253,7 +264,13 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
 
-        if self._period == QUARTER_HOURLY:
+        if self._cron_pattern is not None:
+            async_track_point_in_time(
+                self.hass,
+                self._async_reset_meter,
+                croniter(self._cron_pattern, dt_util.now()).get_next(datetime),
+            )
+        elif self._period == QUARTER_HOURLY:
             for quarter in range(4):
                 async_track_time_change(
                     self.hass,

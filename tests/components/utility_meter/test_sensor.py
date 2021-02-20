@@ -422,6 +422,22 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         assert state.attributes.get("last_reset") == start_time_str
 
 
+async def test_self_reset_cron_pattern(hass, legacy_patchable_time):
+    """Test cron pattern reset of meter."""
+    config = gen_config("yearly")  # ignored because cron is defined
+    config["utility_meter"]["energy_bill"]["cron"] = "0 0 1 * *"
+
+    await _test_self_reset(hass, config, "2017-01-31T23:59:00.000000+00:00")
+
+
+async def test_bad_cron_pattern(hass, legacy_patchable_time):
+    """Test cron pattern reset of meter."""
+    config = gen_config("hourly")
+    config["utility_meter"]["energy_bill"]["cron"] = "trash"
+
+    assert not await async_setup_component(hass, DOMAIN, config)
+
+
 async def test_self_reset_quarter_hourly(hass, legacy_patchable_time):
     """Test quarter-hourly reset of meter."""
     await _test_self_reset(

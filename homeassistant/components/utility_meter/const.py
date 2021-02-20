@@ -32,6 +32,7 @@ CONF_PAUSED = "paused"
 CONF_TARIFFS = "tariffs"
 CONF_TARIFF = "tariff"
 CONF_TARIFF_ENTITY = "tariff_entity"
+CONF_CRON_PATTERN = "cron"
 
 ATTR_TARIFF = "tariff"
 ATTR_VALUE = "value"
