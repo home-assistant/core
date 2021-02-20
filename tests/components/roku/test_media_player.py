@@ -74,7 +74,7 @@ TV_ENTITY_ID = f"{MP_DOMAIN}.58_onn_roku_tv"
 TV_HOST = "192.168.1.161"
 TV_LOCATION = "Living room"
 TV_MANUFACTURER = "Onn"
-TV_MODEL = ""
+TV_MODEL = "100005844"
 TV_SERIAL = "YN00H5555555"
 TV_SW_VERSION = "9.2.0"
 
@@ -322,9 +322,7 @@ async def test_tv_device_registry(
     )
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
-    reg_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TV_SERIAL)}
-    )
+    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TV_SERIAL)})
 
     assert reg_device.model == TV_MODEL
     assert reg_device.sw_version == TV_SW_VERSION
