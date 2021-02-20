@@ -42,11 +42,7 @@ class GaragesamsterdamSensor(CoordinatorEntity):
         self._unique_id = f"{garage_name}-{info_type}"
         self._garage_name = garage_name
         self._info_type = info_type
-        self._name = (
-            f"{self.coordinator.data[garage_name].garage_name} - {info_type}".replace(
-                "_", " "
-            )
-        )
+        self._name = f"{garage_name} - {info_type}".replace("_", " ")
 
     @property
     def name(self):

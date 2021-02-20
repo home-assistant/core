@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Unload a config entry."""
+    """Unload Garages Amsterdam config entry."""
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -41,6 +41,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
+
+    if len(hass.config_entries.async_entries(DOMAIN)) == 1:
+        hass.data.pop(DOMAIN)
 
     return unload_ok
 

@@ -35,7 +35,7 @@ class GaragesamsterdamBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._unique_id = f"{garage_name}-{info_type}"
         self._garage_name = garage_name
         self._info_type = info_type
-        self._name = f"{self.coordinator.data[garage_name].garage_name}"
+        self._name = garage_name
 
     @property
     def name(self):
@@ -51,8 +51,7 @@ class GaragesamsterdamBinarySensor(CoordinatorEntity, BinarySensorEntity):
     def is_on(self):
         """If the binary sensor is currently on or off."""
         return (
-            getattr(self.coordinator.data[self._garage_name], self._info_type)
-            == "error"
+            getattr(self.coordinator.data[self._garage_name], self._info_type) != "ok"
         )
 
     @property
