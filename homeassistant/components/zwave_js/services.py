@@ -19,11 +19,6 @@ from .entity import get_home_and_node_id_from_device_id
 _LOGGER = logging.getLogger(__name__)
 
 
-def convert_bitmask_to_int(value: str) -> int:
-    """Convert a bitmask (hex) to an integer."""
-    return int(value, 16)
-
-
 def parameter_name_does_not_need_bitmask(
     val: Dict[str, Union[int, str]]
 ) -> Dict[str, Union[int, str]]:
@@ -41,7 +36,7 @@ def parameter_name_does_not_need_bitmask(
 # Validates that a bitmask is provided in hex form and converts it to decimal
 # int equivalent since that's what the library uses
 BITMASK_SCHEMA = vol.All(
-    cv.string, vol.Lower, vol.Match(r"^(0x)?[0-9a-f]+$"), convert_bitmask_to_int
+    cv.string, vol.Lower, vol.Match(r"^(0x)?[0-9a-f]+$"), lambda value: int(value, 16)
 )
 
 
