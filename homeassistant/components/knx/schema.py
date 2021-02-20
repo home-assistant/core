@@ -240,6 +240,7 @@ class ClimateSchema:
     CONF_ON_OFF_INVERT = "on_off_invert"
     CONF_MIN_TEMP = "min_temp"
     CONF_MAX_TEMP = "max_temp"
+    CONF_CREATE_TEMPERATURE_SENSORS = "create_temperature_sensors"
 
     DEFAULT_NAME = "KNX Climate"
     DEFAULT_SETPOINT_SHIFT_MODE = "DPT6010"
@@ -295,6 +296,9 @@ class ClimateSchema:
                 ),
                 vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
                 vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
+                vol.Optional(
+                    CONF_CREATE_TEMPERATURE_SENSORS, default=False
+                ): cv.boolean,
             }
         ),
     )
@@ -397,13 +401,14 @@ class WeatherSchema:
     CONF_KNX_BRIGHTNESS_WEST_ADDRESS = "address_brightness_west"
     CONF_KNX_BRIGHTNESS_NORTH_ADDRESS = "address_brightness_north"
     CONF_KNX_WIND_SPEED_ADDRESS = "address_wind_speed"
+    CONF_KNX_WIND_BEARING_ADDRESS = "address_wind_bearing"
     CONF_KNX_RAIN_ALARM_ADDRESS = "address_rain_alarm"
     CONF_KNX_FROST_ALARM_ADDRESS = "address_frost_alarm"
     CONF_KNX_WIND_ALARM_ADDRESS = "address_wind_alarm"
     CONF_KNX_DAY_NIGHT_ADDRESS = "address_day_night"
     CONF_KNX_AIR_PRESSURE_ADDRESS = "address_air_pressure"
     CONF_KNX_HUMIDITY_ADDRESS = "address_humidity"
-    CONF_KNX_EXPOSE_SENSORS = "expose_sensors"
+    CONF_KNX_CREATE_SENSORS = "create_sensors"
 
     DEFAULT_NAME = "KNX Weather Station"
 
@@ -415,13 +420,14 @@ class WeatherSchema:
                 cv.boolean,
                 cv.string,
             ),
-            vol.Optional(CONF_KNX_EXPOSE_SENSORS, default=False): cv.boolean,
+            vol.Optional(CONF_KNX_CREATE_SENSORS, default=False): cv.boolean,
             vol.Required(CONF_KNX_TEMPERATURE_ADDRESS): cv.string,
             vol.Optional(CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS): cv.string,
             vol.Optional(CONF_KNX_BRIGHTNESS_EAST_ADDRESS): cv.string,
             vol.Optional(CONF_KNX_BRIGHTNESS_WEST_ADDRESS): cv.string,
             vol.Optional(CONF_KNX_BRIGHTNESS_NORTH_ADDRESS): cv.string,
             vol.Optional(CONF_KNX_WIND_SPEED_ADDRESS): cv.string,
+            vol.Optional(CONF_KNX_WIND_BEARING_ADDRESS): cv.string,
             vol.Optional(CONF_KNX_RAIN_ALARM_ADDRESS): cv.string,
             vol.Optional(CONF_KNX_FROST_ALARM_ADDRESS): cv.string,
             vol.Optional(CONF_KNX_WIND_ALARM_ADDRESS): cv.string,
