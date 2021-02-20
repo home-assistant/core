@@ -63,6 +63,7 @@ class Fan(HomeAccessory):
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         preset_modes = state.attributes.get(ATTR_PRESET_MODES)
         percentage_step = state.attributes.get(ATTR_PERCENTAGE_STEP, 1)
+        preset_modes = state.attributes.get(ATTR_PRESET_MODES)
 
         if features & SUPPORT_DIRECTION:
             chars.append(CHAR_ROTATION_DIRECTION)
