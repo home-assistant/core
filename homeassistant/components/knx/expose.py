@@ -27,9 +27,10 @@ def create_knx_exposure(
     attribute = config.get(ExposeSchema.CONF_KNX_EXPOSE_ATTRIBUTE)
     default = config.get(ExposeSchema.CONF_KNX_EXPOSE_DEFAULT)
     address = config.get(ExposeSchema.CONF_KNX_EXPOSE_ADDRESS)
+
+    exposure: Union["KNXExposeSensor", "KNXExposeTime"]
     if expose_type.lower() in ["time", "date", "datetime"]:
         exposure = KNXExposeTime(xknx, expose_type, address)
-        exposure.async_register()
     else:
         exposure = KNXExposeSensor(
             hass,
@@ -40,7 +41,7 @@ def create_knx_exposure(
             default,
             address,
         )
-        exposure.async_register()
+    exposure.async_register()
     return exposure
 
 
