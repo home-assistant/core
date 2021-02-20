@@ -5,6 +5,7 @@ from zwave_js_server.event import Event
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
@@ -19,10 +20,12 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     PRESET_NONE,
+    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
 )
+from homeassistant.components.zwave_js.climate import ATTR_FAN_STATE
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 
 CLIMATE_RADIO_THERMOSTAT_ENTITY = "climate.z_wave_thermostat"
@@ -50,6 +53,8 @@ async def test_thermostat_v2(
     assert state.attributes[ATTR_TEMPERATURE] == 22.2
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+    assert state.attributes[ATTR_FAN_MODE] == "Auto low"
+    assert state.attributes[ATTR_FAN_STATE] == "Idle / off"
 
     # Test setting preset mode
     await hass.services.async_call(
@@ -325,6 +330,57 @@ async def test_thermostat_v2(
             {
                 ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
                 ATTR_PRESET_MODE: "invalid_mode",
+            },
+            blocking=True,
+        )
+
+    client.async_send_command.reset_mock()
+
+    # Test setting fan mode
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ATTR_FAN_MODE: "Low",
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 13
+    assert args["valueId"] == {
+        "endpoint": 1,
+        "commandClass": 68,
+        "commandClassName": "Thermostat Fan Mode",
+        "property": "mode",
+        "propertyName": "mode",
+        "ccVersion": 0,
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "min": 0,
+            "max": 255,
+            "states": {"0": "Auto low", "1": "Low"},
+            "label": "Thermostat fan mode",
+        },
+        "value": 0,
+    }
+    assert args["value"] == 1
+
+    client.async_send_command.reset_mock()
+
+    # Test setting invalid fan mode
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {
+                ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+                ATTR_FAN_MODE: "fake value",
             },
             blocking=True,
         )
