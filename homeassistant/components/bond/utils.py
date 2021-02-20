@@ -2,6 +2,7 @@
 import logging
 from typing import List, Optional, Set
 
+from aiohttp import ClientResponseError
 from bond_api import Action, Bond
 
 from .const import BRIDGE_MAKE
@@ -105,7 +106,11 @@ class BondHub:
         """Read hub version information."""
         self._version = await self.bond.version()
         _LOGGER.debug("Bond reported the following version info: %s", self._version)
-        self._bridge = await self.bond.bridge()
+        try:
+            # Smart by bond devices do not have a bridge api call
+            self._bridge = await self.bond.bridge()
+        except ClientResponseError:
+            self._bridge = {}
         _LOGGER.debug("Bond reported the following bridge info: %s", self._bridge)
         # Fetch all available devices using Bond API.
         device_ids = await self.bond.devices()
