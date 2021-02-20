@@ -11,7 +11,6 @@ from .const import (
     MIN_SEGMENT_DURATION,
     OUTPUT_AUDIO_CODECS,
     OUTPUT_CONTAINER_FORMAT,
-    OUTPUT_VIDEO_CODECS,
     PACKETS_TO_WAIT_FOR_AUDIO,
     STREAM_TIMEOUT,
 )
@@ -20,15 +19,16 @@ from .core import Segment, StreamBuffer
 _LOGGER = logging.getLogger(__name__)
 
 
-def create_stream_buffer(stream_output, video_stream, audio_stream, sequence):
+def create_stream_buffer(video_stream, audio_stream, sequence):
     """Create a new StreamBuffer."""
 
     segment = io.BytesIO()
-    container_options = (
-        stream_output.container_options(sequence)
-        if stream_output.container_options
-        else {}
-    )
+    container_options = {
+        # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
+        "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont",
+        "avoid_negative_ts": "make_non_negative",
+        "fragment_index": str(sequence),
+    }
     output = av.open(
         segment,
         mode="w",
@@ -73,14 +73,10 @@ class SegmentBuffer:
 
         # Fetch the latest StreamOutputs, which may have changed since the
         # worker started.
-        self._outputs = []
-        for stream_output in self._outputs_callback():
-            if self._video_stream.name not in OUTPUT_VIDEO_CODECS:
-                continue
-            buffer = create_stream_buffer(
-                stream_output, self._video_stream, self._audio_stream, self._sequence
-            )
-            self._outputs.append((buffer, stream_output))
+        self._outputs = self._outputs_callback()
+        self._stream_buffer = create_stream_buffer(
+            self._video_stream, self._audio_stream, self._sequence
+        )
 
     def mux_packet(self, packet):
         """Mux a packet to the appropriate StreamBuffers."""
@@ -96,22 +92,21 @@ class SegmentBuffer:
                 self.reset(packet.pts)
 
         # Mux the packet
-        for (buffer, _) in self._outputs:
-            if packet.stream == self._video_stream:
-                packet.stream = buffer.vstream
-            elif packet.stream == self._audio_stream:
-                packet.stream = buffer.astream
-            else:
-                continue
-            buffer.output.mux(packet)
+        if packet.stream == self._video_stream:
+            packet.stream = self._stream_buffer.vstream
+            self._stream_buffer.output.mux(packet)
+        elif packet.stream == self._audio_stream:
+            packet.stream = self._stream_buffer.astream
+            self._stream_buffer.output.mux(packet)
 
     def flush(self, duration):
         """Create a segment from the buffered packets and write to output."""
-        for (buffer, stream_output) in self._outputs:
-            buffer.output.close()
-            stream_output.put(
-                Segment(self._sequence, buffer.segment, duration, self._stream_id)
-            )
+        self._stream_buffer.output.close()
+        segment = Segment(
+            self._sequence, self._stream_buffer.segment, duration, self._stream_id
+        )
+        for stream_output in self._outputs:
+            stream_output.put(segment)
 
     def discontinuity(self):
         """Mark the stream as having been restarted."""
@@ -121,9 +116,8 @@ class SegmentBuffer:
         self._stream_id += 1
 
     def close(self):
-        """Close all StreamBuffers."""
-        for (buffer, _) in self._outputs:
-            buffer.output.close()
+        """Close stream buffer."""
+        self._stream_buffer.output.close()
 
 
 def stream_worker(source, options, segment_buffer, quit_event):

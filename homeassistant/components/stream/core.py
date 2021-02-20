@@ -83,16 +83,6 @@ class StreamOutput(abc.ABC):
         """Initialize a stream output."""
         self._hass = hass
 
-    @property
-    def container_options(self) -> Callable[[int], dict]:
-        """Return Callable which takes a sequence number and returns container options."""
-        return lambda sequence: {
-            # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
-            "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont",
-            "avoid_negative_ts": "make_non_negative",
-            "fragment_index": str(sequence),
-        }
-
     def put(self, segment: Segment) -> None:
         """Store output."""
         self._hass.loop.call_soon_threadsafe(self._async_put, segment)
