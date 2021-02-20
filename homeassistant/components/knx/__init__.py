@@ -421,10 +421,10 @@ class KNXModule:
         if call.data.get(SERVICE_KNX_ATTR_REMOVE):
             try:
                 removed_exposure = self.service_exposures.pop(group_address)
-            except KeyError:
+            except KeyError as err:
                 raise HomeAssistantError(
-                    f"Service `knx.exposure_register` could not remove exposure for '{group_address}'."
-                )
+                    f"Could not find exposure for '{group_address}' to remove."
+                ) from err
             else:
                 removed_exposure.shutdown()
             return
