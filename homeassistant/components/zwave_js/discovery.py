@@ -83,6 +83,12 @@ class ZWaveDiscoverySchema:
     allow_multi: bool = False
 
 
+SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
+    command_class={CommandClass.SWITCH_MULTILEVEL},
+    property={"currentValue"},
+    type={"number"},
+)
+
 # For device class mapping see:
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/deviceClasses.json
 DISCOVERY_SCHEMAS = [
@@ -93,11 +99,7 @@ DISCOVERY_SCHEMAS = [
         manufacturer_id={0x0039},
         product_id={0x3131},
         product_type={0x4944},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # GE/Jasco fan controllers using switch multilevel CC
     ZWaveDiscoverySchema(
@@ -105,11 +107,7 @@ DISCOVERY_SCHEMAS = [
         manufacturer_id={0x0063},
         product_id={0x3034, 0x3131, 0x3138},
         product_type={0x4944},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # Leviton ZW4SF fan controllers using switch multilevel CC
     ZWaveDiscoverySchema(
@@ -117,50 +115,39 @@ DISCOVERY_SCHEMAS = [
         manufacturer_id={0x001D},
         product_id={0x0002},
         product_type={0x0038},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # Fibaro Shutter Fibaro FGS222
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="fibaro_fgs222",
         manufacturer_id={0x010F},
         product_id={0x1000},
         product_type={0x0302},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # Qubino flush shutter
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="fibaro_fgs222",
         manufacturer_id={0x0159},
         product_id={0x0052},
         product_type={0x0003},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # Graber/Bali/Spring Fashion Covers
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="fibaro_fgs222",
         manufacturer_id={0x026E},
         product_id={0x5A31},
         product_type={0x4353},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
+    # iBlinds v2 window blind motor
+    ZWaveDiscoverySchema(
+        platform="cover",
+        manufacturer_id={0x0287},
+        product_id={0x000D},
+        product_type={0x0003},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
@@ -248,11 +235,7 @@ DISCOVERY_SCHEMAS = [
             "Multilevel Scene Switch",
             "Unused",
         },
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # binary sensors
     ZWaveDiscoverySchema(
@@ -370,11 +353,7 @@ DISCOVERY_SCHEMAS = [
             "Motor Control Class C",
             "Multiposition Motor",
         },
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # cover
     # motorized barriers
@@ -400,11 +379,7 @@ DISCOVERY_SCHEMAS = [
         hint="fan",
         device_class_generic={"Multilevel Switch"},
         device_class_specific={"Fan Switch"},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
 ]
 
