@@ -39,6 +39,7 @@ class WemoEntity(Entity):
         self._state = None
         self._available = True
         self._update_lock = None
+        self._has_polled = False
 
     @property
     def name(self) -> str:
@@ -103,6 +104,7 @@ class WemoEntity(Entity):
         """Try updating within an async lock."""
         async with self._update_lock:
             await self.hass.async_add_executor_job(self._update, force_update)
+            self._has_polled = True
             # When the timeout expires HomeAssistant is no longer waiting for an
             # update from the device. Instead, the state needs to be updated
             # asynchronously. This also handles the case where an update came
@@ -135,6 +137,24 @@ class WemoSubscriptionEntity(WemoEntity):
     def is_on(self) -> bool:
         """Return true if the state is on. Standby is on."""
         return self._state
+
+    @property
+    def should_poll(self) -> bool:
+        """Return True if the the device requires local polling, False otherwise.
+
+        Polling can be disabled if three conditions are met:
+        1. The device has polled to get the initial state (self._has_polled).
+        2. The polling was successful and the device is in a healthy state
+           (self.available).
+        3. The pywemo subscription registry reports that there is an active
+           subscription and the subscription has been confirmed by receiving an
+           initial event. This confirms that device push notifications are
+           working correctly (registry.is_subscribed - this method is async safe).
+        """
+        registry = self.hass.data[WEMO_DOMAIN]["registry"]
+        return not (
+            self.available and self._has_polled and registry.is_subscribed(self.wemo)
+        )
 
     async def async_added_to_hass(self) -> None:
         """Wemo device added to Home Assistant."""
