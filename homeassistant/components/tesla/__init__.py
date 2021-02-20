@@ -53,11 +53,7 @@ def _async_save_tokens(hass, config_entry, access_token, refresh_token, expirati
 @callback
 def _async_configured_emails(hass):
     """Return a set of configured Tesla emails."""
-    return {
-        entry.data[CONF_USERNAME]
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if CONF_USERNAME in entry.data
-    }
+    return {entry.title for entry in hass.config_entries.async_entries(DOMAIN)}
 
 
 async def async_setup(hass, base_config):

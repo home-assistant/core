@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Text
 from aiohttp import web, web_response
 from aiohttp.web_exceptions import HTTPBadRequest
 from teslajsonpy import Controller as TeslaAPI
-from teslajsonpy.exceptions import TeslaException
+from teslajsonpy.exceptions import IncompleteCredentials, TeslaException
 from teslajsonpy.teslaproxy import TeslaProxy
 import voluptuous as vol
 from yarl import URL
@@ -209,8 +209,8 @@ async def validate_input(hass: core.HomeAssistant, data, controller: TeslaAPI = 
                 websession,
                 email=data.get(CONF_USERNAME),
                 password=data.get(CONF_PASSWORD),
-                refresh_token=data[CONF_TOKEN],
-                access_token=data[CONF_ACCESS_TOKEN],
+                refresh_token=data.get(CONF_TOKEN),
+                access_token=data.get(CONF_ACCESS_TOKEN),
                 expiration=data.get(CONF_EXPIRATION, 0),
                 update_interval=data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
             )
@@ -219,10 +219,10 @@ async def validate_input(hass: core.HomeAssistant, data, controller: TeslaAPI = 
             test_login=True,
         )
     except TeslaException as ex:
-        if ex.code == HTTP_UNAUTHORIZED:
-            _LOGGER.error("Invalid credentials: %s", ex)
+        if ex.code == HTTP_UNAUTHORIZED or isinstance(ex, IncompleteCredentials):
+            _LOGGER.error("Invalid credentials: %s", ex.message)
             raise InvalidAuth() from ex
-        _LOGGER.error("Unable to communicate with Tesla API: %s", ex)
+        _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
         raise CannotConnect() from ex
     _LOGGER.debug("Credentials successfully connected to the Tesla API")
     return config
