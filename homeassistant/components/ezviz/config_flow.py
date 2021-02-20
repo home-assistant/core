@@ -42,12 +42,8 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         Data has the keys from DATA_SCHEMA with values provided by the user.
         """
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if (
-                entry.data[CONF_USERNAME] == data[CONF_USERNAME]
-                and entry.data[CONF_PASSWORD] == data[CONF_PASSWORD]
-            ):
-                raise AbortFlow("already_configured")
+        await self.async_set_unique_id(data[CONF_USERNAME])
+        self._abort_if_unique_id_configured()
 
         # constructor does login call
         client = EzvizClient(
@@ -107,7 +103,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self._validate_and_create(import_config)
 
         except InvalidAuth:
-            _LOGGER.error("Error importing Ezviz platform config: invalid auth.")
+            _LOGGER.error("Error importing Ezviz platform config: invalid auth")
             return self.async_abort(reason="invalid_auth")
 
         except AbortFlow:
@@ -115,7 +111,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Error importing ezviz platform config: unexpected exception."
+                "Error importing ezviz platform config: unexpected exception"
             )
             return self.async_abort(reason="unknown")
 
