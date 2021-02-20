@@ -59,6 +59,7 @@ class SegmentBuffer:
         self._outputs = []
         self._sequence = 0
         self._segment_start_pts = None
+        self._stream_buffer = None
 
     def set_streams(self, video_stream, audio_stream):
         """Initialize output buffer with streams from container."""
