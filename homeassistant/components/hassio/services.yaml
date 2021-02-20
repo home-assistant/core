@@ -48,11 +48,17 @@ snapshot_full:
   description: Create a full snapshot.
   fields:
     name:
+      name: Name
       description: Optional or it will be the current date and time.
       example: "Snapshot 1"
+      selector:
+        text:
     password:
+      name: Password
       description: Optional password.
       example: "password"
+      selector:
+        text:
 
 snapshot_partial:
   description: Create a partial snapshot.
@@ -60,12 +66,23 @@ snapshot_partial:
     addons:
       description: Optional list of addon slugs.
       example: ["core_ssh", "core_samba", "core_mosquitto"]
+      selector:
+        object:
     folders:
+      name: Folders
       description: Optional list of directories.
       example: ["homeassistant", "share"]
+      selector:
+        object:
     name:
+      name: Name
       description: Optional or it will be the current date and time.
       example: "Partial Snapshot 1"
+      selector:
+        text:
     password:
+      name: Password
       description: Optional password.
       example: "password"
+      selector:
+        text:
