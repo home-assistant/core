@@ -376,6 +376,7 @@ class KNXModule:
             self.telegram_received_cb,
             address_filters=address_filters,
             group_addresses=[],
+            match_for_outgoing=True,
         )
 
     async def service_event_register_modify(self, call):
