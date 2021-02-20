@@ -1,4 +1,5 @@
 """Reusable utilities for the Bond component."""
+import asyncio
 import logging
 from typing import List, Optional
 
@@ -94,20 +95,23 @@ class BondHub:
         self._version: Optional[dict] = None
         self._devices: Optional[List[BondDevice]] = None
 
-    async def setup(self):
+    async def setup(self, max_devices=None):
         """Read hub version information."""
         self._version = await self.bond.version()
         _LOGGER.debug("Bond reported the following version info: %s", self._version)
         # Fetch all available devices using Bond API.
         device_ids = await self.bond.devices()
-        self._devices = [
-            BondDevice(
-                device_id,
-                await self.bond.device(device_id),
-                await self.bond.device_properties(device_id),
+        self._devices = []
+        for idx, device_id in enumerate(device_ids):
+            if max_devices is not None and idx >= max_devices:
+                break
+
+            device, props = await asyncio.gather(
+                self.bond.device(device_id), self.bond.device_properties(device_id)
             )
-            for device_id in device_ids
-        ]
+
+            self._devices.append(BondDevice(device_id, device, props))
+
         _LOGGER.debug("Discovered Bond devices: %s", self._devices)
         try:
             # Smart by bond devices do not have a bridge api call
@@ -119,7 +123,8 @@ class BondHub:
     @property
     def bond_id(self) -> str:
         """Return unique Bond ID for this hub."""
-        return self._version["bondid"]
+        # Old firmwares are missing the bondid
+        return self._version.get("bondid")
 
     @property
     def target(self) -> str:
