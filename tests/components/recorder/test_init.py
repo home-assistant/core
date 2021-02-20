@@ -16,14 +16,45 @@ from homeassistant.components.recorder import (
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import MATCH_ALL, STATE_LOCKED, STATE_UNLOCKED
-from homeassistant.core import Context, callback
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    MATCH_ALL,
+    STATE_LOCKED,
+    STATE_UNLOCKED,
+)
+from homeassistant.core import Context, CoreState, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import wait_recording_done
 
-from tests.common import fire_time_changed, get_test_home_assistant
+from tests.common import (
+    async_init_recorder_component,
+    fire_time_changed,
+    get_test_home_assistant,
+)
+
+
+async def test_shutdown_before_startup_finishes(hass):
+    """Test shutdown before recorder starts is clean."""
+
+    hass.state = CoreState.not_running
+
+    await async_init_recorder_component(hass)
+    await hass.async_block_till_done()
+
+    session = await hass.async_add_executor_job(hass.data[DATA_INSTANCE].get_session)
+
+    with patch.object(hass.data[DATA_INSTANCE], "engine"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+        hass.stop()
+
+    run_info = await hass.async_add_executor_job(run_information_with_session, session)
+
+    assert run_info.run_id == 1
+    assert run_info.start is not None
+    assert run_info.end is not None
 
 
 def test_saving_state(hass, hass_recorder):
