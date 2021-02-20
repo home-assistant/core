@@ -59,7 +59,7 @@ class AreaRegistry:
         normalized_name = normalize_area_name(name)
         if normalized_name not in self._normalized_name_area_idx:
             return None
-        return self.areas.get(self._normalized_name_area_idx[normalized_name])
+        return self.areas[self._normalized_name_area_idx[normalized_name]]
 
     @callback
     def async_list_areas(self) -> Iterable[AreaEntry]:
