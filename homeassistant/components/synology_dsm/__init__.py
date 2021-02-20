@@ -223,6 +223,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             async with async_timeout.timeout(10):
                 await hass.async_add_executor_job(surveillance_station.update)
         except SynologyDSMAPIErrorException as err:
+            _LOGGER.debug(
+                "async_coordinator_update_data_cameras() - exception: %s", err
+            )
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
         return {
@@ -246,6 +249,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         try:
             await api.async_update()
         except Exception as err:
+            _LOGGER.debug(
+                "async_coordinator_update_data_central() - exception: %s", err
+            )
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         return None
 
