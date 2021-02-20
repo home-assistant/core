@@ -216,7 +216,7 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
         return self._percentage
 
     @property
-    def speed_count(self) -> Optional[float]:
+    def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return 3
 
@@ -276,7 +276,7 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
         return self._percentage
 
     @property
-    def speed_count(self) -> Optional[float]:
+    def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return 3
 
