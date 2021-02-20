@@ -129,7 +129,7 @@ class BondHub:
         _LOGGER.debug("Bond reported the following bridge info: %s", self._bridge)
 
     @property
-    def bond_id(self) -> str:
+    def bond_id(self) -> Optional[str]:
         """Return unique Bond ID for this hub."""
         # Old firmwares are missing the bondid
         return self._version.get("bondid")
@@ -150,14 +150,14 @@ class BondHub:
         return self._version.get("make", BRIDGE_MAKE)
 
     @property
-    def name(self) -> str:
+    def name(self) -> Optional[str]:
         """Get the name of this bridge."""
         if not self.is_bridge and self._devices:
             return self._devices[0].name
         return self._bridge.get("name")
 
     @property
-    def location(self) -> str:
+    def location(self) -> Optional[str]:
         """Get the location of this bridge."""
         if not self.is_bridge and self._devices:
             return self._devices[0].location
