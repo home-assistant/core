@@ -62,8 +62,7 @@ async def test_user_form_with_non_bridge(hass: core.HomeAssistant):
         return_value=["f6776c11"]
     ), patch_bond_device_properties(), patch_bond_device(
         return_value={
-            "name": "Dining Room Fan by Front Door",
-            "location": "89 Dining Room",
+            "name": "New Fan",
         }
     ), patch_bond_bridge(
         return_value={}
@@ -75,7 +74,7 @@ async def test_user_form_with_non_bridge(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Dining Room Fan by Front Door (test-bond-id)"
+    assert result2["title"] == "New Fan (test-bond-id)"
     assert result2["data"] == {
         CONF_HOST: "some host",
         CONF_ACCESS_TOKEN: "test-token",
