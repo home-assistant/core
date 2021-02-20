@@ -24,21 +24,36 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import ATTR_MODE, CONF_HOST, CONF_NAME, CONF_PROTOCOL
+from homeassistant.const import (
+    ATTR_MODE,
+    ATTR_NAME,
+    CONF_DEVICES,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PROTOCOL,
+)
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.util import Throttle
 import homeassistant.util.color as color_util
 
 from .const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     CONF_AUTOMATIC_ADD,
-    CONF_DEVICES,
     CONF_EFFECT_SPEED,
     DEFAULT_EFFECT_SPEED,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    SIGNAL_ADD_DEVICE,
+    SIGNAL_REMOVE_DEVICE,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CUSTOM_EFFECT = "custom_effect"
 CONF_COLORS = "colors"
 CONF_SPEED_PCT = "speed_pct"
 CONF_TRANSITION = "transition"
@@ -47,10 +62,8 @@ CONF_CUSTOM_EFFECT = "custom_effect"
 SUPPORT_FLUX_LED = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_COLOR
 
 MODE_RGB = "rgb"
-MODE_WHITE = "w"
+MODE_RGBW = "rgbw"
 
-<<<<<<< HEAD
-=======
 # This mode enables white value to be controlled by brightness.
 # RGB value is ignored when this mode is specified.
 MODE_WHITE = "w"
@@ -59,7 +72,6 @@ MODE_WHITE = "w"
 # Warm-white and Cool-white modes
 COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF = 285
 
->>>>>>> Added back color temp. Catch for rgbwprotocol type. Fix pylint issue.
 # List of supported effects which aren't already declared in LIGHT
 EFFECT_RED_FADE = "red_fade"
 EFFECT_GREEN_FADE = "green_fade"
@@ -112,6 +124,45 @@ TRANSITION_STROBE = "strobe"
 
 FLUX_EFFECT_LIST = sorted(list(EFFECT_MAP)) + [EFFECT_RANDOM]
 
+CUSTOM_EFFECT_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_COLORS): vol.All(
+            cv.ensure_list,
+            vol.Length(min=1, max=16),
+            [
+                vol.All(
+                    vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
+                )
+            ],
+        ),
+        vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
+            vol.Range(min=0, max=100), vol.Coerce(int)
+        ),
+        vol.Optional(CONF_TRANSITION, default=TRANSITION_GRADUAL): vol.All(
+            cv.string, vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])
+        ),
+    }
+)
+
+DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(ATTR_MODE, default=MODE_RGBW): vol.All(
+            cv.string, vol.In([MODE_RGBW, MODE_RGB, MODE_WHITE])
+        ),
+        vol.Optional(CONF_PROTOCOL): vol.All(cv.string, vol.In(["ledenet"])),
+        vol.Optional(CONF_CUSTOM_EFFECT): CUSTOM_EFFECT_SCHEMA,
+    }
+)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
+        vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
+    }
+)
+
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the platform and manage importing from YAML."""
     automatic_add = config["automatic_add"]
@@ -119,7 +170,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     for import_host, import_item in config["devices"].items():
         import_name = import_host
-        import_name = import_item.get("name", import_host)
+        if import_item:
+            import_name = import_item.get("name", import_host)
 
         devices[import_host.replace(".", "_")] = {
             CONF_NAME: import_name,
@@ -134,6 +186,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             CONF_DEVICES: devices,
         },
     )
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Flux lights."""
@@ -172,209 +225,109 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_dispatcher_connect(hass, SIGNAL_ADD_DEVICE, async_new_lights)
 
+
 class FluxLight(LightEntity):
-    """Representation of a Flux light."""
-
-    def __init__(self, device):
-        """Initialize the light."""
-        self._name = device["name"]
-        self._ipaddr = device[CONF_HOST]
-        self._protocol = device[CONF_PROTOCOL]
-        self._mode = device[ATTR_MODE]
-        self._custom_effect = device[CONF_CUSTOM_EFFECT]
-        self._effect_speed = device[CONF_EFFECT_SPEED]
-        self._bulb = None
-        self._error_reported = False
-
-    def _connect(self):
-        """Connect to Flux light."""
-
-        self._bulb = WifiLedBulb(self._ipaddr, timeout=5)
-        if self._protocol:
-            self._bulb.setProtocol(self._protocol)
-
-        # After bulb object is created the status is updated. We can
-        # now set the correct mode if it was not explicitly defined.
-        if not self._mode:
-            if self._bulb.rgbwcapable:
-                self._mode = MODE_RGBW
-            else:
-                self._mode = MODE_RGB
-
-    def _disconnect(self):
-        """Disconnect from Flux light."""
-        self._bulb = None
-
-
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the Flux lights."""
-
-    async def async_new_lights(bulbs: dict):
-        """Add new bulbs when they are found or configured."""
-
-        lights = []
-
-        for bulb_id, bulb_details in bulbs.items():
-            effect_speed = entry.options.get(bulb_id, {}).get(
-                CONF_EFFECT_SPEED,
-                entry.options.get("global", {}).get(
-                    CONF_EFFECT_SPEED, DEFAULT_EFFECT_SPEED
-                ),
-            )
-
-    if config_auto:
-        # Find the bulbs on the LAN
-        scanner = BulbScanner()
-        await hass.async_add_executor_job(scanner.scan)
-
-        for device in scanner.getBulbInfo():
-            device_id = device["ipaddr"].replace(".", "_")
-                hass=hass,
-                name=bulb_details[CONF_NAME],
-                update_interval=DEFAULT_SCAN_INTERVAL,
-                ip_address=bulb_details[CONF_HOST],
-                scan_coordinator=bulb_coordinator,
-            )
-
-            await coordinator.async_refresh()
-
-            lights.append(
-                FluxLight(
-                    coordinator=coordinator,
-                    unique_id=bulb_id,
-                    device=bulb_details,
-                    effect_speed=effect_speed,
-                    hass=hass,
-                )
-            )
-
-        async_add_entities(lights)
-
-    await async_new_lights(entry.data[CONF_DEVICES])
-
-    async_dispatcher_connect(hass, SIGNAL_ADD_DEVICE, async_new_lights)
-
-
-class FluxLEDCoordinator(DataUpdateCoordinator):
-    """Update Coordinator for a specific light entity."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        name: str,
-        update_interval: int,
-        ip_address: str,
-        scan_coordinator: FluxLEDListUpdateCoordinator = None,
-    ):
-        """Initialize the update coordinator."""
-
-        super().__init__(
-            hass=hass,
-            logger=_LOGGER,
-            name=name,
-            update_interval=timedelta(milliseconds=update_interval),
-        )
-
-        self._ip_address = ip_address
-        self._name = name
-        self.scan_coordinator = scan_coordinator
-
-        self.light = WifiLedBulb(self._ip_address)
-
-    async def _async_update_data(self):
-        """Fetch the data from this light bulb."""
-
-        await self.hass.async_add_executor_job(self.light.update_state)
-
-        get_rgbw = await self.hass.async_add_executor_job(self.light.getRgbw)
-        get_rgb = await self.hass.async_add_executor_job(self.light.getRgb)
-
-        light = {}
-
-        if self.light.mode == "ww":
-            light["mode"] = MODE_WHITE
-        elif self.light.rgbwcapable:
-            light["mode"] = MODE_RGBW
-        else:
-            light["mode"] = MODE_RGB
-
-        light["white_value"] = get_rgbw[3]
-
-        if light["mode"] == MODE_WHITE:
-            light["brightness"] = light["white_value"]
-        else:
-            light["brightness"] = self.light.brightness
-
-        light["hs_color"] = color_util.color_RGB_to_hs(*get_rgb)
-
-        light["current_effect"] = self.light.raw_state[3]
-
-        if self.light.is_on and light["brightness"] > 0:
-            light["state"] = True
-        else:
-            light["state"] = False
-
-        return light
-
-
-class FluxLight(CoordinatorEntity, LightEntity):
     """Represents a Flux Light entity."""
 
-    def __init__(
-        self,
-        coordinator: FluxLEDCoordinator,
-        unique_id: str,
-        device: dict,
-        effect_speed: int,
-        hass: HomeAssistant,
-    ):
+    def __init__(self, unique_id: str, device: dict, effect_speed: int, bulb):
         """Initialize the Flux light entity."""
-        super().__init__(coordinator=coordinator)
-
         self._name = device[CONF_NAME]
         self._unique_id = unique_id
         self._icon = "mdi:lightbulb"
         self._attrs = {}
-        self._last_update = 0
         self._state = None
         self._brightness = None
         self._hs_color = None
-        self._bulb = coordinator.light
-        self._last_brightness = 255
-        self._last_hs_color = color_util.color_RGB_to_hs(255, 255, 255)
+        self._white_value = None
+        self._current_effect = None
+        self._last_brightness = None
+        self._last_hs_color = None
         self._ip_address = device[CONF_HOST]
         self._effect_speed = effect_speed
-        self._mode = coordinator.data["mode"]
+        self._mode = None
+        self._get_rgbw = None
+        self._get_rgb = None
+        self._bulb = bulb
 
-        async def async_remove_light(device: dict):
-            """Remove a bulb device when it is removed from options."""
+    async def async_remove_light(self, device: dict):
+        """Remove a bulb device when it is removed from options."""
 
-            bulb_id = device["device_id"]
+        bulb_id = device["device_id"]
 
-            if self._unique_id != bulb_id:
-                return
+        if self._unique_id != bulb_id:
+            return
 
-            entity_registry = await hass.helpers.entity_registry.async_get_registry()
-            entity_entry = entity_registry.async_get(self.entity_id)
+        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        entity_entry = entity_registry.async_get(self.entity_id)
 
-            device_registry = await hass.helpers.device_registry.async_get_registry()
-            device_entry = device_registry.async_get(entity_entry.device_id)
+        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_entry = device_registry.async_get(entity_entry.device_id)
 
-            if (
-                len(
-                    async_entries_for_device(
-                        entity_registry,
-                        entity_entry.device_id,
-                        include_disabled_entities=True,
-                    )
+        if (
+            len(
+                async_entries_for_device(
+                    entity_registry,
+                    entity_entry.device_id,
+                    include_disabled_entities=True,
                 )
-                == 1
-            ):
-                device_registry.async_remove_device(device_entry.id)
+            )
+            == 1
+        ):
+            # If only this entity exists on this device, remove the device.
+            device_registry.async_remove_device(device_entry.id)
 
-            entity_registry.async_remove(self.entity_id)
+        entity_registry.async_remove(self.entity_id)
 
-        async_dispatcher_connect(hass, SIGNAL_REMOVE_DEVICE, async_remove_light)
+    async def async_added_to_hass(self):
+        """Run when the entity is about to be added to hass."""
+        await super().async_added_to_hass()
+
+        async_dispatcher_connect(
+            self.hass, SIGNAL_REMOVE_DEVICE, self.async_remove_light
+        )
+
+    def update_bulb_info(self):
+        """Update the bulb information."""
+        self._bulb.update_state()
+        self._get_rgbw = self._bulb.getRgbw()
+        self._get_rgb = self._bulb.getRgb()
+
+    @Throttle(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    def update(self):
+        """Fetch the data from this light bulb."""
+
+        try:
+            self.update_bulb_info()
+        except BrokenPipeError as error:
+            _LOGGER.warning("Error updating flux_led: %s", error)
+            return
+
+        if self._bulb.mode == "ww":
+            self._mode = MODE_WHITE
+        elif self._bulb.rgbwcapable and not self._bulb.rgbwprotocol:
+            self._mode = MODE_RGBW
+        else:
+            self._mode = MODE_RGB
+
+        self._white_value = self._get_rgbw[3]
+
+        if self._mode == MODE_WHITE:
+            self._brightness = self._white_value
+        else:
+            self._brightness = self._bulb.brightness
+
+        self._hs_color = color_util.color_RGB_to_hs(*self._get_rgb)
+
+        self._current_effect = self._bulb.raw_state[3]
+
+        if self._bulb.is_on and self._brightness > 0:
+            self._state = True
+        else:
+            self._state = False
+
+        if self._state:
+            self._last_brightness = self._brightness
+            self._last_hs_color = self._hs_color
 
     @property
     def unique_id(self):
@@ -388,6 +341,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
 
     @property
     def is_on(self):
+        """Return true if the light is on."""
         return self._state
 
     @property
@@ -454,8 +408,8 @@ class FluxLight(CoordinatorEntity, LightEntity):
 
     def turn_on(self, **kwargs):
         """Turn on the light."""
-        rgb = None
 
+        rgb = None
         hs_color = kwargs.get(ATTR_HS_COLOR)
 
         if hs_color:
@@ -496,36 +450,19 @@ class FluxLight(CoordinatorEntity, LightEntity):
             return
 
         if effect in EFFECT_MAP:
-<<<<<<< HEAD
-<<<<<<< HEAD
+            self._current_effect = effect
             self._bulb.setPresetPattern(EFFECT_MAP[effect], self._effect_speed)
             return
-=======
-<<<<<<< HEAD
->>>>>>> Refactor flux led and add config_flow (#44320)
-=======
->>>>>>> Addressed PR comments.
-            self._bulb.setPresetPattern(EFFECT_MAP[effect], DEFAULT_SPEED)
+
+        if not brightness and not rgb and not self._state:
+            self._state = True
+            self._bulb.turnOn()
+            return
 
         if not brightness:
             brightness = self._last_brightness
 
         self._brightness = brightness
-<<<<<<< HEAD
-<<<<<<< HEAD
-            self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
-            return
-
-        self._last_brightness = brightness
-        self._brightness = brightness
-=======
-=======
-            self._bulb.setPresetPattern(EFFECT_MAP[effect], self._effect_speed)
-            return
->>>>>>> Refactor flux led and add config_flow (#44320)
->>>>>>> Refactor flux led and add config_flow (#44320)
-=======
->>>>>>> Addressed PR comments.
 
         if not rgb and self._last_hs_color:
             rgb = color_util.color_hs_to_RGB(*self._last_hs_color)
