@@ -22,6 +22,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
@@ -396,9 +397,8 @@ class KNXModule:
             try:
                 removed_exposure = self.service_exposures.pop(group_address)
             except KeyError:
-                _LOGGER.warning(
-                    "Service exposure_register could not remove exposure for '%s'",
-                    group_address,
+                raise HomeAssistantError(
+                    f"Service `knx.exposure_register` could not remove exposure for '{group_address}'."
                 )
             else:
                 removed_exposure.shutdown()
