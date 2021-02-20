@@ -1,4 +1,6 @@
 """Test the buienradar2 config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries
 from homeassistant.components.buienradar.const import (
     CONF_CAMERA,
@@ -10,7 +12,6 @@ from homeassistant.components.buienradar.const import (
 )
 from homeassistant.const import CONF_DOMAIN, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 TEST_LATITUDE = 51.65
