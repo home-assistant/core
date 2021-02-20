@@ -336,14 +336,14 @@ class DSMREntity(SensorEntity):
 
     @property
     def state(self):
-        """Return the state of sensor, if available, translate if needed."""
+        """Return the state of sensor, if available."""
         value = self.get_dsmr_object_attr("value")
 
         if self._obis == obis_ref.ELECTRICITY_ACTIVE_TARIFF:
             return self.translate_tariff(value)
-
-        with suppress(TypeError):
-            value = round(float(value), self._config[CONF_PRECISION])
+        else:
+            with suppress(TypeError):
+                value = round(float(value), self._config[CONF_PRECISION])
 
         if value is not None:
             return value
@@ -377,16 +377,6 @@ class DSMREntity(SensorEntity):
     def should_poll(self):
         """Disable polling."""
         return False
-
-    @staticmethod
-    def translate_tariff(value):
-        """Convert to 1 or 2. Meaning is not consistently in all countries, leave interpretation to the user."""
-        if value == "0001":
-            return "1"
-        if value == "0002":
-            return "2"
-
-        return None
 
 
 class DerivativeDSMREntity(DSMREntity):
