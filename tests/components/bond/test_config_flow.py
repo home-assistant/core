@@ -40,7 +40,7 @@ async def test_user_form(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "bond-name (test-bond-id)"
+    assert result2["title"] == "bond-name"
     assert result2["data"] == {
         CONF_HOST: "some host",
         CONF_ACCESS_TOKEN: "test-token",
@@ -76,7 +76,7 @@ async def test_user_form_with_non_bridge(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "New Fan (test-bond-id)"
+    assert result2["title"] == "New Fan"
     assert result2["data"] == {
         CONF_HOST: "some host",
         CONF_ACCESS_TOKEN: "test-token",
@@ -212,7 +212,7 @@ async def test_zeroconf_form(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "bond-name (test-bond-id)"
+    assert result2["title"] == "bond-name"
     assert result2["data"] == {
         CONF_HOST: "test-host",
         CONF_ACCESS_TOKEN: "test-token",
