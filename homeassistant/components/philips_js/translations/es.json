@@ -3,7 +3,8 @@
         "step": {
             "user": {
                 "data": {
-                    "api_version": "Versi\u00f3n del API"
+                    "api_version": "Versi\u00f3n del API",
+                    "host": "Host"
                 }
             }
         }

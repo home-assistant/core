@@ -1,0 +1,26 @@
+{
+    "config": {
+        "error": {
+            "account_locked": "Cuenta bloqueada. Por favor, int\u00e9ntelo de nuevo m\u00e1s tarde."
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "region": "Regi\u00f3n"
+                },
+                "description": "Ha fallado la autenticaci\u00f3n para los Servicios Conectados de Mazda. Por favor, introduce tus credenciales actuales.",
+                "title": "Servicios Conectados de Mazda - Fallo de autenticaci\u00f3n"
+            },
+            "user": {
+                "data": {
+                    "email": "Correo electronico",
+                    "password": "Contrase\u00f1a",
+                    "region": "Regi\u00f3n"
+                },
+                "description": "Introduce la direcci\u00f3n de correo electr\u00f3nico y la contrase\u00f1a que utilizas para iniciar sesi\u00f3n en la aplicaci\u00f3n m\u00f3vil MyMazda.",
+                "title": "Servicios Conectados de Mazda - A\u00f1adir cuenta"
+            }
+        }
+    },
+    "title": "Servicios Conectados de Mazda"
+}
