@@ -1,12 +1,10 @@
 """The tests for hls streams."""
-import asyncio
 from datetime import timedelta
 import logging
 import os
 import threading
 from unittest.mock import patch
 
-import async_timeout
 import av
 import pytest
 
@@ -34,30 +32,23 @@ class SaveRecordWorkerSync:
     def __init__(self):
         """Initialize SaveRecordWorkerSync."""
         self.reset()
-        self._segments = None
 
-    def recorder_save_worker(self, file_out, segments, container_format):
+    def recorder_save_worker(self, *args, **kwargs):
         """Mock method for patch."""
         logging.debug("recorder_save_worker thread started")
-        self._segments = segments
         assert self._save_thread is None
         self._save_thread = threading.current_thread()
         self._save_event.set()
 
-    async def get_segments(self):
-        """Verify save worker thread was invoked and return saved segments."""
-        with async_timeout.timeout(TEST_TIMEOUT):
-            assert await self._save_event.wait()
-            return self._segments
-
     def join(self):
-        """Block until the record worker thread exist to ensure cleanup."""
+        """Verify save worker was invoked and block on shutdown."""
+        assert self._save_event.wait(timeout=TEST_TIMEOUT)
         self._save_thread.join()
 
     def reset(self):
         """Reset callback state for reuse in tests."""
         self._save_thread = None
-        self._save_event = asyncio.Event()
+        self._save_event = threading.Event()
 
 
 @pytest.fixture()
@@ -72,7 +63,7 @@ def record_worker_sync(hass):
         yield sync
 
 
-async def test_record_stream(hass, hass_client, record_worker_sync):
+async def test_record_stream(hass, hass_client, stream_worker_sync, record_worker_sync):
     """
     Test record stream.
 
@@ -82,14 +73,28 @@ async def test_record_stream(hass, hass_client, record_worker_sync):
     """
     await async_setup_component(hass, "stream", {"stream": {}})
 
+    stream_worker_sync.pause()
+
     # Setup demo track
     source = generate_h264_video()
     stream = create_stream(hass, source)
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path")
 
-    segments = await record_worker_sync.get_segments()
-    assert len(segments) > 1
+    recorder = stream.add_provider("recorder")
+    while True:
+        segment = await recorder.recv()
+        if not segment:
+            break
+        segments = segment.sequence
+        if segments > 1:
+            stream_worker_sync.resume()
+
+    stream.stop()
+    assert segments > 1
+
+    # Verify that the save worker was invoked, then block until its
+    # thread completes and is shutdown completely to avoid thread leaks.
     record_worker_sync.join()
 
 
@@ -102,24 +107,19 @@ async def test_record_lookback(
     source = generate_h264_video()
     stream = create_stream(hass, source)
 
-    # Don't let the stream finish (and clean itself up) until the test has had
-    # a chance to perform lookback
-    stream_worker_sync.pause()
-
     # Start an HLS feed to enable lookback
-    stream.hls_output()
+    stream.add_provider("hls")
+    stream.start()
 
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path", lookback=4)
 
     # This test does not need recorder cleanup since it is not fully exercised
-    stream_worker_sync.resume()
+
     stream.stop()
 
 
-async def test_recorder_timeout(
-    hass, hass_client, stream_worker_sync, record_worker_sync
-):
+async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
     """
     Test recorder timeout.
 
@@ -137,8 +137,9 @@ async def test_recorder_timeout(
         stream = create_stream(hass, source)
         with patch.object(hass.config, "is_allowed_path", return_value=True):
             await stream.async_record("/example/path")
+        recorder = stream.add_provider("recorder")
 
-        assert not mock_timeout.called
+        await recorder.recv()
 
         # Wait a minute
         future = dt_util.utcnow() + timedelta(minutes=1)
@@ -148,10 +149,6 @@ async def test_recorder_timeout(
         assert mock_timeout.called
 
         stream_worker_sync.resume()
-        # Verify worker is invoked, and do clean shutdown of worker thread
-        await record_worker_sync.get_segments()
-        record_worker_sync.join()
-
         stream.stop()
         await hass.async_block_till_done()
         await hass.async_block_till_done()
@@ -183,7 +180,9 @@ async def test_recorder_save(tmpdir):
     assert os.path.exists(filename)
 
 
-async def test_record_stream_audio(hass, hass_client, record_worker_sync):
+async def test_record_stream_audio(
+    hass, hass_client, stream_worker_sync, record_worker_sync
+):
     """
     Test treatment of different audio inputs.
 
@@ -199,6 +198,7 @@ async def test_record_stream_audio(hass, hass_client, record_worker_sync):
         (None, 0),  # no audio stream
     ):
         record_worker_sync.reset()
+        stream_worker_sync.pause()
 
         # Setup demo track
         source = generate_h264_video(
@@ -207,14 +207,22 @@ async def test_record_stream_audio(hass, hass_client, record_worker_sync):
         stream = create_stream(hass, source)
         with patch.object(hass.config, "is_allowed_path", return_value=True):
             await stream.async_record("/example/path")
+        recorder = stream.add_provider("recorder")
 
-        segments = await record_worker_sync.get_segments()
-        last_segment = segments[-1]
+        while True:
+            segment = await recorder.recv()
+            if not segment:
+                break
+            last_segment = segment
+            stream_worker_sync.resume()
 
         result = av.open(last_segment.segment, "r", format="mp4")
 
         assert len(result.streams.audio) == expected_audio_streams
         result.close()
-
         stream.stop()
+        await hass.async_block_till_done()
+
+        # Verify that the save worker was invoked, then block until its
+        # thread completes and is shutdown completely to avoid thread leaks.
         record_worker_sync.join()
