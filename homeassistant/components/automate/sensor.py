@@ -45,7 +45,7 @@ class AutomateBattery(AutomateBase):
 
     @property
     def name(self):
-        """Return the name of roller."""
+        """Return the name of roller Battery."""
         if super().name is None:
             return None
         return f"{super().name} Battery"
@@ -70,6 +70,10 @@ class AutomateBattery(AutomateBase):
             attrs = attrs.copy()
         attrs[ATTR_VOLTAGE] = self.roller.battery
         return attrs
+
+    def include_entity(self) -> bool:
+        """Return True if roller has a battery."""
+        return self.roller.has_battery
 
 
 class AutomateSignal(AutomateBase):

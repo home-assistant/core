@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/automate",
   "requirements": [
-    "aiopulse2==0.5.1"
+    "aiopulse2==0.6.0"
   ],
   "codeowners": [
     "@sillyfrog"
