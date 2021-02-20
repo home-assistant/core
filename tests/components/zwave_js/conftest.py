@@ -164,6 +164,12 @@ def motorized_barrier_cover_state_fixture():
     return json.loads(load_fixture("zwave_js/cover_zw062_state.json"))
 
 
+@pytest.fixture(name="iblinds_v2_state", scope="session")
+def iblinds_v2_state_fixture():
+    """Load the iBlinds v2 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_iblinds_v2_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state):
     """Mock a client."""
@@ -357,5 +363,13 @@ def multiple_devices_fixture(
 def motorized_barrier_cover_fixture(client, gdc_zw062_state):
     """Mock a motorized barrier node."""
     node = Node(client, gdc_zw062_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="iblinds_v2")
+def iblinds_cover_fixture(client, iblinds_v2_state):
+    """Mock an iBlinds v2.0 window cover node."""
+    node = Node(client, iblinds_v2_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
