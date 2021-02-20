@@ -3,7 +3,6 @@ import asyncio
 import logging
 
 import pywemo
-import requests
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -229,10 +228,10 @@ def validate_static_config(host, port):
         return None
 
     try:
-        device = pywemo.discovery.device_from_description(url, None)
+        device = pywemo.discovery.device_from_description(url)
     except (
-        requests.exceptions.ConnectionError,
-        requests.exceptions.Timeout,
+        pywemo.exceptions.ActionException,
+        pywemo.exceptions.HTTPException,
     ) as err:
         _LOGGER.error("Unable to access WeMo at %s (%s)", url, err)
         return None

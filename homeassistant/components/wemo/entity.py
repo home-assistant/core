@@ -6,7 +6,7 @@ from typing import Any, Dict, Generator, Optional
 
 import async_timeout
 from pywemo import WeMoDevice
-from pywemo.ouimeaux_device.api.service import ActionException
+from pywemo.exceptions import ActionException
 
 from homeassistant.helpers.entity import Entity
 
