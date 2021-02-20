@@ -11,6 +11,7 @@ import weakref
 import attr
 
 from homeassistant import data_entry_flow, loader
+from homeassistant.const import EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import entity_registry
@@ -800,6 +801,10 @@ class ConfigEntries:
 
         entry.disabled_by = disabled_by
         self._async_schedule_save()
+
+        self.hass.bus.async_fire(
+            EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED, {"config_entry_id": entry_id}
+        )
 
         return await self.async_reload(entry_id)
 

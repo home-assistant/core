@@ -1104,3 +1104,41 @@ async def test_get_or_create_sets_default_values(hass, registry):
     assert entry.name == "default name 1"
     assert entry.model == "default model 1"
     assert entry.manufacturer == "default manufacturer 1"
+
+
+async def test_disable_config_entry_disables_devices(hass, registry):
+    """Test that we disable entities tied to a config entry."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+
+    entry1 = registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={("mac", "12:34:56:AB:CD:EF")},
+    )
+    entry2 = registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={("mac", "34:56:AB:CD:EF:12")},
+        disabled_by="user",
+    )
+
+    assert not entry1.disabled
+    assert entry2.disabled
+
+    await hass.config_entries.async_set_disabled_by(config_entry.entry_id, "user")
+    await hass.async_block_till_done()
+
+    entry1 = registry.async_get(entry1.id)
+    assert entry1.disabled
+    assert entry1.disabled_by == "config_entry"
+    entry2 = registry.async_get(entry2.id)
+    assert entry2.disabled
+    assert entry2.disabled_by == "user"
+
+    await hass.config_entries.async_set_disabled_by(config_entry.entry_id, None)
+    await hass.async_block_till_done()
+
+    entry1 = registry.async_get(entry1.id)
+    assert not entry1.disabled
+    entry2 = registry.async_get(entry2.id)
+    assert entry2.disabled
+    assert entry2.disabled_by == "user"

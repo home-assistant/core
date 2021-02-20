@@ -1129,14 +1129,16 @@ async def test_entry_disable_succeed(hass, manager):
     mock_entity_platform(hass, "config_flow.comp", None)
 
     # Disable
-    assert await manager.async_disable(entry.entry_id, config_entries.DISABLED_USER)
+    assert await manager.async_set_disabled_by(
+        entry.entry_id, config_entries.DISABLED_USER
+    )
     assert len(async_unload_entry.mock_calls) == 1
     assert len(async_setup.mock_calls) == 0
     assert len(async_setup_entry.mock_calls) == 0
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
 
     # Enable
-    assert await manager.async_disable(entry.entry_id, None)
+    assert await manager.async_set_disabled_by(entry.entry_id, None)
     assert len(async_unload_entry.mock_calls) == 1
     assert len(async_setup.mock_calls) == 1
     assert len(async_setup_entry.mock_calls) == 1
@@ -1162,14 +1164,16 @@ async def test_entry_disable_without_reload_support(hass, manager):
     mock_entity_platform(hass, "config_flow.comp", None)
 
     # Disable
-    assert not await manager.async_disable(entry.entry_id, config_entries.DISABLED_USER)
+    assert not await manager.async_set_disabled_by(
+        entry.entry_id, config_entries.DISABLED_USER
+    )
     assert len(async_setup.mock_calls) == 0
     assert len(async_setup_entry.mock_calls) == 0
     assert entry.state == config_entries.ENTRY_STATE_FAILED_UNLOAD
 
     # Enable
     with pytest.raises(config_entries.OperationNotAllowed):
-        await manager.async_disable(entry.entry_id, None)
+        await manager.async_set_disabled_by(entry.entry_id, None)
     assert len(async_setup.mock_calls) == 0
     assert len(async_setup_entry.mock_calls) == 0
     assert entry.state == config_entries.ENTRY_STATE_FAILED_UNLOAD
@@ -1194,13 +1198,15 @@ async def test_entry_enable_without_reload_support(hass, manager):
     mock_entity_platform(hass, "config_flow.comp", None)
 
     # Enable
-    assert await manager.async_disable(entry.entry_id, None)
+    assert await manager.async_set_disabled_by(entry.entry_id, None)
     assert len(async_setup.mock_calls) == 1
     assert len(async_setup_entry.mock_calls) == 1
     assert entry.state == config_entries.ENTRY_STATE_LOADED
 
     # Disable
-    assert not await manager.async_disable(entry.entry_id, config_entries.DISABLED_USER)
+    assert not await manager.async_set_disabled_by(
+        entry.entry_id, config_entries.DISABLED_USER
+    )
     assert len(async_setup.mock_calls) == 1
     assert len(async_setup_entry.mock_calls) == 1
     assert entry.state == config_entries.ENTRY_STATE_FAILED_UNLOAD
