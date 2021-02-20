@@ -1,5 +1,4 @@
 """Support for WeMo device discovery."""
-import asyncio
 import logging
 
 import pywemo
@@ -16,8 +15,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util.async_ import gather_with_concurrency
 
 from .const import DOMAIN
+
+# Max number of devices to initialize at once. This limit is in place to
+# avoid tying up too many executor threads with WeMo device setup.
+MAX_CONCURRENCY = 3
 
 # Mapping from Wemo model_name to domain.
 WEMO_MODEL_DISPATCH = {
@@ -114,11 +118,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     static_conf = config.get(CONF_STATIC, [])
     if static_conf:
         _LOGGER.debug("Adding statically configured WeMo devices...")
-        for device in await asyncio.gather(
+        for device in await gather_with_concurrency(
+            MAX_CONCURRENCY,
             *[
                 hass.async_add_executor_job(validate_static_config, host, port)
                 for host, port in static_conf
-            ]
+            ],
         ):
             if device:
                 wemo_dispatcher.async_add_unique_device(hass, device)
@@ -187,15 +192,44 @@ class WemoDiscovery:
         self._wemo_dispatcher = wemo_dispatcher
         self._stop = None
         self._scan_delay = 0
+        self._upnp_entries = set()
+
+    async def async_add_from_upnp_entry(self, entry: pywemo.ssdp.UPNPEntry) -> None:
+        """Create a WeMoDevice from an UPNPEntry and add it to the dispatcher.
+
+        Uses the self._upnp_entries set to avoid interrogating the same device
+        multiple times.
+        """
+        if entry in self._upnp_entries:
+            return
+        try:
+            device = await self._hass.async_add_executor_job(
+                pywemo.discovery.device_from_uuid_and_location,
+                entry.udn,
+                entry.location,
+            )
+        except pywemo.PyWeMoException as err:
+            _LOGGER.error("Unable to setup WeMo %r (%s)", entry, err)
+        else:
+            self._wemo_dispatcher.async_add_unique_device(self._hass, device)
+            self._upnp_entries.add(entry)
 
     async def async_discover_and_schedule(self, *_) -> None:
         """Periodically scan the network looking for WeMo devices."""
         _LOGGER.debug("Scanning network for WeMo devices...")
         try:
-            for device in await self._hass.async_add_executor_job(
-                pywemo.discover_devices
-            ):
-                self._wemo_dispatcher.async_add_unique_device(self._hass, device)
+            # pywemo.ssdp.scan is a light-weight UDP UPnP scan for WeMo devices.
+            entries = await self._hass.async_add_executor_job(pywemo.ssdp.scan)
+
+            # async_add_from_upnp_entry causes multiple HTTP requests to be sent
+            # to the WeMo device for the initial setup of the WeMoDevice
+            # instance. This may take some time to complete. The per-device
+            # setup work is done in parallel to speed up initial setup for the
+            # component.
+            await gather_with_concurrency(
+                MAX_CONCURRENCY,
+                *[self.async_add_from_upnp_entry(entry) for entry in entries],
+            )
         finally:
             # Run discovery more frequently after hass has just started.
             self._scan_delay = min(
