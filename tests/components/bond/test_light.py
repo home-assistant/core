@@ -56,6 +56,24 @@ def dimmable_ceiling_fan(name: str):
     }
 
 
+def down_light_ceiling_fan(name: str):
+    """Create a ceiling fan (that has built-in down light) with given name."""
+    return {
+        "name": name,
+        "type": DeviceType.CEILING_FAN,
+        "actions": [Action.TURN_DOWN_LIGHT_ON, Action.TURN_DOWN_LIGHT_OFF],
+    }
+
+
+def up_light_ceiling_fan(name: str):
+    """Create a ceiling fan (that has built-in down light) with given name."""
+    return {
+        "name": name,
+        "type": DeviceType.CEILING_FAN,
+        "actions": [Action.TURN_UP_LIGHT_ON, Action.TURN_UP_LIGHT_OFF],
+    }
+
+
 def fireplace(name: str):
     """Create a fireplace with given name."""
     return {
@@ -94,6 +112,36 @@ async def test_fan_entity_registry(hass: core.HomeAssistant):
     assert entity.unique_id == "test-hub-id_test-device-id"
 
 
+async def test_fan_up_light_entity_registry(hass: core.HomeAssistant):
+    """Tests that fan with up light devices are registered in the entity registry."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        up_light_ceiling_fan("fan-name"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_device_id="test-device-id",
+    )
+
+    registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    entity = registry.entities["light.fan_name_up_light"]
+    assert entity.unique_id == "test-hub-id_test-device-id_up_light"
+
+
+async def test_fan_down_light_entity_registry(hass: core.HomeAssistant):
+    """Tests that fan with down light devices are registered in the entity registry."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        down_light_ceiling_fan("fan-name"),
+        bond_version={"bondid": "test-hub-id"},
+        bond_device_id="test-device-id",
+    )
+
+    registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    entity = registry.entities["light.fan_name_down_light"]
+    assert entity.unique_id == "test-hub-id_test-device-id_down_light"
+
+
 async def test_fireplace_entity_registry(hass: core.HomeAssistant):
     """Tests that flame fireplace devices are registered in the entity registry."""
     await setup_platform(
@@ -122,7 +170,7 @@ async def test_fireplace_with_light_entity_registry(hass: core.HomeAssistant):
     registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
     entity_flame = registry.entities["light.fireplace_name"]
     assert entity_flame.unique_id == "test-hub-id_test-device-id"
-    entity_light = registry.entities["light.fireplace_name_2"]
+    entity_light = registry.entities["light.fireplace_name_light"]
     assert entity_light.unique_id == "test-hub-id_test-device-id_light"
 
 
@@ -269,6 +317,98 @@ async def test_turn_on_light_with_brightness(hass: core.HomeAssistant):
     )
 
 
+async def test_turn_on_up_light(hass: core.HomeAssistant):
+    """Tests that turn on command, on an up light, delegates to API."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        up_light_ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_turn_on, patch_bond_device_state():
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "light.name_1_up_light"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_turn_on.assert_called_once_with(
+        "test-device-id", Action(Action.TURN_UP_LIGHT_ON)
+    )
+
+
+async def test_turn_off_up_light(hass: core.HomeAssistant):
+    """Tests that turn off command, on an up light, delegates to API."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        up_light_ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_turn_off, patch_bond_device_state():
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "light.name_1_up_light"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_turn_off.assert_called_once_with(
+        "test-device-id", Action(Action.TURN_UP_LIGHT_OFF)
+    )
+
+
+async def test_turn_on_down_light(hass: core.HomeAssistant):
+    """Tests that turn on command, on a down light, delegates to API."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        down_light_ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_turn_on, patch_bond_device_state():
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "light.name_1_down_light"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_turn_on.assert_called_once_with(
+        "test-device-id", Action(Action.TURN_DOWN_LIGHT_ON)
+    )
+
+
+async def test_turn_off_down_light(hass: core.HomeAssistant):
+    """Tests that turn off command, on a down light, delegates to API."""
+    await setup_platform(
+        hass,
+        LIGHT_DOMAIN,
+        down_light_ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_turn_off, patch_bond_device_state():
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "light.name_1_down_light"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_turn_off.assert_called_once_with(
+        "test-device-id", Action(Action.TURN_DOWN_LIGHT_OFF)
+    )
+
+
 async def test_update_reports_light_is_on(hass: core.HomeAssistant):
     """Tests that update command sets correct state when Bond API reports the light is on."""
     await setup_platform(hass, LIGHT_DOMAIN, ceiling_fan("name-1"))
@@ -289,6 +429,50 @@ async def test_update_reports_light_is_off(hass: core.HomeAssistant):
         await hass.async_block_till_done()
 
     assert hass.states.get("light.name_1").state == "off"
+
+
+async def test_update_reports_up_light_is_on(hass: core.HomeAssistant):
+    """Tests that update command sets correct state when Bond API reports the up light is on."""
+    await setup_platform(hass, LIGHT_DOMAIN, up_light_ceiling_fan("name-1"))
+
+    with patch_bond_device_state(return_value={"up_light": 1, "light": 1}):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+
+    assert hass.states.get("light.name_1_up_light").state == "on"
+
+
+async def test_update_reports_up_light_is_off(hass: core.HomeAssistant):
+    """Tests that update command sets correct state when Bond API reports the up light is off."""
+    await setup_platform(hass, LIGHT_DOMAIN, up_light_ceiling_fan("name-1"))
+
+    with patch_bond_device_state(return_value={"up_light": 0, "light": 0}):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+
+    assert hass.states.get("light.name_1_up_light").state == "off"
+
+
+async def test_update_reports_down_light_is_on(hass: core.HomeAssistant):
+    """Tests that update command sets correct state when Bond API reports the down light is on."""
+    await setup_platform(hass, LIGHT_DOMAIN, down_light_ceiling_fan("name-1"))
+
+    with patch_bond_device_state(return_value={"down_light": 1, "light": 1}):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+
+    assert hass.states.get("light.name_1_down_light").state == "on"
+
+
+async def test_update_reports_down_light_is_off(hass: core.HomeAssistant):
+    """Tests that update command sets correct state when Bond API reports the down light is off."""
+    await setup_platform(hass, LIGHT_DOMAIN, down_light_ceiling_fan("name-1"))
+
+    with patch_bond_device_state(return_value={"down_light": 0, "light": 0}):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+
+    assert hass.states.get("light.name_1_down_light").state == "off"
 
 
 async def test_turn_on_fireplace_with_brightness(hass: core.HomeAssistant):
