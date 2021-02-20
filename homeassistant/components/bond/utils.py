@@ -106,6 +106,7 @@ class BondHub:
         self._version = await self.bond.version()
         _LOGGER.debug("Bond reported the following version info: %s", self._version)
         self._bridge = await self.bond.bridge()
+        _LOGGER.debug("Bond reported the following bridge info: %s", self._bridge)
         # Fetch all available devices using Bond API.
         device_ids = await self.bond.devices()
         self._devices = [

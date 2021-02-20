@@ -31,6 +31,7 @@ async def _validate_input(data: Dict[str, Any]) -> str:
     try:
         bond = Bond(data[CONF_HOST], data[CONF_ACCESS_TOKEN])
         version = await bond.version()
+        bridge = await bond.bridge()
         # call to non-version API is needed to validate authentication
         await bond.devices()
     except ClientConnectionError as error:
@@ -48,7 +49,7 @@ async def _validate_input(data: Dict[str, Any]) -> str:
     if not bond_id:
         raise InputValidationError("old_firmware")
 
-    return bond_id
+    return bond_id, bridge.get("location")
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -113,10 +114,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _try_create_entry(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        bond_id = await _validate_input(data)
+        bond_id, name = await _validate_input(data)
         await self.async_set_unique_id(bond_id)
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=bond_id, data=data)
+        hub_name = f"{name} ({bond_id})" if name else bond_id
+        return self.async_create_entry(title=hub_name, data=data)
 
 
 class InputValidationError(exceptions.HomeAssistantError):
