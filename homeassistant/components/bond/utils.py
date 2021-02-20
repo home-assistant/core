@@ -140,11 +140,15 @@ class BondHub:
     @property
     def name(self) -> str:
         """Get the name of this bridge."""
+        if not self.is_bridge and self._devices:
+            return self._devices[0].name
         return self._bridge.get("name")
 
     @property
     def location(self) -> str:
         """Get the location of this bridge."""
+        if not self.is_bridge and self._devices:
+            return self._devices[0].location
         return self._bridge.get("location")
 
     @property
@@ -160,5 +164,4 @@ class BondHub:
     @property
     def is_bridge(self) -> bool:
         """Return if the Bond is a Bond Bridge."""
-        # If False, it means that it is a Smart by Bond product. Assumes that it is if the model is not available.
-        return self._version.get("model", "BD-").startswith("BD-")
+        return bool(self._bridge)
