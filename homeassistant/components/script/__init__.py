@@ -181,7 +181,10 @@ async def async_setup(hass, config):
             return
 
         await asyncio.wait(
-            [script_entity.async_turn_off() for script_entity in script_entities]
+            [
+                asyncio.create_task(script_entity.async_turn_off())
+                for script_entity in script_entities
+            ]
         )
 
     async def toggle_service(service):
