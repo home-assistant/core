@@ -1,5 +1,4 @@
 """Support for WeMo device discovery."""
-import asyncio
 import logging
 
 import pywemo
@@ -16,8 +15,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util.async_ import gather_with_concurrency
 
 from .const import DOMAIN
+
+# Max number of devices to initialize at once. This limit is in place to
+# avoid tying up too many asyncio executors with WeMo device setup.
+MAX_CONCURRENCY = 3
 
 # Mapping from Wemo model_name to domain.
 WEMO_MODEL_DISPATCH = {
@@ -114,11 +118,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     static_conf = config.get(CONF_STATIC, [])
     if static_conf:
         _LOGGER.debug("Adding statically configured WeMo devices...")
-        for device in await asyncio.gather(
+        for device in await gather_with_concurrency(
+            MAX_CONCURRENCY,
             *[
                 hass.async_add_executor_job(validate_static_config, host, port)
                 for host, port in static_conf
-            ]
+            ],
         ):
             if device:
                 wemo_dispatcher.async_add_unique_device(hass, device)
@@ -221,8 +226,9 @@ class WemoDiscovery:
             # instance. This may take some time to complete. The per-device
             # setup work is done in parallel to speed up initial setup for the
             # component.
-            await asyncio.gather(
-                *[self.async_add_from_upnp_entry(entry) for entry in entries]
+            await gather_with_concurrency(
+                MAX_CONCURRENCY,
+                *[self.async_add_from_upnp_entry(entry) for entry in entries],
             )
         finally:
             # Run discovery more frequently after hass has just started.
