@@ -48,7 +48,7 @@ async def test_user_form(hass: core.HomeAssistant):
 
 
 async def test_user_form_with_non_bridge(hass: core.HomeAssistant):
-    """Test we get the user initiated form."""
+    """Test setup a smart by bond fan."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
