@@ -323,7 +323,7 @@ async def test_tv_device_registry(
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     reg_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "58_onn_roku_tv")}
+        identifiers={(DOMAIN, TV_SERIAL)}
     )
 
     assert reg_device.model == TV_MODEL
