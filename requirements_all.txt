@@ -371,7 +371,7 @@ blockchain==1.4.4
 # bme680==1.0.5
 
 # homeassistant.components.bond
-bond-api==0.1.9
+bond-api==0.1.10
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
