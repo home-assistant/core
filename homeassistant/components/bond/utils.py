@@ -149,7 +149,7 @@ class BondHub:
         return self._bridge.get("name")
 
     @property
-    def location(self) -> str:
+    def location(self) -> Optional[str]:
         """Get the location of this bridge."""
         if not self.is_bridge and self._devices:
             return self._devices[0].location
