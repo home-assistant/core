@@ -2,29 +2,41 @@ addon_start:
   description: Start a Hass.io docker add-on.
   fields:
     addon:
+      name: Add-on
       description: The add-on slug.
       example: core_ssh
+      selector:
+        addon:
 
 addon_restart:
   description: Restart a Hass.io docker add-on.
   fields:
     addon:
+      name: Add-on
       description: The add-on slug.
       example: core_ssh
+      selector:
+        addon:
 
 addon_stdin:
   description: Write data to a Hass.io docker add-on stdin .
   fields:
     addon:
+      name: Add-on
       description: The add-on slug.
       example: core_ssh
+      selector:
+        addon:
 
 addon_stop:
   description: Stop a Hass.io docker add-on.
   fields:
     addon:
+      name: Add-on
       description: The add-on slug.
       example: core_ssh
+      selector:
+        addon:
 
 homeassistant_update:
   description: Update the Home Assistant docker image.
