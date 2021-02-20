@@ -374,7 +374,7 @@ async def test_if_numeric_state_raises_on_unavailable(hass, caplog):
 async def test_state_raises(hass):
     """Test that state raises ConditionError on errors."""
     # Unknown entity_id
-    with pytest.raises(ConditionError, match="Unknown entity"):
+    with pytest.raises(ConditionError, match="unknown entity"):
         test = await condition.async_from_config(
             hass,
             {
@@ -387,7 +387,7 @@ async def test_state_raises(hass):
         test(hass)
 
     # Unknown attribute
-    with pytest.raises(ConditionError, match=r"Attribute .* does not exist"):
+    with pytest.raises(ConditionError, match=r"attribute .* does not exist"):
         test = await condition.async_from_config(
             hass,
             {
@@ -602,7 +602,7 @@ async def test_state_using_input_entities(hass):
 async def test_numeric_state_raises(hass):
     """Test that numeric_state raises ConditionError on errors."""
     # Unknown entity_id
-    with pytest.raises(ConditionError, match="Unknown entity"):
+    with pytest.raises(ConditionError, match="unknown entity"):
         test = await condition.async_from_config(
             hass,
             {
@@ -615,7 +615,7 @@ async def test_numeric_state_raises(hass):
         test(hass)
 
     # Unknown attribute
-    with pytest.raises(ConditionError, match=r"Attribute .* does not exist"):
+    with pytest.raises(ConditionError, match=r"attribute .* does not exist"):
         test = await condition.async_from_config(
             hass,
             {
@@ -645,7 +645,7 @@ async def test_numeric_state_raises(hass):
         test(hass)
 
     # Unavailable state
-    with pytest.raises(ConditionError, match="State is not available"):
+    with pytest.raises(ConditionError, match="state of .* is unavailable"):
         test = await condition.async_from_config(
             hass,
             {
@@ -673,7 +673,7 @@ async def test_numeric_state_raises(hass):
         test(hass)
 
     # Below entity missing
-    with pytest.raises(ConditionError, match="below entity"):
+    with pytest.raises(ConditionError, match="'below' entity"):
         test = await condition.async_from_config(
             hass,
             {
@@ -687,7 +687,7 @@ async def test_numeric_state_raises(hass):
         test(hass)
 
     # Above entity missing
-    with pytest.raises(ConditionError, match="above entity"):
+    with pytest.raises(ConditionError, match="'above' entity"):
         test = await condition.async_from_config(
             hass,
             {
@@ -834,7 +834,7 @@ async def test_zone_raises(hass):
         },
     )
 
-    with pytest.raises(ConditionError, match="Unknown zone"):
+    with pytest.raises(ConditionError, match="unknown zone"):
         test(hass)
 
     hass.states.async_set(
@@ -843,7 +843,7 @@ async def test_zone_raises(hass):
         {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
     )
 
-    with pytest.raises(ConditionError, match="Unknown entity"):
+    with pytest.raises(ConditionError, match="unknown entity"):
         test(hass)
 
     hass.states.async_set(
