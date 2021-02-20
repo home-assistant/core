@@ -115,7 +115,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         bond_id, name = await _validate_input(data)
         await self.async_set_unique_id(bond_id)
         self._abort_if_unique_id_configured()
-        hub_name = f"{name} ({bond_id})" if name else bond_id
+        hub_name = name or bond_id
         return self.async_create_entry(title=hub_name, data=data)
 
 
