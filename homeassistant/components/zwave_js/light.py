@@ -206,7 +206,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             raise ValueError(
                 "Illegal color name specified, color must be one of "
                 f"{','.join([color.name for color in ColorComponent])}"
-            )
+            ) from None
         cur_zwave_value = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
