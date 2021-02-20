@@ -157,9 +157,7 @@ class AreaRegistry:
 
         if data is not None:
             for area in data["areas"]:
-                normalized_name = area.get(
-                    "normalized_name", normalize_area_name(area["name"])
-                )
+                normalized_name = normalize_area_name(area["name"])
                 areas[area["id"]] = AreaEntry(
                     name=area["name"], id=area["id"], normalized_name=normalized_name
                 )
@@ -180,7 +178,6 @@ class AreaRegistry:
         data["areas"] = [
             {
                 "name": entry.name,
-                "normalized_name": entry.normalized_name,
                 "id": entry.id,
             }
             for entry in self.areas.values()
