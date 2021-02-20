@@ -98,12 +98,6 @@ class BondHub:
         """Read hub version information."""
         self._version = await self.bond.version()
         _LOGGER.debug("Bond reported the following version info: %s", self._version)
-        try:
-            # Smart by bond devices do not have a bridge api call
-            self._bridge = await self.bond.bridge()
-        except ClientResponseError:
-            self._bridge = {}
-        _LOGGER.debug("Bond reported the following bridge info: %s", self._bridge)
         # Fetch all available devices using Bond API.
         device_ids = await self.bond.devices()
         self._devices = [
@@ -114,8 +108,13 @@ class BondHub:
             )
             for device_id in device_ids
         ]
-
         _LOGGER.debug("Discovered Bond devices: %s", self._devices)
+        try:
+            # Smart by bond devices do not have a bridge api call
+            self._bridge = await self.bond.bridge()
+        except ClientResponseError:
+            self._bridge = {}
+        _LOGGER.debug("Bond reported the following bridge info: %s", self._bridge)
 
     @property
     def bond_id(self) -> str:
