@@ -178,36 +178,72 @@ def test_basic_sanity_check(hass_recorder):
         util.basic_sanity_check(cursor)
 
 
-def test_combined_checks(hass_recorder):
+def test_combined_checks(hass_recorder, caplog):
     """Run Checks on the open database."""
     hass = hass_recorder()
 
-    db_integrity_check = False
-
     cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
 
-    assert (
-        util.run_checks_on_open_db("fake_db_path", cursor, db_integrity_check) is None
-    )
+    assert util.run_checks_on_open_db("fake_db_path", cursor, False) is None
+    assert "skipped because db_integrity_check was disabled" in caplog.text
+
+    caplog.clear()
+    assert util.run_checks_on_open_db("fake_db_path", cursor, True) is None
+    assert "could not validate that the sqlite3 database" in caplog.text
+
+    # We are patching recorder.util here in order
+    # to avoid creating the full database on disk
+    with patch(
+        "homeassistant.components.recorder.util.basic_sanity_check", return_value=False
+    ):
+        caplog.clear()
+        assert util.run_checks_on_open_db("fake_db_path", cursor, False) is None
+        assert "skipped because db_integrity_check was disabled" in caplog.text
+
+        caplog.clear()
+        assert util.run_checks_on_open_db("fake_db_path", cursor, True) is None
+        assert "could not validate that the sqlite3 database" in caplog.text
 
     # We are patching recorder.util here in order
     # to avoid creating the full database on disk
     with patch("homeassistant.components.recorder.util.last_run_was_recently_clean"):
+        caplog.clear()
+        assert util.run_checks_on_open_db("fake_db_path", cursor, False) is None
         assert (
-            util.run_checks_on_open_db("fake_db_path", cursor, db_integrity_check)
-            is None
+            "system was restarted cleanly and passed the basic sanity check"
+            in caplog.text
         )
 
+        caplog.clear()
+        assert util.run_checks_on_open_db("fake_db_path", cursor, True) is None
+        assert (
+            "system was restarted cleanly and passed the basic sanity check"
+            in caplog.text
+        )
+
+    caplog.clear()
     with patch(
         "homeassistant.components.recorder.util.last_run_was_recently_clean",
         side_effect=sqlite3.DatabaseError,
     ), pytest.raises(sqlite3.DatabaseError):
-        util.run_checks_on_open_db("fake_db_path", cursor, db_integrity_check)
+        util.run_checks_on_open_db("fake_db_path", cursor, False)
+
+    caplog.clear()
+    with patch(
+        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        side_effect=sqlite3.DatabaseError,
+    ), pytest.raises(sqlite3.DatabaseError):
+        util.run_checks_on_open_db("fake_db_path", cursor, True)
 
     cursor.execute("DROP TABLE events;")
 
+    caplog.clear()
     with pytest.raises(sqlite3.DatabaseError):
-        util.run_checks_on_open_db("fake_db_path", cursor, db_integrity_check)
+        util.run_checks_on_open_db("fake_db_path", cursor, False)
+
+    caplog.clear()
+    with pytest.raises(sqlite3.DatabaseError):
+        util.run_checks_on_open_db("fake_db_path", cursor, True)
 
 
 def _corrupt_db_file(test_db_file):

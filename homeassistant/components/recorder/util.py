@@ -171,7 +171,10 @@ def validate_sqlite_database(dbpath: str, db_integrity_check: bool) -> bool:
 
 def run_checks_on_open_db(dbpath, cursor, db_integrity_check):
     """Run checks that will generate a sqlite3 exception if there is corruption."""
-    if basic_sanity_check(cursor) and last_run_was_recently_clean(cursor):
+    sanity_check_passed = basic_sanity_check(cursor)
+    last_run_was_clean = last_run_was_recently_clean(cursor)
+
+    if sanity_check_passed and last_run_was_clean:
         _LOGGER.debug(
             "The quick_check will be skipped as the system was restarted cleanly and passed the basic sanity check"
         )
@@ -187,7 +190,19 @@ def run_checks_on_open_db(dbpath, cursor, db_integrity_check):
         )
         return
 
-    _LOGGER.debug(
+    if not sanity_check_passed:
+        _LOGGER.warning(
+            "The database sanity check failed to validate the sqlite3 database at %s",
+            dbpath,
+        )
+
+    if not last_run_was_clean:
+        _LOGGER.warning(
+            "The system could not validate that the sqlite3 database at %s was shutdown cleanly.",
+            dbpath,
+        )
+
+    _LOGGER.info(
         "A quick_check is being performed on the sqlite3 database at %s", dbpath
     )
     cursor.execute("PRAGMA QUICK_CHECK")
