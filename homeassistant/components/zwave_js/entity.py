@@ -152,9 +152,9 @@ class ZWaveBaseEntity(Entity):
             self.info.node,
             command_class,
             value_property,
-            endpoint,
-            value_property_key,
-            value_property_key_name,
+            endpoint=endpoint,
+            property_key=value_property_key,
+            property_key_name=value_property_key_name,
         )
         return_value = self.info.node.values.get(value_id)
 
