@@ -1,61 +1,68 @@
 # Describes the format for available alarm control panel services
 
 alarm_disarm:
-  description: Send the alarm the command for disarm.
+  description: Send the alarm the command for disarm
+  target:
   fields:
-    entity_id:
-      description: Name of alarm control panel to disarm.
-      example: "alarm_control_panel.downstairs"
     code:
+      name: Code
       description: An optional code to disarm the alarm control panel with.
       example: "1234"
+      selector:
+        text:
 
 alarm_arm_custom_bypass:
-  description: Send arm custom bypass command.
+  description: Send arm custom bypass command
+  target:
   fields:
-    entity_id:
-      description: Name of alarm control panel to arm custom bypass.
-      example: "alarm_control_panel.downstairs"
     code:
-      description: An optional code to arm custom bypass the alarm control panel with.
+      name: Code
+      description:
+        An optional code to arm custom bypass the alarm control panel with.
       example: "1234"
+      selector:
+        text:
 
 alarm_arm_home:
-  description: Send the alarm the command for arm home.
+  description: Send the alarm the command for arm home
+  target:
   fields:
-    entity_id:
-      description: Name of alarm control panel to arm home.
-      example: "alarm_control_panel.downstairs"
     code:
+      name: Code
       description: An optional code to arm home the alarm control panel with.
       example: "1234"
+      selector:
+        text:
 
 alarm_arm_away:
-  description: Send the alarm the command for arm away.
+  description: Send the alarm the command for arm away
+  target:
   fields:
-    entity_id:
-      description: Name of alarm control panel to arm away.
-      example: "alarm_control_panel.downstairs"
     code:
+      name: Code
       description: An optional code to arm away the alarm control panel with.
       example: "1234"
+      selector:
+        text:
 
 alarm_arm_night:
-  description: Send the alarm the command for arm night.
+  description: Send the alarm the command for arm night
+  target:
   fields:
-    entity_id:
-      description: Name of alarm control panel to arm night.
-      example: "alarm_control_panel.downstairs"
     code:
+      name: Code
       description: An optional code to arm night the alarm control panel with.
       example: "1234"
+      selector:
+        text:
 
 alarm_trigger:
-  description: Send the alarm the command for trigger.
+  description: Send the alarm the command for trigger
+  target:
   fields:
-    entity_id:
-      description: Name of alarm control panel to trigger.
-      example: "alarm_control_panel.downstairs"
     code:
+      name: Code
       description: An optional code to trigger the alarm control panel with.
       example: "1234"
+      selector:
+        text:

@@ -27,6 +27,7 @@ LIMITED_AND_FULL_FAN_ENTITY_IDS = FULL_FAN_ENTITY_IDS + [
 FANS_WITH_PRESET_MODES = FULL_FAN_ENTITY_IDS + [
     "fan.percentage_limited_fan",
 ]
+PERCENTAGE_MODEL_FANS = ["fan.percentage_full_fan", "fan.percentage_limited_fan"]
 
 
 @pytest.fixture(autouse=True)
@@ -395,6 +396,128 @@ async def test_set_percentage(hass, fan_entity_id):
     state = hass.states.get(fan_entity_id)
     assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_LOW
     assert state.attributes[fan.ATTR_PERCENTAGE] == 33
+
+
+@pytest.mark.parametrize("fan_entity_id", LIMITED_AND_FULL_FAN_ENTITY_IDS)
+async def test_increase_decrease_speed(hass, fan_entity_id):
+    """Test increasing and decreasing the percentage speed of the device."""
+    state = hass.states.get(fan_entity_id)
+    assert state.state == STATE_OFF
+    assert state.attributes[fan.ATTR_PERCENTAGE_STEP] == 100 / 3
+
+    await hass.services.async_call(
+        fan.DOMAIN,
+        fan.SERVICE_INCREASE_SPEED,
+        {ATTR_ENTITY_ID: fan_entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(fan_entity_id)
+    assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_LOW
+    assert state.attributes[fan.ATTR_PERCENTAGE] == 33
+
+    await hass.services.async_call(
+        fan.DOMAIN,
+        fan.SERVICE_INCREASE_SPEED,
+        {ATTR_ENTITY_ID: fan_entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(fan_entity_id)
+    assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_MEDIUM
+    assert state.attributes[fan.ATTR_PERCENTAGE] == 66
+
+    await hass.services.async_call(
+        fan.DOMAIN,
+        fan.SERVICE_INCREASE_SPEED,
+        {ATTR_ENTITY_ID: fan_entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(fan_entity_id)
+    assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_HIGH
+    assert state.attributes[fan.ATTR_PERCENTAGE] == 100
+
+    await hass.services.async_call(
+        fan.DOMAIN,
+        fan.SERVICE_INCREASE_SPEED,
+        {ATTR_ENTITY_ID: fan_entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(fan_entity_id)
+    assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_HIGH
+    assert state.attributes[fan.ATTR_PERCENTAGE] == 100
+
+    await hass.services.async_call(
+        fan.DOMAIN,
+        fan.SERVICE_DECREASE_SPEED,
+        {ATTR_ENTITY_ID: fan_entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(fan_entity_id)
+    assert state.attributes[fan.ATTR_PERCENTAGE] == 66
+    assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_MEDIUM
+
+    await hass.services.async_call(
+        fan.DOMAIN,
+        fan.SERVICE_DECREASE_SPEED,
+        {ATTR_ENTITY_ID: fan_entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(fan_entity_id)
+    assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_LOW
+    assert state.attributes[fan.ATTR_PERCENTAGE] == 33
+
+    await hass.services.async_call(
+        fan.DOMAIN,
+        fan.SERVICE_DECREASE_SPEED,
+        {ATTR_ENTITY_ID: fan_entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(fan_entity_id)
+    assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_OFF
+    assert state.attributes[fan.ATTR_PERCENTAGE] == 0
+
+    await hass.services.async_call(
+        fan.DOMAIN,
+        fan.SERVICE_DECREASE_SPEED,
+        {ATTR_ENTITY_ID: fan_entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(fan_entity_id)
+    assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_OFF
+    assert state.attributes[fan.ATTR_PERCENTAGE] == 0
+
+
+@pytest.mark.parametrize("fan_entity_id", PERCENTAGE_MODEL_FANS)
+async def test_increase_decrease_speed_with_percentage_step(hass, fan_entity_id):
+    """Test increasing speed with a percentage step."""
+    await hass.services.async_call(
+        fan.DOMAIN,
+        fan.SERVICE_INCREASE_SPEED,
+        {ATTR_ENTITY_ID: fan_entity_id, fan.ATTR_PERCENTAGE_STEP: 25},
+        blocking=True,
+    )
+    state = hass.states.get(fan_entity_id)
+    assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_LOW
+    assert state.attributes[fan.ATTR_PERCENTAGE] == 25
+
+    await hass.services.async_call(
+        fan.DOMAIN,
+        fan.SERVICE_INCREASE_SPEED,
+        {ATTR_ENTITY_ID: fan_entity_id, fan.ATTR_PERCENTAGE_STEP: 25},
+        blocking=True,
+    )
+    state = hass.states.get(fan_entity_id)
+    assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_MEDIUM
+    assert state.attributes[fan.ATTR_PERCENTAGE] == 50
+
+    await hass.services.async_call(
+        fan.DOMAIN,
+        fan.SERVICE_INCREASE_SPEED,
+        {ATTR_ENTITY_ID: fan_entity_id, fan.ATTR_PERCENTAGE_STEP: 25},
+        blocking=True,
+    )
+    state = hass.states.get(fan_entity_id)
+    assert state.attributes[fan.ATTR_SPEED] == fan.SPEED_HIGH
+    assert state.attributes[fan.ATTR_PERCENTAGE] == 75
 
 
 @pytest.mark.parametrize("fan_entity_id", FULL_FAN_ENTITY_IDS)

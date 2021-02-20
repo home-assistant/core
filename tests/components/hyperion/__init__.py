@@ -1,7 +1,6 @@
 """Tests for the Hyperion component."""
 from __future__ import annotations
 
-import logging
 from types import TracebackType
 from typing import Any, Dict, Optional, Type
 from unittest.mock import AsyncMock, Mock, patch
@@ -63,8 +62,6 @@ TEST_AUTH_NOT_REQUIRED_RESP = {
     "info": {"required": False},
 }
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class AsyncContextManagerMock(Mock):
     """An async context manager mock for Hyperion."""
@@ -98,7 +95,7 @@ def create_mock_client() -> Mock:
     )
 
     mock_client.async_sysinfo_id = AsyncMock(return_value=TEST_SYSINFO_ID)
-    mock_client.async_sysinfo_version = AsyncMock(return_value=TEST_SYSINFO_ID)
+    mock_client.async_sysinfo_version = AsyncMock(return_value=TEST_SYSINFO_VERSION)
     mock_client.async_client_switch_instance = AsyncMock(return_value=True)
     mock_client.async_client_login = AsyncMock(return_value=True)
     mock_client.async_get_serverinfo = AsyncMock(

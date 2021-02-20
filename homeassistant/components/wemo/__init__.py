@@ -3,7 +3,6 @@ import asyncio
 import logging
 
 import pywemo
-import requests
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -12,7 +11,7 @@ from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_DISCOVERY, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -57,7 +56,6 @@ def coerce_host_port(value):
 
 
 CONF_STATIC = "static"
-CONF_DISCOVERY = "discovery"
 
 DEFAULT_DISCOVERY = True
 
@@ -230,10 +228,10 @@ def validate_static_config(host, port):
         return None
 
     try:
-        device = pywemo.discovery.device_from_description(url, None)
+        device = pywemo.discovery.device_from_description(url)
     except (
-        requests.exceptions.ConnectionError,
-        requests.exceptions.Timeout,
+        pywemo.exceptions.ActionException,
+        pywemo.exceptions.HTTPException,
     ) as err:
         _LOGGER.error("Unable to access WeMo at %s (%s)", url, err)
         return None

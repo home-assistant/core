@@ -3,4 +3,3 @@
 DOMAIN = "somfy"
 COORDINATOR = "coordinator"
 API = "api"
-CONF_OPTIMISTIC = "optimistic"

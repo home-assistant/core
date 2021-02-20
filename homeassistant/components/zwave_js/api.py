@@ -1,6 +1,5 @@
 """Websocket API for Z-Wave JS."""
 import json
-import logging
 
 from aiohttp import hdrs, web, web_exceptions
 import voluptuous as vol
@@ -16,8 +15,6 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DATA_CLIENT, DOMAIN, EVENT_DEVICE_ADDED_TO_REGISTRY
-
-_LOGGER = logging.getLogger(__name__)
 
 ID = "id"
 ENTRY_ID = "entry_id"
@@ -284,9 +281,9 @@ class DumpView(HomeAssistantView):
         msgs = await dump.dump_msgs(entry.data[CONF_URL], async_get_clientsession(hass))
 
         return web.Response(
-            body="\n".join(json.dumps(msg) for msg in msgs) + "\n",
+            body=json.dumps(msgs, indent=2) + "\n",
             headers={
-                hdrs.CONTENT_TYPE: "application/jsonl",
-                hdrs.CONTENT_DISPOSITION: 'attachment; filename="zwave_js_dump.jsonl"',
+                hdrs.CONTENT_TYPE: "application/json",
+                hdrs.CONTENT_DISPOSITION: 'attachment; filename="zwave_js_dump.json"',
             },
         )

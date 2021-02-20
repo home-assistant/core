@@ -44,6 +44,7 @@ from homeassistant.const import (
     CONF_REPEAT,
     CONF_SCENE,
     CONF_SEQUENCE,
+    CONF_SERVICE,
     CONF_TARGET,
     CONF_TIMEOUT,
     CONF_UNTIL,
@@ -433,14 +434,14 @@ class _ScriptRun:
         self._script.last_action = self._action.get(CONF_ALIAS, "call service")
         self._log("Executing step %s", self._script.last_action)
 
-        domain, service_name, service_data = service.async_prepare_call_from_config(
+        params = service.async_prepare_call_from_config(
             self._hass, self._action, self._variables
         )
 
         running_script = (
-            domain == "automation"
-            and service_name == "trigger"
-            or domain in ("python_script", "script")
+            params[CONF_DOMAIN] == "automation"
+            and params[CONF_SERVICE] == "trigger"
+            or params[CONF_DOMAIN] in ("python_script", "script")
         )
         # If this might start a script then disable the call timeout.
         # Otherwise use the normal service call limit.
@@ -451,9 +452,7 @@ class _ScriptRun:
 
         service_task = self._hass.async_create_task(
             self._hass.services.async_call(
-                domain,
-                service_name,
-                service_data,
+                **params,
                 blocking=True,
                 context=self._context,
                 limit=limit,
@@ -1057,7 +1056,7 @@ class Script:
             raise
 
     async def _async_stop(self, update_state):
-        aws = [run.async_stop() for run in self._runs]
+        aws = [asyncio.create_task(run.async_stop()) for run in self._runs]
         if not aws:
             return
         await asyncio.wait(aws)

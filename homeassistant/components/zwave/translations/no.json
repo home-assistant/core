@@ -13,7 +13,7 @@
                     "network_key": "Nettverksn\u00f8kkel (la v\u00e6re tom for automatisk oppretting)",
                     "usb_path": "USB enhetsbane"
                 },
-                "description": "Se [www.home-assistant.io/docs/z-wave/installation/](https://www.home-assistant.io/docs/z-wave/installation/) for informasjon om konfigurasjon variablene",
+                "description": "Denne integrasjonen opprettholdes ikke lenger. For nye installasjoner, bruk Z-Wave JS i stedet. \n\n Se https://www.home-assistant.io/docs/z-wave/installation/ for informasjon om konfigurasjonsvariablene",
                 "title": "Sett opp Z-Wave"
             }
         }

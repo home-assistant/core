@@ -1,4 +1,6 @@
 """Media Source models."""
+from __future__ import annotations
+
 from abc import ABC
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
@@ -82,12 +84,12 @@ class MediaSourceItem:
         return await self.async_media_source().async_resolve_media(self)
 
     @callback
-    def async_media_source(self) -> "MediaSource":
+    def async_media_source(self) -> MediaSource:
         """Return media source that owns this item."""
         return self.hass.data[DOMAIN][self.domain]
 
     @classmethod
-    def from_uri(cls, hass: HomeAssistant, uri: str) -> "MediaSourceItem":
+    def from_uri(cls, hass: HomeAssistant, uri: str) -> MediaSourceItem:
         """Create an item from a uri."""
         match = URI_SCHEME_REGEX.match(uri)
 

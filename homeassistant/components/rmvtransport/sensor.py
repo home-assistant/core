@@ -4,11 +4,14 @@ from datetime import timedelta
 import logging
 
 from RMVtransport import RMVtransport
-from RMVtransport.rmvtransport import RMVtransportApiConnectionError
+from RMVtransport.rmvtransport import (
+    RMVtransportApiConnectionError,
+    RMVtransportDataError,
+)
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_TIMEOUT, TIME_MINUTES
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -25,7 +28,6 @@ CONF_LINES = "lines"
 CONF_PRODUCTS = "products"
 CONF_TIME_OFFSET = "time_offset"
 CONF_MAX_JOURNEYS = "max_journeys"
-CONF_TIMEOUT = "timeout"
 
 DEFAULT_NAME = "RMV Journey"
 
@@ -230,7 +232,7 @@ class RMVDepartureData:
                 max_journeys=50,
             )
 
-        except RMVtransportApiConnectionError:
+        except (RMVtransportApiConnectionError, RMVtransportDataError):
             self.departures = []
             _LOGGER.warning("Could not retrieve data from rmv.de")
             return

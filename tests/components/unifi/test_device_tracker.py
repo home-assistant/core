@@ -353,6 +353,7 @@ async def test_remove_clients(hass, aioclient_mock):
     }
     controller.api.session_handler(SIGNAL_DATA)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
 

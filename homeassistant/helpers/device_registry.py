@@ -2,16 +2,16 @@
 from collections import OrderedDict
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import attr
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, callback
+from homeassistant.loader import bind_hass
 import homeassistant.util.uuid as uuid_util
 
 from .debounce import Debouncer
-from .singleton import singleton
 from .typing import UNDEFINED, HomeAssistantType, UndefinedType
 
 # mypy: disallow_any_generics
@@ -71,6 +71,7 @@ class DeviceEntry:
             )
         ),
     )
+    suggested_area: Optional[str] = attr.ib(default=None)
 
     @property
     def disabled(self) -> bool:
@@ -251,6 +252,7 @@ class DeviceRegistry:
         via_device: Optional[Tuple[str, str]] = None,
         # To disable a device if it gets created
         disabled_by: Union[str, None, UndefinedType] = UNDEFINED,
+        suggested_area: Union[str, None, UndefinedType] = UNDEFINED,
     ) -> Optional[DeviceEntry]:
         """Get device. Create if it doesn't exist."""
         if not identifiers and not connections:
@@ -304,6 +306,7 @@ class DeviceRegistry:
             sw_version=sw_version,
             entry_type=entry_type,
             disabled_by=disabled_by,
+            suggested_area=suggested_area,
         )
 
     @callback
@@ -321,6 +324,7 @@ class DeviceRegistry:
         via_device_id: Union[str, None, UndefinedType] = UNDEFINED,
         remove_config_entry_id: Union[str, UndefinedType] = UNDEFINED,
         disabled_by: Union[str, None, UndefinedType] = UNDEFINED,
+        suggested_area: Union[str, None, UndefinedType] = UNDEFINED,
     ) -> Optional[DeviceEntry]:
         """Update properties of a device."""
         return self._async_update_device(
@@ -335,6 +339,7 @@ class DeviceRegistry:
             via_device_id=via_device_id,
             remove_config_entry_id=remove_config_entry_id,
             disabled_by=disabled_by,
+            suggested_area=suggested_area,
         )
 
     @callback
@@ -356,6 +361,7 @@ class DeviceRegistry:
         area_id: Union[str, None, UndefinedType] = UNDEFINED,
         name_by_user: Union[str, None, UndefinedType] = UNDEFINED,
         disabled_by: Union[str, None, UndefinedType] = UNDEFINED,
+        suggested_area: Union[str, None, UndefinedType] = UNDEFINED,
     ) -> Optional[DeviceEntry]:
         """Update device attributes."""
         old = self.devices[device_id]
@@ -363,6 +369,16 @@ class DeviceRegistry:
         changes: Dict[str, Any] = {}
 
         config_entries = old.config_entries
+
+        if (
+            suggested_area not in (UNDEFINED, None, "")
+            and area_id is UNDEFINED
+            and old.area_id is None
+        ):
+            area = self.hass.helpers.area_registry.async_get(
+                self.hass
+            ).async_get_or_create(suggested_area)
+            area_id = area.id
 
         if (
             add_config_entry_id is not UNDEFINED
@@ -403,6 +419,7 @@ class DeviceRegistry:
             ("entry_type", entry_type),
             ("via_device_id", via_device_id),
             ("disabled_by", disabled_by),
+            ("suggested_area", suggested_area),
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
                 changes[attr_name] = value
@@ -593,12 +610,26 @@ class DeviceRegistry:
                 self._async_update_device(dev_id, area_id=None)
 
 
-@singleton(DATA_REGISTRY)
+@callback
+def async_get(hass: HomeAssistantType) -> DeviceRegistry:
+    """Get device registry."""
+    return cast(DeviceRegistry, hass.data[DATA_REGISTRY])
+
+
+async def async_load(hass: HomeAssistantType) -> None:
+    """Load device registry."""
+    assert DATA_REGISTRY not in hass.data
+    hass.data[DATA_REGISTRY] = DeviceRegistry(hass)
+    await hass.data[DATA_REGISTRY].async_load()
+
+
+@bind_hass
 async def async_get_registry(hass: HomeAssistantType) -> DeviceRegistry:
-    """Create entity registry."""
-    reg = DeviceRegistry(hass)
-    await reg.async_load()
-    return reg
+    """Get device registry.
+
+    This is deprecated and will be removed in the future. Use async_get instead.
+    """
+    return async_get(hass)
 
 
 @callback
@@ -672,25 +703,34 @@ def async_setup_cleanup(hass: HomeAssistantType, dev_reg: DeviceRegistry) -> Non
     )
 
     async def entity_registry_changed(event: Event) -> None:
-        """Handle entity updated or removed."""
+        """Handle entity updated or removed dispatch."""
+        await debounced_cleanup.async_call()
+
+    @callback
+    def entity_registry_changed_filter(event: Event) -> bool:
+        """Handle entity updated or removed filter."""
         if (
             event.data["action"] == "update"
             and "device_id" not in event.data["changes"]
         ) or event.data["action"] == "create":
-            return
+            return False
 
-        await debounced_cleanup.async_call()
+        return True
 
     if hass.is_running:
         hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, entity_registry_changed
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            entity_registry_changed,
+            event_filter=entity_registry_changed_filter,
         )
         return
 
     async def startup_clean(event: Event) -> None:
         """Clean up on startup."""
         hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, entity_registry_changed
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            entity_registry_changed,
+            event_filter=entity_registry_changed_filter,
         )
         await debounced_cleanup.async_call()
 

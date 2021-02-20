@@ -148,7 +148,7 @@ async def test_sbb_trust_state(hass: core.HomeAssistant):
         "bondid": "test-bond-id",
     }
     await setup_platform(
-        hass, LIGHT_DOMAIN, ceiling_fan("name-1"), bond_version=version
+        hass, LIGHT_DOMAIN, ceiling_fan("name-1"), bond_version=version, bridge={}
     )
 
     device = hass.states.get("light.name_1")
