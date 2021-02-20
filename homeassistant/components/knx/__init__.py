@@ -15,7 +15,7 @@ from xknx.io import (
     ConnectionType,
 )
 from xknx.telegram import AddressFilter, GroupAddress, Telegram
-from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
+from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -75,6 +75,7 @@ SERVICE_KNX_ATTR_PAYLOAD = "payload"
 SERVICE_KNX_ATTR_TYPE = "type"
 SERVICE_KNX_ATTR_REMOVE = "remove"
 SERVICE_KNX_EVENT_REGISTER = "event_register"
+SERVICE_KNX_READ = "read"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -166,6 +167,15 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
     ),
 )
 
+SERVICE_KNX_READ_SCHEMA = vol.Schema(
+    {
+        vol.Required(SERVICE_KNX_ATTR_ADDRESS): vol.All(
+            cv.ensure_list,
+            [cv.string],
+        )
+    }
+)
+
 SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
     {
         vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
@@ -208,6 +218,13 @@ async def async_setup(hass, config):
         SERVICE_KNX_SEND,
         hass.data[DOMAIN].service_send_to_knx_bus,
         schema=SERVICE_KNX_SEND_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_KNX_READ,
+        hass.data[DOMAIN].service_read_to_knx_bus,
+        schema=SERVICE_KNX_READ_SCHEMA,
     )
 
     async_register_admin_service(
@@ -422,6 +439,15 @@ class KNXModule:
             payload=GroupValueWrite(calculate_payload(attr_payload)),
         )
         await self.xknx.telegrams.put(telegram)
+
+    async def service_read_to_knx_bus(self, call):
+        """Service for sending a GroupValueRead telegram to the KNX bus."""
+        for address in call.data.get(SERVICE_KNX_ATTR_ADDRESS):
+            telegram = Telegram(
+                destination_address=GroupAddress(address),
+                payload=GroupValueRead(),
+            )
+            await self.xknx.telegrams.put(telegram)
 
 
 class KNXExposeTime:
