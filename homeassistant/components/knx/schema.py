@@ -38,7 +38,7 @@ class ConnectionSchema:
         }
     )
 
-    ROUTING_SCHEMA = vol.Schema({vol.Optional(CONF_KNX_LOCAL_IP): cv.string})
+    ROUTING_SCHEMA = vol.Maybe(vol.Schema({vol.Optional(CONF_KNX_LOCAL_IP): cv.string}))
 
 
 class CoverSchema:
