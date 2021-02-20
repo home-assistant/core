@@ -37,11 +37,6 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         super().__init__(coordinator, spa, "thermostat")
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique id for the entity."""
-        return f"{self.spa.id}-{self._entity_type}"
-
-    @property
     def temperature_unit(self):
         """Return the unit of measurement used by the platform."""
         return TEMP_CELSIUS

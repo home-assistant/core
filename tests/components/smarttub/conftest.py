@@ -46,6 +46,7 @@ def mock_spa():
         "setTemperature": 39,
         "water": {"temperature": 38},
         "heater": "ON",
+        "state": "NORMAL",
     }
     return mock_spa
 
@@ -60,7 +61,7 @@ def mock_account(spa):
     return mock_account
 
 
-@pytest.fixture(name="smarttub_api")
+@pytest.fixture(name="smarttub_api", autouse=True)
 def mock_api(account, spa):
     """Mock the SmartTub API."""
 
@@ -71,3 +72,11 @@ def mock_api(account, spa):
         api_mock = api_class_mock.return_value
         api_mock.get_account.return_value = account
         yield api_mock
+
+
+@pytest.fixture
+async def setup_entry(hass, config_entry):
+    """Initialize the config entry."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
