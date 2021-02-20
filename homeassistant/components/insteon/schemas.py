@@ -187,47 +187,47 @@ def add_device_override(config_data, new_override):
     except ValueError as err:
         raise ValueError("Incorrect values") from err
 
-    overrides = config_data.get(CONF_OVERRIDE, [])
+    overrides = []
+
+    for override in config_data.get(CONF_OVERRIDE, []):
+        if override[CONF_ADDRESS] != address:
+            overrides.append(override)
+
     curr_override = {}
-
-    # If this address has an override defined, remove it
-    for override in overrides:
-        if override[CONF_ADDRESS] == address:
-            curr_override = override
-            break
-    if curr_override:
-        overrides.remove(curr_override)
-
     curr_override[CONF_ADDRESS] = address
     curr_override[CONF_CAT] = cat
     curr_override[CONF_SUBCAT] = subcat
     overrides.append(curr_override)
-    config_data[CONF_OVERRIDE] = overrides
-    return config_data
+
+    new_config = {}
+    if config_data.get(CONF_X10):
+        new_config[CONF_X10] = config_data[CONF_X10]
+    new_config[CONF_OVERRIDE] = overrides
+    return new_config
 
 
 def add_x10_device(config_data, new_x10):
     """Add a new X10 device to X10 device list."""
-    curr_device = {}
-    x10_devices = config_data.get(CONF_X10, [])
-    for x10_device in x10_devices:
+    x10_devices = []
+    for x10_device in config_data.get(CONF_X10, []):
         if (
-            x10_device[CONF_HOUSECODE] == new_x10[CONF_HOUSECODE]
-            and x10_device[CONF_UNITCODE] == new_x10[CONF_UNITCODE]
+            x10_device[CONF_HOUSECODE] != new_x10[CONF_HOUSECODE]
+            or x10_device[CONF_UNITCODE] != new_x10[CONF_UNITCODE]
         ):
-            curr_device = x10_device
-            break
+            x10_devices.append(x10_device)
 
-    if curr_device:
-        x10_devices.remove(curr_device)
-
+    curr_device = {}
     curr_device[CONF_HOUSECODE] = new_x10[CONF_HOUSECODE]
     curr_device[CONF_UNITCODE] = new_x10[CONF_UNITCODE]
     curr_device[CONF_PLATFORM] = new_x10[CONF_PLATFORM]
     curr_device[CONF_DIM_STEPS] = new_x10[CONF_DIM_STEPS]
     x10_devices.append(curr_device)
-    config_data[CONF_X10] = x10_devices
-    return config_data
+
+    new_config = {}
+    if config_data.get(CONF_OVERRIDE):
+        new_config[CONF_OVERRIDE] = config_data[CONF_OVERRIDE]
+    new_config[CONF_X10] = x10_devices
+    return new_config
 
 
 def build_device_override_schema(
