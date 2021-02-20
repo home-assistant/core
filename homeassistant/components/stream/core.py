@@ -34,6 +34,8 @@ class Segment:
     sequence: int = attr.ib()
     segment: io.BytesIO = attr.ib()
     duration: float = attr.ib()
+    # For detecting discontinuities across stream restarts
+    stream_id: int = attr.ib(default=0)
 
 
 class IdleTimer:
@@ -67,7 +69,7 @@ class IdleTimer:
         self._unsub = async_call_later(self._hass, self._timeout, self.fire)
 
     def clear(self):
-        """Clear and disable the timer."""
+        """Clear and disable the timer if it has not already fired."""
         if self._unsub is not None:
             self._unsub()
 

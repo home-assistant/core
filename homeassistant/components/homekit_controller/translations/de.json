@@ -18,12 +18,21 @@
         },
         "flow_title": "HomeKit-Zubeh\u00f6r: {name}",
         "step": {
+            "busy_error": {
+                "title": "Das Ger\u00e4t wird bereits mit einem anderen Controller gekoppelt"
+            },
+            "max_tries_error": {
+                "title": "Maximale Authentifizierungsversuche \u00fcberschritten"
+            },
             "pair": {
                 "data": {
                     "pairing_code": "Kopplungscode"
                 },
                 "description": "Gib deinen HomeKit-Kopplungscode ein, um dieses Zubeh\u00f6r zu verwenden",
                 "title": "Mit HomeKit Zubeh\u00f6r koppeln"
+            },
+            "protocol_error": {
+                "title": "Fehler bei der Kommunikation mit dem Zubeh\u00f6r"
             },
             "user": {
                 "data": {

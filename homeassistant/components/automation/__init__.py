@@ -615,11 +615,20 @@ async def _async_process_if(hass, config, p_config):
 
     def if_action(variables=None):
         """AND all conditions."""
-        try:
-            return all(check(hass, variables) for check in checks)
-        except ConditionError as ex:
-            LOGGER.warning("Error in 'condition' evaluation: %s", ex)
+        errors = []
+        for check in checks:
+            try:
+                if not check(hass, variables):
+                    return False
+            except ConditionError as ex:
+                errors.append(f"Error in 'condition' evaluation: {ex}")
+
+        if errors:
+            for error in errors:
+                LOGGER.warning("%s", error)
             return False
+
+        return True
 
     if_action.config = if_configs
 
