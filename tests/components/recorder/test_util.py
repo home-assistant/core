@@ -10,7 +10,7 @@ from homeassistant.components.recorder import util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.util import dt as dt_util
 
-from .common import wait_recording_done
+from .common import corrupt_db_file, wait_recording_done
 
 from tests.common import get_test_home_assistant, init_recorder_component
 
@@ -90,7 +90,7 @@ def test_validate_or_move_away_sqlite_database_with_integrity_check(
         util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is False
     )
 
-    _corrupt_db_file(test_db_file)
+    corrupt_db_file(test_db_file)
 
     assert util.validate_sqlite_database(dburl, db_integrity_check) is False
 
@@ -127,7 +127,7 @@ def test_validate_or_move_away_sqlite_database_without_integrity_check(
         util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is False
     )
 
-    _corrupt_db_file(test_db_file)
+    corrupt_db_file(test_db_file)
 
     assert util.validate_sqlite_database(dburl, db_integrity_check) is False
 
@@ -150,7 +150,7 @@ def test_last_run_was_recently_clean(hass_recorder):
 
     assert util.last_run_was_recently_clean(cursor) is False
 
-    hass.data[DATA_INSTANCE]._close_run()
+    hass.data[DATA_INSTANCE]._shutdown()
     wait_recording_done(hass)
 
     assert util.last_run_was_recently_clean(cursor) is True
@@ -244,10 +244,3 @@ def test_combined_checks(hass_recorder, caplog):
     caplog.clear()
     with pytest.raises(sqlite3.DatabaseError):
         util.run_checks_on_open_db("fake_db_path", cursor, True)
-
-
-def _corrupt_db_file(test_db_file):
-    """Corrupt an sqlite3 database file."""
-    f = open(test_db_file, "a")
-    f.write("I am a corrupt db")
-    f.close()

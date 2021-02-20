@@ -112,17 +112,22 @@ def execute(qry, to_native=False, validate_entity_ids=True):
 
 def validate_or_move_away_sqlite_database(dburl: str, db_integrity_check: bool) -> bool:
     """Ensure that the database is valid or move it away."""
-    dbpath = dburl[len(SQLITE_URL_PREFIX) :]
+    dbpath = dburl_to_path(dburl)
 
     if not os.path.exists(dbpath):
         # Database does not exist yet, this is OK
         return True
 
     if not validate_sqlite_database(dbpath, db_integrity_check):
-        _move_away_broken_database(dbpath)
+        move_away_broken_database(dbpath)
         return False
 
     return True
+
+
+def dburl_to_path(dburl):
+    """Convert the db url into a filesystem path."""
+    return dburl[len(SQLITE_URL_PREFIX) :]
 
 
 def last_run_was_recently_clean(cursor):
@@ -208,7 +213,7 @@ def run_checks_on_open_db(dbpath, cursor, db_integrity_check):
     cursor.execute("PRAGMA QUICK_CHECK")
 
 
-def _move_away_broken_database(dbfile: str) -> None:
+def move_away_broken_database(dbfile: str) -> None:
     """Move away a broken sqlite3 database."""
 
     isotime = dt_util.utcnow().isoformat()
