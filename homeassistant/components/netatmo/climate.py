@@ -567,6 +567,11 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             schedule_id,
         )
 
+    @property
+    def device_info(self):
+        """Return the device info for the thermostat."""
+        return {**super().device_info, "suggested_area": self._room_data["name"]}
+
 
 def interpolate(batterylevel, module_type):
     """Interpolate battery level depending on device type."""
