@@ -24,12 +24,7 @@ async def validate_input(hass: core.HomeAssistant, data: dict):
     """
     hub = LitterRobotHub(hass, data)
 
-    try:
-        await hub.login()
-    except LitterRobotLoginException as ex:
-        raise InvalidAuth from ex
-    except LitterRobotException as ex:
-        raise CannotConnect from ex
+    await hub.login()
 
     return {"title": data[CONF_USERNAME]}
 
@@ -53,9 +48,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
 
                 return self.async_create_entry(title=info["title"], data=user_input)
-            except CannotConnect:
+            except LitterRobotException:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except LitterRobotLoginException:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -64,11 +59,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""

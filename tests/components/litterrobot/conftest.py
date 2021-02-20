@@ -12,7 +12,7 @@ from .common import BASE_PATH, ROBOT_DATA
 
 @pytest.fixture(autouse=True)
 def no_refresh_wait_time():
-    """Make the refresh wait tiime 0 for instant tests."""
+    """Make the refresh wait time 0 for instant tests."""
     with patch(f"{BASE_PATH}.hub.REFRESH_WAIT_TIME", 0):
         yield
 
