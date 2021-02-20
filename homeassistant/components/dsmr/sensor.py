@@ -84,7 +84,7 @@ async def async_setup_entry(
     obis_mapping = [
         ["Power Consumption", obis_ref.CURRENT_ELECTRICITY_USAGE, True],
         ["Power Production", obis_ref.CURRENT_ELECTRICITY_DELIVERY, True],
-        ["Power Tariff", obis_ref.ELECTRICITY_ACTIVE_TARIFF, False],
+        ["Energy Tariff", obis_ref.ELECTRICITY_ACTIVE_TARIFF, False],
         ["Energy Consumption (tarif 1)", obis_ref.ELECTRICITY_USED_TARIFF_1, True],
         ["Energy Consumption (tarif 2)", obis_ref.ELECTRICITY_USED_TARIFF_2, True],
         ["Energy Production (tarif 1)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_1, True],

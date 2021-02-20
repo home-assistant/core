@@ -139,9 +139,9 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     )
 
     # tariff should be translated in human readable and have no unit
-    power_tariff = hass.states.get("sensor.power_tariff")
-    assert power_tariff.state == "low"
-    assert power_tariff.attributes.get("unit_of_measurement") == ""
+    energy_tariff = hass.states.get("sensor.energy_tariff")
+    assert energy_tariff.state == "low"
+    assert energy_tariff.attributes.get("unit_of_measurement") == ""
 
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_consumption")
@@ -268,9 +268,9 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
     await asyncio.sleep(0)
 
     # tariff should be translated in human readable and have no unit
-    power_tariff = hass.states.get("sensor.power_tariff")
-    assert power_tariff.state == "low"
-    assert power_tariff.attributes.get("unit_of_measurement") == ""
+    energy_tariff = hass.states.get("sensor.energy_tariff")
+    assert energy_tariff.state == "low"
+    assert energy_tariff.attributes.get("unit_of_measurement") == ""
 
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_consumption")
@@ -328,9 +328,9 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
     await asyncio.sleep(0)
 
     # tariff should be translated in human readable and have no unit
-    power_tariff = hass.states.get("sensor.power_tariff")
-    assert power_tariff.state == "low"
-    assert power_tariff.attributes.get("unit_of_measurement") == ""
+    energy_tariff = hass.states.get("sensor.energy_tariff")
+    assert energy_tariff.state == "low"
+    assert energy_tariff.attributes.get("unit_of_measurement") == ""
 
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_consumption")
@@ -457,9 +457,9 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
     await asyncio.sleep(0)
 
     # tariff should be translated in human readable and have no unit
-    power_tariff = hass.states.get("sensor.power_tariff")
-    assert power_tariff.state == "normal"
-    assert power_tariff.attributes.get("unit_of_measurement") == ""
+    energy_tariff = hass.states.get("sensor.energy_tariff")
+    assert energy_tariff.state == "normal"
+    assert energy_tariff.attributes.get("unit_of_measurement") == ""
 
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_consumption")
@@ -506,9 +506,9 @@ async def test_belgian_meter_low(hass, dsmr_connection_fixture):
     await asyncio.sleep(0)
 
     # tariff should be translated in human readable and have no unit
-    power_tariff = hass.states.get("sensor.power_tariff")
-    assert power_tariff.state == "low"
-    assert power_tariff.attributes.get("unit_of_measurement") == ""
+    energy_tariff = hass.states.get("sensor.energy_tariff")
+    assert energy_tariff.state == "low"
+    assert energy_tariff.attributes.get("unit_of_measurement") == ""
 
 
 async def test_tcp(hass, dsmr_connection_fixture):
