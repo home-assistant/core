@@ -44,6 +44,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize."""
         self.host = None
+        self.mac = None
 
     async def async_step_import(self, conf: dict):
         """Import a configuration from config.yaml."""
@@ -57,15 +58,15 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         name = discovery_info.get("name")
         self.host = discovery_info.get("host")
-        mac_address = discovery_info.get("properties", {}).get("mac")
+        self.mac = discovery_info.get("properties", {}).get("mac")
 
-        if not name or not self.host or not mac_address:
+        if not name or not self.host or not self.mac:
             return self.async_abort(reason="not_xiaomi_miio")
 
         # Check which device is discovered.
         for gateway_model in MODELS_GATEWAY:
             if name.startswith(gateway_model.replace(".", "-")):
-                unique_id = format_mac(mac_address)
+                unique_id = format_mac(self.mac)
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
@@ -76,7 +77,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_device()
         for device_model in MODELS_ALL_DEVICES:
             if name.startswith(device_model.replace(".", "-")):
-                unique_id = format_mac(mac_address)
+                unique_id = format_mac(self.mac)
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
@@ -112,13 +113,13 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 model = device_info.model
 
             if model is not None:
-                mac = await self.async_get_mac(device_info, self.host)
+                if self.mac is None:
+                    self.mac = await self.async_get_mac(device_info, self.host)
 
-            if model is not None and mac is not None:
                 # Setup Gateways
                 for gateway_model in MODELS_GATEWAY:
                     if model.startswith(gateway_model):
-                        unique_id = mac
+                        unique_id = self.mac
                         await self.async_set_unique_id(unique_id)
                         self._abort_if_unique_id_configured()
                         return self.async_create_entry(
@@ -128,7 +129,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                                 CONF_HOST: self.host,
                                 CONF_TOKEN: token,
                                 CONF_MODEL: model,
-                                CONF_MAC: mac,
+                                CONF_MAC: self.mac,
                             },
                         )
 
@@ -137,7 +138,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 for device_model in MODELS_ALL_DEVICES:
                     if model.startswith(device_model):
-                        unique_id = mac
+                        unique_id = self.mac
                         await self.async_set_unique_id(unique_id)
                         self._abort_if_unique_id_configured()
                         return self.async_create_entry(
@@ -147,7 +148,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                                 CONF_HOST: self.host,
                                 CONF_TOKEN: token,
                                 CONF_MODEL: model,
-                                CONF_MAC: mac,
+                                CONF_MAC: self.mac,
                             },
                         )
                 errors["base"] = "unknown_device"

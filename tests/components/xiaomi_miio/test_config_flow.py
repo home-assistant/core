@@ -338,15 +338,23 @@ async def test_config_flow_step_device_manual_model_fail(hass):
     ), patch(
         "homeassistant.components.xiaomi_miio.config_flow.get_mac_address",
         return_value=None,
+    ), patch(
+        "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: TEST_TOKEN, const.CONF_MODEL: overwrite_model},
         )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "device"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == "create_entry"
+    assert result["title"] == DEFAULT_DEVICE_NAME
+    assert result["data"] == {
+        const.CONF_FLOW_TYPE: const.CONF_DEVICE,
+        CONF_HOST: TEST_HOST,
+        CONF_TOKEN: TEST_TOKEN,
+        const.CONF_MODEL: overwrite_model,
+        const.CONF_MAC: None,
+    }
 
 
 async def test_config_flow_step_device_manual_model_err(hass):
@@ -380,15 +388,23 @@ async def test_config_flow_step_device_manual_model_err(hass):
     ), patch(
         "homeassistant.components.xiaomi_miio.config_flow.get_mac_address",
         side_effect=OSError,
+    ), patch(
+        "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: TEST_TOKEN, const.CONF_MODEL: overwrite_model},
         )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "device"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == "create_entry"
+    assert result["title"] == DEFAULT_DEVICE_NAME
+    assert result["data"] == {
+        const.CONF_FLOW_TYPE: const.CONF_DEVICE,
+        CONF_HOST: TEST_HOST,
+        CONF_TOKEN: TEST_TOKEN,
+        const.CONF_MODEL: overwrite_model,
+        const.CONF_MAC: None,
+    }
 
 
 async def config_flow_device_success(hass, model_to_test):
