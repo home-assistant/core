@@ -71,7 +71,10 @@ async def validate_input(hass: HomeAssistant, data: Dict):
                 balances_list.append(balance["asset"])
         balances_list.sort()
     except BinanceAPIException as error:
-        raise InvalidAuth from error
+        if error.message == "Invalid API-key, IP, or permissions for action.":
+            raise InvalidAuth from error
+        else:
+            raise InvalidResponse from error
     except BinanceRequestException as error:
         raise InvalidResponse from error
     finally:
